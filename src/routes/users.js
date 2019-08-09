@@ -7,6 +7,6 @@ const usersController = require('../controllers/users');
 
 
 /* GET users listing. */
-router.get('/', authMiddleware.isAuthenticated, usersController.list);
+router.get('/', authMiddleware.isAuthenticated, authMiddleware.isAdmin, usersController.list);
 
 module.exports = router;

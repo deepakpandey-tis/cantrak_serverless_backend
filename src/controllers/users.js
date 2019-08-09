@@ -5,7 +5,8 @@ const usersController = {
         const users = await knex.select().from('users');
         res.status(200).json({
             data: {
-                users: users
+                users: users,
+                // currentUser: req.me
             }
         });
     },
