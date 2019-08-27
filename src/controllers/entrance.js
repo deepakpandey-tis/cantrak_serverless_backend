@@ -49,6 +49,7 @@ const entranceController = {
                     ],
                 });
             }
+            
             loginResult = validUser[0];
             // console.log('[controllers][entrance][login]: ValidatePassword', loginResult.password);
 

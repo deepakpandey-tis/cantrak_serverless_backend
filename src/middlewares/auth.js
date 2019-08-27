@@ -65,7 +65,7 @@ const authMiddleware = {
            
             let currentUser = req.me;
 
-            if(currentUser && currentUser.roles && currentUser.roles.includes("admin")){
+            if(currentUser && currentUser.roles && currentUser.roles.includes("admin") || currentUser.roles.includes("superAdmin")){
                 return next();
             }
             return next(createError(403));
