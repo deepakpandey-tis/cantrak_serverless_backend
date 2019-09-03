@@ -3,47 +3,21 @@ const moment = require('moment');
 const uuidv4 = require('uuid/v4');
 var jwt = require('jsonwebtoken');
 const _ = require('lodash');
-const multer = require('multer');
-const multerS3 = require('multer-s3');
 
 const knex = require('../db/knex');
 
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const trx = knex.transaction();
-const AWS = require('aws-sdk');
-AWS.config.update({ region: process.env.REGION || 'us-east-2' });
-
-
-const getUploadURL = async () => {
-    const actionId = uuidv4();
-    const s3Params = {
-        Bucket: 'local-bucket',
-        Key: `${actionId}.jpg`,
-        ContentType: 'image/jpeg',
-        ACL: 'public-read',
-    };
-    return new Promise((resolve, reject) => {
-        const s3 = new AWS.S3();
-        let uploadURL = s3.getSignedUrl('putObject', s3Params)
-        resolve({
-            "isBase64Encoded": false,
-            "headers": { "Access-Control-Allow-Origin": "*" },
-            "uploadURL": uploadURL,
-            "photoFilename": `${actionId}.jpg`
-        })
-    })
-};
-
 
 
 const serviceRequestController = {
 
-    addServiceRequest: async (req, res) => {
+    getGeneralDetails: async (req, res) => {
 
         try {
 
-            let serviceRequestId = null;
+            let generalDetails = null;
 
             await knex.transaction(async (trx) => {
 
@@ -70,7 +44,7 @@ const serviceRequestController = {
             });
 
         } catch (err) {
-            console.log('[controllers][service][requestId] :  Error', err);
+            console.log('[controllers][servicedetails][getgeneraldetails] :  Error', err);
             trx.rollback;
             res.status(500).json({
                 errors: [
@@ -194,55 +168,6 @@ const serviceRequestController = {
 
         } catch (err) {
             console.log('[controllers][service][request] :  Error', err);
-            trx.rollback;
-            res.status(500).json({
-                errors: [
-                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
-                ],
-            });
-        }
-    },
-    updateImages: async (req, res) => {
-        try {
-
-            let serviceRequest = null;
-
-            await knex.transaction(async (trx) => {
-                const imagesPayload = req.body;
-                console.log('[controllers][service][images]', imagesPayload);
-
-
-
-
-
-
-            });
-
-
-        } catch (err) {
-            console.log('[controllers][service][request] :  Error', err);
-            trx.rollback;
-            res.status(500).json({
-                errors: [
-                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
-                ],
-            });
-        }
-    },
-    getImageUploadUrl: async (req, res) => {
-        try {
-
-        const uploadUrlData =  await getUploadURL();
-
-        res.status(200).json({
-            data: {
-                uploadUrlData: uploadUrlData
-            },
-            message: "Upload Url generated succesfully!"
-        });
-
-        } catch (err) {
-            console.log('[controllers][service][getImageUploadUrl] :  Error', err);
             trx.rollback;
             res.status(500).json({
                 errors: [

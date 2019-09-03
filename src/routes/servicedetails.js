@@ -8,7 +8,7 @@ const authMiddleware = require('../middlewares/auth');
 
 /* GET users listing. */
 
-router.post('/post-service-request', authMiddleware.isAuthenticated, serviceRequestController.addServiceRequest);
+router.post('/get-general-details', authMiddleware.isAuthenticated, serviceRequestController.getGeneralDetails);
 
 router.post('/add-service-problems', authMiddleware.isAuthenticated, serviceRequestController.addServiceProblems);
 
