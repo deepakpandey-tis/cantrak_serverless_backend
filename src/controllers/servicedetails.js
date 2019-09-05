@@ -11,40 +11,45 @@ const saltRounds = 10;
 const trx = knex.transaction();
 
 
-const serviceRequestController = {
+const serviceDetailsController = {
 
     getGeneralDetails: async (req, res) => {
 
         try {
 
             let generalDetails = null;
-
-            await knex.transaction(async (trx) => {
+            
+            await knex.transaction(async (trx) => {                        
 
                 // Insert in users table,
-                const currentTime = new Date().getTime();
-                //console.log('[controllers][entrance][signup]: Expiry Time', tokenExpiryTime);
+                const incidentTypePayload = req.body;
 
-                const insertData = { moderationStatus: 0, isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
+                const DataResult = await knex('property_units').where({ houseId: incidentTypePayload.houseId });
+               
+                //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
+                //const updateDataResult = await knex.update({ isActive : 'false', updatedAt : currentTime }).where({ id: incidentTypePayload.id }).returning(['*']).transacting(trx).into('incident_type');
 
-                console.log('[controllers][service][requestId]: Insert Data', insertData);
+               // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
 
-                const serviceResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('service_requests');
+                console.log('[controllers][servicedetails][generaldetails]: View Data', DataResult);
 
-                serviceRequestId = serviceResult[0];
-
+                //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
+                
+                generalDetails = DataResult;
+               
                 trx.commit;
             });
-
+        
             res.status(200).json({
                 data: {
-                    service: serviceRequestId
+                    generalDetails: generalDetails
                 },
-                message: "Service Request added successfully !"
+                message: "General details list successfully !"
             });
 
+
         } catch (err) {
-            console.log('[controllers][servicedetails][getgeneraldetails] :  Error', err);
+            console.log('[controllers][entrance][signup] :  Error', err);
             trx.rollback;
             res.status(500).json({
                 errors: [
@@ -53,58 +58,41 @@ const serviceRequestController = {
             });
         }
     },
-    addServiceProblems: async (req, res) => {
+    getLocationTags: async (req, res) => {
+
         try {
 
-            let serviceProblem = null;
+            let locationTags = null;
+            
+            await knex.transaction(async (trx) => {                        
 
-            await knex.transaction(async (trx) => {
-                const serviceProblemPayload = req.body;
-                console.log('[controllers][service][problem]', serviceProblemPayload);
+                // Get Location Tag List,               
+                const DataResult = await knex('location_tags_master').where({ isActive: 'true' });
+               
+                //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
+                //const updateDataResult = await knex.update({ isActive : 'false', updatedAt : currentTime }).where({ id: incidentTypePayload.id }).returning(['*']).transacting(trx).into('incident_type');
 
-                // validate keys
-                const schema = Joi.object().keys({
-                    serviceRequestId: Joi.string().required(),
-                    problemId: Joi.string().required(),
-                    categoryId: Joi.string().required(),
-                    description: Joi.string().required()
-                });
+               // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
 
-                const result = Joi.validate(serviceProblemPayload, schema);
-                console.log('[controllers][service][problem]: JOi Result', result);
+                console.log('[controllers][servicedetails][locationtags]: View Data', DataResult);
 
-                if (result && result.hasOwnProperty('error') && result.error) {
-                    return res.status(400).json({
-                        errors: [
-                            { code: 'VALIDATION_ERROR', message: result.error.message }
-                        ],
-                    });
-                }
-
-                // Insert in users table,
-                const currentTime = new Date().getTime();
-
-                const insertData = { ...serviceProblemPayload, createdAt: currentTime, updatedAt: currentTime };
-
-                console.log('[controllers][service][problem]: Insert Data', insertData);
-
-                const problemResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('service_problems');
-
-                serviceProblem = problemResult[0];
-
+                //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
+                
+                locationTags = DataResult;
+               
                 trx.commit;
-
             });
-
+        
             res.status(200).json({
                 data: {
-                    serviceProblem: serviceProblem
+                    locationTags: locationTags
                 },
-                message: "Service problem added successfully !"
+                message: "Location Tags list successfully !"
             });
 
+
         } catch (err) {
-            console.log('[controllers][service][problem] :  Error', err);
+            console.log('[controllers][servicedetails][signup] :  Error', err);
             trx.rollback;
             res.status(500).json({
                 errors: [
@@ -113,61 +101,41 @@ const serviceRequestController = {
             });
         }
     },
-    updateServiceRequest: async (req, res) => {
+    getServiceType: async (req, res) => {
+
         try {
 
-            let serviceRequest = null;
+            let sourceRequest = null;
+            
+            await knex.transaction(async (trx) => {                        
 
-            await knex.transaction(async (trx) => {
-                const serviceRequestPayload = req.body;
-                console.log('[controllers][service][request]', serviceRequestPayload);
+                // Get Location Tag List,               
+                const DataResult = await knex('source_of_request').where({ isActive: 'true' });
+               
+                //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
+                //const updateDataResult = await knex.update({ isActive : 'false', updatedAt : currentTime }).where({ id: incidentTypePayload.id }).returning(['*']).transacting(trx).into('incident_type');
 
-                // validate keys
-                const schema = Joi.object().keys({
-                    id: Joi.number().required(),
-                    description: Joi.string().required(),
-                    requestFor: Joi.string().required(),
-                    houseId: Joi.string().required(),
-                    commonId: Joi.string().required(),
-                    serviceType: Joi.string().required(),
-                    requestedBy: Joi.string().required(),
-                    priority: Joi.string().required(),
-                    location: Joi.string().required()
-                });
+               // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
 
-                const result = Joi.validate(serviceRequestPayload, schema);
-                console.log('[controllers][service][request]: JOi Result', result);
+                console.log('[controllers][servicedetails][locationtags]: View Data', DataResult);
 
-                if (result && result.hasOwnProperty('error') && result.error) {
-                    return res.status(400).json({
-                        errors: [
-                            { code: 'VALIDATION_ERROR', message: result.error.message }
-                        ],
-                    });
-                }
-
-                // Insert in users table,
-                const currentTime = new Date().getTime();
-
-                const updateServiceReq = await knex.update({ description: serviceRequestPayload.description, requestFor: serviceRequestPayload.requestFor, houseId: serviceRequestPayload.houseId, commonId: serviceRequestPayload.commonId, serviceType: serviceRequestPayload.serviceType, requestedBy: serviceRequestPayload.requestedBy, priority: serviceRequestPayload.priority, location: serviceRequestPayload.location, updatedAt: currentTime, isActive: true, moderationStatus: true }).where({ id: serviceRequestPayload.id }).returning(['*']).transacting(trx).into('service_requests');
-
-                console.log('[controllers][service][request]: Update Data', updateServiceReq);
-
-                serviceRequest = updateServiceReq[0];
-
+                //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
+                
+                sourceRequest = DataResult;
+               
                 trx.commit;
-
             });
-
+        
             res.status(200).json({
                 data: {
-                    serviceRequest: serviceRequest
+                    sourceRequest: sourceRequest
                 },
-                message: "Service request updated successfully !"
+                message: "source Of Request list successfully !"
             });
 
+
         } catch (err) {
-            console.log('[controllers][service][request] :  Error', err);
+            console.log('[controllers][servicedetails][signup] :  Error', err);
             trx.rollback;
             res.status(500).json({
                 errors: [
@@ -175,7 +143,7 @@ const serviceRequestController = {
                 ],
             });
         }
-    }
+    },
 };
 
-module.exports = serviceRequestController;
+module.exports = serviceDetailsController;
