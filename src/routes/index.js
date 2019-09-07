@@ -9,6 +9,7 @@ const serviceDetailsRouter = require('./servicedetails');
 const propertySetupRouter = require('./administration-features/property-sertup');
 const propertyCategoryRouter = require('./administration-features/property-category');
 const propertySubCategoryRouter = require('./administration-features/property-subcategory');
+const generalSetupRouter = require('./administration-features/general-setup');
 
 
 /* GET home page. */
@@ -27,5 +28,6 @@ router.use('/servicedetails', serviceDetailsRouter);
 router.use('/administration-features/property-setup', propertySetupRouter);
 router.use('/administration-features/property-category', propertyCategoryRouter);
 router.use('/administration-features/property-subcategory', propertySubCategoryRouter);
+router.use('/administration-features/general-setup', generalSetupRouter);
 
 module.exports = router;

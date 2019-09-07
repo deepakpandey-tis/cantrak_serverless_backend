@@ -18,23 +18,21 @@ const serviceDetailsController = {
         try {
 
             let generalDetails = null;
+            let DataResult = null;
             
             await knex.transaction(async (trx) => {                        
 
                 // Insert in users table,
                 const incidentTypePayload = req.body;
 
-                const DataResult = await knex('property_units').where({ houseId: incidentTypePayload.houseId });
-               
-                //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
-                //const updateDataResult = await knex.update({ isActive : 'false', updatedAt : currentTime }).where({ id: incidentTypePayload.id }).returning(['*']).transacting(trx).into('incident_type');
-
-               // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
-
+                DataResult = await knex('property_units').join('companies','property_units.companyId', '=','companies.id').join('projects','property_units.projectId', '=','projects.id').join('property_types','property_units.propertyTypeId', '=','property_types.id').join('buildings_and_phases','property_units.buildingPhaseId', '=','buildings_and_phases.id').join('floor_and_zones','property_units.floorZoneId', '=','floor_and_zones.id').select('companies.companyName','projects.projectName','property_types.propertyType','buildings_and_phases.buildingPhaseCode','floor_and_zones.floorZoneCode','property_units.*').where({ 'property_units.houseId' : incidentTypePayload.houseId });
+                            
                 console.log('[controllers][servicedetails][generaldetails]: View Data', DataResult);
 
                 //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
                 
+                DataResult = _.omit(DataResult[0], ['companyId'],['projectId'],['propertyTypeId'],['buildingPhaseId'],['floorZoneId']);
+
                 generalDetails = DataResult;
                
                 trx.commit;
@@ -117,7 +115,7 @@ const serviceDetailsController = {
 
                // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
 
-                console.log('[controllers][servicedetails][locationtags]: View Data', DataResult);
+                console.log('[controllers][servicedetails][sourcerequest]: View Data', DataResult);
 
                 //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
                 
@@ -130,12 +128,138 @@ const serviceDetailsController = {
                 data: {
                     sourceRequest: sourceRequest
                 },
-                message: "source Of Request list successfully !"
+                message: "Source Of Request list successfully !"
             });
 
 
         } catch (err) {
             console.log('[controllers][servicedetails][signup] :  Error', err);
+            trx.rollback;
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    },
+    getPriorityList: async (req, res) => {
+
+        try {
+
+            let priorityList = null;
+            
+            await knex.transaction(async (trx) => {                        
+
+                // Get Location Tag List,               
+                const DataResult = await knex('incident_priority').where({ isActive: 'true' });
+               
+                //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
+                //const updateDataResult = await knex.update({ isActive : 'false', updatedAt : currentTime }).where({ id: incidentTypePayload.id }).returning(['*']).transacting(trx).into('incident_type');
+
+               // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
+
+                console.log('[controllers][servicedetails][priority]: View Data', DataResult);
+
+                //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
+                
+                priorityList = DataResult;
+               
+                trx.commit;
+            });
+        
+            res.status(200).json({
+                data: {
+                    priorityList: priorityList
+                },
+                message: "Priority list successfully !"
+            });
+
+
+        } catch (err) {
+            console.log('[controllers][servicedetails][signup] :  Error', err);
+            trx.rollback;
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    },
+    getServiceRequestList: async (req, res) => {
+
+        try {
+
+            let serviceRequestList = null;
+            
+            await knex.transaction(async (trx) => {                        
+
+                // Get Location Tag List,               
+                const DataResult = await knex('service_requests').where({ isActive: 'true', moderationStatus: 'true' });
+               
+                //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
+                //const updateDataResult = await knex.update({ isActive : 'false', updatedAt : currentTime }).where({ id: incidentTypePayload.id }).returning(['*']).transacting(trx).into('incident_type');
+
+               // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
+
+                console.log('[controllers][servicedetails][serviceRequestList]: View Data', DataResult);
+
+                //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
+                
+                serviceRequestList = DataResult;
+               
+                trx.commit;
+            });
+        
+            res.status(200).json({
+                data: {
+                    serviceRequestList: serviceRequestList
+                },
+                message: "Service Request List Successfully !"
+            });
+
+
+        } catch (err) {
+            console.log('[controllers][servicedetails][serviceRequestList] :  Error', err);
+            trx.rollback;
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    },
+    viewServiceRequestDetails: async (req, res) => {
+
+        try {
+
+            let serviceRequestList = null;
+            
+            await knex.transaction(async (trx) => {                        
+                const viewRequestPayload = req.body;
+                console.log('[controllers][servicedetails][viewrequest]', viewRequestPayload);
+
+                // Get Location Tag List,               
+                const DataResult = await knex('service_requests').where({ id: viewRequestPayload.serviceRequestId, isActive: 'true', moderationStatus: 'true' });
+                                
+                console.log('[controllers][servicedetails][serviceRequestList]: View Data', DataResult);
+
+                //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
+                
+                serviceRequestList = DataResult;
+               
+                trx.commit;
+            });
+        
+            res.status(200).json({
+                data: {
+                    serviceRequestList: serviceRequestList
+                },
+                message: "Service Request List Successfully !"
+            });
+
+
+        } catch (err) {
+            console.log('[controllers][servicedetails][serviceRequestList] :  Error', err);
             trx.rollback;
             res.status(500).json({
                 errors: [
