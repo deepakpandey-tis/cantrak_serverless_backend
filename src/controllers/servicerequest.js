@@ -12,25 +12,32 @@ const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const trx = knex.transaction();
 const AWS = require('aws-sdk');
+AWS.config.update({
+    accessKeyId: 'S3RVER',
+    secretAccessKey: 'S3RVER',
+});
 AWS.config.update({ region: process.env.REGION || 'us-east-2' });
 
 
-const getUploadURL = async () => {
+const getUploadURL = async (mimeType, extension) => {
     const actionId = uuidv4();
     const s3Params = {
         Bucket: 'local-bucket',
-        Key: `${actionId}.jpg`,
-        ContentType: 'image/jpeg',
+        Key: `${actionId}.${extension}`,
+        ContentType: mimeType,
         ACL: 'public-read',
     };
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         const s3 = new AWS.S3();
-        let uploadURL = s3.getSignedUrl('putObject', s3Params)
+        let uploadURL = await s3.getSignedUrl('putObject', s3Params);
+        if(Boolean(process.env.IS_OFFLINE)){
+            uploadURL = uploadURL.replace("https://", "http://").replace(".com", ".com:8000");
+        }
         resolve({
             "isBase64Encoded": false,
             "headers": { "Access-Control-Allow-Origin": "*" },
             "uploadURL": uploadURL,
-            "photoFilename": `${actionId}.jpg`
+            "photoFilename": `${actionId}.${extension}`
         })
     })
 };
@@ -230,16 +237,18 @@ const serviceRequestController = {
         }
     },
     getImageUploadUrl: async (req, res) => {
+        const mimeType = req.body.mimeType;
+        const extension = req.body.extension;
         try {
 
-        const uploadUrlData =  await getUploadURL();
+            const uploadUrlData = await getUploadURL(mimeType, extension);
 
-        res.status(200).json({
-            data: {
-                uploadUrlData: uploadUrlData
-            },
-            message: "Upload Url generated succesfully!"
-        });
+            res.status(200).json({
+                data: {
+                    uploadUrlData: uploadUrlData
+                },
+                message: "Upload Url generated succesfully!"
+            });
 
         } catch (err) {
             console.log('[controllers][service][getImageUploadUrl] :  Error', err);

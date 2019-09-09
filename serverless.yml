@@ -70,12 +70,12 @@ functions:
           method: ANY
           cors: true
   webhook:
-    handler: handler.webhook
+    handler: src/app.webhook
     events:
       - http:
         method: GET       
   s3hook:
-    handler: handler.s3hook
+    handler: src/app.s3hook
     events:
       - s3: local-bucket
         event: s3:*

@@ -16,7 +16,7 @@ router.post('/update-service-request', authMiddleware.isAuthenticated, serviceRe
 
 router.post('/upload-images', authMiddleware.isAuthenticated, serviceRequestController.updateImages);
 
-router.get('/upload-image-url', authMiddleware.isAuthenticated, serviceRequestController.getImageUploadUrl);
+router.post('/upload-image-url', authMiddleware.isAuthenticated, serviceRequestController.getImageUploadUrl);
 
 
 module.exports = router;
