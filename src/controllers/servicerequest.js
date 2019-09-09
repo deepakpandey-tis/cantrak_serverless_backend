@@ -12,18 +12,24 @@ const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const trx = knex.transaction();
 const AWS = require('aws-sdk');
-AWS.config.update({
-    accessKeyId: 'S3RVER',
-    secretAccessKey: 'S3RVER',
-});
+
+if(process.env.IS_OFFLINE){
+    AWS.config.update({
+        accessKeyId: 'S3RVER',
+        secretAccessKey: 'S3RVER',
+    });
+}
+
 AWS.config.update({ region: process.env.REGION || 'us-east-2' });
 
 
-const getUploadURL = async (mimeType, extension) => {
+const getUploadURL = async (mimeType, filename) => {
+    let re = /(?:\.([^.]+))?$/;
+    let ext = re.exec(filename)[1];
     const actionId = uuidv4();
     const s3Params = {
         Bucket: 'local-bucket',
-        Key: `${actionId}.${extension}`,
+        Key: `${actionId}.${ext}`,
         ContentType: mimeType,
         ACL: 'public-read',
     };
@@ -37,7 +43,7 @@ const getUploadURL = async (mimeType, extension) => {
             "isBase64Encoded": false,
             "headers": { "Access-Control-Allow-Origin": "*" },
             "uploadURL": uploadURL,
-            "photoFilename": `${actionId}.${extension}`
+            "photoFilename": `${actionId}.${ext}`
         })
     })
 };
@@ -238,10 +244,10 @@ const serviceRequestController = {
     },
     getImageUploadUrl: async (req, res) => {
         const mimeType = req.body.mimeType;
-        const extension = req.body.extension;
+        const filename = req.body.filename;
         try {
 
-            const uploadUrlData = await getUploadURL(mimeType, extension);
+            const uploadUrlData = await getUploadURL(mimeType, filename);
 
             res.status(200).json({
                 data: {
