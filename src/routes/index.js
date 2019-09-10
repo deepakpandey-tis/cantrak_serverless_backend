@@ -10,7 +10,8 @@ const propertySetupRouter = require('./administration-features/property-sertup')
 const propertyCategoryRouter = require('./administration-features/property-category');
 const propertySubCategoryRouter = require('./administration-features/property-subcategory');
 const generalSetupRouter = require('./administration-features/general-setup');
-
+const vendorRouter = require('./vendor');
+const partsRouter = require('./parts')
 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
@@ -29,5 +30,7 @@ router.use('/administration-features/property-setup', propertySetupRouter);
 router.use('/administration-features/property-category', propertyCategoryRouter);
 router.use('/administration-features/property-subcategory', propertySubCategoryRouter);
 router.use('/administration-features/general-setup', generalSetupRouter);
+router.use('/vendors', vendorRouter);
+router.use('/parts', partsRouter)
 
 module.exports = router;
