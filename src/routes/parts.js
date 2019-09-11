@@ -9,5 +9,6 @@ const partsController = require(
 
 router.get('/get-parts', authMiddleware.isAuthenticated, partsController.getParts)
 router.post('/add-parts', authMiddleware.isAuthenticated, partsController.addParts)
-
+router.post('/update-part-details', authMiddleware.isAuthenticated, partsController.updatePartDetails)
+router.post('/get-part-details', authMiddleware.isAuthenticated, partsController.getPartDetails)
 module.exports = router;
