@@ -11,4 +11,5 @@ router.get('/get-parts', authMiddleware.isAuthenticated, partsController.getPart
 router.post('/add-parts', authMiddleware.isAuthenticated, partsController.addParts)
 router.post('/update-part-details', authMiddleware.isAuthenticated, partsController.updatePartDetails)
 router.post('/get-part-details', authMiddleware.isAuthenticated, partsController.getPartDetails)
+router.post('/add-part-stock',  authMiddleware.isAuthenticated, partsController.addPartStock)
 module.exports = router;

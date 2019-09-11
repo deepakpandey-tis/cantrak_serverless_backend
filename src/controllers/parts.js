@@ -271,6 +271,68 @@ const partsController = {
                 ],
             });
         }
+    },
+    addPartStock: async (req,res) => {
+        
+        try {
+
+            let partStock = null;
+            let attribs = []
+
+            await knex.transaction(async (trx) => {
+                let partStockPayload = req.body;
+                console.log('[controllers][part][stock]', partStockPayload);
+                // validate keys
+                const schema = Joi.object().keys({
+                    partId:Joi.string().required(),
+                    unitCost: Joi.string().required(),
+                    quantity: Joi.string().required(),
+                    isPartAdded: Joi.string().required()   
+                });
+
+                let result = Joi.validate(partStockPayload, schema);
+                console.log('[controllers][part]: JOi Result', result);
+
+                if (result && result.hasOwnProperty('error') && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: 'VALIDATION_ERROR', message: result.error.message }
+                        ],
+                    });
+                }
+
+                // Insert in part_ledger table,
+                let currentTime = new Date().getTime();
+
+                let insertData = { ...partStockPayload, createdAt: currentTime, updatedAt: currentTime };
+
+                console.log('[controllers][part]: Insert Data', insertData);
+
+                let partStockResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('part_ledger');
+                partStock = partStockResult[0];
+
+
+                trx.commit;
+
+            });
+
+            res.status(200).json({
+                data: {
+                    part: partStock
+                },
+                message: "Part Stock added successfully !"
+            });
+
+        } catch (err) {
+            console.log('[controllers][part] :  Error', err);
+            trx.rollback;
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        } 
+            
     }
 }
 
