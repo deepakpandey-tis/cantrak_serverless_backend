@@ -12,6 +12,7 @@ const propertySubCategoryRouter = require('./administration-features/property-su
 const generalSetupRouter = require('./administration-features/general-setup');
 const vendorRouter = require('./vendor');
 const partsRouter = require('./parts')
+const assetRouter = require('./asset')
 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
@@ -32,5 +33,6 @@ router.use('/administration-features/property-subcategory', propertySubCategoryR
 router.use('/administration-features/general-setup', generalSetupRouter);
 router.use('/vendors', vendorRouter);
 router.use('/parts', partsRouter)
+router.use('/asset', assetRouter)
 
 module.exports = router;

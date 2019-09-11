@@ -15,13 +15,12 @@ const partsController = {
         try {
 
             let partData = null;
-            // check username & password not blank
-            //partData = await knex('part_master').where({ isActive: 'true' }).select();
-
             partData = await knex.from('part_ledger').innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
-
-            console.log('[controllers][parts]: Parts List', partData);
+            
+            console.log('[controllers][parts][getParts]: Parts List', partData);
+            
             partData = partData.map(d => _.omit(d, ['partId'], ['createdAt'], ['updatedAt'], ['isActive']));
+            
             res.status(200).json({
                 data: partData,
                 message: "Parts List"
@@ -29,7 +28,7 @@ const partsController = {
 
 
         } catch (err) {
-            console.log('[controllers][parts] :  Error', err);
+            console.log('[controllers][parts][getParts] :  Error', err);
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -45,7 +44,7 @@ const partsController = {
 
             await knex.transaction(async (trx) => {
                 let partPayload = req.body;
-                console.log('[controllers][part]', partPayload);
+                console.log('[controllers][part][addParts]', partPayload);
                 partPayload = _.omit(partPayload, ['quantity'], ['unitCost'], ['additionalAttributes'])
                 // validate keys
                 const schema = Joi.object().keys({
@@ -60,7 +59,7 @@ const partsController = {
                 });
 
                 let result = Joi.validate(partPayload, schema);
-                console.log('[controllers][part]: JOi Result', result);
+                console.log('[controllers][part][addParts]: JOi Result', result);
 
                 if (result && result.hasOwnProperty('error') && result.error) {
                     return res.status(400).json({
@@ -70,12 +69,12 @@ const partsController = {
                     });
                 }
 
-                // Insert in users table,
+                // Insert in part_master table,
                 let currentTime = new Date().getTime();
 
                 let insertData = { ...partPayload, createdAt: currentTime, updatedAt: currentTime };
 
-                console.log('[controllers][part]: Insert Data', insertData);
+                console.log('[controllers][part][addParts]: Insert Data', insertData);
 
                 let partResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('part_master');
                 part = partResult[0];
@@ -87,7 +86,7 @@ const partsController = {
                     quantity: Joi.string().required(),
                 })
                 let quantityResult = Joi.validate({ unitCost, quantity }, quantitySchema);
-                console.log('[controllers][part]: JOi Result', result);
+                console.log('[controllers][part][addParts]: JOi Result', result);
 
                 if (quantityResult && quantityResult.hasOwnProperty('error') && quantityResult.error) {
                     return res.status(400).json({
@@ -111,12 +110,8 @@ const partsController = {
                         attribs.push(d[0])
                     }
 
-
                 }
-
-
                 trx.commit;
-
             });
 
             res.status(200).json({
@@ -144,7 +139,7 @@ const partsController = {
 
             await knex.transaction(async (trx) => {
                 const partDetailsPayload = req.body;
-                console.log('[controllers][part][details]', partDetailsPayload);
+                console.log('[controllers][part][updatePartDetails]', partDetailsPayload);
                 partPayload = _.omit(partDetailsPayload, ['id'],['quantity'], ['unitCost'], ['additionalAttributes'])
 
                 // validate keys
@@ -160,7 +155,7 @@ const partsController = {
                 });
 
                 const result = Joi.validate(partPayload, schema);
-                console.log('[controllers][service][request]: JOi Result', result);
+                console.log('[controllers][part][updatePartDetails]: JOi Result', result);
 
                 if (result && result.hasOwnProperty('error') && result.error) {
                     return res.status(400).json({
@@ -170,12 +165,12 @@ const partsController = {
                     });
                 }
 
-                // Insert in users table,
+                // Update in part_master table,
                 const currentTime = new Date().getTime();
 
                 const updatePartDetails = await knex.update({ partName: partDetailsPayload.partName, partCode: partDetailsPayload.partCode, partDescription: partDetailsPayload.partDescription, partCategory: partDetailsPayload.partCategory, minimumQuantity: partDetailsPayload.minimumQuantity, barcode: partDetailsPayload.barcode, assignedVendors: partDetailsPayload.assignedVendors, additionalPartDetails: partDetailsPayload.additionalPartDetails, updatedAt: currentTime, isActive: true }).where({ id: partDetailsPayload.id }).returning(['*']).transacting(trx).into('part_master');
 
-                console.log('[controllers][update][part]: Update Part Details', updatePartDetails);
+                console.log('[controllers][part][updatePartDetails]: Update Part Details', updatePartDetails);
 
                 partDetails = updatePartDetails[0];
 
@@ -186,7 +181,7 @@ const partsController = {
                     quantity: Joi.string().required(),
                 })
                 let quantityResult = Joi.validate({ unitCost, quantity }, quantitySchema);
-                console.log('[controllers][part]: JOi Result', result);
+                console.log('[controllers][part][updatePartDetails]: JOi Result', result);
 
                 if (quantityResult && quantityResult.hasOwnProperty('error') && quantityResult.error) {
                     return res.status(400).json({
@@ -243,8 +238,6 @@ const partsController = {
             let additionalAttributes = null;
             let partQuantityData = null
             let id = req.body.id;
-            // check username & password not blank
-            //partData = await knex('part_master').where({ isActive: 'true' }).select();
 
             partData = await knex('part_master').where({id}).select()
             let partDataResult = partData[0];
@@ -253,10 +246,9 @@ const partsController = {
             partQuantityData = await knex('part_ledger').where({partId:id}).select('unitCost','quantity')
             let partQuantityDataResult = partQuantityData[0]
 
-            //omitedPartData = _.omit(partData,['createdAt', 'updatedAt'])
 
-            console.log('[controllers][parts][part_details]: Part Details', partData);
-            //partData = partData.map(d => _.omit(d, ['createdAt'], ['updatedAt'], ['isActive']));
+            console.log('[controllers][parts][getPartDetails]: Part Details', partData);
+
             res.status(200).json({
                 data: {part:{...omitedPartDataResult,...partQuantityDataResult,additionalAttributes}},
                 message: "Part Details"
@@ -306,7 +298,7 @@ const partsController = {
 
                 let insertData = { ...partStockPayload, createdAt: currentTime, updatedAt: currentTime };
 
-                console.log('[controllers][part]: Insert Data', insertData);
+                console.log('[controllers][part][addPartStock]: Insert Data', insertData);
 
                 let partStockResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('part_ledger');
                 partStock = partStockResult[0];
@@ -324,7 +316,7 @@ const partsController = {
             });
 
         } catch (err) {
-            console.log('[controllers][part] :  Error', err);
+            console.log('[controllers][part][addPartStock] :  Error', err);
             trx.rollback;
             res.status(500).json({
                 errors: [
