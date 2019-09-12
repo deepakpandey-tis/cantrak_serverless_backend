@@ -13,7 +13,8 @@ const generalSetupRouter = require('./administration-features/general-setup');
 const vendorRouter = require('./vendor');
 const partsRouter = require('./parts')
 const assetRouter = require('./asset')
-
+const peopleRouter = require('./people')
+ 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
   res.json({ app: 'Serverless Express App' });
@@ -34,5 +35,6 @@ router.use('/administration-features/general-setup', generalSetupRouter);
 router.use('/vendors', vendorRouter);
 router.use('/parts', partsRouter)
 router.use('/asset', assetRouter)
+router.use('/people', peopleRouter)
 
 module.exports = router;
