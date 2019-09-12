@@ -19,7 +19,7 @@ const knex = require('knex')({
     debug: process.env.NODE_ENV === 'local' ? true : false,
     pool: {
         min: 2,
-        max: 30,
+        max: 20,
         afterCreate: function (conn, done) {
             // in this example we use pg driver's connection API
             conn.query('SET timezone="UTC";', function (err) {
