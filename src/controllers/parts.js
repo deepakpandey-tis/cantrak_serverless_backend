@@ -41,11 +41,13 @@ const partsController = {
 
             let part = null;
             let attribs = []
+            let files = [];
+            let images = [];
 
             await knex.transaction(async (trx) => {
                 let partPayload = req.body;
                 console.log('[controllers][part][addParts]', partPayload);
-                partPayload = _.omit(partPayload, ['quantity'], ['unitCost'], ['additionalAttributes'])
+                partPayload = _.omit(partPayload, ['quantity'], ['unitCost'], ['additionalAttributes'],['images'],['files'])
                 // validate keys
                 const schema = Joi.object().keys({
                     partName: Joi.string().required(),
@@ -79,6 +81,9 @@ const partsController = {
                 let partResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('part_master');
                 part = partResult[0];
 
+
+                // Insert unitCost and quantity in part_ledger table
+
                 let unitCost = req.body.unitCost;
                 let quantity = req.body.quantity
                 let quantitySchema = Joi.object().keys({
@@ -101,9 +106,11 @@ const partsController = {
                 quantityObject = _.omit(partQuantityResult[0], ['id'], ['partId']);
 
 
+                // Insert attributes in part_attributes table
+
                 let additionalAttributes = req.body.additionalAttributes;
-                console.log(additionalAttributes)
-                if (additionalAttributes.length > 0) {
+                //console.log(additionalAttributes)
+                if (additionalAttributes && additionalAttributes.length > 0) {
 
                     for (attribute of additionalAttributes) {
                         let d = await knex.insert({ partId: part.id, ...attribute, createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('part_attributes');
@@ -111,12 +118,36 @@ const partsController = {
                     }
 
                 }
+
+
+                // Insert images in images table
+                let imagesData = req.body.images;
+                if (imagesData && imagesData.length > 0) {
+
+                    for (image of imagesData) {
+                        let d = await knex.insert({ entityId: part.id, ...image,entityType:'part_master', createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('images');
+                        images.push(d[0])
+                    }
+
+                }
+
+                // Insert files in files table
+                let filesData = req.body.files;
+                if (filesData && filesData.length > 0) {
+
+                    for (file of filesData) {
+                        let d = await knex.insert({ entityId: part.id, ...file,entityType:'part_master', createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('files');
+                        files.push(d[0])
+                    }
+
+                }
+
                 trx.commit;
             });
 
             res.status(200).json({
                 data: {
-                    part: { ...part, ...quantityObject, attributes: attribs }
+                    part: { ...part, ...quantityObject, attributes: attribs,files,images }
                 },
                 message: "Part added successfully !"
             });
@@ -237,6 +268,8 @@ const partsController = {
             let partData = null;
             let additionalAttributes = null;
             let partQuantityData = null
+            let files = null;
+            let images = null;
             let id = req.body.id;
 
             partData = await knex('part_master').where({id}).select()
@@ -247,10 +280,13 @@ const partsController = {
             let partQuantityDataResult = partQuantityData[0]
 
 
+            files = await knex('files').where({entityId:id,entityType:'part_master'}).select()
+            images = await knex('images').where({entityId:id,entityType:'part_master'}).select()
+
             console.log('[controllers][parts][getPartDetails]: Part Details', partData);
 
             res.status(200).json({
-                data: {part:{...omitedPartDataResult,...partQuantityDataResult,additionalAttributes}},
+                data: {part:{...omitedPartDataResult,...partQuantityDataResult,additionalAttributes,images,files}},
                 message: "Part Details"
             });
 
