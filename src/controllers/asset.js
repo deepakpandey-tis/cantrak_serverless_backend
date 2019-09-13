@@ -1,13 +1,8 @@
 const Joi = require('@hapi/joi');
-const moment = require('moment');
-const uuidv4 = require('uuid/v4');
-var jwt = require('jsonwebtoken');
 const _ = require('lodash');
 
 const knex = require('../db/knex');
 
-const bcrypt = require('bcrypt');
-const saltRounds = 10;
 const trx = knex.transaction();
 const assetController = {
     addAsset: async (req,res) => {
@@ -20,7 +15,7 @@ const assetController = {
 
             await knex.transaction(async (trx) => {
                 let assetPayload = req.body;
-                console.log('[controllers][asset][payload]', assetPayload);
+                console.log('[controllers][asset][payload]: Asset Payload', assetPayload);
                 assetPayload = _.omit(assetPayload, ['additionalAttributes','multiple','images','files'])
                 // validate keys
                 const schema = Joi.object().keys({
@@ -133,7 +128,7 @@ const assetController = {
             
             console.log('[controllers][asset][getAssetList]: Asset List', assetData);
             
-            //assetData = partData.map(d => _.omit(d, ['partId'], ['createdAt'], ['updatedAt'], ['isActive']));
+            assetData = assetData.map(d => _.omit(d, ['createdAt'], ['updatedAt'], ['isActive']));
             
             res.status(200).json({
                 data: assetData,
@@ -156,6 +151,7 @@ const assetController = {
             let assetData = null;
             let additionalAttributes = null;
             let files = null;
+            let images = null
             let id = req.body.id;
 
             assetData = await knex('asset_master').where({id}).select()
@@ -193,7 +189,7 @@ const assetController = {
             await knex.transaction(async (trx) => {
                 let assetPayload = req.body;
                 let id = req.body.id
-                console.log('[controllers][asset][payload]', assetPayload);
+                console.log('[controllers][asset][payload]: Update Asset Payload', assetPayload);
                 assetPayload = _.omit(assetPayload, ['additionalAttributes'],['id'])
                 // validate keys
                 const schema = Joi.object().keys({
@@ -230,9 +226,9 @@ const assetController = {
                 // Update in asset_master table,
                 let currentTime = new Date().getTime();
 
-                let insertData = { ...assetPayload,createdAt:currentTime, updatedAt: currentTime,isActive:true };
+                let insertData = { ...assetPayload, updatedAt: currentTime,isActive:true };
 
-                console.log('[controllers][asset][updateAssetDetails]: Update Data', insertData);
+                console.log('[controllers][asset][updateAssetDetails]: Update Asset Insert Data', insertData);
 
                 console.log('DATTAA ',insertData)
                 let assetResult = await knex.update(insertData).where({ id:id }).returning(['*']).transacting(trx).into('asset_master');
@@ -242,7 +238,7 @@ const assetController = {
                 let additionalAttributes = req.body.additionalAttributes;
                 if (additionalAttributes.length > 0) {
                     for(attribute of additionalAttributes) {
-                        let finalAttribute = {...attribute,assetId:asset.id, createdAt: currentTime, updatedAt: currentTime}
+                        let finalAttribute = {...attribute,assetId:asset.id, updatedAt: currentTime}
                         let d = await knex.update(finalAttribute).where({id:attribute.id}).returning(['*']).transacting(trx).into('asset_attributes');
                         attribs.push(d[0])
                     }   

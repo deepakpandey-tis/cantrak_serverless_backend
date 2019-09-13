@@ -1,13 +1,8 @@
 const Joi = require('@hapi/joi');
-const moment = require('moment');
-const uuidv4 = require('uuid/v4');
-var jwt = require('jsonwebtoken');
 const _ = require('lodash');
 
 const knex = require('../db/knex');
 
-const bcrypt = require('bcrypt');
-const saltRounds = 10;
 const trx = knex.transaction();
 
 const partsController = {
@@ -305,7 +300,6 @@ const partsController = {
         try {
 
             let partStock = null;
-            let attribs = []
 
             await knex.transaction(async (trx) => {
                 let partStockPayload = req.body;
