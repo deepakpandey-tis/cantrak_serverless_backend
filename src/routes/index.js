@@ -14,6 +14,7 @@ const vendorRouter = require('./vendor');
 const partsRouter = require('./parts')
 const assetRouter = require('./asset')
 const peopleRouter = require('./people')
+const surveyOrderRouter = require("./survey-order")
  
 /* GET home page. */
 router.get('/', async (req, res, next) => {
@@ -36,5 +37,6 @@ router.use('/vendors', vendorRouter);
 router.use('/parts', partsRouter)
 router.use('/asset', assetRouter)
 router.use('/people', peopleRouter)
+router.use('/survey-order', surveyOrderRouter)
 
 module.exports = router;
