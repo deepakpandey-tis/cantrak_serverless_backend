@@ -232,34 +232,71 @@ const serviceDetailsController = {
 
         try {
 
-            let serviceRequestList = null;
-            
-            await knex.transaction(async (trx) => {                        
+            let serviceRequestDetails = null;
+            let generalResult = null;
+            let problemResult = null;
+            let problemImages = null;
+            await knex.transaction(async (trx) => {                                        
                 const viewRequestPayload = req.body;
                 console.log('[controllers][servicedetails][viewrequest]', viewRequestPayload);
 
                 // Get Location Tag List,               
                 const DataResult = await knex('service_requests').where({ id: viewRequestPayload.serviceRequestId, isActive: 'true', moderationStatus: 'true' });
                                 
-                console.log('[controllers][servicedetails][serviceRequestList]: View Data', DataResult);
+                console.log('[controllers][servicedetails][serviceRequestDetails]: View House Id', DataResult[0].houseId);
 
                 //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
                 
-                serviceRequestList = DataResult;
+                serviceRequestDetails = DataResult[0];
+
+                // General Details
+
+                generalResult = await knex('property_units').join('companies','property_units.companyId', '=','companies.id').join('projects','property_units.projectId', '=','projects.id').join('property_types','property_units.propertyTypeId', '=','property_types.id').join('buildings_and_phases','property_units.buildingPhaseId', '=','buildings_and_phases.id').join('floor_and_zones','property_units.floorZoneId', '=','floor_and_zones.id').select('companies.companyName','projects.projectName','property_types.propertyType','buildings_and_phases.buildingPhaseCode','floor_and_zones.floorZoneCode','property_units.*').where({ 'property_units.houseId' : DataResult[0].houseId });
+                            
+                console.log('[controllers][servicedetails][serviceRequestDetails]: View Data', generalResult);
+
+                //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
+                
+                generalResult = _.omit(generalResult[0],['id'],['area'],['description'],['productCode'],['createdBy'],['isActive'],['updatedAt'],['createdAt'],['companyId'],['projectId'],['propertyTypeId'],['buildingPhaseId'],['floorZoneId']);
+
+                serviceRequestDetails.generalDetails = generalResult;
+
+                // Problems Details
+
+                problemResult = await knex('service_problems').join('incident_categories','service_problems.categoryId', '=', 'incident_categories.id').join('incident_sub_categories','service_problems.problemId', '=', 'incident_sub_categories.id').select('incident_categories.descriptionEng as category','incident_sub_categories.descriptionEng as subcategory','service_problems.*').where({ 'service_problems.serviceRequestId' : DataResult[0].id });
+                            
+                console.log('[controllers][servicedetails][serviceProblemDetails]: View Data', problemResult);
+
+                //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
+                problemResult = _.omit(problemResult[0],['id'],['createdAt'],['problemId'],['categoryId'],['serviceRequestId'],['updatedAt']);
                
+                serviceRequestDetails.problemDetails = problemResult;  
+
+
+                // Problems Images
+
+                problemImages = await knex('images').join('service_problems','images.entityId', '=', 'service_problems.id').select('images.s3Url').where({ 'images.entityType' : 'service_problems' });
+                            
+                console.log('[controllers][servicedetails][images]: View Data', problemResult);
+
+                //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
+               // problemResult = _.omit(problemResult[0],['id'],['createdAt'],['problemId'],['categoryId'],['serviceRequestId'],['updatedAt']);
+               
+                serviceRequestDetails.problemDetails.images = problemImages;
+                         
                 trx.commit;
             });
         
             res.status(200).json({
                 data: {
-                    serviceRequestList: serviceRequestList
+                    serviceRequestDetails: serviceRequestDetails
                 },
                 message: "Service Request List Successfully !"
             });
 
 
         } catch (err) {
-            console.log('[controllers][servicedetails][serviceRequestList] :  Error', err);
+            console.log('[controllers][servicedetails][serviceRequestDetails] :  Error', err);
             trx.rollback;
             res.status(500).json({
                 errors: [

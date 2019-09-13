@@ -142,7 +142,6 @@ const entranceController = {
                     houseId: Joi.string().required()
                 });
 
-
                 const result = Joi.validate(signupPayload, schema);
                 console.log('[controllers][entrance][signup]: JOi Result', result);
 
