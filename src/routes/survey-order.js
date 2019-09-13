@@ -6,6 +6,8 @@ const router = Router()
 
 router.post('/add-survey-order', authMiddleware.isAuthenticated, authMiddleware.isAdmin,surveyOrderController.addSurveyOrder);
 router.post('/update-survey-order', authMiddleware.isAuthenticated, authMiddleware.isAdmin, surveyOrderController.updateSurveyOrder);
-router.get('/get-survey-orders', authMiddleware.isAuthenticated, authMiddleware.isAdmin, surveyOrderController.getSurveyOrderList)
+
+// We can also get survey order by serviceRequestId so we support both at same route
+router.post('/get-survey-orders', authMiddleware.isAuthenticated, authMiddleware.isAdmin, surveyOrderController.getSurveyOrderList)
 
 module.exports = router;

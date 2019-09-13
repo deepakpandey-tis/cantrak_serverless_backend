@@ -161,7 +161,13 @@ const surveyOrderController = {
         try {
 
             let surveyOrderData = null;
-            surveyOrderData = await knex.select().from('survey_orders')
+            let serviceRequestId = req.body.serviceRequestId;
+
+            if(serviceRequestId){
+                surveyOrderData = await knex.select().from('survey_orders').where({serviceRequestId:serviceRequestId})
+            }else {
+                surveyOrderData = await knex.select().from('survey_orders')
+            }
             
             console.log('[controllers][surveyOrder][getSurveyOrderList]: Survey Orders', surveyOrderData);
             
