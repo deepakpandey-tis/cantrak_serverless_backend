@@ -9,5 +9,6 @@ router.post('/update-survey-order', authMiddleware.isAuthenticated, authMiddlewa
 
 // We can also get survey order by serviceRequestId so we support both at same route
 router.post('/get-survey-orders', authMiddleware.isAuthenticated, authMiddleware.isAdmin, surveyOrderController.getSurveyOrderList)
+router.post('/get-survey-order-details', authMiddleware.isAuthenticated, authMiddleware.isAdmin, surveyOrderController.getSurveyOrderDetails)
 
 module.exports = router;
