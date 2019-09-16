@@ -187,6 +187,47 @@ const surveyOrderController = {
                 ],
             });
         }
+    },
+    getSurveyOrderDetails: async (req,res) => {
+        try {
+
+            let surveyOrder = null;
+
+            await knex.transaction(async (trx) => {
+                let id = req.body.id;
+
+                surveyOrder = await knex('survey_orders').select().where({id:id})
+                const schema = Joi.object().keys({              
+                    id:Joi.string().required()
+                })
+                let result = Joi.validate(req.body, schema);
+                console.log('[controllers][surveyOrder][getSurveyOrderDetails]: JOi Result', result);
+
+                if (result && result.hasOwnProperty('error') && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: 'VALIDATION_ERROR', message: result.error.message }
+                        ],
+                    });
+                }
+
+                return res.status(200).json({
+                    data: {surveyOrder},
+                    message: "Survey Order Details"
+                });
+
+
+            });
+        } catch(err) {
+            console.log('[controllers][surveyOrder][getSurveyOrderDetails] :  Error', err);
+            trx.rollback;
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+
     }
 }
 
