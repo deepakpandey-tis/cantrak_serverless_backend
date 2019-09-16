@@ -13,7 +13,7 @@ const saltRounds = 10;
 const trx = knex.transaction();
 const AWS = require('aws-sdk');
 
-if(process.env.IS_OFFLINE){
+if (process.env.IS_OFFLINE) {
     AWS.config.update({
         accessKeyId: 'S3RVER',
         secretAccessKey: 'S3RVER',
@@ -36,7 +36,7 @@ const getUploadURL = async (mimeType, filename) => {
     return new Promise(async (resolve, reject) => {
         const s3 = new AWS.S3();
         let uploadURL = await s3.getSignedUrl('putObject', s3Params);
-        if(Boolean(process.env.IS_OFFLINE)){
+        if (Boolean(process.env.IS_OFFLINE)) {
             uploadURL = uploadURL.replace("https://", "http://").replace(".com", ".com:8000");
         }
         resolve({
