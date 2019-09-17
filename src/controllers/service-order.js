@@ -228,6 +228,90 @@ const serviceOrderController = {
                 ],
             });
         }
+    },
+    updateServiceOrder: async (req, res) => {
+        try {
+            await knex.transaction(async trx => {
+                let serviceOrder = null;
+                let team = null;
+                let additionalUsers = []
+                let currentTime = new Date().getTime();
+                const id = req.body.serviceOrderId;
+                const serviceRequestId = req.body.serviceRequestId
+                const serviceOrderPayload = req.body;
+
+
+                let updateData = { updatedAt: currentTime }
+                serviceOrder = await knex.update(updateData).where({ id: id }).returning(['*']).transacting(trx).into('service_orders');
+
+
+                // Check if previous teamId is equal to new team id
+                let teamResult = await knex.select().where({ entityId: id, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_service_team').map(team => team.id)
+
+                if (!_.isEqual(teamResult, [req.body.teamId])) {
+
+                    // Delete previous TeamId
+                    await knex.del().where({ entityId: id, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_service_team')
+
+                    // Add new teamId
+                    let insertData = { createdAt: currentTime, updatedAt: currentTime, entityId: id, entityType: 'service_orders', teamId: serviceOrderPayload.teamId, userId: serviceOrderPayload.mainUserId }
+                    let teamRes = await knex.insert(insertData).returning(['*']).transacting(trx).into('assigned_service_team')
+                    team = teamRes[0]
+                }
+
+
+
+
+
+
+
+                let assignedServiceAdditionalUsers = serviceOrderPayload.additionalUsers;
+                let selectedUsers = [];
+
+                selectedUsers = await knex.select().where({ entityId: id, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_service_additional_users').map(user => user.userId)
+                if (selectedUsers.length === 0) {
+                    selectedUsers = await knex.select().where({ entityId: serviceRequestId, entityType: 'service_requests' }).returning(['*']).transacting(trx).into('assigned_service_additional_users').map(user => user.userId)
+                }
+
+                if (_.isEqual(selectedUsers, assignedServiceAdditionalUsers)) {
+                    // trx.commit
+                    trx.commit;
+                    return res.status(200).json({
+                        data: { serviceOrder, team, assignedAdditionalUsers: assignedServiceAdditionalUsers },
+                        message: "Service Order updated successfully !"
+                    });
+                } else {
+
+                    // Remove old users
+
+                    for (user of selectedUsers) {
+                        await knex.del().where({ entityId: id, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_service_additional_users')
+                    }
+
+                    // Insert New Users
+
+                    for (user of assignedServiceAdditionalUsers) {
+                        let userResult = await knex.insert({ userId: user, entityId: id, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('assigned_service_additional_users')
+                        additionalUsers.push(userResult[0])
+                    }
+                    trx.commit;
+                    return res.status(200).json({
+                        data: { serviceOrder, team, assignedAdditionalUsers: additionalUsers },
+                        message: "Service Order updated successfully !"
+                    });
+                }
+
+
+            })
+        } catch (err) {
+            console.log('[controllers][serviceOrder][updateServiceOrder] :  Error', err);
+            trx.rollback;
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
     }
 }
 

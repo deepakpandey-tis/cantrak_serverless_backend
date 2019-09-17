@@ -7,5 +7,6 @@ const router = Router()
 router.post("/add-service-order", authMiddleware.isAuthenticated, serviceOrderController.addServiceOrder)
 router.get('/get-service-orders-list', authMiddleware.isAuthenticated, serviceOrderController.getServiceOrderList)
 router.post('/get-service-order-details', authMiddleware.isAuthenticated, serviceOrderController.getServiceOrderDetails)
+router.post('/update-service-order', authMiddleware.isAuthenticated, serviceOrderController.updateServiceOrder)
 
 module.exports = router;
