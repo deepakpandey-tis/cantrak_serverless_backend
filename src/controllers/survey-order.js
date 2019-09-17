@@ -164,14 +164,36 @@ const surveyOrderController = {
             let serviceRequestId = req.body.serviceRequestId;
 
             if (serviceRequestId) {
-                surveyOrderData = await knex.select().from('survey_orders').where({ serviceRequestId: serviceRequestId })
+                surveyOrderData = await knex.select()
+                    .from('survey_orders')
+                    .where({ serviceRequestId: serviceRequestId })
+                    .innerJoin('service_requests', 'survey_orders.serviceRequestId', 'service_requests.id')
+                    .select([
+                        'survey_orders.id as so_id',
+                        'service_requests.id as sr_id',
+                        'survey_orders.updatedAt as updatedAt',
+                        'survey_orders.createdAt as createdAt',
+                        'survey_orders.appointedDate as appointedDate',
+                        'service_requests.description as description',
+                        'service_requests.priority as priority',
+                        'survey_orders.isActive as status'
+                    ])
             } else {
-                surveyOrderData = await knex.select().from('survey_orders')
+                surveyOrderData = await knex.from('survey_orders').innerJoin('service_requests', 'survey_orders.serviceRequestId', 'service_requests.id').select([
+                    'survey_orders.id as so_id',
+                    'service_requests.id as sr_id',
+                    'survey_orders.updatedAt as updatedAt',
+                    'survey_orders.createdAt as createdAt',
+                    'survey_orders.appointedDate as appointedDate',
+                    'service_requests.description as description',
+                    'service_requests.priority as priority',
+                    'survey_orders.isActive as status'
+                ])
             }
 
             console.log('[controllers][surveyOrder][getSurveyOrderList]: Survey Orders', surveyOrderData);
 
-            surveyOrderData = surveyOrderData.map(d => _.omit(d, ['createdAt'], ['updatedAt'], ['isActive']));
+
 
             res.status(200).json({
                 data: surveyOrderData,
@@ -192,32 +214,36 @@ const surveyOrderController = {
         try {
 
             let surveyOrder = null;
+            let serviceRequest = null;
 
-            await knex.transaction(async (trx) => {
-                let id = req.body.id;
+            //await knex.transaction(async (trx) => {
+            let id = req.body.id;
 
-                surveyOrder = await knex('survey_orders').select().where({ id: id })
-                const schema = Joi.object().keys({
-                    id: Joi.string().required()
-                })
-                let result = Joi.validate(req.body, schema);
-                console.log('[controllers][surveyOrder][getSurveyOrderDetails]: JOi Result', result);
+            const schema = Joi.object().keys({
+                id: Joi.string().required()
+            })
+            let result = Joi.validate(req.body, schema);
+            console.log('[controllers][surveyOrder][getSurveyOrderDetails]: JOi Result', result);
 
-                if (result && result.hasOwnProperty('error') && result.error) {
-                    return res.status(400).json({
-                        errors: [
-                            { code: 'VALIDATION_ERROR', message: result.error.message }
-                        ],
-                    });
-                }
-
-                return res.status(200).json({
-                    data: { surveyOrder },
-                    message: "Survey Order Details"
+            if (result && result.hasOwnProperty('error') && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: 'VALIDATION_ERROR', message: result.error.message }
+                    ],
                 });
+            }
 
-
+            surveyOrderResult = await knex.from('survey_orders').select().where({ id: id })
+            surveyOrder = surveyOrderResult[0]
+            serviceRequestResult = await knex('service_requests').select().where({ id: surveyOrder.serviceRequestId })
+            serviceRequest = serviceRequestResult[0]
+            return res.status(200).json({
+                data: { surveyOrder, serviceRequest },
+                message: "Survey Order Details"
             });
+
+
+            //});
         } catch (err) {
             console.log('[controllers][surveyOrder][getSurveyOrderDetails] :  Error', err);
             trx.rollback;

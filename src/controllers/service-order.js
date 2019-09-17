@@ -97,7 +97,7 @@ const serviceOrderController = {
 
                 let assignedServiceAdditionalUsers = additionalUsers
 
-                let selectedUsers = await knex.select().where({ entityId: serviceRequestId, entityType: 'service_requests' }).returning(['*']).transacting(trx).into('assigned_service_additional_users').map(user => user.userId)
+                let selectedUsers = await knex.select().where({ entityId: serviceOrder.id, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_service_additional_users').map(user => user.userId)
 
                 let additionalUsersResultantArray = []
 
@@ -113,13 +113,13 @@ const serviceOrderController = {
                     // Remove old users
 
                     for (user of selectedUsers) {
-                        await knex.del().where({ entityId: serviceRequestId, entityType: 'service_requests' }).returning(['*']).transacting(trx).into('assigned_service_additional_users')
+                        await knex.del().where({ entityId: serviceOrder.id, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_service_additional_users')
                     }
 
                     // Insert New Users
 
                     for (user of assignedServiceAdditionalUsers) {
-                        let userResult = await knex.insert({ userId: user, entityId: serviceRequestId, entityType: 'service_requests', createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('assigned_service_additional_users')
+                        let userResult = await knex.insert({ userId: user, entityId: serviceOrder.id, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('assigned_service_additional_users')
                         additionalUsersResultantArray.push(userResult[0])
                     }
                     trx.commit;
@@ -146,7 +146,29 @@ const serviceOrderController = {
     },
     getServiceOrderList: async (req, res) => {
         try {
-            const serviceOrders = await knex('service_orders').select();
+            //const serviceOrders = await knex('service_orders').select();
+
+
+
+            const serviceOrders = await knex
+                .from('service_orders')
+                .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                .select(['service_orders.id as so_id',
+                    'service_requests.id as sr_id', 'service_requests.description as sr_description',
+                    'location', 'priority', 'orderDueDate',
+                    'service_orders.createdAt as createdAt',
+                    'service_requests.requestedBy as requestedBy',
+                    'serviceOrderStatus', 'service_problems.description as sp_description',
+                    'categoryId', 'problemId',
+                    'incident_categories.id as categoryId',
+                    'incident_categories.descriptionEng as problem'
+
+                ])
+            //.innerJoin('service_problems', 'service_orders.serviceRequestId', 'service_problems.serviceRequestId')
+
+
 
             res.status(200).json({
                 data: { serviceOrders },
@@ -165,11 +187,36 @@ const serviceOrderController = {
         try {
 
             await knex.transaction(async trx => {
-                let id = req.body.id;
-                let serviceOrderResult = await knex.select().where({ id: id }).returning(['*']).transacting(trx).into('service_orders')
+                let serviceOrderId = req.body.serviceOrderId;
+                let serviceRequestId = req.body.serviceRequestId;
+
+                // Get Service Order Details
+                let serviceOrderResult = await knex.select().where({ id: serviceOrderId }).returning(['*']).transacting(trx).into('service_orders')
+
+                // Get Service Request Details
+
+                let serviceRequestResult = await knex.select().where({ id: serviceRequestId }).returning(['*']).transacting(trx).into('service_requests')
+
+
+                // Get Team details based on ids provided
+                let assignedServiceTeam = null
+                if (serviceRequestId && serviceOrderId) {
+                    assignedServiceTeam = await knex.select().where({ entityId: serviceOrderId, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_service_team')
+                } else {
+                    assignedServiceTeam = await knex.select().where({ entityId: serviceRequestId, entityType: 'service_requests' }).returning(['*']).transacting(trx).into('assigned_service_team')
+                }
+
+
+                // Get additional users
+                let additionalUsers = []
+                if (serviceRequestId && serviceOrderId) {
+                    additionalUsers = await knex.select().where({ entityId: serviceOrderId, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_service_additional_users')
+                } else {
+                    additionalUsers = await knex.select().where({ entityId: serviceRequestId, entityType: 'service_requests' }).returning(['*']).transacting(trx).into('assigned_service_additional_users')
+                }
 
                 res.status(200).json({
-                    data: { serviceOrder: serviceOrderResult[0] },
+                    data: { serviceOrder: serviceOrderResult[0], assignedServiceTeam, additionalUsers, serviceRequest: serviceRequestResult[0] },
                     message: "Service Order Details!"
                 });
             })
