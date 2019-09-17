@@ -160,6 +160,27 @@ const serviceOrderController = {
                 ],
             });
         }
+    },
+    getServiceOrderDetails: async (req, res) => {
+        try {
+
+            await knex.transaction(async trx => {
+                let id = req.body.id;
+                let serviceOrderResult = await knex.select().where({ id: id }).returning(['*']).transacting(trx).into('service_orders')
+
+                res.status(200).json({
+                    data: { serviceOrder: serviceOrderResult[0] },
+                    message: "Service Order Details!"
+                });
+            })
+        } catch (err) {
+            console.log('[controllers][serviceOrder][GetServiceOrderDetails] :  Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
     }
 }
 
