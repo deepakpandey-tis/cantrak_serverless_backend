@@ -42,14 +42,14 @@ const entranceController = {
             }).orWhere({ mobileNo: loginPayload.userName }).orWhere({ email: loginPayload.userName });
 
             console.log('[controllers][entrance][login]: ValidateUsername', validUser);
-            if(validUser.length < 1){
+            if (validUser.length < 1) {
                 return res.status(400).json({
                     errors: [
                         { code: 'ACCOUNT_NOT_FOUND_ERROR', message: 'Invalid credentials' }
                     ],
                 });
             }
-            
+
             loginResult = validUser[0];
             // console.log('[controllers][entrance][login]: ValidatePassword', loginResult.password);
 
@@ -59,7 +59,7 @@ const entranceController = {
                 const verifyEmail = await knex('users').where({ email: loginResult.email, emailVerified: 'true' });
                 console.log('[controllers][entrance][login]: Email verify', verifyEmail);
 
-                if (verifyEmail && verifyEmail.length < 1){
+                if (verifyEmail && verifyEmail.length < 1) {
                     return res.status(400).json({
                         errors: [
                             { code: 'EMAIL_VERFICATION_ERROR', message: 'Please verify email id before login !' }
@@ -265,14 +265,14 @@ const entranceController = {
 
     me: async (req, res) => {
 
-        try{            
-            
+        try {
+
             res.status(200).json({
-                data: {user : req.me},
+                data: { user: req.me },
                 message: "Login successfull"
             });
-            
-        }catch (err){
+
+        } catch (err) {
             console.log('[controllers][entrance][login] :  Error', err);
             res.status(500).json({
                 errors: [

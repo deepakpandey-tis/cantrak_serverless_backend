@@ -17,7 +17,8 @@ const assetRouter = require('./asset');
 const peopleRouter = require('./people');
 const surveyOrderRouter = require("./survey-order");
 const quotationRouter = require("./quotations");
- 
+const serviceOrderRouter = require("./service-order")
+
 /* GET home page. */
 router.get('/', async (req, res, next) => {
   res.json({ app: 'Serverless Express App' });
@@ -42,5 +43,6 @@ router.use('/asset', assetRouter);
 router.use('/people', peopleRouter);
 router.use('/survey-order', surveyOrderRouter);
 router.use('/quotations', quotationRouter);
+router.use('/service-order', serviceOrderRouter)
 
 module.exports = router;

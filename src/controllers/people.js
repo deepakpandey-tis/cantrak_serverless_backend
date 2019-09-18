@@ -6,7 +6,7 @@ const knex = require('../db/knex');
 const trx = knex.transaction();
 
 const peopleController = {
-    addPeople: async (req,res) => {
+    addPeople: async (req, res) => {
         try {
 
             let people = null;
@@ -30,26 +30,26 @@ const peopleController = {
                 }
 
                 let currentTime = new Date().getTime();
-                let insertPeopleData = {email: peoplePayload.email,createdAt:currentTime, updatedAt:currentTime}
+                let insertPeopleData = { email: peoplePayload.email, createdAt: currentTime, updatedAt: currentTime }
                 // Insert into users table
                 let peopleResult = await knex.insert(insertPeopleData).returning(['*']).transacting(trx).into('users');
                 people = peopleResult[0]
 
                 // Insert into user_roles table
 
-                
-                let insertRoleData = {roleId: peoplePayload.roleId,userId:people.id,createdAt:currentTime, updatedAt:currentTime}
+
+                let insertRoleData = { roleId: peoplePayload.roleId, userId: people.id, createdAt: currentTime, updatedAt: currentTime }
 
                 let roleResult = await knex.insert(insertRoleData).returning(['*']).transacting(trx).into('user_roles');
                 role = roleResult[0];
 
                 trx.commit;
                 res.status(200).json({
-                    data: {people,role},
+                    data: { people, role },
                     message: "People added successfully !"
                 });
             })
-        }catch(err) {
+        } catch (err) {
             console.log('[controllers][people][addPeople] :  Error', err);
             trx.rollback;
             res.status(500).json({
@@ -59,11 +59,11 @@ const peopleController = {
             });
         }
     },
-    updatePeopleDetails: async(req,res) => {
+    updatePeopleDetails: async (req, res) => {
         try {
 
             let people = null;
-            
+
 
             await knex.transaction(async (trx) => {
                 let peoplePayload = req.body;
@@ -72,12 +72,12 @@ const peopleController = {
                 peoplePayload = _.omit(peoplePayload, ['id'])
                 // validate keys
                 const schema = Joi.object().keys({
-                        firstName:Joi.string().required(),
-                        lastName:Joi.string().required(),
-                        mobileNo:Joi.string().required(),
-                        userName:Joi.string().required(),
-                        houseId:Joi.string().required(),
-                        email:Joi.string().required()
+                    firstName: Joi.string().required(),
+                    lastName: Joi.string().required(),
+                    mobileNo: Joi.string().required(),
+                    userName: Joi.string().required(),
+                    houseId: Joi.string().required(),
+                    email: Joi.string().required()
                 });
 
                 let result = Joi.validate(peoplePayload, schema);
@@ -93,23 +93,23 @@ const peopleController = {
 
                 // Update in users table,
                 let currentTime = new Date().getTime();
-                let finalPayload = _.omit(peoplePayload, ['id','firstName','lastName'])
-                let insertData = { ...finalPayload,name:peoplePayload.firstName+' '+peoplePayload.lastName,updatedAt: currentTime,isActive:true };
+                let finalPayload = _.omit(peoplePayload, ['id', 'firstName', 'lastName'])
+                let insertData = { ...finalPayload, name: peoplePayload.firstName + ' ' + peoplePayload.lastName, updatedAt: currentTime, isActive: true };
 
                 console.log('[controllers][people][updatePeopleDetails]: Update Data', insertData);
 
-                let peopleResult = await knex.update(insertData).where({ id:id }).returning(['*']).transacting(trx).into('users');
-                
+                let peopleResult = await knex.update(insertData).where({ id: id }).returning(['*']).transacting(trx).into('users');
+
                 people = peopleResult[0]
 
-                
+
                 trx.commit;
 
             });
 
             res.status(200).json({
                 data: {
-                    people:people
+                    people: people
                 },
                 message: "People details updated successfully !"
             });
@@ -124,16 +124,16 @@ const peopleController = {
             });
         }
     },
-    getPeopleList: async (req,res) => {
+    getPeopleList: async (req, res) => {
         try {
 
             let peopleData = null;
             peopleData = await knex.select().from('users')
-            
+
             console.log('[controllers][people][getPeopleList]: People List', peopleData);
-            
-            peopleData = peopleData.map(d => _.omit(d, ['password'], ['createdAt'], ['updatedAt'], ['isActive'],['verifyToken'],['verifyTokenExpiryTime']));
-            
+
+            peopleData = peopleData.map(d => _.omit(d, ['password'], ['createdAt'], ['updatedAt'], ['isActive'], ['verifyToken'], ['verifyTokenExpiryTime']));
+
             res.status(200).json({
                 data: peopleData,
                 message: "People List"
@@ -149,20 +149,20 @@ const peopleController = {
             });
         }
     },
-    getPeopleDetails: async (req,res) => {
+    getPeopleDetails: async (req, res) => {
         try {
 
             let peopleData = null;
             let id = req.body.id;
 
-            peopleData = await knex('users').where({id}).select()
+            peopleData = await knex('users').where({ id }).select()
             let peopleDataResult = peopleData[0];
-            let omitedPeopleDataResult = _.omit(peopleDataResult, ['createdAt'],['updatedAt'], ['isActive','password','verifyToken'])
+            let omitedPeopleDataResult = _.omit(peopleDataResult, ['createdAt'], ['updatedAt'], ['isActive', 'password', 'verifyToken'])
 
             console.log('[controllers][people][getPeopleDetails]: People Details', peopleDataResult);
 
             res.status(200).json({
-                data: {people:omitedPeopleDataResult},
+                data: { people: omitedPeopleDataResult },
                 message: "People Details"
             });
 
@@ -176,7 +176,7 @@ const peopleController = {
             });
         }
     },
-    removePeople: async(req,res) => {
+    removePeople: async (req, res) => {
         try {
             let people = null;
             await knex.transaction(async trx => {
@@ -197,18 +197,18 @@ const peopleController = {
                 }
 
                 let currentTime = new Date().getTime();
-                let peopleData = await knex.update({isActive:false,updatedAt:currentTime}).where({id:id}).returning(['*']).transacting(trx).into('users');
+                let peopleData = await knex.update({ isActive: false, updatedAt: currentTime }).where({ id: id }).returning(['*']).transacting(trx).into('users');
                 people = peopleData[0];
 
                 trx.commit
             })
             res.status(200).json({
                 data: {
-                    people:people
+                    people: people
                 },
                 message: "People removed successfully !"
             });
-        }catch(err){
+        } catch (err) {
 
         }
     }

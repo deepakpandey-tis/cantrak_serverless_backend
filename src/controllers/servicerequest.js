@@ -13,7 +13,7 @@ const saltRounds = 10;
 const trx = knex.transaction();
 const AWS = require('aws-sdk');
 
-if(process.env.IS_OFFLINE){
+if (process.env.IS_OFFLINE) {
     AWS.config.update({
         accessKeyId: 'S3RVER',
         secretAccessKey: 'S3RVER',
@@ -36,7 +36,7 @@ const getUploadURL = async (mimeType, filename) => {
     return new Promise(async (resolve, reject) => {
         const s3 = new AWS.S3();
         let uploadURL = await s3.getSignedUrl('putObject', s3Params);
-        if(Boolean(process.env.IS_OFFLINE)){
+        if (Boolean(process.env.IS_OFFLINE)) {
             uploadURL = uploadURL.replace("https://", "http://").replace(".com", ".com:8000");
         }
         resolve({
@@ -258,6 +258,115 @@ const serviceRequestController = {
 
         } catch (err) {
             console.log('[controllers][service][getImageUploadUrl] :  Error', err);
+            trx.rollback;
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    },
+    addServiceRequestPart: async (req, res) => {
+        try {
+            let assignedPart = null;
+
+            await knex.transaction(async trx => {
+
+                let assignedPartPayload = req.body;
+                let schema = Joi.object().keys({
+                    partId: Joi.string().required(),
+                    unitCost: Joi.string().required(),
+                    quantity: Joi.string().required(),
+                    status: Joi.string().required(),
+                    serviceRequestId: Joi.string().required()
+                })
+
+
+                let result = Joi.validate(assignedPartPayload, schema)
+                console.log('[controllers][service][request]: JOi Result', result);
+
+                if (result && result.hasOwnProperty('error') && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: 'VALIDATION_ERROR', message: result.error.message }
+                        ],
+                    });
+                }
+
+                // Insert in assigned_parts table,
+                const currentTime = new Date().getTime();
+
+                let assignedPartInsertPayload = _.omit(assignedPartPayload, ['serviceRequestId'])
+
+                let insertData = { ...assignedPartInsertPayload, entityId: assignedPartPayload.serviceRequestId, entityType: 'service_requests', createdAt: currentTime, updatedAt: currentTime }
+                let partResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('assigned_parts')
+                assignedPart = partResult[0]
+                trx.commit
+
+            })
+            res.status(200).json({
+                data: {
+                    assignedPart: assignedPart
+                },
+                message: "Part added to Service request successfully !"
+            });
+
+        } catch (err) {
+            console.log('[controllers][service][request] :  Error', err);
+            trx.rollback;
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    },
+    addServiceRequestAsset: async (req, res) => {
+        try {
+            let assignedAsset = null;
+
+            await knex.transaction(async trx => {
+
+                let assignedAssetPayload = req.body;
+                let schema = Joi.object().keys({
+                    assetId: Joi.string().required(),
+                    price: Joi.string().required(),
+                    status: Joi.string().required(),
+                    serviceRequestId: Joi.string().required()
+                })
+
+
+                let result = Joi.validate(assignedAssetPayload, schema)
+                console.log('[controllers][service][request]: JOi Result', result);
+
+                if (result && result.hasOwnProperty('error') && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: 'VALIDATION_ERROR', message: result.error.message }
+                        ],
+                    });
+                }
+
+                // Insert in assigned_parts table,
+                const currentTime = new Date().getTime();
+
+                let assignedAssetInsertPayload = _.omit(assignedAssetPayload, ['serviceRequestId'])
+
+                let insertData = { ...assignedAssetInsertPayload, entityId: assignedAssetPayload.serviceRequestId, entityType: 'service_requests', createdAt: currentTime, updatedAt: currentTime }
+                let assetResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('assigned_assets')
+                assignedAsset = assetResult[0]
+                trx.commit
+
+            })
+            res.status(200).json({
+                data: {
+                    assignedAsset: assignedAsset
+                },
+                message: "Asset added to Service request successfully !"
+            });
+
+        } catch (err) {
+            console.log('[controllers][service][request] :  Error', err);
             trx.rollback;
             res.status(500).json({
                 errors: [

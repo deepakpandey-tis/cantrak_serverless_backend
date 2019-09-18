@@ -42,47 +42,47 @@ const userManagementController = {
         try {
             let added = null;
             let roles = null;
-          //  await knex.transaction(async (trx) => {
-                const { userId, roleIds } = req.body;
-                console.log('[controllers][usermanagement][updateroles]: UpdateUserRole', userId, roleIds);
+            //  await knex.transaction(async (trx) => {
+            const { userId, roleIds } = req.body;
+            console.log('[controllers][usermanagement][updateroles]: UpdateUserRole', userId, roleIds);
 
-                // get User Role List
+            // get User Role List
 
-                let userAssignedRole = await knex('user_roles').where({ userId: userId }).select('roleId');
-                userAssignedRole = userAssignedRole.map(role => role.roleId);
-                console.log('[controllers][usermanagement][updateroles]: DB', userAssignedRole);
-                console.log('[controllers][usermanagement][updateroles]: Inputs', roleIds);
+            let userAssignedRole = await knex('user_roles').where({ userId: userId }).select('roleId');
+            userAssignedRole = userAssignedRole.map(role => role.roleId);
+            console.log('[controllers][usermanagement][updateroles]: DB', userAssignedRole);
+            console.log('[controllers][usermanagement][updateroles]: Inputs', roleIds);
 
 
-                const compareData = arrayCompare(userAssignedRole, roleIds);
+            const compareData = arrayCompare(userAssignedRole, roleIds);
 
-                compareData.missing = compareData.missing.map(a => a.a);
-                console.log('[controllers][usermanagement][updateroles]: Compare Missing', compareData.missing);
+            compareData.missing = compareData.missing.map(a => a.a);
+            console.log('[controllers][usermanagement][updateroles]: Compare Missing', compareData.missing);
 
-                compareData.added = compareData.added.map(b => b.b);
-                console.log('[controllers][usermanagement][updateroles]: Compare Added', compareData.added);
+            compareData.added = compareData.added.map(b => b.b);
+            console.log('[controllers][usermanagement][updateroles]: Compare Added', compareData.added);
 
-                const Parallel = require('async-parallel');
+            const Parallel = require('async-parallel');
 
-                const currentTime = new Date().getTime();
+            const currentTime = new Date().getTime();
 
-                await Parallel.map(compareData.missing, async items => {
-                    deletedRoles = await knex('user_roles').where({roleId:items, userId:userId}).del();
-                    //let rolename = await knex('roles').where({ id: item.roleId }).select('name');
-                    //rolename = rolename[0].name;
-                    return deletedRoles;
-                });
+            await Parallel.map(compareData.missing, async items => {
+                deletedRoles = await knex('user_roles').where({ roleId: items, userId: userId }).del();
+                //let rolename = await knex('roles').where({ id: item.roleId }).select('name');
+                //rolename = rolename[0].name;
+                return deletedRoles;
+            });
 
-                await Parallel.map(compareData.added, async item => {
-                    roles = await knex('user_roles').insert({roleId:item, userId:userId, createdAt: currentTime, updatedAt: currentTime}).returning(['*']);
-                    //let rolename = await knex('roles').where({ id: item.roleId }).select('name');
-                    //rolename = rolename[0].name;
-                    return roles;
-                });
+            await Parallel.map(compareData.added, async item => {
+                roles = await knex('user_roles').insert({ roleId: item, userId: userId, createdAt: currentTime, updatedAt: currentTime }).returning(['*']);
+                //let rolename = await knex('roles').where({ id: item.roleId }).select('name');
+                //rolename = rolename[0].name;
+                return roles;
+            });
 
-                console.log('[controllers][usermanagement][updateroles]: results', compareData);
-                //trx.commit;
-           // });
+            console.log('[controllers][usermanagement][updateroles]: results', compareData);
+            //trx.commit;
+            // });
 
             res.status(200).json({
                 data: {

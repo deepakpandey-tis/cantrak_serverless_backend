@@ -5,7 +5,7 @@ const knex = require('../db/knex');
 
 const trx = knex.transaction();
 const assetController = {
-    addAsset: async (req,res) => {
+    addAsset: async (req, res) => {
         try {
 
             let asset = null;
@@ -16,26 +16,26 @@ const assetController = {
             await knex.transaction(async (trx) => {
                 let assetPayload = req.body;
                 console.log('[controllers][asset][payload]: Asset Payload', assetPayload);
-                assetPayload = _.omit(assetPayload, ['additionalAttributes','multiple','images','files'])
+                assetPayload = _.omit(assetPayload, ['additionalAttributes', 'multiple', 'images', 'files'])
                 // validate keys
                 const schema = Joi.object().keys({
-                        parentAssetId:Joi.string().allow('').optional(),
-                        subAssetId:Joi.string().allow('').optional(), 
-                        partId:Joi.string().allow('').optional(),
-                        assetName:Joi.string().required(),
-                        model:Joi.string().required(),
-                        barcode:Joi.string().required(),
-                        areaName:Joi.string().required(),
-                        description:Joi.string().required(),
-                        assetCategory:Joi.string().required(),
-                        price:Joi.string().required(),
-                        installationDate:Joi.string().required(),
-                        warrentyExpiration:Joi.string().required(),
-                        locationId:Joi.string().allow('').optional(),
-                        assignedUsers:Joi.string().allow('').optional(),
-                        assignedTeams:Joi.string().required(),
-                        assignedVendors:Joi.string().required(),
-                        additionalInformation:Joi.string().required()
+                    parentAssetId: Joi.string().allow('').optional(),
+                    subAssetId: Joi.string().allow('').optional(),
+                    partId: Joi.string().allow('').optional(),
+                    assetName: Joi.string().required(),
+                    model: Joi.string().required(),
+                    barcode: Joi.string().required(),
+                    areaName: Joi.string().required(),
+                    description: Joi.string().required(),
+                    assetCategory: Joi.string().required(),
+                    price: Joi.string().required(),
+                    installationDate: Joi.string().required(),
+                    warrentyExpiration: Joi.string().required(),
+                    locationId: Joi.string().allow('').optional(),
+                    assignedUsers: Joi.string().allow('').optional(),
+                    assignedTeams: Joi.string().required(),
+                    assignedVendors: Joi.string().required(),
+                    additionalInformation: Joi.string().required()
                 });
 
                 let result = Joi.validate(assetPayload, schema);
@@ -56,22 +56,22 @@ const assetController = {
 
                 console.log('[controllers][asset][addAsset]: Insert Data', insertData);
                 let multiple = 1;
-                if(req.body.multiple){
+                if (req.body.multiple) {
                     multiple = Number(req.body.multiple);
                 }
                 let data = Array(multiple).fill(insertData)
                 let assetResult = await knex.insert(data).returning(['*']).transacting(trx).into('asset_master');
-                
+
                 asset = assetResult
 
                 let additionalAttributes = req.body.additionalAttributes;
-                if ( additionalAttributes && additionalAttributes.length > 0) {
+                if (additionalAttributes && additionalAttributes.length > 0) {
                     for (asset of assetResult) {
-                        for(attribute of additionalAttributes) {
-                            let finalAttribute = {...attribute,assetId:asset.id, createdAt: currentTime, updatedAt: currentTime}
+                        for (attribute of additionalAttributes) {
+                            let finalAttribute = { ...attribute, assetId: asset.id, createdAt: currentTime, updatedAt: currentTime }
                             let d = await knex.insert(finalAttribute).returning(['*']).transacting(trx).into('asset_attributes');
                             attribs.push(d[0])
-                        }   
+                        }
                     }
                 }
 
@@ -80,7 +80,7 @@ const assetController = {
                 if (imagesData && imagesData.length > 0) {
                     for (asset of assetResult) {
                         for (image of imagesData) {
-                            let d = await knex.insert({ entityId: asset.id, ...image,entityType:'asset_master', createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('images');
+                            let d = await knex.insert({ entityId: asset.id, ...image, entityType: 'asset_master', createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('images');
                             images.push(d[0])
                         }
                     }
@@ -91,21 +91,21 @@ const assetController = {
                 if (filesData && filesData.length > 0) {
                     for (asset of assetResult) {
                         for (file of filesData) {
-                            let d = await knex.insert({ entityId: asset.id, ...file,entityType:'asset_master', createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('files');
+                            let d = await knex.insert({ entityId: asset.id, ...file, entityType: 'asset_master', createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('files');
                             files.push(d[0])
                         }
-                    }  
+                    }
                 }
 
                 trx.commit;
 
             });
 
-            attribs = _.uniqBy(attribs,'attributeName')
+            attribs = _.uniqBy(attribs, 'attributeName')
 
             res.status(200).json({
                 data: {
-                    asset: { ...asset, attributes: attribs,images,files }
+                    asset: { ...asset, attributes: attribs, images, files }
                 },
                 message: "Asset added successfully !"
             });
@@ -120,16 +120,16 @@ const assetController = {
             });
         }
     },
-    getAssetList: async (req,res) => {
+    getAssetList: async (req, res) => {
         try {
 
             let assetData = null;
             assetData = await knex.select().from('asset_master')
-            
+
             console.log('[controllers][asset][getAssetList]: Asset List', assetData);
-            
+
             assetData = assetData.map(d => _.omit(d, ['createdAt'], ['updatedAt'], ['isActive']));
-            
+
             res.status(200).json({
                 data: assetData,
                 message: "Asset List"
@@ -145,7 +145,7 @@ const assetController = {
             });
         }
     },
-    getAssetDetails: async (req,res) => {
+    getAssetDetails: async (req, res) => {
         try {
 
             let assetData = null;
@@ -154,19 +154,19 @@ const assetController = {
             let images = null
             let id = req.body.id;
 
-            assetData = await knex('asset_master').where({id}).select()
+            assetData = await knex('asset_master').where({ id }).select()
             let assetDataResult = assetData[0];
-            let omitedAssetDataResult = _.omit(assetDataResult, ['createdAt'],['updatedAt'], ['isActive'])
-            additionalAttributes = await knex('asset_attributes').where({assetId:id}).select()
+            let omitedAssetDataResult = _.omit(assetDataResult, ['createdAt'], ['updatedAt'], ['isActive'])
+            additionalAttributes = await knex('asset_attributes').where({ assetId: id }).select()
 
 
-            files = await knex('files').where({entityId:id,entityType:'asset_master'}).select();
-            images = await knex('images').where({entityId:id,entityType:'asset_master'}).select()
+            files = await knex('files').where({ entityId: id, entityType: 'asset_master' }).select();
+            images = await knex('images').where({ entityId: id, entityType: 'asset_master' }).select()
 
             console.log('[controllers][asset][getAssetDetails]: Asset Details', assetData);
 
             res.status(200).json({
-                data: {asset:{...omitedAssetDataResult,additionalAttributes,files,images}},
+                data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, images } },
                 message: "Asset Details"
             });
 
@@ -180,7 +180,7 @@ const assetController = {
             });
         }
     },
-    updateAssetDetails: async (req,res) => {
+    updateAssetDetails: async (req, res) => {
         try {
 
             let asset = null;
@@ -190,26 +190,26 @@ const assetController = {
                 let assetPayload = req.body;
                 let id = req.body.id
                 console.log('[controllers][asset][payload]: Update Asset Payload', assetPayload);
-                assetPayload = _.omit(assetPayload, ['additionalAttributes'],['id'])
+                assetPayload = _.omit(assetPayload, ['additionalAttributes'], ['id'])
                 // validate keys
                 const schema = Joi.object().keys({
-                        parentAssetId:Joi.string().allow('').optional(),
-                        subAssetId:Joi.string().allow('').optional(), 
-                        partId:Joi.string().allow('').optional(),
-                        assetName:Joi.string().required(),
-                        model:Joi.string().required(),
-                        barcode:Joi.string().required(),
-                        areaName:Joi.string().required(),
-                        description:Joi.string().required(),
-                        assetCategory:Joi.string().required(),
-                        price:Joi.string().required(),
-                        installationDate:Joi.string().required(),
-                        warrentyExpiration:Joi.string().required(),
-                        locationId:Joi.string().allow('').optional(),
-                        assignedUsers:Joi.string().allow('').optional(),
-                        assignedTeams:Joi.string().required(),
-                        assignedVendors:Joi.string().required(),
-                        additionalInformation:Joi.string().required()
+                    parentAssetId: Joi.string().allow('').optional(),
+                    subAssetId: Joi.string().allow('').optional(),
+                    partId: Joi.string().allow('').optional(),
+                    assetName: Joi.string().required(),
+                    model: Joi.string().required(),
+                    barcode: Joi.string().required(),
+                    areaName: Joi.string().required(),
+                    description: Joi.string().required(),
+                    assetCategory: Joi.string().required(),
+                    price: Joi.string().required(),
+                    installationDate: Joi.string().required(),
+                    warrentyExpiration: Joi.string().required(),
+                    locationId: Joi.string().allow('').optional(),
+                    assignedUsers: Joi.string().allow('').optional(),
+                    assignedTeams: Joi.string().required(),
+                    assignedVendors: Joi.string().required(),
+                    additionalInformation: Joi.string().required()
                 });
 
                 let result = Joi.validate(assetPayload, schema);
@@ -226,22 +226,22 @@ const assetController = {
                 // Update in asset_master table,
                 let currentTime = new Date().getTime();
 
-                let insertData = { ...assetPayload, updatedAt: currentTime,isActive:true };
+                let insertData = { ...assetPayload, updatedAt: currentTime, isActive: true };
 
                 console.log('[controllers][asset][updateAssetDetails]: Update Asset Insert Data', insertData);
 
-                console.log('DATTAA ',insertData)
-                let assetResult = await knex.update(insertData).where({ id:id }).returning(['*']).transacting(trx).into('asset_master');
-                
+                console.log('DATTAA ', insertData)
+                let assetResult = await knex.update(insertData).where({ id: id }).returning(['*']).transacting(trx).into('asset_master');
+
                 asset = assetResult[0]
 
                 let additionalAttributes = req.body.additionalAttributes;
                 if (additionalAttributes.length > 0) {
-                    for(attribute of additionalAttributes) {
-                        let finalAttribute = {...attribute,assetId:asset.id, updatedAt: currentTime}
-                        let d = await knex.update(finalAttribute).where({id:attribute.id}).returning(['*']).transacting(trx).into('asset_attributes');
+                    for (attribute of additionalAttributes) {
+                        let finalAttribute = { ...attribute, assetId: asset.id, updatedAt: currentTime }
+                        let d = await knex.update(finalAttribute).where({ id: attribute.id }).returning(['*']).transacting(trx).into('asset_attributes');
                         attribs.push(d[0])
-                    }   
+                    }
                 }
                 trx.commit;
 
