@@ -9,5 +9,7 @@ router.get('/get-service-orders-list', authMiddleware.isAuthenticated, serviceOr
 router.post('/get-service-order-details', authMiddleware.isAuthenticated, serviceOrderController.getServiceOrderDetails)
 router.post('/update-service-order', authMiddleware.isAuthenticated, serviceOrderController.updateServiceOrder)
 router.post('/add-service-order-part', authMiddleware.isAuthenticated, serviceOrderController.addServiceOrderPart)
+router.post('/add-service-order-asset', authMiddleware.isAuthenticated, serviceOrderController.addServiceOrderAsset)
+router.post('/delete-service-order-part', authMiddleware.isAuthenticated, serviceOrderController.deleteServiceOrderPart)
 
 module.exports = router;

@@ -323,9 +323,56 @@ const serviceRequestController = {
     },
     addServiceRequestAsset: async (req, res) => {
         try {
+            let assignedAsset = null;
+
+            await knex.transaction(async trx => {
+
+                let assignedAssetPayload = req.body;
+                let schema = Joi.object().keys({
+                    assetId: Joi.string().required(),
+                    price: Joi.string().required(),
+                    status: Joi.string().required(),
+                    serviceRequestId: Joi.string().required()
+                })
+
+
+                let result = Joi.validate(assignedAssetPayload, schema)
+                console.log('[controllers][service][request]: JOi Result', result);
+
+                if (result && result.hasOwnProperty('error') && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: 'VALIDATION_ERROR', message: result.error.message }
+                        ],
+                    });
+                }
+
+                // Insert in assigned_parts table,
+                const currentTime = new Date().getTime();
+
+                let assignedAssetInsertPayload = _.omit(assignedAssetPayload, ['serviceRequestId'])
+
+                let insertData = { ...assignedAssetInsertPayload, entityId: assignedAssetPayload.serviceRequestId, entityType: 'service_requests', createdAt: currentTime, updatedAt: currentTime }
+                let assetResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('assigned_assets')
+                assignedAsset = assetResult[0]
+                trx.commit
+
+            })
+            res.status(200).json({
+                data: {
+                    assignedAsset: assignedAsset
+                },
+                message: "Asset added to Service request successfully !"
+            });
 
         } catch (err) {
-
+            console.log('[controllers][service][request] :  Error', err);
+            trx.rollback;
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
         }
     }
 };

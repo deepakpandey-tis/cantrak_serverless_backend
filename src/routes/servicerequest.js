@@ -20,5 +20,7 @@ router.post('/upload-image-url', authMiddleware.isAuthenticated, serviceRequestC
 
 router.post('/add-service-request-part', authMiddleware.isAuthenticated, serviceRequestController.addServiceRequestPart)
 
+router.post('/add-service-request-asset', authMiddleware.isAuthenticated, serviceRequestController.addServiceRequestAsset)
+
 
 module.exports = router;
