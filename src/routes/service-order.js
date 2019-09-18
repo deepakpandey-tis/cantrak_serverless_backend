@@ -11,5 +11,5 @@ router.post('/update-service-order', authMiddleware.isAuthenticated, serviceOrde
 router.post('/add-service-order-part', authMiddleware.isAuthenticated, serviceOrderController.addServiceOrderPart)
 router.post('/add-service-order-asset', authMiddleware.isAuthenticated, serviceOrderController.addServiceOrderAsset)
 router.post('/delete-service-order-part', authMiddleware.isAuthenticated, serviceOrderController.deleteServiceOrderPart)
-
+router.post('/delete-service-order-asset', authMiddleware.isAuthenticated, serviceOrderController.deleteServiceOrderAsset)
 module.exports = router;

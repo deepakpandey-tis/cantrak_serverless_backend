@@ -450,9 +450,9 @@ const serviceOrderController = {
                 let serviceOrderResult = await knex.select().where({ id: partPayload.serviceOrderId }).returning(['*']).transacting(trx).into('service_orders')
 
                 serviceOrder = serviceOrderResult[0]
-                if (String(serviceOrder.serviceOrderStatus).toUpperCase() === 'COMPLETE') {
+                if (String(serviceOrder.serviceOrderStatus).toUpperCase() === 'CMTD') {
                     // Now soft delete and return
-                    let updatedPart = await knex.update({ status: 'done', updatedAt: currentTime }).where({ partId: partPayload.partId, entityId: partPayload.serviceOrderId, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_parts')
+                    let updatedPart = await knex.update({ status: 'CMTD', updatedAt: currentTime }).where({ partId: partPayload.partId, entityId: partPayload.serviceOrderId, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_parts')
                     //partResult = updatedPartResult[0]
                     trx.commit;
                     return res.status(200).json({
@@ -469,6 +469,67 @@ const serviceOrderController = {
                         updatedPart: null
                     },
                     message: 'Part status for this service order can not be updated because this service order is not completed yet.'
+                })
+            })
+
+
+        } catch (err) {
+            console.log('[controllers][service][order] :  Error', err);
+            trx.rollback;
+            return res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    },
+    deleteServiceOrderAsset: async (req, res) => {
+        try {
+            let serviceOrder = null;
+            let partResult = null;
+            await knex.transaction(async trx => {
+
+                let currentTime = new Date().getTime()
+                const assetPayload = req.body;
+                const schema = Joi.object().keys({
+                    serviceOrderId: Joi.string().required(),
+                    assetId: Joi.string().required()
+                })
+
+                let result = Joi.validate(assetPayload, schema)
+                console.log('[controllers][service][order]: JOi Result', result);
+
+                if (result && result.hasOwnProperty('error') && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: 'VALIDATION_ERROR', message: result.error.message }
+                        ],
+                    });
+                }
+
+                // Now, check whether this service order is completed or not. If completed, we will soft delete the asset from assigned_parts table
+                let serviceOrderResult = await knex.select().where({ id: assetPayload.serviceOrderId }).returning(['*']).transacting(trx).into('service_orders')
+
+                serviceOrder = serviceOrderResult[0]
+                if (String(serviceOrder.serviceOrderStatus).toUpperCase() === 'CMTD') {
+                    // Now soft delete and return
+                    let updatedAsset = await knex.update({ status: 'CMTD', updatedAt: currentTime }).where({ assetId: assetPayload.assetId, entityId: assetPayload.serviceOrderId, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_assets')
+                    //partResult = updatedPartResult[0]
+                    trx.commit;
+                    return res.status(200).json({
+                        data: {
+                            updatedAsset: updatedAsset
+                        },
+                        message: "Assigned asset status updated successfully !"
+                    });
+
+                }
+                trx.commit
+                return res.status(200).json({
+                    data: {
+                        updatedAsset: null
+                    },
+                    message: 'Asset status for this service order can not be updated because this service order is not completed yet.'
                 })
             })
 

@@ -17,6 +17,7 @@ router.get('/get-quotation-details', authMiddleware.isAuthenticated, quotationCo
 // router.post('/upload-images', authMiddleware.isAuthenticated, serviceRequestController.updateImages);
 
 // router.post('/upload-image-url', authMiddleware.isAuthenticated, serviceRequestController.getImageUploadUrl);
-
+router.post('/add-quotation-part', authMiddleware.isAuthenticated, quotationController.addQuotationPart)
+router.post('/add-quotation-asset', authMiddleware.isAuthenticated, quotationController.addQuotationAsset)
 
 module.exports = router;

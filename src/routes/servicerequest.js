@@ -22,5 +22,8 @@ router.post('/add-service-request-part', authMiddleware.isAuthenticated, service
 
 router.post('/add-service-request-asset', authMiddleware.isAuthenticated, serviceRequestController.addServiceRequestAsset)
 
+router.post('/delete-service-request-part', authMiddleware.isAuthenticated, serviceRequestController.deleteServiceRequestPart)
+router.post('/delete-service-request-asset', authMiddleware.isAuthenticated, serviceRequestController.deleteServiceRequestAsset)
+
 
 module.exports = router;
