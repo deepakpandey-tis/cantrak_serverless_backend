@@ -223,13 +223,7 @@ const teamsController = {
             addtionalUser = await knex('assigned_service_additional_users').leftJoin('team_users', 'assigned_service_additional_users.userId', '=', 'team_users.userId').leftJoin('users', 'assigned_service_additional_users.userId', '=', 'users.id').leftJoin('user_roles', 'assigned_service_additional_users.userId', '=', 'user_roles.userId').leftJoin('roles', 'user_roles.roleId', '=', 'roles.id').select('assigned_service_additional_users.id', 'users.name as addtionalUsers', 'roles.name as userRole').where({ 'assigned_service_additional_users.entityId': requestId });
             console.log('[controllers][teams][getTeamList] : Addtional Users List', addtionalUser);
             assignedTeams.addtinalUserList = addtionalUser;
-            // const Parallel = require('async-parallel');
-            // user.roles = await Parallel.map(user.roles, async item => {
-            //     let rolename = await knex('roles').where({ id: item.roleId }).select('name');
-            //     rolename = rolename[0].name;
-            //     return rolename;
-            // });
-
+        
             teamResult = { 'teams': assignedTeams };
 
             res.status(200).json({
@@ -246,8 +240,7 @@ const teamsController = {
             });
         }
     }
-
-
+    
 }
 
 module.exports = teamsController;

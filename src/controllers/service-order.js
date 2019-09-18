@@ -45,7 +45,7 @@ const serviceOrderController = {
                 serviceOrder = serviceOrderResults[0]
 
                 // if new service request id that means direct serviceOrder
-
+                
 
                 let currentUser = req.me;
 

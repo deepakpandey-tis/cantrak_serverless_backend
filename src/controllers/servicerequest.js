@@ -171,7 +171,9 @@ const serviceRequestController = {
                     serviceType: Joi.string().required(),
                     requestedBy: Joi.string().required(),
                     priority: Joi.string().required(),
-                    location: Joi.string().required()
+                    location: Joi.string().required(),
+                    recurrenceType: Joi.string().required(),
+                    serviceDate:Joi.array().required()
                 });
 
                 const result = Joi.validate(serviceRequestPayload, schema);
@@ -185,7 +187,7 @@ const serviceRequestController = {
                     });
                 }
 
-                // Insert in users table,
+                // Insert in service request table,
                 const currentTime = new Date().getTime();
 
                 const updateServiceReq = await knex.update({ description: serviceRequestPayload.description, requestFor: serviceRequestPayload.requestFor, houseId: serviceRequestPayload.houseId, commonId: serviceRequestPayload.commonId, serviceType: serviceRequestPayload.serviceType, requestedBy: serviceRequestPayload.requestedBy, priority: serviceRequestPayload.priority, location: serviceRequestPayload.location, updatedAt: currentTime, isActive: true, moderationStatus: true, serviceStatusCode: "O" }).where({ id: serviceRequestPayload.id }).returning(['*']).transacting(trx).into('service_requests');
@@ -193,14 +195,30 @@ const serviceRequestController = {
                 console.log('[controllers][service][request]: Update Data', updateServiceReq);
 
                 serviceRequest = updateServiceReq[0];
-
+                serviceOrders  = [];
+                // Insert into service orders table with selected recrence date
+                let dates = serviceRequestPayload.serviceDate;
+                console.log("dates",dates);
+                let countDates = dates.length;
+                console.log("countDates",countDates);
+                
+                for(i=0; i<countDates; i++ ){
+                    let newdate = dates[i].split("-").reverse().join("-");               
+                    let serviceDateExist = await knex('service_orders').where({ orderDueDate: newdate });
+                    if(serviceDateExist <= 0){
+                        let serviceOrderResult = await knex.insert({ serviceRequestId: serviceRequestPayload.id, recurrenceType:serviceRequestPayload.recurrenceType, orderDueDate:newdate,  createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('service_orders')
+                        serviceOrders.push(serviceOrderResult[0]);
+                    }
+                }
                 trx.commit;
 
             });
 
+            let returnResponse = {serviceRequest, 'serviceOrder' : serviceOrders};
+
             res.status(200).json({
                 data: {
-                    serviceRequest: serviceRequest
+                    response: returnResponse
                 },
                 message: "Service request updated successfully !"
             });
