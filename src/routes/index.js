@@ -19,6 +19,7 @@ const surveyOrderRouter = require("./survey-order");
 const quotationRouter = require("./quotations");
 const serviceOrderRouter = require("./service-order")
 const chargeRouter = require("./charge")
+const companyRouter = require('./administration-features/company')
 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
@@ -37,6 +38,7 @@ router.use('/administration-features/property-setup', propertySetupRouter);
 router.use('/administration-features/property-category', propertyCategoryRouter);
 router.use('/administration-features/property-subcategory', propertySubCategoryRouter);
 router.use('/administration-features/general-setup', generalSetupRouter);
+router.use('/administration-features/company', companyRouter)
 router.use('/teams', teamsRouter);
 router.use('/vendors', vendorRouter);
 router.use('/parts', partsRouter);
