@@ -23,6 +23,7 @@ const companyRouter = require('./administration-features/company')
 const projectRouter = require('./administration-features/project')
 const buildingPhaseRouter = require('./administration-features/building-phase')
 const floorZoneRouter = require('./administration-features/floor-zone')
+const propertyUnitRouter = require("./administration-features/property-unit")
 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
@@ -44,6 +45,7 @@ router.use('/administration-features/general-setup', generalSetupRouter);
 router.use('/administration-features/company', companyRouter)
 router.use('/administration-features/project', projectRouter)
 router.use('/administration-features/building-phase', buildingPhaseRouter)
+router.use('/administration-features/property-unit', propertyUnitRouter)
 router.use('/teams', teamsRouter);
 router.use('/vendors', vendorRouter);
 router.use('/parts', partsRouter);

@@ -11,38 +11,30 @@ const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const trx = knex.transaction();
 
-const ProjectController = {
-  addProject: async (req, res) => {
+const propertyUnitController = {
+  addPropertyUnit: async (req, res) => {
     try {
-      let Project = null
+      let propertyUnit = null
       await knex.transaction(async trx => {
         const payload = req.body;
 
 
         const schema = Joi.object().keys({
           companyId: Joi.string().required(),
-          project: Joi.string().required(),
-          projectName: Joi.string().required(),
-          projectLocationThai: Joi.string().required(),
-          projectLocationEng: Joi.string().required(),
-          projectStartDate: Joi.string().required(),
-          projectEndDate: Joi.string().required(),
-          branchId: Joi.string().required(),
-          ownerCode: Joi.string().required(),
-          customerCode: Joi.string().required(),
-          ventureType: Joi.string().required(),
-          locationFlag: Joi.string().required(),
-          projectType: Joi.string().required(),
-          biddingDate: Joi.string().required(),
-          projectPeriod: Joi.string().required(),
-          budgetValue: Joi.string().required(),
-          currency: Joi.string().required(),
-          secondCurrency: Joi.string().required(),
-          addressFlag: Joi.string().required(),
+          projectId: Joi.string().required(),
+          propertyTypeId: Joi.string().required(),
+          buildingPhaseId: Joi.string().required(),
+          floorZoneId: Joi.string().required(),
+          unitNumber: Joi.string().required(),
+          houseId: Joi.string().required(),
+          description: Joi.string().required(),
+          productCode: Joi.string().required(),
+          area: Joi.string().required(),
+          createdBy: Joi.string().required(),
         })
 
         const result = Joi.validate(payload, schema)
-        console.log('[controllers][administrationFeatures][addProject]: JOi Result', result);
+        console.log('[controllers][administrationFeatures][addpropertyUnit]: JOi Result', result);
 
         if (result && result.hasOwnProperty('error') && result.error) {
           return res.status(400).json({
@@ -54,20 +46,20 @@ const ProjectController = {
 
         let currentTime = new Date().getTime()
         let insertData = { ...payload, createdAt: currentTime, updatedAt: currentTime };
-        let insertResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('projects')
-        Project = insertResult[0]
+        let insertResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('property_units')
+        propertyUnit = insertResult[0]
 
         trx.commit;
       })
 
       return res.status(200).json({
         data: {
-          project: Project
+          propertyUnit: propertyUnit
         },
-        message: 'Project added successfully.'
+        message: 'Property Unit added successfully.'
       })
     } catch (err) {
-      console.log('[controllers][generalsetup][addProject] :  Error', err);
+      console.log('[controllers][generalsetup][addpropertyUnit] :  Error', err);
       trx.rollback;
       res.status(500).json({
         errors: [
@@ -76,9 +68,9 @@ const ProjectController = {
       });
     }
   },
-  updateProject: async (req, res) => {
+  updatePropertyUnit: async (req, res) => {
     try {
-      let Project = null
+      let propertyUnit = null
       await knex.transaction(async trx => {
         const payload = req.body;
 
@@ -86,28 +78,20 @@ const ProjectController = {
         const schema = Joi.object().keys({
           id: Joi.string().required(),
           companyId: Joi.string().required(),
-          project: Joi.string().required(),
-          projectName: Joi.string().required(),
-          projectLocationThai: Joi.string().required(),
-          projectLocationEng: Joi.string().required(),
-          projectStartDate: Joi.string().required(),
-          projectEndDate: Joi.string().required(),
-          branchId: Joi.string().required(),
-          ownerCode: Joi.string().required(),
-          customerCode: Joi.string().required(),
-          ventureType: Joi.string().required(),
-          locationFlag: Joi.string().required(),
-          projectType: Joi.string().required(),
-          biddingDate: Joi.string().required(),
-          projectPeriod: Joi.string().required(),
-          budgetValue: Joi.string().required(),
-          currency: Joi.string().required(),
-          secondCurrency: Joi.string().required(),
-          addressFlag: Joi.string().required(),
+          projectId: Joi.string().required(),
+          propertyTypeId: Joi.string().required(),
+          buildingPhaseId: Joi.string().required(),
+          floorZoneId: Joi.string().required(),
+          unitNumber: Joi.string().required(),
+          houseId: Joi.string().required(),
+          description: Joi.string().required(),
+          productCode: Joi.string().required(),
+          area: Joi.string().required(),
+          createdBy: Joi.string().required(),
         })
 
         const result = Joi.validate(payload, schema)
-        console.log('[controllers][administrationFeatures][updateProject]: JOi Result', result);
+        console.log('[controllers][administrationFeatures][updatepropertyUnit]: JOi Result', result);
 
         if (result && result.hasOwnProperty('error') && result.error) {
           return res.status(400).json({
@@ -119,20 +103,20 @@ const ProjectController = {
 
         let currentTime = new Date().getTime()
         let insertData = { ...payload, updatedAt: currentTime };
-        let insertResult = await knex.update(insertData).where({ id: payload.id }).returning(['*']).transacting(trx).into('projects')
-        Project = insertResult[0]
+        let insertResult = await knex.update(insertData).where({ id: payload.id }).returning(['*']).transacting(trx).into('property_units')
+        propertyUnit = insertResult[0]
 
         trx.commit;
       })
 
       return res.status(200).json({
         data: {
-          Project: Project
+          propertyUnit: propertyUnit
         },
-        message: 'Project details updated successfully.'
+        message: 'Property Unit details updated successfully.'
       })
     } catch (err) {
-      console.log('[controllers][generalsetup][updateProject] :  Error', err);
+      console.log('[controllers][generalsetup][updatepropertyUnit] :  Error', err);
       trx.rollback;
       res.status(500).json({
         errors: [
@@ -141,9 +125,9 @@ const ProjectController = {
       });
     }
   },
-  viewProject: async (req, res) => {
+  viewPropertyUnit: async (req, res) => {
     try {
-      let Project = null;
+      let propertyUnit = null;
       await knex.transaction(async trx => {
         let payload = req.body;
         const schema = Joi.object().keys({
@@ -158,19 +142,19 @@ const ProjectController = {
           });
         }
         let current = new Date().getTime()
-        let ProjectResult = await knex.select().where({ id: payload.id }).returning(['*']).transacting(trx).into('projects')
+        let propertyUnitResult = await knex.select().where({ id: payload.id }).returning(['*']).transacting(trx).into('property_units')
 
-        Project = _.omit(ProjectResult[0], ['createdAt', 'updatedAt', 'isActive'])
+        propertyUnit = _.omit(propertyUnitResult[0], ['createdAt', 'updatedAt', 'isActive'])
         trx.commit;
       })
       return res.status(200).json({
         data: {
-          Project: Project
+          propertyUnit: propertyUnit
         },
-        message: 'Project details'
+        message: 'propertyUnit details'
       })
     } catch (err) {
-      console.log('[controllers][generalsetup][viewProject] :  Error', err);
+      console.log('[controllers][generalsetup][viewpropertyUnit] :  Error', err);
       trx.rollback;
       res.status(500).json({
         errors: [
@@ -179,9 +163,9 @@ const ProjectController = {
       });
     }
   },
-  deleteProject: async (req, res) => {
+  deletePropertyUnit: async (req, res) => {
     try {
-      let Project = null
+      let propertyUnit = null
       await knex.transaction(async trx => {
         let payload = req.body;
         const schema = Joi.object().keys({
@@ -195,18 +179,18 @@ const ProjectController = {
             ],
           });
         }
-        let ProjectResult = await knex.update({ isActive: false }).where({ id: payload.id }).returning(['*']).transacting(trx).into('projects')
-        Project = ProjectResult[0]
+        let propertyUnitResult = await knex.update({ isActive: false }).where({ id: payload.id }).returning(['*']).transacting(trx).into('property_units')
+        propertyUnit = propertyUnitResult[0]
         trx.commit;
       })
       return res.status(200).json({
         data: {
-          Project: Project
+          propertyUnit: propertyUnit
         },
-        message: 'Project deleted!'
+        message: 'Property Unit deleted!'
       })
     } catch (err) {
-      console.log('[controllers][generalsetup][viewProject] :  Error', err);
+      console.log('[controllers][generalsetup][viewpropertyUnit] :  Error', err);
       trx.rollback;
       res.status(500).json({
         errors: [
@@ -215,7 +199,7 @@ const ProjectController = {
       });
     }
   },
-  getProjectList: async (req, res) => {
+  getPropertyUnitList: async (req, res) => {
     try {
       let companyId = req.query.companyId;
       let reqData = req.query;
@@ -228,8 +212,8 @@ const ProjectController = {
         let offset = (page - 1) * per_page;
 
         let [total, rows] = await Promise.all([
-          knex.count('* as count').from("projects").first(),
-          knex.select("*").from("projects").offset(offset).limit(per_page)
+          knex.count('* as count').from("property_units").first(),
+          knex.select("*").from("property_units").offset(offset).limit(per_page)
         ])
 
         let count = total.count;
@@ -249,8 +233,8 @@ const ProjectController = {
         let offset = (page - 1) * per_page;
 
         let [total, rows] = await Promise.all([
-          knex.count('* as count').from("projects").first(),
-          knex.from("projects").innerJoin("companies", "projects.companyId", "companies.id").where({ 'projects.companyId': companyId }).offset(offset).limit(per_page)
+          knex.count('* as count').from("property_units").first(),
+          knex.from("property_units").innerJoin("companies", "property_units.companyId", "companies.id").where({ 'property_units.companyId': companyId }).offset(offset).limit(per_page)
         ])
 
         let count = total.count;
@@ -265,12 +249,12 @@ const ProjectController = {
       }
       return res.status(200).json({
         data: {
-          projects: pagination
+          propertyUnits: pagination
         },
-        message: 'projects List!'
+        message: 'Property Units List!'
       })
     } catch (err) {
-      console.log('[controllers][generalsetup][viewProject] :  Error', err);
+      console.log('[controllers][generalsetup][viewpropertyUnit] :  Error', err);
       trx.rollback;
       res.status(500).json({
         errors: [
@@ -281,4 +265,4 @@ const ProjectController = {
   }
 }
 
-module.exports = ProjectController
+module.exports = propertyUnitController
