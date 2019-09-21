@@ -24,25 +24,25 @@ app.enable('trust proxy');
 app.set('trust proxy', 1);
 
 app.use((req, res, next) => {
-    res.set('Cache-Control', 'no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
-    next();
+  res.set('Cache-Control', 'no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
+  next();
 });
 app.use((req, res, next) => {
-    res.append('Access-Control-Allow-Origin', ['*']);
-    res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-    res.append('Access-Control-Allow-Headers', 'Content-Type, Authorization, XMLHttpRequest, ngsw-bypass');
-    next();
+  res.append('Access-Control-Allow-Origin', ['*']);
+  res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.append('Access-Control-Allow-Headers', 'Content-Type, Authorization, XMLHttpRequest, ngsw-bypass');
+  next();
 });
 
 // i18n
 i18n.configure({
-    locales: ['en', 'et'],
-    defaultLocale: 'en',
-    cookie: 'lang',
-    objectNotation: true,
-    queryParameter: 'lang',
-    directory: path.join(__dirname, 'i18n'),
-    //updateFiles: true
+  locales: ['en', 'et'],
+  defaultLocale: 'en',
+  cookie: 'lang',
+  objectNotation: true,
+  queryParameter: 'lang',
+  directory: path.join(__dirname, 'i18n'),
+  //updateFiles: true
 });
 app.use(i18n.init);
 // app.get('/en', function (req, res) {
@@ -61,21 +61,21 @@ app.use(i18n.init);
 app.use('/', indexRouter);
 
 // catch 404 and forward to error handler
-app.use( (req, res, next) => {
-    next(createError(404));
+app.use((req, res, next) => {
+  next(createError(404));
 });
 
 // error handler
-app.use( (err, req, res, next) => {
-    // set locals, only providing error in development
-    // res.locals.message = err.message;
-    // res.locals.error = req.app.get('env') === 'development' ? err : {};
+app.use((err, req, res, next) => {
+  // set locals, only providing error in development
+  // res.locals.message = err.message;
+  // res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-    const error = req.app.get('env') !== 'production' ? err : {};
+  const error = req.app.get('env') !== 'production' ? err : {};
 
-    res.status(err.status || 500);
-    // res.render('error');
-    res.json(error);
+  res.status(err.status || 500);
+  // res.render('error');
+  res.json(error);
 });
 
 
