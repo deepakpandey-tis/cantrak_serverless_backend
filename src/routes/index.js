@@ -18,7 +18,9 @@ const peopleRouter = require('./people');
 const surveyOrderRouter = require("./survey-order");
 const quotationRouter = require("./quotations");
 const serviceOrderRouter = require("./service-order")
-const chargeRouter = require("./charge")
+const chargeRouter = require("./charge");
+const commonAreaRouter = require("./administration-features/common-area");
+const statusRouter = require("./administration-features/status");
 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
@@ -45,6 +47,8 @@ router.use('/people', peopleRouter);
 router.use('/survey-order', surveyOrderRouter);
 router.use('/quotations', quotationRouter);
 router.use('/service-order', serviceOrderRouter)
-router.use('/charge', chargeRouter)
+router.use('/charge', chargeRouter);
+router.use('/administration-features/common-area',commonAreaRouter);
+router.use('/administration-features/status',statusRouter);
 
 module.exports = router;
