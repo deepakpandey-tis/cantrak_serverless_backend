@@ -21,6 +21,12 @@ const serviceOrderRouter = require("./service-order")
 const chargeRouter = require("./charge");
 const commonAreaRouter = require("./administration-features/common-area");
 const statusRouter = require("./administration-features/status");
+const chargeRouter = require("./charge")
+const companyRouter = require('./administration-features/company')
+const projectRouter = require('./administration-features/project')
+const buildingPhaseRouter = require('./administration-features/building-phase')
+const floorZoneRouter = require('./administration-features/floor-zone')
+const propertyUnitRouter = require("./administration-features/property-unit")
 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
@@ -39,6 +45,10 @@ router.use('/administration-features/property-setup', propertySetupRouter);
 router.use('/administration-features/property-category', propertyCategoryRouter);
 router.use('/administration-features/property-subcategory', propertySubCategoryRouter);
 router.use('/administration-features/general-setup', generalSetupRouter);
+router.use('/administration-features/company', companyRouter)
+router.use('/administration-features/project', projectRouter)
+router.use('/administration-features/building-phase', buildingPhaseRouter)
+router.use('/administration-features/property-unit', propertyUnitRouter)
 router.use('/teams', teamsRouter);
 router.use('/vendors', vendorRouter);
 router.use('/parts', partsRouter);
@@ -50,5 +60,7 @@ router.use('/service-order', serviceOrderRouter)
 router.use('/charge', chargeRouter);
 router.use('/administration-features/common-area',commonAreaRouter);
 router.use('/administration-features/status',statusRouter);
+router.use('/charge', chargeRouter)
+router.use('/administration-features/floor-zone', floorZoneRouter)
 
 module.exports = router;

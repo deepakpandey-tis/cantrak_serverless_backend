@@ -19,7 +19,7 @@ const knex = require('knex')({
     debug: process.env.NODE_ENV === 'local' ? true : false,
     pool: {
         min: 2,
-        max: 20,
+        max: 100,
         afterCreate: function (conn, done) {
             // in this example we use pg driver's connection API
             conn.query('SET timezone="UTC";', function (err) {
@@ -48,5 +48,10 @@ const knex = require('knex')({
     }
 });
 
-module.exports = knex;
+//const { attachPaginate } = require('knex-paginate');
+//attachPaginate();
+
+//const setupPaginator = require('knex-paginator');
+//setupPaginator(knex);
+module.exports = knex
 

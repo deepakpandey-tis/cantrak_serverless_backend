@@ -113,6 +113,98 @@ const chargeController = {
         ],
       });
     }
+  },
+  addQuotationFixCharge: async (req, res) => {
+    try {
+      let charge = null;
+      await knex.transaction(async trx => {
+        const payload = req.body;
+        const schema = Joi.object().keys({
+          quotationId: Joi.string().required(),
+          chargeId: Joi.string().required()
+        })
+
+        let result = Joi.validate(payload, schema);
+        console.log('[controllers][charge][addQuotationFixCharge]: JOi Result', result);
+
+        if (result && result.hasOwnProperty('error') && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: 'VALIDATION_ERROR', message: result.error.message }
+            ],
+          });
+        }
+        let currentTime = new Date().getTime()
+        let insertData = { chargeId: payload.chargeId, entityId: payload.quotationId, entityType: 'quotations', updatedAt: currentTime, createdAt: currentTime }
+        let chargeResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('assigned_service_charges')
+        charge = chargeResult[0]
+
+        trx.commit;
+
+      })
+
+      return res.status(200).json({
+        data: {
+          charge: charge
+        },
+        message: 'Charge added to quotation'
+      })
+
+    } catch (err) {
+      console.log('[controllers][charge][addQuotationFixCharge] :  Error', err);
+      trx.rollback;
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
+  addServiceRequestFixCharge: async (req, res) => {
+    try {
+      let charge = null;
+      await knex.transaction(async trx => {
+        const payload = req.body;
+        const schema = Joi.object().keys({
+          serviceRequestId: Joi.string().required(),
+          chargeId: Joi.string().required()
+        })
+
+        let result = Joi.validate(payload, schema);
+        console.log('[controllers][charge][addServiceRequestFixCharge]: JOi Result', result);
+
+        if (result && result.hasOwnProperty('error') && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: 'VALIDATION_ERROR', message: result.error.message }
+            ],
+          });
+        }
+        let currentTime = new Date().getTime()
+        let insertData = { chargeId: payload.chargeId, entityId: payload.serviceRequestId, entityType: 'service_requests', updatedAt: currentTime, createdAt: currentTime }
+        let chargeResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('assigned_service_charges')
+        charge = chargeResult[0]
+
+        trx.commit;
+
+      })
+
+      return res.status(200).json({
+        data: {
+          charge: charge
+        },
+        message: 'Charge added to service request'
+      })
+
+    } catch (err) {
+      console.log('[controllers][charge][addServiceRequestFixCharge] :  Error', err);
+      trx.rollback;
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
   }
 }
 

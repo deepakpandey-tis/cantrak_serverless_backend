@@ -7,6 +7,10 @@ const assetController = require("../controllers/asset")
 router.post('/add-asset', authMiddleware.isAuthenticated, assetController.addAsset)
 router.get('/get-asset-list', authMiddleware.isAuthenticated, assetController.getAssetList)
 router.post('/get-asset-details', authMiddleware.isAuthenticated, assetController.getAssetDetails)
-router.post('/update-asset-details',authMiddleware.isAuthenticated,assetController.updateAssetDetails)
+router.post('/update-asset-details', authMiddleware.isAuthenticated, assetController.updateAssetDetails)
+router.post('/add-service-order-replace-asset', authMiddleware.isAuthenticated, assetController.addServiceOrderReplaceAsset)
+router.post('/add-service-request-replace-asset', authMiddleware.isAuthenticated, assetController.addServiceRequestReplaceAsset)
+router.post('/add-service-order-relocate-asset', authMiddleware.isAuthenticated, assetController.addServiceOrderRelocateAsset)
+router.post('/add-service-request-relocate-asset', authMiddleware.isAuthenticated, assetController.addServiceRequestRelocateAsset)
 
 module.exports = router

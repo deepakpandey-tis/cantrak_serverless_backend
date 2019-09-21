@@ -264,6 +264,244 @@ const assetController = {
             });
         }
 
+    },
+    addServiceOrderReplaceAsset: async (req, res) => {
+        //if newAset exists in the table for this oldasset that we gonna replace with some other newasset add end date to that previous entry if end date blank
+        try {
+            let asset = null
+            let updated = null
+            await knex.transaction(async trx => {
+                let payload = req.body;
+                const schema = Joi.object().keys({
+                    OldAssetId: Joi.string().required(),
+                    newAssetId: Joi.string().required(),
+                    serviceOrderId: Joi.string().required()
+                })
+                const result = Joi.validate(payload, schema)
+                if (result && result.hasOwnProperty('error') && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: 'VALIDATION_ERROR', message: result.error.message }
+                        ],
+                    });
+                }
+
+                let currentTime = new Date().getTime()
+                //let currentDate = new Date().getDate()
+                let ommitedPayload = _.omit(payload, ['serviceOrderId'])
+
+
+                // Now first check whether this oldAssetId exists as the newAssetId for any previous entry where endDate is null
+                let entry = await knex.select().where({ newAssetId: payload.OldAssetId, endDate: null, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('replaced_assets')
+
+                if (entry.length > 0) {
+                    // Update endDate of previous entry with today's date and insert new entry
+                    let updatedEntry = await knex.update({ endDate: currentTime }).where({ newAssetId: payload.OldAssetId, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('replaced_assets')
+
+                    updated = updatedEntry[0]
+
+                    let insertData = { startDate: currentTime, endDate: null, createdAt: currentTime, updatedAt: currentTime, entityId: payload.serviceOrderId, entityType: 'service_orders', ...ommitedPayload }
+                    let assetResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('replaced_assets')
+                    asset = assetResult[0]
+                } else {
+                    let insertData = { startDate: currentTime, endDate: null, createdAt: currentTime, updatedAt: currentTime, entityId: payload.serviceOrderId, entityType: 'service_orders', ...ommitedPayload }
+                    let assetResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('replaced_assets')
+                    asset = assetResult[0]
+                }
+                trx.commit
+            })
+            return res.status(200).json({
+                data: {
+                    asset: asset,
+                    updatedEntry: updated
+                },
+                message: 'Asset replaced successfully'
+            })
+        } catch (err) {
+            console.log('[controllers][asset][addServiceOrderReplaceAsset] :  Error', err);
+            trx.rollback;
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    },
+    addServiceRequestReplaceAsset: async (req, res) => {
+        try {
+            let asset = null
+            let updated = null
+            await knex.transaction(async trx => {
+                let payload = req.body;
+                const schema = Joi.object().keys({
+                    OldAssetId: Joi.string().required(),
+                    newAssetId: Joi.string().required(),
+                    serviceRequestId: Joi.string().required()
+                })
+                const result = Joi.validate(payload, schema)
+                if (result && result.hasOwnProperty('error') && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: 'VALIDATION_ERROR', message: result.error.message }
+                        ],
+                    });
+                }
+                let currentTime = new Date().getTime()
+                let ommitedPayload = _.omit(payload, ['serviceRequestId'])
+
+
+
+                // Now first check whether this oldAssetId exists as the newAssetId for any previous entry where endDate is null
+                let entry = await knex.select().where({ entityType: 'service_requests', newAssetId: payload.OldAssetId, endDate: null }).returning(['*']).transacting(trx).into('replaced_assets')
+
+                if (entry.length > 0) {
+                    // Update endDate of previous entry with today's date and insert new entry
+                    let updatedEntry = await knex.update({ endDate: currentTime }).where({ newAssetId: payload.OldAssetId, entityType: 'service_requests' }).returning(['*']).transacting(trx).into('replaced_assets')
+
+                    updated = updatedEntry[0]
+
+                    let insertData = { startDate: currentTime, endDate: null, createdAt: currentTime, updatedAt: currentTime, entityId: payload.serviceRequestId, entityType: 'service_requests', ...ommitedPayload }
+                    let assetResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('replaced_assets')
+                    asset = assetResult[0]
+                } else {
+                    let insertData = { startDate: currentTime, endDate: null, createdAt: currentTime, updatedAt: currentTime, entityId: payload.serviceRequestId, entityType: 'service_requests', ...ommitedPayload }
+                    let assetResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('replaced_assets')
+                    asset = assetResult[0]
+                }
+                trx.commit
+            })
+            return res.status(200).json({
+                data: {
+                    asset: asset,
+                    updatedEntry: updated
+                },
+                message: 'Asset replaced successfully'
+            })
+        } catch (err) {
+            console.log('[controllers][asset][addServiceRequestReplaceAsset] :  Error', err);
+            trx.rollback;
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    },
+    addServiceOrderRelocateAsset: async (req, res) => {
+        try {
+            let updatedEntry = null
+            let insertedEntry = null
+            await knex.transaction(async trx => {
+                let payload = req.body;
+                const schema = Joi.object().keys({
+                    assetId: Joi.string().required(),
+                    locationId: Joi.string().required(),
+                    serviceOrderId: Joi.string().required()
+                })
+                const result = Joi.validate(payload, schema)
+
+                if (result && result.hasOwnProperty('error') && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: 'VALIDATION_ERROR', message: result.error.message }
+                        ],
+                    });
+                }
+
+                let currentTime = new Date().getTime()
+                // Check whether this asset is already relocated once or this is the first time
+                let entryCheck = await knex.select().where({ assetId: payload.assetId, entityType: 'service_orders', endDate: null }).returning(['*']).transacting(trx).into('relocated_assets')
+                if (entryCheck.length > 0) {
+                    let updateEntry = await knex.update({ endDate: currentTime, assetId: payload.assetId, entityType: 'service_orders', entityId: payload.serviceOrderId }).returning(['*']).transacting(trx).into('relocated_assets')
+                    updatedEntry = updateEntry[0]
+
+                    // Now insert new entry
+                    let insertEntry = await knex.insert({ assetId: payload.assetId, locationId: payload.locationId, entityId: payload.serviceOrderId, entityType: 'service_orders', startDate: currentTime, createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('relocated_assets')
+                    insertedEntry = insertEntry[0]
+                } else {
+                    // Insert new entry with endDate equal to null
+                    let insertEntry = await knex.insert({ assetId: payload.assetId, locationId: payload.locationId, entityId: payload.serviceOrderId, entityType: 'service_orders', startDate: currentTime, createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('relocated_assets')
+                    insertedEntry = insertEntry[0]
+                }
+
+                trx.commit;
+            })
+
+            res.status(200).json({
+                data: {
+                    relocatedEntry: insertedEntry,
+                    updatedEntry: updatedEntry
+                },
+                message: 'Asset relocated successfully.'
+            })
+
+        } catch (err) {
+            console.log('[controllers][asset][addServiceOrderRelocateAsset] :  Error', err);
+            trx.rollback;
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    },
+    addServiceRequestRelocateAsset: async (req, res) => {
+        try {
+            let updatedEntry = null
+            let insertedEntry = null
+            await knex.transaction(async trx => {
+                let payload = req.body;
+                const schema = Joi.object().keys({
+                    assetId: Joi.string().required(),
+                    locationId: Joi.string().required(),
+                    serviceRequestId: Joi.string().required()
+                })
+                const result = Joi.validate(payload, schema)
+
+                if (result && result.hasOwnProperty('error') && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: 'VALIDATION_ERROR', message: result.error.message }
+                        ],
+                    });
+                }
+
+                let currentTime = new Date().getTime()
+                // Check whether this asset is already relocated once or this is the first time
+                let entryCheck = await knex.select().where({ assetId: payload.assetId, entityType: 'service_requests', endDate: null }).returning(['*']).transacting(trx).into('relocated_assets')
+                if (entryCheck.length > 0) {
+                    let updateEntry = await knex.update({ endDate: currentTime, assetId: payload.assetId, entityType: 'service_requests', entityId: payload.serviceRequestId }).returning(['*']).transacting(trx).into('relocated_assets')
+                    updatedEntry = updateEntry[0]
+
+                    // Now insert new entry
+                    let insertEntry = await knex.insert({ assetId: payload.assetId, locationId: payload.locationId, entityId: payload.serviceRequestId, entityType: 'service_requests', startDate: currentTime, createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('relocated_assets')
+                    insertedEntry = insertEntry[0]
+                } else {
+                    // Insert new entry with endDate equal to null
+                    let insertEntry = await knex.insert({ assetId: payload.assetId, locationId: payload.locationId, entityId: payload.serviceRequestId, entityType: 'service_requests', startDate: currentTime, createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('relocated_assets')
+                    insertedEntry = insertEntry[0]
+                }
+
+                trx.commit;
+            })
+
+            res.status(200).json({
+                data: {
+                    relocatedEntry: insertedEntry,
+                    updatedEntry: updatedEntry
+                },
+                message: 'Asset relocated successfully.'
+            })
+
+        } catch (err) {
+            console.log('[controllers][asset][addServiceOrderRelocateAsset] :  Error', err);
+            trx.rollback;
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
     }
 }
 
