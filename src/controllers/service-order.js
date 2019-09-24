@@ -45,7 +45,7 @@ const serviceOrderController = {
                 serviceOrder = serviceOrderResults[0]
 
                 // if new service request id that means direct serviceOrder
-                
+
 
                 let currentUser = req.me;
 
@@ -148,32 +148,170 @@ const serviceOrderController = {
         try {
             //const serviceOrders = await knex('service_orders').select();
 
+            let { serviceRequestId,
+                description,
+                serviceOrderStatus,
+                archive, location, serviceStartTime, serviceStopTime } = req.body
+
+            let reqData = req.query;
+            let total, rows
+
+            let pagination = {};
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
+            //let filter = 
+            //let filters = 
+            let filters = {}
+            if (serviceRequestId) {
+                filters['service_requests.id'] = serviceRequestId
+            }
+            if (description) {
+                filters['service_requests.description'] = description;
+            }
+
+            if (serviceOrderStatus) {
+                filters['service_orders.serviceOrderStatus'] = serviceOrderStatus
+            }
+
+            if (archive) {
+                filters['service_orders.archive'] = serviceOrderStatus
+            }
+
+            if (location) {
+                filters['service_requests.location'] = location
+            }
+
+            if (serviceStartTime) {
+                filters['service_orders.serviceStartTime'] = serviceStartTime
+            }
+
+            if (serviceStopTime) {
+                filters['service_orders.serviceStopTime'] = serviceStopTime
+            }
 
 
-            const serviceOrders = await knex
-                .from('service_orders')
-                .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                .select(['service_orders.id as so_id',
-                    'service_requests.id as sr_id', 'service_requests.description as sr_description',
-                    'location', 'priority', 'orderDueDate',
-                    'service_orders.createdAt as createdAt',
-                    'service_requests.requestedBy as requestedBy',
-                    'serviceOrderStatus', 'service_problems.description as sp_description',
-                    'categoryId', 'problemId',
-                    'incident_categories.id as categoryId',
-                    'incident_categories.descriptionEng as problem'
 
+
+
+
+            if (_.isEmpty(filters)) {
+                [total, rows] = await Promise.all([
+                    knex.from('service_orders')
+                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .select(['service_orders.id as so_id',
+                            'service_requests.id as sr_id', 'service_requests.description as sr_description',
+                            'location', 'priority', 'orderDueDate',
+                            'service_orders.createdAt as createdAt',
+                            'service_requests.requestedBy as requestedBy',
+                            'serviceOrderStatus', 'service_problems.description as sp_description',
+                            'categoryId', 'problemId',
+                            'incident_categories.id as categoryId',
+                            'incident_categories.descriptionEng as problem'
+                        ]).offset(offset).limit(per_page).first(),
+                    knex.from('service_orders')
+                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .select(['service_orders.id as so_id',
+                            'service_requests.id as sr_id', 'service_requests.description as sr_description',
+                            'location', 'priority', 'orderDueDate',
+                            'service_orders.createdAt as createdAt',
+                            'service_requests.requestedBy as requestedBy',
+                            'serviceOrderStatus', 'service_problems.description as sp_description',
+                            'categoryId', 'problemId',
+                            'incident_categories.id as categoryId',
+                            'incident_categories.descriptionEng as problem'
+                        ]).offset(offset).limit(per_page)
                 ])
+            } else {
+                try {
+                    [total, rows] = await Promise.all([
+                        knex.from('service_orders')
+                            .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                            .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                            .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                            .select(['service_orders.id as so_id',
+                                'service_requests.id as sr_id', 'service_requests.description as sr_description',
+                                'location', 'priority', 'orderDueDate',
+                                'service_orders.createdAt as createdAt',
+                                'service_requests.requestedBy as requestedBy',
+                                'serviceOrderStatus', 'service_problems.description as sp_description',
+                                'categoryId', 'problemId',
+                                'incident_categories.id as categoryId',
+                                'incident_categories.descriptionEng as problem'
+                            ]).where(filters).offset(offset).limit(per_page).first(),
+                        knex.from('service_orders')
+                            .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                            .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                            .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                            .select(['service_orders.id as so_id',
+                                'service_requests.id as sr_id', 'service_requests.description as sr_description',
+                                'location', 'priority', 'orderDueDate',
+                                'service_orders.createdAt as createdAt',
+                                'service_requests.requestedBy as requestedBy',
+                                'serviceOrderStatus', 'service_problems.description as sp_description',
+                                'categoryId', 'problemId',
+                                'incident_categories.id as categoryId',
+                                'incident_categories.descriptionEng as problem'
+                            ]).where(filters).offset(offset).limit(per_page)
+                    ])
+                } catch (e) {
+                    // Error
+                    console.log('Error: ', e.message)
+                }
+            }
+
+            let count = total.count;
+            pagination.total = count;
+            pagination.per_page = per_page;
+            pagination.offset = offset;
+            pagination.to = offset + rows.length;
+            pagination.last_page = Math.ceil(count / per_page);
+            pagination.current_page = page;
+            pagination.from = offset;
+            pagination.data = rows;
+
+
+
+
+
+
+
+
+            // const serviceOrders = await knex
+            //     .from('service_orders')
+            //     .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+            //     .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+            //     .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+            //     .select(['service_orders.id as so_id',
+            //         'service_requests.id as sr_id', 'service_requests.description as sr_description',
+            //         'location', 'priority', 'orderDueDate',
+            //         'service_orders.createdAt as createdAt',
+            //         'service_requests.requestedBy as requestedBy',
+            //         'serviceOrderStatus', 'service_problems.description as sp_description',
+            //         'categoryId', 'problemId',
+            //         'incident_categories.id as categoryId',
+            //         'incident_categories.descriptionEng as problem'
+
+            //     ]).where(filters)
             //.innerJoin('service_problems', 'service_orders.serviceRequestId', 'service_problems.serviceRequestId')
 
+            return res.status(200).json({
+                data: {
+                    service_orders: pagination
+                },
+                message: 'Service Orders List!'
+            })
 
 
-            res.status(200).json({
-                data: { serviceOrders },
-                message: "Service Orders List !"
-            });
+            // res.status(200).json({
+            //     data: { serviceOrders },
+            //     message: "Service Orders List !"
+            // });
         } catch (err) {
             console.log('[controllers][serviceOrder][GetServiceOrderList] :  Error', err);
             res.status(500).json({

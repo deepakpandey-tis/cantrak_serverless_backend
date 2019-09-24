@@ -385,7 +385,6 @@ const quotationsController = {
                     knex.select("*").from("quotations").offset(offset).limit(per_page)
                 ])
             } else {
-                console.log('IN else: ')
                 filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
                 try {
                     [total, rows] = await Promise.all([
