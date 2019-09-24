@@ -249,7 +249,7 @@ const ProjectController = {
         let offset = (page - 1) * per_page;
 
         let [total, rows] = await Promise.all([
-          knex.count('* as count').from("projects").first(),
+          knex.count('* as count').from("projects").where({ 'projects.companyId': companyId }).offset(offset).limit(per_page).first(),
           knex.from("projects").innerJoin("companies", "projects.companyId", "companies.id").where({ 'projects.companyId': companyId }).offset(offset).limit(per_page)
         ])
 

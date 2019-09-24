@@ -14,10 +14,12 @@ router.post('/update-quotations', authMiddleware.isAuthenticated, quotationContr
 
 router.get('/get-quotation-details', authMiddleware.isAuthenticated, quotationController.getQuotationDetails);
 
+
 // router.post('/upload-images', authMiddleware.isAuthenticated, serviceRequestController.updateImages);
 
 // router.post('/upload-image-url', authMiddleware.isAuthenticated, serviceRequestController.getImageUploadUrl);
 router.post('/add-quotation-part', authMiddleware.isAuthenticated, quotationController.addQuotationPart)
 router.post('/add-quotation-asset', authMiddleware.isAuthenticated, quotationController.addQuotationAsset)
+router.post('/get-quotation-list', authMiddleware.isAuthenticated, quotationController.getQuotationList)
 
 module.exports = router;
