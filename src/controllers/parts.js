@@ -421,6 +421,36 @@ const partsController = {
             });
         }
 
+    },
+    searchParts: async (req, res) => {
+
+        try {
+
+            let query = decodeURI(req.query.query).trim();
+            const getFilteredItems = (searchTerm) => knex('part_master')
+                .where((qb) => {
+                    qb.where('part_master.partName', 'like', `%${searchTerm}%`);
+
+                    qb.orWhere('part_master.partCode', 'like', `%${searchTerm}%`);
+
+                    qb.orWhere('part_master.partCategory', 'like', `%${searchTerm}%`);
+                    qb.orWhere('part_master.barcode', 'like', `%${searchTerm}%`);
+                });
+            const parts = await getFilteredItems(query)
+            return res.status(200).json({
+                data: {
+                    parts: parts
+                },
+                message: 'Search results for: ' + query
+            })
+        } catch (err) {
+            console.log('[controllers][part][searchPart] :  Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
     }
 }
 

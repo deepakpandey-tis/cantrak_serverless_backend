@@ -121,19 +121,68 @@ const assetController = {
         }
     },
     getAssetList: async (req, res) => {
+        // name, model, area, category
         try {
 
-            let assetData = null;
-            assetData = await knex.select().from('asset_master')
+            let reqData = req.query;
+            let filters = req.body;
+            let total, rows
 
-            console.log('[controllers][asset][getAssetList]: Asset List', assetData);
+            let pagination = {};
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
 
-            assetData = assetData.map(d => _.omit(d, ['createdAt'], ['updatedAt'], ['isActive']));
 
-            res.status(200).json({
-                data: assetData,
-                message: "Asset List"
-            });
+
+            if (_.isEmpty(filters)) {
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from("asset_master").first(),
+                    knex.select("*").from("asset_master").offset(offset).limit(per_page)
+                ])
+            } else {
+                filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
+                try {
+                    [total, rows] = await Promise.all([
+                        knex.count('* as count').from("asset_master").where(filters).offset(offset).limit(per_page).first(),
+                        knex("asset_master").where(filters).offset(offset).limit(per_page)
+                    ])
+                } catch (e) {
+                    // Error
+                    console.log('Error: ' + e.message)
+                }
+            }
+
+            let count = total.count;
+            pagination.total = count;
+            pagination.per_page = per_page;
+            pagination.offset = offset;
+            pagination.to = offset + rows.length;
+            pagination.last_page = Math.ceil(count / per_page);
+            pagination.current_page = page;
+            pagination.from = offset;
+            pagination.data = rows;
+
+            return res.status(200).json({
+                data: {
+                    asset: pagination
+                },
+                message: 'Asset List!'
+            })
+
+
+            // let assetData = null;
+            // assetData = await knex.select().from('asset_master')
+
+            // console.log('[controllers][asset][getAssetList]: Asset List', assetData);
+
+            // assetData = assetData.map(d => _.omit(d, ['createdAt'], ['updatedAt'], ['isActive']));
+
+            // res.status(200).json({
+            //     data: assetData,
+            //     message: "Asset List"
+            // });
 
 
         } catch (err) {
@@ -491,6 +540,42 @@ const assetController = {
                     updatedEntry: updatedEntry
                 },
                 message: 'Asset relocated successfully.'
+            })
+
+        } catch (err) {
+            console.log('[controllers][asset][addServiceOrderRelocateAsset] :  Error', err);
+            trx.rollback;
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    },
+    assetSearch: async (req, res) => {
+        try {
+
+            let query = decodeURI(req.query.query).trim();
+
+            const getFilteredItems = (searchTerm) => knex('asset_master')
+                .where((qb) => {
+                    qb.where('asset_master.assetName', 'like', `%${searchTerm}%`);
+
+                    qb.orWhere('asset_master.barcode', 'like', `%${searchTerm}%`);
+
+                    qb.orWhere('asset_master.areaName', 'like', `%${searchTerm}%`);
+                    qb.orWhere('asset_master.assetCategory', 'like', `%${searchTerm}%`);
+                    qb.orWhere('asset_master.price', 'like', `%${searchTerm}%`);
+                    qb.orWhere('asset_master.additionalInformation', 'like', `%${searchTerm}%`);
+                    qb.orWhere('asset_master.description', 'like', `%${searchTerm}%`);
+                    qb.orWhere('asset_master.model', 'like', `%${searchTerm}%`);
+                });
+            const assets = await getFilteredItems(query)
+            return res.status(200).json({
+                data: {
+                    assets: assets
+                },
+                message: 'Search results for: ' + query
             })
 
         } catch (err) {

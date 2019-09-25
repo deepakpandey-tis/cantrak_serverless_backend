@@ -61,32 +61,56 @@ const serviceDetailsController = {
         try {
 
             let locationTags = null;
+            let reqData = req.query;
+            //let filters = req.body;
+            let total, rows
 
-            await knex.transaction(async (trx) => {
+            let pagination = {};
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
 
-                // Get Location Tag List,               
-                const DataResult = await knex('location_tags_master').where({ isActive: 'true' });
+            // await knex.transaction(async (trx) => {
 
-                //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
-                //const updateDataResult = await knex.update({ isActive : 'false', updatedAt : currentTime }).where({ id: incidentTypePayload.id }).returning(['*']).transacting(trx).into('incident_type');
+            // Get Location Tag List,               
+            //const DataResult = await knex('location_tags_master').where({ isActive: 'true' });
 
-                // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
+            [total, rows] = await Promise.all([
+                knex.count('* as count').from("location_tags_master").where({ isActive: true }).first(),
+                knex.select("*").from("location_tags_master").offset(offset).limit(per_page)
+            ])
 
-                console.log('[controllers][servicedetails][locationtags]: View Data', DataResult);
 
-                //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
+            let count = total.count;
+            pagination.total = count;
+            pagination.per_page = per_page;
+            pagination.offset = offset;
+            pagination.to = offset + rows.length;
+            pagination.last_page = Math.ceil(count / per_page);
+            pagination.current_page = page;
+            pagination.from = offset;
+            pagination.data = rows;
 
-                locationTags = DataResult;
-
-                trx.commit;
-            });
-
-            res.status(200).json({
+            return res.status(200).json({
                 data: {
-                    locationTags: locationTags
+                    location_tags: pagination
                 },
-                message: "Location Tags list successfully !"
-            });
+                message: 'Location Tags List!'
+            })
+            //console.log('[controllers][servicedetails][locationtags]: View Data', DataResult);
+
+            //locationTags = DataResult;
+
+            //trx.commit;
+            //});
+
+            // res.status(200).json({
+            //     data: {
+            //         locationTags: locationTags
+            //     },
+            //     message: "Location Tags list successfully !"
+            // });
 
 
         } catch (err) {
@@ -146,33 +170,57 @@ const serviceDetailsController = {
 
         try {
 
-            let priorityList = null;
+            let locationTags = null;
+            let reqData = req.query;
+            //let filters = req.body;
+            let total, rows
 
-            await knex.transaction(async (trx) => {
+            let pagination = {};
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
 
-                // Get Location Tag List,               
-                const DataResult = await knex('incident_priority').where({ isActive: 'true' });
+            // await knex.transaction(async (trx) => {
 
-                //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
-                //const updateDataResult = await knex.update({ isActive : 'false', updatedAt : currentTime }).where({ id: incidentTypePayload.id }).returning(['*']).transacting(trx).into('incident_type');
+            // Get Location Tag List,               
+            //const DataResult = await knex('location_tags_master').where({ isActive: 'true' });
 
-                // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
+            [total, rows] = await Promise.all([
+                knex.count('* as count').from("incident_priority").where({ isActive: true }).first(),
+                knex.select("*").from("incident_priority").offset(offset).limit(per_page)
+            ])
 
-                console.log('[controllers][servicedetails][priority]: View Data', DataResult);
 
-                //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
+            let count = total.count;
+            pagination.total = count;
+            pagination.per_page = per_page;
+            pagination.offset = offset;
+            pagination.to = offset + rows.length;
+            pagination.last_page = Math.ceil(count / per_page);
+            pagination.current_page = page;
+            pagination.from = offset;
+            pagination.data = rows;
 
-                priorityList = DataResult;
-
-                trx.commit;
-            });
-
-            res.status(200).json({
+            return res.status(200).json({
                 data: {
-                    priorityList: priorityList
+                    priorities: pagination
                 },
-                message: "Priority list successfully !"
-            });
+                message: 'Priorities List!'
+            })
+            //console.log('[controllers][servicedetails][locationtags]: View Data', DataResult);
+
+            //locationTags = DataResult;
+
+            //trx.commit;
+            //});
+
+            // res.status(200).json({
+            //     data: {
+            //         locationTags: locationTags
+            //     },
+            //     message: "Location Tags list successfully !"
+            // });
 
 
         } catch (err) {
