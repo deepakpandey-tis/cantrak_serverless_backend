@@ -520,7 +520,7 @@ const serviceRequestController = {
         try {
 
             let reqData = req.query;
-            let filters = req.body;
+            let { description } = req.body;
             let total, rows
 
             let pagination = {};
@@ -529,25 +529,76 @@ const serviceRequestController = {
             if (page < 1) page = 1;
             let offset = (page - 1) * per_page;
 
-            if (_.isEmpty(filters)) {
-                [total, rows] = await Promise.all([
-                    knex.count('* as count').from("service_requests").first(),
-                    knex.select("*").from("service_requests").offset(offset).limit(per_page)
-                ])
-            } else {
-                console.log('IN else: ')
-                filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
-                try {
-                    [total, rows] = await Promise.all([
-                        knex.count('* as count').from("service_requests").where(filters).offset(offset).limit(per_page).first(),
-                        knex("service_requests").where(filters).offset(offset).limit(per_page)
-                    ])
-                } catch (e) {
-                    // Error
-                }
+            let filters = {}
+            if (description) {
+                filters['service_requests.description'] = description
             }
 
-            let count = total.count;
+
+            if (_.isEmpty(filters)) {
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from("service_requests")
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .select([
+                            'service_requests.id as sr_id', 'service_requests.description as sr_description',
+
+                            'service_requests.requestedBy as requestedBy',
+                            'service_problems.description as sp_description',
+                            'categoryId', 'problemId',
+                            'incident_categories.id as categoryId',
+                            'incident_categories.descriptionEng as problem'
+                        ]).groupBy(["service_requests.id", "service_problems.id", 'incident_categories.id']).first(),
+                    knex.from("service_requests")
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .select([
+                            'service_requests.id as sr_id', 'service_requests.description as sr_description',
+
+                            'service_requests.requestedBy as requestedBy',
+                            'service_problems.description as sp_description',
+                            'categoryId', 'problemId',
+                            'incident_categories.id as categoryId',
+                            'incident_categories.descriptionEng as problem'
+                        ]).offset(offset).limit(per_page)
+                ])
+            } else {
+                //console.log('IN else: ')
+                //filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from("service_requests")
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .select([
+                            'service_requests.id as sr_id', 'service_requests.description as sr_description',
+
+                            'service_requests.requestedBy as requestedBy',
+                            'service_problems.description as sp_description',
+                            'categoryId', 'problemId',
+                            'incident_categories.id as categoryId',
+                            'incident_categories.descriptionEng as problem'
+                        ]).where((qb) => {
+                            qb.where(filters)
+                        }).groupBy(["service_requests.id", "service_problems.id", 'incident_categories.id']),
+                    knex.from("service_requests")
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .select([
+                            'service_requests.id as sr_id', 'service_requests.description as sr_description',
+
+                            'service_requests.requestedBy as requestedBy',
+                            'service_problems.description as sp_description',
+                            'categoryId', 'problemId',
+                            'incident_categories.id as categoryId',
+                            'incident_categories.descriptionEng as problem'
+                        ]).where((qb) => {
+                            qb.where(filters)
+                        }).offset(offset).limit(per_page)
+                ])
+
+            }
+
+            let count = total.length;
             pagination.total = count;
             pagination.per_page = per_page;
             pagination.offset = offset;

@@ -151,7 +151,7 @@ const serviceOrderController = {
             let { serviceRequestId,
                 description,
                 serviceOrderStatus,
-                archive, location, serviceStartTime, serviceStopTime } = req.body
+                archive, location, serviceStartTime, serviceStopTime, createdAt, createdBy, requestedBy, completedBy, createdAtFrom, createdAtTo } = req.body
 
             let reqData = req.query;
             let total, rows
@@ -183,6 +183,18 @@ const serviceOrderController = {
                 filters['service_requests.location'] = location
             }
 
+            if (createdBy) {
+                filters['service_orders.createdBy'] = createdBy
+            }
+
+            if (requestedBy) {
+                filters['service_orders.requestedBy'] = requestedBy
+            }
+
+            if (completedBy) {
+                filters['service_orders.completedBy'] = completedBy
+            }
+
             if (serviceStartTime) {
                 filters['service_orders.serviceStartTime'] = serviceStartTime
             }
@@ -192,6 +204,11 @@ const serviceOrderController = {
             }
 
 
+            // CreatedAt BETWEEN dates for created from - created to
+
+            // orderDueDate - due from - to
+
+            // completed on -> closed from - to
 
 
 
@@ -211,7 +228,7 @@ const serviceOrderController = {
                             'categoryId', 'problemId',
                             'incident_categories.id as categoryId',
                             'incident_categories.descriptionEng as problem'
-                        ]).offset(offset).limit(per_page).first(),
+                        ]).first(),
                     knex.from('service_orders')
                         .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
                         .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
@@ -228,41 +245,72 @@ const serviceOrderController = {
                         ]).offset(offset).limit(per_page)
                 ])
             } else {
-                try {
-                    [total, rows] = await Promise.all([
-                        knex.from('service_orders')
-                            .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                            .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                            .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                            .select(['service_orders.id as so_id',
-                                'service_requests.id as sr_id', 'service_requests.description as sr_description',
-                                'location', 'priority', 'orderDueDate',
-                                'service_orders.createdAt as createdAt',
-                                'service_requests.requestedBy as requestedBy',
-                                'serviceOrderStatus', 'service_problems.description as sp_description',
-                                'categoryId', 'problemId',
-                                'incident_categories.id as categoryId',
-                                'incident_categories.descriptionEng as problem'
-                            ]).where(filters).offset(offset).limit(per_page).first(),
-                        knex.from('service_orders')
-                            .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                            .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                            .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                            .select(['service_orders.id as so_id',
-                                'service_requests.id as sr_id', 'service_requests.description as sr_description',
-                                'location', 'priority', 'orderDueDate',
-                                'service_orders.createdAt as createdAt',
-                                'service_requests.requestedBy as requestedBy',
-                                'serviceOrderStatus', 'service_problems.description as sp_description',
-                                'categoryId', 'problemId',
-                                'incident_categories.id as categoryId',
-                                'incident_categories.descriptionEng as problem'
-                            ]).where(filters).offset(offset).limit(per_page)
-                    ])
-                } catch (e) {
-                    // Error
-                    console.log('Error: ', e.message)
-                }
+                [total, rows] = await Promise.all([
+                    knex.from('service_orders')
+                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .select(['service_orders.id as so_id',
+                            'service_requests.id as sr_id', 'service_requests.description as sr_description',
+                            'location', 'priority', 'orderDueDate',
+                            'service_orders.createdAt as createdAt',
+                            'service_requests.requestedBy as requestedBy',
+                            'serviceOrderStatus', 'service_problems.description as sp_description',
+                            'categoryId', 'problemId',
+                            'incident_categories.id as categoryId',
+                            'incident_categories.descriptionEng as problem',
+                            'service_orders.createdBy as createdBy'
+                        ]).where((qb) => {
+
+                            if (filters) {
+                                qb.where(filters);
+                            }
+
+                            if (createdAtFrom && createdAtTo) {
+                                let from = new Date(createdAtFrom).getTime()
+                                let to = new Date(createdAtTo).getTime();
+                                qb.whereBetween('service_orders.createdAt', [from, to])
+                            }
+
+                            //qb.where('asset_master.assetName', 'like', `%${searchTerm}%`);
+
+                            //qb.orWhere('asset_master.barcode', 'like', `%${searchTerm}%`);
+
+                        }).first(),
+                    knex.from('service_orders')
+                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .select(['service_orders.id as so_id',
+                            'service_requests.id as sr_id', 'service_requests.description as sr_description',
+                            'location', 'priority', 'orderDueDate',
+                            'service_orders.createdAt as createdAt',
+                            'service_requests.requestedBy as requestedBy',
+                            'serviceOrderStatus', 'service_problems.description as sp_description',
+                            'categoryId', 'problemId',
+                            'incident_categories.id as categoryId',
+                            'incident_categories.descriptionEng as problem',
+                            'service_orders.createdBy as createdBy'
+                        ]).where((qb) => {
+
+                            if (filters) {
+                                qb.where(filters);
+                            }
+
+                            if (createdAtFrom && createdAtTo) {
+                                let from = new Date(createdAtFrom).getTime()
+                                let to = new Date(createdAtTo).getTime();
+                                qb.whereBetween('service_orders.createdAt', [from, to])
+                            }
+
+
+                            //qb.where('asset_master.assetName', 'like', `%${searchTerm}%`);
+
+                            //qb.orWhere('asset_master.barcode', 'like', `%${searchTerm}%`);
+
+                        }).offset(offset).limit(per_page)
+                ])
+
             }
 
             let count = total.count;
