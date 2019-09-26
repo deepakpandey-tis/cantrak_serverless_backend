@@ -45,7 +45,7 @@ const serviceDetailsController = {
                 message: "General details list successfully !"
             });
 
-
+            
         } catch (err) {
             console.log('[controllers][entrance][signup] :  Error', err);
             trx.rollback;

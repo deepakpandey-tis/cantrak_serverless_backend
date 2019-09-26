@@ -281,6 +281,8 @@ const satisfactionController = {
                 trx.commit;
             });
         
+
+            
             res.status(200).json({
                 data: {
                     satisfaction: updateStatusPayload
