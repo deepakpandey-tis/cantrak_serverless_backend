@@ -173,7 +173,7 @@ const serviceRequestController = {
                     priority: Joi.string().required(),
                     location: Joi.string().required(),
                     recurrenceType: Joi.string().required(),
-                    serviceDate:Joi.array().required()
+                    serviceDate: Joi.array().required()
                 });
 
                 const result = Joi.validate(serviceRequestPayload, schema);
@@ -195,18 +195,18 @@ const serviceRequestController = {
                 console.log('[controllers][service][request]: Update Data', updateServiceReq);
 
                 serviceRequest = updateServiceReq[0];
-                serviceOrders  = [];
+                serviceOrders = [];
                 // Insert into service orders table with selected recrence date
                 let dates = serviceRequestPayload.serviceDate;
-                console.log("dates",dates);
+                console.log("dates", dates);
                 let countDates = dates.length;
-                console.log("countDates",countDates);
-                
-                for(i=0; i<countDates; i++ ){
-                    let newdate = dates[i].split("-").reverse().join("-");               
+                console.log("countDates", countDates);
+
+                for (i = 0; i < countDates; i++) {
+                    let newdate = dates[i].split("-").reverse().join("-");
                     let serviceDateExist = await knex('service_orders').where({ orderDueDate: newdate });
-                    if(serviceDateExist <= 0){
-                        let serviceOrderResult = await knex.insert({ serviceRequestId: serviceRequestPayload.id, recurrenceType:serviceRequestPayload.recurrenceType, orderDueDate:newdate,  createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('service_orders')
+                    if (serviceDateExist <= 0) {
+                        let serviceOrderResult = await knex.insert({ serviceRequestId: serviceRequestPayload.id, recurrenceType: serviceRequestPayload.recurrenceType, orderDueDate: newdate, createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('service_orders')
                         serviceOrders.push(serviceOrderResult[0]);
                     }
                 }
@@ -214,7 +214,7 @@ const serviceRequestController = {
 
             });
 
-            let returnResponse = {serviceRequest, 'serviceOrder' : serviceOrders};
+            let returnResponse = { serviceRequest, 'serviceOrder': serviceOrders };
 
             res.status(200).json({
                 data: {
@@ -514,6 +514,164 @@ const serviceRequestController = {
                 ],
             });
         }
+    },
+    getServiceRequestList: async (req, res) => {
+        // We will get service request list 
+        try {
+
+            let reqData = req.query;
+            let { description,
+                completedOn,
+                serviceFrom,
+                serviceTo,
+                id,
+                location,
+                serviceStatus } = req.body;
+            let total, rows
+
+            let pagination = {};
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
+
+            let filters = {}
+            if (description) {
+                filters['service_requests.description'] = description
+            }
+
+            // completedOn -> null means due
+            // serviceFrom -serviceTo = createdAt
+
+
+            if (id) {
+                filters['service_requests.id'] = id
+            }
+            if (location) {
+                filters['service_requests.location'] = location
+            }
+            if (serviceStatus) {
+                filters['service_requests.serviceStatusCode'] = serviceStatus
+            }
+
+            let serviceFromDate, serviceToDate
+            if (serviceFrom && serviceTo) {
+
+                serviceFromDate = new Date(serviceFrom).getTime();
+                serviceToDate = new Date(serviceTo).getTime();
+
+            } else if (serviceFrom && !serviceTo) {
+
+                serviceFromDate = new Date(serviceFrom).getTime();
+                serviceToDate = new Date("2030-01-01").getTime()
+
+            } else if (!serviceFrom && serviceTo) {
+                serviceFromDate = new Date("2000-01-01").getTime();
+                serviceToDate = new Date(serviceTo).getTime()
+            }
+
+
+            if (completedOn) {
+                filters['service_requests.completedOn'] = completedOn
+            }
+
+
+
+            if (_.isEmpty(filters)) {
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from("service_requests")
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .select([
+                            'service_requests.id as sr_id', 'service_requests.description as sr_description',
+
+                            'service_requests.requestedBy as requestedBy',
+                            'service_problems.description as sp_description',
+                            'categoryId', 'problemId',
+                            'incident_categories.id as categoryId',
+                            'incident_categories.descriptionEng as problem'
+                        ]).groupBy(["service_requests.id", "service_problems.id", 'incident_categories.id']),
+                    knex.from("service_requests")
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .select([
+                            'service_requests.id as sr_id', 'service_requests.description as sr_description',
+
+                            'service_requests.requestedBy as requestedBy',
+                            'service_problems.description as sp_description',
+                            'categoryId', 'problemId',
+                            'incident_categories.id as categoryId',
+                            'incident_categories.descriptionEng as problem'
+                        ]).offset(offset).limit(per_page)
+                ])
+            } else {
+                //console.log('IN else: ')
+                //filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from("service_requests")
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .select([
+                            'service_requests.id as sr_id', 'service_requests.description as sr_description',
+
+                            'service_requests.requestedBy as requestedBy',
+                            'service_problems.description as sp_description',
+                            'categoryId', 'problemId',
+                            'incident_categories.id as categoryId',
+                            'incident_categories.descriptionEng as problem'
+                        ]).where((qb) => {
+                            qb.where(filters)
+                            if (serviceFromDate && serviceToDate) {
+                                qb.whereBetween('service_requests.createdAt', [serviceFromDate, serviceToDate])
+                            }
+
+                        }).groupBy(["service_requests.id", "service_problems.id", 'incident_categories.id']),
+                    knex.from("service_requests")
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .select([
+                            'service_requests.id as sr_id', 'service_requests.description as sr_description',
+
+                            'service_requests.requestedBy as requestedBy',
+                            'service_problems.description as sp_description',
+                            'categoryId', 'problemId',
+                            'incident_categories.id as categoryId',
+                            'incident_categories.descriptionEng as problem'
+                        ]).where((qb) => {
+                            qb.where(filters)
+                            if (serviceFromDate && serviceToDate) {
+                                qb.whereBetween('service_requests.createdAt', [serviceFromDate, serviceToDate])
+                            }
+                        }).offset(offset).limit(per_page)
+                ])
+
+            }
+
+            let count = total.length;
+            pagination.total = count;
+            pagination.per_page = per_page;
+            pagination.offset = offset;
+            pagination.to = offset + rows.length;
+            pagination.last_page = Math.ceil(count / per_page);
+            pagination.current_page = page;
+            pagination.from = offset;
+            pagination.data = rows;
+
+            return res.status(200).json({
+                data: {
+                    service_requests: pagination
+                },
+                message: 'Service Request List!'
+            })
+        } catch (err) {
+            console.log('[controllers][service][request] :  Error', err);
+            return res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+
     }
 };
 

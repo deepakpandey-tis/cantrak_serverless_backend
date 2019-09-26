@@ -14,6 +14,8 @@ router.post('/add-service-problems', authMiddleware.isAuthenticated, serviceRequ
 
 router.post('/update-service-request', authMiddleware.isAuthenticated, serviceRequestController.updateServiceRequest);
 
+router.post('/get-service-request-list', authMiddleware.isAuthenticated, serviceRequestController.getServiceRequestList)
+
 router.post('/upload-images', authMiddleware.isAuthenticated, serviceRequestController.updateImages);
 
 router.post('/upload-image-url', authMiddleware.isAuthenticated, serviceRequestController.getImageUploadUrl);

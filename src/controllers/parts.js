@@ -10,16 +10,82 @@ const partsController = {
         try {
 
             let partData = null;
-            partData = await knex.from('part_ledger').innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
+            let reqData = req.query;
+            let total, rows
 
-            console.log('[controllers][parts][getParts]: Parts List', partData);
+            let pagination = {};
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
 
-            partData = partData.map(d => _.omit(d, ['partId'], ['createdAt'], ['updatedAt'], ['isActive']));
 
-            res.status(200).json({
-                data: partData,
-                message: "Parts List"
-            });
+            let { partName,
+                partCode,
+                partCategory } = req.body;
+
+
+            let filters = {}
+
+            if (partName) {
+                filters['part_master.partName'] = partName
+            }
+
+            if (partCode) {
+                filters['part_master.partCode'] = partCode
+            }
+
+            if (partCategory) {
+                filters['part_master.partCategory'] = partCategory
+            }
+
+
+
+            if (_.isEmpty(filters)) {
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from("part_ledger").innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
+                    knex.from('part_ledger').innerJoin('part_master', 'part_ledger.partId', 'part_master.id').offset(offset).limit(per_page)
+                ])
+            } else {
+                //filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
+                try {
+                    [total, rows] = await Promise.all([
+                        knex.count('* as count').from("part_ledger").innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
+                        knex.from('part_ledger').innerJoin('part_master', 'part_ledger.partId', 'part_master.id').where(filters).offset(offset).limit(per_page)
+                    ])
+                } catch (e) {
+                    // Error
+                }
+            }
+
+
+            let count = total.count;
+            pagination.total = count;
+            pagination.per_page = per_page;
+            pagination.offset = offset;
+            pagination.to = offset + rows.length;
+            pagination.last_page = Math.ceil(count / per_page);
+            pagination.current_page = page;
+            pagination.from = offset;
+            pagination.data = rows;
+
+            return res.status(200).json({
+                data: {
+                    parts: pagination
+                },
+                message: 'Parts List!'
+            })
+
+            //partData = await knex.from('part_ledger').innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
+
+            //console.log('[controllers][parts][getParts]: Parts List', partData);
+
+            //partData = partData.map(d => _.omit(d, ['partId'], ['createdAt'], ['updatedAt'], ['isActive']));
+
+            // res.status(200).json({
+            //     data: partData,
+            //     message: "Parts List"
+            // });
 
 
         } catch (err) {
@@ -355,6 +421,36 @@ const partsController = {
             });
         }
 
+    },
+    searchParts: async (req, res) => {
+
+        try {
+
+            let query = decodeURI(req.query.query).trim();
+            const getFilteredItems = (searchTerm) => knex('part_master')
+                .where((qb) => {
+                    qb.where('part_master.partName', 'like', `%${searchTerm}%`);
+
+                    qb.orWhere('part_master.partCode', 'like', `%${searchTerm}%`);
+
+                    qb.orWhere('part_master.partCategory', 'like', `%${searchTerm}%`);
+                    qb.orWhere('part_master.barcode', 'like', `%${searchTerm}%`);
+                });
+            const parts = await getFilteredItems(query)
+            return res.status(200).json({
+                data: {
+                    parts: parts
+                },
+                message: 'Search results for: ' + query
+            })
+        } catch (err) {
+            console.log('[controllers][part][searchPart] :  Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
     }
 }
 

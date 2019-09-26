@@ -220,7 +220,7 @@ const floorZoneController = {
         let offset = (page - 1) * per_page;
 
         let [total, rows] = await Promise.all([
-          knex.count('* as count').from("floor_and_zones").first(),
+          knex.count('* as count').from("floor_and_zones").where({ 'floor_and_zones.companyId': companyId }).offset(offset).limit(per_page).first(),
           knex.from("floor_and_zones").innerJoin("companies", "floor_and_zones.companyId", "companies.id").where({ 'floor_and_zones.companyId': companyId }).offset(offset).limit(per_page)
         ])
 
