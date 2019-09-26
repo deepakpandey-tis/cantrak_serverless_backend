@@ -520,7 +520,13 @@ const serviceRequestController = {
         try {
 
             let reqData = req.query;
-            let { description } = req.body;
+            let { description,
+                completedOn,
+                serviceFrom,
+                serviceTo,
+                id,
+                location,
+                serviceStatus } = req.body;
             let total, rows
 
             let pagination = {};
@@ -533,6 +539,42 @@ const serviceRequestController = {
             if (description) {
                 filters['service_requests.description'] = description
             }
+
+            // completedOn -> null means due
+            // serviceFrom -serviceTo = createdAt
+
+
+            if (id) {
+                filters['service_requests.id'] = id
+            }
+            if (location) {
+                filters['service_requests.location'] = location
+            }
+            if (serviceStatus) {
+                filters['service_requests.serviceStatusCode'] = serviceStatus
+            }
+
+            let serviceFromDate, serviceToDate
+            if (serviceFrom && serviceTo) {
+
+                serviceFromDate = new Date(serviceFrom).getTime();
+                serviceToDate = new Date(serviceTo).getTime();
+
+            } else if (serviceFrom && !serviceTo) {
+
+                serviceFromDate = new Date(serviceFrom).getTime();
+                serviceToDate = new Date("2030-01-01").getTime()
+
+            } else if (!serviceFrom && serviceTo) {
+                serviceFromDate = new Date("2000-01-01").getTime();
+                serviceToDate = new Date(serviceTo).getTime()
+            }
+
+
+            if (completedOn) {
+                filters['service_requests.completedOn'] = completedOn
+            }
+
 
 
             if (_.isEmpty(filters)) {
@@ -548,7 +590,7 @@ const serviceRequestController = {
                             'categoryId', 'problemId',
                             'incident_categories.id as categoryId',
                             'incident_categories.descriptionEng as problem'
-                        ]).groupBy(["service_requests.id", "service_problems.id", 'incident_categories.id']).first(),
+                        ]).groupBy(["service_requests.id", "service_problems.id", 'incident_categories.id']),
                     knex.from("service_requests")
                         .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
                         .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
@@ -579,6 +621,10 @@ const serviceRequestController = {
                             'incident_categories.descriptionEng as problem'
                         ]).where((qb) => {
                             qb.where(filters)
+                            if (serviceFromDate && serviceToDate) {
+                                qb.whereBetween('service_requests.createdAt', [serviceFromDate, serviceToDate])
+                            }
+
                         }).groupBy(["service_requests.id", "service_problems.id", 'incident_categories.id']),
                     knex.from("service_requests")
                         .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
@@ -593,6 +639,9 @@ const serviceRequestController = {
                             'incident_categories.descriptionEng as problem'
                         ]).where((qb) => {
                             qb.where(filters)
+                            if (serviceFromDate && serviceToDate) {
+                                qb.whereBetween('service_requests.createdAt', [serviceFromDate, serviceToDate])
+                            }
                         }).offset(offset).limit(per_page)
                 ])
 
