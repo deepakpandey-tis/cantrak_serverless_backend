@@ -20,13 +20,13 @@ const propertyCategoryController = {
         try {
 
             let incident = null;
-            
+
             await knex.transaction(async (trx) => {
 
                 const categoryPayload = req.body;
 
                 console.log('[controllers][category][add]', categoryPayload);
-               
+
                 // validate keys
                 const schema = Joi.object().keys({
                     categoryCode: Joi.string().required(),
@@ -38,7 +38,7 @@ const propertyCategoryController = {
 
                 const result = Joi.validate(categoryPayload, schema);
                 console.log('[controllers][category][add]: JOi Result', result);
-               
+
                 if (result && result.hasOwnProperty('error') && result.error) {
                     return res.status(400).json({
                         errors: [
@@ -49,7 +49,7 @@ const propertyCategoryController = {
 
                 // Check typeCode already exists 
                 const existCategoryCode = await knex('incident_categories').where({ categoryCode: categoryPayload.categoryCode });
-              
+
                 console.log('[controllers][category][add]: CategoryCode', existCategoryCode);
 
                 // Return error when username exist
@@ -60,7 +60,7 @@ const propertyCategoryController = {
                             { code: 'TYPE_CODE_EXIST_ERROR', message: 'Category Code already exist !' }
                         ],
                     });
-                }           
+                }
 
                 // Insert in users table,
                 const currentTime = new Date().getTime();
@@ -71,12 +71,12 @@ const propertyCategoryController = {
                 console.log('[controllers][category][add]: Insert Data', insertData);
 
                 const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_categories');
-                
+
                 incident = incidentResult[0];
-               
+
                 trx.commit;
             });
-        
+
             res.status(200).json({
                 data: {
                     category: incident
@@ -101,13 +101,13 @@ const propertyCategoryController = {
         try {
 
             let incident = null;
-            
+
             await knex.transaction(async (trx) => {
 
                 const categoryTypePayload = req.body;
 
                 console.log('[controllers][Category][categoryType]', categoryTypePayload);
-               
+
                 // validate keys
                 const schema = Joi.object().keys({
                     id: Joi.number().required(),
@@ -120,7 +120,7 @@ const propertyCategoryController = {
 
                 const result = Joi.validate(categoryTypePayload, schema);
                 console.log('[controllers][Category][categoryType]: JOi Result', result);
-               
+
                 if (result && result.hasOwnProperty('error') && result.error) {
                     return res.status(400).json({
                         errors: [
@@ -131,7 +131,7 @@ const propertyCategoryController = {
 
                 // Check typeCode already exists 
                 const existCateoryTypeCode = await knex('incident_categories').where({ categoryCode: categoryTypePayload.categoryCode });
-              
+
                 console.log('[controllers][Category][categoryType]: CategoryTypeCode', existCateoryTypeCode);
 
                 // Return error when username exist
@@ -142,26 +142,26 @@ const propertyCategoryController = {
                             { code: 'TYPE_CODE_EXIST_ERROR', message: 'Category Code already exist !' }
                         ],
                     });
-                }           
+                }
 
                 // Insert in users table,
                 const currentTime = new Date().getTime();
                 //console.log('[controllers][entrance][signup]: Expiry Time', tokenExpiryTime);
 
                 //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
-                const updateDataResult = await knex.update({ categoryCode : categoryTypePayload.categoryCode.toUpperCase(), descriptionEng : categoryTypePayload.descriptionEng, descriptionThai : categoryTypePayload.descriptionThai, updatedAt : currentTime }).where({ id: categoryTypePayload.id }).returning(['*']).transacting(trx).into('incident_categories');
+                const updateDataResult = await knex.update({ categoryCode: categoryTypePayload.categoryCode.toUpperCase(), descriptionEng: categoryTypePayload.descriptionEng, descriptionThai: categoryTypePayload.descriptionThai, updatedAt: currentTime }).where({ id: categoryTypePayload.id }).returning(['*']).transacting(trx).into('incident_categories');
 
-               // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
+                // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
 
                 console.log('[controllers][Category][incidentType]: Update Data', updateDataResult);
 
                 //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
-                
+
                 incident = updateDataResult[0];
-               
+
                 trx.commit;
             });
-        
+
             res.status(200).json({
                 data: {
                     category: incident
@@ -186,13 +186,13 @@ const propertyCategoryController = {
         try {
 
             let incident = null;
-            
+
             await knex.transaction(async (trx) => {
 
                 const categoryDelPayload = req.body;
 
                 console.log('[controllers][category][categoryDelete]', categoryDelPayload);
-               
+
                 // validate keys
                 const schema = Joi.object().keys({
                     id: Joi.number().required()
@@ -200,7 +200,7 @@ const propertyCategoryController = {
 
                 const result = Joi.validate(categoryDelPayload, schema);
                 console.log('[controllers][category][categoryDelete]: JOi Result', result);
-               
+
                 if (result && result.hasOwnProperty('error') && result.error) {
                     return res.status(400).json({
                         errors: [
@@ -211,7 +211,7 @@ const propertyCategoryController = {
 
                 // Check typeCode already exists 
                 const notexistCategoryCode = await knex('incident_categories').where({ id: categoryDelPayload.id });
-              
+
                 console.log('[controllers][category][categoryDelete]: CategoryId', notexistCategoryCode);
 
                 // Return error when username exist
@@ -222,26 +222,26 @@ const propertyCategoryController = {
                             { code: 'TYPE_CODE_EXIST_ERROR', message: 'Category does not exist !' }
                         ],
                     });
-                }           
+                }
 
                 // Insert in users table,
                 const currentTime = new Date().getTime();
                 //console.log('[controllers][entrance][signup]: Expiry Time', tokenExpiryTime);
 
                 //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
-                const updateDataResult = await knex.update({ isActive : 'false', updatedAt : currentTime }).where({ id: categoryDelPayload.id }).returning(['*']).transacting(trx).into('incident_categories');
+                const updateDataResult = await knex.update({ isActive: 'false', updatedAt: currentTime }).where({ id: categoryDelPayload.id }).returning(['*']).transacting(trx).into('incident_categories');
 
                 // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
 
                 console.log('[controllers][category][categoryDelete]: Update Data', updateDataResult);
 
                 //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
-                
+
                 incident = updateDataResult[0];
-               
+
                 trx.commit;
             });
-        
+
             res.status(200).json({
                 data: {
                     category: incident
@@ -266,27 +266,27 @@ const propertyCategoryController = {
         try {
 
             let listCategories = null;
-            
-            await knex.transaction(async (trx) => {                        
+
+            await knex.transaction(async (trx) => {
 
                 // Insert in users table,
-                
+
                 const DataResult = await knex('incident_categories').where({ isActive: 'true' });
-               
+
                 //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
                 //const updateDataResult = await knex.update({ isActive : 'false', updatedAt : currentTime }).where({ id: incidentTypePayload.id }).returning(['*']).transacting(trx).into('incident_type');
 
-               // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
+                // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
 
                 console.log('[controllers][category][categoryDelete]: View Data', DataResult);
 
                 //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
-                
+
                 listCategories = DataResult;
-               
+
                 trx.commit;
             });
-        
+
             res.status(200).json({
                 data: {
                     categories: listCategories
