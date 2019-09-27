@@ -304,6 +304,42 @@ const propertyCategoryController = {
             });
         }
     },
+    getCategoryDetails: async (req, res) => {
+        try {
+            let categoryDetails = null;
+            let payload = req.body;
+            const schema = Joi.object().keys({
+                id: Joi.number().required()
+            });
+            const result = Joi.validate(payload, schema);
+            if (result && result.hasOwnProperty("error") && result.error) {
+                return res.status(400).json({
+                    errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+                });
+            }
+
+            let categoryResults = await knex("incident_categories")
+                .select()
+                .where({ id: payload.id });
+
+            categoryDetails = _.omit(categoryResults[0], [
+                "createdAt",
+                "updatedAt",
+                "isActive"
+            ]);
+            return res.status(200).json({
+                data: {
+                    categoryDetail: categoryDetails
+                },
+                message: "Category details"
+            });
+        } catch (err) {
+            console.log("[controllers][category][viewCategory] : Error", err);
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    }
 
 };
 
