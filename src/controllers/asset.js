@@ -186,7 +186,7 @@ const assetController = {
 
 
         } catch (err) {
-            console.log('[controllers][parts][getParts] :  Error', err);
+            console.log('[controllers][asset][getAssets] :  Error', err);
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
