@@ -29,7 +29,8 @@ const floorZoneRouter = require('./administration-features/floor-zone')
 const propertyUnitRouter = require("./administration-features/property-unit")
 const satisfactionRouter = require("./administration-features/satisfaction");
 const taxesRouter = require("./administration-features/taxes");
-const problemRouter = require('./administration-features/problem')
+const problemRouter = require('./administration-features/problem');
+const dashboardRouter = require('./dashboard');
 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
@@ -67,5 +68,6 @@ router.use('/administration-features/status', statusRouter);
 router.use('/administration-features/floor-zone', floorZoneRouter)
 router.use('/administration-features/satisfaction', satisfactionRouter);
 router.use('/administration-features/taxes', taxesRouter);
-router.use('/administration-features/problem', problemRouter)
+router.use('/administration-features/problem', problemRouter);
+router.use('/dashboard',dashboardRouter);
 module.exports = router;
