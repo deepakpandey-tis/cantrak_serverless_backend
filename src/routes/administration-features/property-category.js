@@ -18,5 +18,5 @@ router.get('/category-list', authMiddleware.isAuthenticated, authMiddleware.isSu
 
 router.post('/get-category-details', propertyCategoryController.getCategoryDetails);
 
+
 module.exports = router;
- 

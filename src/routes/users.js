@@ -7,6 +7,8 @@ const usersController = require('../controllers/users');
 
 
 /* GET users listing. */
-router.get('/', authMiddleware.isAuthenticated, authMiddleware.isAdmin, usersController.list);
+router.get('/', authMiddleware.isAuthenticated, authMiddleware.isSuperAdmin, usersController.list);
+router.get('/get-user-details', authMiddleware.isAuthenticated, authMiddleware.isSuperAdmin, usersController.getUserDetails);
+router.post('/update-user-details', authMiddleware.isAuthenticated, authMiddleware.isSuperAdmin, usersController.updateUserDetails)
 
 module.exports = router;
