@@ -19,7 +19,7 @@ const authMiddleware = {
             if (token && token != '') {
 
                 // Very token using JWT
-                // console.log('[][auth]: Token', token);
+                 console.log('[][auth]: Token', token);
                 const decodedTokenData = await jwt.verify(token, process.env.JWT_PRIVATE_KEY);
                 // console.log('[middleware][auth]: Token Decoded Data:', decodedTokenData);
 
@@ -65,7 +65,7 @@ const authMiddleware = {
            
             let currentUser = req.me;
 
-            if(currentUser && currentUser.roles && currentUser.roles.includes("admin")){
+            if(currentUser && currentUser.roles && currentUser.roles.includes("superAdmin") || currentUser.roles.includes("admin")){
                 return next();
             }
             return next(createError(403));

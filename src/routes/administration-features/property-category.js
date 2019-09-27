@@ -8,13 +8,15 @@ const authMiddleware = require('../../middlewares/auth');
 
 /* GET users listing. */
 
-router.post('/add-category', authMiddleware.isAuthenticated, authMiddleware.isAdmin, propertyCategoryController.addCategory);
+router.post('/add-category', authMiddleware.isAuthenticated, authMiddleware.isSuperAdmin, propertyCategoryController.addCategory);
 
-router.post('/update-category', authMiddleware.isAuthenticated, authMiddleware.isAdmin, propertyCategoryController.updateCategory);
+router.post('/update-category', authMiddleware.isAuthenticated, authMiddleware.isSuperAdmin, propertyCategoryController.updateCategory);
 
-router.post('/delete-category', authMiddleware.isAuthenticated, authMiddleware.isAdmin, propertyCategoryController.deleteCategory);
+router.post('/delete-category', authMiddleware.isAuthenticated, authMiddleware.isSuperAdmin, propertyCategoryController.deleteCategory);
 
-router.get('/category-list', authMiddleware.isAuthenticated, authMiddleware.isAdmin, propertyCategoryController.categoryList);
+router.get('/category-list', authMiddleware.isAuthenticated, authMiddleware.isSuperAdmin, propertyCategoryController.categoryList);
+
+router.post('/get-category-details', propertyCategoryController.getCategoryDetails);
 
 module.exports = router;
  
