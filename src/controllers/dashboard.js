@@ -11,21 +11,38 @@ const _ = require('lodash');
 const dashboardController = {
   getDashboardData: async (req, res) => {
     try {
-      // Get opened service requests
+
       const [openRequests, openOrders, srhp, sohp] = await Promise.all([
-        knex('service_requests').select().where({ serviceStatusCode: 'O' }),
-        knex('service_orders').select().where({ serviceOrderStatus: 'O' }),
-        knex('service_requests').select().where({ serviceStatusCode: 'O', priority: 'HIGH' }),
-        knex.from('service_orders').innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id').select([
-          'service_orders.id as so_id',
-          'service_requests.id as sr_id',
-        ]).where({ 'service_requests.serviceStatusCode': 'O', 'service_requests.priority': 'HIGH' })
+        knex.count('service_requests.serviceStatusCode as count')
+          .from('service_requests')
+          .select('service_requests.serviceStatusCode as status')
+          .groupBy(['service_requests.serviceStatusCode'])
+          .where({ serviceStatusCode: 'O' })
+        ,
+        knex.count('service_orders.serviceOrderStatus as count')
+          .from('service_orders')
+          .select('service_orders.serviceOrderStatus as status')
+          .groupBy(['service_orders.serviceOrderStatus'])
+          .where({ serviceOrderStatus: 'O' })
+        ,
+        knex.count('service_requests.serviceStatusCode as count')
+          .from('service_requests')
+          .select('service_requests.serviceStatusCode as status')
+          .groupBy(['service_requests.serviceStatusCode'])
+          .where({ serviceStatusCode: 'O', priority: 'HIGH' })
+        ,
+        knex.count(
+          'service_orders.serviceRequestId as count'
+        ).from('service_orders').innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id').select([
+          'service_orders.serviceRequestId as sr_id',
+        ]).groupBy(['service_orders.serviceRequestId']).where({ 'service_requests.serviceStatusCode': 'O', 'service_requests.priority': 'HIGH' })
       ])
 
-      let open_service_requests = openRequests.length;
-      let open_service_orders = openOrders.length;
-      let open_service_requests_high_priority = srhp.length;
-      let open_service_orders_high_priority = sohp.length;
+      let open_service_requests = openRequests.length ? openRequests[0].count : 0;
+      let open_service_orders = openOrders.length ? openOrders[0].count : 0;
+      let open_service_requests_high_priority = srhp.length ? srhp[0].count : 0;
+      let open_service_orders_high_priority = sohp.length ? sohp[0].count : 0;
+
 
       return res.status(200).json({
         data: {
@@ -37,12 +54,6 @@ const dashboardController = {
         message: 'Dashboard data'
       })
 
-
-      // Get opened service requests with high priority
-
-      // Get opened service orders
-
-      // Get opened service orders with high priority
 
     } catch (err) {
       console.log('[controllers][parts][getParts] :  Error', err);
