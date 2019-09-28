@@ -172,10 +172,10 @@ const surveyOrderController = {
 
         // Here 3 operations will take place
         /*
-                    1. Select users based on entity id and entity type
-                    2. Remove Those users 
-                    3. Add new users                    
-                */
+            1. Select users based on entity id and entity type
+            2. Remove Those users 
+            3. Add new users                    
+        */
         let assignedServiceAdditionalUsers = surveyOrderPayload.additionalUsers;
 
         let selectedUsers = await knex
@@ -262,7 +262,6 @@ const surveyOrderController = {
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
 
-
       if (servicePayload.isFilterActive == "true") {
         // SURVEY ORDER ID
         if (
@@ -279,7 +278,7 @@ const surveyOrderController = {
           serviceRequestId != "" &&
           serviceRequestId
         ) {
-           filterList["s.id"] = serviceRequestId;
+          filterList["s.id"] = serviceRequestId;
         }
 
         // STATUS
@@ -293,7 +292,7 @@ const surveyOrderController = {
 
         // PRIORITY
         if (servicePayload.priority != "undefined" && servicePayload.priority) {
-           filterList["s.priority"] = servicePayload.priority;
+          filterList["s.priority"] = servicePayload.priority;
         }
 
         // LOCATION
@@ -311,7 +310,7 @@ const surveyOrderController = {
           (servicePayload.assignedBy != "undefined",
           servicePayload.assignedBy != "" && servicePayload.assignedBy)
         ) {
-           filterList["o.createdBy"] = servicePayload.assignedBy;
+          filterList["o.createdBy"] = servicePayload.assignedBy;
         }
 
         // CREATED BY
@@ -406,46 +405,54 @@ const surveyOrderController = {
         /* Get List of survey order List By Filter Data */
 
         // For get the totalCount
-        total = await knex.count('* as count').from("survey_orders As o")
-            .where(qb => {
-                qb.where(filterList);
-                if (newCreatedDate || newCreatedDateTo) {
-                    qb.whereBetween("o.createdAt", [
-                        newCreatedDate,
-                        newCreatedDateTo
-                    ]);
-                }
-                if (completedFromDate || completedToDate) {
-                    qb.whereBetween("o.completedOn", [
-                        completedFromDate,
-                        completedToDate
-                    ]);
-                }
-                if (dueFromDate || dueToDate) {
-                    qb.whereBetween("o.appointedDate", [dueFromDate, dueToDate]);
-                }
-            })
-            .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
-            .leftJoin(
-                "service_status AS status",
-                "o.surveyOrderStatus",
-                "status.statusCode"
-            )
-            .leftJoin("users AS u", "o.createdBy", "u.id")
-            .select(
-                "o.id AS surveyId",
-                "o.serviceRequestId",
-                "status.descriptionEng AS surveyStatus",
-                "status.statusCode AS surveyStatusCode",
-                "u.id As createdUserId",
-                "u.name AS appointedBy",
-                "u.name AS createdBy",
-                "o.appointedDate AS appointmentDate",
-                "o.appointedTime AS appointmentTime",
-                "o.createdAt AS createdAt"
-            )            
-            .groupBy(["o.id","s.id","status.descriptionEng","status.statusCode","u.id"])
-       
+        total = await knex
+          .count("* as count")
+          .from("survey_orders As o")
+          .where(qb => {
+            qb.where(filterList);
+            if (newCreatedDate || newCreatedDateTo) {
+              qb.whereBetween("o.createdAt", [
+                newCreatedDate,
+                newCreatedDateTo
+              ]);
+            }
+            if (completedFromDate || completedToDate) {
+              qb.whereBetween("o.completedOn", [
+                completedFromDate,
+                completedToDate
+              ]);
+            }
+            if (dueFromDate || dueToDate) {
+              qb.whereBetween("o.appointedDate", [dueFromDate, dueToDate]);
+            }
+          })
+          .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
+          .leftJoin(
+            "service_status AS status",
+            "o.surveyOrderStatus",
+            "status.statusCode"
+          )
+          .leftJoin("users AS u", "o.createdBy", "u.id")
+          .select(
+            "o.id AS surveyId",
+            "o.serviceRequestId",
+            "status.descriptionEng AS surveyStatus",
+            "status.statusCode AS surveyStatusCode",
+            "u.id As createdUserId",
+            "u.name AS appointedBy",
+            "u.name AS createdBy",
+            "o.appointedDate AS appointmentDate",
+            "o.appointedTime AS appointmentTime",
+            "o.createdAt AS createdAt"
+          )
+          .groupBy([
+            "o.id",
+            "s.id",
+            "status.descriptionEng",
+            "status.statusCode",
+            "u.id"
+          ]);
+
         // For Get Rows In Pagination With Offset and Limit
         rows = await knex
           .select(
@@ -486,24 +493,25 @@ const surveyOrderController = {
             "status.statusCode"
           )
           .leftJoin("users AS u", "o.createdBy", "u.id")
-          .offset(offset).limit(per_page);
-
+          .offset(offset)
+          .limit(per_page);
       } else if (
         servicePayload.isFilterActive == "false" &&
         servicePayload.serviceRequestId != ""
       ) {
-
         /* Get List of All survey order of particular service requests */
 
         // For get the totalCount
-        total = await knex.count('* as count').from("survey_orders")
+        total = await knex
+          .count("* as count")
+          .from("survey_orders")
           .where({ serviceRequestId: serviceRequestId })
           .innerJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
             "service_requests.id"
           )
-          .groupBy(["service_requests.id","survey_orders.id"])
+          .groupBy(["service_requests.id", "survey_orders.id"])
           .select([
             "survey_orders.id as so_id",
             "service_requests.id as sr_id",
@@ -515,8 +523,8 @@ const surveyOrderController = {
             "survey_orders.isActive as status"
           ]);
 
-          // For get the rows With pagination
-        rows =  await knex
+        // For get the rows With pagination
+        rows = await knex
           .select()
           .from("survey_orders")
           .where({ serviceRequestId: serviceRequestId })
@@ -535,21 +543,22 @@ const surveyOrderController = {
             "service_requests.priority as priority",
             "survey_orders.isActive as status"
           ])
-          .offset(offset).limit(per_page);
-
-
+          .offset(offset)
+          .limit(per_page);
       } else {
         /* Get List of All survey order With out Filter */
 
         // For get the totalCount
-        total = await knex.count('* as count').from("survey_orders")
-            .innerJoin(
+        total = await knex
+          .count("* as count")
+          .from("survey_orders")
+          .innerJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
             "service_requests.id"
-            )
-            .groupBy(["service_requests.id","survey_orders.id"])          
-            .select([
+          )
+          .groupBy(["service_requests.id", "survey_orders.id"])
+          .select([
             "survey_orders.id as so_id",
             "service_requests.id as sr_id",
             "survey_orders.updatedAt as updatedAt",
@@ -558,18 +567,18 @@ const surveyOrderController = {
             "service_requests.description as description",
             "service_requests.priority as priority",
             "survey_orders.isActive as status"
-            ]);
+          ]);
 
-            // For get the rows With pagination
-        rows =  await knex
-            .select()
-            .from("survey_orders")
-            .innerJoin(
+        // For get the rows With pagination
+        rows = await knex
+          .select()
+          .from("survey_orders")
+          .innerJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
             "service_requests.id"
-            )
-            .select([
+          )
+          .select([
             "survey_orders.id as so_id",
             "service_requests.id as sr_id",
             "survey_orders.updatedAt as updatedAt",
@@ -578,11 +587,11 @@ const surveyOrderController = {
             "service_requests.description as description",
             "service_requests.priority as priority",
             "survey_orders.isActive as status"
-            ])
-            .offset(offset).limit(per_page);
+          ])
+          .offset(offset)
+          .limit(per_page);
       }
 
-     
       let count = total.length;
       pagination.total = count;
       pagination.per_page = per_page;
@@ -591,8 +600,7 @@ const surveyOrderController = {
       pagination.last_page = Math.ceil(count / per_page);
       pagination.current_page = page;
       pagination.from = offset;
-      pagination.data = rows; 
-
+      pagination.data = rows;
 
       res.status(200).json({
         data: pagination,
@@ -614,7 +622,7 @@ const surveyOrderController = {
       let serviceRequest = null;
 
       //await knex.transaction(async (trx) => {
-      let id = req.body.id;
+      let surveyOrderid = req.body.id;
 
       const schema = Joi.object().keys({
         id: Joi.string().required()
@@ -653,6 +661,213 @@ const surveyOrderController = {
       );
       trx.rollback;
       res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  updateSurveyOrderNotes: async (req, res) => {
+    // Define try/catch block
+    try {
+      let surveyNotesResponse = null;
+      let upNotesPayload = null;
+      let problemImagesData = [];
+      let noteImagesData = [];
+      await knex.transaction(async trx => {
+        upNotesPayload = req.body;
+        console.log(
+          "[controllers][survey][updateNotes] : Request Body",
+          upNotesPayload
+        );
+
+        // validate keys
+        const schema = Joi.object().keys({
+          surveyOrderId: Joi.number().required(),
+          description: Joi.string().required(),
+          problemsImages: Joi.array().required(),
+          notesImages: Joi.array().required()
+        });
+
+        let problemImages = upNotesPayload.problemsImages;
+        let noteImages = upNotesPayload.notesImages;
+        // validate params
+        const result = Joi.validate(upNotesPayload, schema);
+
+        if (result && result.hasOwnProperty("error") && result.error) {
+          res.status(400).json({
+            errors: [
+              { code: "VALIDATON ERRORS", message: result.message.error }
+            ]
+          });
+        }
+
+        const currentTime = new Date().getTime();
+        // Insert into survey order post update table
+        const insertData = {
+          surveyOrderId: upNotesPayload.surveyOrderId,
+          description: upNotesPayload.description,
+          createdAt: currentTime,
+          updatedAt: currentTime
+        };
+        console.log(
+          "[controllers][survey][surveyPostNotes] : Insert Data ",
+          insertData
+        );
+
+        const resultSurveyNotes = await knex
+          .insert(insertData)
+          .returning(["*"])
+          .transacting(trx)
+          .into("survey_order_post_update");
+        notesData = resultSurveyNotes;
+        surveyNoteId = notesData[0];
+        // Insert Problems Images
+        for (prodImg of problemImages) {
+          let insertProblemData = {
+            entityId: surveyNoteId.id,
+            entityType: "survey_order_post_update",
+            s3Url: prodImg.s3Url,
+            name: prodImg.name,
+            title: prodImg.title,
+            createdAt: currentTime,
+            updatedAt: currentTime
+          };
+          let resultProblemsImg = await knex
+            .insert(insertProblemData)
+            .returning(["*"])
+            .transacting(trx)
+            .into("images");
+          console.log("problemImageResponse", resultProblemsImg);
+          problemImagesData.push(resultProblemsImg[0]);
+        }
+
+        // Insert Problems Images
+        for (noteImg of noteImages) {
+          let insertNoteData = {
+            entityId: upNotesPayload.surveyOrderId,
+            entityType: "survey_order",
+            s3Url: noteImg.s3Url,
+            name: noteImg.name,
+            title: noteImg.title,
+            createdAt: currentTime,
+            updatedAt: currentTime
+          };
+          let resultSurveyNotesImg = await knex
+            .insert(insertNoteData)
+            .returning(["*"])
+            .transacting(trx)
+            .into("images");
+          noteImagesData.push(resultSurveyNotesImg[0]);
+        }
+        trx.commit;
+
+        res.status(200).json({
+          data: {
+            surveyNotesResponse: {
+              notesData,
+              problemImage: problemImagesData,
+              noteImage: noteImagesData
+            }
+          },
+          message: "Survey Note updated successfully !"
+        });
+      });
+    } catch (err) {
+      console.log("[controllers][survey][surveyPostNotes] : Error", err);
+      trx.rollback;
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getSurveyOrderNoteList: async (req, res) => {
+    try {
+      let surveyOrderNoteList = null;
+
+      //await knex.transaction(async (trx) => {
+      let surveyOrder = req.body;
+
+      const schema = Joi.object().keys({
+        surveyOrderId: Joi.number().required()
+      });
+      let result = Joi.validate(surveyOrder, schema);
+      console.log(
+        "[controllers][surveyOrder][getsurveyPostNotes]: JOi Result",
+        result
+      );
+
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+
+      surveyOrderNoteResult = await knex
+        .from("survey_order_post_update")
+        .select()
+        .where({ surveyOrderId: surveyOrder.surveyOrderId, isActive: "true" });
+      surveyOrderNoteList = surveyOrderNoteResult;
+
+      return res.status(200).json({
+        data: surveyOrderNoteList,
+        message: "Survey Order Details"
+      });
+
+      //});
+    } catch (err) {
+      console.log(
+        "[controllers][surveyOrder][getSurveyOrderDetails] :  Error",
+        err
+      );
+      trx.rollback;
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  deleteSurveyRemark: async (req, res) => {
+    try {
+      let serviceOrder = null;
+      await knex.transaction(async trx => {
+        let currentTime = new Date().getTime();
+        const remarkPayload = req.body;
+        const schema = Joi.object().keys({
+          remarkId: Joi.number().required()
+        });
+
+        let result = Joi.validate(remarkPayload, schema);
+        console.log("[controllers][survey][order]: JOi Result", result);
+
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message }
+            ]
+          });
+        }
+
+     
+         // Now soft delete and return
+          let updatedRemark = await knex
+            .update({ isActive: "false", updatedAt: currentTime })
+            .where({
+              id: remarkPayload.remarkId
+            })
+            .returning(["*"])
+            .transacting(trx)
+            .into("survey_order_post_update");         
+          trx.commit;
+
+          return res.status(200).json({
+            data: {
+              deletedRemark: updatedRemark
+            },
+            message: "Survey order remarks deleted successfully !"
+          });    
+      });
+    } catch (err) {
+      console.log("[controllers][survey][remaks] :  Error", err);
+      trx.rollback;
+      return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }

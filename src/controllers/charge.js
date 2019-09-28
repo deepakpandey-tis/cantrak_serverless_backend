@@ -152,8 +152,9 @@ const chargeController = {
           updateChargesResult
         );
 
-        //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
 
+        //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
+        
         chargeData = updateChargesResult[0];
 
         trx.commit;

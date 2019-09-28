@@ -16,6 +16,6 @@ router.post('/delete-category', authMiddleware.isAuthenticated, authMiddleware.i
 
 router.get('/category-list', authMiddleware.isAuthenticated, authMiddleware.isAdmin, propertyCategoryController.categoryList);
 
-router.post('/get-category-details', propertyCategoryController.getCategoryDetails);
+router.post('/get-category-details',authMiddleware.isAuthenticated, authMiddleware.isAdmin, propertyCategoryController.getCategoryDetails);
 
 module.exports = router;
