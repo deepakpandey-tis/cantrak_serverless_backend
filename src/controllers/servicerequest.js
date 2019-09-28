@@ -96,9 +96,11 @@ const serviceRequestController = {
         try {
 
             let serviceProblem = null;
+            let images = null
+
 
             await knex.transaction(async (trx) => {
-                const serviceProblemPayload = req.body;
+                const serviceProblemPayload = _.omit(req.body, ['images']);
                 console.log('[controllers][service][problem]', serviceProblemPayload);
 
                 // validate keys
@@ -106,7 +108,8 @@ const serviceRequestController = {
                     serviceRequestId: Joi.string().required(),
                     problemId: Joi.string().required(),
                     categoryId: Joi.string().required(),
-                    description: Joi.string().required()
+                    description: Joi.string().required(),
+                    images: Joi.array().items(Joi.object().keys().min(1))
                 });
 
                 const result = Joi.validate(serviceProblemPayload, schema);
@@ -131,13 +134,20 @@ const serviceRequestController = {
 
                 serviceProblem = problemResult[0];
 
+                // Add to images with serviceRequestId and service_requests
+                if (req.body.images && req.body.images.length) {
+                    images = req.body.images.map(image => ({ ...image, createdAt: currentTime, updatedAt: currentTime, entityId: serviceProblem.id, entityType: 'service_problems' }));
+                    let addedImages = await knex.insert(images).returning(['*']).transacting(trx).into('images')
+                    images = addedImages
+                }
+
                 trx.commit;
 
             });
 
             res.status(200).json({
                 data: {
-                    serviceProblem: serviceProblem
+                    serviceProblem: { ...serviceProblem, images }
                 },
                 message: "Service problem added successfully !"
             });
@@ -156,9 +166,11 @@ const serviceRequestController = {
         try {
 
             let serviceRequest = null;
+            let images = null
 
             await knex.transaction(async (trx) => {
-                const serviceRequestPayload = req.body;
+                const serviceRequestPayload = _.omit(req.body, ['images']);
+                images = req.body.images
                 console.log('[controllers][service][request]', serviceRequestPayload);
 
                 // validate keys
@@ -196,6 +208,14 @@ const serviceRequestController = {
 
                 serviceRequest = updateServiceReq[0];
                 serviceOrders = [];
+
+                //
+                if (images && images.length) {
+                    images = req.body.images.map(image => ({ ...image, createdAt: currentTime, updatedAt: currentTime, entityId: serviceRequestPayload.id, entityType: 'service_requests' }));
+                    let addedImages = await knex.insert(images).returning(['*']).transacting(trx).into('images')
+                    images = addedImages
+                }
+
                 // Insert into service orders table with selected recrence date
                 let dates = serviceRequestPayload.serviceDate;
                 console.log("dates", dates);
@@ -218,7 +238,7 @@ const serviceRequestController = {
 
             res.status(200).json({
                 data: {
-                    response: returnResponse
+                    response: { ...returnResponse, serviceRequestImages: images }
                 },
                 message: "Service request updated successfully !"
             });

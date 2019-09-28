@@ -1,21 +1,25 @@
 const Joi = require('@hapi/joi');
 const _ = require('lodash');
+const moment = require("moment")
 
 const knex = require('../db/knex');
 
 const trx = knex.transaction();
 
+
 const serviceOrderController = {
     addServiceOrder: async (req, res) => {
         try {
             let serviceOrder = null;
+            let images = null
             await knex.transaction(async trx => {
 
 
                 let serviceOrderPayload = req.body;
+                images = req.body.images
                 let serviceRequestId = req.body.serviceRequestId
                 let serviceRequest = { id: req.body.serviceRequestId };
-                serviceOrderPayload = _.omit(serviceOrderPayload, ['serviceRequest', 'teamId', 'mainUserId', 'additionalUsers'])
+                serviceOrderPayload = _.omit(serviceOrderPayload, ['serviceRequest', 'teamId', 'mainUserId', 'additionalUsers', 'images'])
 
                 const schema = Joi.object().keys({
                     serviceRequestId: Joi.string().required(),
@@ -88,6 +92,12 @@ const serviceOrderController = {
                 }
 
 
+                if (images && images.length) {
+                    images = req.body.images.map(image => ({ ...image, createdAt: currentTime, updatedAt: currentTime, entityId: serviceOrder.id, entityType: 'service_orders' }));
+                    let addedImages = await knex.insert(images).returning(['*']).transacting(trx).into('images')
+                    images = addedImages
+                }
+
                 // Insert into assigned_service_team table
                 let { teamId, mainUserId, additionalUsers } = req.body;
                 const assignedServiceTeamPayload = { teamId, userId: mainUserId, entityId: serviceOrder.id, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime }
@@ -124,7 +134,7 @@ const serviceOrderController = {
                     }
                     trx.commit;
                     return res.status(200).json({
-                        data: { serviceOrder, assignedServiceTeam, assignedAdditionalUsers: additionalUsersResultantArray },
+                        data: { serviceOrder, assignedServiceTeam, assignedAdditionalUsers: additionalUsersResultantArray, images: images },
                         message: "Service Order added successfully!"
                     });
                 }
@@ -231,17 +241,18 @@ const serviceOrderController = {
             let dueFromDate, dueToDate
             if (dueFrom && dueTo) {
 
-                dueFromDate = new Date(dueFrom).getTime();
-                dueToDate = new Date(dueTo).getTime();
+                dueFromDate = moment(dueFrom).format();
+                dueToDate = moment(dueTo).format();
+                console.log(dueFromDate)
 
             } else if (dueFrom && !dueTo) {
 
-                dueFromDate = new Date(dueFrom).getTime();
-                dueToDate = new Date("2030-01-01").getTime()
+                dueFromDate = dueFrom;
+                dueToDate = "2030-01-01"
 
             } else if (!dueFrom && dueTo) {
-                dueFromDate = new Date("2000-01-01").getTime();
-                dueToDate = new Date(dueTo).getTime()
+                dueFromDate = "2000-01-01";
+                dueToDate = dueTo
             }
 
 
