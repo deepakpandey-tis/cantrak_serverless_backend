@@ -63,8 +63,10 @@ const quotationsController = {
             let additionalUsersList = []
 
             await knex.transaction(async (trx) => {
+                let images = []
 
-                let quotationPayload = req.body;
+                let quotationPayload = _.omit(req.body, ['images']);
+                images = req.body.images
 
                 console.log('[controllers][quotations][updateQuotation] : Quotation Body', quotationPayload);
 
@@ -109,6 +111,13 @@ const quotationsController = {
                 quotationsData = updateQuotationReq[0];
 
 
+                if (images && images.length) {
+                    images = req.body.images.map(image => ({ ...image, createdAt: currentTime, updatedAt: currentTime, entityId: quotationsData.id, entityType: 'quotations' }));
+                    let addedImages = await knex.insert(images).returning(['*']).transacting(trx).into('images')
+                    images = addedImages
+                }
+
+                //console.log(images)
 
 
                 // Start quotation service charges table,
@@ -186,7 +195,7 @@ const quotationsController = {
                     }
                     trx.commit;
                     return res.status(200).json({
-                        data: { quotationsData, assignedServiceTeam, assignedAdditionalUsers: additionalUsersList },
+                        data: { quotationsData, assignedServiceTeam, assignedAdditionalUsers: additionalUsersList, images: images },
                         message: "Quotations updated successfully !"
                     });
 
@@ -206,7 +215,7 @@ const quotationsController = {
                     }
                     trx.commit;
                     return res.status(200).json({
-                        data: { quotationsData, assignedServiceTeam, assignedAdditionalUsers: additionalUsersList },
+                        data: { quotationsData, assignedServiceTeam, assignedAdditionalUsers: additionalUsersList, images: images },
                         message: "Quotations updated successfully !"
                     });
 
