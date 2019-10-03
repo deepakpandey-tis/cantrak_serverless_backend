@@ -79,7 +79,7 @@ module.exports = require('knex')({
     },
     pool: {
         min: 1,
-        max: 200,
+        max: 1,
         afterCreate: (conn, done) => {
             conn.query('SET timezone="UTC";', function (err) {
                 if (err) {
@@ -88,12 +88,12 @@ module.exports = require('knex')({
                     done(err, conn);
                 } else {
                     console.log('DB Connection Successfull');
-                    conn.query('SELECT 1=1 as val;', function (err, res) {
-                        // if err is not falsy, connection is discarded from pool
-                        // if connection aquire was triggered by a query the error is passed to query promise
-                        console.log('DB Temp Res:', JSON.stringify(res));
-                        done(err, conn);
-                    });
+                    // conn.query('SELECT 1=1 as val;', function (err, res) {
+                    //     // if err is not falsy, connection is discarded from pool
+                    //     // if connection aquire was triggered by a query the error is passed to query promise
+                    //     console.log('DB Temp Res:', JSON.stringify(res));
+                    // });
+                    done(err, conn);
                 }
             });
         }
