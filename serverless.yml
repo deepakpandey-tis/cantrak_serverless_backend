@@ -16,8 +16,8 @@ provider:
   runtime: nodejs10.x
   stage: dev
   region: us-east-2
-  memorySize: 1024
-  timeout: 5
+  memorySize: 2048
+  timeout: 15
   environment: 
 
 
@@ -49,12 +49,12 @@ custom:
     # Uncomment only if you already have a S3 server running locally
     # noStart: true
 
-resources:
-  Resources:
-    NewResource:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: local-bucket
+# resources:
+#   Resources:
+#     NewResource:
+#       Type: AWS::S3::Bucket
+#       Properties:
+#         BucketName: sls-app-resources-bucket
 
 
 functions:
@@ -73,9 +73,10 @@ functions:
     handler: src/app.webhook
     events:
       - http:
-        method: GET       
-  s3hook:
-    handler: src/app.s3hook
-    events:
-      - s3: local-bucket
-        event: s3:*
+         method: GET
+         path: webhook       
+  # s3hook:
+  #   handler: src/app.s3hook
+  #   events:
+  #     - s3: sls-app-resources-bucket
+  #       event: s3:*

@@ -82,21 +82,20 @@ app.use((err, req, res, next) => {
 module.exports.server = sls(app);
 
 
-
 // S3
 const AWS = require('aws-sdk');
 
 module.exports.webhook = (event, context, callback) => {
   const S3 = new AWS.S3({
     s3ForcePathStyle: true,
-    accessKeyId: 'S3RVER', // This specific key is required when working offline
-    secretAccessKey: 'S3RVER',
-    endpoint: new AWS.Endpoint('http://localhost:8000'),
+    accessKeyId: process.env.S3_ACCESS_KEY_ID, // This specific key is required when working offline
+    secretAccessKey:  process.env.S3_SECRET_ACCESS_KEY,
+    endpoint: new AWS.Endpoint(process.env.S3_END_POINT),
   });
 };
 
-module.exports.s3hook = (event, context) => {
-  console.log(JSON.stringify(event));
-  console.log(JSON.stringify(context));
-  console.log(JSON.stringify(process.env));
-};
+// module.exports.s3hook = (event, context) => {
+//   console.log(JSON.stringify(event));
+//   console.log(JSON.stringify(context));
+//   console.log(JSON.stringify(process.env));
+// };

@@ -28,7 +28,7 @@ const getUploadURL = async (mimeType, filename) => {
     let ext = re.exec(filename)[1];
     const actionId = uuidv4();
     const s3Params = {
-        Bucket: 'local-bucket',
+        Bucket: process.env.S3_BUCKET_NAME,
         Key: `${actionId}.${ext}`,
         ContentType: mimeType,
         ACL: 'public-read',
