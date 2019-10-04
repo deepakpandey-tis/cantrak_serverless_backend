@@ -9,9 +9,9 @@ router.get('/', async(req,res) => {
         let users =null
         await knex.transaction(async trx => {
             users = await knex.select().returning(['*']).transacting(trx).into('users')
-            trx.commit
+            //trx.commit
         })
-
+        
         res.status(200).json({
             data: {
                 users:users

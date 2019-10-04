@@ -62,8 +62,36 @@
 // //const setupPaginator = require('knex-paginator');
 // //setupPaginator(knex);
 // module.exports = knex
+// const Knex = require('knex')
+// const { patchKnex } = require('knex-dynamic-connection')
+// const readConfig = {
+//     client: 'pg',
+//     connection: {
+//         host:process.env.DB_HOST,
+//         port:process.env.DB_PORT,
+//         user:process.env.DB_USER,
+//         database:process.env.DB_NAME,
+//         password:process.env.DB_PASS
+//     },
+//     replicas: [
+//       {
+//         host: process.env.DB_HOST,
+//       },
+//       {
+//         host: process.env.DB_HOST,
+//       }
+//     ],
+//   }
+  
+//   const knex = Knex(readConfig)
+//   let roundRobinCounter = 0
+  
+//   patchKnex(knex, (originalConfig) => {
+//     const node = roundRobinCounter++ % originalConfig.replicas.length
+//     return originalConfig.replicas[node]
+//   })
 
-
+  // module.exports = knex;
 module.exports = require('knex')({
     client: 'pg',
     connection: {
@@ -75,7 +103,7 @@ module.exports = require('knex')({
     debug: process.env.NODE_ENV === 'local' ? true : false,
     pool: {
         min: 1,
-        max: 200,
+        max: 50,
         afterCreate: (conn, done) => {
             console.log('AFTERCREATE DB CONNECTION');
             done();
