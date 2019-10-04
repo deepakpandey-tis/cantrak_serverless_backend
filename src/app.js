@@ -79,17 +79,20 @@ app.use((err, req, res, next) => {
 });
 
 
-// module.exports.server = sls(app);
+module.exports.server = sls(app);
 
-const server = sls(app);
-module.exports.server = async (event, context) => {
-  context.callbackWaitsForEmptyEventLoop = false;
-  console.log('Remaining time: ', context.getRemainingTimeInMillis())
-  console.log('Function name: ', context.functionName)
-  const result = await server(event, context);
-  // and here
-  return result;
-};
+// const server = sls(app);
+// module.exports.server = async (event, context) => {
+//   context.callbackWaitsForEmptyEventLoop = false;
+//   console.log('Remaining time: ', context.getRemainingTimeInMillis())
+//   console.log('Function name: ', context.functionName)
+//   const result = await server(event, context);
+//   // and here
+//   return result;
+// };
+
+
+
 
 // S3
 const AWS = require('aws-sdk');

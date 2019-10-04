@@ -73,30 +73,19 @@ module.exports = require('knex')({
         database: process.env.DB_NAME
     },
     debug: process.env.NODE_ENV === 'local' ? true : false,
+    pool: {
+        min: 1,
+        max: 200,
+        afterCreate: (conn, done) => {
+            console.log('AFTERCREATE DB CONNECTION');
+            done();
+            console.log('AFTERCREATE DB CONNECTION - 2');
+            return ;
+        }
+    },
     migrations: {
         tableName: 'knex_migrations',
         directory: __dirname + '/src/db/migrations',
-    },
-    pool: {
-        min: 1,
-        max: 1,
-        afterCreate: (conn, done) => {
-            conn.query('SET timezone="UTC";', function (err) {
-                if (err) {
-                    // first query failed, return error and don't try to make next query
-                    console.error('DB Connection Failed');
-                    done(err, conn);
-                } else {
-                    console.log('DB Connection Successfull');
-                    // conn.query('SELECT 1=1 as val;', function (err, res) {
-                    //     // if err is not falsy, connection is discarded from pool
-                    //     // if connection aquire was triggered by a query the error is passed to query promise
-                    //     console.log('DB Temp Res:', JSON.stringify(res));
-                    // });
-                    done(err, conn);
-                }
-            });
-        }
     },
     seeds: {
         directory: __dirname + '/src/db/seeds'

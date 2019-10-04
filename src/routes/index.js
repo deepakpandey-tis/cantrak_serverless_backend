@@ -31,6 +31,7 @@ const taxesRouter = require("./administration-features/taxes");
 const problemRouter = require('./administration-features/problem')
 const dashboardRouter = require("./dashboard")
 const imageRouter = require("./image")
+const testRouter = require('./test')
 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
@@ -40,6 +41,7 @@ router.get('/', async (req, res, next) => {
 /**
  * Routers
  */
+router.use('/test', testRouter)
 router.use('/entrance', entranceRouter);
 router.use('/users', usersRouter);
 router.use('/usermanagement', userManagementRouter);
