@@ -31,6 +31,7 @@ const taxesRouter = require("./administration-features/taxes");
 const problemRouter = require('./administration-features/problem')
 const dashboardRouter = require("./dashboard")
 const imageRouter = require("./image")
+const pmRouter = require("./preventive-maintenance")
 const testRouter = require('./test')
 
 /* GET home page. */
@@ -73,4 +74,5 @@ router.use('/administration-features/problem', problemRouter);
 router.use('/dashboard', dashboardRouter);
 router.use('/administration-features/problem', problemRouter)
 router.use('/image', imageRouter)
+router.use('/preventive-maintenance', pmRouter)
 module.exports = router;
