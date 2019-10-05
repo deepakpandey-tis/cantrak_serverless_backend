@@ -103,7 +103,7 @@ module.exports = require('knex')({
     debug: process.env.NODE_ENV === 'local' ? true : false,
     pool: {
         min: 1,
-        max: 50,
+        max: 200,
         afterCreate: (conn, done) => {
             console.log('AFTERCREATE DB CONNECTION');
             done();
