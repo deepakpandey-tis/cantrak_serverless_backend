@@ -9,7 +9,7 @@ const knex = require('../../db/knex');
 
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 const ProjectController = {
   addProject: async (req, res) => {
@@ -68,7 +68,7 @@ const ProjectController = {
       })
     } catch (err) {
       console.log('[controllers][generalsetup][addProject] :  Error', err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -133,7 +133,7 @@ const ProjectController = {
       })
     } catch (err) {
       console.log('[controllers][generalsetup][updateProject] :  Error', err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -171,7 +171,7 @@ const ProjectController = {
       })
     } catch (err) {
       console.log('[controllers][generalsetup][viewProject] :  Error', err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -207,7 +207,7 @@ const ProjectController = {
       })
     } catch (err) {
       console.log('[controllers][generalsetup][viewProject] :  Error', err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -271,7 +271,7 @@ const ProjectController = {
       })
     } catch (err) {
       console.log('[controllers][generalsetup][viewProject] :  Error', err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }

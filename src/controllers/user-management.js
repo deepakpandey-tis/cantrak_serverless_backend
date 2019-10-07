@@ -3,7 +3,7 @@ const Joi = require('@hapi/joi');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const moment = require('moment');
-const trx = knex.transaction();
+//const trx = knex.transaction();
 const uuidv4 = require('uuid/v4');
 var jwt = require('jsonwebtoken');
 const _ = require('lodash');
@@ -92,7 +92,7 @@ const userManagementController = {
             });
 
         } catch (err) {
-            //trx.rollback;
+            ////trx.rollback
             console.log('[controllers][usermanagement][roles] :  Error', err);
             res.status(500).json({
                 errors: [

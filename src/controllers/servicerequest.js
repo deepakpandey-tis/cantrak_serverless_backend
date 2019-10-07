@@ -10,7 +10,7 @@ const knex = require('../db/knex');
 
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const trx = knex.transaction();
+//const trx = knex.transaction();
 const AWS = require('aws-sdk');
 
 if (process.env.IS_OFFLINE) {
@@ -84,7 +84,7 @@ const serviceRequestController = {
 
         } catch (err) {
             console.log('[controllers][service][requestId] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -154,7 +154,7 @@ const serviceRequestController = {
 
         } catch (err) {
             console.log('[controllers][service][problem] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -245,7 +245,7 @@ const serviceRequestController = {
 
         } catch (err) {
             console.log('[controllers][service][request] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -272,7 +272,7 @@ const serviceRequestController = {
 
         } catch (err) {
             console.log('[controllers][service][request] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -296,7 +296,7 @@ const serviceRequestController = {
 
         } catch (err) {
             console.log('[controllers][service][getImageUploadUrl] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -351,7 +351,7 @@ const serviceRequestController = {
 
         } catch (err) {
             console.log('[controllers][service][request] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -405,7 +405,7 @@ const serviceRequestController = {
 
         } catch (err) {
             console.log('[controllers][service][request] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -466,7 +466,7 @@ const serviceRequestController = {
 
         } catch (err) {
             console.log('[controllers][service][order] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             return res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -527,7 +527,7 @@ const serviceRequestController = {
 
         } catch (err) {
             console.log('[controllers][service][order] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             return res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }

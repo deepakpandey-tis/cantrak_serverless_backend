@@ -3,7 +3,7 @@ const _ = require('lodash');
 
 const knex = require('../db/knex');
 
-const trx = knex.transaction();
+//const trx = knex.transaction();
 const assetController = {
     addAsset: async (req, res) => {
         try {
@@ -112,7 +112,7 @@ const assetController = {
 
         } catch (err) {
             console.log('[controllers][asset][addAsset] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -287,7 +287,7 @@ const assetController = {
                 let additionalAttributes = req.body.additionalAttributes;
                 if (additionalAttributes.length > 0) {
                     for (attribute of additionalAttributes) {
-                        let finalAttribute = { ...attribute, assetId: asset.id, updatedAt: currentTime }
+                        let finalAttribute = { ...attribute, assetId: id, updatedAt: currentTime }
                         let d = await knex.update(finalAttribute).where({ id: attribute.id }).returning(['*']).transacting(trx).into('asset_attributes');
                         attribs.push(d[0])
                     }
@@ -305,7 +305,7 @@ const assetController = {
 
         } catch (err) {
             console.log('[controllers][asset][addAsset] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -368,7 +368,7 @@ const assetController = {
             })
         } catch (err) {
             console.log('[controllers][asset][addServiceOrderReplaceAsset] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -428,7 +428,7 @@ const assetController = {
             })
         } catch (err) {
             console.log('[controllers][asset][addServiceRequestReplaceAsset] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -486,7 +486,7 @@ const assetController = {
 
         } catch (err) {
             console.log('[controllers][asset][addServiceOrderRelocateAsset] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -544,7 +544,7 @@ const assetController = {
 
         } catch (err) {
             console.log('[controllers][asset][addServiceOrderRelocateAsset] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -580,7 +580,7 @@ const assetController = {
 
         } catch (err) {
             console.log('[controllers][asset][addServiceOrderRelocateAsset] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }

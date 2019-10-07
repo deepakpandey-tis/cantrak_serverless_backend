@@ -4,7 +4,7 @@ const moment = require("moment")
 
 const knex = require('../db/knex');
 
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 
 const serviceOrderController = {
@@ -146,7 +146,7 @@ const serviceOrderController = {
             })
         } catch (err) {
             console.log('[controllers][serviceOrder][addServiceOrder] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -549,7 +549,7 @@ const serviceOrderController = {
             })
         } catch (err) {
             console.log('[controllers][serviceOrder][updateServiceOrder] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -604,7 +604,7 @@ const serviceOrderController = {
 
         } catch (err) {
             console.log('[controllers][service][order] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -658,7 +658,7 @@ const serviceOrderController = {
 
         } catch (err) {
             console.log('[controllers][service][order] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -719,7 +719,7 @@ const serviceOrderController = {
 
         } catch (err) {
             console.log('[controllers][service][order] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             return res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -780,7 +780,7 @@ const serviceOrderController = {
 
         } catch (err) {
             console.log('[controllers][service][order] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             return res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }

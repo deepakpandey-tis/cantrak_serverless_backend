@@ -9,7 +9,7 @@ const knex = require('../../db/knex');
 
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 
 
@@ -88,7 +88,7 @@ const propertysubCategoryController = {
 
         } catch (err) {
             console.log('[controllers][category][categoryAdd] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -173,7 +173,7 @@ const propertysubCategoryController = {
 
         } catch (err) {
             console.log('[controllers][Subcategory][subcategoryUpdate] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -253,7 +253,7 @@ const propertysubCategoryController = {
 
         } catch (err) {
             console.log('[controllers][category][categoryDelete] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -305,7 +305,7 @@ const propertysubCategoryController = {
 
         } catch (err) {
             console.log('[controllers][subcategory][subcategoryList] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }

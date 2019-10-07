@@ -7,7 +7,7 @@ const { RRule, RRuleSet, rrulestr } = require('rrule')
 
 const knex = require('../db/knex');
 
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 
 const pmController = {
@@ -119,7 +119,7 @@ const pmController = {
             })
         } catch (err) {
             console.log('[controllers][people][UpdatePeople] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -213,7 +213,7 @@ const pmController = {
             })
         } catch (err) {
             console.log('[controllers][people][UpdatePeople] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -255,7 +255,7 @@ const pmController = {
             })
         } catch (err) {
             console.log('[controllers][people][UpdatePeople] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -313,7 +313,7 @@ const pmController = {
 
         } catch (err) {
             console.log('[controllers][people][UpdatePeople] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -346,7 +346,7 @@ const pmController = {
             })
         } catch (err) {
             console.log('[controllers][people][UpdatePeople] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }

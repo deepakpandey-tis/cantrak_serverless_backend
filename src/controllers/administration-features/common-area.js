@@ -9,7 +9,7 @@ const knex = require('../../db/knex');
 
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 
 
@@ -80,7 +80,7 @@ const commonAreaController = {
 
         }catch (err){
             console.log('[controllers][generalsetup][addservice] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -171,7 +171,7 @@ const commonAreaController = {
 
         }catch (err){
             console.log('[controllers][commonArea][updatecommonArea] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -226,7 +226,7 @@ const commonAreaController = {
 
         } catch (err) {
             console.log('[controllers][commonArea][getcommonArea] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -303,7 +303,7 @@ const commonAreaController = {
 
         }catch (err){
             console.log('[controllers][commonArea][updatecommonArea] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -373,7 +373,7 @@ const commonAreaController = {
 
         }catch (err){
             console.log('[controllers][commonArea][updatecommonArea] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
