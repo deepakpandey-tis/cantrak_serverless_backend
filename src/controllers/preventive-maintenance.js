@@ -328,19 +328,21 @@ const pmController = {
 
                 let { pmMasterId,
                     assetId } = req.body;
-                // Join pm_feedbacks and group by feedback id
 
                 const feedbacks = await knex.from('pm_feedbacks as p')
-                .innerJoin('images as i', 'p.id', 'i.entityId')
-                .where(qb => {
-                    qb.where({entityType:"pm_feedbacks",'p.pmMasterId':pmMasterId, 'p.assetId':assetId})
+                .where({ 'p.pmMasterId': pmMasterId, 'p.assetId': assetId})
+                .select('p.id as id','description')
+
+                const Parallel = require('async-parallel')
+
+                const data = await Parallel.map(feedbacks, async feedback => {
+                    const images = await knex('images').select().where({entityId:feedback.id, entityType:'pm_feedbacks'})
+                    return {...feedback,images};
                 })
-                .select(['p.assetId','p.description'])
-                .groupBy('p.id')
 
                 trx.commit;
                 res.status(200).json({
-                    feedbacks
+                    feedbacks:data
                 })
 
             })

@@ -206,8 +206,8 @@ const buildingPhaseController = {
         let offset = (page - 1) * per_page;
 
         let [total, rows] = await Promise.all([
-          knex.count('* as count').from("buildings_and_phases").first(),
-          knex.select("*").from("buildings_and_phases").offset(offset).limit(per_page)
+          knex.count('* as count').from("buildings_and_phases").where({ 'buildings_and_phases.isActive': true}).first(),
+          knex.select("*").from("buildings_and_phases").where({ 'buildings_and_phases.isActive': true}).offset(offset).limit(per_page)
         ])
 
         let count = total.count;
@@ -227,8 +227,8 @@ const buildingPhaseController = {
         let offset = (page - 1) * per_page;
 
         let [total, rows] = await Promise.all([
-          knex.count('* as count').from("buildings_and_phases").where({ 'buildings_and_phases.companyId': companyId }).offset(offset).limit(per_page).first(),
-          knex.from("buildings_and_phases").innerJoin("companies", "buildings_and_phases.companyId", "companies.id").where({ 'buildings_and_phases.companyId': companyId }).offset(offset).limit(per_page)
+          knex.count('* as count').from("buildings_and_phases").where({ 'buildings_and_phases.companyId': companyId,'buildings_and_phases.isActive':true }).offset(offset).limit(per_page).first(),
+          knex.from("buildings_and_phases").innerJoin("companies", "buildings_and_phases.companyId", "companies.id").where({ 'buildings_and_phases.companyId': companyId, 'buildings_and_phases.isActive': true }).offset(offset).limit(per_page)
         ])
 
         let count = total.count;

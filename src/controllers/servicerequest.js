@@ -18,7 +18,7 @@ if (process.env.IS_OFFLINE) {
         accessKeyId: 'S3RVER',
         secretAccessKey: 'S3RVER',
     });
-}
+} 
 
 AWS.config.update({ region: process.env.REGION || 'us-east-2' });
 
