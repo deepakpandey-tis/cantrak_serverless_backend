@@ -9,7 +9,7 @@ const knex = require('../../db/knex');
 
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 const floorZoneController = {
   addFloorZone: async (req, res) => {
@@ -53,7 +53,7 @@ const floorZoneController = {
       })
     } catch (err) {
       console.log('[controllers][generalsetup][addfloorZone] :  Error', err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -107,7 +107,7 @@ const floorZoneController = {
       })
     } catch (err) {
       console.log('[controllers][generalsetup][updatefloorZone] :  Error', err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -177,7 +177,7 @@ const floorZoneController = {
       })
     } catch (err) {
       console.log('[controllers][generalsetup][viewfloorZone] :  Error', err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -243,7 +243,7 @@ const floorZoneController = {
       })
     } catch (err) {
       console.log('[controllers][generalsetup][viewfloorZone] :  Error', err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }

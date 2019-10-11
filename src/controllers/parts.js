@@ -3,7 +3,7 @@ const _ = require('lodash');
 
 const knex = require('../db/knex');
 
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 const partsController = {
     getParts: async (req, res) => {
@@ -215,7 +215,7 @@ const partsController = {
 
         } catch (err) {
             console.log('[controllers][part] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -315,7 +315,7 @@ const partsController = {
 
         } catch (err) {
             console.log('[controllers][service][request] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -413,7 +413,7 @@ const partsController = {
 
         } catch (err) {
             console.log('[controllers][part][addPartStock] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }

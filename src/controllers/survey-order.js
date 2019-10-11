@@ -3,7 +3,7 @@ const _ = require("lodash");
 
 const knex = require("../db/knex");
 
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 const surveyOrderController = {
   addSurveyOrder: async (req, res) => {
@@ -99,7 +99,7 @@ const surveyOrderController = {
       });
     } catch (err) {
       console.log("[controllers][surveyOrder][addSurveyOrder] :  Error", err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
@@ -238,7 +238,7 @@ const surveyOrderController = {
       });
     } catch (err) {
       console.log("[controllers][surveyOrder][addSurveyOrder] :  Error", err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
@@ -642,7 +642,7 @@ const surveyOrderController = {
       surveyOrderResult = await knex
         .from("survey_orders")
         .select()
-        .where({ id: id });
+        .where({ id: surveyOrderid });
       surveyOrder = surveyOrderResult[0];
       serviceRequestResult = await knex("service_requests")
         .select()
@@ -659,7 +659,7 @@ const surveyOrderController = {
         "[controllers][surveyOrder][getSurveyOrderDetails] :  Error",
         err
       );
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
@@ -773,7 +773,7 @@ const surveyOrderController = {
       });
     } catch (err) {
       console.log("[controllers][survey][surveyPostNotes] : Error", err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
@@ -818,7 +818,7 @@ const surveyOrderController = {
         "[controllers][surveyOrder][getSurveyOrderDetails] :  Error",
         err
       );
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
@@ -866,7 +866,7 @@ const surveyOrderController = {
       });
     } catch (err) {
       console.log("[controllers][survey][remaks] :  Error", err);
-      trx.rollback;
+      //trx.rollback
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });

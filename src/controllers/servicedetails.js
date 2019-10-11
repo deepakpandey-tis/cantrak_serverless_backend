@@ -8,7 +8,7 @@ const knex = require('../db/knex');
 
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 
 const serviceDetailsController = {
@@ -25,7 +25,14 @@ const serviceDetailsController = {
                 // Insert in users table,
                 const incidentTypePayload = req.body;
 
-                DataResult = await knex('property_units').join('companies', 'property_units.companyId', '=', 'companies.id').join('projects', 'property_units.projectId', '=', 'projects.id').join('property_types', 'property_units.propertyTypeId', '=', 'property_types.id').join('buildings_and_phases', 'property_units.buildingPhaseId', '=', 'buildings_and_phases.id').join('floor_and_zones', 'property_units.floorZoneId', '=', 'floor_and_zones.id').select('companies.companyName', 'projects.projectName', 'property_types.propertyType', 'buildings_and_phases.buildingPhaseCode', 'floor_and_zones.floorZoneCode', 'property_units.*').where({ 'property_units.houseId': incidentTypePayload.houseId });
+                DataResult = await knex('property_units')
+                .join('companies', 'property_units.companyId', '=', 'companies.id')
+                .join('projects', 'property_units.projectId', '=', 'projects.id')
+                .join('property_types', 'property_units.propertyTypeId', '=', 'property_types.id')
+                .join('buildings_and_phases', 'property_units.buildingPhaseId', '=', 'buildings_and_phases.id')
+                .join('floor_and_zones', 'property_units.floorZoneId', '=', 'floor_and_zones.id')
+                .select('companies.companyName', 'projects.projectName', 'property_types.propertyType', 'buildings_and_phases.buildingPhaseCode', 'floor_and_zones.floorZoneCode', 'property_units.*')
+                .where({ 'property_units.houseId': incidentTypePayload.houseId });
 
                 console.log('[controllers][servicedetails][generaldetails]: View Data', DataResult);
 
@@ -48,7 +55,7 @@ const serviceDetailsController = {
             
         } catch (err) {
             console.log('[controllers][entrance][signup] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -115,7 +122,7 @@ const serviceDetailsController = {
 
         } catch (err) {
             console.log('[controllers][servicedetails][signup] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -158,7 +165,7 @@ const serviceDetailsController = {
 
         } catch (err) {
             console.log('[controllers][servicedetails][signup] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -225,7 +232,7 @@ const serviceDetailsController = {
 
         } catch (err) {
             console.log('[controllers][servicedetails][signup] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -268,7 +275,7 @@ const serviceDetailsController = {
 
         } catch (err) {
             console.log('[controllers][servicedetails][serviceRequestList] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -345,7 +352,7 @@ const serviceDetailsController = {
 
         } catch (err) {
             console.log('[controllers][servicedetails][serviceRequestDetails] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }

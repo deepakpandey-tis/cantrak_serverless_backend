@@ -9,7 +9,7 @@ const knex = require('../../db/knex');
 
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 const buildingPhaseController = {
   addBuildingPhase: async (req, res) => {
@@ -57,7 +57,7 @@ const buildingPhaseController = {
       })
     } catch (err) {
       console.log('[controllers][generalsetup][addbuildingPhase] :  Error', err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -111,7 +111,7 @@ const buildingPhaseController = {
       })
     } catch (err) {
       console.log('[controllers][generalsetup][updatebuildingPhase] :  Error', err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -149,7 +149,7 @@ const buildingPhaseController = {
       })
     } catch (err) {
       console.log('[controllers][generalsetup][viewbuildingPhase] :  Error', err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -185,7 +185,7 @@ const buildingPhaseController = {
       })
     } catch (err) {
       console.log('[controllers][generalsetup][viewbuildingPhase] :  Error', err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -206,8 +206,8 @@ const buildingPhaseController = {
         let offset = (page - 1) * per_page;
 
         let [total, rows] = await Promise.all([
-          knex.count('* as count').from("buildings_and_phases").first(),
-          knex.select("*").from("buildings_and_phases").offset(offset).limit(per_page)
+          knex.count('* as count').from("buildings_and_phases").where({ 'buildings_and_phases.isActive': true}).first(),
+          knex.select("*").from("buildings_and_phases").where({ 'buildings_and_phases.isActive': true}).offset(offset).limit(per_page)
         ])
 
         let count = total.count;
@@ -227,8 +227,8 @@ const buildingPhaseController = {
         let offset = (page - 1) * per_page;
 
         let [total, rows] = await Promise.all([
-          knex.count('* as count').from("buildings_and_phases").where({ 'buildings_and_phases.companyId': companyId }).offset(offset).limit(per_page).first(),
-          knex.from("buildings_and_phases").innerJoin("companies", "buildings_and_phases.companyId", "companies.id").where({ 'buildings_and_phases.companyId': companyId }).offset(offset).limit(per_page)
+          knex.count('* as count').from("buildings_and_phases").where({ 'buildings_and_phases.companyId': companyId,'buildings_and_phases.isActive':true }).offset(offset).limit(per_page).first(),
+          knex.from("buildings_and_phases").innerJoin("companies", "buildings_and_phases.companyId", "companies.id").where({ 'buildings_and_phases.companyId': companyId, 'buildings_and_phases.isActive': true }).offset(offset).limit(per_page)
         ])
 
         let count = total.count;
@@ -250,7 +250,7 @@ const buildingPhaseController = {
       })
     } catch (err) {
       console.log('[controllers][generalsetup][viewbuildingPhase] :  Error', err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }

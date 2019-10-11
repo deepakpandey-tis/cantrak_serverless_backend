@@ -219,7 +219,7 @@ const usersController = {
             })
         } catch (err) {
             console.log('[controllers][serviceOrder][GetServiceOrderList] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }

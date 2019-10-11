@@ -101,16 +101,16 @@ module.exports = require('knex')({
         database: process.env.DB_NAME
     },
     debug: process.env.NODE_ENV === 'local' ? true : false,
-    pool: {
-        min: 1,
-        max: 200,
-        afterCreate: (conn, done) => {
-            console.log('AFTERCREATE DB CONNECTION');
-            done();
-            console.log('AFTERCREATE DB CONNECTION - 2');
-            return ;
-        }
-    },
+    // pool: {
+    //     min: 1,
+    //     max: 1,
+    //     afterCreate: (conn, done) => {
+    //         console.log('AFTERCREATE DB CONNECTION');
+    //         done();
+    //         console.log('AFTERCREATE DB CONNECTION - 2');
+    //         return ;
+    //     }
+    // },
     migrations: {
         tableName: 'knex_migrations',
         directory: __dirname + '/src/db/migrations',

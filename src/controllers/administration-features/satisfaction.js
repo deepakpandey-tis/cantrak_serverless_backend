@@ -9,7 +9,7 @@ const knex = require('../../db/knex');
 
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 
 
@@ -78,7 +78,7 @@ const satisfactionController = {
 
         }catch (err){
             console.log('[controllers][satisfaction][addsatisfaction] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -163,7 +163,7 @@ const satisfactionController = {
 
         }catch (err){
             console.log('[controllers][satisfaction][updatesatisfaction] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -213,7 +213,7 @@ const satisfactionController = {
 
         } catch (err) {
             console.log('[controllers][satisfaction][getsatisfaction] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -292,7 +292,7 @@ const satisfactionController = {
 
         }catch (err){
             console.log('[controllers][satisfaction][deletefaction] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }

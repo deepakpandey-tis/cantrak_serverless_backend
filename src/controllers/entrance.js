@@ -3,7 +3,7 @@ const Joi = require('@hapi/joi');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const moment = require('moment');
-const trx = knex.transaction();
+//const trx = knex.transaction();
 const uuidv4 = require('uuid/v4');
 var jwt = require('jsonwebtoken');
 const _ = require('lodash');
@@ -253,7 +253,7 @@ const entranceController = {
 
         } catch (err) {
             console.log('[controllers][entrance][signup] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }

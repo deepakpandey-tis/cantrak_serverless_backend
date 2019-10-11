@@ -3,7 +3,7 @@ const _ = require("lodash");
 
 const knex = require("../db/knex");
 
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 const chargeController = {
   addCharge: async (req, res) => {
@@ -61,7 +61,7 @@ const chargeController = {
       });
     } catch (err) {
       console.log("[controllers][charge] :  Error", err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
@@ -167,7 +167,7 @@ const chargeController = {
       });
     } catch (err) {
       console.log("[controllers][charge][updatecharge] :  Error", err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
@@ -214,7 +214,7 @@ const chargeController = {
       });
     } catch (err) {
       console.log("[controllers][charge][getcharges] :  Error", err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
@@ -294,7 +294,7 @@ const chargeController = {
       });
     } catch (err) {
       console.log("[controllers][charge][deletefaction] :  Error", err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
@@ -349,7 +349,7 @@ const chargeController = {
       });
     } catch (err) {
       console.log("[controllers][charge][addServiceFixCharge] :  Error", err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
@@ -404,7 +404,7 @@ const chargeController = {
       });
     } catch (err) {
       console.log("[controllers][charge][addQuotationFixCharge] :  Error", err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
@@ -462,7 +462,7 @@ const chargeController = {
         "[controllers][charge][addServiceRequestFixCharge] :  Error",
         err
       );
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });

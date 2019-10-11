@@ -10,7 +10,7 @@ const knex = require('../db/knex');
 
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 
 const quotationsController = {
@@ -47,7 +47,7 @@ const quotationsController = {
 
         } catch (err) {
             console.log('[controllers][quotation][generateQuotation] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -167,7 +167,7 @@ const quotationsController = {
 
                     const insertAssignedTeam = { teamId: quotationPayload.teamId, userId: quotationPayload.userId, entityId: quotationPayload.quotationId, entityType: "quotations", createdAt: currentTime, updatedAt: currentTime };
 
-                    console.log('[controllers][quotation][addQuotationTeam]: Insert Data', insertChargesData);
+                    //console.log('[controllers][quotation][addQuotationTeam]: Insert Data', insertChargesData);
 
                     const serviceResult = await knex.insert(insertAssignedTeam).returning(['*']).transacting(trx).into('assigned_service_team');
 
@@ -224,7 +224,7 @@ const quotationsController = {
 
         } catch (err) {
             console.log('[controllers][quotation][updateQuotation] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -319,7 +319,7 @@ const quotationsController = {
             })
         } catch (err) {
             console.log('[controllers][quotation][addQuotationPart] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -367,7 +367,7 @@ const quotationsController = {
             })
         } catch (err) {
             console.log('[controllers][quotation][addQuotationAsset] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
