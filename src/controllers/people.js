@@ -63,8 +63,6 @@ const peopleController = {
         try {
 
             let people = null;
-
-
             await knex.transaction(async (trx) => {
                 let peoplePayload = req.body;
                 let id = req.body.id
