@@ -294,7 +294,7 @@ const partsController = {
 
                     for (attribute of additionalAttributes) {
                         console.log('attribute: ', attribute)
-                        let d = await knex.update({ ...attribute, updatedAt: currentTime }).where({ id: attribute.id }).returning(['*']).transacting(trx).into('part_attributes');
+                        let d = await knex.update({ ...attribute, updatedAt: currentTime }).where({ id:attribute.id,partId: partDetailsPayload.id }).returning(['*']).transacting(trx).into('part_attributes');
                         attribs.push(d[0])
                     }
 
