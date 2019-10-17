@@ -4,7 +4,7 @@ const router = Router();
 const authMiddleware = require("../middlewares/auth");
 const pmController = require("../controllers/preventive-maintenance");
 
-router.post("/get-pm-task-schedule-list",authMiddleware.isAuthenticated,authMiddleware.isAdmin,pmController.getPmTaskScheduleList);
+router.post("/get-pm-task-schedule-list",authMiddleware.isAuthenticated,authMiddleware.isAdmin,pmController.getPMList);
 router.post("/get-feedbacks-details",authMiddleware.isAuthenticated,authMiddleware.isAdmin,pmController.viewFeedbacksReport);
 router.post('/create-pm-task-schedule', authMiddleware.isAuthenticated, authMiddleware.isAdmin, pmController.createPmTaskSchedule)
 router.post('/get-pm-asset-list-by-filter', authMiddleware.isAuthenticated, authMiddleware.isAdmin, pmController.getPmAssetListByFilter)

@@ -5,6 +5,30 @@ const knex = require('../db/knex');
 
 //const trx = knex.transaction();
 const assetController = {
+    getAssetCategories: async (req,res) => {
+        
+        try {
+            let categories
+        let filters = req.body;
+        if(filters) {
+            categories = await knex('asset_category_master').select().where({...filters})    
+        } else {
+            categories = await knex('asset_category_master').select();
+        }
+		res.status(200).json({
+			data: {
+				categories,
+				message: 'Categories List'
+			}
+		})
+	}catch(err){
+		return res.status(200).json({
+			errors:[
+				{code:'UNKNOWN SERVER ERROR', message: err.message}
+			]
+		})
+	}
+    },
     addAsset: async (req, res) => {
         try {
 
@@ -16,7 +40,7 @@ const assetController = {
             await knex.transaction(async (trx) => {
                 let assetPayload = req.body;
                 console.log('[controllers][asset][payload]: Asset Payload', assetPayload);
-                assetPayload = _.omit(assetPayload, ['additionalAttributes', 'multiple', 'images', 'files'])
+                assetPayload = _.omit(assetPayload, ['additionalAttributes', 'multiple', 'images', 'files','assetCategory'])
                 // validate keys
                 const schema = Joi.object().keys({
                     parentAssetId: Joi.string().allow('').optional(),
@@ -27,7 +51,6 @@ const assetController = {
                     barcode: Joi.string().required(),
                     areaName: Joi.string().required(),
                     description: Joi.string().required(),
-                    assetCategory: Joi.string().required(),
                     price: Joi.string().required(),
                     installationDate: Joi.string().required(),
                     warrentyExpiration: Joi.string().required(),
@@ -49,10 +72,24 @@ const assetController = {
                     });
                 }
 
-                // Insert in asset_master table,
-                let currentTime = new Date().getTime();
 
-                let insertData = { ...assetPayload, createdAt: currentTime, updatedAt: currentTime };
+                
+               let currentTime = new Date().getTime();
+               
+                let category
+                let assetCategoryId
+                let assetCategory = req.body.assetCategory;
+                category = await knex.select().where({categoryName:assetCategory}).returning(['*']).transacting(trx).into('asset_category_master')
+                if(category && category.length){
+                    assetCategoryId = category[0].id;
+                }else {
+                    category = await knex.insert({categoryName:assetCategory,createdAt:currentTime,updatedAt:currentTime}).returning(['*']).transacting(trx).into('asset_category_master')
+                    assetCategoryId = category[0].id;
+                }
+
+                // Insert in asset_master table,
+
+                let insertData = { ...assetPayload, assetCategoryId, createdAt: currentTime, updatedAt: currentTime };
 
                 console.log('[controllers][asset][addAsset]: Insert Data', insertData);
                 let multiple = 1;
@@ -63,6 +100,9 @@ const assetController = {
                 let assetResult = await knex.insert(data).returning(['*']).transacting(trx).into('asset_master');
 
                 asset = assetResult
+
+
+                
 
                 let additionalAttributes = req.body.additionalAttributes;
                 if (additionalAttributes && additionalAttributes.length > 0) {
