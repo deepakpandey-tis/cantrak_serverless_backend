@@ -507,6 +507,7 @@ const pmController = {
       const assetSerialOrBarcode = req.body.assetSerialOrBarcode
       // need to find assetId by assetSerial or assetBarcode
       //let assetId = req.body.asset
+      let pmSchedule = await knex('pm_master').select().where({id:pmMasterId})
       let assetResult = await knex('asset_master').select('id').where(qb => {
         qb.where({'barcode':`${assetSerialOrBarcode}`}).orWhere({'assetSerial':`${assetSerialOrBarcode}`})
       })
@@ -516,6 +517,7 @@ const pmController = {
       if(!assetId){
         return res.status(200).json({
           data: {
+            pmSchedule: pmSchedule[0],
             assets: []
           }  
         })
@@ -523,6 +525,7 @@ const pmController = {
       let assets = await knex('pm_assign_assets').select().where({assetId,pmMasterId});
       return res.status(200).json({
         data: {
+          pmSchedule: pmSchedule[0],
           assets: assets
         }
       })
