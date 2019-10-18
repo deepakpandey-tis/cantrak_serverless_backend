@@ -74,7 +74,7 @@ functions:
     events:
       - http:
          method: GET
-         path: webhook       
+         path: webhook
   # s3hook:
   #   handler: src/app.s3hook
   #   events:

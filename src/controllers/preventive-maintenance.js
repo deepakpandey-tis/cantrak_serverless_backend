@@ -22,7 +22,7 @@ const pmController = {
       await knex.transaction(async trx => {
         let payload = req.body;
         let repeatType = payload.repeatType;
-        let repeatOn = payload.repeatOn.join(',');
+        let repeatOn = payload.repeatOn && payload.repeatOn.length ? payload.repeatOn.join(','):[];
         let repeatNumber = Number(payload.repeatNumber);
         let start = new Date(payload.pmStartDateTime);
         let startYear = start.getFullYear();
@@ -495,6 +495,39 @@ const pmController = {
     } catch(err) {
       console.log("[controllers][people][UpdatePeople] :  Error", err);
       //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getSingleAssetPmScheduleList: async (req,res) => {
+    try {
+      // Get whole pm schedule list of an asset
+      let pmMasterId = req.body.pmMasterId;
+      const assetSerialOrBarcode = req.body.assetSerialOrBarcode
+      // need to find assetId by assetSerial or assetBarcode
+      //let assetId = req.body.asset
+      let assetResult = await knex('asset_master').select('id').where(qb => {
+        qb.where({'barcode':`${assetSerialOrBarcode}`}).orWhere({'assetSerial':`${assetSerialOrBarcode}`})
+      })
+      console.log(assetResult)
+      let assetId = assetResult && assetResult.length  ? assetResult[0].id : null;
+
+      if(!assetId){
+        return res.status(200).json({
+          data: {
+            assets: []
+          }  
+        })
+      }
+      let assets = await knex('pm_assign_assets').select().where({assetId,pmMasterId});
+      return res.status(200).json({
+        data: {
+          assets: assets
+        }
+      })
+        } catch(err) {
+      console.log("[controllers][people][UpdatePeople] :  Error", err);
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });

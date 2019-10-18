@@ -254,7 +254,7 @@ const teamsController = {
                     const roleNames = await knex('roles').select('name').where({ id: role.roleId })
                     return roleNames.map(role => role.name)
                 })
-                return {user,roleNames};
+                return {...user,roleNames};
             })
 
             res.status(200).json({

@@ -11,5 +11,5 @@ router.post('/get-pm-asset-list-by-filter', authMiddleware.isAuthenticated, auth
 router.post('/assign-team-to-pm-task', authMiddleware.isAuthenticated,authMiddleware.isAdmin, pmController.assignTeamToPmTask)
 router.post('/pm-post-feedback-for-asset', authMiddleware.isAuthenticated, authMiddleware.isAdmin, pmController.postFeedbackWithImages)
 router.post('/get-pm-feedback-list',authMiddleware.isAuthenticated,authMiddleware.isAdmin,pmController.getFeedbackList)
-
+router.post('/get-single-asset-pm-schedule-list', authMiddleware.isAuthenticated, authMiddleware.isAdmin,pmController.getSingleAssetPmScheduleList)
 module.exports = router
