@@ -13,6 +13,7 @@ router.post('/update-teams', authMiddleware.isAuthenticated, teamsController.upd
 router.get('/get-team-list', authMiddleware.isAuthenticated, teamsController.getTeamList);
 router.post('/add-team-users', authMiddleware.isAuthenticated, teamsController.addTeamUsers);
 router.get('/get-assigned-teams', authMiddleware.isAuthenticated, teamsController.getAssignedTeams);
+router.post('/get-main-and-additional-users-by-teamid', authMiddleware.isAuthenticated, teamsController.getMainAndAdditionalUsersByTeamId)
 
 
 module.exports = router;

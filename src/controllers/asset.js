@@ -627,6 +627,126 @@ const assetController = {
                 ],
             });
         }
+    },
+    getAssetListByLocation: async (req,res) => {
+        try {  
+
+            let reqData = req.query;
+            let filters = _.pickBy(req.body,v=>v);
+            let total, rows
+
+            
+            let pagination = {};
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
+
+            
+        
+           let buildingId
+           let floorId
+           let projectId
+           let companyId
+
+           if(filters.buildingPhaseCode){
+               // go extract buildingId
+              let buildingIdResult = await knex('buildings_and_phases').select('id').where(qb => {
+                  qb.where('buildingPhaseCode', 'like', `%${filters.buildingPhaseCode}%`);
+               })
+               if(buildingIdResult && buildingIdResult.length){
+                   buildingId = buildingIdResult[0].id
+               }
+           }
+
+           if(filters.companyName){
+               let buildingIdResult = await knex('companies').select('id').where(qb => {
+                   qb.where('companyName', 'like', `%${filters.companyName}%`);
+               })
+               if (buildingIdResult && buildingIdResult.length) {
+                   companyId = buildingIdResult[0].id
+               }
+           }
+           if(filters.floorZoneCode){
+               let buildingIdResult = await knex('floor_and_zones').select('id').where(qb => {
+                   qb.where('floorZoneCode', 'like', `%${filters.floorZoneCode}%`);
+               })
+               if (buildingIdResult && buildingIdResult.length) {
+                   floorId = buildingIdResult[0].id
+               }
+           }
+           if(filters.projectName){
+               let buildingIdResult = await knex('projects').select('id').where(qb => {
+                   qb.where('projectName', 'like', `%${filters.projectName}%`);
+               })
+               if (buildingIdResult && buildingIdResult.length) {
+                   projectId = buildingIdResult[0].id
+               }
+           }
+
+            let condition = {}
+            if(buildingId){
+                condition['asset_location.buildingId'] = buildingId
+            }
+            if(floorId){
+                condition['asset_location.floorId'] = floorId
+            }
+            if(companyId){
+                condition['asset_location.companyId'] = companyId
+            }
+            if(projectId){
+                condition['asset_location.projectId'] = projectId;
+            }
+
+           //console.log('Condition: ',JSON.stringify(condition))
+
+            
+            [total, rows] = await Promise.all([
+                knex.count('* as count').from("asset_master")
+                    .innerJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
+                    .select([
+                        'asset_master.id as id', 
+                        "assetName",
+                        "model",
+                        "barcode",
+                        "areaName"
+                    ]).where(condition).groupBy(["asset_master.id", "asset_location.id"]),
+                knex.from("asset_master")
+                    .innerJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
+                    .select([
+                        'asset_master.id as id',
+                        "assetName",
+                        "model",
+                        "barcode",
+                        "areaName"
+                    ]).where(condition).offset(offset).limit(per_page)
+            ])
+            
+
+            let count = total.length;
+            pagination.total = count;
+            pagination.per_page = per_page;
+            pagination.offset = offset;
+            pagination.to = offset + rows.length;
+            pagination.last_page = Math.ceil(count / per_page);
+            pagination.current_page = page;
+            pagination.from = offset;
+            pagination.data = rows;
+            return res.status(200).json({
+                data: {
+                    asset: pagination
+                },
+                message: 'Asset List!'
+            })
+
+        } catch(err) {
+            console.log('[controllers][asset][addServiceOrderRelocateAsset] :  Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
     }
 }
 

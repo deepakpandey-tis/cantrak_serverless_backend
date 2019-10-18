@@ -22,7 +22,7 @@ const pmController = {
       await knex.transaction(async trx => {
         let payload = req.body;
         let repeatType = payload.repeatType;
-        let repeatOn = payload.repeatOn;
+        let repeatOn = payload.repeatOn.join(',');
         let repeatNumber = Number(payload.repeatNumber);
         let start = new Date(payload.pmStartDateTime);
         let startYear = start.getFullYear();
@@ -88,7 +88,7 @@ const pmController = {
           updatedAt: currentTime,
           createdAt: currentTime,
           repeatType: payload.repeatType,
-          repeatOn: payload.repeatOn,
+          repeatOn,
           repeatNumber: payload.repeatNumber
         };
         pmResult = await knex

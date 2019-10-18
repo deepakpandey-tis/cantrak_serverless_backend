@@ -15,5 +15,6 @@ router.post('/add-service-order-relocate-asset', authMiddleware.isAuthenticated,
 router.post('/add-service-request-relocate-asset', authMiddleware.isAuthenticated, assetController.addServiceRequestRelocateAsset)
 router.get('/search-asset', authMiddleware.isAuthenticated, assetController.assetSearch)
 router.post('/get-asset-categories', authMiddleware.isAuthenticated,assetController.getAssetCategories)
+router.post('/get-asset-list-by-location',authMiddleware.isAuthenticated,assetController.getAssetListByLocation)
 
 module.exports = router
