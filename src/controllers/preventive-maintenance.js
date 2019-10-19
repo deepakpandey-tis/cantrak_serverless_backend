@@ -453,9 +453,31 @@ const pmController = {
       });
     }
   },
-  getPMList: async (req,res) => {
+  getPmById:async(req,res) => {
     try {
-      const pms = await knex('pm_master').select()
+      const pmMasterId = req.body.pmMasterId;
+      const pm = await knex('pm_master').select('pmStartDate','pmStopDate','repeatType','repeatOn','repeatNumber').where({id:pmMasterId})
+      return res.status(200).json({
+        data: {
+          pm: pm[0]
+        }
+      })
+    }catch(err){
+      console.log("[controllers][people][UpdatePeople] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getPmListByAssetId: async(req,res) => {
+    try {
+      // here i need to get pms by assetId
+      let assetId = req.body.assetId;
+
+
+
+
       let pagination = {};
       let per_page = req.query.per_page || 10;
       let page = req.query.current_page || 1;
@@ -464,19 +486,80 @@ const pmController = {
 
 
       let [total, rows] = await Promise.all([
-        knex
-          .count("* as count", "pm_master.*")
-          .from("pm_master")
+        knex.select().from('pm_master')
+          .whereIn('id', function () {
+            this.distinct('pmMasterId')
+              .from('pm_assign_assets')
+              .innerJoin('pm_master', 'pm_assign_assets.pmMasterId', 'pm_master.id')
+              .where({ assetId })
+          }),
+        knex.select().from('pm_master')
+          .whereIn('id', function () {
+            this.distinct('pmMasterId')
+              .from('pm_assign_assets')
+              .innerJoin('pm_master', 'pm_assign_assets.pmMasterId', 'pm_master.id')
+              .where({ assetId })
+          })
           .offset(offset)
           .limit(per_page)
-          .first(),
-        knex
-          .from("pm_master")
-          .offset(offset)
-          .limit(per_page)
-        ])
+      ])
 
-      let count = total.count;
+      let count = total.length;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+        res.status(200).json({
+          data: {
+            pms:pagination
+          }
+        })
+
+    } catch(err) {
+      console.log("[controllers][people][UpdatePeople] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getPMList: async (req,res) => {
+    try {
+      let pagination = {};
+      let per_page = req.query.per_page || 10;
+      let page = req.query.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+      
+      //const pms = await knex('pm_master').select()
+
+      let [total,rows] = await Promise.all([
+        knex.from('pm_master')
+        ,
+        knex.from('pm_master').offset(offset).limit(per_page)
+      ])
+
+      // let [total, rows] = await Promise.all([
+      //   knex
+      //     .count("* as count", "pm_master.*")
+      //     .from("pm_master")
+      //     .offset(offset)
+      //     .limit(per_page)
+      //     .first(),
+      //   knex
+      //     .from("pm_master")
+      //     .offset(offset)
+      //     .limit(per_page)
+      //   ])
+
+       // console.log(JSON.stringify(total,null,2))
+
+      let count = total.length;
       pagination.total = count;
       pagination.per_page = per_page;
       pagination.offset = offset;
@@ -530,6 +613,158 @@ const pmController = {
         }
       })
         } catch(err) {
+      console.log("[controllers][people][UpdatePeople] :  Error", err);
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getAssetListOfPm: async (req,res) => {
+    try {
+      const pmMasterId = req.body.pmMasterId;
+      const assetId = req.body.assetId
+      let total, rows
+      let pagination = {};
+      let per_page = req.query.per_page || 10;
+      let page = req.query.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+      
+      if(assetId){
+        [total, rows] = await Promise.all([
+          knex
+            .from("pm_assign_assets")
+            .innerJoin('asset_master', 'pm_assign_assets.assetId', 'asset_master.id')
+            .where({ pmMasterId,'asset_master.id':assetId })
+            .whereNull('pm_assign_assets.endDateTime')
+          ,
+          knex
+            .from("pm_assign_assets")
+            .innerJoin('asset_master', 'pm_assign_assets.assetId', 'asset_master.id')
+            .groupBy('pm_assign_assets.id', 'asset_master.id')
+            .where({ pmMasterId, 'asset_master.id': assetId })
+            .whereNull('pm_assign_assets.endDateTime')
+            .offset(offset)
+            .limit(per_page)
+        ])
+
+      } else {
+
+        [total, rows] = await Promise.all([
+          knex
+            .from("pm_assign_assets")
+            .innerJoin('asset_master', 'pm_assign_assets.assetId', 'asset_master.id')
+            .where({pmMasterId})
+            .whereNull('pm_assign_assets.endDateTime')
+            ,
+          knex
+            .from("pm_assign_assets")
+            .innerJoin('asset_master', 'pm_assign_assets.assetId', 'asset_master.id')
+            .groupBy('pm_assign_assets.id', 'asset_master.id')
+            .where({pmMasterId})
+            .whereNull('pm_assign_assets.endDateTime')
+            .offset(offset)
+            .limit(per_page)
+        ])
+      }
+
+      let count = total.length;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+      return res.status(200).json({
+        data: {
+          assets:pagination
+        },
+        message: 'Asset list of a PM'
+      })
+    } catch(err) {
+      console.log("[controllers][people][UpdatePeople] :  Error", err);
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getAssetListWithCompletedPm: async (req,res) => {
+    try {
+      const pmMasterId = req.body.pmMasterId;
+      let pagination = {};
+      let per_page = req.query.per_page || 10;
+      let page = req.query.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+
+      let [total, rows] = await Promise.all([
+        knex
+          .from("pm_assign_assets")
+          .innerJoin('asset_master', 'pm_assign_assets.assetId', 'asset_master.id')
+          .where({ pmMasterId })
+          .whereNotNull('pm_assign_assets.endDateTime')
+        ,
+        knex
+          .from("pm_assign_assets")
+          .innerJoin('asset_master', 'pm_assign_assets.assetId', 'asset_master.id')
+          .groupBy('pm_assign_assets.id', 'asset_master.id')
+          .where({ pmMasterId })
+          .whereNotNull('pm_assign_assets.endDateTime')
+          .offset(offset)
+          .limit(per_page)
+      ])
+
+      let count = total.length;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+      return res.status(200).json({
+        data: {
+          assets: pagination
+        },
+        message: 'Asset list of a PM'
+      })
+    } catch(err) {
+      console.log("[controllers][people][UpdatePeople] :  Error", err);
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getAssetIdByAssetSerialOrBarcode:async(req,res) => {
+    try {
+      const assetSerialOrBarcode = req.body.assetSerialOrBarcode;
+      if(!assetSerialOrBarcode){
+        return res.status(200).json({
+          data: {
+            assetId: ''
+          }
+        })
+      }
+      let asset = await knex('asset_master').select('id').where({assetSerial:assetSerialOrBarcode}).orWhere({barcode:assetSerialOrBarcode})
+      if (asset && asset.length){
+        asset = asset[0].id
+          return res.status(200).json({
+            data: {
+              assetId:asset
+            }
+          })
+      }
+      return res.status(200).json({
+        data: {
+          assetId:''
+        }
+      })
+
+    } catch(err) {
       console.log("[controllers][people][UpdatePeople] :  Error", err);
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]

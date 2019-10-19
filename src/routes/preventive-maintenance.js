@@ -12,4 +12,9 @@ router.post('/assign-team-to-pm-task', authMiddleware.isAuthenticated,authMiddle
 router.post('/pm-post-feedback-for-asset', authMiddleware.isAuthenticated, authMiddleware.isAdmin, pmController.postFeedbackWithImages)
 router.post('/get-pm-feedback-list',authMiddleware.isAuthenticated,authMiddleware.isAdmin,pmController.getFeedbackList)
 router.post('/get-single-asset-pm-schedule-list', authMiddleware.isAuthenticated, authMiddleware.isAdmin,pmController.getSingleAssetPmScheduleList)
+router.post('/get-asset-list-of-pm', authMiddleware.isAuthenticated, authMiddleware.isAdmin, pmController.getAssetListOfPm)
+router.post('/get-asset-list-with-completed-pm', authMiddleware.isAuthenticated, authMiddleware.isAdmin, pmController.getAssetListWithCompletedPm)
+router.post('/get-pm-by-id', authMiddleware.isAuthenticated, authMiddleware.isAdmin, pmController.getPmById)
+router.post('/get-pm-list-by-asset-id', authMiddleware.isAuthenticated, authMiddleware.isAdmin, pmController.getPmListByAssetId)
+router.post('/get-asset-id-by-asset-serial-or-barcode', authMiddleware.isAuthenticated, authMiddleware.isAdmin, pmController.getAssetIdByAssetSerialOrBarcode)
 module.exports = router
