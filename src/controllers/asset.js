@@ -682,7 +682,6 @@ const assetController = {
                 ],
             });
         }
-<<<<<<< HEAD
     },
     exportAsset: async(req,res)=>{
         try {
