@@ -192,7 +192,7 @@ const assetController = {
              if(category){
                 filters['asset_category_master.categoryName'] = category
              }
- 
+            
 
             if (_.isEmpty(filters)) {
                 [total, rows] = await Promise.all([
