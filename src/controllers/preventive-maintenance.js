@@ -1225,9 +1225,7 @@ const pmController = {
         'images.s3Url as image_url'
 
 
-      ])
-
-      //.where({'pm_assign_assets.pmMasterId':payload.pmMasterId,'pm_assign_assets.assetId':payload.assetId,'pm_assign_assets.pmDate':payload.pmDate})
+      ]).where({'pm_assign_assets.pmMasterId':payload.pmMasterId,'pm_assign_assets.assetId':payload.assetId,'pm_assign_assets.pmDate':payload.pmDate})
 
       return res.status(200).json({
         data: {
