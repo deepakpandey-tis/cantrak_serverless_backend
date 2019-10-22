@@ -159,8 +159,17 @@ const sourceofRequestController = {
         let offset = (page - 1) * per_page;
 
         let [total, rows] = await Promise.all([
-          knex.count('* as count').from("source_of_request").where({ 'source_of_request.isActive': true}).first(),
-          knex.select("*").from("source_of_request").where({ 'source_of_request.isActive': true}).offset(offset).limit(per_page)
+          knex.count('* as count').from("source_of_request").first(),
+          knex("source_of_request")
+          .select([
+            "requestCode as Source Code",
+            "descriptionEng as Description English",
+            "descriptionThai as Description Thai",
+            "isActive as Status",
+            "createdby as Created By",
+            "createdAt as Date Created"
+          ])
+          .offset(offset).limit(per_page)
         ])
 
         let count = total.count;
@@ -203,8 +212,18 @@ const sourceofRequestController = {
         let offset = (page - 1) * per_page;
 
         let [total, rows] = await Promise.all([
-          knex.count('* as count').from("source_of_request").where({ 'source_of_request.isActive': true}).first(),
-          knex.select("*").from("source_of_request").where({ 'source_of_request.isActive': true}).offset(offset).limit(per_page)
+          knex.count('* as count').from("source_of_request")
+          .first(),
+          knex("source_of_request")
+          .select([
+            "requestCode as Source Code",
+            "descriptionEng as Description English",
+            "descriptionThai as Description Thai",
+            "isActive as Status",
+            "createdby as Created By",
+            "createdAt as Date Created"
+          ])
+          .offset(offset).limit(per_page)
         ])
 
       var wb = XLSX.utils.book_new({sheet:"Sheet JS"});

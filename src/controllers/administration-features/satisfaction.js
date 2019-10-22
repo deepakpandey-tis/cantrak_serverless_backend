@@ -191,7 +191,16 @@ const satisfactionController = {
           
             [total, rows] = await Promise.all([
                 knex.count('* as count').from("satisfaction").first(),
-                knex.select("*").from("satisfaction").offset(offset).limit(per_page)
+                knex("satisfaction")
+                .select([
+                    "satisfactionCode as Satisfaction Code",
+                    "descriptionThai as Description English",
+                    "descriptionThai as Description Thai",
+                    "isActive as Status",
+                    "createdby as Created By",
+                    "createdAt as Date Created"
+                ])
+                .offset(offset).limit(per_page)
             ])
             
 
@@ -318,7 +327,16 @@ const satisfactionController = {
       
         [total, rows] = await Promise.all([
             knex.count('* as count').from("satisfaction").first(),
-            knex.select("*").from("satisfaction").offset(offset).limit(per_page)
+            knex("satisfaction")
+            .select([
+                "satisfactionCode as Satisfaction Code",
+                "descriptionThai as Description English",
+                "descriptionThai as Description Thai",
+                "isActive as Status",
+                "createdby as Created By",
+                "createdAt as Date Created"
+            ])
+            .offset(offset).limit(per_page)
         ])
         
 

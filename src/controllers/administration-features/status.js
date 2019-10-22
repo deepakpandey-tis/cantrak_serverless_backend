@@ -192,7 +192,17 @@ const statusController = {
           
             [total, rows] = await Promise.all([
                 knex.count('* as count').from("service_status").first(),
-                knex.select("*").from("service_status").offset(offset).limit(per_page)
+                knex("service_status")
+                .select([
+                    "statusCode as Status Code",
+                    "descriptionEng as Description English",
+                    "descriptionThai as Description Thai",
+                    "isActive as Status",
+                    "createdby as Created By",
+                    "createdAt as Date Created"
+                    
+                ])
+                .offset(offset).limit(per_page)
             ])
             
 
@@ -315,7 +325,17 @@ const statusController = {
           
             [total, rows] = await Promise.all([
                 knex.count('* as count').from("service_status").first(),
-                knex.select("*").from("service_status").offset(offset).limit(per_page)
+                knex("service_status")
+                .select([
+                    "statusCode as Status Code",
+                    "descriptionEng as Description English",
+                    "descriptionThai as Description Thai",
+                    "isActive as Status",
+                    "createdby as Created By",
+                    "createdAt as Date Created"
+                    
+                ])
+                .offset(offset).limit(per_page)
             ])
             
             var wb = XLSX.utils.book_new({sheet:"Sheet JS"});

@@ -1136,6 +1136,56 @@ const pmController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  // Update Asset PM EndDate
+  updateAssetPm:async (req,res)=>{
+
+    try{
+      let   assetData = null;
+      const payload  = req.body;
+
+      const schema = Joi.object().keys({
+        pmMasterId: Joi.number().required(),
+        assetId: Joi.number().required(),
+        pmDate:Joi.date().required(),
+        startDateTime:Joi.date().required(),
+        endDateTime:Joi.date().required(),
+      })
+
+      const result = Joi.validate(payload, schema)
+      console.log('[controllers][administrationFeatures][PM]: JOi Result', result);
+
+      if (result && result.hasOwnProperty('error') && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: 'VALIDATION_ERROR', message: result.error.message }
+          ],
+        });
+      }
+
+          let currentTime  = new Date().getTime()
+          let updateData   = { ...payload, updatedAt: currentTime };
+          let updateResult = await knex('pm_assign_assets').update(updateData)
+          .where({pmMasterId:payload.pmMasterId,assetId:payload.assetId,pmDate:payload.pmDate}).returning(['*'])
+          assetData        = updateResult[0]
+
+          return res.status(200).json({
+            data: {
+              assetPmUpdateData: assetData
+            },
+            message: 'Asset Pm EndDate Updated Successfully!'
+          })
+          
+
+    }catch(err){
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+    
   }
+
 };
 module.exports = pmController;

@@ -189,9 +189,16 @@ const chargeController = {
           .count("* as count")
           .from("charge_master")
           .first(),
-        knex
-          .select("*")
-          .from("charge_master")
+        knex("charge_master")
+          .select([
+            "chargeCode as Charges Code",
+            "chargeName as Charges Name",
+            "calculationUnit as Calculation Unit",
+            "rate as Cost",
+            "isActive as Status",
+            "createdby as Created By",
+            "createdAt as Date Created"
+          ])
           .offset(offset)
           .limit(per_page)
       ]);
