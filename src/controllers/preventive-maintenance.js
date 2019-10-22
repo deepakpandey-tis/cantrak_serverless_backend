@@ -1189,6 +1189,62 @@ const pmController = {
       });
     }
     
+  },getPmReport:async (req,res)=>{
+    try{
+
+      let   reportData = null;
+      const payload  = req.body;
+
+      const schema = Joi.object().keys({
+        pmMasterId: Joi.number().required(),
+        assetId: Joi.number().required(),
+        pmDate:Joi.date().required(),
+      })
+
+      const result = Joi.validate(payload, schema)
+      console.log('[controllers][administrationFeatures][PMreport]: JOi Result', result);
+
+      if (result && result.hasOwnProperty('error') && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: 'VALIDATION_ERROR', message: result.error.message }
+          ],
+        });
+      }
+
+      let reportResult = await knex('pm_assign_assets')
+      .innerJoin('pm_feedbacks','pm_assign_assets.pmMasterId','pm_feedbacks.pmMasterId')
+      .innerJoin('pm_task_master','pm_assign_assets.pmMasterId','pm_task_master.pmMasterId')
+      .innerJoin('images','pm_feedbacks.id','images.entityId')
+      .select([
+        'pm_assign_assets.id as id',
+        'pm_task_master.taskName as Task Name',
+        'pm_feedbacks.description as Feedback Description',
+        'pm_assign_assets.startDateTime as startDate',
+        'pm_assign_assets.startDateTime as endDate',
+        'images.s3Url as image_url'
+
+
+      ])
+
+      //.where({'pm_assign_assets.pmMasterId':payload.pmMasterId,'pm_assign_assets.assetId':payload.assetId,'pm_assign_assets.pmDate':payload.pmDate})
+
+      return res.status(200).json({
+        data: {
+          pmReport: reportResult
+        },
+        message: 'Pm Report Successfully!'
+      })
+
+    } catch (err) {
+      console.log('[controllers][preventive-maintainece][pmreport] :  Error', err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
   }
 
 };

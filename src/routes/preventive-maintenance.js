@@ -19,6 +19,8 @@ router.post('/get-asset-list-with-completed-pm', authMiddleware.isAuthenticated,
 router.post('/get-pm-by-id', authMiddleware.isAuthenticated, authMiddleware.isAdmin, pmController.getPmById)
 router.post('/get-pm-list-by-asset-id', authMiddleware.isAuthenticated, authMiddleware.isAdmin, pmController.getPmListByAssetId)
 router.post('/get-asset-id-by-asset-serial-or-barcode', authMiddleware.isAuthenticated, authMiddleware.isAdmin, pmController.getAssetIdByAssetSerialOrBarcode)
+// Update asset Pm Endate
 router.post('/update-asset-pm-endDate', authMiddleware.isAuthenticated, authMiddleware.isAdmin, pmController.updateAssetPm)
-
+// Get Pm Report
+router.post('/get-pm-report', authMiddleware.isAuthenticated, authMiddleware.isAdmin, pmController.getPmReport)
 module.exports = router
