@@ -384,24 +384,28 @@ const pmController = {
             .transacting(trx)
             .into("pm_feedbacks");
 
-          let imagesResult = await Parallel.map(images, async image => {
-            let { s3Url, title, name } = image;
-            let insertPayload = {
-              entityType: "pm_feedbacks",
-              entityId: feedBackInsertResult[0].id,
-              createdAt: currentTime,
-              updatedAt: currentTime,
-              s3Url,
-              title,
-              name
-            };
-            let imageInsertResult = await knex
-              .insert(insertPayload)
-              .returning(["*"])
-              .transacting(trx)
-              .into("images");
-            return imageInsertResult;
-          });
+          let imagesResult = []
+            if(images){
+              imagesResult = await Parallel.map(images, async image => {
+                let { s3Url, title, name } = image;
+                let insertPayload = {
+                  entityType: "pm_feedbacks",
+                  entityId: feedBackInsertResult[0].id,
+                  createdAt: currentTime,
+                  updatedAt: currentTime,
+                  s3Url,
+                  title,
+                  name
+                };
+                let imageInsertResult = await knex
+                  .insert(insertPayload)
+                  .returning(["*"])
+                  .transacting(trx)
+                  .into("images");
+                return imageInsertResult;
+              });
+
+            }
           return { feedback: feedBackInsertResult[0], images: imagesResult };
         });
 
