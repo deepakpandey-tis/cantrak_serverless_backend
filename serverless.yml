@@ -74,9 +74,9 @@ functions:
     events:
       - http:
          method: GET
-         path: webhook       
-  s3hook:
-    handler: src/app.s3hook
-    events:
-      - s3: local-bucket
-        event: s3:*
+         path: webhook
+  # s3hook:
+  #   handler: src/app.s3hook
+  #   events:
+  #     - s3: sls-app-resources-bucket
+  #       event: s3:*

@@ -15,6 +15,7 @@ router.post('/add-team-users', authMiddleware.isAuthenticated, teamsController.a
 router.get('/get-assigned-teams', authMiddleware.isAuthenticated, teamsController.getAssignedTeams);
 // Export Team Data
 router.get('/export-teams', authMiddleware.isAuthenticated, teamsController.exportTeams);
+router.post('/get-main-and-additional-users-by-teamid', authMiddleware.isAuthenticated, teamsController.getMainAndAdditionalUsersByTeamId)
 
 
 module.exports = router;
