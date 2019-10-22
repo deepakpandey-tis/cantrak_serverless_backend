@@ -3,6 +3,7 @@ const moment = require('moment');
 const uuidv4 = require('uuid/v4');
 var jwt = require('jsonwebtoken');
 const _ = require('lodash');
+const XLSX = require('xlsx');
 
 
 const knex = require('../../db/knex');
@@ -261,17 +262,26 @@ const propertyCategoryController = {
         }
     },
 
-    categoryList: async (req, res) => {
+    propertyCategoryList: async (req, res) => {
 
         try {
 
             let listCategories = null;
 
-            await knex.transaction(async (trx) => {
+            //await knex.transaction(async (trx) => {
 
                 // Insert in users table,
 
-                const DataResult = await knex('incident_categories').where({ isActive: 'true' });
+                const DataResult = await knex('property_types').
+                innerJoin('users','property_types.createdBy','users.id')
+                .select([
+                    'property_types.propertyType as Property Type',
+                    'property_types.propertyTypeCode as Property Code',
+                    'property_types.isActive as Status',
+                    'users.name as Created By',
+                    'property_types.createdAt as Date Created'
+                    ])
+                .where({'property_types.isActive': 'true' });
 
                 //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
                 //const updateDataResult = await knex.update({ isActive : 'false', updatedAt : currentTime }).where({ id: incidentTypePayload.id }).returning(['*']).transacting(trx).into('incident_type');
@@ -284,8 +294,119 @@ const propertyCategoryController = {
 
                 listCategories = DataResult;
 
-                trx.commit;
+              //  trx.commit;
+            //});
+
+            res.status(200).json({
+                data: {
+                    categories: listCategories
+                },
+                message: "Property Categories list successfully !"
             });
+
+        } catch (err) {
+            console.log('[controllers][category][categoryList] :  Error', err);
+            //trx.rollback
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    },
+    categoryList: async (req, res) => {
+
+        try {
+
+            let listCategories = null;
+
+            //await knex.transaction(async (trx) => {
+
+                
+
+                const DataResult = await knex('incident_categories')
+                
+                .select([
+                    'categoryCode as Category',
+                    'descriptionEng as Decription Eng',
+                    'descriptionThai as Description Thai',
+                    'isActive as Status',
+                    'createdAt as Date Created'
+                    ])
+                
+
+                //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
+                //const updateDataResult = await knex.update({ isActive : 'false', updatedAt : currentTime }).where({ id: incidentTypePayload.id }).returning(['*']).transacting(trx).into('incident_type');
+
+                // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
+
+                console.log('[controllers][category][categoryDelete]: View Data', DataResult);
+
+                //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
+
+                listCategories = DataResult;
+
+              //  trx.commit;
+            //});
+
+            res.status(200).json({
+                data: {
+                    categories: listCategories
+                },
+                message: "Categories list successfully !"
+            });
+
+        } catch (err) {
+            console.log('[controllers][category][categoryList] :  Error', err);
+            //trx.rollback
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    },
+    exportCategory: async (req, res) => {
+
+        try {
+
+            let listCategories = null;
+
+            //await knex.transaction(async (trx) => {
+
+                
+
+                const DataResult = await knex('incident_categories')
+                
+                .select([
+                    'categoryCode as Category',
+                    'descriptionEng as Decription Eng',
+                    'descriptionThai as Description Thai',
+                    'isActive as Status',
+                    'createdAt as Date Created'
+                    ])
+                
+
+                //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
+                //const updateDataResult = await knex.update({ isActive : 'false', updatedAt : currentTime }).where({ id: incidentTypePayload.id }).returning(['*']).transacting(trx).into('incident_type');
+
+                // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
+
+                console.log('[controllers][category][categoryDelete]: View Data', DataResult);
+
+                //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
+
+                listCategories = DataResult;
+
+              //  trx.commit;
+            //});
+
+            var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
+            var ws = XLSX.utils.json_to_sheet(listCategories);
+            XLSX.utils.book_append_sheet(wb, ws, "pres");
+            XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
+            let filename = "uploads/CategoryData-"+Date.now()+".csv";
+            let  check = XLSX.writeFile(wb,filename);
 
             res.status(200).json({
                 data: {
@@ -337,6 +458,66 @@ const propertyCategoryController = {
             console.log("[controllers][category][viewCategory] : Error", err);
             res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+        // Export Category Data
+    },exportPropertyCategory:async (req,res)=>{
+
+        try {
+
+            let listCategories = null;
+
+            //await knex.transaction(async (trx) => {
+
+                // Insert in users table,
+
+                const DataResult = await knex('property_types').
+                innerJoin('users','property_types.createdBy','users.id')
+                .select([
+                    'property_types.propertyType as Property Type',
+                    'property_types.propertyTypeCode as Property Code',
+                    'property_types.isActive as Status',
+                    'users.name as Created By',
+                    'property_types.createdAt as Date Created'
+                    ])
+                .where({'property_types.isActive': 'true' });
+
+                //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
+                //const updateDataResult = await knex.update({ isActive : 'false', updatedAt : currentTime }).where({ id: incidentTypePayload.id }).returning(['*']).transacting(trx).into('incident_type');
+
+                // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
+
+                console.log('[controllers][category][categoryDelete]: View Data', DataResult);
+
+                //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
+
+                listCategories = DataResult;
+
+              //  trx.commit;
+            //});
+
+
+            var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
+            var ws = XLSX.utils.json_to_sheet(listCategories);
+            XLSX.utils.book_append_sheet(wb, ws, "pres");
+            XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
+            let filename = "uploads/PropertTypeData-"+Date.now()+".csv";
+            let  check = XLSX.writeFile(wb,filename);
+
+            res.status(200).json({
+                data: {
+                    categories: listCategories
+                },
+                message: "Categories Data Export Successfully !"
+            });
+
+        } catch (err) {
+            console.log('[controllers][category][categoryList] :  Error', err);
+            //trx.rollback
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
             });
         }
     }

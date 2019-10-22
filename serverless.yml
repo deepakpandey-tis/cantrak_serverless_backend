@@ -49,12 +49,12 @@ custom:
     # Uncomment only if you already have a S3 server running locally
     # noStart: true
 
-# resources:
-#   Resources:
-#     NewResource:
-#       Type: AWS::S3::Bucket
-#       Properties:
-#         BucketName: sls-app-resources-bucket
+resources:
+  Resources:
+    NewResource:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: local-bucket
 
 
 functions:
@@ -75,8 +75,8 @@ functions:
       - http:
          method: GET
          path: webhook       
-  # s3hook:
-  #   handler: src/app.s3hook
-  #   events:
-  #     - s3: sls-app-resources-bucket
-  #       event: s3:*
+  s3hook:
+    handler: src/app.s3hook
+    events:
+      - s3: local-bucket
+        event: s3:*

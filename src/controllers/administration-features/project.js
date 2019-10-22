@@ -1,8 +1,9 @@
-const Joi = require('@hapi/joi');
+const Joi    = require('@hapi/joi');
 const moment = require('moment');
 const uuidv4 = require('uuid/v4');
-var jwt = require('jsonwebtoken');
-const _ = require('lodash');
+var jwt      = require('jsonwebtoken');
+const _      = require('lodash');
+const XLSX   = require('xlsx');
 
 
 const knex = require('../../db/knex');
@@ -228,8 +229,17 @@ const ProjectController = {
         let offset = (page - 1) * per_page;
 
         let [total, rows] = await Promise.all([
-          knex.count('* as count').from("projects").first(),
-          knex.select("*").from("projects").offset(offset).limit(per_page)
+          knex.count('* as count').from("projects").innerJoin("companies", "projects.companyId", "companies.id")
+          .first(),
+          knex("projects").innerJoin("companies", "projects.companyId", "companies.id")
+          .select([
+            'projects.projectName as Project Name',
+            'companies.companyName as Company Name',
+            'projects.isActive as Status',
+            'projects.createdBy as Created By',
+            'projects.createdAt as Date Created',
+          ])
+          .offset(offset).limit(per_page)
         ])
 
         let count = total.count;
@@ -249,8 +259,16 @@ const ProjectController = {
         let offset = (page - 1) * per_page;
 
         let [total, rows] = await Promise.all([
-          knex.count('* as count').from("projects").where({ 'projects.companyId': companyId }).offset(offset).limit(per_page).first(),
-          knex.from("projects").innerJoin("companies", "projects.companyId", "companies.id").where({ 'projects.companyId': companyId }).offset(offset).limit(per_page)
+          knex.count('* as count').from("projects").innerJoin("companies", "projects.companyId", "companies.id").where({ 'projects.companyId': companyId }).offset(offset).limit(per_page).first(),
+          knex.from("projects").innerJoin("companies", "projects.companyId", "companies.id").where({ 'projects.companyId': companyId })
+          .select([
+            'projects.projectName as Project Name',
+            'companies.companyName as Company Name',
+            'projects.isActive as Status',
+            'projects.createdBy as Created By',
+            'projects.createdAt as Date Created',
+          ])
+          .offset(offset).limit(per_page)
         ])
 
         let count = total.count;
@@ -268,6 +286,91 @@ const ProjectController = {
           projects: pagination
         },
         message: 'projects List!'
+      })
+    } catch (err) {
+      console.log('[controllers][generalsetup][viewProject] :  Error', err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },exportProject: async (req,res)=>{
+    try {
+      let companyId = req.query.companyId;
+      let reqData = req.query;
+      let pagination = {};
+
+      if (!companyId) {
+        let per_page = reqData.per_page || 10;
+        let page = reqData.current_page || 1;
+        if (page < 1) page = 1;
+        let offset = (page - 1) * per_page;
+
+        let [total, rows] = await Promise.all([
+          knex.count('* as count').from("projects").innerJoin("companies", "projects.companyId", "companies.id")
+          .first(),
+          knex("projects").innerJoin("companies", "projects.companyId", "companies.id")
+          .select([
+            'projects.projectName as Project Name',
+            'companies.companyName as Company Name',
+            'projects.isActive as Status',
+            'projects.createdBy as Created By',
+            'projects.createdAt as Date Created',
+          ])
+          .offset(offset).limit(per_page)
+        ])
+
+        let count = total.count;
+        pagination.total = count;
+        pagination.per_page = per_page;
+        pagination.offset = offset;
+        pagination.to = offset + rows.length;
+        pagination.last_page = Math.ceil(count / per_page);
+        pagination.current_page = page;
+        pagination.from = offset;
+        pagination.data = rows;
+
+      } else {
+        let per_page = reqData.per_page || 10;
+        let page = reqData.current_page || 1;
+        if (page < 1) page = 1;
+        let offset = (page - 1) * per_page;
+
+        let [total, rows] = await Promise.all([
+          knex.count('* as count').from("projects").innerJoin("companies", "projects.companyId", "companies.id").where({ 'projects.companyId': companyId }).offset(offset).limit(per_page).first(),
+          knex.from("projects").innerJoin("companies", "projects.companyId", "companies.id").where({ 'projects.companyId': companyId })
+          .select([
+            'projects.projectName as Project Name',
+            'companies.companyName as Company Name',
+            'projects.isActive as Status',
+            'projects.createdBy as Created By',
+            'projects.createdAt as Date Created',
+          ])
+          .offset(offset).limit(per_page)
+        ])
+
+        let count = total.count;
+        pagination.total = count;
+        pagination.per_page = per_page;
+        pagination.offset = offset;
+        pagination.to = offset + rows.length;
+        pagination.last_page = Math.ceil(count / per_page);
+        pagination.current_page = page;
+        pagination.from = offset;
+        pagination.data = rows;
+      }
+            var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
+            var ws = XLSX.utils.json_to_sheet(pagination.data);
+            XLSX.utils.book_append_sheet(wb, ws, "pres");
+            XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
+            let filename = "uploads/ProjectData-"+Date.now()+".csv";
+            let  check = XLSX.writeFile(wb,filename);
+
+      return res.status(200).json({
+        data: pagination.data,
+        message: 'Project Data Export Successfully!'
       })
     } catch (err) {
       console.log('[controllers][generalsetup][viewProject] :  Error', err);

@@ -741,6 +741,83 @@ const pmController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+    // Get Task List By PM Master ID
+  },getTaskListByPmId: async(req,res)=>{
+
+    try {
+      let reqData = req.query;
+      let pagination = {};
+
+        const {
+          pmMasterId
+        } = req.body;
+
+        let filters = {};
+        if (pmMasterId) {
+          filters["pm_task_master.pmMasterId"] = pmMasterId;
+        }
+        
+
+        let per_page = reqData.per_page || 10;
+        let page = reqData.current_page || 1;
+        if (page < 1) page = 1;
+        let offset = (page - 1) * per_page;
+        let total, rows;
+        if (_.isEmpty(filters)) {
+          [total, rows] = await Promise.all([
+            knex
+              .count("* as count")
+              .from("pm_task_master"),
+            knex
+              .from("pm_task_master")     
+              .select('*')
+              .offset(offset)
+              .limit(per_page)
+          ]);
+        } else {
+          [total, rows] = await Promise.all([
+            knex
+              .count("* as count")
+              .from("pm_task_master")
+              .where(qb => {
+                qb.where(filters);
+              }),
+              
+            knex
+              .from("pm_task_master")
+              .select('*')
+              .where(qb => {
+                qb.where(filters);
+              })
+              .offset(offset)
+              .limit(per_page)
+          ]);
+        }
+
+        let count = total.length;
+        pagination.total = count;
+        pagination.per_page = per_page;
+        pagination.offset = offset;
+        pagination.to = offset + rows.length;
+        pagination.last_page = Math.ceil(count / per_page);
+        pagination.current_page = page;
+        pagination.from = offset;
+        pagination.data = rows;
+
+        
+      return res.status(200).json({
+        data: {
+          pagination
+        },
+        message: "Preventive Maintaince Task List"
+      });
+    } catch (err) {
+      console.log("[controllers][people][UpdatePeople] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 module.exports = pmController;

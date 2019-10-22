@@ -88,6 +88,21 @@ const authMiddleware = {
             console.log('[middleware][auth][isSuperAdmin] :  Error', err);
             next(createError(401));
         }
+    },
+    isRole: async (req, res, next) => {
+
+        try {
+           
+            let currentUser = req.me;
+
+            if(currentUser && currentUser.roles && currentUser.roles.includes("superAdmin") || currentUser.roles.includes("admin") || currentUser.roles.includes("supervisor") || currentUser.roles.includes("technician") || currentUser.roles.includes("worker") || currentUser.roles.includes("engineer") ){
+                return next();
+            }
+            return next(createError(403));
+        } catch (err) {
+            console.log('[middleware][auth][isRoleDelete] :  Error', err);
+            next(createError(401));
+        }
     }
 };
 

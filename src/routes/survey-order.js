@@ -13,5 +13,7 @@ router.post('/get-survey-order-details', authMiddleware.isAuthenticated, authMid
 router.post('/update-survey-order-notes', authMiddleware.isAuthenticated, authMiddleware.isSuperAdmin, surveyOrderController.updateSurveyOrderNotes)
 router.post('/get-survey-order-notes-list', authMiddleware.isAuthenticated, authMiddleware.isSuperAdmin, surveyOrderController.getSurveyOrderNoteList)
 router.post('/delete-survey-order-remark', authMiddleware.isAuthenticated, authMiddleware.isSuperAdmin, surveyOrderController.deleteSurveyRemark);
+/// Survey Order Export Data 
+router.post('/export-survey-order', authMiddleware.isAuthenticated, authMiddleware.isSuperAdmin, surveyOrderController.exportSurveyOrder);
 
 module.exports = router;

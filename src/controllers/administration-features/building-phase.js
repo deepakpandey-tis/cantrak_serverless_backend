@@ -1,8 +1,9 @@
-const Joi = require('@hapi/joi');
+const Joi    = require('@hapi/joi');
 const moment = require('moment');
 const uuidv4 = require('uuid/v4');
-var jwt = require('jsonwebtoken');
-const _ = require('lodash');
+var jwt      = require('jsonwebtoken');
+const _      = require('lodash');
+const XLSX   = require('xlsx');
 
 
 const knex = require('../../db/knex');
@@ -206,8 +207,23 @@ const buildingPhaseController = {
         let offset = (page - 1) * per_page;
 
         let [total, rows] = await Promise.all([
-          knex.count('* as count').from("buildings_and_phases").where({ 'buildings_and_phases.isActive': true}).first(),
-          knex.select("*").from("buildings_and_phases").where({ 'buildings_and_phases.isActive': true}).offset(offset).limit(per_page)
+          knex.count('* as count').from("buildings_and_phases")
+          .innerJoin('projects','buildings_and_phases.projectId','projects.id')
+          .innerJoin('companies','buildings_and_phases.companyId','companies.id')
+          .where({ 'buildings_and_phases.isActive': true}).first(),
+          knex("buildings_and_phases")
+          .innerJoin('projects','buildings_and_phases.projectId','projects.id')
+          .innerJoin('companies','buildings_and_phases.companyId','companies.id')
+          .where({ 'buildings_and_phases.isActive': true})
+          .select([
+            'buildings_and_phases.buildingPhaseCode as Building/Phase',
+            'projects.projectName as Project Name',
+            'companies.companyName as Company Name',
+            'buildings_and_phases.isActive as Status',
+            'buildings_and_phases.createdBy as Created By',
+            'buildings_and_phases.createdAt as Date Created'
+           ])
+          .offset(offset).limit(per_page)
         ])
 
         let count = total.count;
@@ -227,8 +243,23 @@ const buildingPhaseController = {
         let offset = (page - 1) * per_page;
 
         let [total, rows] = await Promise.all([
-          knex.count('* as count').from("buildings_and_phases").where({ 'buildings_and_phases.companyId': companyId,'buildings_and_phases.isActive':true }).offset(offset).limit(per_page).first(),
-          knex.from("buildings_and_phases").innerJoin("companies", "buildings_and_phases.companyId", "companies.id").where({ 'buildings_and_phases.companyId': companyId, 'buildings_and_phases.isActive': true }).offset(offset).limit(per_page)
+          knex.count('* as count').from("buildings_and_phases")
+          .innerJoin('projects','buildings_and_phases.projectId','projects.id')
+          .innerJoin('companies','buildings_and_phases.companyId','companies.id')
+          .where({ 'buildings_and_phases.isActive': true}).first(),
+          knex("buildings_and_phases")
+          .innerJoin('projects','buildings_and_phases.projectId','projects.id')
+          .innerJoin('companies','buildings_and_phases.companyId','companies.id')
+          .where({ 'buildings_and_phases.isActive': true})
+          .select([
+            'buildings_and_phases.buildingPhaseCode as Building/Phase',
+            'projects.projectName as Project Name',
+            'companies.companyName as Company Name',
+            'buildings_and_phases.isActive as Status',
+            'buildings_and_phases.createdBy as Created By',
+            'buildings_and_phases.createdAt as Date Created'
+           ])
+          .offset(offset).limit(per_page)
         ])
 
         let count = total.count;
@@ -257,6 +288,110 @@ const buildingPhaseController = {
         ],
       });
     }
+    // Export Building Phase Data
+  },exportBuildingPhase:async (req,res)=>{
+
+    try {
+      let companyId = req.query.companyId;
+      let reqData = req.query;
+      let pagination = {};
+
+      if (!companyId) {
+        let per_page = reqData.per_page || 10;
+        let page = reqData.current_page || 1;
+        if (page < 1) page = 1;
+        let offset = (page - 1) * per_page;
+
+        let [total, rows] = await Promise.all([
+          knex.count('* as count').from("buildings_and_phases")
+          .innerJoin('projects','buildings_and_phases.projectId','projects.id')
+          .innerJoin('companies','buildings_and_phases.companyId','companies.id')
+          .where({ 'buildings_and_phases.isActive': true}).first(),
+          knex("buildings_and_phases")
+          .innerJoin('projects','buildings_and_phases.projectId','projects.id')
+          .innerJoin('companies','buildings_and_phases.companyId','companies.id')
+          .where({ 'buildings_and_phases.isActive': true})
+          .select([
+            'buildings_and_phases.buildingPhaseCode as Building/Phase',
+            'projects.projectName as Project Name',
+            'companies.companyName as Company Name',
+            'buildings_and_phases.isActive as Status',
+            'buildings_and_phases.createdBy as Created By',
+            'buildings_and_phases.createdAt as Date Created'
+           ])
+          .offset(offset).limit(per_page)
+        ])
+
+        let count = total.count;
+        pagination.total = count;
+        pagination.per_page = per_page;
+        pagination.offset = offset;
+        pagination.to = offset + rows.length;
+        pagination.last_page = Math.ceil(count / per_page);
+        pagination.current_page = page;
+        pagination.from = offset;
+        pagination.data = rows;
+
+      } else {
+        let per_page = reqData.per_page || 10;
+        let page = reqData.current_page || 1;
+        if (page < 1) page = 1;
+        let offset = (page - 1) * per_page;
+
+        let [total, rows] = await Promise.all([
+          knex.count('* as count').from("buildings_and_phases")
+          .innerJoin('projects','buildings_and_phases.projectId','projects.id')
+          .innerJoin('companies','buildings_and_phases.companyId','companies.id')
+          .where({ 'buildings_and_phases.isActive': true}).first(),
+          knex("buildings_and_phases")
+          .innerJoin('projects','buildings_and_phases.projectId','projects.id')
+          .innerJoin('companies','buildings_and_phases.companyId','companies.id')
+          .where({ 'buildings_and_phases.isActive': true})
+          .select([
+            'buildings_and_phases.buildingPhaseCode as Building/Phase',
+            'projects.projectName as Project Name',
+            'companies.companyName as Company Name',
+            'buildings_and_phases.isActive as Status',
+            'buildings_and_phases.createdBy as Created By',
+            'buildings_and_phases.createdAt as Date Created'
+           ])
+          .offset(offset).limit(per_page)
+        ])
+
+        let count = total.count;
+        pagination.total = count;
+        pagination.per_page = per_page;
+        pagination.offset = offset;
+        pagination.to = offset + rows.length;
+        pagination.last_page = Math.ceil(count / per_page);
+        pagination.current_page = page;
+        pagination.from = offset;
+        pagination.data = rows;
+      }
+
+      var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
+      var ws = XLSX.utils.json_to_sheet(pagination.data);
+      XLSX.utils.book_append_sheet(wb, ws, "pres");
+      XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
+      let filename = "uploads/BuildingPhaseData-"+Date.now()+".csv";
+      let  check = XLSX.writeFile(wb,filename);
+
+      return res.status(200).json({
+        data: {
+          buildingPhases: pagination.data
+        },
+        message: 'Building Phases Data Export Successfully!'
+      })
+    } catch (err) {
+      console.log('[controllers][generalsetup][viewbuildingPhase] :  Error', err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+
   }
 }
 

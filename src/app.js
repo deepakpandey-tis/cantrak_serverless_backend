@@ -3,7 +3,6 @@ const sls = require('serverless-http');
 const createError = require('http-errors');
 const path = require('path');
 const i18n = require('i18n');
-
 const indexRouter = require('./routes/index');
 
 
@@ -105,9 +104,9 @@ module.exports.webhook = (event, context, callback) => {
     endpoint: new AWS.Endpoint(process.env.S3_END_POINT),
   });
 };
-
-// module.exports.s3hook = (event, context) => {
-//   console.log(JSON.stringify(event));
-//   console.log(JSON.stringify(context));
-//   console.log(JSON.stringify(process.env));
-// };
+global.appRoot = path.resolve(__dirname);
+module.exports.s3hook = (event, context) => {
+  console.log(JSON.stringify(event));
+  console.log(JSON.stringify(context));
+  console.log(JSON.stringify(process.env));
+};

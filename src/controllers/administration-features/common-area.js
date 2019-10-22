@@ -3,7 +3,7 @@ const moment = require('moment');
 const uuidv4 = require('uuid/v4');
 var jwt = require('jsonwebtoken');
 const _ = require('lodash');
-
+const XLSX  = require('xlsx');
 
 const knex = require('../../db/knex');
 
@@ -183,6 +183,7 @@ const commonAreaController = {
     // Get List of Common Area
 
     getCommonAreaList : async (req,res) => {
+
         try {
 
             let reqData = req.query;
@@ -197,13 +198,49 @@ const commonAreaController = {
 
             if(companyId){
                 [total, rows] = await Promise.all([
-                    knex.count('* as count').from("common_area").first(),
-                    knex.select("*").from("common_area").offset(offset).limit(per_page).where({companyId: companyId})
+                    knex.count('* as count').from("common_area")
+                    .innerJoin('floor_and_zones','common_area.floorZoneId','common_area.id')
+                    .innerJoin('buildings_and_phases','common_area.buildingPhaseId','buildings_and_phases.id')
+                    .innerJoin('projects','common_area.projectId','projects.id')
+                    .offset(offset).limit(per_page).where({'common_area.companyId': companyId})
+                    ,
+                    knex("common_area")
+                    .innerJoin('floor_and_zones','common_area.floorZoneId','common_area.id')
+                    .innerJoin('buildings_and_phases','common_area.buildingPhaseId','buildings_and_phases.id')
+                    .innerJoin('projects','common_area.projectId','projects.id')
+                    .select([
+                        'common_area.commonAreaCode as Common Area',
+                        'floor_and_zones.floorZoneCode as Floor',
+                        'buildings_and_phases.buildingPhaseCode as Building',
+                        'projects.projectName as Project',
+                        'common_area.isActive as Status',
+                        'common_area.createdBy as Created By',
+                        'common_area.createdAt as Date Created',
+                        
+                    ])
+                    .offset(offset).limit(per_page).where({'common_area.companyId': companyId})
                 ])
             }else{
                 [total, rows] = await Promise.all([
-                    knex.count('* as count').from("common_area").first(),
-                    knex.select("*").from("common_area").offset(offset).limit(per_page)
+                    knex.count('* as count').from("common_area")
+                    .innerJoin('floor_and_zones','common_area.floorZoneId','common_area.id')
+                    .innerJoin('buildings_and_phases','common_area.buildingPhaseId','buildings_and_phases.id')
+                    .innerJoin('projects','common_area.projectId','projects.id'),
+                    knex("common_area")
+                    .innerJoin('floor_and_zones','common_area.floorZoneId','common_area.id')
+                    .innerJoin('buildings_and_phases','common_area.buildingPhaseId','buildings_and_phases.id')
+                    .innerJoin('projects','common_area.projectId','projects.id')
+                    .select([
+                        'common_area.commonAreaCode as Common Area',
+                        'floor_and_zones.floorZoneCode as Floor',
+                        'buildings_and_phases.buildingPhaseCode as Building',
+                        'projects.projectName as Project',
+                        'common_area.isActive as Status',
+                        'common_area.createdBy as Created By',
+                        'common_area.createdAt as Date Created',
+                        
+                    ])
+                    .offset(offset).limit(per_page)
                 ])
             }
 
@@ -380,6 +417,91 @@ const commonAreaController = {
                 ],
             });
         }
+      // Export Common Area Data
+    },exportCommonArea: async (req,res)=>{
+
+        try {
+
+            let reqData = req.query;
+            let total = null;
+            let rows = null;
+            let companyId = reqData.companyId;
+            let pagination = {};
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
+
+            if(companyId){
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from("common_area")
+                    .innerJoin('floor_and_zones','common_area.floorZoneId','common_area.id')
+                    .innerJoin('buildings_and_phases','common_area.buildingPhaseId','buildings_and_phases.id')
+                    .innerJoin('projects','common_area.projectId','projects.id')
+                    .offset(offset).limit(per_page).where({'common_area.companyId': companyId})
+                    ,
+                    knex("common_area")
+                    .innerJoin('floor_and_zones','common_area.floorZoneId','common_area.id')
+                    .innerJoin('buildings_and_phases','common_area.buildingPhaseId','buildings_and_phases.id')
+                    .innerJoin('projects','common_area.projectId','projects.id')
+                    .select([
+                        'common_area.commonAreaCode as Common Area',
+                        'floor_and_zones.floorZoneCode as Floor',
+                        'buildings_and_phases.buildingPhaseCode as Building',
+                        'projects.projectName as Project',
+                        'common_area.isActive as Status',
+                        'common_area.createdBy as Created By',
+                        'common_area.createdAt as Date Created',
+                        
+                    ])
+                    .offset(offset).limit(per_page).where({'common_area.companyId': companyId})
+                ])
+            }else{
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from("common_area")
+                    .innerJoin('floor_and_zones','common_area.floorZoneId','common_area.id')
+                    .innerJoin('buildings_and_phases','common_area.buildingPhaseId','buildings_and_phases.id')
+                    .innerJoin('projects','common_area.projectId','projects.id'),
+                    knex("common_area")
+                    .innerJoin('floor_and_zones','common_area.floorZoneId','common_area.id')
+                    .innerJoin('buildings_and_phases','common_area.buildingPhaseId','buildings_and_phases.id')
+                    .innerJoin('projects','common_area.projectId','projects.id')
+                    .select([
+                        'common_area.commonAreaCode as Common Area',
+                        'floor_and_zones.floorZoneCode as Floor',
+                        'buildings_and_phases.buildingPhaseCode as Building',
+                        'projects.projectName as Project',
+                        'common_area.isActive as Status',
+                        'common_area.createdBy as Created By',
+                        'common_area.createdAt as Date Created',
+                        
+                    ])
+                    .offset(offset).limit(per_page)
+                ])
+            }
+            
+            var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
+            var ws = XLSX.utils.json_to_sheet(rows);
+            XLSX.utils.book_append_sheet(wb, ws, "pres");
+            XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
+            let filename = "uploads/CommonAreaData-"+Date.now()+".csv";
+            let  check = XLSX.writeFile(wb,filename);
+        
+            res.status(200).json({
+                data:  rows,
+                message: "Common Area Data Export Successfully !"
+            });
+
+        } catch (err) {
+            console.log('[controllers][commonArea][getcommonArea] :  Error', err);
+            //trx.rollback
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }      
+
     }
 };
 

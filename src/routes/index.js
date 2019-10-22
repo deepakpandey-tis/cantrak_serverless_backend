@@ -29,6 +29,9 @@ const propertyUnitRouter = require("./administration-features/property-unit")
 const satisfactionRouter = require("./administration-features/satisfaction");
 const taxesRouter = require("./administration-features/taxes");
 const problemRouter = require('./administration-features/problem')
+const propertyTypeRouter = require('./administration-features/property-type')
+const sourceofRequestRouter = require('./administration-features/source-of-request')
+const administractionUsersRouter          = require('./administration-features/administraction-users');
 const dashboardRouter = require("./dashboard")
 const imageRouter = require("./image")
 const pmRouter = require("./preventive-maintenance")
@@ -56,6 +59,10 @@ router.use('/administration-features/company', companyRouter)
 router.use('/administration-features/project', projectRouter)
 router.use('/administration-features/building-phase', buildingPhaseRouter)
 router.use('/administration-features/property-unit', propertyUnitRouter)
+router.use('/administration-features/property-type',propertyTypeRouter)
+router.use('/administration-features/source-of-request',sourceofRequestRouter)
+router.use('/administration-features/administraction-users',administractionUsersRouter);
+
 router.use('/teams', teamsRouter);
 router.use('/vendors', vendorRouter);
 router.use('/parts', partsRouter);

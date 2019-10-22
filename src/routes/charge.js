@@ -13,4 +13,7 @@ router.post('/add-service-order-fix-charge', authMiddleware.isAuthenticated, cha
 router.post('/add-quotation-fix-charge', authMiddleware.isAuthenticated, chargeController.addQuotationFixCharge)
 router.post('/add-service-request-fix-charge', authMiddleware.isAuthenticated, chargeController.addServiceRequestFixCharge)
 
+// Export Charge Data
+router.get('/export-charge', authMiddleware.isAuthenticated, chargeController.exportCharge)
+
 module.exports = router;

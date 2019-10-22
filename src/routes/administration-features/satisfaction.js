@@ -12,6 +12,9 @@ router.post('/add-satisfaction', authMiddleware.isAuthenticated, authMiddleware.
 router.post('/update-satisfaction', authMiddleware.isAuthenticated, authMiddleware.isAdmin, satisfactionController.updateSatisfaction);
 router.get('/get-satisfaction-list', authMiddleware.isAuthenticated, authMiddleware.isAdmin, satisfactionController.getSatisfactionList);
 router.post('/delete-satisfaction', authMiddleware.isAuthenticated, authMiddleware.isAdmin, satisfactionController.deleteSatisfaction);
+// Export Satisfaction Data
+router.get('/export-satisfaction', authMiddleware.isAuthenticated, authMiddleware.isAdmin, satisfactionController.exportSatisfaction);
+
 
 
 module.exports = router;

@@ -1,8 +1,10 @@
-const Joi = require('@hapi/joi');
+const Joi    = require('@hapi/joi');
 const moment = require('moment');
 const uuidv4 = require('uuid/v4');
-var jwt = require('jsonwebtoken');
-const _ = require('lodash');
+var jwt      = require('jsonwebtoken');
+const _      = require('lodash');
+const XLSX   = require('xlsx');
+
 
 
 const knex = require('../../db/knex');
@@ -224,7 +226,16 @@ const companyController = {
 
       let [total, rows] = await Promise.all([
         knex.count('* as count').from("companies").first(),
-        knex.select("*").from("companies").offset(offset).limit(per_page)
+        knex("companies")
+        .select([
+        'companyName as Compnay Name',
+        'contactPerson as Contact Person',
+        'telephone as Contact Number',
+        'isActive as Status',
+        'createdBy as Created By',
+        'createdAt as Date Created'
+        ])
+        .offset(offset).limit(per_page)
       ])
 
       let count = total.count;
@@ -241,6 +252,51 @@ const companyController = {
           companies: pagination
         },
         message: 'Companies List!'
+      })
+    } catch (err) {
+      console.log('[controllers][generalsetup][viewCompany] :  Error', err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+    // Export Company Data
+  },exportCompany:async (req,res)=>{
+
+    try {
+      let reqData = req.query;
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+      let [total, rows] = await Promise.all([
+        knex.count('* as count').from("companies").first(),
+        knex("companies")
+        .select([
+        'companyName as Compnay Name',
+        'contactPerson as Contact Person',
+        'telephone as Contact Number',
+        'isActive as Status',
+        'createdBy as Created By',
+        'createdAt as Date Created'
+        ])
+        .offset(offset).limit(per_page)
+      ])
+
+            var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
+            var ws = XLSX.utils.json_to_sheet(rows);
+            XLSX.utils.book_append_sheet(wb, ws, "pres");
+            XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
+            let filename = "uploads/CompanyData-"+Date.now()+".csv";
+            let  check = XLSX.writeFile(wb,filename);
+
+      return res.status(200).json({
+        data:rows,
+        message: 'Companies Data Export Successfully!'
       })
     } catch (err) {
       console.log('[controllers][generalsetup][viewCompany] :  Error', err);

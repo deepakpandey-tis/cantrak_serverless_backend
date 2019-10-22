@@ -13,6 +13,8 @@ router.post('/update-teams', authMiddleware.isAuthenticated, teamsController.upd
 router.get('/get-team-list', authMiddleware.isAuthenticated, teamsController.getTeamList);
 router.post('/add-team-users', authMiddleware.isAuthenticated, teamsController.addTeamUsers);
 router.get('/get-assigned-teams', authMiddleware.isAuthenticated, teamsController.getAssignedTeams);
+// Export Team Data
+router.get('/export-teams', authMiddleware.isAuthenticated, teamsController.exportTeams);
 
 
 module.exports = router;

@@ -14,5 +14,7 @@ router.post('/add-service-request-replace-asset', authMiddleware.isAuthenticated
 router.post('/add-service-order-relocate-asset', authMiddleware.isAuthenticated, assetController.addServiceOrderRelocateAsset)
 router.post('/add-service-request-relocate-asset', authMiddleware.isAuthenticated, assetController.addServiceRequestRelocateAsset)
 router.get('/search-asset', authMiddleware.isAuthenticated, assetController.assetSearch)
+// Export Asset Data 
+router.post('/export-asset', authMiddleware.isAuthenticated, assetController.exportAsset)
 
 module.exports = router

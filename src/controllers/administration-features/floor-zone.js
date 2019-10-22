@@ -1,8 +1,9 @@
-const Joi = require('@hapi/joi');
+const Joi    = require('@hapi/joi');
 const moment = require('moment');
 const uuidv4 = require('uuid/v4');
-var jwt = require('jsonwebtoken');
-const _ = require('lodash');
+var jwt      = require('jsonwebtoken');
+const _      = require('lodash');
+const XLSX   = require('xlsx');
 
 
 const knex = require('../../db/knex');
@@ -186,8 +187,8 @@ const floorZoneController = {
     }
   },
   getFloorZoneList: async (req, res) => {
-    try {
 
+    try {
       let reqData = req.query;
       let companyId = req.query.companyId;
       let pagination = {};
@@ -199,8 +200,24 @@ const floorZoneController = {
         let offset = (page - 1) * per_page;
 
         let [total, rows] = await Promise.all([
-          knex.count('* as count').from("floor_and_zones").first(),
-          knex.select("*").from("floor_and_zones").offset(offset).limit(per_page)
+          knex.count('* as count').from("floor_and_zones")
+          .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
+          .innerJoin("users", "floor_and_zones.createdBy", "users.id")
+          .first(),
+          knex("floor_and_zones")
+          .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
+          .innerJoin("users", "floor_and_zones.createdBy", "users.id")
+          .select([
+            'floor_and_zones.floorZoneCode as Floor/Zone',
+            'floor_and_zones.description as Description',
+            'floor_and_zones.totalFloorArea as Total Area',
+            'floor_and_zones.isActive as Status',
+            'users.name as Created By',
+            'floor_and_zones.createdAt as Date Created'
+            
+           ])
+
+          .offset(offset).limit(per_page)
         ])
 
         let count = total.count;
@@ -220,8 +237,25 @@ const floorZoneController = {
         let offset = (page - 1) * per_page;
 
         let [total, rows] = await Promise.all([
-          knex.count('* as count').from("floor_and_zones").where({ 'floor_and_zones.companyId': companyId }).offset(offset).limit(per_page).first(),
-          knex.from("floor_and_zones").innerJoin("companies", "floor_and_zones.companyId", "companies.id").where({ 'floor_and_zones.companyId': companyId }).offset(offset).limit(per_page)
+          knex.count('* as count').from("floor_and_zones")
+          .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
+          .innerJoin("users", "floor_and_zones.createdBy", "users.id")
+          .where({ 'floor_and_zones.companyId': companyId })
+          
+          .offset(offset).limit(per_page).first(),
+          knex.from("floor_and_zones")
+          .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
+          .innerJoin("users", "floor_and_zones.createdBy", "users.id")
+          .select([
+            'floor_and_zones.floorZoneCode as Floor/Zone',
+            'floor_and_zones.description as Description',
+            'floor_and_zones.totalFloorArea as Total Area',
+            'floor_and_zones.isActive as Status',
+            'users.name as Created By',
+            'floor_and_zones.createdAt as Date Created'
+            
+           ])
+          .where({ 'floor_and_zones.companyId': companyId }).offset(offset).limit(per_page)
         ])
 
         let count = total.count;
@@ -240,6 +274,110 @@ const floorZoneController = {
           floorZones: pagination
         },
         message: 'Floor/Zones List!'
+      })
+    } catch (err) {
+      console.log('[controllers][generalsetup][viewfloorZone] :  Error', err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },exportFloorZone: async  (req,res)=>{
+
+    try {
+      let reqData = req.query;
+      let companyId = req.query.companyId;
+      let pagination = {};
+
+      if (!companyId) {
+        let per_page = reqData.per_page || 10;
+        let page = reqData.current_page || 1;
+        if (page < 1) page = 1;
+        let offset = (page - 1) * per_page;
+
+        let [total, rows] = await Promise.all([
+          knex.count('* as count').from("floor_and_zones")
+          .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
+          .innerJoin("users", "floor_and_zones.createdBy", "users.id")
+          .first(),
+          knex("floor_and_zones")
+          .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
+          .innerJoin("users", "floor_and_zones.createdBy", "users.id")
+          .select([
+            'floor_and_zones.floorZoneCode as Floor/Zone',
+            'floor_and_zones.description as Description',
+            'floor_and_zones.totalFloorArea as Total Area',
+            'floor_and_zones.isActive as Status',
+            'users.name as Created By',
+            'floor_and_zones.createdAt as Date Created'
+            
+           ])
+
+          .offset(offset).limit(per_page)
+        ])
+
+        let count = total.count;
+        pagination.total = count;
+        pagination.per_page = per_page;
+        pagination.offset = offset;
+        pagination.to = offset + rows.length;
+        pagination.last_page = Math.ceil(count / per_page);
+        pagination.current_page = page;
+        pagination.from = offset;
+        pagination.data = rows;
+
+      } else {
+        let per_page = reqData.per_page || 10;
+        let page = reqData.current_page || 1;
+        if (page < 1) page = 1;
+        let offset = (page - 1) * per_page;
+
+        let [total, rows] = await Promise.all([
+          knex.count('* as count').from("floor_and_zones")
+          .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
+          .innerJoin("users", "floor_and_zones.createdBy", "users.id")
+          .where({ 'floor_and_zones.companyId': companyId })
+          
+          .offset(offset).limit(per_page).first(),
+          knex.from("floor_and_zones")
+          .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
+          .innerJoin("users", "floor_and_zones.createdBy", "users.id")
+          .select([
+            'floor_and_zones.floorZoneCode as Floor/Zone',
+            'floor_and_zones.description as Description',
+            'floor_and_zones.totalFloorArea as Total Area',
+            'floor_and_zones.isActive as Status',
+            'users.name as Created By',
+            'floor_and_zones.createdAt as Date Created'
+            
+           ])
+          .where({ 'floor_and_zones.companyId': companyId }).offset(offset).limit(per_page)
+        ])
+
+        let count = total.count;
+        pagination.total = count;
+        pagination.per_page = per_page;
+        pagination.offset = offset;
+        pagination.to = offset + rows.length;
+        pagination.last_page = Math.ceil(count / per_page);
+        pagination.current_page = page;
+        pagination.from = offset;
+        pagination.data = rows;
+      }
+
+      var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
+      var ws = XLSX.utils.json_to_sheet(pagination.data);
+      XLSX.utils.book_append_sheet(wb, ws, "pres");
+      XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
+      let filename = "uploads/FloorZoneData-"+Date.now()+".csv";
+      let  check = XLSX.writeFile(wb,filename);
+
+      return res.status(200).json({
+        data: pagination.data
+        ,
+        message: 'Floor/Zones Data Export Successfully!'
       })
     } catch (err) {
       console.log('[controllers][generalsetup][viewfloorZone] :  Error', err);

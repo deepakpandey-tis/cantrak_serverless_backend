@@ -3,7 +3,7 @@ const moment = require('moment');
 const uuidv4 = require('uuid/v4');
 var jwt = require('jsonwebtoken');
 const _ = require('lodash');
-
+const XLSX = require('xlsx');
 
 const knex = require('../../db/knex');
 
@@ -177,8 +177,8 @@ const statusController = {
     // Get List of Common Area
 
     getStatusList : async (req,res) => {
-        try {
 
+        try {
             let reqData = req.query;
             let total = null;
             let rows = null;
@@ -299,7 +299,47 @@ const statusController = {
                 ],
             });
         }
-    }    
+        // Export Status Data
+    },exportStatus:async (req,res)=>{
+        try {
+            let reqData = req.query;
+            let total = null;
+            let rows = null;
+            let companyId = reqData.companyId;
+            let pagination = {};
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
+
+          
+            [total, rows] = await Promise.all([
+                knex.count('* as count').from("service_status").first(),
+                knex.select("*").from("service_status").offset(offset).limit(per_page)
+            ])
+            
+            var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
+            var ws = XLSX.utils.json_to_sheet(rows);
+            XLSX.utils.book_append_sheet(wb, ws, "pres");
+            XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
+            let filename = "uploads/StatusData-"+Date.now()+".csv";
+            let  check = XLSX.writeFile(wb,filename);
+        
+            res.status(200).json({
+                data: rows,
+                message: "Status Data Export Successfully !"
+            });
+
+        } catch (err) {
+            console.log('[controllers][status][getstatus] :  Error', err);
+            //trx.rollback
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    }
    
 };
 

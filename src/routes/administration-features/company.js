@@ -9,5 +9,7 @@ router.post('/update-company', authMiddleware.isAuthenticated, companyController
 router.post('/view-company', authMiddleware.isAuthenticated, companyController.viewCompany)
 router.post('/delete-company', authMiddleware.isAuthenticated, companyController.deleteCompany)
 router.get('/get-company-list', authMiddleware.isAuthenticated, companyController.getCompanyList)
+// Export Company Data
+router.get('/export-company', authMiddleware.isAuthenticated, companyController.exportCompany)
 
 module.exports = router

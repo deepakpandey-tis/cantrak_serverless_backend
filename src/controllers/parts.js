@@ -2,6 +2,7 @@ const Joi = require('@hapi/joi');
 const _ = require('lodash');
 
 const knex = require('../db/knex');
+const XLSX = require('xlsx');
 
 //const trx = knex.transaction();
 
@@ -43,15 +44,39 @@ const partsController = {
 
             if (_.isEmpty(filters)) {
                 [total, rows] = await Promise.all([
-                    knex.count('* as count').from("part_ledger").innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
-                    knex.from('part_ledger').innerJoin('part_master', 'part_ledger.partId', 'part_master.id').offset(offset).limit(per_page)
+                    knex.count('* as count').from("part_ledger")
+                    .innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
+                    knex.from('part_ledger').
+                    innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
+                    .select([
+                        'part_master.partName as Name',
+                        'part_master.partCode as ID',
+                        'part_ledger.quantity as Quantity',
+                        'part_ledger.unitCost as Price',
+                        'part_master.partCategory as Category',
+                        'part_master.barcode as Barcode',
+                        'part_ledger.createdAt as Date Added'
+
+                    ])
+                    .offset(offset).limit(per_page)
                 ])
             } else {
                 //filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
                 try {
                     [total, rows] = await Promise.all([
                         knex.count('* as count').from("part_ledger").innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
-                        knex.from('part_ledger').innerJoin('part_master', 'part_ledger.partId', 'part_master.id').where(filters).offset(offset).limit(per_page)
+                        knex.from('part_ledger').innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
+                        .select([
+                        'part_master.partName as Name',
+                        'part_master.partCode as ID',
+                        'part_ledger.quantity as Quantity',
+                        'part_ledger.unitCost as Price',
+                        'part_master.partCategory as Category',
+                        'part_master.barcode as Barcode',
+                        'part_ledger.createdAt as Date Added'
+
+                    ])
+                        .where(filters).offset(offset).limit(per_page)
                     ])
                 } catch (e) {
                     // Error
@@ -451,6 +476,103 @@ const partsController = {
                 ],
             });
         }
+    },exportPart:async (req,res)=>{
+        
+        try{ 
+            let partData = null;
+            let reqData = req.query;
+            let total, rows
+
+            let pagination = {};
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
+
+
+            let { partName,
+                partCode,
+                partCategory } = req.body;
+
+
+            let filters = {}
+
+            if (partName) {
+                filters['part_master.partName'] = partName
+            }
+
+            if (partCode) {
+                filters['part_master.partCode'] = partCode
+            }
+
+            if (partCategory) {
+                filters['part_master.partCategory'] = partCategory
+            }
+
+
+
+            if (_.isEmpty(filters)) {
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from("part_ledger")
+                    .innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
+                    knex.from('part_ledger').
+                    innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
+                    .select([
+                        'part_master.partName as Name',
+                        'part_master.partCode as ID',
+                        'part_ledger.quantity as Quantity',
+                        'part_ledger.unitCost as Price',
+                        'part_master.partCategory as Category',
+                        'part_master.barcode as Barcode',
+                        'part_ledger.createdAt as Date Added'
+
+                    ])
+                    .offset(offset).limit(per_page)
+                ])
+            } else {
+                //filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
+                try {
+                    [total, rows] = await Promise.all([
+                        knex.count('* as count').from("part_ledger").innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
+                        knex.from('part_ledger').innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
+                        .select([
+                        'part_master.partName as Name',
+                        'part_master.partCode as ID',
+                        'part_ledger.quantity as Quantity',
+                        'part_ledger.unitCost as Price',
+                        'part_master.partCategory as Category',
+                        'part_master.barcode as Barcode',
+                        'part_ledger.createdAt as Date Added'
+
+                    ])
+                        .where(filters).offset(offset).limit(per_page)
+                    ])
+                } catch (e) {
+                    // Error
+                }
+            }
+
+    
+            var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
+            var ws = XLSX.utils.json_to_sheet(rows);
+            XLSX.utils.book_append_sheet(wb, ws, "pres");
+            XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
+            let filename = "uploads/Parts-"+Date.now()+".csv";
+            let  check = XLSX.writeFile(wb,filename);
+            
+                return res.status(200).json({
+                    data:rows,
+                    message:"Parts Data Export Successfully!"
+                })
+                
+            
+         } catch(err){
+             return res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+             })
+         }   
     }
 }
 
