@@ -643,9 +643,6 @@ const serviceRequestController = {
         //     filters['service_requests.recuring'] = recuring
         //    }
 
-        
-
-
 
 
             if (_.isEmpty(filters)) {
@@ -655,8 +652,6 @@ const serviceRequestController = {
                         .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
                         .innerJoin('incident_sub_categories', 'incident_categories.id', 'incident_sub_categories.incidentCategoryId')
                         .innerJoin('property_units', 'service_requests.houseId', 'property_units.houseId')
-
-            
                         .select([
                             'service_requests.id as S Id', 'service_requests.description as Description',
                             'incident_categories.descriptionEng as Category',
@@ -666,7 +661,6 @@ const serviceRequestController = {
                             'property_units.unitNumber as Unit No',
                             'service_requests.requestedBy as Requested By',
                             'service_requests.createdAt as Date Created',
-
                         ]).groupBy(["service_requests.id", "service_problems.id", 'incident_categories.id','incident_sub_categories.id','property_units.id']),
                     knex.from("service_requests")
                         .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
@@ -674,7 +668,8 @@ const serviceRequestController = {
                         .innerJoin('incident_sub_categories', 'incident_categories.id', 'incident_sub_categories.incidentCategoryId')
                         .innerJoin('property_units', 'service_requests.houseId', 'property_units.houseId')
                         .select([
-                            'service_requests.id as S Id', 'service_requests.description as Description',
+                            'service_requests.id as S Id', 
+                            'service_requests.description as Description',
                             'incident_categories.descriptionEng as Category',
                             'incident_sub_categories.descriptionEng as Problem',
                             'service_requests.priority as Priority',

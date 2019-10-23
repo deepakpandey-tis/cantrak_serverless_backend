@@ -381,7 +381,7 @@ const quotationsController = {
 
             let reqData = req.query;
             //let filters = req.body;
-            let total, rows
+            let total, rows;
 
             let pagination = {};
             let per_page = reqData.per_page || 10;
@@ -463,9 +463,7 @@ const quotationsController = {
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from("quotations")
                         .innerJoin('service_requests', 'quotations.serviceRequestId', 'service_requests.id')
-                        .select([
-                            'quotations.id as id'
-                        ]).groupBy(['quotations.id',"service_requests.id"]),
+                        .groupBy(['quotations.id',"service_requests.id"]),
                     knex.from("quotations")
                     .innerJoin('service_requests', 'quotations.serviceRequestId', 'service_requests.id')
                         .select([
@@ -487,9 +485,7 @@ const quotationsController = {
                         .innerJoin('service_requests', 'quotations.serviceRequestId', 'service_requests.id')
                         .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
                         .innerJoin('users','assigned_service_team.userId','users.id')
-                        .select([
-                            'quotations.id as id'
-                        ])
+                        
                         .where((qb)=>{
                          qb.where(filters)
                          if(quotationFrom && quotationTo){
@@ -527,7 +523,8 @@ const quotationsController = {
                 }
             }
 
-            let count = total.count;
+            let count = total.length;
+
             pagination.total = count;
             pagination.per_page = per_page;
             pagination.offset = offset;

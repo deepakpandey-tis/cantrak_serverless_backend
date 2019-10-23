@@ -75,6 +75,34 @@ const pmController = {
           config["freq"] = RRule.DAILY;
         }
 
+
+
+
+        const schema = Joi.object().keys({
+          assetCategoryId: Joi.number().required(),
+          pmStartDateTime: Joi.date().required(),
+          pmEndDateTime: Joi.date().required(),
+          repeatType: Joi.string().required(),
+          repeatOn: Joi.array().items(Joi.string().required()).strict().required(),
+          repeatNumber: Joi.number().required(),
+          assets: Joi.array().items(Joi.string().required()).strict().required(),
+          tasks: Joi.array().items(Joi.string().required()).strict().required(),
+      });
+
+      const result = Joi.validate(payload, schema);
+      console.log('[controllers][preventive-maintaince][createpmtask]: JOi Result', result);
+
+      if (result && result.hasOwnProperty('error') && result.error) {
+          return res.status(400).json({
+              errors: [
+                  { code: 'VALIDATION_ERROR', message: result.error.message }
+              ],
+          });
+      }
+
+
+
+
         const rule = new RRule(config);
 
         pmPerformingDates = rule.all();
@@ -1142,7 +1170,7 @@ const pmController = {
     }
   },
   // Update Asset PM EndDate
-  updateAssetPm:async (req,res)=>{
+  updateAssetPm: async (req,res)=>{
 
     try{
       let   assetData = null;
@@ -1188,8 +1216,9 @@ const pmController = {
         ],
       });
     }
-    
+    // Get PM Report
   },getPmReport:async (req,res)=>{
+
     try{
 
       let   reportData = null;
@@ -1215,7 +1244,7 @@ const pmController = {
       let reportResult = await knex('pm_assign_assets')
       .innerJoin('pm_feedbacks','pm_assign_assets.pmMasterId','pm_feedbacks.pmMasterId')
       .innerJoin('pm_task_master','pm_assign_assets.pmMasterId','pm_task_master.pmMasterId')
-      .innerJoin('images','pm_feedbacks.id','images.entityId')
+      .leftJoin('images','pm_feedbacks.id','images.entityId')
       .select([
         'pm_assign_assets.id as id',
         'pm_task_master.taskName as Task Name',
@@ -1223,11 +1252,8 @@ const pmController = {
         'pm_assign_assets.startDateTime as startDate',
         'pm_assign_assets.startDateTime as endDate',
         'images.s3Url as image_url'
-
-
       ])
-
-      //.where({'pm_assign_assets.pmMasterId':payload.pmMasterId,'pm_assign_assets.assetId':payload.assetId,'pm_assign_assets.pmDate':payload.pmDate})
+      .where({'pm_assign_assets.pmMasterId':payload.pmMasterId,'pm_assign_assets.assetId':payload.assetId,'pm_assign_assets.pmDate':payload.pmDate})
 
       return res.status(200).json({
         data: {

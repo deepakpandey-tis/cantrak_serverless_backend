@@ -166,6 +166,7 @@ const assetController = {
         try {
 
             let reqData = req.query;
+            
             let filters = {}
             let total, rows
             let {
@@ -798,6 +799,7 @@ const assetController = {
         try {  
 
             let reqData = req.query;
+            
             let filters = _.pickBy(req.body,v=>v);
             let total, rows
 
