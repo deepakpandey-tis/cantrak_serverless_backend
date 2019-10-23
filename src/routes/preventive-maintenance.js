@@ -23,4 +23,6 @@ router.post('/get-asset-id-by-asset-serial-or-barcode', authMiddleware.isAuthent
 router.post('/update-asset-pm-endDate', authMiddleware.isAuthenticated, authMiddleware.isAdmin, pmController.updateAssetPm)
 // Get Pm Report
 router.post('/get-pm-report', authMiddleware.isAuthenticated, authMiddleware.isAdmin, pmController.getPmReport)
+router.post('/save-pm-template',authMiddleware.isAuthenticated,authMiddleware.isAuthenticated,pmController.savePMTemplate)
+router.post('/search-pm-template',authMiddleware.isAuthenticated,authMiddleware.isAuthenticated,pmController.searchPMTemplate)
 module.exports = router

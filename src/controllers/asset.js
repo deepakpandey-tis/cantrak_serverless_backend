@@ -193,7 +193,7 @@ const assetController = {
              if(category){
                 filters['asset_category_master.categoryName'] = category
              }
- 
+            
 
             if (_.isEmpty(filters)) {
                 [total, rows] = await Promise.all([
@@ -249,6 +249,74 @@ const assetController = {
                     console.log('Error: ' + e.message)
                 }
             }
+
+            let count = total.count;
+            pagination.total = count;
+            pagination.per_page = per_page;
+            pagination.offset = offset;
+            pagination.to = offset + rows.length;
+            pagination.last_page = Math.ceil(count / per_page);
+            pagination.current_page = page;
+            pagination.from = offset;
+            pagination.data = rows;
+
+            return res.status(200).json({
+                data: {
+                    asset: pagination
+                },
+                message: 'Asset List!'
+            })
+
+
+            // let assetData = null;
+            // assetData = await knex.select().from('asset_master')
+
+            // console.log('[controllers][asset][getAssetList]: Asset List', assetData);
+
+            // assetData = assetData.map(d => _.omit(d, ['createdAt'], ['updatedAt'], ['isActive']));
+
+            // res.status(200).json({
+            //     data: assetData,
+            //     message: "Asset List"
+            // });
+
+
+        } catch (err) {
+            console.log('[controllers][asset][getAssets] :  Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    },
+    getAssetListByCategory: async (req, res) => {
+        // name, model, area, category
+        try {
+
+            let reqData = req.query;
+            let total, rows
+            let {
+                assetCategoryId
+            } = req.body;
+            let pagination = {};
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
+            
+            //let filters = { assetCategoryId}
+
+            [total, rows] = await Promise.all([
+                knex.count('* as count').from("asset_master")
+                    .where({ assetCategoryId}).first(),
+
+                knex("asset_master")
+                    .select([
+                        'id','assetName','model','barcode','areaName'
+                    ]).where({ assetCategoryId})
+                    .offset(offset).limit(per_page)
+            ])
 
             let count = total.count;
             pagination.total = count;
