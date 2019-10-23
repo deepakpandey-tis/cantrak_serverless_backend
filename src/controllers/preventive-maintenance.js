@@ -1216,15 +1216,9 @@ const pmController = {
         ],
       });
     }
-<<<<<<< HEAD
     // Get PM Report
   },getPmReport:async (req,res)=>{
 
-=======
-    
-  },
-  getPmReport:async (req,res)=>{
->>>>>>> f7e0873971863e2423b20fc6f0bd663904ac05f8
     try{
 
       let   reportData = null;
