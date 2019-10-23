@@ -83,7 +83,7 @@ const pmController = {
           pmStartDateTime: Joi.date().required(),
           pmEndDateTime: Joi.date().required(),
           repeatType: Joi.string().required(),
-          repeatOn: Joi.array().items(Joi.string().required()).strict().required(),
+          repeatOn: Joi.array().items(Joi.string().allow(null)),
           repeatNumber: Joi.number().required(),
           assets: Joi.array().items(Joi.string().required()).strict().required(),
           tasks: Joi.array().items(Joi.string().required()).strict().required(),
@@ -1216,15 +1216,9 @@ const pmController = {
         ],
       });
     }
-<<<<<<< HEAD
     // Get PM Report
   },getPmReport:async (req,res)=>{
 
-=======
-    
-  },
-  getPmReport:async (req,res)=>{
->>>>>>> f7e0873971863e2423b20fc6f0bd663904ac05f8
     try{
 
       let   reportData = null;
