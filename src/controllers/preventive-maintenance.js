@@ -1189,7 +1189,8 @@ const pmController = {
       });
     }
     
-  },getPmReport:async (req,res)=>{
+  },
+  getPmReport:async (req,res)=>{
     try{
 
       let   reportData = null;
@@ -1215,7 +1216,7 @@ const pmController = {
       let reportResult = await knex('pm_assign_assets')
       .innerJoin('pm_feedbacks','pm_assign_assets.pmMasterId','pm_feedbacks.pmMasterId')
       .innerJoin('pm_task_master','pm_assign_assets.pmMasterId','pm_task_master.pmMasterId')
-      .innerJoin('images','pm_feedbacks.id','images.entityId')
+      .leftJoin('images','pm_feedbacks.id','images.entityId')
       .select([
         'pm_assign_assets.id as id',
         'pm_task_master.taskName as Task Name',
@@ -1235,6 +1236,58 @@ const pmController = {
       })
 
     } catch (err) {
+      console.log('[controllers][preventive-maintainece][pmreport] :  Error', err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
+  savePMTemplate: async (req,res) => {
+    try {
+      const {name,templateData} = req.body;
+      const result = await knex('pm_templates').insert({name,templateData})
+      return res.status(200).json({
+        data: {
+          template: result[0]
+        }
+      })
+    } catch(err) {
+      console.log('[controllers][preventive-maintainece][pmreport] :  Error', err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
+  searchPMTemplate: async (req,res) => {
+    try {
+      let {taskGroupSearchTerm} = req.body;
+      let found = await knex('pm_templates').select().where(qb => {
+        qb.where('pm_templates.name','like',`%${taskGroupSearchTerm}`)
+      })
+
+      if(found && found.length){
+
+        return res.status(200).json({
+          data: {
+            search_result:found
+          },
+          message: 'Result found'
+        })
+      }
+      return res.status(200).json({
+        data: {
+          search_result: []
+        },
+        message: 'Not found'
+      })
+
+    } catch(err) {
       console.log('[controllers][preventive-maintainece][pmreport] :  Error', err);
       //trx.rollback
       res.status(500).json({

@@ -6,6 +6,7 @@ const assetController = require("../controllers/asset")
 
 router.post('/add-asset', authMiddleware.isAuthenticated, assetController.addAsset)
 router.post('/get-asset-list', authMiddleware.isAuthenticated, assetController.getAssetList)
+router.post('/get-asset-list-by-category', authMiddleware.isAuthenticated, assetController.getAssetListByCategory)
 // router.get('/get-asset-list', authMiddleware.isAuthenticated, assetController.getAssetList)
 router.post('/get-asset-details', authMiddleware.isAuthenticated, assetController.getAssetDetails)
 router.post('/update-asset-details', authMiddleware.isAuthenticated, assetController.updateAssetDetails)
