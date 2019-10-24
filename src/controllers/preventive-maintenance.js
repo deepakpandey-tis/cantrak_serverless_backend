@@ -83,13 +83,12 @@ const pmController = {
           pmStartDateTime: Joi.date().required(),
           pmEndDateTime: Joi.date().required(),
           repeatType: Joi.string().required(),
-          repeatOn: Joi.array().items(Joi.string().allow(null)),
           repeatNumber: Joi.number().required(),
           assets: Joi.array().items(Joi.string().required()).strict().required(),
           tasks: Joi.array().items(Joi.string().required()).strict().required(),
       });
 
-      const result = Joi.validate(payload, schema);
+      const result = Joi.validate(_.omit(payload,'repeatOn'), schema);
       console.log('[controllers][preventive-maintaince][createpmtask]: JOi Result', result);
 
       if (result && result.hasOwnProperty('error') && result.error) {
