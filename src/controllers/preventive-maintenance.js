@@ -1,5 +1,5 @@
 const Joi = require("@hapi/joi");
-const _ = require("lodash");
+const _   = require("lodash");
 const moment = require("moment");
 require("moment-recur");
 
@@ -28,9 +28,7 @@ const pmController = {
         let startYear = start.getFullYear();
         let startMonth = start.getMonth();
         let startDate = start.getDate();
-
         let end = new Date(payload.pmEndDateTime);
-
         let endYear = end.getFullYear();
         let endMonth = end.getMonth();
         let endDate = end.getDate();
@@ -83,13 +81,12 @@ const pmController = {
           pmStartDateTime: Joi.date().required(),
           pmEndDateTime: Joi.date().required(),
           repeatType: Joi.string().required(),
-          repeatOn: Joi.array().items(Joi.string().allow(null)),
           repeatNumber: Joi.number().required(),
           assets: Joi.array().items(Joi.string().required()).strict().required(),
           tasks: Joi.array().items(Joi.string().required()).strict().required(),
       });
 
-      const result = Joi.validate(payload, schema);
+      const result = Joi.validate(_.omit(payload,'repeatOn'), schema);
       console.log('[controllers][preventive-maintaince][createpmtask]: JOi Result', result);
 
       if (result && result.hasOwnProperty('error') && result.error) {
@@ -1253,7 +1250,7 @@ const pmController = {
         'pm_assign_assets.startDateTime as endDate',
         'images.s3Url as image_url'
       ])
-      .where({'pm_assign_assets.pmMasterId':payload.pmMasterId,'pm_assign_assets.assetId':payload.assetId,'pm_assign_assets.pmDate':payload.pmDate})
+      .where({'pm_assign_assets.pmMasterId':payload.pmMasterId,'pm_assign_assets.assetId':payload.assetId,'pm_assign_assets.pmDate':payload.pmDate,'pm_feedbacks.pmDate':payload.pmDate})
 
       return res.status(200).json({
         data: {
