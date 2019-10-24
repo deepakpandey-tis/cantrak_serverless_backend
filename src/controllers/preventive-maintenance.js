@@ -1238,7 +1238,7 @@ const pmController = {
         });
       }
 
-      let reportResult = await knex('pm_assign_assets')
+      let reportResult = await knex('pm_assign_assets').distinct('pm_assign_assets.id')
       .innerJoin('pm_feedbacks','pm_assign_assets.pmMasterId','pm_feedbacks.pmMasterId')
       .innerJoin('pm_task_master','pm_assign_assets.pmMasterId','pm_task_master.pmMasterId')
       .leftJoin('images','pm_feedbacks.id','images.entityId')
@@ -1250,7 +1250,7 @@ const pmController = {
         'pm_assign_assets.startDateTime as endDate',
         'images.s3Url as image_url'
       ])
-      .where({'pm_assign_assets.pmMasterId':payload.pmMasterId,'pm_assign_assets.assetId':payload.assetId,'pm_assign_assets.pmDate':payload.pmDate,'pm_feedbacks.pmDate':payload.pmDate})
+      .where({'pm_assign_assets.pmMasterId':payload.pmMasterId,'pm_assign_assets.assetId':payload.assetId,'pm_feedbacks.pmDate':payload.pmDate})
 
       return res.status(200).json({
         data: {
