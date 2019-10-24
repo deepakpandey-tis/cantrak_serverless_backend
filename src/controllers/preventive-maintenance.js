@@ -569,8 +569,14 @@ const pmController = {
 
       let [total,rows] = await Promise.all([
         knex.from('pm_master')
+        .innerJoin('asset_category_master','pm_master.assetCategoryId','asset_category_master.id')
+        .offset(offset).limit(per_page)
+        
         ,
-        knex.from('pm_master').offset(offset).limit(per_page)
+        knex.from('pm_master')
+        .innerJoin('asset_category_master','pm_master.assetCategoryId','asset_category_master.id')
+        .offset(offset).limit(per_page)
+        
       ])
 
       // let [total, rows] = await Promise.all([
@@ -1256,7 +1262,7 @@ const pmController = {
         data: {
           pmReport: reportResult
         },
-        message: 'Pm Report Successfully!'
+        message: 'Preventive Maintenance Report Successfully!'
       })
 
     } catch (err) {
