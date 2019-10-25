@@ -569,12 +569,12 @@ const pmController = {
 
       let [total,rows] = await Promise.all([
         knex.from('pm_master')
-        .innerJoin('asset_category_master','pm_master.assetCategoryId','asset_category_master.id')
-        .offset(offset).limit(per_page)
+       // .innerJoin('asset_category_master','pm_master.assetCategoryId','asset_category_master.id')
+        ///.offset(offset).limit(per_page)
         
         ,
         knex.from('pm_master')
-        .innerJoin('asset_category_master','pm_master.assetCategoryId','asset_category_master.id')
+        //.innerJoin('asset_category_master','pm_master.assetCategoryId','asset_category_master.id')
         .offset(offset).limit(per_page)
         
       ])

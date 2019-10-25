@@ -36,6 +36,7 @@ const dashboardRouter = require("./dashboard")
 const imageRouter = require("./image")
 const pmRouter = require("./preventive-maintenance")
 const testRouter = require('./test')
+const taskGroupRouter = require('./administration-features/task-group');
 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
@@ -82,4 +83,5 @@ router.use('/dashboard', dashboardRouter);
 router.use('/administration-features/problem', problemRouter)
 router.use('/image', imageRouter)
 router.use('/preventive-maintenance', pmRouter)
+router.use('/task-group',taskGroupRouter);
 module.exports = router;
