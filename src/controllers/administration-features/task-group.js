@@ -137,16 +137,55 @@ const taskGroupController = {
 
     try {
       let payload        = req.body;  
-      let templateResult = null;
+      const schema         = Joi.object().keys({
+        assetCategoryId : Joi.string().required()       
+      });
 
-      let result = await knex('task_group_templates').returning('*').where({"assetCategoryId":payload.assetCategoryId});
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+      let templateResult = await knex('task_group_templates').returning('*').where({"assetCategoryId":payload.assetCategoryId});
 
       return res.status(200).json({
-        data:result});
+
+        data:{groupTemplateData:templateResult},
+        message :"Task Group Template List Successfully!"
+      });
 
     }catch(err){
-    console.log("[controllers][task-group][getGroupTemplateList] :  Error", err);
-    
+     console.log("[controllers][task-group][getGroupTemplateList] :  Error", err);
+    res.status(500).json({
+      errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+    });  
+  }   
+   // GET GROUP TASK LIST
+  },getGroupTaskList: async (req,res)=>{
+
+    try {
+      let payload          = req.body;  
+      const schema         = Joi.object().keys({
+        templateId : Joi.string().required()       
+      });
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+      let taskResult = await knex('template_task').returning('*').where({"templateId":payload.templateId});
+
+      return res.status(200).json({
+        data:{groupTaskData:taskResult
+        },
+        message :"Group Task List Successfully!"
+      });
+
+    }catch(err){
+     console.log("[controllers][task-group][getGroupTaskList] :  Error", err);
     res.status(500).json({
       errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
     });  
