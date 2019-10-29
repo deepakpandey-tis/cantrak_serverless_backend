@@ -197,6 +197,7 @@ const taskGroupController = {
   createPmTaskgroupSchedule:async (req,res)=>{
 
     try{
+      let createPM               = null;
       let createPmTaskGroup      = null;
       let assignedServiceTeam    = null;
       let taskSchedule           = null;
@@ -205,6 +206,7 @@ const taskGroupController = {
       let payload                = req.body;  
       const schema               = Joi.object().keys({
         assetCategoryId : Joi.number().required(),
+        pmName          : Joi.string().required(),
         teamId          : Joi.string().required(),
         mainUserId      : Joi.string().required(),
         additionalUsers : Joi.array().items(Joi.string().required()).strict().required(),
@@ -227,28 +229,34 @@ const taskGroupController = {
 
       await knex.transaction(async trx=>{
            
-        let payload     = req.body;
-        let currentTime = new Date().getTime();
-
+        let payload       = req.body;
+        let currentTime   = new Date().getTime();
+       // CREATE PM  OPEN
+       let insertPmData   = {"name":payload.pmName,'assetCategoryId':payload.assetCategoryId,createdAt:currentTime,updatedAt:currentTime};
+       let insertPmResult = await knex.insert(insertPmData).returning(['*']).transacting(trx).into('pm_master2');
+        createPM          = insertPmResult[0];
+      // CREATE PM CLOSE
 
       // CREATE PM TASK GROUP OPEN
       let insertPmTaskGroupData = {
-                 taskGroupName:payload.taskGroupName,
+                 pmId:createPM.id,
+                 assetCategoryId : payload.assetCategoryId,
+                 taskGroupName :payload.taskGroupName,
                  createdAt :currentTime,
                  updatedAt :currentTime
               }
 
       let insertPmTemplateResult = await knex.insert(insertPmTaskGroupData).returning(['*']).transacting(trx).into('pm_task_groups');
-      createPmTaskGroup = insertPmTemplateResult[0];
+      createPmTaskGroup          = insertPmTemplateResult[0];
 
       // CREATE PM TASK GROUP CLOSE
 
       // CREATE PM TASK OPEN
       let InsertPmTaskPayload = payload.tasks.map(da=>({
-        taskName  : da,
-        taskGroupId: createPmTaskGroup.id,
-        createdAt : currentTime,
-        updatedAt :currentTime
+        taskName    : da,
+        taskGroupId : createPmTaskGroup.id,
+        createdAt   : currentTime,
+        updatedAt   : currentTime
     }))
 
    let insertPmTaskResult = await knex.insert(InsertPmTaskPayload).returning(['*']).transacting(trx).into('pm_task');
@@ -258,26 +266,26 @@ const taskGroupController = {
 
       // ASSIGNED ADDITIONAL USER OPEN
       let insertAssignedAdditionalUserData = payload.additionalUsers.map(user=>({
-        userId  :user,
-        entityId:createPmTaskGroup.id,
-        entityType:"pm_task_groups",
-        createdAt:currentTime,
-        updatedAt:currentTime
+        userId     : user,
+        entityId   : createPmTaskGroup.id,
+        entityType : "pm_task_groups",
+        createdAt  : currentTime,
+        updatedAt  : currentTime
       
     }))
 
       let assignedAdditionalUserResult = await knex.insert(insertAssignedAdditionalUserData).returning(['*']).transacting(trx).into('assigned_service_additional_users');
-      assignedAdditionalUser = assignedAdditionalUserResult[0];
+      assignedAdditionalUser = assignedAdditionalUserResult;
      // ASSIGNED ADDITIONAL USER CLOSE
 
      // ASSIGNED TEAM OPEN
       let insertAssignedServiceTeamData = {
-        teamId  :payload.teamId,
-        userId  :payload.mainUserId,
-        entityId:createPmTaskGroup.id,
-        entityType:"pm_task_groups",
-        createdAt:currentTime,
-        updatedAt:currentTime
+        teamId    : payload.teamId,
+        userId    : payload.mainUserId,
+        entityId  : createPmTaskGroup.id,
+        entityType: "pm_task_groups",
+        createdAt : currentTime,
+        updatedAt : currentTime
       }
 
       let assignedServiceTeamResult = await knex.insert(insertAssignedServiceTeamData).returning(['*']).transacting(trx).into('assigned_service_team');
@@ -287,15 +295,15 @@ const taskGroupController = {
     
      // TASK GROUP SCHEDULE OPEN
      let insertScheduleData = {
-      taskGroupId   :createPmTaskGroup.id,
-      pmId          :payload.pmId,
-      startDate     :payload.startDateTime,
-      endDate       :payload.endDateTime,
-      repeatPeriod  :payload.repeatPeriod,
-      repeatOn      :payload.repeatOn,
-      repeatNumber  :payload.repeatFrequency,
-      createdAt:currentTime,
-      updatedAt:currentTime
+      taskGroupId  : createPmTaskGroup.id,
+      pmId         : createPM.id,
+      startDate    : payload.startDateTime,
+      endDate      : payload.endDateTime,
+      repeatPeriod : payload.repeatPeriod,
+      repeatOn     : payload.repeatOn,
+      repeatNumber : payload.repeatFrequency,
+      createdAt    : currentTime,
+      updatedAt    : currentTime
     }
 
     let scheduleResult = await knex.insert(insertScheduleData).returning(['*']).transacting(trx).into('task_group_schedule');
@@ -304,17 +312,17 @@ const taskGroupController = {
 
     // create recurring pm of this task group open
 
-        let repeatPeriod = payload.repeatPeriod;
-        let repeatOn = payload.repeatOn && payload.repeatOn.length ? payload.repeatOn.join(','):[];
+        let repeatPeriod    = payload.repeatPeriod;
+        let repeatOn        = payload.repeatOn && payload.repeatOn.length ? payload.repeatOn.join(','):[];
         let repeatFrequency = Number(payload.repeatFrequency);
-        let start = new Date(payload.startDateTime);
-        let startYear = start.getFullYear();
-        let startMonth = start.getMonth();
-        let startDate = start.getDate();
-        let end = new Date(payload.endDateTime);
-        let endYear = end.getFullYear();
-        let endMonth = end.getMonth();
-        let endDate = end.getDate();
+        let start           = new Date(payload.startDateTime);
+        let startYear       = start.getFullYear();
+        let startMonth      = start.getMonth();
+        let startDate       = start.getDate();
+        let end             = new Date(payload.endDateTime);
+        let endYear         = end.getFullYear();
+        let endMonth        = end.getMonth();
+        let endDate         = end.getDate();
         let performingDates;
 
         let config = {
@@ -366,11 +374,11 @@ const taskGroupController = {
             const date = performingDates[j];
             let assetResult = await knex
               .insert({
-                pmDate: date,
-                scheduleId: taskSchedule.id,
+                pmDate     : date,
+                scheduleId : taskSchedule.id,
                 assetId,
-                createdAt: currentTime,
-                updatedAt: currentTime
+                createdAt  : currentTime,
+                updatedAt  : currentTime
               })
               .returning(["*"])
               .transacting(trx)
@@ -399,15 +407,15 @@ const taskGroupController = {
        });  
     }
   },
-  // Create Pm
-  createPM:async (req,res)=>{
+  // GET TASK GROUP SCHEDULE LIST
+  getTaskGroupScheduleList:async (req,res)=>{
 
     try{
-      let createPM       = null;
-      let payload          = req.body;
-      const schema         = Joi.object().keys({
-        assetCategoryId : Joi.string().required(),
-        name            : Joi.string().required(),
+      let scheduleList = null;
+      let payload      = req.body;
+
+      const schema     = Joi.object().keys({
+        pmId : Joi.string().required()
       });
 
       const result = Joi.validate(payload, schema);
@@ -416,25 +424,45 @@ const taskGroupController = {
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
         });
       }
-      
-      await knex.transaction(async trx=>{
-           
-        let payload      = req.body;
-        let currentTime  = new Date().getTime();
-        let insertData   = {...payload,createdAt:currentTime,updatedAt:currentTime};
-        let insertResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('pm_master2');
-        createPM = insertResult[0];
 
+
+      let pagination = {};
+      let per_page = req.query.per_page || 10;
+      let page = req.query.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+      
+      
+
+      let [total,rows] = await Promise.all([
+        knex.count("* as count").from('task_group_schedule')
+       .where({pmId:payload.pmId})
+       .offset(offset).limit(per_page)
+        ,
+        knex.from('task_group_schedule')
+        .where({pmId:payload.pmId})
+        .offset(offset).limit(per_page)
+      ])
+
+
+      let count = total.length;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+      
 
         res.status(200).json({
           data:{
-           pmData:createPM
+           taskGroupScheduleData:pagination
           },
-          "message":"PM Create Successfully!"
+          "message":"Task Group Schedule List Successfully!"
         })
-      })
-
-    
 
     }catch(err){
       res.status(500).json({

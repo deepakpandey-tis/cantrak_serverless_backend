@@ -16,9 +16,8 @@ router.post('/get-group-task-list',authMiddleware.isAuthenticated,authMiddleware
 //CREATE PM TASK GROUP SCHEDULE
 router.post('/create-pm-taskgroup-schedule',authMiddleware.isAuthenticated,authMiddleware.isAdmin, taskGroupController.createPmTaskgroupSchedule)
 
-// CREATE PM
-
-router.post('/create-pm',authMiddleware.isAuthenticated,authMiddleware.isAdmin, taskGroupController.createPM)
+// GET TASK GROUP SCHEDULE LIST
+router.post('/get-taskgroup-schedule-list',authMiddleware.isAuthenticated,authMiddleware.isAdmin, taskGroupController.getTaskGroupScheduleList)
 
 
 
