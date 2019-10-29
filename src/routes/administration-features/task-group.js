@@ -13,6 +13,10 @@ router.post('/get-group-template-list',authMiddleware.isAuthenticated,authMiddle
 // GET GROUP TASK LIST
 router.post('/get-group-task-list',authMiddleware.isAuthenticated,authMiddleware.isAdmin, taskGroupController.getGroupTaskList)
 
+//ASSIGN PM TASK GROUP TEAM
+router.post('/assign-pm-taskgroup-team',authMiddleware.isAuthenticated,authMiddleware.isAdmin, taskGroupController.assignPmTaskGroupTeam)
+
+
 
 
 

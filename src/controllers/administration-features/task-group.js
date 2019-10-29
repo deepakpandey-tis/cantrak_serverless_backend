@@ -136,8 +136,8 @@ const taskGroupController = {
   },getGroupTemplateList: async (req,res)=>{
 
     try {
-      let payload        = req.body;  
-      const schema         = Joi.object().keys({
+      let payload       = req.body;  
+      const schema      = Joi.object().keys({
         assetCategoryId : Joi.string().required()       
       });
 
@@ -179,7 +179,8 @@ const taskGroupController = {
       let taskResult = await knex('template_task').returning('*').where({"templateId":payload.templateId});
 
       return res.status(200).json({
-        data:{groupTaskData:taskResult
+        data:{
+          groupTaskData:taskResult
         },
         message :"Group Task List Successfully!"
       });
@@ -189,8 +190,109 @@ const taskGroupController = {
     res.status(500).json({
       errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
     });  
-  }   
+   }   
+  },assignPmTaskGroupTeam:async (req,res)=>{
 
+    try{
+      let createPmTaskGroup      = null;
+      let assignedServiceTeam    = null;
+      let taskSchedule           = null;
+      let assignedAdditionalUser = null;
+      let payload                = req.body;  
+      const schema               = Joi.object().keys({
+        teamId          : Joi.string().required(),
+        userId          : Joi.string().required(),
+        additionalUsers : Joi.array().items(Joi.string().required()).strict().required(),
+        taskGroupName   : Joi.string().required(),
+      });
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+
+      await knex.transaction(async trx=>{
+           
+        let payload     = req.body;
+        let currentTime = new Date().getTime();
+
+
+      // CREATE PM TASK GROUP OPEN
+      let insertPmTaskGroupData = {
+        taskGroupName:payload.taskGroupName,
+        createdAt :currentTime,
+        updatedAt :currentTime
+      }
+
+      let insertPmTemplateResult = await knex.insert(insertPmTaskGroupData).returning(['*']).transacting(trx).into('pm_task_groups');
+      createPmTaskGroup = insertPmTemplateResult[0];
+      // CREATE PM TASK GROUP CLOSE
+
+      // ASSIGNED ADDITIONAL USER OPEN
+      let insertAssignedAdditionalUserData = payload.additionalUsers.map(user=>({
+        userId  :payload.user,
+        entityId:createPmTaskGroup.id,
+        entityType:"pm_task_groups",
+        createdAt:currentTime,
+        updatedAt:currentTime
+      
+    }))
+
+      let assignedAdditionalUserResult = await knex.insert(insertAssignedAdditionalUserData).returning(['*']).transacting(trx).into('assigned_service_additional_users');
+      assignedAdditionalUser = assignedAdditionalUserResult[0];
+     // ASSIGNED ADDITIONAL USER CLOSE
+
+     // ASSIGNED TEAM OPEN
+      let insertAssignedServiceTeamData = {
+        teamId  :payload.teamId,
+        userId  :payload.userId,
+        entityId:createPmTaskGroup.id,
+        entityType:"pm_task_groups",
+        createdAt:currentTime,
+        updatedAt:currentTime
+      }
+
+      let assignedServiceTeamResult = await knex.insert(insertAssignedServiceTeamData).returning(['*']).transacting(trx).into('assigned_service_team');
+      assignedServiceTeam = assignedServiceTeamResult[0];
+      
+     // ASSIGNED TEAM CLOSE
+    
+     // TASK GROUP SCHEDULE OPEN
+     let insertScheduleData = {
+      taskGroupId :payload.taskGroupId,
+      pmId        :payload.userId,
+      startDate   :payload.startDate,
+      endDate     :payload.endDate,
+      repeatType  :payload.repeatType,
+      repeatOn    :payload.repeatOn,
+      repeatNumber:payload.repeatNumber,
+      createdAt:currentTime,
+      updatedAt:currentTime
+    }
+
+    let scheduleResult = await knex.insert(insertScheduleData).returning(['*']).transacting(trx).into('task_group_schedule');
+    taskSchedule = scheduleResult[0];
+     
+    // TASK GROUP SCHEDULE CLOSE
+
+    return res.status(200).json({
+      data:{
+        pmTaskGroupData:createPmTaskGroup,
+        assignedAdditionalUserData:assignedAdditionalUser,
+        assignedServiceTeamData:assignedServiceTeam,
+        taskScheduleData:taskSchedule
+      },
+      message :"Preventive Maintenance Team Assigned Successfully!"
+    });
+    })
+      
+    }catch(err){
+      res.status(500).json({
+       errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+       });  
+    }
   }
 }
 
