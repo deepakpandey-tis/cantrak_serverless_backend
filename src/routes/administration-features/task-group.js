@@ -20,6 +20,7 @@ router.post('/create-pm-taskgroup-schedule',authMiddleware.isAuthenticated,authM
 
 router.post('/create-pm',authMiddleware.isAuthenticated,authMiddleware.isAdmin, taskGroupController.createPM)
 
+router.get('/get-pm-list',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getPmList)
 
 
 
