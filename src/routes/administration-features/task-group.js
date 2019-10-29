@@ -22,7 +22,7 @@ router.post('/get-taskgroup-schedule-list',authMiddleware.isAuthenticated,authMi
 router.get('/get-pm-list',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getPmList)
 
 
-
+router.post('/create-brand-new-pm',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.createBrandNewPm)
 
 
 module.exports = router

@@ -206,7 +206,7 @@ const taskGroupController = {
       let payload                = req.body;  
       const schema               = Joi.object().keys({
         assetCategoryId : Joi.number().required(),
-        pmName          : Joi.string().required(),
+        pmId          : Joi.string().required(),
         teamId          : Joi.string().required(),
         mainUserId      : Joi.string().required(),
         additionalUsers : Joi.array().items(Joi.string().required()).strict().required(),
@@ -229,17 +229,17 @@ const taskGroupController = {
 
       await knex.transaction(async trx=>{
            
-        let payload       = req.body;
-        let currentTime   = new Date().getTime();
-       // CREATE PM  OPEN
-       let insertPmData   = {"name":payload.pmName,'assetCategoryId':payload.assetCategoryId,createdAt:currentTime,updatedAt:currentTime};
-       let insertPmResult = await knex.insert(insertPmData).returning(['*']).transacting(trx).into('pm_master2');
-        createPM          = insertPmResult[0];
+      //   let payload       = req.body;
+         let currentTime   = new Date().getTime();
+      //  // CREATE PM  OPEN
+      //  let insertPmData   = {"name":payload.pmName,'assetCategoryId':payload.assetCategoryId,createdAt:currentTime,updatedAt:currentTime};
+      //  let insertPmResult = await knex.insert(insertPmData).returning(['*']).transacting(trx).into('pm_master2');
+      //   createPM          = insertPmResult[0];
       // CREATE PM CLOSE
 
       // CREATE PM TASK GROUP OPEN
       let insertPmTaskGroupData = {
-                 pmId:createPM.id,
+                 pmId:payload.pmId,
                  assetCategoryId : payload.assetCategoryId,
                  taskGroupName :payload.taskGroupName,
                  createdAt :currentTime,
@@ -296,7 +296,7 @@ const taskGroupController = {
      // TASK GROUP SCHEDULE OPEN
      let insertScheduleData = {
       taskGroupId  : createPmTaskGroup.id,
-      pmId         : createPM.id,
+      pmId         : payload.pmId,
       startDate    : payload.startDateTime,
       endDate      : payload.endDateTime,
       repeatPeriod : payload.repeatPeriod,
@@ -511,6 +511,26 @@ const taskGroupController = {
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       }); 
+    }
+  },
+  createBrandNewPm:async(req,res) => {
+    try {
+         let payload       = req.body;
+        let currentTime   = new Date().getTime();
+       // CREATE PM  OPEN
+       let insertPmData   = {"name":payload.pmName,'assetCategoryId':payload.assetCategoryId,createdAt:currentTime,updatedAt:currentTime};
+      let insertPmResult = await knex('pm_master2').insert(insertPmData).returning(['*'])
+        createPM          = insertPmResult[0];
+        return res.status(200).json({
+          data: {
+            pm: createPM,
+            message:'Pm created Successfully'
+          }
+        })
+    } catch(err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });  
     }
   }
 }
