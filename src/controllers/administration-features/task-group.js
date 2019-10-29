@@ -301,7 +301,7 @@ const taskGroupController = {
       endDate      : payload.endDateTime,
       repeatPeriod : payload.repeatPeriod,
       repeatOn     : payload.repeatOn,
-      repeatNumber : payload.repeatFrequency,
+      repeatFrequency : payload.repeatFrequency,
       createdAt    : currentTime,
       updatedAt    : currentTime
     }
@@ -434,7 +434,10 @@ const taskGroupController = {
       
       
 
-      let [total,rows] = await Promise.all([
+      let [total,rows] 
+      
+      = await Promise.all([
+
         knex.count("* as count").from('task_group_schedule')
        .where({pmId:payload.pmId})
        .offset(offset).limit(per_page)
@@ -443,6 +446,8 @@ const taskGroupController = {
         .where({pmId:payload.pmId})
         .offset(offset).limit(per_page)
       ])
+      
+      
 
 
       let count = total.length;
