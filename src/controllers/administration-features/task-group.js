@@ -469,6 +469,44 @@ const taskGroupController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
         });  
     }
+  },
+  getPmList: async(req,res) => {
+    try {
+      const list = await knex('pm_master2').select()
+      let reqData = req.query;
+      let total, rows
+
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+      [total, rows] = await Promise.all([
+        knex.count('* as count').from("pm_master2"),
+        knex.from('pm_master2')
+          .offset(offset).limit(per_page)
+      ])
+
+      console.log(JSON.stringify(total,2,null))
+      let count = total[0].count;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+      return res.status(200).json({
+        data: {
+          pm_list:pagination
+        }
+      })
+    } catch(err){
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      }); 
+    }
   }
 }
 
