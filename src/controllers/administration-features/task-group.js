@@ -134,7 +134,8 @@ const taskGroupController = {
       });  
     }   
     // GET TASK GROUP TEMPLATE LIST
-  },getGroupTemplateList: async (req,res)=>{
+  },
+  getGroupTemplateList: async (req,res)=>{
 
     try {
       let payload       = req.body;  
@@ -163,7 +164,8 @@ const taskGroupController = {
     });  
   }   
    // GET GROUP TASK LIST
-  },getGroupTaskList: async (req,res)=>{
+  },
+  getGroupTaskList: async (req,res)=>{
 
     try {
       let payload          = req.body;  
@@ -202,8 +204,8 @@ const taskGroupController = {
       let assignedServiceTeam    = null;
       let taskSchedule           = null;
       let assignedAdditionalUser = null;
-      let assetResults          =  [];
-      let payload                = req.body;  
+      let assetResults           =  [];
+      let payload                = req.body; 
       const schema               = Joi.object().keys({
         assetCategoryId : Joi.number().required(),
         pmName          : Joi.string().required(),
