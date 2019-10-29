@@ -534,6 +534,69 @@ const taskGroupController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });  
     }
+  },
+  // GET TASK GROUP ASSET PMS LIST
+  getTaskGroupAssetPmsList:async (req,res)=>{
+
+    try {
+        let reqData = req.query;
+        let payload = req.body
+
+        const schema     = Joi.object().keys({
+          taskGroupId : Joi.string().required()
+        });
+  
+        const result = Joi.validate(payload, schema);
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+          });
+        }
+        let pagination = {};
+        let per_page = reqData.per_page || 10;
+        let page = reqData.current_page || 1;
+        if (page < 1) page = 1;
+        let offset = (page - 1) * per_page;
+
+        let [total, rows] = await Promise.all([
+          knex.count('* as count').from("task_group_schedule")
+          .innerJoin('task_group_schedule_assign_assets','task_group_schedule.id','task_group_schedule_assign_assets.scheduleId')
+          .innerJoin('asset_master','task_group_schedule_assign_assets.id','task_group_schedule_assign_assets.scheduleId')
+          .where({"taskGroupId":payload.taskGroupId})
+          .offset(offset).limit(per_page),
+          knex("task_group_schedule")
+          .innerJoin('task_group_schedule_assign_assets','task_group_schedule.id','task_group_schedule_assign_assets.scheduleId')
+          .where({"taskGroupId":payload.taskGroupId})
+          .offset(offset).limit(per_page)
+        ])
+
+        let count = rows.length;
+        pagination.total = count;
+        pagination.per_page = per_page;
+        pagination.offset = offset;
+        pagination.to = offset + rows.length;
+        pagination.last_page = Math.ceil(count / per_page);
+        pagination.current_page = page;
+        pagination.from = offset;
+        pagination.data = rows;
+
+        return res.status(200).json({
+          data: {
+            taskGroupAssetPmsData: pagination
+          },
+          message: 'Task Group PMs Asset  List Successfully!'
+        })
+
+      } catch (err) {
+      console.log('[controllers][task-group][get-task-group-asset-pms-list] :  Error', err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+
   }
 }
 
