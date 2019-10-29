@@ -244,6 +244,25 @@ const usersController = {
                 ],
             });
         }
+    },
+    getAllUsers: async (req,res) => {
+        try {
+            const users= await knex('users').select('id','name')
+            return res.status(200).json({
+                data: {
+                    users
+                },
+                messsage:'Users list'
+            })
+        } catch(err){
+            console.log('[controllers][serviceOrder][GetServiceOrderList] :  Error', err);
+            //trx.rollback
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
     }
 };
 
