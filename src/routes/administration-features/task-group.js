@@ -27,4 +27,9 @@ router.post('/create-brand-new-pm',authMiddleware.isAuthenticated,authMiddleware
 // GET TASK GROUP ASSET PMS LIST
 router.post('/get-task-group-asset-pms-list',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getTaskGroupAssetPmsList)
 
+// CREATE TASK TEMPLATE
+router.post('/create-task-template',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.createTaskTemplate)
+// GET TASK TEMPLATE LIST
+router.post('/get-task-template-list',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getTaskTemplateList)
+
 module.exports = router

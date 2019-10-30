@@ -247,6 +247,7 @@ const taskGroupController = {
 
           // CREATE TASK TEMPLATE OPEN 
           let insertTemplateData = {
+            pmId:payload.pmId,
             assetCategoryId:payload.assetCategoryId,
             taskGroupName:payload.taskGroupName,
             createdAt :currentTime,
@@ -400,6 +401,8 @@ const taskGroupController = {
         const rule = new RRule(config);
         performingDates = rule.all();
 
+      
+
         for (let i = 0; i < payload.assets.length; i++) {
           const assetId = payload.assets[i];
 
@@ -475,17 +478,15 @@ const taskGroupController = {
 
         knex.count("* as count").from('task_group_schedule')
        .where({pmId:payload.pmId})
-       .offset(offset).limit(per_page)
+       //.offset(offset).limit(per_page)
         ,
         knex.from('task_group_schedule')
         .where({pmId:payload.pmId})
         .offset(offset).limit(per_page)
       ])
       
-      
 
-
-      let count = total.length;
+      let count = total[0].count;
       pagination.total = count;
       pagination.per_page = per_page;
       pagination.offset = offset;
@@ -553,8 +554,8 @@ const taskGroupController = {
          let payload       = req.body;
         let currentTime   = new Date().getTime();
        // CREATE PM  OPEN
-       let insertPmData   = {"name":payload.pmName,'assetCategoryId':payload.assetCategoryId,createdAt:currentTime,updatedAt:currentTime};
-      let insertPmResult = await knex('pm_master2').insert(insertPmData).returning(['*'])
+      let insertPmData   = {"name":payload.pmName,'assetCategoryId':payload.assetCategoryId,createdAt:currentTime,updatedAt:currentTime};
+      let insertPmResult  = await knex('pm_master2').insert(insertPmData).returning(['*'])
         createPM          = insertPmResult[0];
         return res.status(200).json({
           data: {
@@ -604,7 +605,7 @@ const taskGroupController = {
           .offset(offset).limit(per_page)
         ])
 
-        let count =total[0].count;
+        let count = total[0].count;
         pagination.total = count;
         pagination.per_page = per_page;
         pagination.offset = offset;
@@ -618,7 +619,7 @@ const taskGroupController = {
           data: {
             taskGroupAssetPmsData: pagination
           },
-          message: 'Task Group PMs Asset  List Successfully!'
+          message: 'Task Group PMs Asset List Successfully!'
         })
 
       } catch (err) {
@@ -630,6 +631,117 @@ const taskGroupController = {
         ],
       });
     }
+  },
+  // CREATE TASK TEMPLATE
+  createTaskTemplate:async (req,res)=>{
+
+    try{
+       
+      let createTemplate     = null;
+      let createTemplateTask = null;
+      let payload            = req.body;
+
+      const schema     = Joi.object().keys({
+        pmId            : Joi.string().required(),
+        assetCategoryId :Joi.string().required(),
+        taskTemplateName:Joi.string().required(),
+        tasks           :Joi.array().items(Joi.string().required()).strict().required(),
+      });
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+
+      await knex.transaction(async trx=>{
+
+               let currentTime = new Date().getTime();
+               // CREATE TASK TEMPLATE OPEN 
+               let insertTemplateData = {
+                pmId:payload.pmId,
+                assetCategoryId:payload.assetCategoryId,
+                taskGroupName:payload.taskTemplateName,
+                createdAt :currentTime,
+                updatedAt :currentTime
+              }
+      
+              let insertTemplateResult = await knex.insert(insertTemplateData).returning(['*']).transacting(trx).into('task_group_templates');
+              createTemplate = insertTemplateResult[0];
+              // CREATE TASK TEMPLATE CLOSE
+      
+              // CREATE TASK TEMPLATE OPEN 
+              let tasksInsertPayload = payload.tasks.map(da=>({
+                  taskName  : da,
+                  templateId: createTemplate.id,
+                  createdAt : currentTime,
+                  updatedAt : currentTime
+              }))
+       
+             let insertTemplateTaskResult = await knex.insert(tasksInsertPayload).returning(['*']).transacting(trx).into('template_task');
+             createTemplateTask           = insertTemplateTaskResult;
+            // CREATE TASK TEMPLATE CLOSE
+      })
+
+      return res.status(200).json({
+        data: {
+          templateData: createTemplate,
+          taskTemplateData:createTemplateTask
+        },
+        message: 'Task Template Created Successfully!'
+      })
+
+    }catch(err){
+           
+      console.log('[controllers][task-group][create-task-template] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
+  // GET TASK TEMPLATE LIST
+  getTaskTemplateList:async (req,res)=>{
+
+    
+     try{
+      
+
+      let  payload = req.body;
+      const schema =  Joi.object().keys({
+        assetCategoryId : Joi.string().required()
+      })
+
+      const result = Joi.validate(payload,schema);
+
+       if(result && result.hasOwnProperty("error") && result.error){
+
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+       }
+
+      
+      let templateResult = await knex('task_group_templates').returning('*').where({"assetCategoryId":payload.assetCategoryId});
+
+      res.status(200).json({
+        data:
+        {taskTemplateData:templateResult
+        },
+        message:"Task Template List Successfully!"
+      })
+
+
+     }catch(err){
+      console.log('[controllers][task-group][get-task-template-list] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+     }
 
   }
 }
