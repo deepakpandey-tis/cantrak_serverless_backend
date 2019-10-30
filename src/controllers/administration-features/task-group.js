@@ -595,8 +595,8 @@ const taskGroupController = {
           knex.count('* as count').from("task_group_schedule")
           .innerJoin('task_group_schedule_assign_assets','task_group_schedule.id','task_group_schedule_assign_assets.scheduleId')
           .innerJoin('asset_master','task_group_schedule_assign_assets.assetId','asset_master.id')
-          .where({"taskGroupId":payload.taskGroupId})
-          .offset(offset).limit(per_page),
+          .where({"taskGroupId":payload.taskGroupId}),
+          //.offset(offset).limit(per_page),
           knex("task_group_schedule")
           .innerJoin('task_group_schedule_assign_assets','task_group_schedule.id','task_group_schedule_assign_assets.scheduleId')
           .innerJoin('asset_master','task_group_schedule_assign_assets.assetId','asset_master.id')
@@ -604,7 +604,7 @@ const taskGroupController = {
           .offset(offset).limit(per_page)
         ])
 
-        let count = rows.length;
+        let count =total[0].count;
         pagination.total = count;
         pagination.per_page = per_page;
         pagination.offset = offset;
