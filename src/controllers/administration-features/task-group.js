@@ -639,16 +639,21 @@ const taskGroupController = {
        
       let createTemplate     = null;
       let createTemplateTask = null;
+      let taskSchedule       = null;
       let payload            = req.body;
 
-      const schema     = Joi.object().keys({
+      const schema     =  Joi.object().keys({
         pmId            : Joi.string().required(),
-        assetCategoryId :Joi.string().required(),
-        taskTemplateName:Joi.string().required(),
-        tasks           :Joi.array().items(Joi.string().required()).strict().required(),
+        assetCategoryId : Joi.string().required(),
+        taskTemplateName: Joi.string().required(),
+        tasks           : Joi.array().items(Joi.string().required()).strict().required(),
+        startDateTime   : Joi.date().required(),
+        endDateTime     : Joi.date().required(),
+        repeatPeriod    : Joi.string().required(),
+        repeatFrequency : Joi.string().required(),
       });
 
-      const result = Joi.validate(payload, schema);
+      const result = Joi.validate(_.omit(payload,'repeatOn'), schema);
       if (result && result.hasOwnProperty("error") && result.error) {
         return res.status(400).json({
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
@@ -682,12 +687,36 @@ const taskGroupController = {
              let insertTemplateTaskResult = await knex.insert(tasksInsertPayload).returning(['*']).transacting(trx).into('template_task');
              createTemplateTask           = insertTemplateTaskResult;
             // CREATE TASK TEMPLATE CLOSE
+
+
+              // TASK GROUP SCHEDULE OPEN
+                let insertScheduleData = {
+              taskGroupId  : createTemplate.id,
+              pmId         : payload.pmId,
+              startDate    : payload.startDateTime,
+              endDate      : payload.endDateTime,
+              repeatPeriod : payload.repeatPeriod,
+              repeatOn     : payload.repeatOn,
+              repeatFrequency : payload.repeatFrequency,
+              createdAt    : currentTime,
+              updatedAt    : currentTime
+            }
+
+            let scheduleResult = await knex.insert(insertScheduleData).returning(['*']).transacting(trx).into('task_group_template_schedule');
+            taskSchedule = scheduleResult[0];
+            // TASK GROUP SCHEDULE CLOSE 
+
       })
+
+
+    
 
       return res.status(200).json({
         data: {
           templateData: createTemplate,
-          taskTemplateData:createTemplateTask
+          taskTemplateData:createTemplateTask,
+          taskScheduleData:taskSchedule
+
         },
         message: 'Task Template Created Successfully!'
       })
@@ -708,7 +737,6 @@ const taskGroupController = {
     
      try{
       
-
       let  payload = req.body;
       const schema =  Joi.object().keys({
         assetCategoryId : Joi.string().required()
