@@ -640,6 +640,9 @@ const taskGroupController = {
       let createTemplate     = null;
       let createTemplateTask = null;
       let taskSchedule       = null;
+      let assignedServiceTeam= null;
+      let assignedAdditionalUser = null;
+      
       let payload            = req.body;
 
       const schema     =  Joi.object().keys({
@@ -651,6 +654,9 @@ const taskGroupController = {
         endDateTime     : Joi.date().required(),
         repeatPeriod    : Joi.string().required(),
         repeatFrequency : Joi.string().required(),
+        teamId          : Joi.string().required(),
+        mainUserId      : Joi.string().required(),
+        additionalUsers : Joi.array().items(Joi.string().required()).strict().required(),
       });
 
       const result = Joi.validate(_.omit(payload,'repeatOn'), schema);
@@ -706,6 +712,36 @@ const taskGroupController = {
             taskSchedule = scheduleResult[0];
             // TASK GROUP SCHEDULE CLOSE 
 
+           // ASSIGNED ADDITIONAL USER OPEN
+      let insertAssignedAdditionalUserData = payload.additionalUsers.map(user=>({
+        userId     : user,
+        entityId   : createTemplate.id,
+        entityType : "task_group_templates",
+        createdAt  : currentTime,
+        updatedAt  : currentTime
+      
+    }))
+
+      let assignedAdditionalUserResult = await knex.insert(insertAssignedAdditionalUserData).returning(['*']).transacting(trx).into('assigned_service_additional_users');
+      assignedAdditionalUser = assignedAdditionalUserResult;
+     // ASSIGNED ADDITIONAL USER CLOSE
+
+     // ASSIGNED TEAM OPEN
+      let insertAssignedServiceTeamData = {
+        teamId    : payload.teamId,
+        userId    : payload.mainUserId,
+        entityId  : createTemplate.id,
+        entityType: "task_group_templates",
+        createdAt : currentTime,
+        updatedAt : currentTime
+      }
+
+      let assignedServiceTeamResult = await knex.insert(insertAssignedServiceTeamData).returning(['*']).transacting(trx).into('assigned_service_team');
+      assignedServiceTeam = assignedServiceTeamResult[0];
+      
+     // ASSIGNED TEAM CLOSE
+
+
       })
 
 
@@ -715,8 +751,9 @@ const taskGroupController = {
         data: {
           templateData: createTemplate,
           taskTemplateData:createTemplateTask,
-          taskScheduleData:taskSchedule
-
+          taskScheduleData:taskSchedule,
+          assignedAdditionalUserData:assignedAdditionalUser,
+          assignedServiceTeamData :assignedServiceTeam
         },
         message: 'Task Template Created Successfully!'
       })
