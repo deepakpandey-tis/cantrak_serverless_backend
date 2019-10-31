@@ -846,7 +846,7 @@ const taskGroupController = {
         .innerJoin('assigned_service_team','task_group_templates.id','assigned_service_team.entityId')
         .innerJoin('assigned_service_additional_users','task_group_templates.id','assigned_service_additional_users.entityId')
         .select([
-          'assigned_service_additional_users.userId as addtional_user',
+          'assigned_service_additional_users.userId as additional_user',
           'task_group_templates.*',
           'template_task.*',
           'task_group_template_schedule.*',
