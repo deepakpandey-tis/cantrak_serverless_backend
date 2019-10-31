@@ -527,6 +527,11 @@ const taskGroupController = {
         .innerJoin('asset_category_master','pm_master2.assetCategoryId','asset_category_master.id'),
         knex.from('pm_master2')
         .innerJoin('asset_category_master','pm_master2.assetCategoryId','asset_category_master.id')
+        .select([
+          'pm_master2.*',
+          'asset_category_master.*',
+          'pm_master2.id as id'
+                ])
           .offset(offset).limit(per_page)
       ])
 
