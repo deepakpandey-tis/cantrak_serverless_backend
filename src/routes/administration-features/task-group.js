@@ -32,4 +32,7 @@ router.post('/create-task-template',authMiddleware.isAuthenticated,authMiddlewar
 // GET TASK TEMPLATE LIST
 router.post('/get-task-template-list',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getTaskTemplateList)
 
+// GET TASK TEMPLATE COMPLETE DATA
+router.post('/get-task-template-complete-list',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getTaskTemplateComplateList)
+
 module.exports = router

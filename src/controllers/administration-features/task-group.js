@@ -808,6 +808,74 @@ const taskGroupController = {
       });
      }
 
+  },
+  // GET TASK TEMPLATE COMPLATE DATA LIST
+  getTaskTemplateComplateList: async (req,res)=>{
+
+    try {
+      let reqData = req.query;
+      let payload = req.body
+
+      const schema     = Joi.object().keys({
+        templateId : Joi.string().required()
+      });
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+      let [total, rows] = await Promise.all([
+        knex.count('* as count').from("task_group_templates")
+        .innerJoin('template_task','task_group_templates.id','template_task.templateId')
+        .innerJoin('task_group_template_schedule','task_group_templates.id','task_group_template_schedule.taskGroupId')
+        .innerJoin('assigned_service_team','task_group_templates.id','assigned_service_team.entityId')
+        .innerJoin('assigned_service_additional_users','task_group_templates.id','assigned_service_additional_users.entityId')
+        .where({"task_group_templates.id":payload.templateId,'assigned_service_team.entityType':'task_group_templates','assigned_service_additional_users.entityType':'task_group_templates'}),
+        //.offset(offset).limit(per_page),
+        knex("task_group_templates")
+        .innerJoin('template_task','task_group_templates.id','template_task.templateId')
+        .innerJoin('task_group_template_schedule','task_group_templates.id','task_group_template_schedule.taskGroupId')
+        .innerJoin('assigned_service_team','task_group_templates.id','assigned_service_team.entityId')
+        .innerJoin('assigned_service_additional_users','task_group_templates.id','assigned_service_additional_users.entityId')
+        .where({"task_group_templates.id":payload.templateId,'assigned_service_team.entityType':'task_group_templates','assigned_service_additional_users.entityType':'task_group_templates'})
+        .offset(offset).limit(per_page)
+      ])
+
+      let count = total[0].count;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+      return res.status(200).json({
+        data: {
+          taskTemplateCompleteData: pagination
+        },
+        message: 'Task Template Complete Data List Successfully!'
+      })
+
+    } catch (err) {
+    console.log('[controllers][task-group][get-task-group-asset-pms-list] :  Error', err);
+    //trx.rollback
+    res.status(500).json({
+      errors: [
+        { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+      ],
+    });
+  }
+
   }
 }
 
