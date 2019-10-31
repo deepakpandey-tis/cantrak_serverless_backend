@@ -523,8 +523,10 @@ const taskGroupController = {
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
       [total, rows] = await Promise.all([
-        knex.count('* as count').from("pm_master2"),
+        knex.count('* as count').from("pm_master2")
+        .innerJoin('asset_category_master','pm_master2.assetCategoryId','asset_category_master.id'),
         knex.from('pm_master2')
+        .innerJoin('asset_category_master','pm_master2.assetCategoryId','asset_category_master.id')
           .offset(offset).limit(per_page)
       ])
 
