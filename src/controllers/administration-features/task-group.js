@@ -211,7 +211,7 @@ const taskGroupController = {
       const schema               = Joi.object().keys({
         assetCategoryId : Joi.number().required(),
         pmId            : Joi.string().required(),
-        isNew           : Joi.string().required(),
+        //isNew           : Joi.string().required(),
         teamId          : Joi.string().required(),
         mainUserId      : Joi.string().required(),
         additionalUsers : Joi.array().items(Joi.string().required()).strict().required(),
@@ -243,33 +243,33 @@ const taskGroupController = {
       // CREATE PM CLOSE
 
 
-      if(payload.isNew==="true"){
+      // if(payload.isNew==="true"){
 
-          // CREATE TASK TEMPLATE OPEN 
-          let insertTemplateData = {
-            pmId:payload.pmId,
-            assetCategoryId:payload.assetCategoryId,
-            taskGroupName:payload.taskGroupName,
-            createdAt :currentTime,
-            updatedAt :currentTime
-          }
+      //     // CREATE TASK TEMPLATE OPEN 
+      //     let insertTemplateData = {
+      //       pmId:payload.pmId,
+      //       assetCategoryId:payload.assetCategoryId,
+      //       taskGroupName:payload.taskGroupName,
+      //       createdAt :currentTime,
+      //       updatedAt :currentTime
+      //     }
   
-          let insertTemplateResult = await knex.insert(insertTemplateData).returning(['*']).transacting(trx).into('task_group_templates');
-          createTemplate = insertTemplateResult[0];
-          // CREATE TASK TEMPLATE CLOSE
+      //     let insertTemplateResult = await knex.insert(insertTemplateData).returning(['*']).transacting(trx).into('task_group_templates');
+      //     createTemplate = insertTemplateResult[0];
+      //     // CREATE TASK TEMPLATE CLOSE
   
-          // CREATE TASK TEMPLATE OPEN 
-          let tasksInsertPayload = payload.tasks.map(da=>({
-              taskName  : da,
-              templateId: createTemplate.id,
-              createdAt : currentTime,
-              updatedAt :currentTime
-          }))
+      //     // CREATE TASK TEMPLATE OPEN 
+      //     let tasksInsertPayload = payload.tasks.map(da=>({
+      //         taskName  : da,
+      //         templateId: createTemplate.id,
+      //         createdAt : currentTime,
+      //         updatedAt :currentTime
+      //     }))
    
-         let insertTemplateTaskResult = await knex.insert(tasksInsertPayload).returning(['*']).transacting(trx).into('template_task');
-         createTemplateTask           = insertTemplateTaskResult;
-        // CREATE TASK TEMPLATE CLOSE
-        }
+      //    let insertTemplateTaskResult = await knex.insert(tasksInsertPayload).returning(['*']).transacting(trx).into('template_task');
+      //    createTemplateTask           = insertTemplateTaskResult;
+      //   // CREATE TASK TEMPLATE CLOSE
+      //   }
 
       // CREATE PM TASK GROUP OPEN
       let insertPmTaskGroupData = {
@@ -851,8 +851,6 @@ const taskGroupController = {
           'template_task.*',
           'task_group_template_schedule.*',
           'assigned_service_team.*'
-
-
                 ])
         .where({"task_group_templates.id":payload.templateId,'assigned_service_team.entityType':'task_group_templates','assigned_service_additional_users.entityType':'task_group_templates'})
         .offset(offset).limit(per_page)
