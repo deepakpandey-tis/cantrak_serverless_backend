@@ -845,6 +845,15 @@ const taskGroupController = {
         .innerJoin('task_group_template_schedule','task_group_templates.id','task_group_template_schedule.taskGroupId')
         .innerJoin('assigned_service_team','task_group_templates.id','assigned_service_team.entityId')
         .innerJoin('assigned_service_additional_users','task_group_templates.id','assigned_service_additional_users.entityId')
+        .select([
+          'assigned_service_additional_users.userId as addtional_user',
+          'task_group_templates.*',
+          'template_task.*',
+          'task_group_template_schedule.*',
+          'assigned_service_team.*'
+
+
+                ])
         .where({"task_group_templates.id":payload.templateId,'assigned_service_team.entityType':'task_group_templates','assigned_service_additional_users.entityType':'task_group_templates'})
         .offset(offset).limit(per_page)
       ])
