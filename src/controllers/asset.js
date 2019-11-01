@@ -882,6 +882,7 @@ const assetController = {
            let floorId
            let projectId
            let companyId
+           let assetCategoryId = filters.assetCategoryId;
 
            if(filters.buildingPhaseCode){
                // go extract buildingId
@@ -930,6 +931,9 @@ const assetController = {
             }
             if(projectId){
                 condition['asset_location.projectId'] = projectId;
+            }
+            if(assetCategoryId){
+                condition['asset_master.assetCategoryId'] = assetCategoryId;
             }
 
            //console.log('Condition: ',JSON.stringify(condition))
