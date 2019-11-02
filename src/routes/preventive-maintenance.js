@@ -25,4 +25,5 @@ router.post('/update-asset-pm-endDate', authMiddleware.isAuthenticated, authMidd
 router.post('/get-pm-report', authMiddleware.isAuthenticated, authMiddleware.isAdmin, pmController.getPmReport)
 router.post('/save-pm-template',authMiddleware.isAuthenticated,authMiddleware.isAuthenticated,pmController.savePMTemplate)
 router.post('/search-pm-template',authMiddleware.isAuthenticated,authMiddleware.isAuthenticated,pmController.searchPMTemplate)
+router.post('/search-pm-by-name',authMiddleware.isAuthenticated,authMiddleware.isAdmin,pmController.getPmByName)
 module.exports = router
