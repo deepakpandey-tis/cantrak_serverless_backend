@@ -872,7 +872,7 @@ const taskGroupController = {
       pagination.last_page = Math.ceil(count / per_page);
       pagination.current_page = page;
       pagination.from = offset;
-      pagination.data = rows;
+      pagination.data = _.uniqBy(rows,'taskName');
 
       return res.status(200).json({
         data: {
