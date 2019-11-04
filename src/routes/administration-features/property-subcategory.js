@@ -16,5 +16,7 @@ router.post('/delete-subcategory', authMiddleware.isAuthenticated, authMiddlewar
 
 router.get('/subcategory-list', authMiddleware.isAuthenticated, authMiddleware.isAdmin, propertySubCategoryController.subCategoryList);
 
+router.post('/get-subcategories-by-category',authMiddleware.isAuthenticated,propertySubCategoryController.getSubCategoryByCategoryId)
+
 module.exports = router;
  
