@@ -319,39 +319,52 @@ const propertyCategoryController = {
         try {
 
             let listCategories = null;
+            let reqData = req.query;
+            let total = null;
+            let rows = null;
+            let pagination = {};
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
 
             //await knex.transaction(async (trx) => {
 
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from("incident_categories"),
+                    knex("incident_categories")
+                    .select([
+                        'id as id',
+                        'categoryCode as Category',
+                        'descriptionEng as Decription Eng',
+                        'descriptionThai as Description Thai',
+                        'isActive as Status',
+                        'createdBy as Created By',
+                        'createdAt as Date Created'
+                        ])
+                    .offset(offset).limit(per_page)
+                ])
+
                 
+                let count = total[0].count;
+            pagination.total = count;
+            pagination.per_page = per_page;
+            pagination.offset = offset;
+            pagination.to = offset + rows.length;
+            pagination.last_page = Math.ceil(count / per_page);
+            pagination.current_page = page;
+            pagination.from = offset;
+            pagination.data = rows; 
 
-                const DataResult = await knex('incident_categories')
+
                 
-                .select([
-                    'categoryCode as Category',
-                    'descriptionEng as Decription Eng',
-                    'descriptionThai as Description Thai',
-                    'isActive as Status',
-                    'createdAt as Date Created'
-                    ])
-                
-
-                //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
-                //const updateDataResult = await knex.update({ isActive : 'false', updatedAt : currentTime }).where({ id: incidentTypePayload.id }).returning(['*']).transacting(trx).into('incident_type');
-
-                // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
-
-                console.log('[controllers][category][categoryDelete]: View Data', DataResult);
-
-                //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
-
-                listCategories = DataResult;
 
               //  trx.commit;
             //});
 
             res.status(200).json({
                 data: {
-                    categories: listCategories
+                    categories: pagination
                 },
                 message: "Categories list successfully !"
             });

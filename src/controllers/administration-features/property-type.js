@@ -161,8 +161,19 @@ const propertyTypeController = {
         let offset = (page - 1) * per_page;
 
         let [total, rows] = await Promise.all([
-          knex.count('* as count').from("property_types").where({ 'property_types.isActive': true}).first(),
-          knex.select("*").from("property_types").where({ 'property_types.isActive': true}).offset(offset).limit(per_page)
+          knex.count('* as count').from("property_types")
+          .innerJoin('users','property_types.createdBy','users.id')
+          .where({ 'property_types.isActive': true}).first(),
+          knex("property_types")
+          .innerJoin('users','property_types.createdBy','users.id')
+          .select([
+            'property_types.propertyType as Property Type',
+            'property_types.propertyTypeCode as Property Type Code',
+            'property_types.isActive as Status',
+            'users.name as Created By',
+            'property_types.createdAt as Date Created',
+          ])
+          .where({ 'property_types.isActive': true}).offset(offset).limit(per_page)
         ])
 
         let count = total.count;
@@ -205,8 +216,19 @@ const propertyTypeController = {
         let offset = (page - 1) * per_page;
 
         let [total, rows] = await Promise.all([
-          knex.count('* as count').from("property_types").where({ 'property_types.isActive': true}).first(),
-          knex.select("*").from("property_types").where({ 'property_types.isActive': true}).offset(offset).limit(per_page)
+          knex.count('* as count').from("property_types")
+          .innerJoin('users','property_types.createdBy','users.id')
+          .where({ 'property_types.isActive': true}).first(),
+          knex("property_types")
+          .innerJoin('users','property_types.createdBy','users.id')
+          .select([
+            'property_types.propertyType as Property Type',
+            'property_types.propertyTypeCode as Property Type Code',
+            'property_types.isActive as Status',
+            'users.name as Created By',
+            'property_types.createdAt as Date Created',
+          ])
+          .where({ 'property_types.isActive': true}).offset(offset).limit(per_page)
         ])
 
       var wb = XLSX.utils.book_new({sheet:"Sheet JS"});

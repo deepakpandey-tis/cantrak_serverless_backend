@@ -209,6 +209,7 @@ const commonAreaController = {
                     .innerJoin('buildings_and_phases','common_area.buildingPhaseId','buildings_and_phases.id')
                     .innerJoin('projects','common_area.projectId','projects.id')
                     .select([
+                        'common_area.id as id',
                         'common_area.commonAreaCode as Common Area',
                         'floor_and_zones.floorZoneCode as Floor',
                         'buildings_and_phases.buildingPhaseCode as Building',
@@ -231,6 +232,7 @@ const commonAreaController = {
                     .innerJoin('buildings_and_phases','common_area.buildingPhaseId','buildings_and_phases.id')
                     .innerJoin('projects','common_area.projectId','projects.id')
                     .select([
+                        'common_area.id as id',
                         'common_area.commonAreaCode as Common Area',
                         'floor_and_zones.floorZoneCode as Floor',
                         'buildings_and_phases.buildingPhaseCode as Building',
@@ -244,7 +246,7 @@ const commonAreaController = {
                 ])
             }
 
-            let count = total.count;
+            let count = total[0].count;
             pagination.total = count;
             pagination.per_page = per_page;
             pagination.offset = offset;

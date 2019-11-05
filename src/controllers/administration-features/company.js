@@ -228,7 +228,8 @@ const companyController = {
         knex.count('* as count').from("companies").first(),
         knex("companies")
         .select([
-        'companyName as Compnay Name',
+        'id as id',
+        'companyName as Company Name',
         'contactPerson as Contact Person',
         'telephone as Contact Number',
         'isActive as Status',
@@ -277,7 +278,8 @@ const companyController = {
         knex.count('* as count').from("companies").first(),
         knex("companies")
         .select([
-        'companyName as Compnay Name',
+        'id as id',
+        'companyName as Company Name',
         'contactPerson as Contact Person',
         'telephone as Contact Number',
         'isActive as Status',
