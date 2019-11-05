@@ -314,6 +314,27 @@ const propertysubCategoryController = {
         }
     },
 
+    getSubCategoryByCategoryId: async (req,res) => {
+        try {
+            let incidentCategoryId = req.body.incidentCategoryId;
+            const subCategories = await knex('incident_sub_categories').select('*').where({incidentCategoryId})
+            return res.status(200).json({
+                data: {
+                    subCategories
+                },
+                message: 'List of sub categories'
+            })
+        } catch(err) {
+            console.log('[controllers][subcategory][subcategoryList] :  Error', err);
+            //trx.rollback
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    }
+
 };
 
 module.exports = propertysubCategoryController;

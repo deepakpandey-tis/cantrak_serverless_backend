@@ -1041,7 +1041,82 @@ const serviceRequestController = {
       }
  
          
-     }
+     },
+    //  getServiceRequestLocationsByServiceRequestId: async(req,res) => {
+    //      try {
+    //          const serviceRequestId = req.body.serviceRequestId;
+    //          const data = await knex
+    //                             .from('service_requests')
+    //                             .innerJoin('property_units', 'service_requests.houseId', 'property_units.houseId')
+    //                             .innerJoin('companies', 'property_units.companyId', 'companies.id')
+    //                             .innerJoin('projects', 'property_units.projectId', 'projects.id')
+    //                             .innerJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
+    //                             .innerJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+    //                             .innerJoin('')
+    //                             .select([
+    //                             'companies.id as companyId',
+    //                             ''
+    //                             ])
+    //      } catch(err) {
+    //          return res.status(500).json({
+    //              errors: [
+    //                  { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+    //              ],
+    //          })
+    //      }
+    //  },
+    getPropertyUnits:async(req,res) => {
+        try {
+            let ids = req.body;
+            let filters = {}
+            if(ids.companyId){
+                filters['property_units.companyId'] = ids.companyId;
+            }
+            if(ids.projectId){
+                filters['property_units.projectId'] = ids.projectId
+            }
+            if(ids.buildingPhaseId){
+                filters['property_units.buildingPhaseId'] = ids.buildingPhaseId
+            }
+            if(ids.floorZoneId){
+                filters['property_units.floorZoneId'] = ids.floorZoneId;
+            }
+            if(ids.unitNumber){
+                filters['property_units.unitNumber'] = ids.unitNumber
+            }
+            if(ids.houseId){
+                filters['property_units.houseId'] = ids.houseId
+            }
+            const units = await knex.from('property_units')
+            .innerJoin('companies', 'property_units.id', 'companies.id')
+            .innerJoin('projects', 'property_units.projectId', 'projects.id')
+            .innerJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+            .innerJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id').where(filters).select([
+                'property_units.companyId as companyId',
+                'companies.companyName as companyName',
+                'property_units.projectId as projectId',
+                'projects.projectName as projectName',
+                'property_units.buildingPhaseId as buildingPhaseId',
+                'buildings_and_phases.buildingPhaseCode as buildingPhaseCode',
+                'property_units.floorZoneId as floorZoneId',
+                'floor_and_zones.floorZoneCode as floorZoneCode',
+                'property_units.unitNumber as unitNumber',
+                'property_units.houseId as houseId'
+            ])
+            return res.status(200).json({
+                data: {
+                    units
+                },
+                message: 'Property units'
+            })
+        } catch(err) {
+            return res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            })
+        }
+    }
 };
 
 module.exports = serviceRequestController;

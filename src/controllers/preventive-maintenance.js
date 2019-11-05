@@ -499,6 +499,27 @@ const pmController = {
       });
     }
   },
+  getPmByName:async(req,res) => {
+    try {
+      let name = req.body.pmNameSearchTerm;
+      const pm = await knex('pm_master2').select().where((qb) => {
+        qb.where('name', 'like', `%${name}%`)
+      })
+
+      return res.status(200).json({
+        data: {
+          pm
+        },
+        message:'Search Results'
+      })
+    } catch(err){
+      console.log("[controllers][people][UpdatePeople] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
   getPmListByAssetId: async(req,res) => {
     try {
       // here i need to get pms by assetId

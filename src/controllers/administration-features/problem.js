@@ -34,6 +34,7 @@ const problemController = {
           knex("incident_sub_categories")
           .innerJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
           .select([
+            'incident_categories.id as ID',
             'incident_categories.categoryCode as Problem Code',
             'incident_sub_categories.descriptionEng as Description(Eng)',
             'incident_sub_categories.descriptionThai as Description(Thai)',
@@ -54,6 +55,7 @@ const problemController = {
             knex("incident_sub_categories")
             .innerJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
             .select([
+              'incident_categories.id as ID',
               'incident_categories.categoryCode as Problem Code',
               'incident_sub_categories.descriptionEng as Description(Eng)',
               'incident_sub_categories.descriptionThai as Description(Thai)',
@@ -173,6 +175,45 @@ const problemController = {
       });
     }
     
+  },
+  getIncidentCategories:async(req,res) => {
+    try {
+      //const incidentCategoryId = req.body.incidentCategoryId;
+      const categories = await knex('incident_categories')//.where({incidentCategoryId})
+      return res.status(200).json({
+        data: {
+          categories
+        },
+        message: 'Categories list'
+      })
+    } catch(err) {
+      console.log('[controllers][quotation][list] :  Error', err);
+      return res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
+  getSubcategories:async(req,res) => {
+    try {
+      let incidentCategoryId = req.body.incidentCategoryId;
+      const subCategories = await knex('incident_sub_categories').select('*').where({ incidentCategoryId })
+      return res.status(200).json({
+        data: {
+          subCategories
+        },
+        message: 'List of sub categories'
+      })
+    } catch (err) {
+      console.log('[controllers][subcategory][subcategoryList] :  Error', err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
   }
 }
 
