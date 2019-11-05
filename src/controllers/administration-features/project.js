@@ -263,6 +263,7 @@ const ProjectController = {
           knex.count('* as count').from("projects").innerJoin("companies", "projects.companyId", "companies.id").where({ 'projects.companyId': companyId }).offset(offset).limit(per_page).first(),
           knex.from("projects").innerJoin("companies", "projects.companyId", "companies.id").where({ 'projects.companyId': companyId })
           .select([
+            'projects.id as id',
             'projects.projectName as Project Name',
             'companies.companyName as Company Name',
             'projects.isActive as Status',
