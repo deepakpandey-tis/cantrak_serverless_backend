@@ -27,6 +27,7 @@ router.post('/add-service-request-asset', authMiddleware.isAuthenticated, servic
 router.post('/delete-service-request-part', authMiddleware.isAuthenticated, serviceRequestController.deleteServiceRequestPart)
 router.post('/delete-service-request-asset', authMiddleware.isAuthenticated, serviceRequestController.deleteServiceRequestAsset)
 router.post('/export-service-request', authMiddleware.isAuthenticated, serviceRequestController.exportServiceRequest)
+router.post('/get-property-units',authMiddleware.isAuthenticated,serviceRequestController.getPropertyUnits)
 
 var multer  = require('multer');
 var storage = multer.diskStorage({
