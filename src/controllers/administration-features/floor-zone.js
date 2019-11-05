@@ -191,6 +191,8 @@ const floorZoneController = {
     try {
       let reqData = req.query;
       let companyId = req.query.companyId;
+      let projectId = req.query.projectId;
+      let buildingPhaseId = req.query.buildingPhaseId;
       let pagination = {};
 
       if (!companyId) {
@@ -235,12 +237,20 @@ const floorZoneController = {
         let page = reqData.current_page || 1;
         if (page < 1) page = 1;
         let offset = (page - 1) * per_page;
+        let filters = {}
+        filters['floor_and_zones.companyId'] = companyId
+        if(projectId){
+          filters['floor_and_zones.projectId'] = projectId
+        }
+        if(buildingPhaseId){
+          filters['floor_and_zones.buildingPhaseId'] = buildingPhaseId
+        }
 
         let [total, rows] = await Promise.all([
           knex.count('* as count').from("floor_and_zones")
           .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
           .innerJoin("users", "floor_and_zones.createdBy", "users.id")
-          .where({ 'floor_and_zones.companyId': companyId })
+          .where(filters)
           
           .offset(offset).limit(per_page).first(),
           knex.from("floor_and_zones")
@@ -255,7 +265,7 @@ const floorZoneController = {
             'floor_and_zones.createdAt as Date Created'
             
            ])
-          .where({ 'floor_and_zones.companyId': companyId }).offset(offset).limit(per_page)
+          .where(filters).offset(offset).limit(per_page)
         ])
 
         let count = total.count;
