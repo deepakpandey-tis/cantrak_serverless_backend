@@ -234,6 +234,9 @@ const taskGroupController = {
 
       await knex.transaction(async trx=>{
            
+
+      //return res.status(200).json("Heafdksfksdfksdfks");
+
       //   let payload       = req.body;
          let currentTime   = new Date().getTime();
       //  // CREATE PM  OPEN
@@ -890,7 +893,99 @@ const taskGroupController = {
       ],
     });
   }
+  },
+  // GET TASK GROUP ASSET PM DETAILS
+  getTaskgroupAssetPmDetails:async (req,res)=>{
 
+      try{
+       let payload = req.body;
+
+       const schema = Joi.object().keys({
+        taskGroupId         : Joi.string().required(),
+        taskGroupScheduleId : Joi.string().required()
+       })
+
+       const result = Joi.validate(payload,schema);
+       if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+   
+         const pmResult = await knex("task_group_schedule")
+         .innerJoin('task_group_schedule_assign_assets','task_group_schedule.id','task_group_schedule_assign_assets.scheduleId')
+         .innerJoin('asset_master','task_group_schedule_assign_assets.assetId','asset_master.id')
+         .innerJoin('pm_master2','task_group_schedule.pmId','pm_master2.id')
+         .innerJoin('asset_category_master','pm_master2.assetCategoryId','asset_category_master.id')
+         .innerJoin('task_group_templates','task_group_schedule.taskGroupId','task_group_templates.id')
+         .innerJoin('assigned_service_team','task_group_templates.id','assigned_service_team.entityId')
+         .innerJoin('teams','assigned_service_team.teamId','teams.teamId')
+         .innerJoin('users','assigned_service_team.userId','users.id')
+         .select([
+           'task_group_schedule.id as id',
+           'pm_master2.name as pmName',
+           'asset_category_master.categoryName as assetCategoryName',
+           'task_group_templates.taskGroupName as taskGroupName',
+           'asset_master.assetName as assetName',
+           'asset_master.barcode as barCode',
+           'asset_master.areaName as areaName',
+           'asset_master.model as modelNo',
+           'task_group_schedule.startDate as startDate',
+           'task_group_schedule.endDate as endDate',
+           'task_group_schedule.repeatFrequency as repeatFrequency',
+           'task_group_schedule.repeatOn as repeatOn',
+           'teams.teamName as teamName',
+           'assigned_service_team.userId as mainUserId',
+           'users.name as mainUser'
+         ])
+         .where({
+           'task_group_schedule.id':payload.taskGroupScheduleId,
+           'task_group_schedule.taskGroupId':payload.taskGroupId,
+           'assigned_service_team.entityType':'task_group_templates'
+          })
+          // ADDITIONAL USER OPEN
+let additionalUsers =  await knex('assigned_service_additional_users')
+                             .innerJoin('users','assigned_service_additional_users.userId','users.id')
+                             .select([
+                              'users.id as additionalUserId',
+                              'users.name as additionalUser'
+                             ])
+                            .where({
+                              'assigned_service_additional_users.entityType':'pm_task_groups',
+                              'assigned_service_additional_users.entityId'  : payload.taskGroupId
+                            })
+          // ADDITIONAL USER CLOSE
+          // TASK OPEN
+        let tasks =  await knex('pm_task')
+        .select([
+          'pm_task.id as taskId',
+          'pm_task.taskName as taskName'
+        ])
+        .where({
+          'pm_task.taskGroupId'  : payload.taskGroupId
+        })
+       // TASK CLOSE
+
+         return res.status(200).json({
+          data: {
+            taskGroupPmAssetDatails: _.uniqBy(pmResult,'id'),
+            additionalUsers    : additionalUsers,
+            tasks              : tasks
+          },
+          message: 'Task Group Asset PM Details Successfully!'
+        })
+
+
+
+      } catch (err) {
+        console.log('[controllers][task-group][get-taskgroup-asset-pm-details] :  Error', err);
+        //trx.rollback
+        res.status(500).json({
+          errors: [
+            { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+          ],
+        });
+      }
   }
 }
 

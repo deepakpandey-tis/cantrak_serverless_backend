@@ -35,4 +35,9 @@ router.post('/get-task-template-list',authMiddleware.isAuthenticated,authMiddlew
 // GET TASK TEMPLATE COMPLETE DATA
 router.post('/get-task-template-complete-list',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getTaskTemplateComplateList)
 
+// GET TASK GROUP ASSET PM DETAILS
+router.post('/get-taskgroup-asset-pm-details',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getTaskgroupAssetPmDetails)
+
+
+
 module.exports = router
