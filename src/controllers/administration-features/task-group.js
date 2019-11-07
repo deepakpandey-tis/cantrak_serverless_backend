@@ -901,7 +901,6 @@ const taskGroupController = {
        let payload = req.body;
 
        const schema = Joi.object().keys({
-        taskGroupId         : Joi.string().required(),
         taskGroupScheduleId : Joi.string().required()
        })
 
@@ -917,15 +916,16 @@ const taskGroupController = {
          .innerJoin('asset_master','task_group_schedule_assign_assets.assetId','asset_master.id')
          .innerJoin('pm_master2','task_group_schedule.pmId','pm_master2.id')
          .innerJoin('asset_category_master','pm_master2.assetCategoryId','asset_category_master.id')
-         .innerJoin('task_group_templates','task_group_schedule.taskGroupId','task_group_templates.id')
-         .innerJoin('assigned_service_team','task_group_templates.id','assigned_service_team.entityId')
+         .innerJoin('pm_task_groups','task_group_schedule.taskGroupId','pm_task_groups.id')
+         .innerJoin('assigned_service_team','pm_task_groups.id','assigned_service_team.entityId')
          .innerJoin('teams','assigned_service_team.teamId','teams.teamId')
          .innerJoin('users','assigned_service_team.userId','users.id')
          .select([
            'task_group_schedule.id as id',
+           'task_group_schedule.taskGroupId',
            'pm_master2.name as pmName',
            'asset_category_master.categoryName as assetCategoryName',
-           'task_group_templates.taskGroupName as taskGroupName',
+           'pm_task_groups.taskGroupName as taskGroupName',
            'asset_master.assetName as assetName',
            'asset_master.barcode as barCode',
            'asset_master.areaName as areaName',
@@ -940,11 +940,15 @@ const taskGroupController = {
          ])
          .where({
            'task_group_schedule.id':payload.taskGroupScheduleId,
-           'task_group_schedule.taskGroupId':payload.taskGroupId,
+           //'task_group_schedule.taskGroupId':payload.taskGroupId,
            'assigned_service_team.entityType':'task_group_templates'
           })
+          console.log("========",pmResult,"========")
           // ADDITIONAL USER OPEN
-let additionalUsers =  await knex('assigned_service_additional_users')
+          let additionalUsers = [];
+          let tasks           = [];
+          if(pmResult && pmResult.length){
+      additionalUsers =  await knex('assigned_service_additional_users')
                              .innerJoin('users','assigned_service_additional_users.userId','users.id')
                              .select([
                               'users.id as additionalUserId',
@@ -952,23 +956,25 @@ let additionalUsers =  await knex('assigned_service_additional_users')
                              ])
                             .where({
                               'assigned_service_additional_users.entityType':'pm_task_groups',
-                              'assigned_service_additional_users.entityId'  : payload.taskGroupId
+                              'assigned_service_additional_users.entityId'  : pmResult[0].taskGroupId
                             })
+                          
           // ADDITIONAL USER CLOSE
           // TASK OPEN
-        let tasks =  await knex('pm_task')
+        tasks =  await knex('pm_task')
         .select([
           'pm_task.id as taskId',
           'pm_task.taskName as taskName'
         ])
         .where({
-          'pm_task.taskGroupId'  : payload.taskGroupId
+          'pm_task.taskGroupId'  : pmResult[0].taskGroupId
         })
+      }
        // TASK CLOSE
 
          return res.status(200).json({
           data: {
-            taskGroupPmAssetDatails: _.uniqBy(pmResult,'id'),
+            taskGroupPmAssetDatails:_.uniqBy(pmResult,'id'),
             additionalUsers    : additionalUsers,
             tasks              : tasks
           },
