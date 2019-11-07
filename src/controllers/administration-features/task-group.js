@@ -612,6 +612,19 @@ const taskGroupController = {
           knex("task_group_schedule")
           .innerJoin('task_group_schedule_assign_assets','task_group_schedule.id','task_group_schedule_assign_assets.scheduleId')
           .innerJoin('asset_master','task_group_schedule_assign_assets.assetId','asset_master.id')
+          .select([
+            'task_group_schedule.id as id',
+            'asset_master.assetName as assetName',
+            'asset_master.model as model',
+            'asset_master.barcode as barcode',
+            'asset_master.areaName as areaName',
+            'asset_master.description as description',
+            'asset_master.assetSerial as assetSerial',
+            'task_group_schedule_assign_assets.pmDate as pmDate',
+            'task_group_schedule.repeatPeriod as repeatPeriod',
+            'task_group_schedule.repeatOn as repeatOn',
+            'task_group_schedule.repeatFrequency as repeatFrequency',
+          ])
           .where({"taskGroupId":payload.taskGroupId})
           .offset(offset).limit(per_page)
         ])
