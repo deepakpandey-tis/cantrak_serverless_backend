@@ -607,7 +607,7 @@ const taskGroupController = {
           knex.count('* as count').from("task_group_schedule")
           .innerJoin('task_group_schedule_assign_assets','task_group_schedule.id','task_group_schedule_assign_assets.scheduleId')
           .innerJoin('asset_master','task_group_schedule_assign_assets.assetId','asset_master.id')
-          .where({"taskGroupId":payload.taskGroupId}),
+          .where({"task_group_schedule.taskGroupId":payload.taskGroupId}),
           //.offset(offset).limit(per_page),
           knex("task_group_schedule")
           .innerJoin('task_group_schedule_assign_assets','task_group_schedule.id','task_group_schedule_assign_assets.scheduleId')
@@ -625,7 +625,7 @@ const taskGroupController = {
             'task_group_schedule.repeatOn as repeatOn',
             'task_group_schedule.repeatFrequency as repeatFrequency',
           ])
-          .where({"taskGroupId":payload.taskGroupId})
+          .where({"task_group_schedule.taskGroupId":payload.taskGroupId})
           .offset(offset).limit(per_page)
         ])
 
@@ -954,9 +954,9 @@ const taskGroupController = {
          .where({
            'task_group_schedule.id':payload.taskGroupScheduleId,
            //'task_group_schedule.taskGroupId':payload.taskGroupId,
-           'assigned_service_team.entityType':'task_group_templates'
+           'assigned_service_team.entityType':'pm_task_groups'
           })
-          console.log("========",pmResult,"========")
+        
           // ADDITIONAL USER OPEN
           let additionalUsers = [];
           let tasks           = [];
