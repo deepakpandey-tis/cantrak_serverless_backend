@@ -937,6 +937,7 @@ const taskGroupController = {
            'asset_category_master.categoryName as assetCategoryName',
            'pm_task_groups.taskGroupName as taskGroupName',
            'asset_master.assetName as assetName',
+           'asset_master.id as assetId',
            'asset_master.barcode as barCode',
            'asset_master.areaName as areaName',
            'asset_master.model as modelNo',
