@@ -768,9 +768,6 @@ const taskGroupController = {
 
       })
 
-
-    
-
       return res.status(200).json({
         data: {
           templateData: createTemplate,
@@ -984,17 +981,14 @@ const taskGroupController = {
         })
       }
        // TASK CLOSE
-
          return res.status(200).json({
           data: {
-            taskGroupPmAssetDatails:_.uniqBy(pmResult,'id'),
-            additionalUsers    : additionalUsers,
-            tasks              : tasks
+            taskGroupPmAssetDatails : _.uniqBy(pmResult,'id'),
+            additionalUsers         : additionalUsers,
+            tasks                   : tasks
           },
           message: 'Task Group Asset PM Details Successfully!'
         })
-
-
 
       } catch (err) {
         console.log('[controllers][task-group][get-taskgroup-asset-pm-details] :  Error', err);
@@ -1005,6 +999,86 @@ const taskGroupController = {
           ],
         });
       }
+  },
+  // GET PM TASK DETAILS
+  getPmTaskDetails: async (req,res)=>{
+      try{
+
+         let {
+           taskId,assetId ,scheduleId
+              } = req.body;
+         let payload          = req.body;
+
+         const schema = Joi.object().keys({
+          taskId     : Joi.string().required(),
+          assetId    : Joi.string().required(),
+          scheduleId : Joi.string().required()
+         })
+         const result = Joi.validate(payload,schema);
+         if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+          });
+        }
+
+        let taskDetails = await knex('pm_task')
+                          .innerJoin('pm_task_groups','pm_task.taskGroupId','pm_task_groups.id')
+                          .innerJoin('pm_master2','pm_task_groups.pmId','pm_master2.id')
+                          .innerJoin('task_group_schedule','pm_task_groups.id','task_group_schedule.taskGroupId')                          
+                          .innerJoin('task_group_schedule_assign_assets','task_group_schedule.id','task_group_schedule_assign_assets.scheduleId')
+
+                          .select([
+                                'pm_task.id as taskId',
+                                'pm_master2.name as pmName',
+                                'pm_task_groups.taskGroupName as taskGroupName',
+                                'task_group_schedule_assign_assets.pmDate as pmDate'
+                          ])
+                          .where({
+                             'pm_task.id':taskId,
+                             'task_group_schedule.id':scheduleId,
+                             'task_group_schedule_assign_assets.scheduleId':scheduleId,
+                             'task_group_schedule_assign_assets.assetId':assetId
+                                 })
+ 
+          // GERERAL DETAILS OPEN
+          let generalDetails = await knex('asset_location')
+          .innerJoin('asset_master','asset_location.assetId','asset_master.id')
+          .innerJoin('companies','asset_location.companyId','companies.id')
+          .innerJoin('property_units','asset_location.unitId','property_units.id')
+          .innerJoin('buildings_and_phases','asset_location.buildingId','buildings_and_phases.id')
+          .innerJoin('floor_and_zones','asset_location.floorId','floor_and_zones.id')
+          .innerJoin('projects','asset_location.projectId','projects.id')
+           .select([
+                  'asset_master.areaName as location',
+                  'companies.companyName as companyName',
+                  'property_units.unitNumber as unitNumber',
+                  'buildings_and_phases.buildingPhaseCode as buildingNumber',
+                  'floor_and_zones.floorZoneCode as floor',
+                  'projects.projectName as projectName'
+            ])
+          .where({
+             'asset_location.assetId':assetId,
+                 })
+          // GERERAL DETAILS CLOSE
+
+                    return res.status(200).json({
+                            data: {
+                              pmTaskDetails  : _.uniqBy(taskDetails,'pmDate'),
+                              generalDetails : generalDetails
+                            },
+                            message: 'PM Task Details Successfully!'
+                          })
+
+        } catch (err) {
+          console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
+          //trx.rollback
+          res.status(500).json({
+            errors: [
+              { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+            ],
+          });
+        }
+
   }
 }
 

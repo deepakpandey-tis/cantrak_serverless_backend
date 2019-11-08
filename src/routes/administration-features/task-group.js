@@ -38,6 +38,9 @@ router.post('/get-task-template-complete-list',authMiddleware.isAuthenticated,au
 // GET TASK GROUP ASSET PM DETAILS
 router.post('/get-taskgroup-asset-pm-details',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getTaskgroupAssetPmDetails)
 
+// GET PM TASK DETAILS
+router.post('/get-pm-task-details',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getPmTaskDetails)
+
 
 
 
