@@ -947,7 +947,8 @@ const taskGroupController = {
            'task_group_schedule.repeatOn as repeatOn',
            'teams.teamName as teamName',
            'assigned_service_team.userId as mainUserId',
-           'users.name as mainUser'
+           'users.name as mainUser',
+           'task_group_schedule_assign_assets.pmDate'
          ])
          .where({
            'task_group_schedule.id':payload.taskGroupScheduleId,
@@ -1006,14 +1007,15 @@ const taskGroupController = {
       try{
 
          let {
-           taskId,assetId ,scheduleId
+           taskId,assetId ,scheduleId, pmDate
               } = req.body;
          let payload          = req.body;
 
          const schema = Joi.object().keys({
           taskId     : Joi.string().required(),
           assetId    : Joi.string().required(),
-          scheduleId : Joi.string().required()
+          scheduleId : Joi.string().required(),
+          pmDate     : Joi.date().required()
          })
          const result = Joi.validate(payload,schema);
          if (result && result.hasOwnProperty("error") && result.error) {
@@ -1037,7 +1039,8 @@ const taskGroupController = {
                              'pm_task.id':taskId,
                              'task_group_schedule.id':scheduleId,
                              'task_group_schedule_assign_assets.scheduleId':scheduleId,
-                             'task_group_schedule_assign_assets.assetId':assetId
+                             'task_group_schedule_assign_assets.assetId':assetId,
+                             'task_group_schedule_assign_assets.pmDate':pmDate
                                  })
  
           // GERERAL DETAILS OPEN
