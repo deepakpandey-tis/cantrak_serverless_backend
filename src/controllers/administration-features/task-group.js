@@ -1027,7 +1027,6 @@ const taskGroupController = {
                           .innerJoin('pm_master2','pm_task_groups.pmId','pm_master2.id')
                           .innerJoin('task_group_schedule','pm_task_groups.id','task_group_schedule.taskGroupId')                          
                           .innerJoin('task_group_schedule_assign_assets','task_group_schedule.id','task_group_schedule_assign_assets.scheduleId')
-
                           .select([
                                 'pm_task.id as taskId',
                                 'pm_master2.name as pmName',
