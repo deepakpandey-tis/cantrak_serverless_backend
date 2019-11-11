@@ -161,6 +161,25 @@ const assetController = {
             });
         }
     },
+    getAllAssetList:async(req,res) => {
+        try {
+            const assets = await knex('asset_master').select('id','assetName','model')
+            return res.status(200).json({
+                data: {
+                    assets
+                },
+                message: 'All assets list'
+            })
+        } catch(err) {
+            console.log('[controllers][asset][addAsset] :  Error', err);
+            //trx.rollback
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    },
     getAssetList: async (req, res) => {
         // name, model, area, category
         try {
