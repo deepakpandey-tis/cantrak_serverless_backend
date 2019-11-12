@@ -135,6 +135,80 @@ const taskGroupController = {
     }   
     // GET TASK GROUP TEMPLATE LIST
   },
+  createPMTemplate: async (req,res) => {
+    try {
+      let taskGroupTemplate = null;
+      let insertedTasks = null
+      let taskGroupTemplateSchedule = null
+      let payload = _.omit(req.body, ['repeatOn','tasks'])
+      const schema = Joi.object().keys({
+        assetCategoryId: Joi.string().required(),
+        repeatFrequency: Joi.string().required(),
+        //repeatOn
+        repeatPeriod: Joi.string().required(),
+        taskGroupName: Joi.string().required(),
+        startDate: Joi.string().required(),
+        endDate:Joi.string().required(),
+        userId: Joi.string().required(),
+        //tasks: []
+      })
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+      let currentTime = new Date().getTime();
+      // Insert into task_group_templates
+      let tgtInsert = {
+        taskGroupName: payload.taskGroupName,
+        assetCategoryId:payload.assetCategoryId,
+        createdBy:payload.userId,
+        createdAt: currentTime,
+        updatedAt:currentTime
+      }
+      let taskGroupTemplateResult = await knex('task_group_templates').insert(tgtInsert).returning(['*'])
+      taskGroupTemplate = taskGroupTemplateResult[0]
+
+      // Insert tasks into template_task
+      let insertPaylaod = req.body.tasks.map(v => ({
+        taskName: v, templateId: taskGroupTemplate.id, createdAt: currentTime,createdBy:payload.userId,
+        updatedAt: currentTime}))
+      insertedTasks = await knex('template_task').insert(insertPaylaod).returning(['*'])
+
+      // Insert into task_group_template_schedule
+      let insertTTData = {
+        startDate: payload.startDate,
+        endDate: payload.endDate,
+        repeatFrequency: payload.repeatFrequency,
+        repeatOn: req.body.repeatOn.join(','),
+        repeatPeriod: payload.repeatPeriod,
+        taskGroupId: taskGroupTemplate.id,
+        createdAt:currentTime,
+        updatedAt:currentTime
+      }
+
+      let taskGroupScheduleResult = await knex('task_group_template_schedule').insert(insertTTData).returning(['*'])
+      taskGroupTemplateSchedule = taskGroupScheduleResult[0]
+
+      return res.status(200).json({
+        data: {
+          taskGroupTemplate,
+          tasks:insertedTasks,
+          taskGroupTemplateSchedule
+        },
+        mesaage: 'Task Group Template added successfully!'
+      })
+
+    } catch(err) {
+      console.log("[controllers][task-group][createTaskGroupTemplate] :  Error", err);
+
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });  
+    }
+  },
   getGroupTemplateList: async (req,res)=>{
 
     try {

@@ -41,6 +41,8 @@ router.post('/get-taskgroup-asset-pm-details',authMiddleware.isAuthenticated,aut
 // GET PM TASK DETAILS
 router.post('/get-pm-task-details',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getPmTaskDetails)
 
+router.post('/create-pm-template',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.createPMTemplate)
+
 
 
 
