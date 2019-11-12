@@ -140,7 +140,7 @@ const taskGroupController = {
       let taskGroupTemplate = null;
       let insertedTasks = null
       let taskGroupTemplateSchedule = null
-      let payload = _.omit(req.body, ['repeatOn','tasks'])
+      let payload = _.omit(req.body, ['repeatOn','tasks','mainUserId','additionalUsers'])
       const schema = Joi.object().keys({
         assetCategoryId: Joi.string().required(),
         repeatFrequency: Joi.string().required(),
@@ -149,7 +149,8 @@ const taskGroupController = {
         taskGroupName: Joi.string().required(),
         startDate: Joi.string().required(),
         endDate:Joi.string().required(),
-        userId: Joi.string().required(),
+        teamId: Joi.string().required(),
+        
         //tasks: []
       })
 
@@ -164,7 +165,7 @@ const taskGroupController = {
       let tgtInsert = {
         taskGroupName: payload.taskGroupName,
         assetCategoryId:payload.assetCategoryId,
-        createdBy:payload.userId,
+        createdBy: req.body.mainUserId,
         createdAt: currentTime,
         updatedAt:currentTime
       }
@@ -173,7 +174,7 @@ const taskGroupController = {
 
       // Insert tasks into template_task
       let insertPaylaod = req.body.tasks.map(v => ({
-        taskName: v, templateId: taskGroupTemplate.id, createdAt: currentTime,createdBy:payload.userId,
+        taskName: v, templateId: taskGroupTemplate.id, createdAt: currentTime,createdBy:req.body.mainUserId,
         updatedAt: currentTime}))
       insertedTasks = await knex('template_task').insert(insertPaylaod).returning(['*'])
 
@@ -192,11 +193,49 @@ const taskGroupController = {
       let taskGroupScheduleResult = await knex('task_group_template_schedule').insert(insertTTData).returning(['*'])
       taskGroupTemplateSchedule = taskGroupScheduleResult[0]
 
+      // Insert into teams
+
+
+
+      // ASSIGNED ADDITIONAL USER OPEN
+      let insertAssignedAdditionalUserData = req.body.additionalUsers.map(user => ({
+        userId: user,
+        entityId: taskGroupTemplate.id,
+        entityType: "task_group_templates",
+        createdAt: currentTime,
+        updatedAt: currentTime
+
+      }))
+
+      let assignedAdditionalUserResult = await knex('assigned_service_additional_users').insert(insertAssignedAdditionalUserData).returning(['*'])
+      assignedAdditionalUser = assignedAdditionalUserResult;
+      // ASSIGNED ADDITIONAL USER CLOSE
+
+      // ASSIGNED TEAM OPEN
+      let insertAssignedServiceTeamData = {
+        teamId: payload.teamId,
+        userId: req.body.mainUserId,
+        entityId: taskGroupTemplate.id,
+        entityType: "task_group_templates",
+        createdAt: currentTime,
+        updatedAt: currentTime
+      }
+
+      let assignedServiceTeamResult = await knex('assigned_service_team').insert(insertAssignedServiceTeamData).returning(['*'])
+      assignedServiceTeam = assignedServiceTeamResult[0];
+
+     // ASSIGNED TEAM CLOSE
+
+
+
+
       return res.status(200).json({
         data: {
           taskGroupTemplate,
           tasks:insertedTasks,
-          taskGroupTemplateSchedule
+          taskGroupTemplateSchedule,
+          assignedAdditionalUser,
+          assignedServiceTeam
         },
         mesaage: 'Task Group Template added successfully!'
       })
