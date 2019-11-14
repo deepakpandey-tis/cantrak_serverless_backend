@@ -49,6 +49,7 @@ const partsController = {
                     knex.from('part_ledger').
                     innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
                     .select([
+                        'part_master.id as partId',
                         'part_master.partName as Name',
                         'part_master.partCode as ID',
                         'part_ledger.quantity as Quantity',
@@ -67,6 +68,7 @@ const partsController = {
                         knex.count('* as count').from("part_ledger").innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
                         knex.from('part_ledger').innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
                         .select([
+                        'part_master.id as partId',
                         'part_master.partName as Name',
                         'part_master.partCode as ID',
                         'part_ledger.quantity as Quantity',
@@ -133,7 +135,7 @@ const partsController = {
             await knex.transaction(async (trx) => {
                 let partPayload = req.body;
                 console.log('[controllers][part][addParts]', partPayload);
-                partPayload = _.omit(partPayload, ['quantity'], ['unitCost'], ['additionalAttributes'], ['images'], ['files'])
+                partPayload = _.omit(partPayload, ['quantity'], ['unitCost'], ['additionalAttributes'], ['images'], ['files'],['additionalDescription'])
                 // validate keys
                 const schema = Joi.object().keys({
                     partName: Joi.string().required(),
@@ -191,16 +193,18 @@ const partsController = {
 
                 quantityObject = _.omit(partQuantityResult[0], ['id'], ['partId']);
 
-
                 // Insert attributes in part_attributes table
 
                 let additionalAttributes = req.body.additionalAttributes;
                 //console.log(additionalAttributes)
                 if (additionalAttributes && additionalAttributes.length > 0) {
-
+                    
+                   
                     for (attribute of additionalAttributes) {
+                       
                         let d = await knex.insert({ partId: part.id, ...attribute, createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('part_attributes');
                         attribs.push(d[0])
+                    
                     }
 
                 }
@@ -398,8 +402,8 @@ const partsController = {
                 // validate keys
                 const schema = Joi.object().keys({
                     partId: Joi.string().required(),
-                    unitCost: Joi.string().required(),
-                    quantity: Joi.string().required(),
+                    unitCost: Joi.number().required(),
+                    quantity: Joi.number().required(),
                     isPartAdded: Joi.string().required()
                 });
 
@@ -573,7 +577,140 @@ const partsController = {
                 ],
              })
          }   
+    },
+    // Part List for DropDown
+    partList : async (req,res)=>{
+
+        try{
+        
+             let partList =  await knex.from('part_master').returning('*');
+
+             return res.status(200).json({
+                data:partList,
+                message:"Part List Successfully!"
+            })
+
+            } catch(err){
+                return res.status(500).json({
+                    errors: [
+                        { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                    ],
+                })
+            }   
+    },
+    //CHECK PART CODE EXIST OR NOT
+    partCodeExist: async (req,res)=>{
+        try{
+
+            let payload    = req.query;
+            let partResult = await knex.from('part_master')
+                                     .select([
+                                         'part_master.id as id',
+                                         'part_master.partName as partName',
+                                         'part_master.partCode',
+                                         'part_master.partDescription as partDescription',
+                                         'part_master.partCategory as partCategory',
+                                         'part_master.minimumQuantity as minimumQuantity',
+                                         'part_master.barcode as barcode',
+                                         'part_master.assignedVendors as assignedVendors',
+                                         'part_master.additionalPartDetails as additionalPartDetails'])
+                                     .returning('*')
+                             .where({partCode:payload.partCode})
+           if(partResult.length>0){
+
+              let partLedgerResult = await knex.from('part_ledger')
+                                      .select([
+                                         'part_ledger.id as partLedgerId',
+                                         'part_ledger.unitCost as unitCost',
+                                         'part_ledger.quantity as quantity'
+                                        ])
+                                       .where({partId:partResult[0].id})
+               let unitCost =  partLedgerResult[0].unitCost
+               let quantity =  partLedgerResult[0].quantity
+  
+           let additionalAttribute = await knex.from('part_attributes')
+           .select([
+              'part_attributes.id as partAttributeId',
+              'part_attributes.attributeName as attributeName',
+              'part_attributes.attributeDescription as attributeDescription',
+             ])
+            .where({partId:partResult[0].id})
+
+               return res.status(200).json({
+                   message:"This Part Code already Exist!",
+                   partResult:{...partResult[0] ,unitCost,quantity,additionalAttributes:additionalAttribute}
+               })
+           } else{
+            return res.status(200).json({
+                message:"Part Code Not Found!",
+                partResult:""
+            })
+           }
+        
+            } catch(err){
+                return res.status(500).json({
+                    errors: [
+                        { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                    ],
+                })
+            }   
+    },
+    //GET PART DETAIL BY ID
+    getPartDetailById: async (req,res)=>{
+        try{
+
+            let payload    = req.query;
+            let id         = payload.id;
+            let partResult = await knex.from('part_master')
+                                     .select([
+                                         'part_master.id as id',
+                                         'part_master.partName as partName',
+                                         'part_master.partCode',
+                                         'part_master.partDescription as partDescription',
+                                         'part_master.partCategory as partCategory',
+                                         'part_master.minimumQuantity as minimumQuantity',
+                                         'part_master.barcode as barcode',
+                                         'part_master.assignedVendors as assignedVendors',
+                                         'part_master.additionalPartDetails as additionalPartDetails'])
+                                     .returning('*')
+                             .where({id:payload.id})
+         
+              let partLedgerResult = await knex.from('part_ledger')
+                                      .select([
+                                         'part_ledger.id as partLedgerId',
+                                         'part_ledger.unitCost as unitCost',
+                                         'part_ledger.quantity as quantity'
+                                        ])
+                                       .where({partId:id})
+
+               let unitCost =  partLedgerResult[0].unitCost
+               let quantity =  partLedgerResult[0].quantity
+  
+           let additionalAttribute = await knex.from('part_attributes')
+           .select([
+              'part_attributes.id as partAttributeId',
+              'part_attributes.attributeName as attributeName',
+              'part_attributes.attributeDescription as attributeDescription',
+             ])
+            .where({partId:id})
+
+            files = await knex('files').where({ entityId: id, entityType: 'part_master' }).select()
+            images = await knex('images').where({ entityId: id, entityType: 'part_master' }).select()
+
+               return res.status(200).json({
+                   message:"Part Details Successfully!",
+                   partDetail:{...partResult[0] ,unitCost,quantity,additionalAttributes:additionalAttribute,images,files}
+               })
+        
+            } catch(err){
+                return res.status(500).json({
+                    errors: [
+                        { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                    ],
+                })
+            }   
     }
-}
+
+ }
 
 module.exports = partsController;

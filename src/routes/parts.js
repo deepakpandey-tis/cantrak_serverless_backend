@@ -15,4 +15,8 @@ router.post('/get-part-details', authMiddleware.isAuthenticated, partsController
 router.post('/add-part-stock', authMiddleware.isAuthenticated, partsController.addPartStock)
 router.get('/search-part', authMiddleware.isAuthenticated, partsController.searchParts)
 router.post('/export-part', authMiddleware.isAuthenticated, partsController.exportPart)
+router.get('/part-list', authMiddleware.isAuthenticated, partsController.partList)
+router.get('/part-code-exist',authMiddleware.isAuthenticated,partsController.partCodeExist)
+router.get('/get-part-detail-by-id',authMiddleware.isAuthenticated,partsController.getPartDetailById)
+
 module.exports = router;

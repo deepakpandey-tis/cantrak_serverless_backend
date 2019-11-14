@@ -1081,7 +1081,6 @@ const taskGroupController = {
             ],
           });
         }
-
   }
 }
 

@@ -24,4 +24,6 @@ router.get('/export-property-category', authMiddleware.isAuthenticated, authMidd
 //Export Category Data
 router.get('/export-category', authMiddleware.isAuthenticated, authMiddleware.isAdmin, propertyCategoryController.exportCategory);
 
+router.get('/asset-category-list', authMiddleware.isAuthenticated, propertyCategoryController.assetCategoryList);
+
 module.exports = router;
