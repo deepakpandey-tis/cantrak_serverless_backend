@@ -309,6 +309,28 @@ const companyController = {
         ],
       });
     }
+  },
+  getCompanyListForProject: async (req, res) => {
+    try {
+      let pagination = {};
+      let [result] = await Promise.all([
+        knex("companies").select('id', 'companyId', 'companyName as CompanyName').where({ isActive: 'true' })
+      ]);
+      pagination.data = result;
+      return res.status(200).json({
+        data: {
+          companies: pagination
+        },
+        message: "Companies List!"
+      });
+    } catch (err) {
+      console.log("[controllers][generalsetup][viewCompany] : Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+    // Export Company Data
   }
 }
 

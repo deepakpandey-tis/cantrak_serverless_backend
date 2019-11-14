@@ -1116,6 +1116,27 @@ const serviceRequestController = {
                 ],
             })
         }
+    },
+
+    // Service Request 
+    getServiceRequestReportData: async(req,res) => {
+        try {
+            // We need to extract service requests on monthly basis
+            // service requests with completed status
+            // based on today's date get the service request of current month
+            
+            const serviceRequestsWithCompletedStatus = await knex('service_requests').count('id as count').where({serviceStatusCode:'O'})
+            return res.status(200).json({
+                serviceRequestsWithCompletedStatus: serviceRequestsWithCompletedStatus[0].count,
+
+            })
+        } catch(err) {
+            return res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            })
+        }
     }
 };
 
