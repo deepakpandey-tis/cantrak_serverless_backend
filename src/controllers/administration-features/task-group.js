@@ -135,6 +135,119 @@ const taskGroupController = {
     }   
     // GET TASK GROUP TEMPLATE LIST
   },
+  createPMTemplate: async (req,res) => {
+    try {
+      let taskGroupTemplate = null;
+      let insertedTasks = null
+      let taskGroupTemplateSchedule = null
+      let payload = _.omit(req.body, ['repeatOn','tasks','mainUserId','additionalUsers'])
+      const schema = Joi.object().keys({
+        assetCategoryId: Joi.string().required(),
+        repeatFrequency: Joi.string().required(),
+        //repeatOn
+        repeatPeriod: Joi.string().required(),
+        taskGroupName: Joi.string().required(),
+        startDate: Joi.string().required(),
+        endDate:Joi.string().required(),
+        teamId: Joi.string().required(),
+        
+        //tasks: []
+      })
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+      let currentTime = new Date().getTime();
+      // Insert into task_group_templates
+      let tgtInsert = {
+        taskGroupName: payload.taskGroupName,
+        assetCategoryId:payload.assetCategoryId,
+        createdBy: req.body.mainUserId,
+        createdAt: currentTime,
+        updatedAt:currentTime
+      }
+      let taskGroupTemplateResult = await knex('task_group_templates').insert(tgtInsert).returning(['*'])
+      taskGroupTemplate = taskGroupTemplateResult[0]
+
+      // Insert tasks into template_task
+      let insertPaylaod = req.body.tasks.map(v => ({
+        taskName: v, templateId: taskGroupTemplate.id, createdAt: currentTime,createdBy:req.body.mainUserId,
+        updatedAt: currentTime}))
+      insertedTasks = await knex('template_task').insert(insertPaylaod).returning(['*'])
+
+      // Insert into task_group_template_schedule
+      let insertTTData = {
+        startDate: payload.startDate,
+        endDate: payload.endDate,
+        repeatFrequency: payload.repeatFrequency,
+        repeatOn: req.body.repeatOn.join(','),
+        repeatPeriod: payload.repeatPeriod,
+        taskGroupId: taskGroupTemplate.id,
+        createdAt:currentTime,
+        updatedAt:currentTime
+      }
+
+      let taskGroupScheduleResult = await knex('task_group_template_schedule').insert(insertTTData).returning(['*'])
+      taskGroupTemplateSchedule = taskGroupScheduleResult[0]
+
+      // Insert into teams
+
+
+
+      // ASSIGNED ADDITIONAL USER OPEN
+      let insertAssignedAdditionalUserData = req.body.additionalUsers.map(user => ({
+        userId: user,
+        entityId: taskGroupTemplate.id,
+        entityType: "task_group_templates",
+        createdAt: currentTime,
+        updatedAt: currentTime
+
+      }))
+
+      let assignedAdditionalUserResult = await knex('assigned_service_additional_users').insert(insertAssignedAdditionalUserData).returning(['*'])
+      assignedAdditionalUser = assignedAdditionalUserResult;
+      // ASSIGNED ADDITIONAL USER CLOSE
+
+      // ASSIGNED TEAM OPEN
+      let insertAssignedServiceTeamData = {
+        teamId: payload.teamId,
+        userId: req.body.mainUserId,
+        entityId: taskGroupTemplate.id,
+        entityType: "task_group_templates",
+        createdAt: currentTime,
+        updatedAt: currentTime
+      }
+
+      let assignedServiceTeamResult = await knex('assigned_service_team').insert(insertAssignedServiceTeamData).returning(['*'])
+      assignedServiceTeam = assignedServiceTeamResult[0];
+
+     // ASSIGNED TEAM CLOSE
+
+
+
+
+      return res.status(200).json({
+        data: {
+          taskGroupTemplate,
+          tasks:insertedTasks,
+          taskGroupTemplateSchedule,
+          assignedAdditionalUser,
+          assignedServiceTeam
+        },
+        mesaage: 'Task Group Template added successfully!'
+      })
+
+    } catch(err) {
+      console.log("[controllers][task-group][createTaskGroupTemplate] :  Error", err);
+
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });  
+    }
+  },
   getGroupTemplateList: async (req,res)=>{
 
     try {
