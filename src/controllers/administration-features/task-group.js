@@ -1144,8 +1144,11 @@ const taskGroupController = {
                           .innerJoin('task_group_schedule_assign_assets','task_group_schedule.id','task_group_schedule_assign_assets.scheduleId')
                           .select([
                                 'pm_task.id as taskId',
+                                'pm_task.status as status',
+                                'pm_task.taskName as taskName',
                                 'pm_master2.name as pmName',
                                 'pm_task_groups.taskGroupName as taskGroupName',
+                                'pm_task_groups.id as taskGroupId',
                                 'task_group_schedule_assign_assets.pmDate as pmDate'
                           ])
                           .where({
@@ -1194,6 +1197,70 @@ const taskGroupController = {
             ],
           });
         }
+  },
+  updateTaskStatus: async (req,res) => {
+    try {
+      const payload = req.body;
+      const schema = Joi.object().keys({
+        taskGroupId:Joi.string().required(),
+        taskId:Joi.string().required(),
+        status:Joi.string().required()
+      })
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+      const taskUpdated = await knex('pm_task').update({status:payload.status}).where({taskGroupId:payload.taskGroupId,id:payload.taskId}).returning(['*'])
+      return res.status(200).json({
+        data: {
+          taskUpdated
+        },
+        message: 'Task updated'
+      })
+    } catch(err) {
+      console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
+  sendFeedbackForTask: async(req,res) => {
+    try {
+      const payload = req.body;
+      const schema = Joi.object().keys({
+        taskId:Joi.string().required(),
+        taskGroupScheduleId:Joi.string().required(),
+        taskGroupId:Joi.string().required(),
+        assetId:Joi.string().required(),
+        description:Joi.string().required()
+      })
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+
+      const addedFeedback = await knex('task_feedbacks').insert({...payload}).returning(['*'])
+      return res.status(200).json({
+        data: {
+          addedFeedback
+        },
+        message: 'Feedback added successfully!'
+      })
+
+    } catch(err) {
+      console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
   }
 }
 
