@@ -26,6 +26,7 @@ router.post('/create-brand-new-pm',authMiddleware.isAuthenticated,authMiddleware
 
 // GET TASK GROUP ASSET PMS LIST
 router.post('/get-task-group-asset-pms-list',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getTaskGroupAssetPmsList)
+router.post('/get-task-group-asset-pms-list-on-today',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getTaskGroupAssetPmsListOnToday)
 
 // CREATE TASK TEMPLATE
 router.post('/create-task-template',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.createTaskTemplate)
@@ -40,6 +41,10 @@ router.post('/get-taskgroup-asset-pm-details',authMiddleware.isAuthenticated,aut
 
 // GET PM TASK DETAILS
 router.post('/get-pm-task-details',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getPmTaskDetails)
+
+router.post('/create-pm-template',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.createPMTemplate)
+router.post('/update-task-status',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.updateTaskStatus)
+router.post('/send-feedback-for-task',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.sendFeedbackForTask)
 
 
 

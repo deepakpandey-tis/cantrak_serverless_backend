@@ -533,6 +533,30 @@ const propertyCategoryController = {
                 ],
             });
         }
+    },
+    // ASSET CATEGORY LIST FOR DROP DOWN
+    assetCategoryList : async (req,res)=>{
+         try{
+
+            let assetCategoryList = await knex('asset_category_master').returning('*')
+
+            res.status(200).json({
+                data: {
+                    assetCategoryList: assetCategoryList
+                },
+                message: "Asset Category List Successfully !"
+            });
+        
+            } catch (err) {
+                console.log('[controllers][category][categoryList] :  Error', err);
+                //trx.rollback
+                res.status(500).json({
+                    errors: [
+                        { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                    ],
+                });
+            }
+
     }
 
 };

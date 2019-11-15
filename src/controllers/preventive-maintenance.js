@@ -1347,6 +1347,16 @@ const pmController = {
         ],
       });
     }
+  },
+
+  //pm dashboard
+  getPMDashboardData: async(req,res) => {
+    try {
+      //calculate number of pms pending
+      
+    } catch(err) {
+
+    }
   }
 
 };

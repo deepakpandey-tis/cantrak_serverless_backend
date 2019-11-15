@@ -135,6 +135,119 @@ const taskGroupController = {
     }   
     // GET TASK GROUP TEMPLATE LIST
   },
+  createPMTemplate: async (req,res) => {
+    try {
+      let taskGroupTemplate = null;
+      let insertedTasks = null
+      let taskGroupTemplateSchedule = null
+      let payload = _.omit(req.body, ['repeatOn','tasks','mainUserId','additionalUsers'])
+      const schema = Joi.object().keys({
+        assetCategoryId: Joi.string().required(),
+        repeatFrequency: Joi.string().required(),
+        //repeatOn
+        repeatPeriod: Joi.string().required(),
+        taskGroupName: Joi.string().required(),
+        startDate: Joi.string().required(),
+        endDate:Joi.string().required(),
+        teamId: Joi.string().required(),
+        
+        //tasks: []
+      })
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+      let currentTime = new Date().getTime();
+      // Insert into task_group_templates
+      let tgtInsert = {
+        taskGroupName: payload.taskGroupName,
+        assetCategoryId:payload.assetCategoryId,
+        createdBy: req.body.mainUserId,
+        createdAt: currentTime,
+        updatedAt:currentTime
+      }
+      let taskGroupTemplateResult = await knex('task_group_templates').insert(tgtInsert).returning(['*'])
+      taskGroupTemplate = taskGroupTemplateResult[0]
+
+      // Insert tasks into template_task
+      let insertPaylaod = req.body.tasks.map(v => ({
+        taskName: v, templateId: taskGroupTemplate.id, createdAt: currentTime,createdBy:req.body.mainUserId,
+        updatedAt: currentTime}))
+      insertedTasks = await knex('template_task').insert(insertPaylaod).returning(['*'])
+
+      // Insert into task_group_template_schedule
+      let insertTTData = {
+        startDate: payload.startDate,
+        endDate: payload.endDate,
+        repeatFrequency: payload.repeatFrequency,
+        repeatOn: req.body.repeatOn.join(','),
+        repeatPeriod: payload.repeatPeriod,
+        taskGroupId: taskGroupTemplate.id,
+        createdAt:currentTime,
+        updatedAt:currentTime
+      }
+
+      let taskGroupScheduleResult = await knex('task_group_template_schedule').insert(insertTTData).returning(['*'])
+      taskGroupTemplateSchedule = taskGroupScheduleResult[0]
+
+      // Insert into teams
+
+
+
+      // ASSIGNED ADDITIONAL USER OPEN
+      let insertAssignedAdditionalUserData = req.body.additionalUsers.map(user => ({
+        userId: user,
+        entityId: taskGroupTemplate.id,
+        entityType: "task_group_templates",
+        createdAt: currentTime,
+        updatedAt: currentTime
+
+      }))
+
+      let assignedAdditionalUserResult = await knex('assigned_service_additional_users').insert(insertAssignedAdditionalUserData).returning(['*'])
+      assignedAdditionalUser = assignedAdditionalUserResult;
+      // ASSIGNED ADDITIONAL USER CLOSE
+
+      // ASSIGNED TEAM OPEN
+      let insertAssignedServiceTeamData = {
+        teamId: payload.teamId,
+        userId: req.body.mainUserId,
+        entityId: taskGroupTemplate.id,
+        entityType: "task_group_templates",
+        createdAt: currentTime,
+        updatedAt: currentTime
+      }
+
+      let assignedServiceTeamResult = await knex('assigned_service_team').insert(insertAssignedServiceTeamData).returning(['*'])
+      assignedServiceTeam = assignedServiceTeamResult[0];
+
+     // ASSIGNED TEAM CLOSE
+
+
+
+
+      return res.status(200).json({
+        data: {
+          taskGroupTemplate,
+          tasks:insertedTasks,
+          taskGroupTemplateSchedule,
+          assignedAdditionalUser,
+          assignedServiceTeam
+        },
+        mesaage: 'Task Group Template added successfully!'
+      })
+
+    } catch(err) {
+      console.log("[controllers][task-group][createTaskGroupTemplate] :  Error", err);
+
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });  
+    }
+  },
   getGroupTemplateList: async (req,res)=>{
 
     try {
@@ -656,6 +769,115 @@ const taskGroupController = {
       });
     }
   },
+  getTaskGroupAssetPmsListOnToday: async (req, res) => {
+
+    try {
+      let reqData = req.query;
+      let payload = req.body
+
+      const schema = Joi.object().keys({
+        // taskGroupId: Joi.string().required(),
+        pmId:Joi.string().required(),
+       // pmDate:Joi.string().required()
+      });
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+      let [total, rows] = await Promise.all([
+        knex("task_group_schedule")
+          .innerJoin('task_group_schedule_assign_assets', 'task_group_schedule.id', 'task_group_schedule_assign_assets.scheduleId')
+          .innerJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id')
+          .select([
+            'task_group_schedule.id as id',
+            'asset_master.assetName as assetName',
+            'asset_master.model as model',
+            'asset_master.barcode as barcode',
+            'asset_master.areaName as areaName',
+            'asset_master.description as description',
+            'asset_master.assetSerial as assetSerial',
+            'task_group_schedule_assign_assets.pmDate as pmDate',
+            'task_group_schedule.repeatPeriod as repeatPeriod',
+            'task_group_schedule.repeatOn as repeatOn',
+            'task_group_schedule.repeatFrequency as repeatFrequency',
+          ])
+          .where({
+            "task_group_schedule.pmId": payload.pmId,
+            // 'task_group_schedule_assign_assets.pmDate':payload.pmDate }) 
+          }).whereRaw(`DATE("task_group_schedule_assign_assets"."pmDate") = date(now())`),
+        // knex.count('* as count').from("task_group_schedule")
+        //   .innerJoin('task_group_schedule_assign_assets', 'task_group_schedule.id', 'task_group_schedule_assign_assets.scheduleId')
+        //   .innerJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id'),
+          // .where({ "task_group_schedule.taskGroupId": payload.taskGroupId }),
+        //.offset(offset).limit(per_page),
+        knex("task_group_schedule")
+          .innerJoin('task_group_schedule_assign_assets', 'task_group_schedule.id', 'task_group_schedule_assign_assets.scheduleId')
+          .innerJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id')
+          .select([
+            'task_group_schedule.id as id',
+            'asset_master.assetName as assetName',
+            'asset_master.model as model',
+            'asset_master.barcode as barcode',
+            'asset_master.areaName as areaName',
+            'asset_master.description as description',
+            'asset_master.assetSerial as assetSerial',
+            'task_group_schedule_assign_assets.pmDate as pmDate',
+            'task_group_schedule.repeatPeriod as repeatPeriod',
+            'task_group_schedule.repeatOn as repeatOn',
+            'task_group_schedule.repeatFrequency as repeatFrequency',
+          ])
+          .where({"task_group_schedule.pmId": payload.pmId,
+         // 'task_group_schedule_assign_assets.pmDate':payload.pmDate }) 
+          }).whereRaw(`DATE("task_group_schedule_assign_assets"."pmDate") = date(now())`)
+          .offset(offset).limit(per_page)
+      ])
+
+
+  //     let str = `select tgs."id" as "id", am."assetName", am."model", am."barcode", am."areaName", am."description", am."assetSerial",
+	// "task_group_schedule_assign_assets"."pmDate", tgs."repeatPeriod", tgs."repeatOn", tgs."repeatFrequency" from "task_group_schedule" as tgs
+	// 	inner join "task_group_schedule_assign_assets" on tgs."id" = "task_group_schedule_assign_assets"."scheduleId"
+	// 	inner join "asset_master" as am on "task_group_schedule_assign_assets"."assetId" = am."id"
+	// 	where tgs."pmId" = 139 and DATE("task_group_schedule_assign_assets"."pmDate") = DATE(now()) limit 10;`
+  //     pagination.data = await knex.raw(str)
+  //     console.log(data)
+
+
+      let count = total.length;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+      return res.status(200).json({
+        data: {
+          taskGroupAssetPmsData: pagination
+        },
+        message: 'Task Group PMs Asset List Successfully!'
+      })
+
+    } catch (err) {
+      console.log('[controllers][task-group][get-task-group-asset-pms-list] :  Error', err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
   // CREATE TASK TEMPLATE
   createTaskTemplate:async (req,res)=>{
 
@@ -1031,8 +1253,11 @@ const taskGroupController = {
                           .innerJoin('task_group_schedule_assign_assets','task_group_schedule.id','task_group_schedule_assign_assets.scheduleId')
                           .select([
                                 'pm_task.id as taskId',
+                                'pm_task.status as status',
+                                'pm_task.taskName as taskName',
                                 'pm_master2.name as pmName',
                                 'pm_task_groups.taskGroupName as taskGroupName',
+                                'pm_task_groups.id as taskGroupId',
                                 'task_group_schedule_assign_assets.pmDate as pmDate'
                           ])
                           .where({
@@ -1081,7 +1306,71 @@ const taskGroupController = {
             ],
           });
         }
+  },
+  updateTaskStatus: async (req,res) => {
+    try {
+      const payload = req.body;
+      const schema = Joi.object().keys({
+        taskGroupId:Joi.string().required(),
+        taskId:Joi.string().required(),
+        status:Joi.string().required()
+      })
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+      const taskUpdated = await knex('pm_task').update({status:payload.status}).where({taskGroupId:payload.taskGroupId,id:payload.taskId}).returning(['*'])
+      return res.status(200).json({
+        data: {
+          taskUpdated
+        },
+        message: 'Task updated'
+      })
+    } catch(err) {
+      console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
+  sendFeedbackForTask: async(req,res) => {
+    try {
+      const payload = req.body;
+      const schema = Joi.object().keys({
+        taskId:Joi.string().required(),
+        taskGroupScheduleId:Joi.string().required(),
+        taskGroupId:Joi.string().required(),
+        assetId:Joi.string().required(),
+        description:Joi.string().required()
+      })
+      const result = Joi.validate(payload[0], schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+      let curentTime = new Date().getTime()
+      let fbs = req.body.map(v => ({ ...v, createdAt: curentTime, updatedAt: curentTime}))
+      const addedFeedback = await knex('task_feedbacks').insert(fbs).returning(['*'])
+      return res.status(200).json({
+        data: {
+          addedFeedback
+        },
+        message: 'Feedback added successfully!'
+      })
 
+    } catch(err) {
+      console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
   }
 }
 

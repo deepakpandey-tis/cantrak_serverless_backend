@@ -88,6 +88,7 @@ const serviceDetailsController = {
                 knex.count('* as count').from("location_tags_master").first(),
                 knex("location_tags_master")
                 .select([
+                'id as ID',
                 'title as Location Tag',
                 'descriptionEng as Description English',
                 'descriptionThai as Description Thai',

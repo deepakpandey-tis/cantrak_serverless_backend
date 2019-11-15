@@ -1116,7 +1116,79 @@ const serviceRequestController = {
                 ],
             })
         }
+    },
+
+    // Service Request 
+    getServiceRequestReportData: async(req,res) => {
+        try {
+            // We need to extract service requests on monthly basis
+            // service requests with completed status
+            // based on today's date get the service request of current month
+            const payload = req.body;
+
+           
+
+           // let currentDate = new Date().getTime()
+
+            const schema = Joi.object().keys({
+                selectedMonth: Joi.string().required(),
+            });
+
+            const result = Joi.validate(payload, schema);
+            console.log('[controllers][service][problem]: JOi Result', result);
+
+            let [startDate,plusOneMonth] = getStartAndEndDate(payload.selectedMonth,'M')
+            // Now get the data of the selected month
+            const selectG = await knex('service_requests').count('id as count').where({ serviceStatusCode: 'G' }).where('createdAt', '>=', Number(startDate))
+                .where('createdAt', '<', Number(plusOneMonth))
+            const selectR = await knex('service_requests').count('id as count').where({ serviceStatusCode: 'R' }).where('createdAt', '>=', Number(startDate))
+                .where('createdAt', '<', Number(plusOneMonth))
+            const selectC = await knex('service_requests').count('id as count').where({ serviceStatusCode: 'C' }).where('createdAt', '>=', Number(startDate))
+                .where('createdAt', '<', Number(plusOneMonth))
+            const selectA = await knex('service_requests').count('id as count').where({ serviceStatusCode: 'A' }).where('createdAt', '>=', Number(startDate))
+                .where('createdAt', '<', Number(plusOneMonth))
+
+            const selectUS = await knex('service_requests').count('id as count').where({ serviceStatusCode: 'US' }).where('createdAt', '>=', Number(startDate))
+                .where('createdAt', '<', Number(plusOneMonth))
+            const selectIP = await knex('service_requests').count('id as count').where({ serviceStatusCode: 'IP' }).where('createdAt', '>=', Number(startDate))
+                .where('createdAt', '<', Number(plusOneMonth))
+            const selectOH = await knex('service_requests').count('id as count').where({ serviceStatusCode: 'OH' }).where('createdAt', '>=', Number(startDate))
+                .where('createdAt', '<', Number(plusOneMonth))
+            const selectCMTD = await knex('service_requests').count('id as count').where({ serviceStatusCode: 'CMTD' }).where('createdAt', '>=', Number(startDate))
+                .where('createdAt', '<', Number(plusOneMonth))
+
+                //us,ip,oh,cmtd
+
+
+            return res.status(200).json({
+                srConfirm: selectG[0].count,
+                srReject: selectR[0].count,
+                srCancel: selectC[0].count,
+                srApprove: selectA[0].count,
+                srUnderSurvey: selectUS[0].count,
+                srInProgress:selectIP[0].count,
+                srOnHold:selectOH[0].count,
+                srCompleted:selectCMTD[0].count
+
+            })
+        } catch(err) {
+            return res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            })
+        }
+    },
+    getServiceRequestByMonth: async(req,res) => {
+        
     }
 };
+
+// Y, M, D
+function getStartAndEndDate(startDate,perWhat){
+    let selectedDate = moment(startDate).valueOf()
+    let plusOneMOnth = moment(selectedDate).add(1, perWhat).valueOf()
+    return [selectedDate,plusOneMOnth].map(v=>Number(v))
+}
 
 module.exports = serviceRequestController;

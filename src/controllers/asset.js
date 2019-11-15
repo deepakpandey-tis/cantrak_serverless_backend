@@ -37,6 +37,7 @@ const assetController = {
             let attribs = []
             let images = []
             let files = []
+            let location = null
 
             await knex.transaction(async (trx) => {
                 let assetPayload = req.body;
@@ -103,6 +104,10 @@ const assetController = {
                 asset = assetResult
 
 
+                // Add asset to a location with help of locationId
+                let locationTagPayload = {entityId: asset[0].id, entityType:'asset', locationTagId:req.body.locationId,createdAt:currentTime,updatedAt:currentTime}
+                const locationResult = await knex.insert(locationTagPayload).returning(['*']).transacting(trx).into('location_tags')
+                location = locationResult[0]
                 
 
                 let additionalAttributes = req.body.additionalAttributes;
@@ -146,7 +151,7 @@ const assetController = {
 
             res.status(200).json({
                 data: {
-                    asset: { ...asset, attributes: attribs, images, files }
+                    asset: { ...asset, attributes: attribs, images, files,location }
                 },
                 message: "Asset added successfully !"
             });
