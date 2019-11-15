@@ -10,5 +10,7 @@ router.post('/delete-property-type', authMiddleware.isAuthenticated, propertyTyp
 router.get('/get-property-type-list', authMiddleware.isAuthenticated, propertyTypeController.getPropertyTypeList)
 // Export Property Type
 router.get('/export-property-type', authMiddleware.isAuthenticated, propertyTypeController.exportPropertyType)
+router.post('/view-property-type-details', authMiddleware.isAuthenticated, propertyTypeController.getPropertyDetails)
+router.get('/get-all-property-type', authMiddleware.isAuthenticated, propertyTypeController.getAllPropertyTypeList)
 
 module.exports = router

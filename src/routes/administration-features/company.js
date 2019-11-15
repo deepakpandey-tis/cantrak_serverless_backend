@@ -11,5 +11,8 @@ router.post('/delete-company', authMiddleware.isAuthenticated, companyController
 router.get('/get-company-list', authMiddleware.isAuthenticated, companyController.getCompanyList)
 // Export Company Data
 router.get('/export-company', authMiddleware.isAuthenticated, companyController.exportCompany)
+// Get Company List For Project
+router.get('/company-lists', authMiddleware.isAuthenticated, companyController.getCompanyListForProject)
+
 
 module.exports = router
