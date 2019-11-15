@@ -769,6 +769,115 @@ const taskGroupController = {
       });
     }
   },
+  getTaskGroupAssetPmsListOnToday: async (req, res) => {
+
+    try {
+      let reqData = req.query;
+      let payload = req.body
+
+      const schema = Joi.object().keys({
+        // taskGroupId: Joi.string().required(),
+        pmId:Joi.string().required(),
+       // pmDate:Joi.string().required()
+      });
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+      let [total, rows] = await Promise.all([
+        knex("task_group_schedule")
+          .innerJoin('task_group_schedule_assign_assets', 'task_group_schedule.id', 'task_group_schedule_assign_assets.scheduleId')
+          .innerJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id')
+          .select([
+            'task_group_schedule.id as id',
+            'asset_master.assetName as assetName',
+            'asset_master.model as model',
+            'asset_master.barcode as barcode',
+            'asset_master.areaName as areaName',
+            'asset_master.description as description',
+            'asset_master.assetSerial as assetSerial',
+            'task_group_schedule_assign_assets.pmDate as pmDate',
+            'task_group_schedule.repeatPeriod as repeatPeriod',
+            'task_group_schedule.repeatOn as repeatOn',
+            'task_group_schedule.repeatFrequency as repeatFrequency',
+          ])
+          .where({
+            "task_group_schedule.pmId": payload.pmId,
+            // 'task_group_schedule_assign_assets.pmDate':payload.pmDate }) 
+          }).whereRaw(`DATE("task_group_schedule_assign_assets"."pmDate") = date(now())`),
+        // knex.count('* as count').from("task_group_schedule")
+        //   .innerJoin('task_group_schedule_assign_assets', 'task_group_schedule.id', 'task_group_schedule_assign_assets.scheduleId')
+        //   .innerJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id'),
+          // .where({ "task_group_schedule.taskGroupId": payload.taskGroupId }),
+        //.offset(offset).limit(per_page),
+        knex("task_group_schedule")
+          .innerJoin('task_group_schedule_assign_assets', 'task_group_schedule.id', 'task_group_schedule_assign_assets.scheduleId')
+          .innerJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id')
+          .select([
+            'task_group_schedule.id as id',
+            'asset_master.assetName as assetName',
+            'asset_master.model as model',
+            'asset_master.barcode as barcode',
+            'asset_master.areaName as areaName',
+            'asset_master.description as description',
+            'asset_master.assetSerial as assetSerial',
+            'task_group_schedule_assign_assets.pmDate as pmDate',
+            'task_group_schedule.repeatPeriod as repeatPeriod',
+            'task_group_schedule.repeatOn as repeatOn',
+            'task_group_schedule.repeatFrequency as repeatFrequency',
+          ])
+          .where({"task_group_schedule.pmId": payload.pmId,
+         // 'task_group_schedule_assign_assets.pmDate':payload.pmDate }) 
+          }).whereRaw(`DATE("task_group_schedule_assign_assets"."pmDate") = date(now())`)
+          .offset(offset).limit(per_page)
+      ])
+
+
+  //     let str = `select tgs."id" as "id", am."assetName", am."model", am."barcode", am."areaName", am."description", am."assetSerial",
+	// "task_group_schedule_assign_assets"."pmDate", tgs."repeatPeriod", tgs."repeatOn", tgs."repeatFrequency" from "task_group_schedule" as tgs
+	// 	inner join "task_group_schedule_assign_assets" on tgs."id" = "task_group_schedule_assign_assets"."scheduleId"
+	// 	inner join "asset_master" as am on "task_group_schedule_assign_assets"."assetId" = am."id"
+	// 	where tgs."pmId" = 139 and DATE("task_group_schedule_assign_assets"."pmDate") = DATE(now()) limit 10;`
+  //     pagination.data = await knex.raw(str)
+  //     console.log(data)
+
+
+      let count = total.length;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+      return res.status(200).json({
+        data: {
+          taskGroupAssetPmsData: pagination
+        },
+        message: 'Task Group PMs Asset List Successfully!'
+      })
+
+    } catch (err) {
+      console.log('[controllers][task-group][get-task-group-asset-pms-list] :  Error', err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
   // CREATE TASK TEMPLATE
   createTaskTemplate:async (req,res)=>{
 
@@ -1238,14 +1347,15 @@ const taskGroupController = {
         assetId:Joi.string().required(),
         description:Joi.string().required()
       })
-      const result = Joi.validate(payload, schema);
+      const result = Joi.validate(payload[0], schema);
       if (result && result.hasOwnProperty("error") && result.error) {
         return res.status(400).json({
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
         });
       }
-
-      const addedFeedback = await knex('task_feedbacks').insert({...payload}).returning(['*'])
+      let curentTime = new Date().getTime()
+      let fbs = req.body.map(v => ({ ...v, createdAt: curentTime, updatedAt: curentTime}))
+      const addedFeedback = await knex('task_feedbacks').insert(fbs).returning(['*'])
       return res.status(200).json({
         data: {
           addedFeedback
