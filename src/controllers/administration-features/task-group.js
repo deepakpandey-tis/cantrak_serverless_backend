@@ -588,21 +588,26 @@ const taskGroupController = {
       
       
 
-      let [total,rows] 
-      
-      = await Promise.all([
+      let [total,rows] = await Promise.all([
 
-        knex.count("* as count").from('task_group_schedule')
-       .where({pmId:payload.pmId})
-       //.offset(offset).limit(per_page)
+      //   knex.count("* as count").from('task_group_schedule')
+      //   .innerJoin('pm_task_groups','task_group_schedule.taskGroupId','pm_task_groups.id')
+      //  .where({'task_group_schedule.pmId':payload.pmId})
+      //  .groupBy(['pm_task_groups.id','task_group_schedule.id'])
+        knex.from('task_group_schedule')
+          .innerJoin('pm_task_groups', 'task_group_schedule.taskGroupId', 'pm_task_groups.id')
+          .select(['task_group_schedule.*', 'pm_task_groups.taskGroupName'])
+          .where({ 'task_group_schedule.pmId': payload.pmId })
         ,
         knex.from('task_group_schedule')
-        .where({pmId:payload.pmId})
+        .innerJoin('pm_task_groups','task_group_schedule.taskGroupId','pm_task_groups.id')
+        .select(['task_group_schedule.*', 'pm_task_groups.taskGroupName'])
+          .where({ 'task_group_schedule.pmId':payload.pmId})
         .offset(offset).limit(per_page)
       ])
       
 
-      let count = total[0].count;
+      let count = total.length;
       pagination.total = count;
       pagination.per_page = per_page;
       pagination.offset = offset;
