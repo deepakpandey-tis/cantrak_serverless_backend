@@ -683,8 +683,10 @@ const partsController = {
                                         ])
                                        .where({partId:id})
 
-               let unitCost =  partLedgerResult[0].unitCost
-               let quantity =  partLedgerResult[0].quantity
+            // This 687 ,688 needs to be removed because its irrelevant but its here because we dont know where this is being used
+            let unitCost = partLedgerResult.length ? partLedgerResult[0].unitCost :'0'
+            let quantity = partLedgerResult.length ? partLedgerResult[0].quantity :'0'
+
   
            let additionalAttribute = await knex.from('part_attributes')
            .select([
@@ -699,7 +701,7 @@ const partsController = {
 
                return res.status(200).json({
                    message:"Part Details Successfully!",
-                   partDetail:{...partResult[0] ,unitCost,quantity,additionalAttributes:additionalAttribute,images,files}
+                   partDetail: { ...partResult[0],partLedgerResult,additionalAttributes:additionalAttribute,images,files,unitCost,quantity}
                })
         
             } catch(err){
