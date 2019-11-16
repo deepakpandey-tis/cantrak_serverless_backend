@@ -1198,7 +1198,8 @@ const taskGroupController = {
         tasks =  await knex('pm_task')
         .select([
           'pm_task.id as taskId',
-          'pm_task.taskName as taskName'
+          'pm_task.taskName as taskName',
+          'pm_task.status as status'
         ])
         .where({
           'pm_task.taskGroupId'  : pmResult[0].taskGroupId
