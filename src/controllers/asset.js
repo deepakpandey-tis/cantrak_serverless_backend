@@ -391,7 +391,7 @@ const assetController = {
             let images = null
             let id = req.body.id;
 
-            assetData = await knex('asset_master').where({ id }).select()
+            assetData = await knex('asset_master').where({ id }).select('*')
             let assetDataResult = assetData[0];
             let omitedAssetDataResult = _.omit(assetDataResult, ['createdAt'], ['updatedAt'], ['isActive'])
             additionalAttributes = await knex('asset_attributes').where({ assetId: id }).select()
