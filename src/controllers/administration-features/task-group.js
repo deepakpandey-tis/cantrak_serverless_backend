@@ -401,18 +401,18 @@ const taskGroupController = {
 
       // CREATE PM TASK GROUP CLOSE
 
-      // CREATE PM TASK OPEN
-      let InsertPmTaskPayload = payload.tasks.map(da=>({
-        taskName    : da,
-        taskGroupId : createPmTaskGroup.id,
-        createdAt   : currentTime,
-        updatedAt   : currentTime
-    }))
+  //     // CREATE PM TASK OPEN
+  //     let InsertPmTaskPayload = payload.tasks.map(da=>({
+  //       taskName    : da,
+  //       taskGroupId : createPmTaskGroup.id,
+  //       createdAt   : currentTime,
+  //       updatedAt   : currentTime
+  //   }))
 
-   let insertPmTaskResult = await knex.insert(InsertPmTaskPayload).returning(['*']).transacting(trx).into('pm_task');
-   createPmTask           = insertPmTaskResult;
+  //  let insertPmTaskResult = await knex.insert(InsertPmTaskPayload).returning(['*']).transacting(trx).into('pm_task');
+  //  createPmTask           = insertPmTaskResult;
 
-      // CREATE PM TASK CLOSE
+  //     // CREATE PM TASK CLOSE
 
       // ASSIGNED ADDITIONAL USER OPEN
       let insertAssignedAdditionalUserData = payload.additionalUsers.map(user=>({
@@ -459,6 +459,7 @@ const taskGroupController = {
     let scheduleResult = await knex.insert(insertScheduleData).returning(['*']).transacting(trx).into('task_group_schedule');
     taskSchedule = scheduleResult[0];
     // TASK GROUP SCHEDULE CLOSE 
+
 
     // create recurring pm of this task group open
 
@@ -535,6 +536,20 @@ const taskGroupController = {
               .returning(["*"])
               .transacting(trx)
               .into("task_group_schedule_assign_assets");
+
+            // CREATE PM TASK OPEN
+            let InsertPmTaskPayload = payload.tasks.map(da => ({
+              taskName: da,
+              taskGroupId: createPmTaskGroup.id,
+              taskGroupScheduleAssignAssetId: assetResult[0].id,
+              createdAt: currentTime,
+              updatedAt: currentTime
+            }))
+
+            let insertPmTaskResult = await knex.insert(InsertPmTaskPayload).returning(['*']).transacting(trx).into('pm_task');
+            createPmTask = insertPmTaskResult;
+
+      // CREATE PM TASK CLOSE
             assetResults.push(assetResult[0]);
           }
         }
@@ -550,7 +565,8 @@ const taskGroupController = {
         assignedAdditionalUserData:assignedAdditionalUser,
         assignedServiceTeamData:assignedServiceTeam,
         taskScheduleData:taskSchedule,
-        assetResultData:assetResults
+        assetResultData:assetResults,
+        createdPmTasks:createPmTask
        },
       message :"Create Pm Task Group Schedule Successfully!"
      });
@@ -732,6 +748,7 @@ const taskGroupController = {
           .innerJoin('asset_master','task_group_schedule_assign_assets.assetId','asset_master.id')
           .select([
             'task_group_schedule_assign_assets.id as workOrderId',
+            'task_group_schedule_assign_assets.status as status',
             'task_group_schedule.id as id',
             'asset_master.assetName as assetName',
             'asset_master.model as model',
@@ -805,6 +822,7 @@ const taskGroupController = {
           .innerJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id')
           .select([
             'task_group_schedule_assign_assets.id as workOrderId',
+            'task_group_schedule_assign_assets.status as status',
             'task_group_schedule.id as id',
             'asset_master.assetName as assetName',
             'asset_master.model as model',
@@ -1141,7 +1159,8 @@ const taskGroupController = {
        let payload = req.body;
 
        const schema = Joi.object().keys({
-        taskGroupScheduleId : Joi.string().required()
+        taskGroupScheduleId : Joi.string().required(),
+         taskGroupScheduleAssignAssetId:Joi.string().required()
        })
 
        const result = Joi.validate(payload,schema);
@@ -1162,6 +1181,7 @@ const taskGroupController = {
          .innerJoin('users','assigned_service_team.userId','users.id')
          .select([
            'task_group_schedule.id as id',
+           'task_group_schedule_assign_assets.id as taskGroupScheduleAssignAssetId',
            'task_group_schedule.taskGroupId',
            'pm_master2.name as pmName',
            'asset_category_master.categoryName as assetCategoryName',
@@ -1210,7 +1230,7 @@ const taskGroupController = {
           'pm_task.status as status'
         ])
         .where({
-          'pm_task.taskGroupId'  : pmResult[0].taskGroupId
+          'pm_task.taskGroupScheduleAssignAssetId': payload.taskGroupScheduleAssignAssetId
         })
       }
        // TASK CLOSE
