@@ -326,13 +326,8 @@ const partsController = {
                         let d = await knex.update({ ...attribute, updatedAt: currentTime }).where({ id:attribute.id,partId: partDetailsPayload.id }).returning(['*']).transacting(trx).into('part_attributes');
                         attribs.push(d[0])
                     }
-
-
                 }
-
-
                 trx.commit;
-
             });
 
             res.status(200).json({
