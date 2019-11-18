@@ -731,7 +731,7 @@ const taskGroupController = {
           .innerJoin('task_group_schedule_assign_assets','task_group_schedule.id','task_group_schedule_assign_assets.scheduleId')
           .innerJoin('asset_master','task_group_schedule_assign_assets.assetId','asset_master.id')
           .select([
-            'task_group_schedule.id as id',
+            'task_group_schedule_assign_assets.id as workOrderId',
             'asset_master.assetName as assetName',
             'asset_master.model as model',
             'asset_master.barcode as barcode',
@@ -803,7 +803,7 @@ const taskGroupController = {
           .innerJoin('task_group_schedule_assign_assets', 'task_group_schedule.id', 'task_group_schedule_assign_assets.scheduleId')
           .innerJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id')
           .select([
-            'task_group_schedule.id as id',
+            'task_group_schedule_assign_assets.id as workOrderId',
             'asset_master.assetName as assetName',
             'asset_master.model as model',
             'asset_master.barcode as barcode',
@@ -828,7 +828,7 @@ const taskGroupController = {
           .innerJoin('task_group_schedule_assign_assets', 'task_group_schedule.id', 'task_group_schedule_assign_assets.scheduleId')
           .innerJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id')
           .select([
-            'task_group_schedule.id as id',
+            'task_group_schedule_assign_assets.id as workOrderId',
             'asset_master.assetName as assetName',
             'asset_master.model as model',
             'asset_master.barcode as barcode',
