@@ -391,7 +391,7 @@ const assetController = {
             let images = null
             let id = req.body.id;
 
-            assetData = await knex('asset_master').where({ id }).select()
+            assetData = await knex('asset_master').where({ id }).select('*')
             let assetDataResult = assetData[0];
             let omitedAssetDataResult = _.omit(assetDataResult, ['createdAt'], ['updatedAt'], ['isActive'])
             additionalAttributes = await knex('asset_attributes').where({ assetId: id }).select()
@@ -427,7 +427,7 @@ const assetController = {
                 let assetPayload = req.body;
                 let id = req.body.id
                 console.log('[controllers][asset][payload]: Update Asset Payload', assetPayload);
-                assetPayload = _.omit(assetPayload, ['additionalAttributes'], ['id'])
+                assetPayload = _.omit(assetPayload, ['additionalAttributes','id','assetCategory'])
                 // validate keys
                 const schema = Joi.object().keys({
                     parentAssetId: Joi.string().allow('').optional(),
@@ -438,7 +438,7 @@ const assetController = {
                     barcode: Joi.string().required(),
                     areaName: Joi.string().required(),
                     description: Joi.string().required(),
-                    assetCategory: Joi.string().required(),
+                   // assetCategory: Joi.string().required(),
                     price: Joi.string().required(),
                     installationDate: Joi.string().required(),
                     warrentyExpiration: Joi.string().required(),
@@ -460,10 +460,21 @@ const assetController = {
                     });
                 }
 
+                let assetCategoryId
+                let category
+                let assetCategory = req.body.assetCategory;
+                category = await knex.select().where({ categoryName: assetCategory }).returning(['*']).transacting(trx).into('asset_category_master')
+                if (category && category.length) {
+                    assetCategoryId = category[0].id;
+                } else {
+                    category = await knex.insert({ categoryName: assetCategory, createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('asset_category_master')
+                    assetCategoryId = category[0].id;
+                }
+
                 // Update in asset_master table,
                 let currentTime = new Date().getTime();
 
-                let insertData = { ...assetPayload, updatedAt: currentTime, isActive: true };
+                let insertData = { ...assetPayload, assetCategoryId, updatedAt: currentTime, isActive: true };
 
                 console.log('[controllers][asset][updateAssetDetails]: Update Asset Insert Data', insertData);
 

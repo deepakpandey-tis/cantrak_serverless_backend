@@ -401,18 +401,18 @@ const taskGroupController = {
 
       // CREATE PM TASK GROUP CLOSE
 
-      // CREATE PM TASK OPEN
-      let InsertPmTaskPayload = payload.tasks.map(da=>({
-        taskName    : da,
-        taskGroupId : createPmTaskGroup.id,
-        createdAt   : currentTime,
-        updatedAt   : currentTime
-    }))
+  //     // CREATE PM TASK OPEN
+  //     let InsertPmTaskPayload = payload.tasks.map(da=>({
+  //       taskName    : da,
+  //       taskGroupId : createPmTaskGroup.id,
+  //       createdAt   : currentTime,
+  //       updatedAt   : currentTime
+  //   }))
 
-   let insertPmTaskResult = await knex.insert(InsertPmTaskPayload).returning(['*']).transacting(trx).into('pm_task');
-   createPmTask           = insertPmTaskResult;
+  //  let insertPmTaskResult = await knex.insert(InsertPmTaskPayload).returning(['*']).transacting(trx).into('pm_task');
+  //  createPmTask           = insertPmTaskResult;
 
-      // CREATE PM TASK CLOSE
+  //     // CREATE PM TASK CLOSE
 
       // ASSIGNED ADDITIONAL USER OPEN
       let insertAssignedAdditionalUserData = payload.additionalUsers.map(user=>({
@@ -459,6 +459,7 @@ const taskGroupController = {
     let scheduleResult = await knex.insert(insertScheduleData).returning(['*']).transacting(trx).into('task_group_schedule');
     taskSchedule = scheduleResult[0];
     // TASK GROUP SCHEDULE CLOSE 
+
 
     // create recurring pm of this task group open
 
@@ -535,6 +536,20 @@ const taskGroupController = {
               .returning(["*"])
               .transacting(trx)
               .into("task_group_schedule_assign_assets");
+
+            // CREATE PM TASK OPEN
+            let InsertPmTaskPayload = payload.tasks.map(da => ({
+              taskName: da,
+              taskGroupId: createPmTaskGroup.id,
+              taskGroupScheduleAssignAssetId: assetResult[0].id,
+              createdAt: currentTime,
+              updatedAt: currentTime
+            }))
+
+            let insertPmTaskResult = await knex.insert(InsertPmTaskPayload).returning(['*']).transacting(trx).into('pm_task');
+            createPmTask = insertPmTaskResult;
+
+      // CREATE PM TASK CLOSE
             assetResults.push(assetResult[0]);
           }
         }
@@ -550,7 +565,8 @@ const taskGroupController = {
         assignedAdditionalUserData:assignedAdditionalUser,
         assignedServiceTeamData:assignedServiceTeam,
         taskScheduleData:taskSchedule,
-        assetResultData:assetResults
+        assetResultData:assetResults,
+        createdPmTasks:createPmTask
        },
       message :"Create Pm Task Group Schedule Successfully!"
      });
@@ -588,21 +604,26 @@ const taskGroupController = {
       
       
 
-      let [total,rows] 
-      
-      = await Promise.all([
+      let [total,rows] = await Promise.all([
 
-        knex.count("* as count").from('task_group_schedule')
-       .where({pmId:payload.pmId})
-       //.offset(offset).limit(per_page)
+      //   knex.count("* as count").from('task_group_schedule')
+      //   .innerJoin('pm_task_groups','task_group_schedule.taskGroupId','pm_task_groups.id')
+      //  .where({'task_group_schedule.pmId':payload.pmId})
+      //  .groupBy(['pm_task_groups.id','task_group_schedule.id'])
+        knex.from('task_group_schedule')
+          .innerJoin('pm_task_groups', 'task_group_schedule.taskGroupId', 'pm_task_groups.id')
+          .select(['task_group_schedule.*', 'pm_task_groups.taskGroupName'])
+          .where({ 'task_group_schedule.pmId': payload.pmId })
         ,
         knex.from('task_group_schedule')
-        .where({pmId:payload.pmId})
+        .innerJoin('pm_task_groups','task_group_schedule.taskGroupId','pm_task_groups.id')
+        .select(['task_group_schedule.*', 'pm_task_groups.taskGroupName'])
+          .where({ 'task_group_schedule.pmId':payload.pmId})
         .offset(offset).limit(per_page)
       ])
       
 
-      let count = total[0].count;
+      let count = total.length;
       pagination.total = count;
       pagination.per_page = per_page;
       pagination.offset = offset;
@@ -726,6 +747,8 @@ const taskGroupController = {
           .innerJoin('task_group_schedule_assign_assets','task_group_schedule.id','task_group_schedule_assign_assets.scheduleId')
           .innerJoin('asset_master','task_group_schedule_assign_assets.assetId','asset_master.id')
           .select([
+            'task_group_schedule_assign_assets.id as workOrderId',
+            'task_group_schedule_assign_assets.status as status',
             'task_group_schedule.id as id',
             'asset_master.assetName as assetName',
             'asset_master.model as model',
@@ -798,6 +821,8 @@ const taskGroupController = {
           .innerJoin('task_group_schedule_assign_assets', 'task_group_schedule.id', 'task_group_schedule_assign_assets.scheduleId')
           .innerJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id')
           .select([
+            'task_group_schedule_assign_assets.id as workOrderId',
+            'task_group_schedule_assign_assets.status as status',
             'task_group_schedule.id as id',
             'asset_master.assetName as assetName',
             'asset_master.model as model',
@@ -823,6 +848,7 @@ const taskGroupController = {
           .innerJoin('task_group_schedule_assign_assets', 'task_group_schedule.id', 'task_group_schedule_assign_assets.scheduleId')
           .innerJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id')
           .select([
+            'task_group_schedule_assign_assets.id as workOrderId',
             'task_group_schedule.id as id',
             'asset_master.assetName as assetName',
             'asset_master.model as model',
@@ -1133,7 +1159,8 @@ const taskGroupController = {
        let payload = req.body;
 
        const schema = Joi.object().keys({
-        taskGroupScheduleId : Joi.string().required()
+        taskGroupScheduleId : Joi.string().required(),
+         taskGroupScheduleAssignAssetId:Joi.string().required()
        })
 
        const result = Joi.validate(payload,schema);
@@ -1154,6 +1181,7 @@ const taskGroupController = {
          .innerJoin('users','assigned_service_team.userId','users.id')
          .select([
            'task_group_schedule.id as id',
+           'task_group_schedule_assign_assets.id as taskGroupScheduleAssignAssetId',
            'task_group_schedule.taskGroupId',
            'pm_master2.name as pmName',
            'asset_category_master.categoryName as assetCategoryName',
@@ -1198,10 +1226,11 @@ const taskGroupController = {
         tasks =  await knex('pm_task')
         .select([
           'pm_task.id as taskId',
-          'pm_task.taskName as taskName'
+          'pm_task.taskName as taskName',
+          'pm_task.status as status'
         ])
         .where({
-          'pm_task.taskGroupId'  : pmResult[0].taskGroupId
+          'pm_task.taskGroupScheduleAssignAssetId': payload.taskGroupScheduleAssignAssetId
         })
       }
        // TASK CLOSE
@@ -1313,7 +1342,8 @@ const taskGroupController = {
       const schema = Joi.object().keys({
         taskGroupId:Joi.string().required(),
         taskId:Joi.string().required(),
-        status:Joi.string().required()
+        status:Joi.string().required(),
+        userId:Joi.string().required()
       })
       const result = Joi.validate(payload, schema);
       if (result && result.hasOwnProperty("error") && result.error) {
@@ -1321,7 +1351,19 @@ const taskGroupController = {
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
         });
       }
-      const taskUpdated = await knex('pm_task').update({status:payload.status}).where({taskGroupId:payload.taskGroupId,id:payload.taskId}).returning(['*'])
+
+      // Get all the tasks of the work order and check if those tasks have status cmtd
+      // then 
+      let currentTime = new Date().getTime()
+      // We need to check whther all the tasks have been updated or not
+      let taskUpdated
+      if(payload.status === 'CMTD'){
+        // check id completedAt i.e current date is greater than pmDate then update completedAt and completedBy
+        taskUpdated = await knex('pm_task').update({status:payload.status,completedAt:currentTime,completedBy:payload.userId}).where({taskGroupId:payload.taskGroupId,id:payload.taskId}).returning(['*'])
+      } else {
+
+        taskUpdated = await knex('pm_task').update({status:payload.status}).where({taskGroupId:payload.taskGroupId,id:payload.taskId}).returning(['*'])
+      }
       return res.status(200).json({
         data: {
           taskUpdated
