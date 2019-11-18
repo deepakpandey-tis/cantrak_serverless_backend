@@ -1342,7 +1342,8 @@ const taskGroupController = {
       const schema = Joi.object().keys({
         taskGroupId:Joi.string().required(),
         taskId:Joi.string().required(),
-        status:Joi.string().required()
+        status:Joi.string().required(),
+        userId:Joi.string().required()
       })
       const result = Joi.validate(payload, schema);
       if (result && result.hasOwnProperty("error") && result.error) {
@@ -1350,7 +1351,19 @@ const taskGroupController = {
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
         });
       }
-      const taskUpdated = await knex('pm_task').update({status:payload.status}).where({taskGroupId:payload.taskGroupId,id:payload.taskId}).returning(['*'])
+
+      // Get all the tasks of the work order and check if those tasks have status cmtd
+      // then 
+      let currentTime = new Date().getTime()
+      // We need to check whther all the tasks have been updated or not
+      let taskUpdated
+      if(payload.status === 'CMTD'){
+        // check id completedAt i.e current date is greater than pmDate then update completedAt and completedBy
+        taskUpdated = await knex('pm_task').update({status:payload.status,completedAt:currentTime,completedBy:payload.userId}).where({taskGroupId:payload.taskGroupId,id:payload.taskId}).returning(['*'])
+      } else {
+
+        taskUpdated = await knex('pm_task').update({status:payload.status}).where({taskGroupId:payload.taskGroupId,id:payload.taskId}).returning(['*'])
+      }
       return res.status(200).json({
         data: {
           taskUpdated
