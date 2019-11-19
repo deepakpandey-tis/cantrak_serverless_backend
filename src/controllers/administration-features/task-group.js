@@ -1413,6 +1413,36 @@ const taskGroupController = {
         ],
       });
     }
+  },
+  editWorkOrder: async(req,res) => {
+    try {
+      const payload = req.body;
+      let {workOrderId,teamId,additionalUsers,mainUserId,tasks} = payload
+      // First based on that workOrderId update tasks
+      let updatedTasks = []
+      if(tasks && tasks.length) {
+        for(let task of tasks){
+          updatedTask = await knex('pm_task').update({taskName:task.taskName}).where({taskGroupScheduleAssignAssetId:workOrderId,id:task.id}).returning(['*'])
+          updatedTasks.push(updatedTask[0]);
+        }
+      }
+
+
+
+      return res.status(200).json({
+        data: {
+          updatedTasks
+        },
+        message:'Tasks updated!'
+      })
+   } catch(err) {
+      console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });      
+    }
   }
 }
 
