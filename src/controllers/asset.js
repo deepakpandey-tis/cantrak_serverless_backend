@@ -45,25 +45,25 @@ const assetController = {
                 assetPayload = _.omit(assetPayload, ['additionalAttributes', 'multiple', 'images', 'files','assetCategory'])
                 // validate keys
                 const schema = Joi.object().keys({
-                    parentAssetId: Joi.string().allow('').optional(),
-                    subAssetId: Joi.string().allow('').optional(),
-                    partId: Joi.string().allow('').optional(),
+                    //parentAssetId: Joi.string(),
+                   // subAssetId: Joi.string(),
+                   // partId: Joi.string(),
                     assetName: Joi.string().required(),
                     model: Joi.string().required(),
-                    barcode: Joi.string().required(),
-                    areaName: Joi.string().required(),
-                    description: Joi.string().required(),
-                    price: Joi.string().required(),
-                    installationDate: Joi.string().required(),
-                    warrentyExpiration: Joi.string().required(),
-                    locationId: Joi.string().allow('').optional(),
-                    assignedUsers: Joi.string().allow('').optional(),
-                    assignedTeams: Joi.string().required(),
-                    assignedVendors: Joi.string().required(),
-                    additionalInformation: Joi.string().required()
+                    //barcode: Joi.string(),
+                   // areaName: Joi.string(),
+                   // description: Joi.string(),
+                  //  price: Joi.string(),
+                  //  installationDate: Joi.string(),
+                   // warrentyExpiration: Joi.string(),
+                   // locationId: Joi.string(),
+                   // assignedUsers: Joi.string(),
+                   // assignedTeams: Joi.string(),
+                  //  assignedVendors: Joi.string(),
+                   // additionalInformation: Joi.string()
                 });
 
-                let result = Joi.validate(assetPayload, schema);
+                let result = Joi.validate({ assetName: assetPayload.assetName, model: assetPayload.model}, schema);
                 console.log('[controllers][asset][addAsset]: JOi Result', result);
 
                 if (result && result.hasOwnProperty('error') && result.error) {
@@ -105,7 +105,7 @@ const assetController = {
 
 
                 // Add asset to a location with help of locationId
-                let locationTagPayload = {entityId: asset[0].id, entityType:'asset', locationTagId:req.body.locationId,createdAt:currentTime,updatedAt:currentTime}
+                let locationTagPayload = {entityId: asset[0].id, entityType:'asset', locationTagId:Number(req.body.locationId),createdAt:currentTime,updatedAt:currentTime}
                 const locationResult = await knex.insert(locationTagPayload).returning(['*']).transacting(trx).into('location_tags')
                 location = locationResult[0]
                 
@@ -430,28 +430,28 @@ const assetController = {
                 assetPayload = _.omit(assetPayload, ['additionalAttributes','id','assetCategory'])
                 // validate keys
                 const schema = Joi.object().keys({
-                    parentAssetId: Joi.string().allow('').optional(),
-                    subAssetId: Joi.string().allow('').optional(),
-                    partId: Joi.string().allow('').optional(),
+                    // parentAssetId: Joi.string(),
+                    // subAssetId: Joi.string(),
+                    // partId: Joi.string(),
                     assetName: Joi.string().required(),
                     model: Joi.string().required(),
-                    barcode: Joi.string().required(),
-                    areaName: Joi.string().required(),
-                    description: Joi.string().required(),
-                   // assetCategory: Joi.string().required(),
-                    price: Joi.string().required(),
-                    installationDate: Joi.string().required(),
-                    warrentyExpiration: Joi.string().required(),
-                    locationId: Joi.string().allow('').optional(),
-                    assignedUsers: Joi.string().allow('').optional(),
-                    assignedTeams: Joi.string().required(),
-                    assignedVendors: Joi.string().required(),
-                    additionalInformation: Joi.string().required()
+                    // barcode: Joi.string(),
+                    // areaName: Joi.string(),
+                    // description: Joi.string(),
+                   assetCategory: Joi.string().required(),
+                    // price: Joi.string(),
+                    // installationDate: Joi.string(),
+                    // warrentyExpiration: Joi.string(),
+                    // locationId: Joi.string(),
+                    // assignedUsers: Joi.string(),
+                    // assignedTeams: Joi.string(),
+                    // assignedVendors: Joi.string(),
+                    // additionalInformation: Joi.string()
                 });
 
                 let currentTime = new Date().getTime();
 
-                let result = Joi.validate(assetPayload, schema);
+                let result = Joi.validate({assetName:assetPayload.assetName,model:assetPayload.model,assetCategory:assetPayload.assetCategory}, schema);
                 console.log('[controllers][asset][addAsset]: JOi Result', result);
 
                 if (result && result.hasOwnProperty('error') && result.error) {
