@@ -1475,6 +1475,183 @@ const taskGroupController = {
         ],
       });      
     }
+  },
+  getTaskGroupDetails: async(req,res) => {
+    try {
+// taskGroupName: new FormControl('', [Validators.required]), done
+//   tasks: new FormArray([this.createTask()]), done
+//     assetCategoryId: new FormControl('', [Validators.required]), done
+//       repeatFrequency: new FormControl('', [Validators.required]), 
+//         repeatPeriod: new FormControl('', [Validators.required]),
+//           repeatOn: new FormControl([]),
+//             startDate: new FormControl('', [Validators.required]),
+//               endDate: new FormControl('', [Validators.required]),
+//                 additionalUsers: new FormControl('', [Validators.required]),
+//                   mainUserId: new FormControl('', [Validators.required]),
+//                     teamId: new FormControl('', [Validators.required])
+
+      let taskGroupResult = await knex('task_group_templates')
+      .innerJoin('task_group_template_schedule', 'task_group_templates.id', 'task_group_template_schedule.taskGroupId')
+      .select([
+        'task_group_templates.taskGroupName as taskGroupName',
+        'task_group_templates.assetCategoryId as assetCategoryId',
+        'task_group_template_schedule.startDate as startDate',
+        'task_group_template_schedule.endDate as endDate',
+        'task_group_template_schedule.repeatFrequency as repeatFrequency',
+        'task_group_template_schedule.repeatPeriod as repeatPeriod',
+        'task_group_template_schedule.repeatOn as repeatOn'
+      ])
+        .where({'task_group_templates.id':req.body.id})
+      let taskGroup = taskGroupResult[0]
+
+
+      const tasks = await knex('template_task').where({templateId:req.body.id}).select('taskName','id')
+
+      // Get the team and main user
+      let team = await knex('assigned_service_team')
+        .innerJoin('teams','assigned_service_team.teamId','teams.teamId')
+        .innerJoin('users','assigned_service_team.userId','users.id')
+        .where({
+          'assigned_service_team.entityId': req.body.id,'assigned_service_team.entityType':'task_group_templates'
+        })
+          .select([
+            'teams.teamId as teamId',
+            'assigned_service_team.userId as mainUserId'
+          ])
+      
+
+      const additionalUsers = await knex('assigned_service_additional_users')
+        .innerJoin('users','assigned_service_additional_users.userId','users.id')
+        .where({
+          'assigned_service_additional_users.entityId': req.body.id, 'assigned_service_additional_users.entityType':'task_group_templates'
+        }).select([
+          'users.id as id'
+        ])
+
+      
+
+      return res.status(200).json({
+        data: {
+          ...taskGroup,
+          tasks,
+          ...team[0],
+          additionalUsers:additionalUsers.map(v => v.id)
+        },
+        message: 'Task Group Details'
+      })
+    } catch(err) {
+      console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });  
+    }
+  },
+  updateTaskGroupDetails: async(req,res) => {
+    try {
+      let id = req.body.id
+      let payload = _.omit(req.body,['id','additionalUsers','tasks','taskGroupName','assetCategoryId','mainUserId','teamId']);
+      let tasks = req.body.tasks;
+      let additionalUsers = req.body.additionalUsers;
+      // additionalUsers: ["59", "60"]
+      // assetCategoryId: "1"
+      // endDate: "2019-11-21T18:30:00.000Z"
+      // mainUserId: "59"
+      // repeatFrequency: "1"
+      // repeatOn: []
+      // repeatPeriod: "DAY"
+      // startDate: "2019-11-19T18:30:00.000Z"
+      // taskGroupName: "Test Template"
+      // tasks: ["task 1"]
+      // teamId: "3"
+      let updatedTaskGroupTemplate = null
+      let resultScheduleData = null
+      let updatedTeam = null
+      let result = await knex('task_group_templates').update({taskGroupName:req.body.taskGroupName,assetCategoryId:req.body.assetCategoryId}).where({id}).returning('*')
+      updatedTaskGroupTemplate = result[0]
+
+      let resultSchedule = await knex('task_group_template_schedule').update({...payload,repeatOn:payload.repeatOn.length?payload.repeatOn.join(','):''})
+      resultScheduleData = resultSchedule[0]
+
+      let updatedTasks = []
+      let updatedUsers = []
+      let updatedTaskResult
+      for(let task in tasks){
+        if(task.id){
+
+          updatedTaskResult = await knex('template_task').update({taskName:task}).where({templateId:id,id:task.id}).returning('*')
+          updatedTasks.push(updatedTaskResult[0])
+        } else {
+          updatedTaskResult = await knex('template_task').insert({ taskName: task, templateId: id }).returning('*')
+          updatedTasks.push(updatedTaskResult[0])
+        } 
+
+      }
+
+      for(let additionalUser of additionalUsers){
+        let updated = await knex('assigned_service_additional_users').update({userId:additionalUser}).where({entityId:id,entityType:'task_group_templates'})
+        updatedUsers.push(updated[0])
+      }
+
+      let updatedTeamResult = await knex('assigned_service_team').update({teamId:req.body.teamId,userId:req.body.mainUserId}).returning('*')
+      updatedTeam = updatedTeamResult[0]
+
+      return res.status(200).json({data: {
+        updatedTaskGroupTemplate,
+        resultScheduleData,
+        updatedTeam,
+        updatedTasks,
+        updatedUsers
+      }})
+
+    } catch(err) {
+      console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });  
+    }
+  },
+  getTaskGroupTemplateList: async (req,res) => {
+    try {
+      let reqData = req.query;
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+      let [total, rows] = await Promise.all([
+        knex('task_group_templates').select('*'),
+        knex('task_group_templates').select('*').offset(offset).limit(per_page)
+      ])
+
+      let count = total.length;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows
+
+      return res.status(200).json({
+        data: {
+          list:pagination
+        },
+        message: 'Task group template list'
+      })
+    } catch(err) {
+      console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });   
+    }
   }
 }
 
