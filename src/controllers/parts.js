@@ -65,7 +65,8 @@ const partsController = {
                 //filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
                 try {
                     [total, rows] = await Promise.all([
-                        knex.count('* as count').from("part_ledger").innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
+                        knex.count('* as count').from("part_ledger").innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first()
+                        .where(filters),
                         knex.from('part_ledger').innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
                         .select([
                         'part_master.id as partId',
@@ -135,7 +136,7 @@ const partsController = {
             await knex.transaction(async (trx) => {
                 let partPayload = req.body;
                 console.log('[controllers][part][addParts]', partPayload);
-                partPayload = _.omit(partPayload, ['quantity'], ['unitCost'], ['additionalAttributes'], ['images'], ['files'],['additionalDescription'])
+                partPayload = _.omit(partPayload,['image_url'],['file_url'], ['quantity'], ['unitCost'], ['additionalAttributes'], ['images'], ['files'],['additionalDescription'])
                 // validate keys
                 const schema = Joi.object().keys({
                     partName: Joi.string().required(),
@@ -206,9 +207,7 @@ const partsController = {
                         attribs.push(d[0])
                     
                     }
-
                 }
-
 
                 // Insert images in images table
                 let imagesData = req.body.images;
@@ -386,6 +385,7 @@ const partsController = {
         }
     },
     addPartStock: async (req, res) => {
+
 
         try {
 
