@@ -449,6 +449,8 @@ const assetController = {
                     additionalInformation: Joi.string().required()
                 });
 
+                let currentTime = new Date().getTime();
+
                 let result = Joi.validate(assetPayload, schema);
                 console.log('[controllers][asset][addAsset]: JOi Result', result);
 
@@ -472,7 +474,6 @@ const assetController = {
                 }
 
                 // Update in asset_master table,
-                let currentTime = new Date().getTime();
 
                 let insertData = { ...assetPayload, assetCategoryId, updatedAt: currentTime, isActive: true };
 
