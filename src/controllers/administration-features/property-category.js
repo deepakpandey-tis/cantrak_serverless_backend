@@ -538,13 +538,13 @@ const propertyCategoryController = {
     assetCategoryList : async (req,res)=>{
          try{
 
-            let assetCategoryList = await knex('asset_category_master').returning('*')
+            let assetCategoryList = await knex('part_category_master').returning('*')
 
             res.status(200).json({
                 data: {
                     assetCategoryList: assetCategoryList
                 },
-                message: "Asset Category List Successfully !"
+                message: "Part Category List Successfully !"
             });
         
             } catch (err) {
