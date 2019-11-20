@@ -653,6 +653,14 @@ const taskGroupController = {
       const list = await knex('pm_master2').select()
       let reqData = req.query;
       let total, rows
+      let {assetCategoryId,pmPlanName,startDate,endDate} = req.body;
+      let filters = {}
+      if(assetCategoryId){
+        filters['asset_category_master.id'] = assetCategoryId;
+      }
+
+      startDate = startDate ? moment(startDate).format("YYYY-MM-DD HH:mm:ss") : ''
+      endDate = endDate ? moment(endDate).format("YYYY-MM-DD HH:mm:ss") : ''
 
       let pagination = {};
       let per_page = reqData.per_page || 10;
@@ -661,16 +669,40 @@ const taskGroupController = {
       let offset = (page - 1) * per_page;
       [total, rows] = await Promise.all([
         knex.count('* as count').from("pm_master2")
-        .innerJoin('asset_category_master','pm_master2.assetCategoryId','asset_category_master.id'),
+        .innerJoin('asset_category_master','pm_master2.assetCategoryId','asset_category_master.id')
+          .innerJoin('task_group_schedule', 'pm_master2.id', 'task_group_schedule.pmId')
+        .where(qb => {
+          qb.where(filters)
+          if(pmPlanName){
+            qb.where('pm_master2.name', 'like', `%${pmPlanName}%`)
+          }
+          if(startDate){
+            qb.where({'task_group_schedule.startDate':startDate})
+          }
+          if(endDate){
+            qb.where({ 'task_group_schedule.endDate': endDate })
+          }
+        }),
         knex.from('pm_master2')
         .innerJoin('asset_category_master','pm_master2.assetCategoryId','asset_category_master.id')
+          .innerJoin('task_group_schedule', 'pm_master2.id', 'task_group_schedule.pmId')
         .select([
-          'pm_master2.*',
           
           'asset_category_master.*',
+          'pm_master2.*',
           'pm_master2.id as id'
-                ])                                                                                                                                                                                
-          .offset(offset).limit(per_page)
+        ]).where(qb => {
+          qb.where(filters)
+          if (pmPlanName) {
+            qb.where('pm_master2.name', 'like', `%${pmPlanName}%`)
+          }
+          if (startDate) {
+            qb.where({ 'task_group_schedule.startDate': startDate })
+          }
+          if (endDate) {
+            qb.where({ 'task_group_schedule.endDate': endDate })
+          }
+        }).offset(offset).limit(per_page)
       ])
 
       console.log(JSON.stringify(total,2,null))
@@ -1412,6 +1444,36 @@ const taskGroupController = {
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
         ],
       });
+    }
+  },
+  editWorkOrder: async(req,res) => {
+    try {
+      const payload = req.body;
+      let {workOrderId,teamId,additionalUsers,mainUserId,tasks} = payload
+      // First based on that workOrderId update tasks
+      let updatedTasks = []
+      if(tasks && tasks.length) {
+        for(let task of tasks){
+          updatedTask = await knex('pm_task').update({taskName:task.taskName}).where({taskGroupScheduleAssignAssetId:workOrderId,id:task.id}).returning(['*'])
+          updatedTasks.push(updatedTask[0]);
+        }
+      }
+
+
+
+      return res.status(200).json({
+        data: {
+          updatedTasks
+        },
+        message:'Tasks updated!'
+      })
+   } catch(err) {
+      console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });      
     }
   }
 }
