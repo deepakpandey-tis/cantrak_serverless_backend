@@ -57,9 +57,12 @@ const partsController = {
                         'part_master.unitOfMeasure',
                         'part_master.partCategory as Category',
                         'part_master.barcode as Barcode',
-                        'part_ledger.createdAt as Date Added'
+                        'part_ledger.createdAt as Date Added',
+                        'part_ledger',
+                         knex.raw('SUM(quantity)')
 
                     ])
+                    .groupBy(['part_master.id','part_ledger.id'])
                     .offset(offset).limit(per_page)
                 ])
             } else {
@@ -78,9 +81,12 @@ const partsController = {
                         'part_master.unitOfMeasure',
                         'part_master.partCategory as Category',
                         'part_master.barcode as Barcode',
-                        'part_ledger.createdAt as Date Added'
+                        'part_ledger.createdAt as Date Added',
+                        'part_ledger',
+                         knex.raw('SUM(quantity)')
 
                     ])
+                    .groupBy(['part_master.id','part_ledger.id'])
                         .where(filters).offset(offset).limit(per_page)
                     ])
                 } catch (e) {
@@ -134,12 +140,13 @@ const partsController = {
             let attribs = []
             let files = [];
             let images = [];
+            let quantityObject;
 
             await knex.transaction(async (trx) => {
                 let partPayload = req.body;
                 let payload     = req.body;
                 console.log('[controllers][part][addParts]', partPayload);
-                partPayload = _.omit(partPayload,['minimumQuantity'],['unitOfMeasure'],['barcode'],['image_url'],['file_url'], ['quantity'], ['unitCost'], ['additionalAttributes'], ['images'], ['files'],['additionalDescription'],['partDescription'],['assignedVendors'],['additionalPartDetails'])
+                partPayload = _.omit(partPayload,['minimumQuantity'],['unitOfMeasure'],['barcode'],['image_url'],['file_url'], 'quantity', 'unitCost', ['additionalAttributes'], ['images'], ['files'],['additionalDescription'],'partDescription',['assignedVendors'],['additionalPartDetails'])
                 // validate keys
                 const schema = Joi.object().keys({
                     partName: Joi.string().required(),
@@ -201,8 +208,16 @@ const partsController = {
                 //         ],
                 //     });
                 // }
-
+                let quantityObject;
+                
                 if(unitCost || quantity){
+                    unitCost = unitCost?unitCost:null;
+                    quantity = quantity?quantity:null;
+                    let insertD = {
+                        unitCost : unitCost,
+                        quantity : quantity
+                    }
+
                 let quantityData = { partId: part.id, unitCost, quantity, createdAt: currentTime, updatedAt: currentTime };
                 let partQuantityResult = await knex.insert(quantityData).returning(['*']).transacting(trx).into('part_ledger');
 
@@ -403,17 +418,44 @@ const partsController = {
             let partStock = null;
 
             await knex.transaction(async (trx) => {
-                let partStockPayload = req.body;
+                let partStockPayload = _.omit(req.body,'date');
                 console.log('[controllers][part][stock]', partStockPayload);
                 // validate keys
-                const schema = Joi.object().keys({
-                    partId: Joi.string().required(),
-                    unitCost: Joi.number().required(),
-                    quantity: Joi.number().required(),
-                    isPartAdded: Joi.string().required()
-                });
+                let result;
+                if(partStockPayload.adjustType=="1" || partStockPayload.adjustType=="3"){
+                    const schema = Joi.object().keys({
+                        partId: Joi.string().required(),
+                        unitCost: Joi.number().required(),
+                        quantity: Joi.number().required(),
+                        adjustType:Joi.string().required(),
+                        serviceOrderNo:Joi.string().required(),
+                        isPartAdded: Joi.string().required()
+                    });
+                     result = Joi.validate(_.omit(partStockPayload,'description','date','workOrderId'), schema);
 
-                let result = Joi.validate(partStockPayload, schema);
+                } else if(partStockPayload.adjustType=="10"){
+                    const schema = Joi.object().keys({
+                        partId: Joi.string().required(),
+                        unitCost: Joi.number().required(),
+                        quantity: Joi.number().required(),
+                        adjustType:Joi.string().required(),
+                        workOrderId:Joi.string().required(),
+                        isPartAdded: Joi.string().required()
+                    });
+                     result = Joi.validate(_.omit(partStockPayload,'serviceOrderNo','description','date'), schema);
+
+                } else {
+                    const schema = Joi.object().keys({
+                        partId: Joi.string().required(),
+                        unitCost: Joi.number().required(),
+                        quantity: Joi.number().required(),
+                        adjustType:Joi.string().required(),
+                        isPartAdded: Joi.string().required()
+                    });
+                     result = Joi.validate(_.omit(partStockPayload,'serviceOrderNo','description','date','workOrderId'), schema);
+
+                }
+                
                 console.log('[controllers][part]: JOi Result', result);
 
                 if (result && result.hasOwnProperty('error') && result.error) {
