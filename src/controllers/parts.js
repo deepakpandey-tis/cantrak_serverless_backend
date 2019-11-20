@@ -54,6 +54,7 @@ const partsController = {
                         'part_master.partCode as ID',
                         'part_ledger.quantity as Quantity',
                         'part_ledger.unitCost as Price',
+                        'part_master.unitOfMeasure',
                         'part_master.partCategory as Category',
                         'part_master.barcode as Barcode',
                         'part_ledger.createdAt as Date Added'
@@ -74,6 +75,7 @@ const partsController = {
                         'part_master.partCode as ID',
                         'part_ledger.quantity as Quantity',
                         'part_ledger.unitCost as Price',
+                        'part_master.unitOfMeasure',
                         'part_master.partCategory as Category',
                         'part_master.barcode as Barcode',
                         'part_ledger.createdAt as Date Added'
