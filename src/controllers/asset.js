@@ -438,7 +438,7 @@ const assetController = {
                     // barcode: Joi.string(),
                     // areaName: Joi.string(),
                     // description: Joi.string(),
-                   assetCategory: Joi.string().required(),
+                   //assetCategory: Joi.string().required(),
                     // price: Joi.string(),
                     // installationDate: Joi.string(),
                     // warrentyExpiration: Joi.string(),
@@ -451,7 +451,7 @@ const assetController = {
 
                 let currentTime = new Date().getTime();
 
-                let result = Joi.validate({assetName:assetPayload.assetName,model:assetPayload.model,assetCategory:assetPayload.assetCategory}, schema);
+                let result = Joi.validate({assetName:assetPayload.assetName,model:assetPayload.model}, schema);
                 console.log('[controllers][asset][addAsset]: JOi Result', result);
 
                 if (result && result.hasOwnProperty('error') && result.error) {
