@@ -653,11 +653,14 @@ const taskGroupController = {
       const list = await knex('pm_master2').select()
       let reqData = req.query;
       let total, rows
-      let {assetCategoryId,pmPlanName} = req.body;
+      let {assetCategoryId,pmPlanName,startDate,endDate} = req.body;
       let filters = {}
       if(assetCategoryId){
         filters['asset_category_master.id'] = assetCategoryId;
       }
+
+      startDate = startDate ? moment(startDate).format("YYYY-MM-DD HH:mm:ss") : ''
+      endDate = endDate ? moment(endDate).format("YYYY-MM-DD HH:mm:ss") : ''
 
       let pagination = {};
       let per_page = reqData.per_page || 10;
@@ -666,14 +669,23 @@ const taskGroupController = {
       let offset = (page - 1) * per_page;
       [total, rows] = await Promise.all([
         knex.count('* as count').from("pm_master2")
-        .innerJoin('asset_category_master','pm_master2.assetCategoryId','asset_category_master.id').where(qb => {
+        .innerJoin('asset_category_master','pm_master2.assetCategoryId','asset_category_master.id')
+          .innerJoin('task_group_schedule', 'pm_master2.id', 'task_group_schedule.pmId')
+        .where(qb => {
           qb.where(filters)
           if(pmPlanName){
             qb.where('pm_master2.name', 'like', `%${pmPlanName}%`)
           }
+          if(startDate){
+            qb.where({'task_group_schedule.startDate':startDate})
+          }
+          if(endDate){
+            qb.where({ 'task_group_schedule.endDate': endDate })
+          }
         }),
         knex.from('pm_master2')
         .innerJoin('asset_category_master','pm_master2.assetCategoryId','asset_category_master.id')
+          .innerJoin('task_group_schedule', 'pm_master2.id', 'task_group_schedule.pmId')
         .select([
           
           'asset_category_master.*',
@@ -683,6 +695,12 @@ const taskGroupController = {
           qb.where(filters)
           if (pmPlanName) {
             qb.where('pm_master2.name', 'like', `%${pmPlanName}%`)
+          }
+          if (startDate) {
+            qb.where({ 'task_group_schedule.startDate': startDate })
+          }
+          if (endDate) {
+            qb.where({ 'task_group_schedule.endDate': endDate })
           }
         }).offset(offset).limit(per_page)
       ])
