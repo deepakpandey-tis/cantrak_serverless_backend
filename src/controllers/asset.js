@@ -265,7 +265,7 @@ const assetController = {
                                 qb.where('asset_category_master.categoryName', 'like', `%${category}%`)
 
                             }
-                        }).offset(offset).limit(per_page).first(),
+                        }).first(),
                         knex("asset_master")
                         .leftJoin('location_tags','asset_master.id','location_tags.entityId')
                         .leftJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
@@ -514,9 +514,16 @@ const assetController = {
                 let additionalAttributes = req.body.additionalAttributes;
                 if (additionalAttributes.length > 0) {
                     for (attribute of additionalAttributes) {
-                        let finalAttribute = { ...attribute, assetId: id, updatedAt: currentTime }
-                        let d = await knex.update(finalAttribute).where({ id: attribute.id }).returning(['*']).transacting(trx).into('asset_attributes');
-                        attribs.push(d[0])
+                        if(attribute.id){
+
+                            let finalAttribute = { ...attribute, assetId: Number(id), updatedAt: currentTime }
+                            let d = await knex.update(finalAttribute).where({ id: attribute.id }).returning(['*']).transacting(trx).into('asset_attributes');
+                            attribs.push(d[0])
+                        } else {
+                            let d = await knex.insert({ attributeName: attribute.attributeName, attributeDescription: attribute.attributeDescription, assetId: Number(id) }).returning(['*']).transacting(trx).into('asset_attributes');
+                            attribs.push(d[0])
+                        
+                        }
                     }
                 }
                 trx.commit;
