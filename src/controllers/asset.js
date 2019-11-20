@@ -196,7 +196,7 @@ const assetController = {
             let {
                 assetName,
                 assetModel,
-                area,
+                // area,
                 category
                 } = req.body;
             let pagination = {};
@@ -211,9 +211,9 @@ const assetController = {
              if(assetModel){
                 filters['asset_master.model'] = assetModel
              }
-             if(area){
-                filters['asset_master.areaName'] = area
-             }
+            //  if(area){
+            //     filters['asset_master.areaName'] = area
+            //  }
              if(category){
                 filters['asset_category_master.categoryName'] = category
              }
@@ -222,15 +222,15 @@ const assetController = {
             if (_.isEmpty(filters)) {
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from("asset_master")
-                    .innerJoin('location_tags','asset_master.id','location_tags.entityId')
-                    .innerJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
-                    .innerJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
+                    .leftJoin('location_tags','asset_master.id','location_tags.entityId')
+                    .leftJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
+                    .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
                     .first(),
                     
                     knex("asset_master")
-                    .innerJoin('location_tags','asset_master.id','location_tags.entityId')
-                    .innerJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
-                    .innerJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
+                    .leftJoin('location_tags','asset_master.id','location_tags.entityId')
+                    .leftJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
+                    .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
                     .select([
                         'asset_master.assetName as Name',
                         'asset_master.id as ID',
@@ -239,7 +239,9 @@ const assetController = {
                         'asset_master.barcode as Barcode',
                         'asset_master.areaName as Area',
                         'asset_category_master.categoryName as Category',
-                        'asset_master.createdAt as Date Created'
+                        'asset_master.createdAt as Date Created',
+                        'asset_master.unitOfMeasure as Unit Of Measure',
+
                     ])
                     .offset(offset).limit(per_page)
                 ])
@@ -248,14 +250,14 @@ const assetController = {
                 try {
                     [total, rows] = await Promise.all([
                         knex.count('* as count').from("asset_master")
-                        .innerJoin('location_tags','asset_master.id','location_tags.entityId')
-                        .innerJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
-                        .innerJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
+                        .leftJoin('location_tags','asset_master.id','location_tags.entityId')
+                        .leftJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
+                        .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
                         .where(filters).offset(offset).limit(per_page).first(),
                         knex("asset_master")
-                        .innerJoin('location_tags','asset_master.id','location_tags.entityId')
-                        .innerJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
-                        .innerJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
+                        .leftJoin('location_tags','asset_master.id','location_tags.entityId')
+                        .leftJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
+                        .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
                         .select([
                             'asset_master.assetName as Name',
                             'asset_master.id as ID',
@@ -264,7 +266,8 @@ const assetController = {
                             'asset_master.barcode as Barcode',
                             'asset_master.areaName as Area',
                             'asset_category_master.categoryName as Category',
-                            'asset_master.createdAt as Date Created'
+                            'asset_master.createdAt as Date Created',
+                            'asset_master.unitOfMeasure as Unit Of Measure',
                         ])
                         .where(filters).offset(offset).limit(per_page)
                     ])
@@ -1031,7 +1034,8 @@ const assetController = {
             console.log('[controllers][asset][addServiceOrderRelocateAsset] :  Error', err);
             
 
-    }
+    },
+    //getAssetCategoryById()
 }
 
 module.exports = assetController;
