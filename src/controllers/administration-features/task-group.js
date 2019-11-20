@@ -1264,13 +1264,20 @@ const taskGroupController = {
         .where({
           'pm_task.taskGroupScheduleAssignAssetId': payload.taskGroupScheduleAssignAssetId
         })
+        let statuses = tasks.filter(t => t.status !== "CMTD")
+        if(statuses.length === 0){
+          status = 'complete'
+        } else {
+          status = 'incomplete'
+        }
       }
        // TASK CLOSE
          return res.status(200).json({
           data: {
             taskGroupPmAssetDatails : _.uniqBy(pmResult,'id'),
             additionalUsers         : additionalUsers,
-            tasks                   : tasks
+            tasks                   : tasks,
+            status:status
           },
           message: 'Task Group Asset PM Details Successfully!'
         })

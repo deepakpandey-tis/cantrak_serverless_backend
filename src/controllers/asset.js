@@ -265,7 +265,7 @@ const assetController = {
                                 qb.where('asset_category_master.categoryName', 'like', `%${category}%`)
 
                             }
-                        }).offset(offset).limit(per_page).first(),
+                        }).first(),
                         knex("asset_master")
                         .leftJoin('location_tags','asset_master.id','location_tags.entityId')
                         .leftJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
