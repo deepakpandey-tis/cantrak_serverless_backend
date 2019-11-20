@@ -191,7 +191,7 @@ const assetController = {
 
             let reqData = req.query;
             
-            let filters = {}
+            //let filters = {}
             let total, rows
             let {
                 assetName,
@@ -205,55 +205,67 @@ const assetController = {
             if (page < 1) page = 1;
             let offset = (page - 1) * per_page;
     
-             if(assetName){
-              filters['asset_master.assetName'] = assetName
-             }
-             if(assetModel){
-                filters['asset_master.model'] = assetModel
-             }
+            //  if(assetName){
+            //   filters['asset_master.assetName'] = assetName
+            //  }
+            //  if(assetModel){
+            //     filters['asset_master.model'] = assetModel
+            //  }
             //  if(area){
             //     filters['asset_master.areaName'] = area
             //  }
-             if(category){
-                filters['asset_category_master.categoryName'] = category
-             }
+            //  if(category){
+            //     filters['asset_category_master.categoryName'] = category
+            //  }
             
 
-            if (_.isEmpty(filters)) {
-                [total, rows] = await Promise.all([
-                    knex.count('* as count').from("asset_master")
-                    .leftJoin('location_tags','asset_master.id','location_tags.entityId')
-                    .leftJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
-                    .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
-                    .first(),
+            // if (_.isEmpty(filters)) {
+            //     [total, rows] = await Promise.all([
+            //         knex.count('* as count').from("asset_master")
+            //         .leftJoin('location_tags','asset_master.id','location_tags.entityId')
+            //         .leftJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
+            //         .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
+            //         .first(),
                     
-                    knex("asset_master")
-                    .leftJoin('location_tags','asset_master.id','location_tags.entityId')
-                    .leftJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
-                    .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
-                    .select([
-                        'asset_master.assetName as Name',
-                        'asset_master.id as ID',
-                        'location_tags_master.title as Location',
-                        'asset_master.model as Model',
-                        'asset_master.barcode as Barcode',
-                        'asset_master.areaName as Area',
-                        'asset_category_master.categoryName as Category',
-                        'asset_master.createdAt as Date Created',
-                        'asset_master.unitOfMeasure as Unit Of Measure',
+            //         knex("asset_master")
+            //         .leftJoin('location_tags','asset_master.id','location_tags.entityId')
+            //         .leftJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
+            //         .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
+            //         .select([
+            //             'asset_master.assetName as Name',
+            //             'asset_master.id as ID',
+            //             'location_tags_master.title as Location',
+            //             'asset_master.model as Model',
+            //             'asset_master.barcode as Barcode',
+            //             'asset_master.areaName as Area',
+            //             'asset_category_master.categoryName as Category',
+            //             'asset_master.createdAt as Date Created',
+            //             'asset_master.unitOfMeasure as Unit Of Measure',
 
-                    ])
-                    .offset(offset).limit(per_page)
-                ])
-            } else {
-                filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
+            //         ])
+            //         .offset(offset).limit(per_page)
+            //     ])
+            //} else {
+                //filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
                 try {
                     [total, rows] = await Promise.all([
                         knex.count('* as count').from("asset_master")
                         .leftJoin('location_tags','asset_master.id','location_tags.entityId')
                         .leftJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
                         .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
-                        .where(filters).offset(offset).limit(per_page).first(),
+                        .where(qb => {
+                            if(assetName){
+                                qb.where('asset_master.assetName','like', `%${assetName}%`)
+                            }
+                            if(assetModel){
+                                qb.where('asset_master.model', 'like', `%${assetModel}%`)
+
+                            }
+                            if(category){
+                                qb.where('asset_category_master.categoryName', 'like', `%${category}%`)
+
+                            }
+                        }).offset(offset).limit(per_page).first(),
                         knex("asset_master")
                         .leftJoin('location_tags','asset_master.id','location_tags.entityId')
                         .leftJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
@@ -269,13 +281,25 @@ const assetController = {
                             'asset_master.createdAt as Date Created',
                             'asset_master.unitOfMeasure as Unit Of Measure',
                         ])
-                        .where(filters).offset(offset).limit(per_page)
+                        .where(qb => {
+                            if (assetName) {
+                                qb.where('asset_master.assetName', 'like', `%${assetName}%`)
+                            }
+                            if (assetModel) {
+                                qb.where('asset_master.model', 'like', `%${assetModel}%`)
+
+                            }
+                            if (category) {
+                                qb.where('asset_category_master.categoryName', 'like', `%${category}%`)
+
+                            }
+                        }).offset(offset).limit(per_page)
                     ])
                 } catch (e) {
                     // Error
                     console.log('Error: ' + e.message)
                 }
-            }
+            //}
 
             let count = total.count;
             pagination.total = count;
