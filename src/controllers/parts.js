@@ -29,7 +29,7 @@ const partsController = {
             let filters = {}
 
             if (partName) {
-                filters['part_master.partName'] = partName
+                filters['part_master.partName'] = partName;
             }
 
             if (partCode) {
@@ -44,49 +44,57 @@ const partsController = {
 
             if (_.isEmpty(filters)) {
                 [total, rows] = await Promise.all([
-                    knex.count('* as count').from("part_ledger")
-                    .innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
-                    knex.from('part_ledger').
-                    innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
+                    knex.count('* as count').from("part_master")
+                    .innerJoin('part_category_master','part_master.partCategory','part_category_master.id').first(),
+                    //.innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
+                    knex.from('part_master')
+                    .innerJoin('part_category_master','part_master.partCategory','part_category_master.id')
+                   // innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
                     .select([
                         'part_master.id as partId',
                         'part_master.partName as Name',
                         'part_master.partCode as ID',
-                        'part_ledger.quantity as Quantity',
-                        'part_ledger.unitCost as Price',
+                        //'part_ledger.quantity as Quantity',
+                        //'part_ledger.unitCost as Price',
                         'part_master.unitOfMeasure',
-                        'part_master.partCategory as Category',
+                        'part_category_master.categoryName as Category',
                         'part_master.barcode as Barcode',
-                        'part_ledger.createdAt as Date Added',
-                        'part_ledger',
-                         knex.raw('SUM(quantity)')
+                        'part_master.createdAt as Date Added',
+                        //'part_ledger',
+                         //knex.raw('SUM(quantity)')
 
                     ])
-                    .groupBy(['part_master.id','part_ledger.id'])
+                    .orderBy('part_master.id','desc')
+                    //.groupBy(['part_master.id','part_ledger.id'])
                     .offset(offset).limit(per_page)
                 ])
             } else {
                 //filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
                 try {
                     [total, rows] = await Promise.all([
-                        knex.count('* as count').from("part_ledger").innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first()
+                        knex.count('* as count').from("part_master")
+                        .innerJoin('part_category_master','part_master.partCategory','part_category_master.id').first()
+                        //.innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first()
                         .where(filters),
-                        knex.from('part_ledger').innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
+                        knex.from('part_master')
+                        .innerJoin('part_category_master','part_master.partCategory','part_category_master.id')
+                        //innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
                         .select([
                         'part_master.id as partId',
                         'part_master.partName as Name',
                         'part_master.partCode as ID',
-                        'part_ledger.quantity as Quantity',
-                        'part_ledger.unitCost as Price',
+                        //'part_ledger.quantity as Quantity',
+                        //'part_ledger.unitCost as Price',
                         'part_master.unitOfMeasure',
-                        'part_master.partCategory as Category',
+                        'part_category_master.categoryName as Category',
                         'part_master.barcode as Barcode',
-                        'part_ledger.createdAt as Date Added',
-                        'part_ledger',
-                         knex.raw('SUM(quantity)')
+                        'part_master.createdAt as Date Added',
+                        //'part_ledger',
+                        // knex.raw('SUM(quantity)')
 
                     ])
-                    .groupBy(['part_master.id','part_ledger.id'])
+                    .orderBy('part_master.id','desc')
+                    //.groupBy(['part_master.id','part_ledger.id'])
                         .where(filters).offset(offset).limit(per_page)
                     ])
                 } catch (e) {
@@ -386,9 +394,22 @@ const partsController = {
             let partDataResult = partData[0];
             let omitedPartDataResult = _.omit(partDataResult, ['createdAt'], ['updatedAt'], ['isActive'])
             additionalAttributes = await knex('part_attributes').where({ partId: id }).select()
-            partQuantityData = await knex('part_ledger').where({ partId: id }).select('unitCost', 'quantity')
-            let partQuantityDataResult = partQuantityData[0]
+            partQuantityData = await knex('part_ledger')
+            .where({ partId: id }).select(
+                'unitCost',
+                'quantity'
+                )
+            let partQuantityDataResult = partQuantityData
 
+            let totalQuantity=0;
+           for(let i =0; i<partQuantityDataResult.length; i++){
+            totalQuantity += parseInt(partQuantityDataResult[i].quantity)
+           }
+           let totalUnitCost =0;
+
+           for(let i =0; i<partQuantityDataResult.length; i++){
+            totalUnitCost += parseInt(partQuantityDataResult[i].unitCost)
+           }
 
             files = await knex('files').where({ entityId: id, entityType: 'part_master' }).select()
             images = await knex('images').where({ entityId: id, entityType: 'part_master' }).select()
@@ -396,7 +417,7 @@ const partsController = {
             console.log('[controllers][parts][getPartDetails]: Part Details', partData);
 
             res.status(200).json({
-                data: { part: { ...omitedPartDataResult, ...partQuantityDataResult, additionalAttributes, images, files } },
+                data: { part: { quantity:totalQuantity,unitCost:totalUnitCost,...omitedPartDataResult, additionalAttributes, images, files } },
                 message: "Part Details"
             });
 
@@ -710,6 +731,7 @@ const partsController = {
             let payload    = req.query;
             let id         = payload.id;
             let partResult = await knex.from('part_master')
+                                       .innerJoin("part_category_master",'part_master.partCategory','part_category_master.id')
                                      .select([
                                          'part_master.id as id',
                                          'part_master.partName as partName',
@@ -717,12 +739,13 @@ const partsController = {
                                          'part_master.partCode',
                                          'part_master.partDescription as partDescription',
                                          'part_master.partCategory as partCategory',
+                                         'part_category_master.categoryName as partCatgoryName ',
                                          'part_master.minimumQuantity as minimumQuantity',
                                          'part_master.barcode as barcode',
                                          'part_master.assignedVendors as assignedVendors',
                                          'part_master.additionalPartDetails as additionalPartDetails'])
                                      .returning('*')
-                             .where({id:payload.id})
+                             .where({'part_master.id':payload.id})
          
               let partLedgerResult = await knex.from('part_ledger')
                                       .select([
