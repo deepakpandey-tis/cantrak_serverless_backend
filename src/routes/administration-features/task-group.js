@@ -49,6 +49,7 @@ router.post('/edit-work-order',authMiddleware.isAuthenticated,authMiddleware.isA
 router.post('/get-task-group-details',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getTaskGroupDetails)
 router.get('/get-task-group-template-list',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getTaskGroupTemplateList)
 router.post('/update-task-group-template-detail', authMiddleware.isAuthenticated, authMiddleware.isAdmin, taskGroupController.updateTaskGroupDetails)
+router.post('/get-task-feedbacks', authMiddleware.isAuthenticated, authMiddleware.isAdmin, taskGroupController.getFeedbacksOfTask)
 
 
 
