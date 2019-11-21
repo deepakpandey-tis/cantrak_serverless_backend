@@ -25,7 +25,7 @@ custom:
   serviceName: tis-serverless-backend
   stage: ${opt:stage, self:custom.defaultStage}
   profile: ${self:custom.profiles.${self:provider.stage}}
-  bucket: local-bucket
+  bucket: sls-app-resources-bucket
   defaultStage: dev
   profiles:
     dev: tis-dev

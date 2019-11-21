@@ -390,7 +390,9 @@ const partsController = {
             let images = null;
             let id = req.body.id;
 
-            partData = await knex('part_master').where({ id }).select()
+            partData = await knex('part_master')
+            .leftJoin('vendor_master','part_master.assignedVendors','vendor_master.id')
+            .where({'part_master.id':id}).select('part_master.*','vendor_master.name')
             let partDataResult = partData[0];
             let omitedPartDataResult = _.omit(partDataResult, ['createdAt'], ['updatedAt'], ['isActive'])
             additionalAttributes = await knex('part_attributes').where({ partId: id }).select()
@@ -799,6 +801,26 @@ const partsController = {
                 });   
             }
 
+        } catch(err){
+            return res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            })
+        }   
+    },
+    //  CHECK WORK ORDER ID 
+    checkOrderWorkId : async (req,res)=>{
+  
+        try{
+            let workOrderId = req.params.id;
+            let result = "";
+            result = await knex('task_group_schedule_assign_assets').returning('*')
+                               .where({id:workOrderId})
+                    return res.status(200).json({
+                                data   :result,
+                                message:"Work Order Id Successfully!"
+                            });
         } catch(err){
             return res.status(500).json({
                 errors: [
