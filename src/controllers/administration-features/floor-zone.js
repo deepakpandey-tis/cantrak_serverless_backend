@@ -203,14 +203,15 @@ const floorZoneController = {
 
         let [total, rows] = await Promise.all([
           knex.count('* as count').from("floor_and_zones")
-          .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
-          .innerJoin("users", "floor_and_zones.createdBy", "users.id")
+          .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
+          .leftJoin("users", "floor_and_zones.createdBy", "users.id")
           .first(),
           knex("floor_and_zones")
-          .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
-          .innerJoin("users", "floor_and_zones.createdBy", "users.id")
+          .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
+          .leftJoin("users", "floor_and_zones.createdBy", "users.id")
           .select([
             'floor_and_zones.floorZoneCode as Floor/Zone',
+            'floor_and_zones.id as id',
             'floor_and_zones.description as Description',
             'floor_and_zones.totalFloorArea as Total Area',
             'floor_and_zones.isActive as Status',
@@ -259,6 +260,7 @@ const floorZoneController = {
           .select([
             'floor_and_zones.floorZoneCode as Floor/Zone',
             'floor_and_zones.description as Description',
+            'floor_and_zones.id as id',
             'floor_and_zones.totalFloorArea as Total Area',
             'floor_and_zones.isActive as Status',
             'users.name as Created By',
