@@ -19,6 +19,7 @@ router.post('/export-part', authMiddleware.isAuthenticated, partsController.expo
 router.get('/part-list', authMiddleware.isAuthenticated, partsController.partList)
 router.get('/part-code-exist',authMiddleware.isAuthenticated,partsController.partCodeExist)
 router.get('/get-part-detail-by-id',authMiddleware.isAuthenticated,partsController.getPartDetailById)
+router.get('/check-order-work-id/:id',authMiddleware.isAuthenticated,partsController.checkOrderWorkId)
 
 var storage = multer.diskStorage({
 	destination: './src/uploads',
