@@ -4,6 +4,8 @@ jspm_packages
 buckets
 tmp
 
+# src/uploads/*
+
 # Serverless directories
 .serverless
 
