@@ -17,6 +17,7 @@ deploy_master:
   
 
   script:
+    - node -v
     - rm ./package-lock.json
     - npm install -g serverless
     - npm install
