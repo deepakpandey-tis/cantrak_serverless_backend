@@ -247,7 +247,12 @@ const usersController = {
     },
     getAllUsers: async (req,res) => {
         try {
-            const users= await knex('users').select('id','name')
+            const users= await knex('users')
+                               .leftJoin('user_roles','users.id','user_roles.userId')
+                               .select('users.id','users.name')
+                               .whereNotIn('user_roles.roleId', [1, 2, 7])
+                               .groupBy('users.id')
+
             return res.status(200).json({
                 data: {
                     users
