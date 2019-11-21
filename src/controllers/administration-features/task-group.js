@@ -1230,10 +1230,11 @@ const taskGroupController = {
            'teams.teamName as teamName',
            'assigned_service_team.userId as mainUserId',
            'users.name as mainUser',
-           'task_group_schedule_assign_assets.pmDate'
+           'task_group_schedule_assign_assets.pmDate as pmDate'
          ])
          .where({
            'task_group_schedule.id':payload.taskGroupScheduleId,
+           'task_group_schedule_assign_assets.id':payload.taskGroupScheduleAssignAssetId,
            //'task_group_schedule.taskGroupId':payload.taskGroupId,
            'assigned_service_team.entityType':'pm_task_groups'
           })
@@ -1444,6 +1445,24 @@ const taskGroupController = {
         message: 'Feedback added successfully!'
       })
 
+    } catch(err) {
+      console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
+  getFeedbacksOfTask: async(req,res) => {
+    try {
+      const {taskId} = req.body;
+      const feedbacks = await knex('task_feedbacks').select('*').where({taskId})
+      return res.status(200).json({
+        data: {
+          feedbacks
+        }
+      })
     } catch(err) {
       console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
       res.status(500).json({
