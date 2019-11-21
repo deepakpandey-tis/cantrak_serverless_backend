@@ -9,7 +9,7 @@ const knex = require('../../db/knex');
 
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 
 
@@ -78,7 +78,7 @@ const taxesfactionController = {
 
         }catch (err){
             console.log('[controllers][tax][addtax] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -163,7 +163,7 @@ const taxesfactionController = {
 
         }catch (err){
             console.log('[controllers][tax][updateTax] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -213,7 +213,7 @@ const taxesfactionController = {
 
         } catch (err) {
             console.log('[controllers][tax][gettax] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -290,7 +290,7 @@ const taxesfactionController = {
 
         }catch (err){
             console.log('[controllers][tax][deletetax] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }

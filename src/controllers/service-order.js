@@ -3,8 +3,8 @@ const _ = require('lodash');
 const moment = require("moment")
 
 const knex = require('../db/knex');
-
-const trx = knex.transaction();
+const XLSX = require('xlsx');
+//const trx = knex.transaction();
 
 
 const serviceOrderController = {
@@ -146,7 +146,7 @@ const serviceOrderController = {
             })
         } catch (err) {
             console.log('[controllers][serviceOrder][addServiceOrder] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -161,7 +161,24 @@ const serviceOrderController = {
             let { serviceRequestId,
                 description,
                 serviceOrderStatus,
-                archive, location, serviceStartTime, serviceStopTime, createdAt, createdBy, requestedBy, completedBy, completedFrom, dueFrom, completedTo, dueTo, createdFrom, createdTo } = req.body
+                archive,
+                location,assignedBy, 
+                serviceStartTime, 
+                serviceStopTime, 
+                createdAt, 
+                createdBy, 
+                requestedBy, 
+                completedBy, 
+                recurrenceType,
+                assignedTo,
+                completedFrom, 
+                dueFrom, 
+                completedTo, 
+                dueTo, 
+                createdFrom,
+                createdTo,
+                unit,
+                serviceType } = req.body
 
             let reqData = req.query;
             let total, rows
@@ -186,7 +203,7 @@ const serviceOrderController = {
             }
 
             if (archive) {
-                filters['service_orders.archive'] = serviceOrderStatus
+                filters['service_orders.archive'] = archive
             }
 
             if (location) {
@@ -197,6 +214,10 @@ const serviceOrderController = {
                 filters['service_orders.createdBy'] = createdBy
             }
 
+            if(assignedBy){
+                filters['service_orders.createdBy'] = assignedBy
+            }
+
             if (requestedBy) {
                 filters['service_orders.requestedBy'] = requestedBy
             }
@@ -205,6 +226,20 @@ const serviceOrderController = {
                 filters['service_orders.completedBy'] = completedBy
             }
 
+            if(recurrenceType){
+                filters['service_orders.recurrenceType'] = recurrenceType
+            }
+            if(assignedTo){
+                filters['users.name'] = assignedTo
+            }
+
+            if(unit){
+
+            }
+            if(serviceType){
+                filters['service_requests.serviceType'] = serviceType
+            }
+            
             if (serviceStartTime) {
                 filters['service_orders.serviceStartTime'] = serviceStartTime
             }
@@ -273,54 +308,27 @@ const serviceOrderController = {
             }
 
 
-
-            if (_.isEmpty(filters)) {
+            if((dueFromDate && dueToDate) || (createdFromDate && createdToDate)){
+               
+            
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from('service_orders')
                         .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
                         .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
                         .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                        .select(['service_orders.id as so_id',
-                            'service_requests.id as sr_id', 'service_requests.description as sr_description',
-                            'location', 'priority', 'orderDueDate',
-                            'service_orders.createdAt as createdAt',
-                            'service_requests.requestedBy as requestedBy',
-                            'serviceOrderStatus', 'service_problems.description as sp_description',
-                            'categoryId', 'problemId',
-                            'incident_categories.id as categoryId',
-                            'incident_categories.descriptionEng as problem'
-                        ]).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id']),
-                    knex.from('service_orders')
-                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                        .select(['service_orders.id as so_id',
-                            'service_requests.id as sr_id', 'service_requests.description as sr_description',
-                            'location', 'priority', 'orderDueDate',
-                            'service_orders.createdAt as createdAt',
-                            'service_requests.requestedBy as requestedBy',
-                            'serviceOrderStatus', 'service_problems.description as sp_description',
-                            'categoryId', 'problemId',
-                            'incident_categories.id as categoryId',
-                            'incident_categories.descriptionEng as problem'
-                        ]).offset(offset).limit(per_page)
-                ])
-            } else {
-                [total, rows] = await Promise.all([
-                    knex.count('* as count').from('service_orders')
-                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                        .select(['service_orders.id as so_id',
-                            'service_requests.id as sr_id', 'service_requests.description as sr_description',
-                            'location', 'priority', 'orderDueDate',
-                            'service_orders.createdAt as createdAt',
-                            'service_requests.requestedBy as requestedBy',
-                            'serviceOrderStatus', 'service_problems.description as sp_description',
-                            'categoryId', 'problemId',
-                            'incident_categories.id as categoryId',
-                            'incident_categories.descriptionEng as problem',
-                            'service_orders.createdBy as createdBy'
+                        .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
+                        .innerJoin('users','assigned_service_team.userId','users.id')
+                        .select([
+                            'service_orders.id as So Id',
+                            'service_requests.description as Description',
+                            'service_requests.location as Location',
+                            'service_requests.id as Sr Id', 
+                            'incident_categories.descriptionEng as Problem',
+                            'priority as Priority',
+                            'service_orders.createdBy as Created By',
+                             'orderDueDate as Due Date',
+                             'serviceOrderStatus as Status',
+                            'service_orders.createdAt as Date Created'
                         ]).where((qb) => {
 
                             if (filters) {
@@ -336,21 +344,132 @@ const serviceOrderController = {
                                 qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
                             }
 
-                        }).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id']),
+                        }).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id','assigned_service_team.id','users.id']),
                     knex.from('service_orders')
                         .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
                         .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
                         .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                        .select(['service_orders.id as so_id',
-                            'service_requests.id as sr_id', 'service_requests.description as sr_description',
-                            'location', 'priority', 'orderDueDate',
-                            'service_orders.createdAt as createdAt',
-                            'service_requests.requestedBy as requestedBy',
-                            'serviceOrderStatus', 'service_problems.description as sp_description',
-                            'categoryId', 'problemId',
-                            'incident_categories.id as categoryId',
-                            'incident_categories.descriptionEng as problem',
-                            'service_orders.createdBy as createdBy'
+                        .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
+                        .innerJoin('users','assigned_service_team.userId','users.id')
+                        .select([
+                            'service_orders.id as So Id',
+                            'service_requests.description as Description',
+                            'service_requests.location as Location',
+                            'service_requests.id as Sr Id', 
+                            'incident_categories.descriptionEng as Problem',
+                            'priority as Priority',
+                            'service_orders.createdBy as Created By',
+                             'orderDueDate as Due Date',
+                             'serviceOrderStatus as Status',
+                            'service_orders.createdAt as Date Created'
+                            
+                        ]).where((qb) => {
+
+                            if (filters) {
+                                qb.where(filters);
+                            }
+                            if (completedFromDate && completedToDate) {
+                                qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
+                            }
+                            if (dueFromDate && dueToDate) {
+                                qb.whereBetween('service_orders.orderDueDate', [dueFromDate, dueToDate])
+                            }
+                            if (createdFromDate && createdToDate) {
+                                qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
+                            }
+
+                        }).offset(offset).limit(per_page)
+                ])
+            }
+            else
+            if (_.isEmpty(filters)) {
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from('service_orders')
+                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .select([
+                            'service_orders.id as So Id',
+                            'service_requests.description as Description',
+                            'location as Location',
+                            'service_requests.id as Sr Id', 
+                            'incident_categories.descriptionEng as Problem',
+                            'priority as Priority',
+                            'service_orders.createdBy as Created By',
+                             'orderDueDate as Due Date',
+                             'serviceOrderStatus as Status',
+                            'service_orders.createdAt as Date Created'
+                        ]).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id']),
+                    knex.from('service_orders')
+                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .select([
+                        'service_orders.id as So Id',
+                        'service_requests.description as Description',
+                        'location as Location',
+                        'service_requests.id as Sr Id', 
+                        'incident_categories.descriptionEng as Problem',
+                        'priority as Priority',
+                        'service_orders.createdBy as Created By',
+                        'orderDueDate as Due Date',
+                        'serviceOrderStatus as Status',
+                        'service_orders.createdAt as Date Created'
+                        ]).offset(offset).limit(per_page)
+                ])
+            } else {
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from('service_orders')
+                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
+                        .innerJoin('users','assigned_service_team.userId','users.id')
+                        .select([
+                            'service_orders.id as So Id',
+                            'service_requests.description as Description',
+                            'service_requests.location as Location',
+                            'service_requests.id as Sr Id', 
+                            'incident_categories.descriptionEng as Problem',
+                            'priority as Priority',
+                            'service_orders.createdBy as Created By',
+                             'orderDueDate as Due Date',
+                             'serviceOrderStatus as Status',
+                            'service_orders.createdAt as Date Created'
+                        ]).where((qb) => {
+
+                            if (filters) {
+                                qb.where(filters);
+                            }
+                            if (completedFromDate && completedToDate) {
+                                qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
+                            }
+                            if (dueFromDate && dueToDate) {
+                                qb.whereBetween('service_orders.orderDueDate', [dueFromDate, dueToDate])
+                            }
+                            if (createdFromDate && createdToDate) {
+                                qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
+                            }
+
+                        }).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id','assigned_service_team.id','users.id']),
+                    knex.from('service_orders')
+                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
+                        .innerJoin('users','assigned_service_team.userId','users.id')
+                        .select([
+                            'service_orders.id as So Id',
+                            'service_requests.description as Description',
+                            'service_requests.location as Location',
+                            'service_requests.id as Sr Id', 
+                            'incident_categories.descriptionEng as Problem',
+                            'priority as Priority',
+                            'service_orders.createdBy as Created By',
+                             'orderDueDate as Due Date',
+                             'serviceOrderStatus as Status',
+                            'service_orders.createdAt as Date Created'
+                            
                         ]).where((qb) => {
 
                             if (filters) {
@@ -549,7 +668,7 @@ const serviceOrderController = {
             })
         } catch (err) {
             console.log('[controllers][serviceOrder][updateServiceOrder] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -604,7 +723,7 @@ const serviceOrderController = {
 
         } catch (err) {
             console.log('[controllers][service][order] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -658,7 +777,7 @@ const serviceOrderController = {
 
         } catch (err) {
             console.log('[controllers][service][order] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -719,7 +838,7 @@ const serviceOrderController = {
 
         } catch (err) {
             console.log('[controllers][service][order] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             return res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -780,13 +899,369 @@ const serviceOrderController = {
 
         } catch (err) {
             console.log('[controllers][service][order] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             return res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
                 ],
             });
         }
+    }, exportServiceOrder:async (req,res)=>{
+        
+        try{ 
+          
+            let { serviceRequestId,
+                description,
+                serviceOrderStatus,
+                archive,
+                location,assignedBy, 
+                serviceStartTime, 
+                serviceStopTime, 
+                createdAt, 
+                createdBy, 
+                requestedBy, 
+                completedBy, 
+                recurrenceType,
+                assignedTo,
+                completedFrom, 
+                dueFrom, 
+                completedTo, 
+                dueTo, 
+                createdFrom,
+                createdTo,
+                unit,
+                serviceType } = req.body
+
+            let reqData = req.query;
+            let total, rows
+
+            let pagination = {};
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
+            //let filter = 
+            //let filters = 
+            let filters = {}
+            if (serviceRequestId) {
+                filters['service_requests.id'] = serviceRequestId
+            }
+            if (description) {
+                filters['service_requests.description'] = description;
+            }
+
+            if (serviceOrderStatus) {
+                filters['service_orders.serviceOrderStatus'] = serviceOrderStatus
+            }
+
+            if (archive) {
+                filters['service_orders.archive'] = archive
+            }
+
+            if (location) {
+                filters['service_requests.location'] = location
+            }
+
+            if (createdBy) {
+                filters['service_orders.createdBy'] = createdBy
+            }
+
+            if(assignedBy){
+                filters['service_orders.createdBy'] = assignedBy
+            }
+
+            if (requestedBy) {
+                filters['service_orders.requestedBy'] = requestedBy
+            }
+
+            if (completedBy) {
+                filters['service_orders.completedBy'] = completedBy
+            }
+
+            if(recurrenceType){
+                filters['service_orders.recurrenceType'] = recurrenceType
+            }
+            if(assignedTo){
+                filters['users.name'] = assignedTo
+            }
+
+            if(unit){
+
+            }
+            if(serviceType){
+                filters['service_requests.serviceType'] = serviceType
+            }
+            
+            if (serviceStartTime) {
+                filters['service_orders.serviceStartTime'] = serviceStartTime
+            }
+
+            if (serviceStopTime) {
+                filters['service_orders.serviceStopTime'] = serviceStopTime
+            }
+
+
+            // CreatedAt BETWEEN dates for created from - created to
+
+            // orderDueDate - due from - to
+
+            // completed on -> closed from - to
+            let completedFromDate, completedToDate
+            if (completedFrom && completedTo) {
+
+                completedFromDate = new Date(completedFrom).getTime();
+                completedToDate = new Date(completedTo).getTime();
+
+            } else if (completedFrom && !completedTo) {
+
+                completedFromDate = new Date(completedFrom).getTime();
+                completedToDate = new Date("2030-01-01").getTime()
+
+            } else if (!completedFrom && completedTo) {
+                completedFromDate = new Date("2000-01-01").getTime();
+                completedToDate = new Date(completedTo).getTime()
+            }
+
+
+
+
+            let dueFromDate, dueToDate
+            if (dueFrom && dueTo) {
+
+                dueFromDate = moment(dueFrom).format();
+                dueToDate = moment(dueTo).format();
+                console.log(dueFromDate)
+
+            } else if (dueFrom && !dueTo) {
+
+                dueFromDate = dueFrom;
+                dueToDate = "2030-01-01"
+
+            } else if (!dueFrom && dueTo) {
+                dueFromDate = "2000-01-01";
+                dueToDate = dueTo
+            }
+
+
+            let createdFromDate, createdToDate
+            if (createdFrom && createdTo) {
+
+                createdFromDate = new Date(createdFrom).getTime();
+                createdToDate = new Date(createdTo).getTime();
+
+            } else if (createdFrom && !createdTo) {
+
+                createdFromDate = new Date(createdFrom).getTime();
+                createdToDate = new Date("2030-01-01").getTime()
+
+            } else if (!createdFrom && createdTo) {
+                createdFromDate = new Date("2000-01-01").getTime();
+                createdToDate = new Date(createdTo).getTime()
+            }
+
+
+            if((dueFromDate && dueToDate) || (createdFromDate && createdToDate)){
+               
+            
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from('service_orders')
+                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
+                        .innerJoin('users','assigned_service_team.userId','users.id')
+                        .select([
+                            'service_orders.id as So Id',
+                            'service_requests.description as Description',
+                            'service_requests.location as Location',
+                            'service_requests.id as Sr Id', 
+                            'incident_categories.descriptionEng as Problem',
+                            'priority as Priority',
+                            'service_orders.createdBy as Created By',
+                             'orderDueDate as Due Date',
+                             'serviceOrderStatus as Status',
+                            'service_orders.createdAt as Date Created'
+                        ]).where((qb) => {
+
+                            if (filters) {
+                                qb.where(filters);
+                            }
+                            if (completedFromDate && completedToDate) {
+                                qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
+                            }
+                            if (dueFromDate && dueToDate) {
+                                qb.whereBetween('service_orders.orderDueDate', [dueFromDate, dueToDate])
+                            }
+                            if (createdFromDate && createdToDate) {
+                                qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
+                            }
+
+                        }).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id','assigned_service_team.id','users.id']),
+                    knex.from('service_orders')
+                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
+                        .innerJoin('users','assigned_service_team.userId','users.id')
+                        .select([
+                            'service_orders.id as So Id',
+                            'service_requests.description as Description',
+                            'service_requests.location as Location',
+                            'service_requests.id as Sr Id', 
+                            'incident_categories.descriptionEng as Problem',
+                            'priority as Priority',
+                            'service_orders.createdBy as Created By',
+                             'orderDueDate as Due Date',
+                             'serviceOrderStatus as Status',
+                            'service_orders.createdAt as Date Created'
+                            
+                        ]).where((qb) => {
+
+                            if (filters) {
+                                qb.where(filters);
+                            }
+                            if (completedFromDate && completedToDate) {
+                                qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
+                            }
+                            if (dueFromDate && dueToDate) {
+                                qb.whereBetween('service_orders.orderDueDate', [dueFromDate, dueToDate])
+                            }
+                            if (createdFromDate && createdToDate) {
+                                qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
+                            }
+
+                        }).offset(offset).limit(per_page)
+                ])
+            }
+            else
+            if (_.isEmpty(filters)) {
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from('service_orders')
+                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .select([
+                            'service_orders.id as So Id',
+                            'service_requests.description as Description',
+                            'location as Location',
+                            'service_requests.id as Sr Id', 
+                            'incident_categories.descriptionEng as Problem',
+                            'priority as Priority',
+                            'service_orders.createdBy as Created By',
+                             'orderDueDate as Due Date',
+                             'serviceOrderStatus as Status',
+                            'service_orders.createdAt as Date Created'
+                        ]).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id']),
+                    knex.from('service_orders')
+                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .select([
+                        'service_orders.id as So Id',
+                        'service_requests.description as Description',
+                        'location as Location',
+                        'service_requests.id as Sr Id', 
+                        'incident_categories.descriptionEng as Problem',
+                        'priority as Priority',
+                        'service_orders.createdBy as Created By',
+                        'orderDueDate as Due Date',
+                        'serviceOrderStatus as Status',
+                        'service_orders.createdAt as Date Created'
+                        ]).offset(offset).limit(per_page)
+                ])
+            } else {
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from('service_orders')
+                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
+                        .innerJoin('users','assigned_service_team.userId','users.id')
+                        .select([
+                            'service_orders.id as So Id',
+                            'service_requests.description as Description',
+                            'service_requests.location as Location',
+                            'service_requests.id as Sr Id', 
+                            'incident_categories.descriptionEng as Problem',
+                            'priority as Priority',
+                            'service_orders.createdBy as Created By',
+                             'orderDueDate as Due Date',
+                             'serviceOrderStatus as Status',
+                            'service_orders.createdAt as Date Created'
+                        ]).where((qb) => {
+
+                            if (filters) {
+                                qb.where(filters);
+                            }
+                            if (completedFromDate && completedToDate) {
+                                qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
+                            }
+                            if (dueFromDate && dueToDate) {
+                                qb.whereBetween('service_orders.orderDueDate', [dueFromDate, dueToDate])
+                            }
+                            if (createdFromDate && createdToDate) {
+                                qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
+                            }
+
+                        }).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id','assigned_service_team.id','users.id']),
+                    knex.from('service_orders')
+                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
+                        .innerJoin('users','assigned_service_team.userId','users.id')
+                        .select([
+                            'service_orders.id as So Id',
+                            'service_requests.description as Description',
+                            'service_requests.location as Location',
+                            'service_requests.id as Sr Id', 
+                            'incident_categories.descriptionEng as Problem',
+                            'priority as Priority',
+                            'service_orders.createdBy as Created By',
+                             'orderDueDate as Due Date',
+                             'serviceOrderStatus as Status',
+                            'service_orders.createdAt as Date Created'
+                            
+                        ]).where((qb) => {
+
+                            if (filters) {
+                                qb.where(filters);
+                            }
+                            if (completedFromDate && completedToDate) {
+                                qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
+                            }
+                            if (dueFromDate && dueToDate) {
+                                qb.whereBetween('service_orders.orderDueDate', [dueFromDate, dueToDate])
+                            }
+                            if (createdFromDate && createdToDate) {
+                                qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
+                            }
+
+                        }).offset(offset).limit(per_page)
+                ])
+
+            }
+    
+            var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
+            var ws = XLSX.utils.json_to_sheet(rows);
+            XLSX.utils.book_append_sheet(wb, ws, "pres");
+            XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
+            let filename = "uploads/ServiceOrder-"+Date.now()+".csv";
+            let  check = XLSX.writeFile(wb,filename);
+            
+                return res.status(200).json({
+                    data:rows,
+                    message:"Service Order Data Export Successfully!"
+                })
+                
+            
+         } catch(err){
+             return res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+             })
+         }   
     }
 }
 

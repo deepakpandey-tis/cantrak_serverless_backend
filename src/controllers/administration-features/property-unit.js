@@ -3,13 +3,14 @@ const moment = require('moment');
 const uuidv4 = require('uuid/v4');
 var jwt = require('jsonwebtoken');
 const _ = require('lodash');
+const XLSX   = require('xlsx');
 
 
 const knex = require('../../db/knex');
 
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 const propertyUnitController = {
   addPropertyUnit: async (req, res) => {
@@ -60,7 +61,7 @@ const propertyUnitController = {
       })
     } catch (err) {
       console.log('[controllers][generalsetup][addpropertyUnit] :  Error', err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -117,7 +118,7 @@ const propertyUnitController = {
       })
     } catch (err) {
       console.log('[controllers][generalsetup][updatepropertyUnit] :  Error', err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -155,7 +156,7 @@ const propertyUnitController = {
       })
     } catch (err) {
       console.log('[controllers][generalsetup][viewpropertyUnit] :  Error', err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -191,7 +192,7 @@ const propertyUnitController = {
       })
     } catch (err) {
       console.log('[controllers][generalsetup][viewpropertyUnit] :  Error', err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -213,7 +214,16 @@ const propertyUnitController = {
 
         let [total, rows] = await Promise.all([
           knex.count('* as count').from("property_units").first(),
-          knex.select("*").from("property_units").offset(offset).limit(per_page)
+          knex("property_units")
+          .select([
+            'property_units.unitNumber as Unit No',
+            'property_units.description as Description',
+            'property_units.area as Area',
+            'property_units.isActive as Status',
+            'property_units.createdBy as Created By',
+            'property_units.createdAt as Date Created',
+          ])
+          .offset(offset).limit(per_page)
         ])
 
         let count = total.count;
@@ -234,7 +244,17 @@ const propertyUnitController = {
 
         let [total, rows] = await Promise.all([
           knex.count('* as count').from("property_units").first(),
-          knex.from("property_units").innerJoin("companies", "property_units.companyId", "companies.id").where({ 'property_units.companyId': companyId }).offset(offset).limit(per_page)
+          knex.from("property_units")
+          .innerJoin("companies", "property_units.companyId", "companies.id")
+          .select([
+            'property_units.unitNumber as Unit No',
+            'property_units.description as Description',
+            'property_units.area as Area',
+            'property_units.isActive as Status',
+            'property_units.createdBy as Created By',
+            'property_units.createdAt as Date Created',
+          ])
+          .where({ 'property_units.companyId': companyId }).offset(offset).limit(per_page)
         ])
 
         let count = total.count;
@@ -255,7 +275,96 @@ const propertyUnitController = {
       })
     } catch (err) {
       console.log('[controllers][generalsetup][viewpropertyUnit] :  Error', err);
-      trx.rollback;
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },exportPropertyUnit:async (req,res)=>{
+    try {
+      let companyId = req.query.companyId;
+      let reqData = req.query;
+      let pagination = {};
+
+      if (!companyId) {
+        let per_page = reqData.per_page || 10;
+        let page = reqData.current_page || 1;
+        if (page < 1) page = 1;
+        let offset = (page - 1) * per_page;
+
+        let [total, rows] = await Promise.all([
+          knex.count('* as count').from("property_units").first(),
+          knex("property_units")
+          .select([
+            'property_units.unitNumber as Unit No',
+            'property_units.description as Description',
+            'property_units.area as Area',
+            'property_units.isActive as Status',
+            'property_units.createdBy as Created By',
+            'property_units.createdAt as Date Created',
+          ])
+          .offset(offset).limit(per_page)
+        ])
+
+        let count = total.count;
+        pagination.total = count;
+        pagination.per_page = per_page;
+        pagination.offset = offset;
+        pagination.to = offset + rows.length;
+        pagination.last_page = Math.ceil(count / per_page);
+        pagination.current_page = page;
+        pagination.from = offset;
+        pagination.data = rows;
+
+      } else {
+        let per_page = reqData.per_page || 10;
+        let page = reqData.current_page || 1;
+        if (page < 1) page = 1;
+        let offset = (page - 1) * per_page;
+
+        let [total, rows] = await Promise.all([
+          knex.count('* as count').from("property_units").first(),
+          knex.from("property_units")
+          .innerJoin("companies", "property_units.companyId", "companies.id")
+          .select([
+            'property_units.unitNumber as Unit No',
+            'property_units.description as Description',
+            'property_units.area as Area',
+            'property_units.isActive as Status',
+            'property_units.createdBy as Created By',
+            'property_units.createdAt as Date Created',
+          ])
+          .where({ 'property_units.companyId': companyId }).offset(offset).limit(per_page)
+        ])
+
+        let count = total.count;
+        pagination.total = count;
+        pagination.per_page = per_page;
+        pagination.offset = offset;
+        pagination.to = offset + rows.length;
+        pagination.last_page = Math.ceil(count / per_page);
+        pagination.current_page = page;
+        pagination.from = offset;
+        pagination.data = rows;
+      }
+
+   
+      var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
+      var ws = XLSX.utils.json_to_sheet(pagination.data);
+      XLSX.utils.book_append_sheet(wb, ws, "pres");
+      XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
+      let filename = "uploads/PropertyUnitData-"+Date.now()+".csv";
+      let  check = XLSX.writeFile(wb,filename);
+
+      return res.status(200).json({
+        data: pagination.data,
+        message: 'Property Units Data Export Successfully!'
+      })
+    } catch (err) {
+      console.log('[controllers][generalsetup][viewpropertyUnit] :  Error', err);
+      //trx.rollback
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }

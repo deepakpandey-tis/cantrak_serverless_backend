@@ -4,7 +4,7 @@ const router = express.Router();
 const serviceRequestController = require('../controllers/servicerequest');
 
 const authMiddleware = require('../middlewares/auth');
-
+const path = require('path');
 
 /* GET users listing. */
 
@@ -26,6 +26,20 @@ router.post('/add-service-request-asset', authMiddleware.isAuthenticated, servic
 
 router.post('/delete-service-request-part', authMiddleware.isAuthenticated, serviceRequestController.deleteServiceRequestPart)
 router.post('/delete-service-request-asset', authMiddleware.isAuthenticated, serviceRequestController.deleteServiceRequestAsset)
+router.post('/export-service-request', authMiddleware.isAuthenticated, serviceRequestController.exportServiceRequest)
+router.post('/get-property-units',authMiddleware.isAuthenticated,serviceRequestController.getPropertyUnits)
 
+var multer  = require('multer');
+var storage = multer.diskStorage({
+	destination: './src/uploads',
+	filename: function ( req, file, cb ) {
+        time = Date.now();
+		cb( null, 'service-request-'+time+path.extname(file.originalname));
+	}
+});
+var upload = multer( { storage: storage } );
+router.post('/import-service-request',upload.single('file'), authMiddleware.isAuthenticated, serviceRequestController.importServiceRequest)
+
+router.post('/get-service-request-report-data', authMiddleware.isAuthenticated,serviceRequestController.getServiceRequestReportData)
 
 module.exports = router;

@@ -3,7 +3,6 @@ const sls = require('serverless-http');
 const createError = require('http-errors');
 const path = require('path');
 const i18n = require('i18n');
-
 const indexRouter = require('./routes/index');
 
 
@@ -27,12 +26,15 @@ app.use((req, res, next) => {
   res.set('Cache-Control', 'no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
   next();
 });
+
+
 app.use((req, res, next) => {
-  res.append('Access-Control-Allow-Origin', ['*']);
-  res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-  res.append('Access-Control-Allow-Headers', 'Content-Type, Authorization, XMLHttpRequest, ngsw-bypass');
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, XMLHttpRequest, ngsw-bypass');
   next();
 });
+
 
 // i18n
 i18n.configure({
@@ -81,6 +83,17 @@ app.use((err, req, res, next) => {
 
 module.exports.server = sls(app);
 
+// const server = sls(app);
+// module.exports.server = async (event, context) => {
+//   context.callbackWaitsForEmptyEventLoop = false;
+//   console.log('Remaining time: ', context.getRemainingTimeInMillis())
+//   console.log('Function name: ', context.functionName)
+//   const result = await server(event, context);
+//   // and here
+//   return result;
+// };
+
+
 
 
 // S3
@@ -89,12 +102,13 @@ const AWS = require('aws-sdk');
 module.exports.webhook = (event, context, callback) => {
   const S3 = new AWS.S3({
     s3ForcePathStyle: true,
-    accessKeyId: 'S3RVER', // This specific key is required when working offline
-    secretAccessKey: 'S3RVER',
-    endpoint: new AWS.Endpoint('http://localhost:8000'),
+    accessKeyId: process.env.S3_ACCESS_KEY_ID, // This specific key is required when working offline
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+    endpoint: new AWS.Endpoint(process.env.S3_END_POINT),
   });
 };
 
+global.appRoot = path.resolve(__dirname);
 module.exports.s3hook = (event, context) => {
   console.log(JSON.stringify(event));
   console.log(JSON.stringify(context));

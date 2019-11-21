@@ -9,8 +9,9 @@ const multerS3 = require('multer-s3');
 const knex = require('../db/knex');
 
 const bcrypt = require('bcrypt');
+const XLSX   = require('xlsx');
 const saltRounds = 10;
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 
 const quotationsController = {
@@ -47,7 +48,7 @@ const quotationsController = {
 
         } catch (err) {
             console.log('[controllers][quotation][generateQuotation] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -167,7 +168,7 @@ const quotationsController = {
 
                     const insertAssignedTeam = { teamId: quotationPayload.teamId, userId: quotationPayload.userId, entityId: quotationPayload.quotationId, entityType: "quotations", createdAt: currentTime, updatedAt: currentTime };
 
-                    console.log('[controllers][quotation][addQuotationTeam]: Insert Data', insertChargesData);
+                    //console.log('[controllers][quotation][addQuotationTeam]: Insert Data', insertChargesData);
 
                     const serviceResult = await knex.insert(insertAssignedTeam).returning(['*']).transacting(trx).into('assigned_service_team');
 
@@ -224,7 +225,7 @@ const quotationsController = {
 
         } catch (err) {
             console.log('[controllers][quotation][updateQuotation] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -319,7 +320,7 @@ const quotationsController = {
             })
         } catch (err) {
             console.log('[controllers][quotation][addQuotationPart] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -367,7 +368,7 @@ const quotationsController = {
             })
         } catch (err) {
             console.log('[controllers][quotation][addQuotationAsset] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -379,33 +380,151 @@ const quotationsController = {
         try {
 
             let reqData = req.query;
-            let filters = req.body;
-            let total, rows
+            //let filters = req.body;
+            let total, rows;
 
             let pagination = {};
             let per_page = reqData.per_page || 10;
             let page = reqData.current_page || 1;
             if (page < 1) page = 1;
             let offset = (page - 1) * per_page;
+            let filters = {};
+            let {quotationId,
+                serviceId,
+                quotationStatus,
+                priority,
+                archive,
+                location,
+                createdBy,
+                assignedBy,
+                requestedBy,
+                quotationFrom,
+                quotationTo,
+                quotationDueFrom,
+                quotationDueTo,
+                completedBy,
+                completedFrom,
+                completedTo,
+                assingedTo
+                } = req.body;
+                
+                if(quotationId){
+                    filters['quotations.id'] =quotationId;
+                }
+                if(serviceId){
+                    filters['service_requests.id']= serviceId
+                }
+                if(quotationStatus){
+                    filters['quotations.quotationStatus'] = quotationStatus
+                }
+                if(priority){
+                    filters['service_requests.priority'] = priority
+                }
+                if(archive){
+                     filters['service_requests.archive'] = archive
+                 }
+                if(location){
+                    filters['service_requests.location'] = location
+                }
+                if(createdBy){
+                    filters['quotations.createdBy'] = createdBy
+                }
+                if(assignedBy){
+                    filters['quotations.createdBy'] = assignedBy
+                }
+                
+                if(requestedBy){
+                    filters['service_requests.requestedBy'] = requestedBy
+                }
+                if(quotationFrom && quotationTo){
+                    quotationFrom = new Date(quotationFrom).getTime();
+                    quotationTo   = new Date(quotationTo).getTime();
+                    
+                }
+                if(quotationDueFrom && quotationDueTo){
+
+                    quotationDueFrom = quotationDueFrom;
+                    quotationDueTo   = quotationDueTo
+                }
+                if(completedBy){
+                    filters['quotations.completedBy'] = completedBy
+                }
+                if(completedFrom && completedTo){
+                    completedFrom = completedFrom;
+                    completedTo   = completedTo
+                }
+                if(assingedTo){
+                    filters['users.name'] = assingedTo
+                }
+
+
 
             if (_.isEmpty(filters)) {
                 [total, rows] = await Promise.all([
-                    knex.count('* as count').from("quotations").first(),
-                    knex.select("*").from("quotations").offset(offset).limit(per_page)
+                    knex.count('* as count').from("quotations")
+                        .innerJoin('service_requests', 'quotations.serviceRequestId', 'service_requests.id')
+                        .groupBy(['quotations.id',"service_requests.id"]),
+                    knex.from("quotations")
+                    .innerJoin('service_requests', 'quotations.serviceRequestId', 'service_requests.id')
+                        .select([
+                            'quotations.id as Q Id',
+                            'service_requests.description as Description',
+                            'service_requests.serviceType as Type',
+                            'service_requests.priority as Priority',
+                            'quotations.createdBy as Created By',
+                            'quotations.quotationStatus as Status',
+                            'quotations.createdAt as Date Created',
+                        ])
+                        .offset(offset).limit(per_page)
                 ])
             } else {
                 filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
                 try {
                     [total, rows] = await Promise.all([
-                        knex.count('* as count').from("quotations").where(filters).offset(offset).limit(per_page).first(),
-                        knex("quotations").where(filters).offset(offset).limit(per_page)
+                        knex.count('* as count').from("quotations")
+                        .innerJoin('service_requests', 'quotations.serviceRequestId', 'service_requests.id')
+                        .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
+                        .innerJoin('users','assigned_service_team.userId','users.id')
+                        
+                        .where((qb)=>{
+                         qb.where(filters)
+                         if(quotationFrom && quotationTo){
+                             qb.whereBetween('quotations.createdAt',[quotationFrom,quotationTo])
+                         }
+
+                        })
+                        .groupBy(['quotations.id',"service_requests.id",'assigned_service_team.id','users.id']),
+                    knex.from("quotations")
+                    .innerJoin('service_requests', 'quotations.serviceRequestId', 'service_requests.id')
+                    .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
+                    .innerJoin('users','assigned_service_team.userId','users.id')
+                    
+                        .select([
+                            'quotations.id as Q Id',
+                            'service_requests.description as Description',
+                            'service_requests.serviceType as Type',
+                            'service_requests.priority as Priority',
+                            'quotations.createdBy as Created By',
+                            'quotations.quotationStatus as Status',
+                            'quotations.createdAt as Date Created',
+                        ])
+                        .where((qb)=>{
+                         qb.where(filters)
+                         if(quotationFrom && quotationTo){
+                             
+                            qb.whereBetween('quotations.createdAt',[quotationFrom,quotationTo])
+                        }
+                         
+                        })
+                        .offset(offset).limit(per_page)
                     ])
                 } catch (e) {
                     // Error
                 }
             }
 
-            let count = total.count;
+            let count = total.length;
+
             pagination.total = count;
             pagination.per_page = per_page;
             pagination.offset = offset;
@@ -429,6 +548,179 @@ const quotationsController = {
                 ],
             });
         }
+    },
+    exportQuotation:async (req,res)=>{
+    
+        try{ 
+            let reqData = req.query;
+            //let filters = req.body;
+            let total, rows
+
+            let pagination = {};
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
+            let filters = {};
+            let {quotationId,
+                serviceId,
+                quotationStatus,
+                priority,
+                archive,
+                location,
+                createdBy,
+                assignedBy,
+                requestedBy,
+                quotationFrom,
+                quotationTo,
+                quotationDueFrom,
+                quotationDueTo,
+                completedBy,
+                completedFrom,
+                completedTo,
+                assingedTo
+                } = req.body;
+                
+                if(quotationId){
+                    filters['quotations.id'] =quotationId;
+                }
+                if(serviceId){
+                    filters['service_requests.id']= serviceId
+                }
+                if(quotationStatus){
+                    filters['quotations.quotationStatus'] = quotationStatus
+                }
+                if(priority){
+                    filters['service_requests.priority'] = priority
+                }
+                if(archive){
+                     filters['service_requests.archive'] = archive
+                 }
+                if(location){
+                    filters['service_requests.location'] = location
+                }
+                if(createdBy){
+                    filters['quotations.createdBy'] = createdBy
+                }
+                if(assignedBy){
+                    filters['quotations.createdBy'] = assignedBy
+                }
+                
+                if(requestedBy){
+                    filters['service_requests.requestedBy'] = requestedBy
+                }
+                if(quotationFrom && quotationTo){
+                    quotationFrom = new Date(quotationFrom).getTime();
+                    quotationTo   = new Date(quotationTo).getTime();
+                    
+                }
+                if(quotationDueFrom && quotationDueTo){
+
+                    quotationDueFrom = quotationDueFrom;
+                    quotationDueTo   = quotationDueTo
+                }
+                if(completedBy){
+                    filters['quotations.completedBy'] = completedBy
+                }
+                if(completedFrom && completedTo){
+                    completedFrom = completedFrom;
+                    completedTo   = completedTo
+                }
+                if(assingedTo){
+                    filters['users.name'] = assingedTo
+                }
+
+
+
+            if (_.isEmpty(filters)) {
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from("quotations")
+                        .innerJoin('service_requests', 'quotations.serviceRequestId', 'service_requests.id')
+                        .select([
+                            'quotations.id as id'
+                        ]).groupBy(['quotations.id',"service_requests.id"]),
+                    knex.from("quotations")
+                    .innerJoin('service_requests', 'quotations.serviceRequestId', 'service_requests.id')
+                        .select([
+                            'quotations.id as Q Id',
+                            'service_requests.description as Description',
+                            'service_requests.serviceType as Type',
+                            'service_requests.priority as Priority',
+                            'quotations.createdBy as Created By',
+                            'quotations.quotationStatus as Status',
+                            'quotations.createdAt as Date Created',
+                        ])
+                        .offset(offset).limit(per_page)
+                ])
+            } else {
+                filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
+                try {
+                    [total, rows] = await Promise.all([
+                        knex.count('* as count').from("quotations")
+                        .innerJoin('service_requests', 'quotations.serviceRequestId', 'service_requests.id')
+                        .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
+                        .innerJoin('users','assigned_service_team.userId','users.id')
+                        .select([
+                            'quotations.id as id'
+                        ])
+                        .where((qb)=>{
+                         qb.where(filters)
+                         if(quotationFrom && quotationTo){
+                             qb.whereBetween('quotations.createdAt',[quotationFrom,quotationTo])
+                         }
+
+                        })
+                        .groupBy(['quotations.id',"service_requests.id",'assigned_service_team.id','users.id']),
+                    knex.from("quotations")
+                    .innerJoin('service_requests', 'quotations.serviceRequestId', 'service_requests.id')
+                    .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
+                    .innerJoin('users','assigned_service_team.userId','users.id')
+                    
+                        .select([
+                            'quotations.id as Q Id',
+                            'service_requests.description as Description',
+                            'service_requests.serviceType as Type',
+                            'service_requests.priority as Priority',
+                            'quotations.createdBy as Created By',
+                            'quotations.quotationStatus as Status',
+                            'quotations.createdAt as Date Created',
+                        ])
+                        .where((qb)=>{
+                         qb.where(filters)
+                         if(quotationFrom && quotationTo){
+                             
+                            qb.whereBetween('quotations.createdAt',[quotationFrom,quotationTo])
+                        }
+                         
+                        })
+                        .offset(offset).limit(per_page)
+                    ])
+                } catch (e) {
+                    // Error
+                }
+            }
+
+    
+            var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
+            var ws = XLSX.utils.json_to_sheet(rows);
+            XLSX.utils.book_append_sheet(wb, ws, "pres");
+            XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
+            let filename = "uploads/Quotation-"+Date.now()+".csv";
+            let  check = XLSX.writeFile(wb,filename)
+            
+                return res.status(200).json({
+                    data:rows,
+                    message:"Quotation Data Export Successfully!"
+                })
+                
+            
+         } catch(err){
+             return res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+             })
+         }   
     }
 
 }

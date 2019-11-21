@@ -12,6 +12,8 @@ router.post('/add-status', authMiddleware.isAuthenticated, authMiddleware.isAdmi
 router.post('/update-status', authMiddleware.isAuthenticated, authMiddleware.isAdmin, statusController.updateStatus);
 router.get('/get-status-list', authMiddleware.isAuthenticated, authMiddleware.isAdmin, statusController.getStatusList);
 router.post('/delete-status', authMiddleware.isAuthenticated, authMiddleware.isAdmin, statusController.deleteStatus);
+// Export Status Data
+router.get('/export-status', authMiddleware.isAuthenticated, authMiddleware.isAdmin, statusController.exportStatus);
 
 
 module.exports = router;

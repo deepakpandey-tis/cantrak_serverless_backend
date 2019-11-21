@@ -1,9 +1,9 @@
 const Joi = require("@hapi/joi");
 const _ = require("lodash");
-
+const XLSX = require('xlsx');
 const knex = require("../db/knex");
 
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 const chargeController = {
   addCharge: async (req, res) => {
@@ -61,7 +61,7 @@ const chargeController = {
       });
     } catch (err) {
       console.log("[controllers][charge] :  Error", err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
@@ -167,7 +167,7 @@ const chargeController = {
       });
     } catch (err) {
       console.log("[controllers][charge][updatecharge] :  Error", err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
@@ -189,9 +189,16 @@ const chargeController = {
           .count("* as count")
           .from("charge_master")
           .first(),
-        knex
-          .select("*")
-          .from("charge_master")
+        knex("charge_master")
+          .select([
+            "chargeCode as Charges Code",
+            "chargeName as Charges Name",
+            "calculationUnit as Calculation Unit",
+            "rate as Cost",
+            "isActive as Status",
+            "createdby as Created By",
+            "createdAt as Date Created"
+          ])
           .offset(offset)
           .limit(per_page)
       ]);
@@ -214,7 +221,7 @@ const chargeController = {
       });
     } catch (err) {
       console.log("[controllers][charge][getcharges] :  Error", err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
@@ -294,7 +301,7 @@ const chargeController = {
       });
     } catch (err) {
       console.log("[controllers][charge][deletefaction] :  Error", err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
@@ -349,7 +356,7 @@ const chargeController = {
       });
     } catch (err) {
       console.log("[controllers][charge][addServiceFixCharge] :  Error", err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
@@ -404,7 +411,7 @@ const chargeController = {
       });
     } catch (err) {
       console.log("[controllers][charge][addQuotationFixCharge] :  Error", err);
-      trx.rollback;
+      //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
@@ -462,7 +469,50 @@ const chargeController = {
         "[controllers][charge][addServiceRequestFixCharge] :  Error",
         err
       );
-      trx.rollback;
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },exportCharge: async (req,res)=>{
+    try {
+      let reqData = req.query;
+      let total = null;
+      let rows = null;
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+      [total, rows] = await Promise.all([
+        knex
+          .count("* as count")
+          .from("charge_master")
+          .first(),
+        knex
+          .select("*")
+          .from("charge_master")
+          .offset(offset)
+          .limit(per_page)
+      ]);
+
+
+      var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
+            var ws = XLSX.utils.json_to_sheet(rows);
+            XLSX.utils.book_append_sheet(wb, ws, "pres");
+            XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
+            let filename = "uploads/ChargesData-"+Date.now()+".csv";
+            let  check = XLSX.writeFile(wb,filename);
+      
+      res.status(200).json({
+        data:rows,
+        message: "Charges Data Export Successfully!"
+      });
+
+    } catch (err) {
+      console.log("[controllers][charge][getcharges] :  Error", err);
+      //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });

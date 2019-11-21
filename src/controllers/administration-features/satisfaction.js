@@ -3,13 +3,14 @@ const moment = require('moment');
 const uuidv4 = require('uuid/v4');
 var jwt = require('jsonwebtoken');
 const _ = require('lodash');
+const XLSX = require('xlsx');
 
 
 const knex = require('../../db/knex');
 
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 
 
@@ -78,7 +79,7 @@ const satisfactionController = {
 
         }catch (err){
             console.log('[controllers][satisfaction][addsatisfaction] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -163,7 +164,7 @@ const satisfactionController = {
 
         }catch (err){
             console.log('[controllers][satisfaction][updatesatisfaction] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -190,7 +191,16 @@ const satisfactionController = {
           
             [total, rows] = await Promise.all([
                 knex.count('* as count').from("satisfaction").first(),
-                knex.select("*").from("satisfaction").offset(offset).limit(per_page)
+                knex("satisfaction")
+                .select([
+                    "satisfactionCode as Satisfaction Code",
+                    "descriptionThai as Description English",
+                    "descriptionThai as Description Thai",
+                    "isActive as Status",
+                    "createdby as Created By",
+                    "createdAt as Date Created"
+                ])
+                .offset(offset).limit(per_page)
             ])
             
 
@@ -213,7 +223,7 @@ const satisfactionController = {
 
         } catch (err) {
             console.log('[controllers][satisfaction][getsatisfaction] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -292,15 +302,68 @@ const satisfactionController = {
 
         }catch (err){
             console.log('[controllers][satisfaction][deletefaction] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
                 ],
             });
         }
-    }    
-   
+    },
+    // Export Satisfaction Data
+    exportSatisfaction:async (req,res)=>{
+    try {
+
+        let reqData = req.query;
+        let total = null;
+        let rows = null;
+        let companyId = reqData.companyId;
+        let pagination = {};
+        let per_page = reqData.per_page || 10;
+        let page = reqData.current_page || 1;
+        if (page < 1) page = 1;
+        let offset = (page - 1) * per_page;
+
+      
+        [total, rows] = await Promise.all([
+            knex.count('* as count').from("satisfaction").first(),
+            knex("satisfaction")
+            .select([
+                "satisfactionCode as Satisfaction Code",
+                "descriptionThai as Description English",
+                "descriptionThai as Description Thai",
+                "isActive as Status",
+                "createdby as Created By",
+                "createdAt as Date Created"
+            ])
+            .offset(offset).limit(per_page)
+        ])
+        
+
+        var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
+        var ws = XLSX.utils.json_to_sheet(rows);
+        XLSX.utils.book_append_sheet(wb, ws, "pres");
+        XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
+        let filename = "uploads/SatisfactionData-"+Date.now()+".csv";
+        let  check = XLSX.writeFile(wb,filename);
+    
+        res.status(200).json({
+            data: {
+                SatisfactionData: rows
+            },
+            message: "Satisfaction Data Export successfully !"
+        });
+
+    } catch (err) {
+        console.log('[controllers][satisfaction][getsatisfaction] :  Error', err);
+        //trx.rollback
+        res.status(500).json({
+            errors: [
+                { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+            ],
+        });
+    } 
+ }
 };
 
 

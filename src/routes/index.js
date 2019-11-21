@@ -29,8 +29,14 @@ const propertyUnitRouter = require("./administration-features/property-unit")
 const satisfactionRouter = require("./administration-features/satisfaction");
 const taxesRouter = require("./administration-features/taxes");
 const problemRouter = require('./administration-features/problem')
+const propertyTypeRouter = require('./administration-features/property-type')
+const sourceofRequestRouter = require('./administration-features/source-of-request')
+const administractionUsersRouter          = require('./administration-features/administraction-users');
 const dashboardRouter = require("./dashboard")
 const imageRouter = require("./image")
+const pmRouter = require("./preventive-maintenance")
+const testRouter = require('./test')
+const taskGroupRouter = require('./administration-features/task-group');
 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
@@ -40,6 +46,7 @@ router.get('/', async (req, res, next) => {
 /**
  * Routers
  */
+router.use('/test', testRouter)
 router.use('/entrance', entranceRouter);
 router.use('/users', usersRouter);
 router.use('/usermanagement', userManagementRouter);
@@ -53,6 +60,10 @@ router.use('/administration-features/company', companyRouter)
 router.use('/administration-features/project', projectRouter)
 router.use('/administration-features/building-phase', buildingPhaseRouter)
 router.use('/administration-features/property-unit', propertyUnitRouter)
+router.use('/administration-features/property-type',propertyTypeRouter)
+router.use('/administration-features/source-of-request',sourceofRequestRouter)
+router.use('/administration-features/administraction-users',administractionUsersRouter);
+
 router.use('/teams', teamsRouter);
 router.use('/vendors', vendorRouter);
 router.use('/parts', partsRouter);
@@ -71,4 +82,6 @@ router.use('/administration-features/problem', problemRouter);
 router.use('/dashboard', dashboardRouter);
 router.use('/administration-features/problem', problemRouter)
 router.use('/image', imageRouter)
+router.use('/preventive-maintenance', pmRouter)
+router.use('/task-group',taskGroupRouter);
 module.exports = router;

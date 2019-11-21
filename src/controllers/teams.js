@@ -6,10 +6,10 @@ const _ = require('lodash');
 var arrayCompare = require("array-compare");
 
 const knex = require('../db/knex');
-
+const XLSX = require('xlsx');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 /* Define Controller */
 const teamsController = {
@@ -62,7 +62,7 @@ const teamsController = {
 
         } catch (err) {
             console.log('[controllers][teams][updateTeams] : Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -115,7 +115,7 @@ const teamsController = {
 
         } catch (err) {
             console.log('[controllers][teams][updateTeams] : Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -131,7 +131,7 @@ const teamsController = {
             let teamResult = null;
 
             // teamResult =  await knex('teams').leftJoin('team_users','team_users.teamId', '=', 'teams.teamId').select('teams.*').count("team_users.userId").groupByRaw('teams.teamId');
-            teamResult = await knex.raw('select "teams".*, count("team_users"."userId") from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" group by "teams"."teamId"');
+            teamResult = await knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" group by "teams"."teamId"');
             console.log('[controllers][teams][getTeamList] : Team List', teamResult);
             teamResult = { teams: teamResult.rows };
 
@@ -239,6 +239,72 @@ const teamsController = {
                 ]
             });
         }
+        // Export Team Data 
+    },
+    exportTeams: async (req,res)=>{
+
+        try {
+            let teamResult = null;
+
+            // teamResult =  await knex('teams').leftJoin('team_users','team_users.teamId', '=', 'teams.teamId').select('teams.*').count("team_users.userId").groupByRaw('teams.teamId');
+            teamResult = await knex.raw('select "teams".*, count("team_users"."userId") from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" group by "teams"."teamId"');
+            teamResult = { teams: teamResult.rows };
+            var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
+            var ws = XLSX.utils.json_to_sheet(teamResult.teams);
+            XLSX.utils.book_append_sheet(wb, ws, "pres");
+            XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
+            let filename = "uploads/TeamData-"+Date.now()+".csv";
+            let  check = XLSX.writeFile(wb,filename);
+
+            res.status(200).json({
+                data: teamResult,
+                message: "Team Data Export Successfully"
+            })
+
+        } catch (err) {
+            console.log('[controllers][teams][getTeamList] : Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ]
+            });
+        }
+    },
+    getMainAndAdditionalUsersByTeamId: async (req,res) => {
+        try {
+            let teamId = req.body.teamId;
+            let mainUsers = await knex('team_users').select().where({teamId})
+            let additionalUsers = await knex('users').select()
+            additionalUsers = additionalUsers.map(user => _.omit(user, ['password','username']))
+            
+            const Parallel = require('async-parallel')
+            const usersWithRoles = await Parallel.map(additionalUsers, async user => {
+                const roles = await knex('user_roles').select('roleId').where({userId:user.id});
+                const roleNames = await Parallel.map(roles, async role => {
+                    const roleNames = await knex('roles').select('name').where({ id: role.roleId })
+                    return roleNames.map(role => role.name)
+                })
+                return {...user,roleNames};
+            })
+
+            res.status(200).json({
+                data :{
+
+                    mainUsers,
+                    additionalUsers: usersWithRoles
+                }
+            })
+
+        } catch(err) {
+            console.log('[controllers][teams][getAssignedTeams] : Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ]
+            });
+        }
+            
+
     }
     
 }

@@ -1,12 +1,12 @@
-const knex = require('../db/knex');
-const Joi = require('@hapi/joi');
+const knex   = require('../db/knex');
+const Joi    = require('@hapi/joi');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const moment = require('moment');
-const trx = knex.transaction();
+//const trx  = knex.transaction();
 const uuidv4 = require('uuid/v4');
-var jwt = require('jsonwebtoken');
-const _ = require('lodash');
+var jwt      = require('jsonwebtoken');
+const _      = require('lodash');
 
 
 const entranceController = {
@@ -72,7 +72,7 @@ const entranceController = {
                 const match = await bcrypt.compare(loginPayload.password, loginResult.password);
                 if (match) {
                     const loginToken = await jwt.sign({ id: loginResult.id }, process.env.JWT_PRIVATE_KEY, { expiresIn: '7h' });
-                    login = { accessToken: loginToken };
+                    login = { accessToken: loginToken,refreshToken:'' };
                     loginResult = _.omit(loginResult, ['password']);
 
                     login.user = loginResult;
@@ -90,10 +90,21 @@ const entranceController = {
                     }
 
 
-                    res.status(200).json({
-                        data: login,
-                        message: "Login successfull"
+                    let roles = await knex('user_roles').select().where({userId:loginResult.id})
+
+                    const Parallel = require('async-parallel');
+                    login.user.roles = await Parallel.map(roles, async item => {
+                        let rolename = await knex('roles').where({ id: item.roleId }).select('name');
+                        rolename = rolename[0].name;
+                        return rolename;
                     });
+
+
+                    // res.status(200).json({
+                    //     data: login,
+                    //     message: "Login successfull"
+                    // });
+                    res.status(200).json(login)
                 }
 
             }
@@ -253,7 +264,7 @@ const entranceController = {
 
         } catch (err) {
             console.log('[controllers][entrance][signup] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }

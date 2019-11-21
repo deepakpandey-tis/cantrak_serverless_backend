@@ -13,6 +13,8 @@ router.post('/update-common-area', authMiddleware.isAuthenticated, authMiddlewar
 router.get('/get-common-area-list', authMiddleware.isAuthenticated, authMiddleware.isAdmin, commonAreaController.getCommonAreaList);
 router.post('/delete-common-area', authMiddleware.isAuthenticated, authMiddleware.isAdmin, commonAreaController.deleteCommonArea);
 router.post('/view-common-area', authMiddleware.isAuthenticated, authMiddleware.isAdmin, commonAreaController.getdetailsCommonArea);
+// Export Common Area 
+router.get('/export-common-area', authMiddleware.isAuthenticated, authMiddleware.isAdmin, commonAreaController.exportCommonArea);
 
 
 module.exports = router;

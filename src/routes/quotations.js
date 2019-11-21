@@ -21,5 +21,7 @@ router.get('/get-quotation-details', authMiddleware.isAuthenticated, quotationCo
 router.post('/add-quotation-part', authMiddleware.isAuthenticated, quotationController.addQuotationPart)
 router.post('/add-quotation-asset', authMiddleware.isAuthenticated, quotationController.addQuotationAsset)
 router.post('/get-quotation-list', authMiddleware.isAuthenticated, quotationController.getQuotationList)
+// Quotation Data Export
+router.post('/export-quotation', authMiddleware.isAuthenticated, quotationController.exportQuotation)
 
 module.exports = router;

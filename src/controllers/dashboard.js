@@ -3,7 +3,7 @@ const Joi = require("@hapi/joi");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const moment = require("moment");
-const trx = knex.transaction();
+//const trx = knex.transaction();
 const uuidv4 = require("uuid/v4");
 var jwt = require("jsonwebtoken");
 const _ = require("lodash");
@@ -74,7 +74,7 @@ const dashboardController = {
       assestProbResult = await knex.raw(`select "asset_master"."assetName","asset_master"."model", count("assigned_assets"."assetId") as "totalProblems" from "assigned_assets" inner join "asset_master" on "assigned_assets"."assetId" = "asset_master"."id" where "assigned_assets"."entityType"='service_requests'  group by "assigned_assets"."assetId","asset_master"."id" ORDER BY "totalProblems" DESC LIMIT 5`);
 
       console.log('[controllers][teams][getTeamList] : Team List', assestProbResult);
-      assestProbResult = { assest: assestProbResult.rows };
+      assestProbResult = { asset: assestProbResult.rows };
 
       res.status(200).json({
           data: assestProbResult,

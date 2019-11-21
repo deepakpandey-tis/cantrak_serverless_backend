@@ -9,7 +9,7 @@ const knex = require('../../db/knex');
 
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 
 
@@ -86,7 +86,7 @@ const generalSetupController = {
 
         } catch (err) {
             console.log('[controllers][generalsetup][addservice] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -170,7 +170,7 @@ const generalSetupController = {
 
         } catch (err) {
             console.log('[controllers][generalsetup][updaterequest] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -251,7 +251,7 @@ const generalSetupController = {
 
         } catch (err) {
             console.log('[controllers][generalsetup][addLocationTag] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -335,7 +335,7 @@ const generalSetupController = {
 
         } catch (err) {
             console.log('[controllers][generalsetup][updaterequest] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }

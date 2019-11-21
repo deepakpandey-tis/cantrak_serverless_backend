@@ -7,8 +7,9 @@ const _ = require('lodash');
 const knex = require('../db/knex');
 
 const bcrypt = require('bcrypt');
+const XLSX   = require('xlsx');
 const saltRounds = 10;
-const trx = knex.transaction();
+//const trx = knex.transaction();
 
 
 const serviceDetailsController = {
@@ -25,7 +26,14 @@ const serviceDetailsController = {
                 // Insert in users table,
                 const incidentTypePayload = req.body;
 
-                DataResult = await knex('property_units').join('companies', 'property_units.companyId', '=', 'companies.id').join('projects', 'property_units.projectId', '=', 'projects.id').join('property_types', 'property_units.propertyTypeId', '=', 'property_types.id').join('buildings_and_phases', 'property_units.buildingPhaseId', '=', 'buildings_and_phases.id').join('floor_and_zones', 'property_units.floorZoneId', '=', 'floor_and_zones.id').select('companies.companyName', 'projects.projectName', 'property_types.propertyType', 'buildings_and_phases.buildingPhaseCode', 'floor_and_zones.floorZoneCode', 'property_units.*').where({ 'property_units.houseId': incidentTypePayload.houseId });
+                DataResult = await knex('property_units')
+                .join('companies', 'property_units.companyId', '=', 'companies.id')
+                .join('projects', 'property_units.projectId', '=', 'projects.id')
+                .join('property_types', 'property_units.propertyTypeId', '=', 'property_types.id')
+                .join('buildings_and_phases', 'property_units.buildingPhaseId', '=', 'buildings_and_phases.id')
+                .join('floor_and_zones', 'property_units.floorZoneId', '=', 'floor_and_zones.id')
+                .select('companies.companyName', 'projects.projectName', 'property_types.propertyType', 'buildings_and_phases.buildingPhaseCode', 'floor_and_zones.floorZoneCode', 'property_units.*')
+                .where({ 'property_units.houseId': incidentTypePayload.houseId });
 
                 console.log('[controllers][servicedetails][generaldetails]: View Data', DataResult);
 
@@ -48,7 +56,7 @@ const serviceDetailsController = {
             
         } catch (err) {
             console.log('[controllers][entrance][signup] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -77,8 +85,17 @@ const serviceDetailsController = {
             //const DataResult = await knex('location_tags_master').where({ isActive: 'true' });
 
             [total, rows] = await Promise.all([
-                knex.count('* as count').from("location_tags_master").where({ isActive: true }).first(),
-                knex.select("*").from("location_tags_master").offset(offset).limit(per_page)
+                knex.count('* as count').from("location_tags_master").first(),
+                knex("location_tags_master")
+                .select([
+                'id as ID',
+                'title as Location Tag',
+                'descriptionEng as Description English',
+                'descriptionThai as Description Thai',
+                'isActive as Status',
+                'createdAt as Date Created'
+                ])
+                .offset(offset).limit(per_page)
             ])
 
 
@@ -115,7 +132,7 @@ const serviceDetailsController = {
 
         } catch (err) {
             console.log('[controllers][servicedetails][signup] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -158,7 +175,7 @@ const serviceDetailsController = {
 
         } catch (err) {
             console.log('[controllers][servicedetails][signup] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -187,8 +204,17 @@ const serviceDetailsController = {
             //const DataResult = await knex('location_tags_master').where({ isActive: 'true' });
 
             [total, rows] = await Promise.all([
-                knex.count('* as count').from("incident_priority").where({ isActive: true }).first(),
-                knex.select("*").from("incident_priority").offset(offset).limit(per_page)
+                knex.count('* as count').from("incident_priority").first(),
+                knex("incident_priority")
+                .select([
+                    "incidentPriorityCode as Priorities",
+                    "descriptionEng as Description English",
+                    "descriptionThai as Description Thai",
+                    'isActive as Status',
+                    'createdBy as Created By',
+                    'createdAt as Date Created'
+                ])
+                .offset(offset).limit(per_page)
             ])
 
 
@@ -225,7 +251,7 @@ const serviceDetailsController = {
 
         } catch (err) {
             console.log('[controllers][servicedetails][signup] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -268,7 +294,7 @@ const serviceDetailsController = {
 
         } catch (err) {
             console.log('[controllers][servicedetails][serviceRequestList] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -345,14 +371,61 @@ const serviceDetailsController = {
 
         } catch (err) {
             console.log('[controllers][servicedetails][serviceRequestDetails] :  Error', err);
-            trx.rollback;
+            //trx.rollback
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
                 ],
             });
         }
-    },
+    },exportLocationTags:async (req,res)=>{
+        try {
+
+            let locationTags = null;
+            let reqData = req.query;
+            //let filters = req.body;
+            let total, rows
+
+            let pagination = {};
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
+
+            // await knex.transaction(async (trx) => {
+
+            // Get Location Tag List,               
+            //const DataResult = await knex('location_tags_master').where({ isActive: 'true' });
+
+            [total, rows] = await Promise.all([
+                knex.count('* as count').from("location_tags_master").where({ isActive: true }).first(),
+                knex.select("*").from("location_tags_master").offset(offset).limit(per_page)
+            ])
+
+
+            var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
+            var ws = XLSX.utils.json_to_sheet(rows);
+            XLSX.utils.book_append_sheet(wb, ws, "pres");
+            XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
+            let filename = "uploads/LocationTagsData-"+Date.now()+".csv";
+            let  check = XLSX.writeFile(wb,filename);
+
+            return res.status(200).json({
+                data: rows,
+                message: 'Location Tags Data Export Successfully!'
+            })
+            
+
+        } catch (err) {
+            console.log('[controllers][servicedetails][signup] :  Error', err);
+            //trx.rollback
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    } 
 };
 
 module.exports = serviceDetailsController;

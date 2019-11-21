@@ -14,8 +14,18 @@ router.post('/update-category', authMiddleware.isAuthenticated, authMiddleware.i
 
 router.post('/delete-category', authMiddleware.isAuthenticated, authMiddleware.isAdmin, propertyCategoryController.deleteCategory);
 
+router.get('/property-category-list', authMiddleware.isAuthenticated, authMiddleware.isAdmin, propertyCategoryController.propertyCategoryList);
 router.get('/category-list', authMiddleware.isAuthenticated, authMiddleware.isAdmin, propertyCategoryController.categoryList);
 
 router.post('/get-category-details',authMiddleware.isAuthenticated, authMiddleware.isAdmin, propertyCategoryController.getCategoryDetails);
 
+//Export Property  Category Data
+router.get('/export-property-category', authMiddleware.isAuthenticated, authMiddleware.isAdmin, propertyCategoryController.exportPropertyCategory);
+//Export Category Data
+router.get('/export-category', authMiddleware.isAuthenticated, authMiddleware.isAdmin, propertyCategoryController.exportCategory);
+//DROP DOWN ASSET LIST
+router.get('/asset-category-list', authMiddleware.isAuthenticated, propertyCategoryController.assetCategoryList);
+
+//DROP DOWN PART CATEGORY LIST
+router.get('/part-category-list', authMiddleware.isAuthenticated, propertyCategoryController.partCategoryList);
 module.exports = router;

@@ -14,6 +14,9 @@ router.get('/get-service-type', authMiddleware.isAuthenticated, serviceDetailsCo
 router.get('/get-priority-list', authMiddleware.isAuthenticated, serviceDetailsController.getPriorityList);
 router.get('/service-request-list', authMiddleware.isAuthenticated, serviceDetailsController.getServiceRequestList);
 router.post('/view-service-request', authMiddleware.isAuthenticated, serviceDetailsController.viewServiceRequestDetails);
+// Export Location tag Data
+router.get('/export-location-tags', authMiddleware.isAuthenticated, serviceDetailsController.exportLocationTags);
+
 
 
 
