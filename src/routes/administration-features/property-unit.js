@@ -10,7 +10,9 @@ router.post('/view-property-unit', authMiddleware.isAuthenticated, propertyUnitC
 router.post('/delete-property-unit', authMiddleware.isAuthenticated, propertyUnitController.deletePropertyUnit)
 router.get('/get-property-unit-list', authMiddleware.isAuthenticated, propertyUnitController.getPropertyUnitList)
  //  Export Property Unit Data
- router.get('/export-property-unit', authMiddleware.isAuthenticated, propertyUnitController.exportPropertyUnit)
+router.get('/export-property-unit', authMiddleware.isAuthenticated, propertyUnitController.exportPropertyUnit)
+// PROPERTY UNIT DETAILS
+router.post('/get-property-unit-details', authMiddleware.isAuthenticated, propertyUnitController.getPropertyUnitDetails)
 
 
 module.exports = router

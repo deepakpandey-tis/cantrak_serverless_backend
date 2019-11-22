@@ -29,11 +29,11 @@ const partsController = {
             let filters = {}
 
             if (partName) {
-                filters['part_master.partName'] = partName;
+                //filters['part_master.partName'] ='like% '+partName+'%';
             }
 
             if (partCode) {
-                filters['part_master.partCode'] = partCode
+                //filters['part_master.partCode'] = partCode
             }
 
             if (partCategory) {
@@ -41,6 +41,7 @@ const partsController = {
             }
 
 
+            //res.json(filters)
 
             if (_.isEmpty(filters)) {
                 [total, rows] = await Promise.all([
@@ -64,7 +65,7 @@ const partsController = {
                          //knex.raw('SUM(quantity)')
 
                     ])
-                    .orderBy('part_master.id','desc')
+                    .orderBy('part_master.createdAt','desc')
                     //.groupBy(['part_master.id','part_ledger.id'])
                     .offset(offset).limit(per_page)
                 ])
@@ -73,9 +74,23 @@ const partsController = {
                 try {
                     [total, rows] = await Promise.all([
                         knex.count('* as count').from("part_master")
-                        .innerJoin('part_category_master','part_master.partCategory','part_category_master.id').first()
+                        .innerJoin('part_category_master','part_master.partCategory','part_category_master.id')
+                        .where(qb => {
+                            if (partName) {
+                                qb.where('part_master.partName', 'like', `%${partName}%`)
+                            }
+                            if (partCode) {
+                                qb.where('part_master.partCode', 'like', `%${partCode}%`)
+
+                            }
+                            if (partCategory) {
+                                qb.where(filters)
+
+                            }
+                        })
+                        .first(),
                         //.innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first()
-                        .where(filters),
+                        //.where(filters),
                         knex.from('part_master')
                         .innerJoin('part_category_master','part_master.partCategory','part_category_master.id')
                         //innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
@@ -93,9 +108,24 @@ const partsController = {
                         // knex.raw('SUM(quantity)')
 
                     ])
-                    .orderBy('part_master.id','desc')
+                    .orderBy('part_master.createdAt','desc')
                     //.groupBy(['part_master.id','part_ledger.id'])
-                        .where(filters).offset(offset).limit(per_page)
+                        //.where(filters)
+                        .where(qb => {
+                            if (partName) {
+                                qb.where('part_master.partName', 'like', `%${partName}%`)
+                            }
+                            if (partCode) {
+                                qb.where('part_master.partCode', 'like', `%${partCode}%`)
+
+                            }
+                            if (partCategory) {
+                                qb.where(filters)
+                                //qb.where('part_master.partCategory', 'like', `%${partCategory}%`)
+
+                            }
+                        })
+                        .offset(offset).limit(per_page)
                     ])
                 } catch (e) {
                     // Error
