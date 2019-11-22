@@ -445,7 +445,9 @@ const assetController = {
                     'projects.id as projectId',
                     'buildings_and_phases.id as buildingId',
                     'floor_and_zones.id as floorId',
-                    'property_units.id as unitId'
+                    'property_units.id as unitId',
+                    'asset_location.createdAt as startDate',
+                    'asset_location.updatedAt as endDate'
                 ]).where({assetId:id})
 
             res.status(200).json({
