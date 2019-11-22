@@ -447,7 +447,8 @@ const assetController = {
                     'floor_and_zones.id as floorId',
                     'property_units.id as unitId',
                     'asset_location.createdAt as startDate',
-                    'asset_location.updatedAt as endDate'
+                    'asset_location.updatedAt as endDate',
+                    'asset_location.id as assetLocationId'
                 ]).where({assetId:id})
 
             res.status(200).json({
@@ -1089,12 +1090,18 @@ const assetController = {
     },
     updateAssetLocation:async(req,res) => {
         try {
-            const payload = req.body;
+            const payload = _.omit(req.body,['previousLocationId']);
             let currentTime = new Date().getTime()
+            let updatedLastLocationEndDate
+            if (req.body.previousLocationId){
+
+                updatedLastLocationEndDate = await knex('asset_location').update({ updatedAt: currentTime }).where({ id: req.body.previousLocationId})
+            }
             const updatedAsset = await knex('asset_location').insert({...payload,createdAt:currentTime,updatedAt:currentTime}).returning(['*'])
             return res.status(200).json({
                 data: {
-                    updatedAsset
+                    updatedAsset,
+                    updatedLastLocationEndDate
                 },
                 message:'Asset location updated'
             })
