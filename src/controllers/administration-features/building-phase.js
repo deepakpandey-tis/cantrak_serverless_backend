@@ -80,6 +80,8 @@ const buildingPhaseController = {
   },
   updateBuildingPhase: async (req, res) => {
     try {
+      let userId = req.me.id;
+     
       let buildingPhase = null;
       await knex.transaction(async trx => {
         const payload = req.body;
@@ -92,8 +94,7 @@ const buildingPhaseController = {
           buildingPhaseCode: Joi.string().required(),
           description: Joi.string().required(),
           buildingAddressEng: Joi.string().required(),
-          buildingAddressThai: Joi.string().required(),
-          createdBy: Joi.string().required()
+          buildingAddressThai: Joi.string().required()
         });
 
         const result = Joi.validate(payload, schema);
@@ -111,7 +112,7 @@ const buildingPhaseController = {
         }
 
         let currentTime = new Date().getTime();
-        let insertData = { ...payload, updatedAt: currentTime };
+        let insertData = { ...payload, createdBy:userId, updatedAt: currentTime };
         let insertResult = await knex
           .update(insertData)
           .where({ id: payload.id })
@@ -156,18 +157,26 @@ const buildingPhaseController = {
             ]
           });
         }
-        let current = new Date().getTime();
-        let buildingPhaseResult = await knex
-          .select()
-          .where({ id: payload.id })
-          .returning(["*"])
-          .transacting(trx)
-          .into("buildings_and_phases");
+         // let buildingPhaseResult = await knex
+        //   .select()
+        //   .where({ id: payload.id })
+        //   .returning(["*"])
+        //   .transacting(trx)
+        //   .into("buildings_and_phases");
+
+        let buildingPhaseResult = await knex("buildings_and_phases")
+        .innerJoin("companies","buildings_and_phases.companyId","companies.id")
+        .innerJoin("projects","buildings_and_phases.projectId","projects.id")
+        .innerJoin("property_types","buildings_and_phases.propertyTypeId","property_types.id")
+        .select("buildings_and_phases.*","companies.companyName as companyName","companies.companyId as compId","companies.id as companyId","projects.projectName","property_types.propertyTypeCode")
+        .where({ "buildings_and_phases.id": payload.id })
+        
+
 
         buildingPhase = _.omit(buildingPhaseResult[0], [
-          "createdAt",
-          "updatedAt",
-          "isActive"
+          "buildings_and_phases.createdAt",
+          "buildings_and_phases.updatedAt",
+          "buildings_and_phases.isActive"
         ]);
         trx.commit;
       });
