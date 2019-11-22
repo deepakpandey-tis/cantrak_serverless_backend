@@ -440,7 +440,12 @@ const assetController = {
                     'projects.projectName as projectName',
                     'buildings_and_phases.description as building',
                     'floor_and_zones.description as floorZone',
-                    'property_units.description as propertyUnit'
+                    'property_units.description as propertyUnit',
+                    'companies.id as companyId',
+                    'projects.id as projectId',
+                    'buildings_and_phases.id as buildingId',
+                    'floor_and_zones.id as floorId',
+                    'property_units.id as unitId'
                 ]).where({assetId:id})
 
             res.status(200).json({
