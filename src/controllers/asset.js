@@ -428,9 +428,23 @@ const assetController = {
             images = await knex('images').where({ entityId: id, entityType: 'asset_master' }).select()
 
             console.log('[controllers][asset][getAssetDetails]: Asset Details', assetData);
+            // Get asset location
+            const assetLocation = await knex('asset_location')
+                .leftJoin('companies', 'asset_location.companyId','companies.id')
+                .leftJoin('projects', 'asset_location.projectId','projects.id')
+                .leftJoin('buildings_and_phases', 'asset_location.buildingId','buildings_and_phases.id')
+                .leftJoin('floor_and_zones', 'asset_location.floorId', 'floor_and_zones.id')
+                .leftJoin('property_units', 'asset_location.unitId', 'property_units.id')
+                .select([
+                    'companies.companyName as companyName',
+                    'projects.projectName as projectName',
+                    'buildings_and_phases.description as building',
+                    'floor_and_zones.description as floorZone',
+                    'property_units.description as propertyUnit'
+                ]).where({assetId:id})
 
             res.status(200).json({
-                data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, images } },
+                data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, images,assetLocation } },
                 message: "Asset Details"
             });
 
