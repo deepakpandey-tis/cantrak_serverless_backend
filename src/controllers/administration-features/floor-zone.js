@@ -400,6 +400,26 @@ const floorZoneController = {
         ],
       });
     }
+  },
+  getFloorZoneListByBuildingId:async(req,res) => {
+    try {
+      const {buildingPhaseId} = req.body;
+      const floor = await knex('floor_and_zones').select('*').where({buildingPhaseId})
+      return res.status(200).json({
+        data: {
+          floor
+        },
+        message:'Floor zone list'
+      })
+    } catch(err) {
+      console.log('[controllers][generalsetup][viewfloorZone] :  Error', err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
   }
 }
 
