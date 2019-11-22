@@ -371,6 +371,26 @@ const propertyUnitController = {
         ],
       });
     }
+  },
+  getPropertyUnitListByFloor:async(req,res) => {
+    try {
+      const {floorZoneId} = req.body;
+      const unit = await knex('property_units').select('*').where({floorZoneId})
+      return res.status(200).json({
+        data: {
+          unit
+        },
+        message:'Unit list'
+      })
+    } catch(err) {
+      console.log('[controllers][generalsetup][viewpropertyUnit] :  Error', err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
   }
 }
 
