@@ -293,7 +293,9 @@ const assetController = {
                                 qb.where('asset_category_master.categoryName', 'like', `%${category}%`)
 
                             }
-                        }).offset(offset).limit(per_page)
+                        })
+                        .orderBy('asset_master.createdAt','desc')
+                        .offset(offset).limit(per_page)
                     ])
                 } catch (e) {
                     // Error
