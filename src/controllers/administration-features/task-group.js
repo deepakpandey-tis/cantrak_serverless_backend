@@ -788,13 +788,14 @@ const taskGroupController = {
             'asset_master.areaName as areaName',
             'asset_master.description as description',
             'asset_master.assetSerial as assetSerial',
-            'task_group_schedule_assign_assets.pmDate as pmDate',
+            'task_group_schedule_assign_assets.pmDate as pmDate', 
+            knex.raw(`DATE("task_group_schedule_assign_assets"."pmDate") as "workOrderDate"`),
             'task_group_schedule.repeatPeriod as repeatPeriod',
             'task_group_schedule.repeatOn as repeatOn',
             'task_group_schedule.repeatFrequency as repeatFrequency',
           ])
           .where({"task_group_schedule.taskGroupId":payload.taskGroupId})
-          .offset(offset).limit(per_page)
+            .offset(offset).limit(per_page).orderBy('workOrderDate', 'asc')
         ])
 
         let count = total[0].count;

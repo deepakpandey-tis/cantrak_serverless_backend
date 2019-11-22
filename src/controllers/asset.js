@@ -430,9 +430,31 @@ const assetController = {
             images = await knex('images').where({ entityId: id, entityType: 'asset_master' }).select()
 
             console.log('[controllers][asset][getAssetDetails]: Asset Details', assetData);
+            // Get asset location
+            const assetLocation = await knex('asset_location')
+                .leftJoin('companies', 'asset_location.companyId','companies.id')
+                .leftJoin('projects', 'asset_location.projectId','projects.id')
+                .leftJoin('buildings_and_phases', 'asset_location.buildingId','buildings_and_phases.id')
+                .leftJoin('floor_and_zones', 'asset_location.floorId', 'floor_and_zones.id')
+                .leftJoin('property_units', 'asset_location.unitId', 'property_units.id')
+                .select([
+                    'companies.companyName as companyName',
+                    'projects.projectName as projectName',
+                    'buildings_and_phases.description as building',
+                    'floor_and_zones.description as floorZone',
+                    'property_units.description as propertyUnit',
+                    'companies.id as companyId',
+                    'projects.id as projectId',
+                    'buildings_and_phases.id as buildingId',
+                    'floor_and_zones.id as floorId',
+                    'property_units.id as unitId',
+                    'asset_location.createdAt as startDate',
+                    'asset_location.updatedAt as endDate',
+                    'asset_location.id as assetLocationId'
+                ]).where({assetId:id})
 
             res.status(200).json({
-                data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, images } },
+                data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, images,assetLocation } },
                 message: "Asset Details"
             });
 
@@ -1068,6 +1090,31 @@ const assetController = {
             
 
     },
+    updateAssetLocation:async(req,res) => {
+        try {
+            const payload = _.omit(req.body,['previousLocationId']);
+            let currentTime = new Date().getTime()
+            let updatedLastLocationEndDate
+            if (req.body.previousLocationId){
+
+                updatedLastLocationEndDate = await knex('asset_location').update({ updatedAt: currentTime }).where({ id: req.body.previousLocationId})
+            }
+            const updatedAsset = await knex('asset_location').insert({...payload,createdAt:currentTime,updatedAt:currentTime}).returning(['*'])
+            return res.status(200).json({
+                data: {
+                    updatedAsset,
+                    updatedLastLocationEndDate
+                },
+                message:'Asset location updated'
+            })
+        } catch(err) {
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    }
     //getAssetCategoryById()
 }
 
