@@ -1066,6 +1066,25 @@ const assetController = {
             
 
     },
+    updateAssetLocation:async(req,res) => {
+        try {
+            const payload = req.body;
+            let currentTime = new Date().getTime()
+            const updatedAsset = await knex('asset_location').insert({...payload,createdAt:currentTime,updatedAt:currentTime}).returning(['*'])
+            return res.status(200).json({
+                data: {
+                    updatedAsset
+                },
+                message:'Asset location updated'
+            })
+        } catch(err) {
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    }
     //getAssetCategoryById()
 }
 
