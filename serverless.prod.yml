@@ -13,11 +13,11 @@ plugins:
   - serverless-s3-local
 provider:
   name: aws
-  runtime: nodejs10.x
+  runtime: nodejs12.x
   stage: dev
   region: us-east-2
-  memorySize: 2048
-  timeout: 20
+  memorySize: 3000
+  timeout: 30
   environment: 
 
 
@@ -25,7 +25,7 @@ custom:
   serviceName: tis-serverless-backend
   stage: ${opt:stage, self:custom.defaultStage}
   profile: ${self:custom.profiles.${self:provider.stage}}
-  bucket: local-bucket
+  bucket: sls-app-resources-bucket
   defaultStage: dev
   profiles:
     dev: tis-dev
@@ -33,29 +33,8 @@ custom:
   apigwBinary:
     types:
       - "*/*"
-  s3:
-    # Uncomment the following line only if you want to specify host address of S3 service.
-    # adress: 0.0.0.0
-    # Uncomment the following line only if you want to specify S3 server address.
-    # Ordinary, this value is localhost. But you can modify this value to use other S3 server.
-    # host: 0.0.0.0
-    port: 8000
-    directory: ./tmp  # this directory must be already created.
-    # Uncomment the first line only if you want to use cors with specified policy
-    # Uncomment the second line only if you don't want to use cors
-    # Not uncomment the these lines only if your wanto use cors with default policy
-    # cors: relative/path/to/your/cors.xml
-    # website: relative/path/to/your/website.xml
-    # Uncomment only if you already have a S3 server running locally
-    # noStart: true
 
-resources:
-  Resources:
-    NewResource:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: ${self:custom.bucket}
-        
+
 functions:
   app:
     handler: src/app.server # reference the file and exported method
@@ -74,8 +53,3 @@ functions:
       - http:
          method: GET
          path: webhook
-  s3hook:
-    handler: src/app.s3hook
-    events:
-      - s3: ${self:custom.bucket}
-        event: s3:*

@@ -220,27 +220,26 @@ const floorZoneController = {
         let offset = (page - 1) * per_page;
 
         let [total, rows] = await Promise.all([
-          knex
-            .count("* as count")
-            .from("floor_and_zones")
-            .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
-            .innerJoin("users", "floor_and_zones.createdBy", "users.id")
-            .first(),
+          knex.count('* as count').from("floor_and_zones")
+          .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
+          .leftJoin("users", "floor_and_zones.createdBy", "users.id")
+          .first(),
           knex("floor_and_zones")
-            .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
-            .innerJoin("users", "floor_and_zones.createdBy", "users.id")
-            .select([
-              "floor_and_zones.floorZoneCode as Floor/Zone",
-              "floor_and_zones.description as Description",
-              "floor_and_zones.totalFloorArea as Total Area",
-              "floor_and_zones.isActive as Status",
-              "users.name as Created By",
-              "floor_and_zones.createdAt as Date Created"
-            ])
+          .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
+          .leftJoin("users", "floor_and_zones.createdBy", "users.id")
+          .select([
+            'floor_and_zones.floorZoneCode as Floor/Zone',
+            'floor_and_zones.id as id',
+            'floor_and_zones.description as Description',
+            'floor_and_zones.totalFloorArea as Total Area',
+            'floor_and_zones.isActive as Status',
+            'users.name as Created By',
+            'floor_and_zones.createdAt as Date Created'
+            
+           ])
 
-            .offset(offset)
-            .limit(per_page)
-        ]);
+          .offset(offset).limit(per_page)
+        ])
 
         let count = total.count;
         pagination.total = count;
@@ -266,32 +265,27 @@ const floorZoneController = {
         }
 
         let [total, rows] = await Promise.all([
-          knex
-            .count("* as count")
-            .from("floor_and_zones")
-            .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
-            .innerJoin("users", "floor_and_zones.createdBy", "users.id")
-            .where(filters)
-
-            .offset(offset)
-            .limit(per_page)
-            .first(),
-          knex
-            .from("floor_and_zones")
-            .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
-            .innerJoin("users", "floor_and_zones.createdBy", "users.id")
-            .select([
-              "floor_and_zones.floorZoneCode as Floor/Zone",
-              "floor_and_zones.description as Description",
-              "floor_and_zones.totalFloorArea as Total Area",
-              "floor_and_zones.isActive as Status",
-              "users.name as Created By",
-              "floor_and_zones.createdAt as Date Created"
-            ])
-            .where(filters)
-            .offset(offset)
-            .limit(per_page)
-        ]);
+          knex.count('* as count').from("floor_and_zones")
+          .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
+          .innerJoin("users", "floor_and_zones.createdBy", "users.id")
+          .where(filters)
+          
+          .offset(offset).limit(per_page).first(),
+          knex.from("floor_and_zones")
+          .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
+          .innerJoin("users", "floor_and_zones.createdBy", "users.id")
+          .select([
+            'floor_and_zones.floorZoneCode as Floor/Zone',
+            'floor_and_zones.description as Description',
+            'floor_and_zones.id as id',
+            'floor_and_zones.totalFloorArea as Total Area',
+            'floor_and_zones.isActive as Status',
+            'users.name as Created By',
+            'floor_and_zones.createdAt as Date Created'
+            
+           ])
+          .where(filters).offset(offset).limit(per_page)
+        ])
 
         let count = total.count;
         pagination.total = count;

@@ -45,25 +45,25 @@ const assetController = {
                 assetPayload = _.omit(assetPayload, ['additionalAttributes', 'multiple', 'images', 'files','assetCategory'])
                 // validate keys
                 const schema = Joi.object().keys({
-                    parentAssetId: Joi.string().allow('').optional(),
-                    subAssetId: Joi.string().allow('').optional(),
-                    partId: Joi.string().allow('').optional(),
+                    //parentAssetId: Joi.string(),
+                   // subAssetId: Joi.string(),
+                   // partId: Joi.string(),
                     assetName: Joi.string().required(),
                     model: Joi.string().required(),
-                    barcode: Joi.string().required(),
-                    areaName: Joi.string().required(),
-                    description: Joi.string().required(),
-                    price: Joi.string().required(),
-                    installationDate: Joi.string().required(),
-                    warrentyExpiration: Joi.string().required(),
-                    locationId: Joi.string().allow('').optional(),
-                    assignedUsers: Joi.string().allow('').optional(),
-                    assignedTeams: Joi.string().required(),
-                    assignedVendors: Joi.string().required(),
-                    additionalInformation: Joi.string().required()
+                    //barcode: Joi.string(),
+                   // areaName: Joi.string(),
+                   // description: Joi.string(),
+                  //  price: Joi.string(),
+                  //  installationDate: Joi.string(),
+                   // warrentyExpiration: Joi.string(),
+                   // locationId: Joi.string(),
+                   // assignedUsers: Joi.string(),
+                   // assignedTeams: Joi.string(),
+                  //  assignedVendors: Joi.string(),
+                   // additionalInformation: Joi.string()
                 });
 
-                let result = Joi.validate(assetPayload, schema);
+                let result = Joi.validate({ assetName: assetPayload.assetName, model: assetPayload.model}, schema);
                 console.log('[controllers][asset][addAsset]: JOi Result', result);
 
                 if (result && result.hasOwnProperty('error') && result.error) {
@@ -105,7 +105,7 @@ const assetController = {
 
 
                 // Add asset to a location with help of locationId
-                let locationTagPayload = {entityId: asset[0].id, entityType:'asset', locationTagId:req.body.locationId,createdAt:currentTime,updatedAt:currentTime}
+                let locationTagPayload = {entityId: asset[0].id, entityType:'asset', locationTagId:Number(req.body.locationId),createdAt:currentTime,updatedAt:currentTime}
                 const locationResult = await knex.insert(locationTagPayload).returning(['*']).transacting(trx).into('location_tags')
                 location = locationResult[0]
                 
@@ -191,12 +191,12 @@ const assetController = {
 
             let reqData = req.query;
             
-            let filters = {}
+            //let filters = {}
             let total, rows
             let {
                 assetName,
                 assetModel,
-                area,
+                // area,
                 category
                 } = req.body;
             let pagination = {};
@@ -205,57 +205,71 @@ const assetController = {
             if (page < 1) page = 1;
             let offset = (page - 1) * per_page;
     
-             if(assetName){
-              filters['asset_master.assetName'] = assetName
-             }
-             if(assetModel){
-                filters['asset_master.model'] = assetModel
-             }
-             if(area){
-                filters['asset_master.areaName'] = area
-             }
-             if(category){
-                filters['asset_category_master.categoryName'] = category
-             }
+            //  if(assetName){
+            //   filters['asset_master.assetName'] = assetName
+            //  }
+            //  if(assetModel){
+            //     filters['asset_master.model'] = assetModel
+            //  }
+            //  if(area){
+            //     filters['asset_master.areaName'] = area
+            //  }
+            //  if(category){
+            //     filters['asset_category_master.categoryName'] = category
+            //  }
             
 
-            if (_.isEmpty(filters)) {
-                [total, rows] = await Promise.all([
-                    knex.count('* as count').from("asset_master")
-                    .innerJoin('location_tags','asset_master.id','location_tags.entityId')
-                    .innerJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
-                    .innerJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
-                    .first(),
+            // if (_.isEmpty(filters)) {
+            //     [total, rows] = await Promise.all([
+            //         knex.count('* as count').from("asset_master")
+            //         .leftJoin('location_tags','asset_master.id','location_tags.entityId')
+            //         .leftJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
+            //         .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
+            //         .first(),
                     
-                    knex("asset_master")
-                    .innerJoin('location_tags','asset_master.id','location_tags.entityId')
-                    .innerJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
-                    .innerJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
-                    .select([
-                        'asset_master.assetName as Name',
-                        'asset_master.id as ID',
-                        'location_tags_master.title as Location',
-                        'asset_master.model as Model',
-                        'asset_master.barcode as Barcode',
-                        'asset_master.areaName as Area',
-                        'asset_category_master.categoryName as Category',
-                        'asset_master.createdAt as Date Created'
-                    ])
-                    .offset(offset).limit(per_page)
-                ])
-            } else {
-                filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
+            //         knex("asset_master")
+            //         .leftJoin('location_tags','asset_master.id','location_tags.entityId')
+            //         .leftJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
+            //         .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
+            //         .select([
+            //             'asset_master.assetName as Name',
+            //             'asset_master.id as ID',
+            //             'location_tags_master.title as Location',
+            //             'asset_master.model as Model',
+            //             'asset_master.barcode as Barcode',
+            //             'asset_master.areaName as Area',
+            //             'asset_category_master.categoryName as Category',
+            //             'asset_master.createdAt as Date Created',
+            //             'asset_master.unitOfMeasure as Unit Of Measure',
+
+            //         ])
+            //         .offset(offset).limit(per_page)
+            //     ])
+            //} else {
+                //filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
                 try {
                     [total, rows] = await Promise.all([
                         knex.count('* as count').from("asset_master")
-                        .innerJoin('location_tags','asset_master.id','location_tags.entityId')
-                        .innerJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
-                        .innerJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
-                        .where(filters).offset(offset).limit(per_page).first(),
+                        .leftJoin('location_tags','asset_master.id','location_tags.entityId')
+                        .leftJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
+                        .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
+                        .where(qb => {
+                            if(assetName){
+                                qb.where('asset_master.assetName','like', `%${assetName}%`)
+                            }
+                            if(assetModel){
+                                qb.where('asset_master.model', 'like', `%${assetModel}%`)
+
+                            }
+                            if(category){
+                                qb.where('asset_category_master.categoryName', 'like', `%${category}%`)
+
+                            }
+                        }).first(),
                         knex("asset_master")
-                        .innerJoin('location_tags','asset_master.id','location_tags.entityId')
-                        .innerJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
-                        .innerJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
+                        .leftJoin('location_tags','asset_master.id','location_tags.entityId')
+                        .leftJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
+                        .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
                         .select([
                             'asset_master.assetName as Name',
                             'asset_master.id as ID',
@@ -264,15 +278,28 @@ const assetController = {
                             'asset_master.barcode as Barcode',
                             'asset_master.areaName as Area',
                             'asset_category_master.categoryName as Category',
-                            'asset_master.createdAt as Date Created'
+                            'asset_master.createdAt as Date Created',
+                            'asset_master.unitOfMeasure as Unit Of Measure',
                         ])
-                        .where(filters).offset(offset).limit(per_page)
+                        .where(qb => {
+                            if (assetName) {
+                                qb.where('asset_master.assetName', 'like', `%${assetName}%`)
+                            }
+                            if (assetModel) {
+                                qb.where('asset_master.model', 'like', `%${assetModel}%`)
+
+                            }
+                            if (category) {
+                                qb.where('asset_category_master.categoryName', 'like', `%${category}%`)
+
+                            }
+                        }).offset(offset).limit(per_page)
                     ])
                 } catch (e) {
                     // Error
                     console.log('Error: ' + e.message)
                 }
-            }
+            //}
 
             let count = total.count;
             pagination.total = count;
@@ -391,7 +418,7 @@ const assetController = {
             let images = null
             let id = req.body.id;
 
-            assetData = await knex('asset_master').where({ id }).select()
+            assetData = await knex('asset_master').where({ id }).select('*')
             let assetDataResult = assetData[0];
             let omitedAssetDataResult = _.omit(assetDataResult, ['createdAt'], ['updatedAt'], ['isActive'])
             additionalAttributes = await knex('asset_attributes').where({ assetId: id }).select()
@@ -427,29 +454,31 @@ const assetController = {
                 let assetPayload = req.body;
                 let id = req.body.id
                 console.log('[controllers][asset][payload]: Update Asset Payload', assetPayload);
-                assetPayload = _.omit(assetPayload, ['additionalAttributes'], ['id'])
+                assetPayload = _.omit(assetPayload, ['additionalAttributes','id','assetCategory'])
                 // validate keys
                 const schema = Joi.object().keys({
-                    parentAssetId: Joi.string().allow('').optional(),
-                    subAssetId: Joi.string().allow('').optional(),
-                    partId: Joi.string().allow('').optional(),
+                    // parentAssetId: Joi.string(),
+                    // subAssetId: Joi.string(),
+                    // partId: Joi.string(),
                     assetName: Joi.string().required(),
                     model: Joi.string().required(),
-                    barcode: Joi.string().required(),
-                    areaName: Joi.string().required(),
-                    description: Joi.string().required(),
-                    assetCategory: Joi.string().required(),
-                    price: Joi.string().required(),
-                    installationDate: Joi.string().required(),
-                    warrentyExpiration: Joi.string().required(),
-                    locationId: Joi.string().allow('').optional(),
-                    assignedUsers: Joi.string().allow('').optional(),
-                    assignedTeams: Joi.string().required(),
-                    assignedVendors: Joi.string().required(),
-                    additionalInformation: Joi.string().required()
+                    // barcode: Joi.string(),
+                    // areaName: Joi.string(),
+                    // description: Joi.string(),
+                   //assetCategory: Joi.string().required(),
+                    // price: Joi.string(),
+                    // installationDate: Joi.string(),
+                    // warrentyExpiration: Joi.string(),
+                    // locationId: Joi.string(),
+                    // assignedUsers: Joi.string(),
+                    // assignedTeams: Joi.string(),
+                    // assignedVendors: Joi.string(),
+                    // additionalInformation: Joi.string()
                 });
 
-                let result = Joi.validate(assetPayload, schema);
+                let currentTime = new Date().getTime();
+
+                let result = Joi.validate({assetName:assetPayload.assetName,model:assetPayload.model}, schema);
                 console.log('[controllers][asset][addAsset]: JOi Result', result);
 
                 if (result && result.hasOwnProperty('error') && result.error) {
@@ -460,10 +489,20 @@ const assetController = {
                     });
                 }
 
-                // Update in asset_master table,
-                let currentTime = new Date().getTime();
+                let assetCategoryId
+                let category
+                let assetCategory = req.body.assetCategory;
+                category = await knex.select().where({ categoryName: assetCategory }).returning(['*']).transacting(trx).into('asset_category_master')
+                if (category && category.length) {
+                    assetCategoryId = category[0].id;
+                } else {
+                    category = await knex.insert({ categoryName: assetCategory, createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('asset_category_master')
+                    assetCategoryId = category[0].id;
+                }
 
-                let insertData = { ...assetPayload, updatedAt: currentTime, isActive: true };
+                // Update in asset_master table,
+
+                let insertData = { ...assetPayload, assetCategoryId, updatedAt: currentTime, isActive: true };
 
                 console.log('[controllers][asset][updateAssetDetails]: Update Asset Insert Data', insertData);
 
@@ -475,9 +514,16 @@ const assetController = {
                 let additionalAttributes = req.body.additionalAttributes;
                 if (additionalAttributes.length > 0) {
                     for (attribute of additionalAttributes) {
-                        let finalAttribute = { ...attribute, assetId: id, updatedAt: currentTime }
-                        let d = await knex.update(finalAttribute).where({ id: attribute.id }).returning(['*']).transacting(trx).into('asset_attributes');
-                        attribs.push(d[0])
+                        if(attribute.id){
+
+                            let finalAttribute = { ...attribute, assetId: Number(id), updatedAt: currentTime }
+                            let d = await knex.update(finalAttribute).where({ id: attribute.id }).returning(['*']).transacting(trx).into('asset_attributes');
+                            attribs.push(d[0])
+                        } else {
+                            let d = await knex.insert({ attributeName: attribute.attributeName, attributeDescription: attribute.attributeDescription, assetId: Number(id) }).returning(['*']).transacting(trx).into('asset_attributes');
+                            attribs.push(d[0])
+                        
+                        }
                     }
                 }
                 trx.commit;
@@ -1019,7 +1065,8 @@ const assetController = {
             console.log('[controllers][asset][addServiceOrderRelocateAsset] :  Error', err);
             
 
-    }
+    },
+    //getAssetCategoryById()
 }
 
 module.exports = assetController;

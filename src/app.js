@@ -107,6 +107,7 @@ module.exports.webhook = (event, context, callback) => {
     endpoint: new AWS.Endpoint(process.env.S3_END_POINT),
   });
 };
+
 global.appRoot = path.resolve(__dirname);
 module.exports.s3hook = (event, context) => {
   console.log(JSON.stringify(event));

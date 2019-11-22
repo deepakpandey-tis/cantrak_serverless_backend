@@ -1,6 +1,7 @@
 const { Router } = require("express")
 const authMiddleware = require('../middlewares/auth');
-
+const multer  = require('multer');
+const path    = require('path');
 const router = Router()
 
 const partsController = require(
@@ -18,5 +19,16 @@ router.post('/export-part', authMiddleware.isAuthenticated, partsController.expo
 router.get('/part-list', authMiddleware.isAuthenticated, partsController.partList)
 router.get('/part-code-exist',authMiddleware.isAuthenticated,partsController.partCodeExist)
 router.get('/get-part-detail-by-id',authMiddleware.isAuthenticated,partsController.getPartDetailById)
+router.get('/check-order-work-id/:id',authMiddleware.isAuthenticated,partsController.checkOrderWorkId)
 
+var storage = multer.diskStorage({
+	destination: './src/uploads',
+	filename: function ( req, file, cb ) {
+        let ext = path.extname(file.originalname)
+        time = Date.now();
+		cb( null, 'part-details'+time+path.extname(file.originalname));
+	}
+});
+var upload = multer( { storage: storage } );
+router.post('/import-part-details',upload.single('file'),authMiddleware.isAuthenticated,partsController.importPartDetails)
 module.exports = router;

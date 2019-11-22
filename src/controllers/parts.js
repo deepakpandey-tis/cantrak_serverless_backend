@@ -29,7 +29,7 @@ const partsController = {
             let filters = {}
 
             if (partName) {
-                filters['part_master.partName'] = partName
+                filters['part_master.partName'] = partName;
             }
 
             if (partCode) {
@@ -44,40 +44,57 @@ const partsController = {
 
             if (_.isEmpty(filters)) {
                 [total, rows] = await Promise.all([
-                    knex.count('* as count').from("part_ledger")
-                    .innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
-                    knex.from('part_ledger').
-                    innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
+                    knex.count('* as count').from("part_master")
+                    .innerJoin('part_category_master','part_master.partCategory','part_category_master.id').first(),
+                    //.innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
+                    knex.from('part_master')
+                    .innerJoin('part_category_master','part_master.partCategory','part_category_master.id')
+                   // innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
                     .select([
                         'part_master.id as partId',
                         'part_master.partName as Name',
                         'part_master.partCode as ID',
-                        'part_ledger.quantity as Quantity',
-                        'part_ledger.unitCost as Price',
-                        'part_master.partCategory as Category',
+                        //'part_ledger.quantity as Quantity',
+                        //'part_ledger.unitCost as Price',
+                        'part_master.unitOfMeasure',
+                        'part_category_master.categoryName as Category',
                         'part_master.barcode as Barcode',
-                        'part_ledger.createdAt as Date Added'
+                        'part_master.createdAt as Date Added',
+                        //'part_ledger',
+                         //knex.raw('SUM(quantity)')
 
                     ])
+                    .orderBy('part_master.id','desc')
+                    //.groupBy(['part_master.id','part_ledger.id'])
                     .offset(offset).limit(per_page)
                 ])
             } else {
                 //filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
                 try {
                     [total, rows] = await Promise.all([
-                        knex.count('* as count').from("part_ledger").innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
-                        knex.from('part_ledger').innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
+                        knex.count('* as count').from("part_master")
+                        .innerJoin('part_category_master','part_master.partCategory','part_category_master.id').first()
+                        //.innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first()
+                        .where(filters),
+                        knex.from('part_master')
+                        .innerJoin('part_category_master','part_master.partCategory','part_category_master.id')
+                        //innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
                         .select([
                         'part_master.id as partId',
                         'part_master.partName as Name',
                         'part_master.partCode as ID',
-                        'part_ledger.quantity as Quantity',
-                        'part_ledger.unitCost as Price',
-                        'part_master.partCategory as Category',
+                        //'part_ledger.quantity as Quantity',
+                        //'part_ledger.unitCost as Price',
+                        'part_master.unitOfMeasure',
+                        'part_category_master.categoryName as Category',
                         'part_master.barcode as Barcode',
-                        'part_ledger.createdAt as Date Added'
+                        'part_master.createdAt as Date Added',
+                        //'part_ledger',
+                        // knex.raw('SUM(quantity)')
 
                     ])
+                    .orderBy('part_master.id','desc')
+                    //.groupBy(['part_master.id','part_ledger.id'])
                         .where(filters).offset(offset).limit(per_page)
                     ])
                 } catch (e) {
@@ -131,21 +148,18 @@ const partsController = {
             let attribs = []
             let files = [];
             let images = [];
+            let quantityObject;
 
             await knex.transaction(async (trx) => {
                 let partPayload = req.body;
+                let payload     = req.body;
                 console.log('[controllers][part][addParts]', partPayload);
-                partPayload = _.omit(partPayload, ['quantity'], ['unitCost'], ['additionalAttributes'], ['images'], ['files'],['additionalDescription'])
+                partPayload = _.omit(partPayload,['minimumQuantity'],['unitOfMeasure'],['barcode'],['image_url'],['file_url'], 'quantity', 'unitCost', ['additionalAttributes'], ['images'], ['files'],['additionalDescription'],'partDescription',['assignedVendors'],['additionalPartDetails'])
                 // validate keys
                 const schema = Joi.object().keys({
                     partName: Joi.string().required(),
                     partCode: Joi.string().required(),
-                    partDescription: Joi.string().required(),
-                    partCategory: Joi.string().required(),
-                    minimumQuantity: Joi.string().required(),
-                    barcode: Joi.string().required(),
-                    assignedVendors: Joi.string().required(),
-                    additionalPartDetails: Joi.string()
+                    partCategory: Joi.string().required()
                 });
 
                 let result = Joi.validate(partPayload, schema);
@@ -159,10 +173,24 @@ const partsController = {
                     });
                 }
 
+                
+          let insertDataObj = {
+            "partName" :payload.partName,
+            "partCode":payload.partCode,
+            "unitOfMeasure":payload.unitOfMeasure,
+            "minimumQuantity":payload.minimumQuantity?payload.minimumQuantity:null,
+            "partDescription" : payload.partDescription,
+            "partCategory" : payload.partCategory,
+            "barcode":payload.barcode,
+            "assignedVendors":payload.assignedVendors?payload.assignedVendors:null,
+            "additionalPartDetails":payload.additionalPartDetails,
+                        }
+
+
                 // Insert in part_master table,
                 let currentTime = new Date().getTime();
 
-                let insertData = { ...partPayload, createdAt: currentTime, updatedAt: currentTime };
+                let insertData = { ...insertDataObj, createdAt: currentTime, updatedAt: currentTime };
 
                 console.log('[controllers][part][addParts]: Insert Data', insertData);
 
@@ -174,25 +202,36 @@ const partsController = {
 
                 let unitCost = req.body.unitCost;
                 let quantity = req.body.quantity
-                let quantitySchema = Joi.object().keys({
-                    unitCost: Joi.string().required(),
-                    quantity: Joi.string().required(),
-                })
-                let quantityResult = Joi.validate({ unitCost, quantity }, quantitySchema);
-                console.log('[controllers][part][addParts]: JOi Result', result);
+                // let quantitySchema = Joi.object().keys({
+                //     unitCost: Joi.number().required(),
+                //     quantity: Joi.number().required(),
+                // })
+                // let quantityResult = Joi.validate({ unitCost, quantity }, quantitySchema);
+                // console.log('[controllers][part][addParts]: JOi Result', result);
 
-                if (quantityResult && quantityResult.hasOwnProperty('error') && quantityResult.error) {
-                    return res.status(400).json({
-                        errors: [
-                            { code: 'VALIDATION_ERROR', message: quantityResult.error.message }
-                        ],
-                    });
-                }
+                // if (quantityResult && quantityResult.hasOwnProperty('error') && quantityResult.error) {
+                //     return res.status(400).json({
+                //         errors: [
+                //             { code: 'VALIDATION_ERROR', message: quantityResult.error.message }
+                //         ],
+                //     });
+                // }
+                let quantityObject;
+                
+                if(unitCost || quantity){
+                    unitCost = unitCost?unitCost:null;
+                    quantity = quantity?quantity:null;
+                    let insertD = {
+                        unitCost : unitCost,
+                        quantity : quantity
+                    }
+
                 let quantityData = { partId: part.id, unitCost, quantity, createdAt: currentTime, updatedAt: currentTime };
                 let partQuantityResult = await knex.insert(quantityData).returning(['*']).transacting(trx).into('part_ledger');
 
                 quantityObject = _.omit(partQuantityResult[0], ['id'], ['partId']);
 
+                }
                 // Insert attributes in part_attributes table
 
                 let additionalAttributes = req.body.additionalAttributes;
@@ -206,9 +245,7 @@ const partsController = {
                         attribs.push(d[0])
                     
                     }
-
                 }
-
 
                 // Insert images in images table
                 let imagesData = req.body.images;
@@ -261,18 +298,13 @@ const partsController = {
             await knex.transaction(async (trx) => {
                 const partDetailsPayload = req.body;
                 console.log('[controllers][part][updatePartDetails]', partDetailsPayload);
-                partPayload = _.omit(partDetailsPayload, ['id'], ['quantity'], ['unitCost'], ['additionalAttributes'])
+                partPayload = _.omit(partDetailsPayload,['minimumQuantity'],['unitOfMeasure'],['barcode'],['image_url'],['file_url'],['additionalPartDetails'],['assignedVendors'], ['partDescription'],['id'], ['quantity'], ['unitCost'], ['additionalAttributes'])
 
                 // validate keys
                 const schema = Joi.object().keys({
-                    partName: Joi.string().required(),
-                    partCode: Joi.string().required(),
-                    partDescription: Joi.string().required(),
-                    partCategory: Joi.string().required(),
-                    minimumQuantity: Joi.string().required(),
-                    barcode: Joi.string().required(),
-                    assignedVendors: Joi.string().required(),
-                    additionalPartDetails: Joi.string()
+                    partName       : Joi.string().required(),
+                    partCode       : Joi.string().required(),
+                    partCategory   : Joi.string().required(),
                 });
 
                 const result = Joi.validate(partPayload, schema);
@@ -289,7 +321,7 @@ const partsController = {
                 // Update in part_master table,
                 const currentTime = new Date().getTime();
 
-                const updatePartDetails = await knex.update({ partName: partDetailsPayload.partName, partCode: partDetailsPayload.partCode, partDescription: partDetailsPayload.partDescription, partCategory: partDetailsPayload.partCategory, minimumQuantity: partDetailsPayload.minimumQuantity, barcode: partDetailsPayload.barcode, assignedVendors: partDetailsPayload.assignedVendors, additionalPartDetails: partDetailsPayload.additionalPartDetails, updatedAt: currentTime, isActive: true }).where({ id: partDetailsPayload.id }).returning(['*']).transacting(trx).into('part_master');
+                const updatePartDetails = await knex.update({ unitOfMeasure:partDetailsPayload.unitOfMeasure,partName: partDetailsPayload.partName, partCode: partDetailsPayload.partCode, partDescription: partDetailsPayload.partDescription, partCategory: partDetailsPayload.partCategory, minimumQuantity: partDetailsPayload.minimumQuantity, barcode: partDetailsPayload.barcode, assignedVendors: partDetailsPayload.assignedVendors, additionalPartDetails: partDetailsPayload.additionalPartDetails, updatedAt: currentTime, isActive: true }).where({ id: partDetailsPayload.id }).returning(['*']).transacting(trx).into('part_master');
 
                 console.log('[controllers][part][updatePartDetails]: Update Part Details', updatePartDetails);
 
@@ -297,20 +329,21 @@ const partsController = {
 
                 let unitCost = req.body.unitCost;
                 let quantity = req.body.quantity
-                let quantitySchema = Joi.object().keys({
-                    unitCost: Joi.string().required(),
-                    quantity: Joi.string().required(),
-                })
-                let quantityResult = Joi.validate({ unitCost, quantity }, quantitySchema);
-                console.log('[controllers][part][updatePartDetails]: JOi Result', result);
+                // let quantitySchema = Joi.object().keys({
+                //     unitCost: Joi.string().required(),
+                //     quantity: Joi.string().required(),
+                // })
+                // let quantityResult = Joi.validate({ unitCost, quantity }, quantitySchema);
+                // console.log('[controllers][part][updatePartDetails]: JOi Result', result);
 
-                if (quantityResult && quantityResult.hasOwnProperty('error') && quantityResult.error) {
-                    return res.status(400).json({
-                        errors: [
-                            { code: 'VALIDATION_ERROR', message: quantityResult.error.message }
-                        ],
-                    });
-                }
+                // if (quantityResult && quantityResult.hasOwnProperty('error') && quantityResult.error) {
+                //     return res.status(400).json({
+                //         errors: [
+                //             { code: 'VALIDATION_ERROR', message: quantityResult.error.message }
+                //         ],
+                //     });
+                // }
+
                 let quantityData = { unitCost, quantity, updatedAt: currentTime };
                 let partQuantityResult = await knex.update(quantityData).where({ partId: partDetailsPayload.id }).returning(['*']).transacting(trx).into('part_ledger');
 
@@ -326,13 +359,8 @@ const partsController = {
                         let d = await knex.update({ ...attribute, updatedAt: currentTime }).where({ id:attribute.id,partId: partDetailsPayload.id }).returning(['*']).transacting(trx).into('part_attributes');
                         attribs.push(d[0])
                     }
-
-
                 }
-
-
                 trx.commit;
-
             });
 
             res.status(200).json({
@@ -362,13 +390,28 @@ const partsController = {
             let images = null;
             let id = req.body.id;
 
-            partData = await knex('part_master').where({ id }).select()
+            partData = await knex('part_master')
+            .leftJoin('vendor_master','part_master.assignedVendors','vendor_master.id')
+            .where({'part_master.id':id}).select('part_master.*','vendor_master.name')
             let partDataResult = partData[0];
             let omitedPartDataResult = _.omit(partDataResult, ['createdAt'], ['updatedAt'], ['isActive'])
             additionalAttributes = await knex('part_attributes').where({ partId: id }).select()
-            partQuantityData = await knex('part_ledger').where({ partId: id }).select('unitCost', 'quantity')
-            let partQuantityDataResult = partQuantityData[0]
+            partQuantityData = await knex('part_ledger')
+            .where({ partId: id }).select(
+                'unitCost',
+                'quantity'
+                )
+            let partQuantityDataResult = partQuantityData
 
+            let totalQuantity=0;
+           for(let i =0; i<partQuantityDataResult.length; i++){
+            totalQuantity += parseInt(partQuantityDataResult[i].quantity)
+           }
+           let totalUnitCost =0;
+
+           for(let i =0; i<partQuantityDataResult.length; i++){
+            totalUnitCost += parseInt(partQuantityDataResult[i].unitCost)
+           }
 
             files = await knex('files').where({ entityId: id, entityType: 'part_master' }).select()
             images = await knex('images').where({ entityId: id, entityType: 'part_master' }).select()
@@ -376,7 +419,7 @@ const partsController = {
             console.log('[controllers][parts][getPartDetails]: Part Details', partData);
 
             res.status(200).json({
-                data: { part: { ...omitedPartDataResult, ...partQuantityDataResult, additionalAttributes, images, files } },
+                data: { part: { quantity:totalQuantity,unitCost:totalUnitCost,...omitedPartDataResult, additionalAttributes, images, files } },
                 message: "Part Details"
             });
 
@@ -392,22 +435,50 @@ const partsController = {
     },
     addPartStock: async (req, res) => {
 
+
         try {
 
             let partStock = null;
 
             await knex.transaction(async (trx) => {
-                let partStockPayload = req.body;
+                let partStockPayload = _.omit(req.body,'date');
                 console.log('[controllers][part][stock]', partStockPayload);
                 // validate keys
-                const schema = Joi.object().keys({
-                    partId: Joi.string().required(),
-                    unitCost: Joi.number().required(),
-                    quantity: Joi.number().required(),
-                    isPartAdded: Joi.string().required()
-                });
+                let result;
+                if(partStockPayload.adjustType=="1" || partStockPayload.adjustType=="3"){
+                    const schema = Joi.object().keys({
+                        partId: Joi.string().required(),
+                        unitCost: Joi.number().required(),
+                        quantity: Joi.number().required(),
+                        adjustType:Joi.string().required(),
+                        serviceOrderNo:Joi.string().required(),
+                        isPartAdded: Joi.string().required()
+                    });
+                     result = Joi.validate(_.omit(partStockPayload,'description','date','workOrderId'), schema);
 
-                let result = Joi.validate(partStockPayload, schema);
+                } else if(partStockPayload.adjustType=="10"){
+                    const schema = Joi.object().keys({
+                        partId: Joi.string().required(),
+                        unitCost: Joi.number().required(),
+                        quantity: Joi.number().required(),
+                        adjustType:Joi.string().required(),
+                        workOrderId:Joi.string().required(),
+                        isPartAdded: Joi.string().required()
+                    });
+                     result = Joi.validate(_.omit(partStockPayload,'serviceOrderNo','description','date'), schema);
+
+                } else {
+                    const schema = Joi.object().keys({
+                        partId: Joi.string().required(),
+                        unitCost: Joi.number().required(),
+                        quantity: Joi.number().required(),
+                        adjustType:Joi.string().required(),
+                        isPartAdded: Joi.string().required()
+                    });
+                     result = Joi.validate(_.omit(partStockPayload,'serviceOrderNo','description','date','workOrderId'), schema);
+
+                }
+                
                 console.log('[controllers][part]: JOi Result', result);
 
                 if (result && result.hasOwnProperty('error') && result.error) {
@@ -662,18 +733,21 @@ const partsController = {
             let payload    = req.query;
             let id         = payload.id;
             let partResult = await knex.from('part_master')
+                                       .innerJoin("part_category_master",'part_master.partCategory','part_category_master.id')
                                      .select([
                                          'part_master.id as id',
                                          'part_master.partName as partName',
+                                         'part_master.unitOfMeasure',
                                          'part_master.partCode',
                                          'part_master.partDescription as partDescription',
                                          'part_master.partCategory as partCategory',
+                                         'part_category_master.categoryName as partCatgoryName ',
                                          'part_master.minimumQuantity as minimumQuantity',
                                          'part_master.barcode as barcode',
                                          'part_master.assignedVendors as assignedVendors',
                                          'part_master.additionalPartDetails as additionalPartDetails'])
                                      .returning('*')
-                             .where({id:payload.id})
+                             .where({'part_master.id':payload.id})
          
               let partLedgerResult = await knex.from('part_ledger')
                                       .select([
@@ -683,8 +757,10 @@ const partsController = {
                                         ])
                                        .where({partId:id})
 
-               let unitCost =  partLedgerResult[0].unitCost
-               let quantity =  partLedgerResult[0].quantity
+            // This 687 ,688 needs to be removed because its irrelevant but its here because we dont know where this is being used
+            let unitCost = partLedgerResult.length ? partLedgerResult[0].unitCost :'0'
+            let quantity = partLedgerResult.length ? partLedgerResult[0].quantity :'0'
+
   
            let additionalAttribute = await knex.from('part_attributes')
            .select([
@@ -699,7 +775,7 @@ const partsController = {
 
                return res.status(200).json({
                    message:"Part Details Successfully!",
-                   partDetail:{...partResult[0] ,unitCost,quantity,additionalAttributes:additionalAttribute,images,files}
+                   partDetail: { ...partResult[0],partLedgerResult,additionalAttributes:additionalAttribute,images,files,unitCost,quantity}
                })
         
             } catch(err){
@@ -709,6 +785,49 @@ const partsController = {
                     ],
                 })
             }   
+    },
+    // IMPORT PART DETAILS
+    importPartDetails: async(req,res)=>{
+     
+        try{
+
+            if(req.file){
+                return res.json(req.file)
+                console.log("======",req.file,"=====");
+            } else{
+                return res.status(400).json({
+
+                    message:"Select File!"
+                });   
+            }
+
+        } catch(err){
+            return res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            })
+        }   
+    },
+    //  CHECK WORK ORDER ID 
+    checkOrderWorkId : async (req,res)=>{
+  
+        try{
+            let workOrderId = req.params.id;
+            let result = "";
+            result = await knex('task_group_schedule_assign_assets').returning('*')
+                               .where({id:workOrderId})
+                    return res.status(200).json({
+                                data   :result,
+                                message:"Work Order Id Successfully!"
+                            });
+        } catch(err){
+            return res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            })
+        }   
     }
 
  }

@@ -23,7 +23,9 @@ router.post('/get-category-details',authMiddleware.isAuthenticated, authMiddlewa
 router.get('/export-property-category', authMiddleware.isAuthenticated, authMiddleware.isAdmin, propertyCategoryController.exportPropertyCategory);
 //Export Category Data
 router.get('/export-category', authMiddleware.isAuthenticated, authMiddleware.isAdmin, propertyCategoryController.exportCategory);
-
+//DROP DOWN ASSET LIST
 router.get('/asset-category-list', authMiddleware.isAuthenticated, propertyCategoryController.assetCategoryList);
 
+//DROP DOWN PART CATEGORY LIST
+router.get('/part-category-list', authMiddleware.isAuthenticated, propertyCategoryController.partCategoryList);
 module.exports = router;

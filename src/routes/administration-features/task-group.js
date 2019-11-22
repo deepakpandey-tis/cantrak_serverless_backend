@@ -19,7 +19,7 @@ router.post('/create-pm-taskgroup-schedule',authMiddleware.isAuthenticated,authM
 // GET TASK GROUP SCHEDULE LIST
 router.post('/get-taskgroup-schedule-list',authMiddleware.isAuthenticated,authMiddleware.isAdmin, taskGroupController.getTaskGroupScheduleList)
 
-router.get('/get-pm-list',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getPmList)
+router.post('/get-pm-list',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getPmList)
 
 
 router.post('/create-brand-new-pm',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.createBrandNewPm)
@@ -45,6 +45,11 @@ router.post('/get-pm-task-details',authMiddleware.isAuthenticated,authMiddleware
 router.post('/create-pm-template',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.createPMTemplate)
 router.post('/update-task-status',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.updateTaskStatus)
 router.post('/send-feedback-for-task',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.sendFeedbackForTask)
+router.post('/edit-work-order',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.editWorkOrder)
+router.post('/get-task-group-details',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getTaskGroupDetails)
+router.get('/get-task-group-template-list',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getTaskGroupTemplateList)
+router.post('/update-task-group-template-detail', authMiddleware.isAuthenticated, authMiddleware.isAdmin, taskGroupController.updateTaskGroupDetails)
+router.post('/get-task-feedbacks', authMiddleware.isAuthenticated, authMiddleware.isAdmin, taskGroupController.getFeedbacksOfTask)
 
 
 
