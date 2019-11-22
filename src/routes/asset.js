@@ -11,6 +11,7 @@ router.post('/get-asset-list-by-category', authMiddleware.isAuthenticated, asset
 // router.get('/get-asset-list', authMiddleware.isAuthenticated, assetController.getAssetList)
 router.post('/get-asset-details', authMiddleware.isAuthenticated, assetController.getAssetDetails)
 router.post('/update-asset-details', authMiddleware.isAuthenticated, assetController.updateAssetDetails)
+router.post('/update-asset-location', authMiddleware.isAuthenticated, assetController.updateAssetLocation)
 router.post('/add-service-order-replace-asset', authMiddleware.isAuthenticated, assetController.addServiceOrderReplaceAsset)
 router.post('/add-service-request-replace-asset', authMiddleware.isAuthenticated, assetController.addServiceRequestReplaceAsset)
 router.post('/add-service-order-relocate-asset', authMiddleware.isAuthenticated, assetController.addServiceOrderRelocateAsset)
