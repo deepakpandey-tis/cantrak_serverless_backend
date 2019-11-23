@@ -20,7 +20,7 @@ router.get('/part-list', authMiddleware.isAuthenticated, partsController.partLis
 router.get('/part-code-exist',authMiddleware.isAuthenticated,partsController.partCodeExist)
 router.get('/get-part-detail-by-id',authMiddleware.isAuthenticated,partsController.getPartDetailById)
 router.get('/check-order-work-id/:id',authMiddleware.isAuthenticated,partsController.checkOrderWorkId)
-
+router.get('/part-requisition-log-list',authMiddleware.isAuthenticated,partsController.partRequisitionLogList)
 var storage = multer.diskStorage({
 	destination: './src/uploads',
 	filename: function ( req, file, cb ) {

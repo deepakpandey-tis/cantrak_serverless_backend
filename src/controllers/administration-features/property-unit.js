@@ -216,6 +216,7 @@ const propertyUnitController = {
           knex.count('* as count').from("property_units").first(),
           knex("property_units")
           .select([
+            'property_units.id as id',
             'property_units.unitNumber as Unit No',
             'property_units.description as Description',
             'property_units.area as Area',
@@ -247,6 +248,7 @@ const propertyUnitController = {
           knex.from("property_units")
           .innerJoin("companies", "property_units.companyId", "companies.id")
           .select([
+            'property_units.id as id',
             'property_units.unitNumber as Unit No',
             'property_units.description as Description',
             'property_units.area as Area',
@@ -371,7 +373,77 @@ const propertyUnitController = {
         ],
       });
     }
-  }
+  },
+  // PROPERTY UNIT DETAILS
+  getPropertyUnitDetails:async (req,res)=>{
+    try{
+
+      let id = req.body.id;
+
+      let resultData = await knex('property_units')
+                             .leftJoin('companies','property_units.companyId','companies.id')
+                             .leftJoin('projects','property_units.projectId','projects.id')
+                             .leftJoin('property_types','property_units.propertyTypeId','property_types.id')
+                             .leftJoin('buildings_and_phases','property_units.buildingPhaseId','buildings_and_phases.id')
+                             .leftJoin('floor_and_zones','property_units.floorZoneId','floor_and_zones.id')
+                             .leftJoin('users','property_units.createdBy','users.id')
+                             .select([
+                               'property_units.id as id',
+                               'property_units.description as description',
+                               'property_units.productCode as productCode',
+                               'property_units.houseId as houseId',
+                               'property_units.area as area',
+                               'property_units.unitNumber as unitNumber',
+                               'companies.companyName as companyName',
+                               'companies.companyId as companyId',
+                               'projects.project as project',
+                               'projects.projectName as projectName',
+                               'property_types.propertyType',
+                               'property_types.propertyTypeCode',
+                               'buildings_and_phases.buildingPhaseCode',
+                               'floor_and_zones.floorZoneCode',
+                               'users.name as createdBy'
+                             ])
+                             .where({'property_units.id':id})
+                
+                return res.status(200).json({
+                data: {
+                  propertyUnitDetails: resultData[0]
+                },
+                message: 'Property Unit Details!'
+              })
+
+    } catch (err) {
+  
+      console.log('[controllers][generalsetup][viewpropertyUnit] :  Error', err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
+  getPropertyUnitListByFloor:async(req,res) => {
+    try {
+      const {floorZoneId} = req.body;
+      const unit = await knex('property_units').select('*').where({floorZoneId})
+      return res.status(200).json({
+        data: {
+          unit
+        },
+        message:'Unit list'
+      })
+    } catch(err) {
+      console.log('[controllers][generalsetup][viewpropertyUnit] :  Error', err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+}
 }
 
 module.exports = propertyUnitController
