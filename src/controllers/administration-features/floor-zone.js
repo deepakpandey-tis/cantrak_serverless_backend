@@ -19,7 +19,6 @@ const floorZoneController = {
       await knex.transaction(async trx => {
         const payload = req.body;
         const schema = Joi.object().keys({
-          createdBy: Joi.string().required(),
           companyId: Joi.string().required(),
           projectId: Joi.string().required(),
           propertyTypeId: Joi.string().required(),
@@ -74,6 +73,8 @@ const floorZoneController = {
   updateFloorZone: async (req, res) => {
     try {
       let floorZone = null;
+      let userId = req.me.id;
+     
       await knex.transaction(async trx => {
         const payload = req.body;
 
@@ -85,8 +86,7 @@ const floorZoneController = {
           buildingPhaseId: Joi.string().required(),
           floorZoneCode: Joi.string().required(),
           description: Joi.string().required(),
-          totalFloorArea: Joi.string().required(),
-          createdBy: Joi.string().required()
+          totalFloorArea: Joi.string().required()
         });
 
         const result = Joi.validate(payload, schema);
@@ -104,7 +104,7 @@ const floorZoneController = {
         }
 
         let currentTime = new Date().getTime();
-        let insertData = { ...payload, updatedAt: currentTime };
+        let insertData = { ...payload, createdBy: userId,  updatedAt: currentTime };
         let insertResult = await knex
           .update(insertData)
           .where({ id: payload.id })
@@ -144,9 +144,18 @@ const floorZoneController = {
         });
       }
       let current = new Date().getTime();
+      // let floorZoneResult = await knex("floor_and_zones")
+      //   .select()
+      //   .where({ id: payload.id });
+
       let floorZoneResult = await knex("floor_and_zones")
-        .select()
-        .where({ id: payload.id });
+        .innerJoin("companies","floor_and_zones.companyId","companies.id")
+        .innerJoin("projects","floor_and_zones.projectId","projects.id")
+        .innerJoin("property_types","floor_and_zones.propertyTypeId","property_types.id")
+        .innerJoin("buildings_and_phases","floor_and_zones.buildingPhaseId","buildings_and_phases.id")
+        .select("floor_and_zones.*","companies.companyName as companyName","companies.companyId as compId","companies.id as companyId","projects.projectName","property_types.propertyTypeCode","buildings_and_phases.buildingPhaseCode")
+        .where({ "floor_and_zones.id": payload.id })
+        
 
       floorZone = _.omit(floorZoneResult[0], [
         "createdAt",
@@ -411,6 +420,34 @@ const floorZoneController = {
       return res.status(200).json({
         data: pagination.data,
         message: "Floor/Zones Data Export Successfully!"
+      });
+    } catch (err) {
+      console.log("[controllers][generalsetup][viewfloorZone] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getFloorZoneAllList: async (req, res) => {
+    try {
+      let buildingPhaseId = req.query.buildingPhaseId;
+      let pagination = {};
+
+        let [rows] = await Promise.all([
+           knex.from("floor_and_zones")
+          .innerJoin("buildings_and_phases", "floor_and_zones.buildingPhaseId", "buildings_and_phases.id")
+          .select('floor_and_zones.floorZoneCode','floor_and_zones.id as id')
+          .where({ "floor_and_zones.buildingPhaseId":buildingPhaseId })
+        ])
+
+      pagination.data = rows;      
+
+      return res.status(200).json({
+        data: {
+          floorZones: pagination
+        },
+        message: "Floor/Zones All List!"
       });
     } catch (err) {
       console.log("[controllers][generalsetup][viewfloorZone] :  Error", err);

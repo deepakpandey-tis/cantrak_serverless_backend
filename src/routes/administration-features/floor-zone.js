@@ -11,6 +11,7 @@ router.post('/delete-floor-zone', authMiddleware.isAuthenticated, floorZoneContr
 router.get('/get-floor-zone-list', authMiddleware.isAuthenticated, floorZoneController.getFloorZoneList)
 // Export Floor Zone Data
 router.get('/export-floor-zone', authMiddleware.isAuthenticated, floorZoneController.exportFloorZone)
+router.get('/get-floor-zone-all-list', authMiddleware.isAuthenticated, floorZoneController.getFloorZoneAllList)
 
 
 module.exports = router

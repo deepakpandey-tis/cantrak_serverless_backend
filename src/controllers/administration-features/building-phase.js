@@ -583,7 +583,49 @@ const buildingPhaseController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-  }
+  },
+  getBuildingPhaseAllList: async (req, res) => {
+    try {
+      let projectId = req.query.projectId;
+       let buildingData = {};
+     
+      let [rows] = await Promise.all([         
+          knex("buildings_and_phases")
+            .innerJoin(
+              "projects",
+              "buildings_and_phases.projectId",
+              "projects.id"
+            )
+            .where({ 
+             "buildings_and_phases.isActive": true,
+             "buildings_and_phases.projectId":projectId 
+            })
+            .select([
+              "buildings_and_phases.id as id",
+              "buildings_and_phases.buildingPhaseCode"              
+            ])
+        ]);
+
+        buildingData.data = rows;
+   
+
+      return res.status(200).json({
+        data: {
+          buildingPhases: buildingData
+        },
+        message: "Building Phases List!"
+      });
+    } catch (err) {
+      console.log(
+        "[controllers][generalsetup][viewbuildingPhase] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
 };
 
 module.exports = buildingPhaseController;
