@@ -443,6 +443,34 @@ const propertyUnitController = {
         ],
       });
     }
+}, 
+// PROPERTY UNIT NO LIST FOR DROPDOWN
+getPropertyUnitAllList:async (req,res)=>{
+  try{
+
+     let floorId  = req.query.floorId;
+     let result   = await knex('property_units')
+                    .select([
+                      'id',
+                      'unitNumber',
+                      'houseId'
+                     ])
+                    .where({'floorZoneId':floorId})
+        
+                    return res.status(200).json({
+                      data: {
+                        unitData:result
+                      },
+                      message:'Property Unit List'
+                    })
+
+  }catch(err){
+    res.status(500).json({
+      errors: [
+        { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+      ],
+    });
+  }
 }
 }
 

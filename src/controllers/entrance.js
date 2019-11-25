@@ -125,7 +125,7 @@ const entranceController = {
             let user = null;
             await knex.transaction(async (trx) => {
 
-                const signupPayload = req.body;
+                const signupPayload = _.omit(req.body,'company','project','building','floor','unitNumber');
 
                 console.log('[controllers][entrance][signup]', signupPayload);
 
