@@ -199,13 +199,13 @@ const commonAreaController = {
             if(companyId){
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from("common_area")
-                    .innerJoin('floor_and_zones','common_area.floorZoneId','common_area.id')
+                    .innerJoin('floor_and_zones','common_area.floorZoneId','floor_and_zones.id')
                     .innerJoin('buildings_and_phases','common_area.buildingPhaseId','buildings_and_phases.id')
                     .innerJoin('projects','common_area.projectId','projects.id')
                     .offset(offset).limit(per_page).where({'common_area.companyId': companyId})
                     ,
                     knex("common_area")
-                    .innerJoin('floor_and_zones','common_area.floorZoneId','common_area.id')
+                    .innerJoin('floor_and_zones','common_area.floorZoneId','floor_and_zones.id')
                     .innerJoin('buildings_and_phases','common_area.buildingPhaseId','buildings_and_phases.id')
                     .innerJoin('projects','common_area.projectId','projects.id')
                     .select([
@@ -224,11 +224,11 @@ const commonAreaController = {
             }else{
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from("common_area")
-                    .innerJoin('floor_and_zones','common_area.floorZoneId','common_area.id')
+                    .innerJoin('floor_and_zones','common_area.floorZoneId','floor_and_zones.id')
                     .innerJoin('buildings_and_phases','common_area.buildingPhaseId','buildings_and_phases.id')
                     .innerJoin('projects','common_area.projectId','projects.id'),
                     knex("common_area")
-                    .innerJoin('floor_and_zones','common_area.floorZoneId','common_area.id')
+                    .innerJoin('floor_and_zones','common_area.floorZoneId','floor_and_zones.id')
                     .innerJoin('buildings_and_phases','common_area.buildingPhaseId','buildings_and_phases.id')
                     .innerJoin('projects','common_area.projectId','projects.id')
                     .select([
@@ -382,13 +382,13 @@ const commonAreaController = {
 
                 if (validCommonAreaId && validCommonAreaId.length) {
                    
-                   DataResult = await knex('common_area').leftJoin('companies', 'common_area.companyId', '=', 'companies.id').leftJoin('projects', 'common_area.projectId', '=', 'projects.id').leftJoin('property_types', 'common_area.propertyTypeId', '=', 'property_types.id').leftJoin('buildings_and_phases', 'common_area.buildingPhaseId', '=', 'buildings_and_phases.id').leftJoin('floor_and_zones', 'common_area.floorZoneId', '=', 'floor_and_zones.id').select('companies.companyName', 'projects.projectName', 'property_types.propertyType', 'buildings_and_phases.buildingPhaseCode', 'floor_and_zones.floorZoneCode', 'common_area.*').where({ 'common_area.id': viewcommonAreaPayload.id });
+                   DataResult = await knex('common_area').leftJoin('companies', 'common_area.companyId', '=', 'companies.id').leftJoin('projects', 'common_area.projectId', '=', 'projects.id').leftJoin('property_types', 'common_area.propertyTypeId', '=', 'property_types.id').leftJoin('buildings_and_phases', 'common_area.buildingPhaseId', '=', 'buildings_and_phases.id').leftJoin('floor_and_zones', 'common_area.floorZoneId', '=', 'floor_and_zones.id').select('companies.companyName', 'companies.companyId as compId', 'projects.projectName', 'property_types.propertyType', 'buildings_and_phases.buildingPhaseCode', 'floor_and_zones.floorZoneCode', 'common_area.*').where({ 'common_area.id': viewcommonAreaPayload.id });
 
                     console.log('[controllers][commonArea][commonareadetails]: View Data', DataResult);
 
                     //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
 
-                    DataResult = _.omit(DataResult[0], ['id'], ['companyId'], ['projectId'], ['propertyTypeId'], ['buildingPhaseId'], ['floorZoneId']);
+                    DataResult = _.omit(DataResult[0]);
 
                     generalDetails = DataResult;
                 
