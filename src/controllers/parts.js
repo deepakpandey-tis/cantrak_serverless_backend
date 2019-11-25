@@ -858,6 +858,74 @@ const partsController = {
                 ],
             })
         }   
+    },
+    // PART REQUISITION LOG LIST
+    partRequisitionLogList : async (req,res)=>{
+        try{
+            
+            let reqData = req.query;
+            let total, rows
+            let pagination = {};
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
+
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from("part_ledger")
+                    .innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
+                    .leftJoin('adjust_type','part_ledger.adjustType','adjust_type.id')
+                    .first(),
+                    knex.from('part_ledger')
+                    .innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
+                    .leftJoin('adjust_type','part_ledger.adjustType','adjust_type.id')
+                    .select([
+                        'part_ledger.id as ID',
+                        'part_master.id as partId',
+                        'part_master.partName as Name',
+                        'part_master.partCode as Part Code',
+                        'part_ledger.quantity as Quantity',
+                        'part_ledger.unitCost as Unit Cost',
+                        'part_ledger.serviceOrderNo as Service Order No',
+                        'part_ledger.workOrderId as Work Order ID',
+                        'adjust_type.adjustType as Adjust Type',
+                        'part_ledger.adjustType as adjustTypeId',
+                        'part_ledger.approved',
+                        'part_ledger.description',
+                        'part_ledger.approvedBy',
+                        'part_ledger.createdAt as Created Date',
+                    ])
+                    .orderBy('part_ledger.createdAt','desc')
+                    //.groupBy(['part_master.id','part_ledger.id'])
+                    .offset(offset).limit(per_page)
+                ])
+            
+            
+            let count = total.count;
+            pagination.total = count;
+            pagination.per_page = per_page;
+            pagination.offset = offset;
+            pagination.to = offset + rows.length;
+            pagination.last_page = Math.ceil(count / per_page);
+            pagination.current_page = page;
+            pagination.from = offset;
+            pagination.data = rows;
+
+            return res.status(200).json({
+                data: {
+                    partsRequisition: pagination
+                },
+                message: 'Part Requisition Log List!'
+            })
+
+        }
+        catch(err){
+            return res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            })
+        }   
     }
 
  }
