@@ -29,11 +29,11 @@ const partsController = {
             let filters = {}
 
             if (partName) {
-                //filters['part_master.partName'] ='like% '+partName+'%';
+                filters['part_master.partName'] = partName;
             }
 
             if (partCode) {
-                //filters['part_master.partCode'] = partCode
+                filters['part_master.partCode'] = partCode
             }
 
             if (partCategory) {
@@ -863,6 +863,7 @@ const partsController = {
     partRequisitionLogList : async (req,res)=>{
         try{
             
+            let {partId ,partName,serviceOrderNo,workOrderId,adjustType} = req.body
             let reqData = req.query;
             let total, rows
             let pagination = {};
@@ -870,6 +871,76 @@ const partsController = {
             let page = reqData.current_page || 1;
             if (page < 1) page = 1;
             let offset = (page - 1) * per_page;
+
+             if(partId || partName || serviceOrderNo || workOrderId || adjustType){
+
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from("part_ledger")
+                    .innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
+                    .leftJoin('adjust_type','part_ledger.adjustType','adjust_type.id')
+                    .where(qb=>{
+                        if(partId){
+                        qb.where('part_master.id',partId)
+                        }
+                        if(partName){
+                        qb.where('part_master.partName', 'like', `%${partName}%`)
+                        }
+                        if(serviceOrderNo){
+                            qb.where('part_ledger.serviceOrderNo','like',`%${serviceOrderNo}%`)
+                        }
+                        if(workOrderId){
+
+                             qb.where('part_ledger.workOrderId','like',`%${workOrderId}%`)
+                         }
+                        if(adjustType){
+                            qb.where('part_ledger.adjustType',adjustType)
+                        }
+
+                    })
+                    .first(),
+                    knex.from('part_ledger')
+                    .innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
+                    .leftJoin('adjust_type','part_ledger.adjustType','adjust_type.id')
+                    .select([
+                        'part_ledger.id as ID',
+                        'part_master.id as Part Id',
+                        'part_master.partName as Part Name',
+                        'part_master.partCode as Part Code',
+                        'part_ledger.quantity as Quantity',
+                        'part_ledger.unitCost as Unit Cost',
+                        'part_ledger.serviceOrderNo as Service Order No',
+                        'part_ledger.workOrderId as Work Order ID',
+                        'adjust_type.adjustType as Adjust Type',
+                        'part_ledger.adjustType as adjustTypeId',
+                        'part_ledger.approved',
+                        'part_ledger.description',
+                        'part_ledger.approvedBy',
+                        'part_ledger.createdAt as Created Date',
+                    ])
+                    .where(qb=>{
+                        if(partId){
+                        qb.where('part_master.id',partId)
+                        }
+                        if(partName){
+                        qb.where('part_master.partName', 'like', `%${partName}%`)
+                        }
+                        if(serviceOrderNo){
+                          qb.where('part_ledger.serviceOrderNo','like',`%${serviceOrderNo}%`)
+                        }
+                        if(workOrderId){
+
+                            qb.where('part_ledger.workOrderId','like',`%${workOrderId}%`)
+                         }
+                        if(adjustType){
+                            qb.where('part_ledger.adjustType',adjustType)
+                        }
+
+                    })
+                    .orderBy('part_ledger.createdAt','desc')
+                    .offset(offset).limit(per_page)
+                ])
+
+             } else {
 
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from("part_ledger")
@@ -881,8 +952,8 @@ const partsController = {
                     .leftJoin('adjust_type','part_ledger.adjustType','adjust_type.id')
                     .select([
                         'part_ledger.id as ID',
-                        'part_master.id as partId',
-                        'part_master.partName as Name',
+                        'part_master.id as Part Id',
+                        'part_master.partName as Part Name',
                         'part_master.partCode as Part Code',
                         'part_ledger.quantity as Quantity',
                         'part_ledger.unitCost as Unit Cost',
@@ -896,9 +967,9 @@ const partsController = {
                         'part_ledger.createdAt as Created Date',
                     ])
                     .orderBy('part_ledger.createdAt','desc')
-                    //.groupBy(['part_master.id','part_ledger.id'])
                     .offset(offset).limit(per_page)
                 ])
+            }
             
             
             let count = total.count;
@@ -926,8 +997,31 @@ const partsController = {
                 ],
             })
         }   
-    }
+    },
+    // ADJUST TYPE LIST FOR DROP DOWN
+    adjustTypeList : async (req,res)=>{
 
+        try{
+
+            let result = await knex('adjust_type').returning('*')
+
+            return res.status(200).json({
+                data: {
+                    adjustTypeList: result
+                },
+                message: 'Adjust type List!'
+            })
+            
+        }catch(err){
+
+            return res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            })
+        }
+
+    }
  }
 
 module.exports = partsController;
