@@ -606,8 +606,7 @@ const buildingPhaseController = {
             ])
         ]);
 
-        buildingData.data = rows;
-   
+        buildingData.data = rows;   
 
       return res.status(200).json({
         data: {
@@ -626,12 +625,12 @@ const buildingPhaseController = {
       });
     }
   },
-  getBuildingPhaseListByProjectId: async(req, res) => {
+  getBuildingPhaseListByProjectId: async(req,res) => {
     try {
-      const { projectId } = req.body;
-      const buildings = await knex('buildings_and_phases').select('*').where({ projectId })
-      return res.status(200).json({ data: { buildings }, message: 'Buildings list' })
-    } catch (err) {
+      const {projectId} = req.body;
+      const buildings = await knex('buildings_and_phases').select('*').where({projectId})
+      return res.status(200).json({data: {buildings},message:'Buildings list'})
+    } catch(err) {
       console.log(
         "[controllers][generalsetup][viewbuildingPhase] :  Error",
         err
@@ -642,7 +641,6 @@ const buildingPhaseController = {
       });
     }
   }
-
 };
 
 module.exports = buildingPhaseController;
