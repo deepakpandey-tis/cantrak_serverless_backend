@@ -12,5 +12,8 @@ router.post('/get-building-phase-by-project-id', authMiddleware.isAuthenticated,
 router.get('/get-building-phase-list', authMiddleware.isAuthenticated, buildingPhaseController.getBuildingPhaseList)
 // Export Building Phase
 router.get('/export-building-phase', authMiddleware.isAuthenticated, buildingPhaseController.exportBuildingPhase)
+router.get('/get-buildings-phases-all-list', authMiddleware.isAuthenticated, buildingPhaseController.getBuildingPhaseAllList)
+
+
 
 module.exports = router

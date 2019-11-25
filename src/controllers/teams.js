@@ -273,25 +273,25 @@ const teamsController = {
     getMainAndAdditionalUsersByTeamId: async (req,res) => {
         try {
             let teamId = req.body.teamId;
-            let mainUsers = await knex('team_users').select().where({teamId})
-            let additionalUsers = await knex('users').select()
-            additionalUsers = additionalUsers.map(user => _.omit(user, ['password','username']))
+            let mainUsers = await knex('team_users').innerJoin('users', 'team_users.userId', 'users.id').select(['users.id as id', 'users.name as name']).where({'team_users.teamId':teamId})
+            let additionalUsers = await knex('users').select(['id','name'])
+            //additionalUsers = additionalUsers.map(user => _.omit(user, ['password','username']))
             
             const Parallel = require('async-parallel')
             const usersWithRoles = await Parallel.map(additionalUsers, async user => {
                 const roles = await knex('user_roles').select('roleId').where({userId:user.id});
                 const roleNames = await Parallel.map(roles, async role => {
-                    const roleNames = await knex('roles').select('name').where({ id: role.roleId })
-                    return roleNames.map(role => role.name)
+                    const roleNames = await knex('roles').select('name').where({ id: role.roleId }).whereNotIn('name', ['superAdmin','admin','customer'])
+                    return roleNames.map(role => role.name).join(',')
                 })
-                return {...user,roleNames};
+                return {...user,roleNames:roleNames.filter(v=>v).join(',')};
             })
 
             res.status(200).json({
                 data :{
 
                     mainUsers,
-                    additionalUsers: usersWithRoles
+                    additionalUsers: usersWithRoles.filter(v => v.roleNames !== "")
                 }
             })
 

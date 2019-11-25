@@ -478,8 +478,16 @@ const taskGroupController = {
 
         let config = {
           interval: repeatFrequency,
-          dtstart: new Date(Date.UTC(startYear, startMonth, startDate)),
-          until: new Date(Date.UTC(endYear, endMonth, endDate)) // year, month, date
+          dtstart: new Date(
+            Date.UTC(
+              startYear, startMonth, startDate-1
+              )
+            ),
+          until: new Date(
+            Date.UTC(
+              endYear, endMonth, endDate
+              )
+            ) // year, month, date
         };
         if (repeatPeriod === "YEAR") {
           config["freq"] = RRule.YEARLY;
