@@ -1687,6 +1687,32 @@ const taskGroupController = {
         ],
       });   
     }
+  },
+  getTaskGroupScheduleDetails:async (req,res) => {
+    try {
+      const {scheduleId} = req.body;
+      const scheduleData = await knex('task_group_schedule')
+      .innerJoin('task_group_schedule_assign_assets','task_group_schedule.id','task_group_schedule_assign_assets.scheduleId')
+      .select([
+        'task_group_schedule.*',
+        'task_group_schedule_assign_assets.pmDate as pmDate'
+      ]).where({ 'task_group_schedule.id': scheduleId})
+
+      return res.status(200).json({
+        data: {
+          scheduleData
+        },
+        message:'Schedule Data'
+      })
+
+    } catch(err) {
+      console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });  
+    }
   }
 }
 
