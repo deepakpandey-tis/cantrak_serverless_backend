@@ -39,7 +39,7 @@ const getUploadURL = async (mimeType, filename) => {
     const s3Params = {
         Bucket: process.env.S3_BUCKET_NAME,
         Key: `${actionId}.${ext}`,
-        ContentType: mimeType,
+        ContentType: "multipart/form-data",
         ACL: 'public-read',
     };
     return new Promise(async (resolve, reject) => {
