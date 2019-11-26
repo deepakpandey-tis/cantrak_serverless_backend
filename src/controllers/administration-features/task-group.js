@@ -1704,7 +1704,7 @@ const taskGroupController = {
 
       return res.status(200).json({
         data: {
-          scheduleData,
+          scheduleData: scheduleData && scheduleData.length ? scheduleData[0] : [],
           team,
           additionalUsers
         },
