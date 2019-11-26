@@ -51,7 +51,8 @@ router.get('/get-task-group-template-list',authMiddleware.isAuthenticated,authMi
 router.post('/update-task-group-template-detail', authMiddleware.isAuthenticated, authMiddleware.isAdmin, taskGroupController.updateTaskGroupDetails)
 router.post('/get-task-feedbacks', authMiddleware.isAuthenticated, authMiddleware.isAdmin, taskGroupController.getFeedbacksOfTask)
 
-
+router.post('/get-task-group-schedule-details', authMiddleware.isAuthenticated, authMiddleware.isAdmin, taskGroupController.getTaskGroupScheduleDetails)
+router.post('/update-old-task-group-schedule-with-work-orders', authMiddleware.isAuthenticated, authMiddleware.isAdmin, taskGroupController.updateOldTaskGroupScheduleWithWorkOrders)
 
 
 module.exports = router
