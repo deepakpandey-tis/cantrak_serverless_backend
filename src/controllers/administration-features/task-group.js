@@ -1704,13 +1704,97 @@ const taskGroupController = {
 
       return res.status(200).json({
         data: {
-          scheduleData: scheduleData && scheduleData.length ? scheduleData[0] : [],
+          scheduleData,
           team,
           additionalUsers
         },
         message:'Schedule Data'
       })
 
+    } catch(err) {
+      console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });  
+    }
+  },
+  updateOldTaskGroupScheduleWithWorkOrders: async(req,res) => {
+    try {
+      const {scheduleId,taskGroupId,newData} = req.body;
+     const {startDateTime,endDateTime,repeatFrequency,repeatOn,repeatPeriod} = newData;
+      const {teamId,mainUserId,additionalUsers} = newData;
+
+     // Generate New Work Orders for the same schedule but from the date which are coming next
+     // Previous date should be discarded
+      let generatedDates = getRecurringDates({ startDateTime, endDateTime, repeatFrequency, repeatOn, repeatPeriod })
+
+      // Delete work orders which are not yet completed
+      await knex('task_group_schedule_assign_assets').where({ scheduleId }).whereRaw(knex.raw(`DATE("task_group_schedule_assign_assets"."pmDate") > now()`)).select('*').del()
+
+      // Create New Work Orders Now
+      // Get tasks for which the pms are to be created
+      let tasksResults = await knex('pm_task').select('taskName').where({taskGroupId})
+      let tasks = _.uniqBy(tasksResults,'taskName').map(v => v.taskName);
+
+      let assetResults = []
+      // Get Asset Ids for which new work orders are to be created
+      const assetIdsResult = await knex('task_group_schedule_assign_assets').where({scheduleId}).select('assetId')
+
+      const assetIds = _.uniq(assetIdsResult.map(r => r.assetId).map(v => Number(v))) 
+      let currentTime = new Date().getTime()
+      for (let i = 0; i < assetIds.length; i++) {
+        const assetId = assetIds[i];
+        for (let j = 0; j < generatedDates.length; j++) {
+          const date = generatedDates[j];
+          let assetResult = await knex("task_group_schedule_assign_assets")
+            .insert({
+              pmDate: date,
+              scheduleId:scheduleId,
+              assetId,
+              createdAt: currentTime,
+              updatedAt: currentTime
+            })
+            .returning(['*']);
+
+          // CREATE PM TASK OPEN
+          let InsertPmTaskPayload = tasks.map(da => ({
+            taskName: da,
+            taskGroupId,
+            taskGroupScheduleAssignAssetId: assetResult[0].id,
+            createdAt: currentTime,
+            updatedAt: currentTime
+          }))
+
+          let insertPmTaskResult = await knex('pm_task').insert(InsertPmTaskPayload).returning(['*']);
+          createPmTask = insertPmTaskResult;
+
+          // CREATE PM TASK CLOSE
+          assetResults.push(assetResult[0]);
+        }
+      }
+
+      const updatedSchedule = await knex('task_group_schedule').update({ startDate:startDateTime, endDate:endDateTime, repeatFrequency, repeatOn, repeatPeriod }).where({id:scheduleId}).select('*')
+      const updatedTeam = await knex('assigned_service_team').update({teamId,userId:mainUserId}).where({entityId:taskGroupId,entityType:'pm_task_groups'})
+      let updatedAdditionalUsers = []
+      for(let id of additionalUsers) {
+        let updatedAdditionalUserResult = await knex('assigned_service_additional_users').update({userId:id}).where({entityType:'pm_task_groups',entityId:taskGroupId})
+        updatedAdditionalUsers.push(updatedAdditionalUserResult[0])
+      }
+      return res.status(200).json({
+        data: {
+          //deletedWorkOrders
+          generatedDates,
+          assetIds,
+          tasks,
+          assetResults,
+          updatedSchedule,
+          updatedTeam,
+          updatedAdditionalUsers
+        },
+        message:'Updated successfully'
+      })
     } catch(err) {
       console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
       res.status(500).json({
@@ -1730,6 +1814,73 @@ module.exports = taskGroupController
 
 
 
+
+
+function getRecurringDates({repeatPeriod,repeatOn,repeatFrequency,startDateTime,endDateTime}){
+   repeatPeriod = repeatPeriod;
+   repeatOn = repeatOn && repeatOn.length ? repeatOn.join(',') : [];
+   repeatFrequency = Number(repeatFrequency);
+  let start = new Date(startDateTime);
+  let startYear = start.getFullYear();
+  let startMonth = start.getMonth();
+  let startDate = start.getDate();
+  let end = new Date(endDateTime);
+  let endYear = end.getFullYear();
+  let endMonth = end.getMonth();
+  let endDate = end.getDate();
+  let performingDates;
+
+  let config = {
+    interval: repeatFrequency,
+    dtstart: new Date(
+      Date.UTC(
+        startYear, startMonth, startDate
+      )
+    ),
+    until: new Date(
+      Date.UTC(
+        endYear, endMonth, endDate
+      )
+    ) // year, month, date
+  };
+  if (repeatPeriod === "YEAR") {
+    config["freq"] = RRule.YEARLY;
+  } else if (repeatPeriod === "MONTH") {
+    config["freq"] = RRule.MONTHLY;
+  } else if (repeatPeriod === "WEEK") {
+    config["freq"] = RRule.WEEKLY;
+    let array = [];
+
+    if (repeatOn.includes("MO")) {
+      array.push(RRule.MO);
+    }
+    if (repeatOn.includes("TU")) {
+      array.push(RRule.TU);
+    }
+    if (repeatOn.includes("WE")) {
+      array.push(RRule.WE);
+    }
+    if (repeatOn.includes("TH")) {
+      array.push(RRule.TH);
+    }
+    if (repeatOn.includes("FR")) {
+      array.push(RRule.FR);
+    }
+    if (repeatOn.includes("SA")) {
+      array.push(RRule.SA);
+    }
+    if (repeatOn.includes("SU")) {
+      array.push(RRule.SU);
+    }
+    config["byweekday"] = array;
+  } else if (repeatPeriod === "DAY") {
+    config["freq"] = RRule.DAILY;
+  }
+
+  const rule = new RRule(config);
+  performingDates = rule.all();
+  return performingDates.map(v => new Date(v).getTime()).filter(v => v > new Date().getTime()).map(v => new Date(v).toISOString())
+}
 
 
 
