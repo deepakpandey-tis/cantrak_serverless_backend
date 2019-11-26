@@ -11,7 +11,7 @@ router.post('/delete-project', authMiddleware.isAuthenticated, projectController
 router.get('/get-project-list', authMiddleware.isAuthenticated, projectController.getProjectList)
 /// Export Project Data 
 router.get('/export-project', authMiddleware.isAuthenticated, projectController.exportProject)
-router.get('/get-project-by-companies', authMiddleware.isAuthenticated, projectController.getProjectByCompany)
+router.get('/get-project-by-companies', projectController.getProjectByCompany)
 
 
 module.exports = router
