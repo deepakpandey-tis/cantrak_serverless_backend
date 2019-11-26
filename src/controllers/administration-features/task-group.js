@@ -1690,7 +1690,7 @@ const taskGroupController = {
   },
   getTaskGroupScheduleDetails:async (req,res) => {
     try {
-      const {scheduleId} = req.body;
+      const {scheduleId,taskGroupId} = req.body;
       const scheduleData = await knex('task_group_schedule')
       .innerJoin('task_group_schedule_assign_assets','task_group_schedule.id','task_group_schedule_assign_assets.scheduleId')
       .select([
@@ -1698,9 +1698,15 @@ const taskGroupController = {
         'task_group_schedule_assign_assets.pmDate as pmDate'
       ]).where({ 'task_group_schedule.id': scheduleId})
 
+      const team = await knex('assigned_service_team').select(['teamId','userId']).where({entityType:'pm_task_groups',entityId:taskGroupId})
+      const additionalUsers = await knex('assigned_service_additional_users').select('userId').where({entityType:'pm_task_groups',entityId:taskGroupId})
+
+
       return res.status(200).json({
         data: {
-          scheduleData
+          scheduleData,
+          team,
+          additionalUsers
         },
         message:'Schedule Data'
       })
