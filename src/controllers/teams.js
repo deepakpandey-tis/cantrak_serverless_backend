@@ -128,15 +128,50 @@ const teamsController = {
     getTeamList: async (req, res) => {
         // Define try/catch block
         try {
-            let teamResult = null;
+            let {teamName}  = req.body;
+            let teamResult  = null;
+            let reqData     = req.query;
+            let pagination  = {}
+            let per_page    = reqData.per_page || 10;
+            let page        = reqData.current_page || 1
+            if(page<1) page = 1;
+            let offset      = (page-1) * per_page;
+  
+             if(teamName){
+
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from("teams")
+                    .first(),
+                    knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" group by "teams"."teamId" limit '+per_page+' OFFSET '+offset+'')               
+                ])
+
+             } else{
+
+            [total, rows] = await Promise.all([
+                knex.count('* as count').from("teams")
+                .first(),
+                knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" group by "teams"."teamId" limit '+per_page+' OFFSET '+offset+'')               
+            ])
+        }
 
             // teamResult =  await knex('teams').leftJoin('team_users','team_users.teamId', '=', 'teams.teamId').select('teams.*').count("team_users.userId").groupByRaw('teams.teamId');
-            teamResult = await knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" group by "teams"."teamId"');
-            console.log('[controllers][teams][getTeamList] : Team List', teamResult);
-            teamResult = { teams: teamResult.rows };
-
+           // teamResult = await knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" group by "teams"."teamId"');
+            //console.log('[controllers][teams][getTeamList] : Team List', teamResult);
+           // teamResult = { teams: teamResult.rows };
+           let count            = total.count;
+           pagination.total     = count;
+           pagination.per_page  = per_page;
+           pagination.offset    = offset;
+           pagination.to        = offset+rows.length;
+           pagination.last_page = Math.ceil(count / per_page);
+           pagination.current_page = page;
+           pagination.from = offset;
+           pagination.data = rows.rows;
+            
             res.status(200).json({
-                data: teamResult,
+                data:{
+                teamData:pagination
+                } ,
                 message: "Team list successfully !"
             })
 
