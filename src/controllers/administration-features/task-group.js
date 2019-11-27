@@ -1613,7 +1613,7 @@ const taskGroupController = {
       let updatedTasks = []
       let updatedUsers = []
       let updatedTaskResult
-      for(let task in tasks){
+      for(let task of tasks){
         if(task.id){
 
           updatedTaskResult = await knex('template_task').update({taskName:task.taskName}).where({templateId:id,id:task.id}).returning('*')
