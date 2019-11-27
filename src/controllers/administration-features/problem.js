@@ -34,7 +34,7 @@ const problemController = {
           knex("incident_sub_categories")
           .innerJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
           .select([
-            'incident_categories.id as ID',
+            'incident_sub_categories.id as ID',
             'incident_categories.categoryCode as Problem Code',
             'incident_sub_categories.descriptionEng as Description(Eng)',
             'incident_sub_categories.descriptionThai as Description(Thai)',
@@ -55,7 +55,7 @@ const problemController = {
             knex("incident_sub_categories")
             .innerJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
             .select([
-              'incident_categories.id as ID',
+              'incident_sub_categories.id as ID',
               'incident_categories.categoryCode as Problem Code',
               'incident_sub_categories.descriptionEng as Description(Eng)',
               'incident_sub_categories.descriptionThai as Description(Thai)',
@@ -97,7 +97,8 @@ const problemController = {
       });
     }
     // Export Problem Data
-  },exportProblem:async (req,res)=>{
+  },
+  exportProblem:async (req,res)=>{
     try {
 
       let reqData = req.query;
@@ -214,7 +215,40 @@ const problemController = {
         ],
       });
     }
-  }
+  },
+  getProblemDetails: async(req, res) => {
+    try {
+      let reqData = req.query;
+      let pagination = {};
+      let problemId = reqData.problemId;
+      
+     let [rows] = await Promise.all([
+        knex("incident_sub_categories")
+        .innerJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
+        .select([
+          'incident_categories.categoryCode as problemCode',
+          'incident_sub_categories.descriptionEng',
+          'incident_sub_categories.descriptionThai',
+          'incident_categories.descriptionEng as Category',
+          'incident_sub_categories.isActive as Status',
+          'incident_sub_categories.createdAt as DateCreated',
+
+        ]).where('incident_sub_categories.id',problemId)
+      ]) 
+     pagination.problems = rows;
+      return res.status(200).json({
+        data: pagination,
+        message: 'Problem Data Details!'
+      })
+    } catch (err) {
+      console.log('[controllers][problem][details] :  Error', err);
+      return res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },  
 }
 
 module.exports = problemController
