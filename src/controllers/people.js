@@ -13,7 +13,8 @@ const peopleController = {
             let role = null
 
             await knex.transaction(async (trx) => {
-                let peoplePayload = req.body;
+                let peoplePayload = _.omit(req.body,'company','building','floor','houseId','project','unitNumber','houseId');
+                let payload       = req.body;
                 const schema = Joi.object().keys({
                     email: Joi.string().required(),
                     roleId: Joi.string().required()
@@ -30,7 +31,11 @@ const peopleController = {
                 }
 
                 let currentTime = new Date().getTime();
-                let insertPeopleData = { email: peoplePayload.email, createdAt: currentTime, updatedAt: currentTime }
+                let houseId  = 0;
+                if(payload.houseId){
+                    houseId = payload.houseId;
+                }
+                let insertPeopleData = { email: peoplePayload.email,houseId:houseId, createdAt: currentTime, updatedAt: currentTime }
                 // Insert into users table
                 let peopleResult = await knex.insert(insertPeopleData).returning(['*']).transacting(trx).into('users');
                 people = peopleResult[0]
@@ -257,7 +262,27 @@ const peopleController = {
             let peopleData = null;
             let id = req.body.id;
 
-            peopleData = await knex('users').where({ id }).select()
+            peopleData = await knex('users')
+                               .leftJoin('property_units', 'users.houseId', 'property_units.houseId')
+                               .leftJoin('companies','property_units.companyId','companies.id')
+                               .innerJoin('user_roles','users.id','user_roles.userId')
+                               .innerJoin('roles','user_roles.roleId','roles.id')
+                               .select([
+                                   'users.id as userId',
+                                   'users.name ',
+                                   'users.mobileNo',
+                                   'users.email',
+                                   'users.houseId',
+                                   'roles.id as roleId',
+                                   'companies.id as company',
+                                   'companies.companyName as companyName',
+                                   'property_units.projectId as project',
+                                   'property_units.unitNumber',
+                                   'property_units.buildingPhaseId as building',
+                                   'property_units.floorZoneId as floor'
+                               ])
+                               .where({ 'users.id':id })
+            
             let peopleDataResult = peopleData[0];
             let omitedPeopleDataResult = _.omit(peopleDataResult, ['createdAt'], ['updatedAt'], ['isActive', 'password', 'verifyToken'])
 

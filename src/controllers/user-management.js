@@ -37,6 +37,34 @@ const userManagementController = {
         }
     },
 
+   // GET ROLE LIST EXCEPT ADMIN SUPER ADMIN
+   getRoleList: async (req, res) => {
+        // const users = await knex.select().from('users');
+        try {
+
+            let roleData = null;
+            // check username & password not blank
+            roleData = await knex('roles')
+            .whereNotIn('id',['1','2'])
+            .where({ isActive: 'true' }).select('id', 'name');
+            console.log('[controllers][usermanagement][roles]: RoleList', roleData);
+
+            res.status(200).json({
+                data: roleData,
+                message: "Roles List"
+            });
+
+
+        } catch (err) {
+            console.log('[controllers][usermanagement][roles] :  Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    }
+   ,
     updateUserRoles: async (req, res) => {
         // const users = await knex.select().from('users');
         try {

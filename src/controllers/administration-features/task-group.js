@@ -1586,9 +1586,18 @@ const taskGroupController = {
   updateTaskGroupDetails: async(req,res) => {
     try {
       let id = req.body.id
-      let payload = _.omit(req.body,['id','additionalUsers','tasks','taskGroupName','assetCategoryId','mainUserId','teamId']);
+      let payload = _.omit(req.body,['id','additionalUsers','tasks','taskGroupName','assetCategoryId','mainUserId','teamId','deletedTasks']);
       let tasks = req.body.tasks;
+      let deletedTasks = req.body.deletedTasks
       let additionalUsers = req.body.additionalUsers;
+      let currentTime = new Date().getTime()
+
+      // Delete Tasks
+      if(deletedTasks && deletedTasks.length){
+        for(let task of deletedTasks){
+          await knex('template_task').where({id:task.id}).del()
+        }
+      }
       // additionalUsers: ["59", "60"]
       // assetCategoryId: "1"
       // endDate: "2019-11-21T18:30:00.000Z"
@@ -1612,13 +1621,13 @@ const taskGroupController = {
       let updatedTasks = []
       let updatedUsers = []
       let updatedTaskResult
-      for(let task in tasks){
+      for(let task of tasks){
         if(task.id){
 
-          updatedTaskResult = await knex('template_task').update({taskName:task}).where({templateId:id,id:task.id}).returning('*')
+          updatedTaskResult = await knex('template_task').update({taskName:task.taskName}).where({templateId:id,id:task.id}).returning('*')
           updatedTasks.push(updatedTaskResult[0])
         } else {
-          updatedTaskResult = await knex('template_task').insert({ taskName: task, templateId: id }).returning('*')
+          updatedTaskResult = await knex('template_task').insert({ taskName: task.taskName, templateId: id, createdAt: currentTime, updatedAt: currentTime }).returning('*')
           updatedTasks.push(updatedTaskResult[0])
         } 
 
