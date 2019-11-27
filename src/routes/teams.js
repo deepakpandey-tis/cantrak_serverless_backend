@@ -10,7 +10,8 @@ const authMiddleware = require('../middlewares/auth');
 
 router.post('/add-teams', authMiddleware.isAuthenticated, teamsController.addNewTeams);
 router.post('/update-teams', authMiddleware.isAuthenticated, teamsController.updateTeams);
-router.post('/get-team-list', authMiddleware.isAuthenticated, teamsController.getTeamList);
+router.get('/get-team-list', authMiddleware.isAuthenticated, teamsController.getTeamList);
+router.post('/get-team-all-list', authMiddleware.isAuthenticated, teamsController.getTeamAllList);
 router.post('/add-team-users', authMiddleware.isAuthenticated, teamsController.addTeamUsers);
 router.get('/get-assigned-teams', authMiddleware.isAuthenticated, teamsController.getAssignedTeams);
 // Export Team Data

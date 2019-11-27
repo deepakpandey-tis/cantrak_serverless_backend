@@ -128,6 +128,40 @@ const teamsController = {
     getTeamList: async (req, res) => {
         // Define try/catch block
         try {
+            
+            let teamResult  = null;
+            
+            
+            teamResult = await  knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" group by "teams"."teamId"')               
+            
+        
+
+            // teamResult =  await knex('teams').leftJoin('team_users','team_users.teamId', '=', 'teams.teamId').select('teams.*').count("team_users.userId").groupByRaw('teams.teamId');
+           // teamResult = await knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" group by "teams"."teamId"');
+            //console.log('[controllers][teams][getTeamList] : Team List', teamResult);
+           // teamResult = { teams: teamResult.rows };
+           
+            
+            res.status(200).json({
+                data:{
+                    teams:teamResult.rows
+                } ,
+                message: "Team list successfully !"
+            })
+
+        } catch (err) {
+            console.log('[controllers][teams][getTeamList] : Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ]
+            });
+        }
+    },
+
+    getTeamAllList: async (req, res) => {
+        // Define try/catch block
+        try {
             let {teamName}  = req.body;
             let teamResult  = null;
             let reqData     = req.query;
@@ -141,8 +175,9 @@ const teamsController = {
 
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from("teams")
+                    .where({'teams.teamName':teamName})
                     .first(),
-                    knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" group by "teams"."teamId" limit '+per_page+' OFFSET '+offset+'')               
+                    knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams.teamName" like %'+teamName+'% group by "teams"."teamId" limit '+per_page+' OFFSET '+offset+'')               
                 ])
 
              } else{
