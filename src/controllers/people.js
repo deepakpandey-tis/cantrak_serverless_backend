@@ -68,18 +68,21 @@ const peopleController = {
         try {
 
             let people = null;
+            let roleResult = null;
+            let role = null;
             await knex.transaction(async (trx) => {
-                let peoplePayload = req.body;
+                let peoplePayload = _.omit(req.body,'company','building','floor','houseId','project','unitNumber','houseId','id');
                 let id = req.body.id
+                let payload = req.body;
                 console.log('[controllers][people][payload]', peoplePayload);
                 peoplePayload = _.omit(peoplePayload, ['id'])
                 // validate keys
                 const schema = Joi.object().keys({
-                    firstName: Joi.string().required(),
-                    lastName: Joi.string().required(),
-                    mobileNo: Joi.string().required(),
-                    userName: Joi.string().required(),
-                    houseId: Joi.string().required(),
+                   //  name: Joi.string().required(),
+                    //lastName: Joi.string().required(),
+                    //mobileNo: Joi.string().required(),
+                    //userName: Joi.string().required(),
+                    roleId: Joi.string().required(),
                     email: Joi.string().required()
                 });
 
@@ -101,18 +104,20 @@ const peopleController = {
 
                 console.log('[controllers][people][updatePeopleDetails]: Update Data', insertData);
 
-                let peopleResult = await knex.update(insertData).where({ id: id }).returning(['*']).transacting(trx).into('users');
+                let peopleResult = await knex.update({name:payload.name,email:payload.email}).where({ id: id }).returning(['*']).transacting(trx).into('users');
 
                 people = peopleResult[0]
 
+                //console.log(roleId)
 
+                let roleResult = await knex.update({roleId:payload.roleId}).where({'userId':payload.id}).returning('*').transacting(trx).into('user_roles');
+                role  = roleResult[0]
                 trx.commit;
-
             });
 
             res.status(200).json({
                 data: {
-                    people: people
+                    people: {...people,role}
                 },
                 message: "People details updated successfully !"
             });

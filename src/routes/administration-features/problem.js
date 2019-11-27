@@ -10,5 +10,6 @@ router.get('/export-problem', authMiddleware.isAuthenticated, problemController.
 
 router.get('/get-category-list',authMiddleware.isAuthenticated,problemController.getIncidentCategories)
 router.post('/get-subcategories-by-category',authMiddleware.isAuthenticated,problemController.getSubcategories)
+router.get('/get-problem-details', authMiddleware.isAuthenticated, problemController.getProblemDetails)
 
 module.exports = router;
