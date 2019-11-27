@@ -1586,10 +1586,18 @@ const taskGroupController = {
   updateTaskGroupDetails: async(req,res) => {
     try {
       let id = req.body.id
-      let payload = _.omit(req.body,['id','additionalUsers','tasks','taskGroupName','assetCategoryId','mainUserId','teamId']);
+      let payload = _.omit(req.body,['id','additionalUsers','tasks','taskGroupName','assetCategoryId','mainUserId','teamId','deletedTasks']);
       let tasks = req.body.tasks;
+      let deletedTasks = req.body.deletedTasks
       let additionalUsers = req.body.additionalUsers;
       let currentTime = new Date().getTime()
+
+      // Delete Tasks
+      if(deletedTasks && deletedTasks.length){
+        for(let task of deletedTasks){
+          await knex('template_task').where({id:task.id}).del()
+        }
+      }
       // additionalUsers: ["59", "60"]
       // assetCategoryId: "1"
       // endDate: "2019-11-21T18:30:00.000Z"
