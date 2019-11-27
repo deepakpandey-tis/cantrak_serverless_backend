@@ -1589,6 +1589,7 @@ const taskGroupController = {
       let payload = _.omit(req.body,['id','additionalUsers','tasks','taskGroupName','assetCategoryId','mainUserId','teamId']);
       let tasks = req.body.tasks;
       let additionalUsers = req.body.additionalUsers;
+      let currentTime = new Date().getTime()
       // additionalUsers: ["59", "60"]
       // assetCategoryId: "1"
       // endDate: "2019-11-21T18:30:00.000Z"
@@ -1615,10 +1616,10 @@ const taskGroupController = {
       for(let task in tasks){
         if(task.id){
 
-          updatedTaskResult = await knex('template_task').update({taskName:task}).where({templateId:id,id:task.id}).returning('*')
+          updatedTaskResult = await knex('template_task').update({taskName:task.taskName}).where({templateId:id,id:task.id}).returning('*')
           updatedTasks.push(updatedTaskResult[0])
         } else {
-          updatedTaskResult = await knex('template_task').insert({ taskName: task, templateId: id }).returning('*')
+          updatedTaskResult = await knex('template_task').insert({ taskName: task.taskName, templateId: id, createdAt: currentTime, updatedAt: currentTime }).returning('*')
           updatedTasks.push(updatedTaskResult[0])
         } 
 
