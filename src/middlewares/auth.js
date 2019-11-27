@@ -8,7 +8,7 @@ const authMiddleware = {
     isAuthenticated: async (req, res, next) => {
 
         try {
-            
+
             if (!req.headers || !req.headers.authorization) {
                 next(createError(401));
             }
@@ -19,7 +19,7 @@ const authMiddleware = {
             if (token && token != '') {
 
                 // Very token using JWT
-                 console.log('[][auth]: Token', token);
+                console.log('[][auth]: Token', token);
                 const decodedTokenData = await jwt.verify(token, process.env.JWT_PRIVATE_KEY);
                 // console.log('[middleware][auth]: Token Decoded Data:', decodedTokenData);
 
@@ -38,9 +38,25 @@ const authMiddleware = {
 
                     const Parallel = require('async-parallel');
                     currentUser.roles = await Parallel.map(currentUser.roles, async item => {
-                        let rolename = await knex('roles').where({ id: item.roleId }).select('name');
-                        rolename = rolename[0].name;
-                        return rolename;
+                        let roleName = await knex('roles').where({ id: item.roleId }).select('name');
+                        roleName = roleName[0].name;
+                        let r;
+                        if (item.roleId == 1) {   // Superadmin
+                            r = {
+                                roleName: roleName
+                            }
+                        } else if (item.roleId == 7) {   // Customer
+                            r = {
+                                roleName: roleName,
+                                houseId: item.entityId
+                            }
+                        } else {
+                            r = {
+                                roleName: roleName,
+                                organisationId: item.entityId
+                            }
+                        }
+                        return r;
                     });
 
                     req.me = currentUser;
@@ -59,43 +75,142 @@ const authMiddleware = {
         }
     },
 
-    isAdmin: async (req, res, next) => {
-
-        try {
-           
-            let currentUser = req.me;
-
-            if(currentUser && currentUser.roles && currentUser.roles.includes("superAdmin") || currentUser.roles.includes("admin")){
-                return next();
-            }
-            return next(createError(403));
-        } catch (err) {
-            console.log('[middleware][auth][isAdmin] :  Error', err);
-            next(createError(401));
-        }
-    },
     isSuperAdmin: async (req, res, next) => {
 
         try {
-           
+
             let currentUser = req.me;
 
-            if(currentUser && currentUser.roles && currentUser.roles.includes("superAdmin") || currentUser.roles.includes("admin")){
+            if (currentUser.roles && currentUser.roles.some(e => e.roleName === 'superAdmin')) {
                 return next();
             }
+
             return next(createError(403));
         } catch (err) {
             console.log('[middleware][auth][isSuperAdmin] :  Error', err);
             next(createError(401));
         }
     },
+
+    isAdmin: async (req, res, next) => {
+
+        try {
+
+            let currentUser = req.me;
+
+            if (currentUser.roles && currentUser.roles.some(e => e.roleName === 'superAdmin')) {
+                return next();
+            }
+
+            if (currentUser.roles && currentUser.roles.some(e => e.roleName === 'admin')) {
+                return next();
+            }
+
+            return next(createError(403));
+        } catch (err) {
+            console.log('[middleware][auth][isAdmin] :  Error', err);
+            next(createError(401));
+        }
+    },
+
+    isEngineer: async (req, res, next) => {
+        try {
+
+            let currentUser = req.me;
+
+            if (currentUser.roles && currentUser.roles.some(e => {
+                return e.roleName === 'superAdmin' || e.roleName === 'admin' || e.roleName === 'engineer'
+            })) {
+                return next();
+            }
+
+            return next(createError(403));
+        } catch (err) {
+            console.log('[middleware][auth][isEngineer] :  Error', err);
+            next(createError(401));
+        }
+    },
+
+    isSupervisor: async (req, res, next) => {
+        try {
+
+            let currentUser = req.me;
+
+            if (currentUser.roles && currentUser.roles.some(e => {
+                return e.roleName === 'superAdmin' || e.roleName === 'admin' || e.roleName === 'engineer' || e.supervisor === 'supervisor'
+            })) {
+                return next();
+            }
+
+            return next(createError(403));
+        } catch (err) {
+            console.log('[middleware][auth][isSupervisor] :  Error', err);
+            next(createError(401));
+        }
+    },
+
+    isTechnician: async (req, res, next) => {
+        try {
+
+            let currentUser = req.me;
+
+            if (currentUser.roles && currentUser.roles.some(e => {
+                return e.roleName === 'superAdmin' || e.roleName === 'admin' || e.roleName === 'engineer' || e.supervisor === 'supervisor' || e.supervisor === 'technician' 
+            })) {
+                return next();
+            }
+
+            return next(createError(403));
+        } catch (err) {
+            console.log('[middleware][auth][isTechnician] :  Error', err);
+            next(createError(401));
+        }
+    },
+
+    isWorker: async (req, res, next) => {
+        try {
+
+            let currentUser = req.me;
+
+            if (currentUser.roles && currentUser.roles.some(e => {
+                return e.roleName !== 'customer'
+            })) {
+                return next();
+            }
+
+            return next(createError(403));
+        } catch (err) {
+            console.log('[middleware][auth][isTechnician] :  Error', err);
+            next(createError(401));
+        }
+    },
+
+    isCustomer: async (req, res, next) => {
+        try {
+
+            let currentUser = req.me;
+
+            if (currentUser.roles && currentUser.roles.some(e => {
+                return e.roleName === 'customer'
+            })) {
+                return next();
+            }
+
+            return next(createError(403));
+        } catch (err) {
+            console.log('[middleware][auth][isTechnician] :  Error', err);
+            next(createError(401));
+        }
+    },
+
+
     isRole: async (req, res, next) => {
 
         try {
-           
+
             let currentUser = req.me;
 
-            if(currentUser && currentUser.roles && currentUser.roles.includes("superAdmin") || currentUser.roles.includes("admin") || currentUser.roles.includes("supervisor") || currentUser.roles.includes("technician") || currentUser.roles.includes("worker") || currentUser.roles.includes("engineer") ){
+            if (currentUser && currentUser.roles && currentUser.roles.includes("superAdmin") || currentUser.roles.includes("admin") || currentUser.roles.includes("supervisor") || currentUser.roles.includes("technician") || currentUser.roles.includes("worker") || currentUser.roles.includes("engineer")) {
                 return next();
             }
             return next(createError(403));

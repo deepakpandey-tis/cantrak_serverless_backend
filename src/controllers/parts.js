@@ -902,7 +902,7 @@ const partsController = {
                     .innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
                     .leftJoin('adjust_type','part_ledger.adjustType','adjust_type.id')
                     .select([
-                        'part_ledger.id as ID',
+                        'part_ledger.id as Log Id',
                         'part_master.id as Part Id',
                         'part_master.partName as Part Name',
                         'part_master.partCode as Part Code',
@@ -951,7 +951,7 @@ const partsController = {
                     .innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
                     .leftJoin('adjust_type','part_ledger.adjustType','adjust_type.id')
                     .select([
-                        'part_ledger.id as ID',
+                        'part_ledger.id as Log Id',
                         'part_master.id as Part Id',
                         'part_master.partName as Part Name',
                         'part_master.partCode as Part Code',

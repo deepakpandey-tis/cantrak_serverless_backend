@@ -125,15 +125,119 @@ const peopleController = {
     getPeopleList: async (req, res) => {
         try {
 
+            let {name,email,accountType} = req.body;
             let peopleData = null;
-            peopleData = await knex.select().from('users')
+            let pagination = {}
+            let reqData    = req.query;
+            let total ,rows 
+            let page      = reqData.current_page || 1;
+            let per_page  = reqData.per_page   || 10;
+            if(page < 1 )   page =1;
+            let offset    = (page-1) * per_page;
+          
+            if(name || email  || accountType){
+               
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from("users")
+                        .leftJoin('property_units', 'users.houseId', 'property_units.houseId')
+                        .leftJoin('companies','property_units.companyId','companies.id')
+                        .innerJoin('user_roles','users.id','user_roles.userId')
+                        .innerJoin('roles','user_roles.roleId','roles.id')
+                        .where(qb=>{
+                            if(name){
+                                qb.where('users.name','like',`%${name}%`)
+                            }
+                            if(email){
+                                qb.where('users.email','like',`%${email}%`)
+                            }
+                            if(accountType){
+                                qb.where('user_roles.roleId',accountType)
+                            }
+                        })
+                        .whereNotIn('roles.name', ['superAdmin','admin'])                    
+                        .first(),
+                        knex.from('users')
+                        .leftJoin('property_units', 'users.houseId', 'property_units.houseId')
+                        .leftJoin('companies','property_units.companyId','companies.id')
+                        .innerJoin('user_roles','users.id','user_roles.userId')
+                        .innerJoin('roles','user_roles.roleId','roles.id')
+                        .where(qb=>{
+                            if(name){
+                                qb.where('users.name','like',`%${name}%`)
+                            }
+                            if(email){
+                                qb.where('users.email','like',`%${email}%`)
+                            }
+                            if(accountType){
+                                qb.where('user_roles.roleId',accountType)
+                            }
+                        })
+                        .whereNotIn('roles.name', ['superAdmin','admin'])                    
+                        .select([
+                            'users.id as userId',
+                            'users.name as name',
+                            'users.email as email',
+                            'users.userName',
+                            'users.mobileNo',
+                            'users.houseId',
+                            'users.lastLogin as lastVisit',
+                            'companies.id as companyId',
+                            'companies.companyName',
+                            'roles.name as roleName'
+                        ])
+                        .offset(offset).limit(per_page)
+                ])
 
-            console.log('[controllers][people][getPeopleList]: People List', peopleData);
+            } else{
 
-            peopleData = peopleData.map(d => _.omit(d, ['password'], ['createdAt'], ['updatedAt'], ['isActive'], ['verifyToken'], ['verifyTokenExpiryTime']));
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from("users")
+                        .leftJoin('property_units', 'users.houseId', 'property_units.houseId')
+                        .leftJoin('companies','property_units.companyId','companies.id')
+                        .innerJoin('user_roles','users.id','user_roles.userId')
+                        .innerJoin('roles','user_roles.roleId','roles.id')
+                        .whereNotIn('roles.name', ['superAdmin','admin'])                    
+                        .first(),
+                        knex.from('users')
+                        .leftJoin('property_units', 'users.houseId', 'property_units.houseId')
+                        .leftJoin('companies','property_units.companyId','companies.id')
+                        .innerJoin('user_roles','users.id','user_roles.userId')
+                        .innerJoin('roles','user_roles.roleId','roles.id')
+                        .whereNotIn('roles.name', ['superAdmin','admin'])                    
+                        .select([
+                            'users.id as userId',
+                            'users.name as name',
+                            'users.email as email',
+                            'users.userName',
+                            'users.mobileNo',
+                            'users.houseId',
+                            'users.lastLogin as lastVisit',
+                            'companies.id as companyId',
+                            'companies.companyName',
+                            'roles.name as roleName'
+                        ])
+                        .offset(offset).limit(per_page)
+                ])
+            }
+            
+            let count            = total.count;
+            pagination.total     = count;
+            pagination.per_page  = per_page;
+            pagination.offset    = offset;
+            pagination.to        = offset+rows.length;
+            pagination.last_page = Math.ceil(count / per_page);
+            pagination.current_page = page;
+            pagination.from = offset;
+            pagination.data = rows;
+
+            // peopleData = await knex.select().from('users')
+            // console.log('[controllers][people][getPeopleList]: People List', peopleData);
+            // peopleData = peopleData.map(d => _.omit(d, ['password'], ['createdAt'], ['updatedAt'], ['isActive'], ['verifyToken'], ['verifyTokenExpiryTime']));
 
             res.status(200).json({
-                data: peopleData,
+                data:{
+                    peopleData:pagination
+                },
                 message: "People List"
             });
 
