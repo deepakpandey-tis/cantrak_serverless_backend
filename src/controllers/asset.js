@@ -4,7 +4,6 @@ const _ = require('lodash');
 const knex = require('../db/knex');
 const XLSX = require('xlsx');
 
-//const trx = knex.transaction();
 const assetController = {
     getAssetCategories: async (req,res) => {
         
@@ -473,7 +472,7 @@ const assetController = {
 
             let asset = null;
             let attribs = []
-            let insertedImageResult = []
+            let insertedImages = []
 
             await knex.transaction(async (trx) => {
                 let assetPayload = req.body;
@@ -528,7 +527,7 @@ const assetController = {
                 // Insert in images
                 for(let image of req.body.images){
                     let insertedImageResult = await knex('images').insert({ ...image,entityId:id,entityType:'asset_master',createdAt:currentTime,updatedAt:currentTime})
-                    insertedImageResult.push(insertedImageResult[0])
+                    insertedImages.push(insertedImageResult[0])
                 }
                 // Update in asset_master table,
 
@@ -562,7 +561,7 @@ const assetController = {
 
             res.status(200).json({
                 data: {
-                    asset: { ...asset, attributes: attribs, insertedImageResult }
+                    asset: { ...asset, attributes: attribs, insertedImages }
                 },
                 message: "Asset updated successfully !"
             });
@@ -1121,7 +1120,6 @@ const assetController = {
             });
         }
     }
-    //getAssetCategoryById()
 }
 
 module.exports = assetController;
