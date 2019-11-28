@@ -14,6 +14,8 @@ router.get('/get-team-list', authMiddleware.isAuthenticated, teamsController.get
 router.post('/get-team-all-list', authMiddleware.isAuthenticated, teamsController.getTeamAllList);
 router.post('/add-team-users', authMiddleware.isAuthenticated, teamsController.addTeamUsers);
 router.get('/get-assigned-teams', authMiddleware.isAuthenticated, teamsController.getAssignedTeams);
+router.get('/get-team-details', authMiddleware.isAuthenticated, teamsController.getTeamDetails);
+router.post('/remove-team', authMiddleware.isAuthenticated, teamsController.removeTeam);
 // Export Team Data
 router.get('/export-teams', authMiddleware.isAuthenticated, teamsController.exportTeams);
 router.post('/get-main-and-additional-users-by-teamid', authMiddleware.isAuthenticated, teamsController.getMainAndAdditionalUsersByTeamId)
