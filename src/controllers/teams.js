@@ -372,9 +372,79 @@ const teamsController = {
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
                 ]
             });
-        }
-            
+        }     
+    },
+    // GET TEAM DETAILS
+    getTeamDetails:async (req,res)=>{
+        try{
+         let teamId = req.query.teamId;
 
+         let result = await knex('teams')
+                            .leftJoin('team_users','teams.teamId','team_users.teamId')
+                            .leftJoin('users','team_users.userId','users.id')
+                            .select([
+                                'teams.teamId',
+                                'teams.teamName',
+                                'teams.description',
+                                'users.id',
+                                'users.name',
+                               'users.email',
+                               'teams.createdAt'
+                             ])
+                             .where({'teams.teamId':teamId}).returning('*')
+        
+                             res.status(200).json({
+                                data :{
+                                    teamDetails:result
+                                },
+                                message:"Team Details Successfully"
+                            })
+
+
+        }catch(err) {
+            console.log('[controllers][teams][getTeamDetails] : Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ]
+            });
+        } 
+    },
+    removeTeam: async (req, res) => {
+        try {
+            let team = null;
+            await knex.transaction(async trx => {
+                let peoplePayload = req.body;
+                let id = req.body.id
+                const schema = Joi.object().keys({
+                    id: Joi.string().required()
+                })
+                const result = Joi.validate(peoplePayload, schema);
+                console.log('[controllers][people][removePeople]: JOi Result', result);
+
+                if (result && result.hasOwnProperty('error') && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: 'VALIDATION_ERROR', message: result.error.message }
+                        ],
+                    });
+                }
+
+                let currentTime = new Date().getTime();
+                let teamData = await knex.update({ isActive: false, updatedAt: currentTime }).where({ teamId: id }).returning(['*']).transacting(trx).into('teams');
+                team = teamData[0];
+
+                trx.commit
+            })
+            res.status(200).json({
+                data: {
+                    team: team
+                },
+                message: "Team removed successfully !"
+            });
+        } catch (err) {
+
+        }
     }
     
 }
