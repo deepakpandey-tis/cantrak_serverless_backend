@@ -525,10 +525,13 @@ const assetController = {
                 }
 
                 // Insert in images
-                for(let image of req.body.images){
-                    let insertedImageResult = await knex('images').insert({ ...image,entityId:id,entityType:'asset_master',createdAt:currentTime,updatedAt:currentTime})
-                    insertedImages.push(insertedImageResult[0])
+                if(req.body.images && req.body.images.length){
+                    for (let image of req.body.images) {
+                        let insertedImageResult = await knex('images').insert({ ...image, entityId: id, entityType: 'asset_master', createdAt: currentTime, updatedAt: currentTime })
+                        insertedImages.push(insertedImageResult[0])
+                    }
                 }
+                
                 // Update in asset_master table,
 
                 let insertData = { ...assetPayload, assetCategoryId, updatedAt: currentTime, isActive: true };
