@@ -4,7 +4,6 @@ const _ = require('lodash');
 const knex = require('../db/knex');
 const XLSX = require('xlsx');
 
-//const trx = knex.transaction();
 const assetController = {
     getAssetCategories: async (req,res) => {
         
@@ -473,12 +472,13 @@ const assetController = {
 
             let asset = null;
             let attribs = []
+            let insertedImages = []
 
             await knex.transaction(async (trx) => {
                 let assetPayload = req.body;
                 let id = req.body.id
                 console.log('[controllers][asset][payload]: Update Asset Payload', assetPayload);
-                assetPayload = _.omit(assetPayload, ['additionalAttributes','id','assetCategory'])
+                assetPayload = _.omit(assetPayload, ['additionalAttributes','id','assetCategory','images'])
                 // validate keys
                 const schema = Joi.object().keys({
                     // parentAssetId: Joi.string(),
@@ -524,6 +524,14 @@ const assetController = {
                     assetCategoryId = category[0].id;
                 }
 
+                // Insert in images
+                if(req.body.images && req.body.images.length){
+                    for (let image of req.body.images) {
+                        let insertedImageResult = await knex('images').insert({ ...image, entityId: id, entityType: 'asset_master', createdAt: currentTime, updatedAt: currentTime })
+                        insertedImages.push(insertedImageResult[0])
+                    }
+                }
+                
                 // Update in asset_master table,
 
                 let insertData = { ...assetPayload, assetCategoryId, updatedAt: currentTime, isActive: true };
@@ -556,7 +564,7 @@ const assetController = {
 
             res.status(200).json({
                 data: {
-                    asset: { ...asset, attributes: attribs }
+                    asset: { ...asset, attributes: attribs, insertedImages }
                 },
                 message: "Asset updated successfully !"
             });
@@ -1115,7 +1123,6 @@ const assetController = {
             });
         }
     }
-    //getAssetCategoryById()
 }
 
 module.exports = assetController;
