@@ -34,6 +34,7 @@ const sourceofRequestRouter = require('./administration-features/source-of-reque
 const administractionUsersRouter          = require('./administration-features/administraction-users');
 const dashboardRouter = require("./dashboard")
 const imageRouter = require("./image")
+const fileRouter = require("./file")
 const pmRouter = require("./preventive-maintenance")
 const testRouter = require('./test')
 const taskGroupRouter = require('./administration-features/task-group');
@@ -83,6 +84,7 @@ router.use('/administration-features/problem', problemRouter);
 router.use('/dashboard', dashboardRouter);
 router.use('/administration-features/problem', problemRouter)
 router.use('/image', imageRouter)
+router.use('/file', fileRouter)
 router.use('/preventive-maintenance', pmRouter)
 router.use('/task-group',taskGroupRouter);
 router.use('/administration-features/organisations',organisationsRouter)

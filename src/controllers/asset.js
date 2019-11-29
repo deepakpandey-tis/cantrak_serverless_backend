@@ -349,7 +349,8 @@ const assetController = {
             let reqData = req.query;
             let total, rows
             let {
-                assetCategoryId
+                assetCategoryId,
+                companyId,
             } = req.body;
             let pagination = {};
             let per_page = reqData.per_page || 10;
@@ -359,14 +360,36 @@ const assetController = {
             
             //let filters = { assetCategoryId}
 
+
+            // validate keys
+            const schema = Joi.object().keys({
+                assetCategoryId:Joi.number().required(),
+                companyId:Joi.number().required()
+            });
+
+            let result = Joi.validate({
+                assetCategoryId,
+                companyId,
+            }, schema);
+            console.log('[controllers][asset][addAsset]: JOi Result', result);
+
+            if (result && result.hasOwnProperty('error') && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: 'VALIDATION_ERROR', message: result.error.message }
+                    ],
+                });
+            }
+
+
             [total, rows] = await Promise.all([
                 knex.count('* as count').from("asset_master")
-                    .where({ assetCategoryId}).first(),
+                    .where({ assetCategoryId, companyId}).first(),
 
                 knex("asset_master")
                     .select([
                         'id','assetName','model','barcode','areaName'
-                    ]).where({ assetCategoryId})
+                    ]).where({ assetCategoryId,companyId})
                     .offset(offset).limit(per_page)
             ])
 
@@ -473,12 +496,13 @@ const assetController = {
             let asset = null;
             let attribs = []
             let insertedImages = []
+            let insertedFiles = []
 
             await knex.transaction(async (trx) => {
                 let assetPayload = req.body;
                 let id = req.body.id
                 console.log('[controllers][asset][payload]: Update Asset Payload', assetPayload);
-                assetPayload = _.omit(assetPayload, ['additionalAttributes','id','assetCategory','images'])
+                assetPayload = _.omit(assetPayload, ['additionalAttributes','id','assetCategory','images','files'])
                 // validate keys
                 const schema = Joi.object().keys({
                     // parentAssetId: Joi.string(),
@@ -531,6 +555,13 @@ const assetController = {
                         insertedImages.push(insertedImageResult[0])
                     }
                 }
+                //Insert In Files
+                if (req.body.files && req.body.files.length) {
+                    for (let file of req.body.files) {
+                        let insertedFileResult = await knex('files').insert({ ...file, entityId: id, entityType: 'asset_master', createdAt: currentTime, updatedAt: currentTime })
+                        insertedFiles.push(insertedFileResult[0])
+                    }
+                }
                 
                 // Update in asset_master table,
 
@@ -564,7 +595,7 @@ const assetController = {
 
             res.status(200).json({
                 data: {
-                    asset: { ...asset, attributes: attribs, insertedImages }
+                    asset: { ...asset, attributes: attribs, insertedImages,insertedFiles }
                 },
                 message: "Asset updated successfully !"
             });
