@@ -279,6 +279,7 @@ const peopleController = {
                                    'users.email',
                                    'users.houseId',
                                    'roles.id as roleId',
+                                   'roles.name as accountType',
                                    'companies.id as company',
                                    'companies.companyName as companyName',
                                    'property_units.projectId as project',
@@ -287,6 +288,7 @@ const peopleController = {
                                    'property_units.floorZoneId as floor'
                                ])
                                .where({ 'users.id':id })
+                               //.whereNotIn('roles.name',['superAdmin','admin'])
             
             let peopleDataResult = peopleData[0];
             let omitedPeopleDataResult = _.omit(peopleDataResult, ['createdAt'], ['updatedAt'], ['isActive', 'password', 'verifyToken'])
