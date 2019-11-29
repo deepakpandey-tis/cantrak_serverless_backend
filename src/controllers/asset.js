@@ -349,7 +349,9 @@ const assetController = {
             let reqData = req.query;
             let total, rows
             let {
-                assetCategoryId
+                assetCategoryId,
+                companyId,
+                projectId
             } = req.body;
             let pagination = {};
             let per_page = reqData.per_page || 10;
@@ -366,7 +368,7 @@ const assetController = {
                 knex("asset_master")
                     .select([
                         'id','assetName','model','barcode','areaName'
-                    ]).where({ assetCategoryId})
+                    ]).where({ assetCategoryId,projectId,companyId})
                     .offset(offset).limit(per_page)
             ])
 

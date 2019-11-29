@@ -323,6 +323,8 @@ const taskGroupController = {
       let payload                = req.body; 
       const schema               = Joi.object().keys({
         assetCategoryId : Joi.number().required(),
+        companyId       : Joi.number().required(),
+        projectId       : Joi.number().required(),
         pmId            : Joi.string().required(),
         //isNew           : Joi.string().required(),
         teamId          : Joi.string().required(),
@@ -347,6 +349,8 @@ const taskGroupController = {
 
       await knex.transaction(async trx=>{
            
+        // Update PM Company and Project
+        await knex('pm_master2').update({companyId:payload.companyId,projectId:payload.projectId}).where({id:payload.pmId})
 
       //return res.status(200).json("Heafdksfksdfksdfks");
 
