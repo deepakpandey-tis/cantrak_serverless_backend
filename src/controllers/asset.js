@@ -473,6 +473,7 @@ const assetController = {
             let asset = null;
             let attribs = []
             let insertedImages = []
+            let insertedFiles = []
 
             await knex.transaction(async (trx) => {
                 let assetPayload = req.body;
@@ -531,6 +532,13 @@ const assetController = {
                         insertedImages.push(insertedImageResult[0])
                     }
                 }
+                //Insert In Files
+                if (req.body.files && req.body.files.length) {
+                    for (let file of req.body.files) {
+                        let insertedFileResult = await knex('files').insert({ ...file, entityId: id, entityType: 'asset_master', createdAt: currentTime, updatedAt: currentTime })
+                        insertedFiles.push(insertedFileResult[0])
+                    }
+                }
                 
                 // Update in asset_master table,
 
@@ -564,7 +572,7 @@ const assetController = {
 
             res.status(200).json({
                 data: {
-                    asset: { ...asset, attributes: attribs, insertedImages }
+                    asset: { ...asset, attributes: attribs, insertedImages,insertedFiles }
                 },
                 message: "Asset updated successfully !"
             });
