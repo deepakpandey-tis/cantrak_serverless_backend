@@ -349,7 +349,8 @@ const assetController = {
             let reqData = req.query;
             let total, rows
             let {
-                assetCategoryId
+                assetCategoryId,
+                companyId,
             } = req.body;
             let pagination = {};
             let per_page = reqData.per_page || 10;
@@ -359,14 +360,36 @@ const assetController = {
             
             //let filters = { assetCategoryId}
 
+
+            // validate keys
+            const schema = Joi.object().keys({
+                assetCategoryId:Joi.number().required(),
+                companyId:Joi.number().required()
+            });
+
+            let result = Joi.validate({
+                assetCategoryId,
+                companyId,
+            }, schema);
+            console.log('[controllers][asset][addAsset]: JOi Result', result);
+
+            if (result && result.hasOwnProperty('error') && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: 'VALIDATION_ERROR', message: result.error.message }
+                    ],
+                });
+            }
+
+
             [total, rows] = await Promise.all([
                 knex.count('* as count').from("asset_master")
-                    .where({ assetCategoryId}).first(),
+                    .where({ assetCategoryId, companyId}).first(),
 
                 knex("asset_master")
                     .select([
                         'id','assetName','model','barcode','areaName'
-                    ]).where({ assetCategoryId})
+                    ]).where({ assetCategoryId,companyId})
                     .offset(offset).limit(per_page)
             ])
 
