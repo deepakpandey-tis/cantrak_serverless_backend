@@ -18,7 +18,7 @@
     "array-compare": "^2.0.0",
     "async-parallel": "^1.2.3",
     "aws-sdk": "^2.315.0",
-    "bcrypt": "^3.0.6",
+    "bcrypt": "^3.0.7",
     "cors": "^2.8.5",
     "ejs": "^2.6.1",
     "express": "^4.17.1",
@@ -44,8 +44,8 @@
     "serverless-http": "^2.0.2",
     "underscore": "^1.9.1",
     "uuid": "^3.3.2",
-    "xlsx": "^0.15.1",
-    "web-push": "^3.4.1"
+    "web-push": "^3.4.1",
+    "xlsx": "^0.15.1"
   },
   "devDependencies": {
     "serverless": "^1.47.0",
