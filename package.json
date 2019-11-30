@@ -44,7 +44,8 @@
     "serverless-http": "^2.0.2",
     "underscore": "^1.9.1",
     "uuid": "^3.3.2",
-    "xlsx": "^0.15.1"
+    "xlsx": "^0.15.1",
+    "web-push": "^3.4.1"
   },
   "devDependencies": {
     "serverless": "^1.47.0",
@@ -52,6 +53,5 @@
     "serverless-dotenv-plugin": "^2.1.1",
     "serverless-offline": "^5.7.2",
     "serverless-s3-local": "^0.5.0",
-    "web-push": "^3.4.1"
   }
 }
