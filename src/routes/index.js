@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+const webPush = require('web-push');
 
 const usersRouter = require('./users');
 const entranceRouter = require('./entrance');
@@ -44,6 +45,46 @@ const organisationsRouter = require('./administration-features/organisations')
 router.get('/', async (req, res, next) => {
   res.json({ app: 'Serverless Express App' });
 });
+
+/**
+ * Test Push Notification Feature
+ * TODO:: Break this function into two parts i). Subscription   ii). Send PushNotification
+ * First will be a controller exposed to api which will save the subscriber details to the database.
+ * Second will be the Helper method, which will be called with notification data as payload to send. 
+ */
+app.post('test-push-notification', function(req, res) {
+  const subscription = req.body.subscription;
+  console.log('[test-push-notification]: Body:', req.body);
+  const DELAY = 1;
+  const payload = '';
+  const options = {
+    TTL: 30
+  };
+
+  let notification = {
+    title: 'TIS - New Notification',
+    body: 'Thanks for Subscribing Push Notification from TIS. We will notify you with only those messages which concerns you!',
+    icon: 'https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/tis-icons/service-mind-type.png',
+  };
+
+  setTimeout(function() {
+    webPush.sendNotification(subscription, notification, options)
+    .then(function() {
+      res.sendStatus(201);
+    })
+    .catch(function(error) {
+      console.log(error);
+      res.sendStatus(500);
+    });
+  }, (DELAY) * 1000);
+
+  res.json({
+    success : true,
+    data: { payload, options}
+  });
+
+});
+
 
 /**
  * Routers
