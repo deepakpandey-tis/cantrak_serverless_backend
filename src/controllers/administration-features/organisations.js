@@ -87,7 +87,7 @@ const organisationsController = {
             mobile  = payloadData.mobileNo;
           }
 
-        let hash = await bcrypt.hash("12345",saltRounds);
+        let hash = await bcrypt.hash("123456",saltRounds);
 
         payloadData.password  = hash;
 
@@ -97,7 +97,7 @@ const organisationsController = {
           email         : payloadData.email,
           mobileNo      : mobile,
           password      : payloadData.password,
-          organisationId: organisation.id,
+          orgId         : organisation.id,
           createdAt: currentTime,
           updatedAt: currentTime
         }
@@ -263,20 +263,70 @@ const organisationsController = {
   getOrganisationList: async (req, res) => {
     try {
       let reqData    = req.query;
+      let total,rows;
+      let {organisationName,userName,email} = req.body;
       let pagination = {};
       let per_page   = reqData.per_page || 10;
       let page       = reqData.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
 
-      let [total, rows] = await Promise.all([
+
+     if(organisationName || userName || email){
+
+       [total, rows] = await Promise.all([
         knex
           .count("* as count")
           .from("organisations")
-          .leftJoin('users','organisations.id','users.organisationId')
+          .leftJoin('users','organisations.id','users.orgId')
+          .where(qb=>{
+            if(organisationName){
+            qb.where('organisations.organisationName','like',`%${organisationName}%`)
+            }
+            if(userName){
+              qb.where('users.name','like',`%${userName}%`)
+              }
+              if(email){
+                qb.where('users.email','like',`%${email}%`)
+                }
+
+          })
           .first(),
         knex("organisations")
-          .leftJoin('users','organisations.id','users.organisationId')
+          .leftJoin('users','organisations.id','users.orgId')
+          .select([
+            'organisations.*',
+            'users.name',
+            'users.email',
+            'users.mobileNo'
+          ])
+          .where(qb=>{
+            if(organisationName){
+            qb.where('organisations.organisationName','like',`%${organisationName}%`)
+            }
+            if(userName){
+              qb.where('users.name','like',`%${userName}%`)
+              }
+              if(email){
+                qb.where('users.email','like',`%${email}%`)
+                }
+
+          })
+          .orderBy('organisations.createdAt','desc')
+          .offset(offset)
+          .limit(per_page)
+      ]);
+
+     } else {
+
+       [total, rows] = await Promise.all([
+        knex
+          .count("* as count")
+          .from("organisations")
+          .leftJoin('users','organisations.id','users.orgId')
+          .first(),
+        knex("organisations")
+          .leftJoin('users','organisations.id','users.orgId')
           .select([
             'organisations.*',
             'users.name',
@@ -288,6 +338,7 @@ const organisationsController = {
           .limit(per_page)
       ]);
 
+    }
       let count = total.count;
       pagination.total = count;
       pagination.per_page = per_page;
@@ -318,7 +369,7 @@ const organisationsController = {
 
      let id = req.query.id;
      let result = await knex("organisations")
-          .leftJoin('users','organisations.id','users.organisationId')
+          .leftJoin('users','organisations.id','users.orgId')
           .select([
             'organisations.*',
             'users.name',
