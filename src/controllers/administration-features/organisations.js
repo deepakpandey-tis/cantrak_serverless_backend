@@ -4,11 +4,9 @@ const uuidv4 = require("uuid/v4");
 var jwt = require("jsonwebtoken");
 const _ = require("lodash");
 const XLSX = require("xlsx");
-
-const knex = require("../../db/knex");
-
-const bcrypt = require("bcrypt");
 const saltRounds = 10;
+const bcrypt = require('bcrypt');
+const knex = require("../../db/knex");
 //const trx = knex.transaction();
 
 const organisationsController = {
@@ -89,12 +87,16 @@ const organisationsController = {
             mobile  = payloadData.mobileNo;
           }
 
+        let hash = await bcrypt.hash("12345",saltRounds);
+
+        payloadData.password  = hash;
 
         let insertUserData = {
           name          : payloadData.name,
           userName      : payloadData.userName,
           email         : payloadData.email,
           mobileNo      : mobile,
+          password      : payloadData.password,
           organisationId: organisation.id,
           createdAt: currentTime,
           updatedAt: currentTime
@@ -210,7 +212,8 @@ const organisationsController = {
 
   deleteOrganisation: async (req, res) => {
     try {
-      let company = null;
+      let organisation = null;
+      let user         = null;
       await knex.transaction(async trx => {
         let payload = req.body;
         const schema = Joi.object().keys({
@@ -224,23 +227,33 @@ const organisationsController = {
             ]
           });
         }
-        let companyResult = await knex
+        let organisationResult = await knex
           .update({ isActive: false })
           .where({ id: payload.id })
           .returning(["*"])
           .transacting(trx)
-          .into("companies");
-        company = companyResult[0];
+          .into("organisations");
+          organisation = organisationResult[0];
+     
+       if(organisation){
+          let userResult = await knex
+          .update({ isActive: false })
+          .where({ id: organisation.organisationAdminId })
+          .returning(["*"])
+          .transacting(trx)
+          .into("users");
+          user = userResult[0]
+       }
         trx.commit;
       });
       return res.status(200).json({
         data: {
-          company: company
+          organisation: {...organisation,...user}
         },
-        message: "Company deleted!"
+        message: "Organisation  Deleted Successfully!"
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][viewCompany] :  Error", err);
+      console.log("[controllers][organisation][deleteOrganisation] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
