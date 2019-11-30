@@ -3,6 +3,7 @@ const sls = require('serverless-http');
 const createError = require('http-errors');
 const path = require('path');
 const i18n = require('i18n');
+const webPush = require('web-push');
 const indexRouter = require('./routes/index');
 
 
@@ -92,6 +93,21 @@ module.exports.server = sls(app);
 //   // and here
 //   return result;
 // };
+
+
+if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+  console.log(`You must set the VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY environment variables to enable push notification.`);
+  // console.log(webPush.generateVAPIDKeys());
+}
+
+webPush.setVapidDetails(
+  'https://desktop.panzuracloud.com/',
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+);
+
+
+
 
 
 
