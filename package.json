@@ -44,8 +44,8 @@
     "serverless-http": "^2.0.2",
     "underscore": "^1.9.1",
     "uuid": "^3.3.2",
-    "xlsx": "^0.15.1",
-    "web-push": "^3.4.1"
+    "web-push": "^3.4.1",
+    "xlsx": "^0.15.1"
   },
   "devDependencies": {
     "serverless": "^1.47.0",
