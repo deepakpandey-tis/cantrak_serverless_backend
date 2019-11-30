@@ -52,7 +52,7 @@ router.get('/', async (req, res, next) => {
  * First will be a controller exposed to api which will save the subscriber details to the database.
  * Second will be the Helper method, which will be called with notification data as payload to send. 
  */
-app.post('test-push-notification', function(req, res) {
+router.post('test-push-notification', function(req, res) {
   const subscription = req.body.subscription;
   console.log('[test-push-notification]: Body:', req.body);
   const DELAY = 1;
