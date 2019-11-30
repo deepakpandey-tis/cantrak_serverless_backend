@@ -5,7 +5,7 @@ const webPush = require('web-push');
 
 
 webPush.setVapidDetails(
-    'https://desktop.panzuracloud.com:4000/',
+    'https://app1.servicemind.asia',
     process.env.VAPID_PUBLIC_KEY,
     process.env.VAPID_PRIVATE_KEY
 );
