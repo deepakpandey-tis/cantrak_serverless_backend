@@ -189,7 +189,8 @@ const partsController = {
                 const schema = Joi.object().keys({
                     partName: Joi.string().required(),
                     partCode: Joi.string().required(),
-                    partCategory: Joi.string().required()
+                    partCategory: Joi.string().required(),
+                    companyId: Joi.string().required()
                 });
 
                 let result = Joi.validate(partPayload, schema);
@@ -214,6 +215,7 @@ const partsController = {
             "barcode":payload.barcode,
             "assignedVendors":payload.assignedVendors?payload.assignedVendors:null,
             "additionalPartDetails":payload.additionalPartDetails,
+            "companyId":payload.companyId
                         }
 
 
@@ -335,6 +337,7 @@ const partsController = {
                     partName       : Joi.string().required(),
                     partCode       : Joi.string().required(),
                     partCategory   : Joi.string().required(),
+                    companyId      : Joi.string().required(),
                 });
 
                 const result = Joi.validate(partPayload, schema);
@@ -351,7 +354,9 @@ const partsController = {
                 // Update in part_master table,
                 const currentTime = new Date().getTime();
 
-                const updatePartDetails = await knex.update({ unitOfMeasure:partDetailsPayload.unitOfMeasure,partName: partDetailsPayload.partName, partCode: partDetailsPayload.partCode, partDescription: partDetailsPayload.partDescription, partCategory: partDetailsPayload.partCategory, minimumQuantity: partDetailsPayload.minimumQuantity, barcode: partDetailsPayload.barcode, assignedVendors: partDetailsPayload.assignedVendors, additionalPartDetails: partDetailsPayload.additionalPartDetails, updatedAt: currentTime, isActive: true }).where({ id: partDetailsPayload.id }).returning(['*']).transacting(trx).into('part_master');
+                const updatePartDetails = await knex.update({ unitOfMeasure:partDetailsPayload.unitOfMeasure,partName: partDetailsPayload.partName, partCode: partDetailsPayload.partCode, partDescription: partDetailsPayload.partDescription, partCategory: partDetailsPayload.partCategory, minimumQuantity: partDetailsPayload.minimumQuantity, barcode: partDetailsPayload.barcode, assignedVendors: partDetailsPayload.assignedVendors, additionalPartDetails: partDetailsPayload.additionalPartDetails, updatedAt: currentTime, isActive: true,
+                    companyId : partDetailsPayload.companyId
+                 }).where({ id: partDetailsPayload.id }).returning(['*']).transacting(trx).into('part_master');
 
                 console.log('[controllers][part][updatePartDetails]: Update Part Details', updatePartDetails);
 
@@ -775,7 +780,10 @@ const partsController = {
                                          'part_master.minimumQuantity as minimumQuantity',
                                          'part_master.barcode as barcode',
                                          'part_master.assignedVendors as assignedVendors',
-                                         'part_master.additionalPartDetails as additionalPartDetails'])
+                                         'part_master.additionalPartDetails as additionalPartDetails',
+                                         'part_master.companyId'
+                                        ])
+                                         
                                      .returning('*')
                              .where({'part_master.id':payload.id})
          
