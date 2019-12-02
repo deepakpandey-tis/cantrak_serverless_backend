@@ -1,6 +1,5 @@
 var express = require('express');
 var router = express.Router();
-const webPush = require('web-push');
 
 const usersRouter = require('./users');
 const entranceRouter = require('./entrance');
@@ -32,63 +31,28 @@ const taxesRouter = require("./administration-features/taxes");
 const problemRouter = require('./administration-features/problem')
 const propertyTypeRouter = require('./administration-features/property-type')
 const sourceofRequestRouter = require('./administration-features/source-of-request')
-const administractionUsersRouter          = require('./administration-features/administraction-users');
+const administractionUsersRouter = require('./administration-features/administraction-users');
 const dashboardRouter = require("./dashboard")
 const imageRouter = require("./image")
 const fileRouter = require("./file")
 const pmRouter = require("./preventive-maintenance")
 const testRouter = require('./test')
 const taskGroupRouter = require('./administration-features/task-group');
-const organisationsRouter = require('./administration-features/organisations')
+const organisationsRouter = require('./administration-features/organisations');
+
+const pushNotificationRouter = require('./push-notification');
+
 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
   res.json({ app: 'Serverless Express App' });
 });
 
-/**
- * Test Push Notification Feature
- * TODO:: Break this function into two parts i). Subscription   ii). Send PushNotification
- * First will be a controller exposed to api which will save the subscriber details to the database.
- * Second will be the Helper method, which will be called with notification data as payload to send. 
- */
-router.post('/test-push-notification', function(req, res) {
-  const subscription = req.body.subscription;
-  console.log('[test-push-notification]: Body:', req.body);
-  const DELAY = 1;
-  const payload = '';
-  const options = {
-    TTL: 30
-  };
-
-  let notification = {
-    title: 'TIS - New Notification',
-    body: 'Thanks for Subscribing Push Notification from TIS. We will notify you with only those messages which concerns you!',
-    icon: 'https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/tis-icons/service-mind-type.png',
-  };
-
-  setTimeout(function() {
-    webPush.sendNotification(subscription, notification, options)
-    .then(function() {
-      res.sendStatus(201);
-    })
-    .catch(function(error) {
-      console.log(error);
-      res.sendStatus(500);
-    });
-  }, (DELAY) * 1000);
-
-  res.json({
-    success : true,
-    data: { payload, options}
-  });
-
-});
-
 
 /**
  * Routers
  */
+router.use('/push-notification', pushNotificationRouter);
 router.use('/test', testRouter)
 router.use('/entrance', entranceRouter);
 router.use('/users', usersRouter);
@@ -103,9 +67,9 @@ router.use('/administration-features/company', companyRouter)
 router.use('/administration-features/project', projectRouter)
 router.use('/administration-features/building-phase', buildingPhaseRouter)
 router.use('/administration-features/property-unit', propertyUnitRouter)
-router.use('/administration-features/property-type',propertyTypeRouter)
-router.use('/administration-features/source-of-request',sourceofRequestRouter)
-router.use('/administration-features/administraction-users',administractionUsersRouter);
+router.use('/administration-features/property-type', propertyTypeRouter)
+router.use('/administration-features/source-of-request', sourceofRequestRouter)
+router.use('/administration-features/administraction-users', administractionUsersRouter);
 
 router.use('/teams', teamsRouter);
 router.use('/vendors', vendorRouter);
@@ -127,6 +91,6 @@ router.use('/administration-features/problem', problemRouter)
 router.use('/image', imageRouter)
 router.use('/file', fileRouter)
 router.use('/preventive-maintenance', pmRouter)
-router.use('/task-group',taskGroupRouter);
-router.use('/administration-features/organisations',organisationsRouter)
+router.use('/task-group', taskGroupRouter);
+router.use('/administration-features/organisations', organisationsRouter)
 module.exports = router;
