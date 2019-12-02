@@ -34,4 +34,5 @@ var storage = multer.diskStorage({
 });
 var upload = multer( { storage: storage } );
 router.post('/import-part-details',upload.single('file'),authMiddleware.isAuthenticated,partsController.importPartDetails)
+router.post('/delete-part',authMiddleware.isAuthenticated,partsController.deletePart)
 module.exports = router;
