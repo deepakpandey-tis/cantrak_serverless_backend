@@ -16,6 +16,13 @@ router.get('/service-request-list', authMiddleware.isAuthenticated, serviceDetai
 router.post('/view-service-request', authMiddleware.isAuthenticated, serviceDetailsController.viewServiceRequestDetails);
 // Export Location tag Data
 router.get('/export-location-tags', authMiddleware.isAuthenticated, serviceDetailsController.exportLocationTags);
+router.post('/add-priorities', authMiddleware.isAuthenticated, serviceDetailsController.addPriorities);
+router.post('/update-priorities', authMiddleware.isAuthenticated, serviceDetailsController.updatePriorities);
+router.post('/priorities-details', authMiddleware.isAuthenticated, serviceDetailsController.viewPriorities);
+router.post('/add-location-tags', authMiddleware.isAuthenticated, serviceDetailsController.addLocationTag);
+router.post('/update-location-tags', authMiddleware.isAuthenticated, serviceDetailsController.updateLocationTag);
+router.post('/location-tags-details', authMiddleware.isAuthenticated, serviceDetailsController.viewLocationTag);
+
 
 
 
