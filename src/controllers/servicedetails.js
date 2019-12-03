@@ -7,13 +7,323 @@ const _ = require('lodash');
 const knex = require('../db/knex');
 
 const bcrypt = require('bcrypt');
-const XLSX   = require('xlsx');
+const XLSX = require('xlsx');
 const saltRounds = 10;
 //const trx = knex.transaction();
 
 
 const serviceDetailsController = {
+    addPriorities: async (req, res) => {
+        try {
+            let Priorities = null;
+            let userId = req.me.id;
+            await knex.transaction(async trx => {
+                const payload = req.body;
 
+                const schema = Joi.object().keys({
+                    incidentPriorityCode: Joi.string().required(),
+                    descriptionThai: Joi.string().required(),
+                    descriptionEng: Joi.string().required()
+                });
+
+                const result = Joi.validate(payload, schema);
+                console.log(
+                    "[controllers][administrationFeatures][addPrioritites]: JOi Result",
+                    result
+                );
+
+                if (result && result.hasOwnProperty("error") && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "VALIDATION_ERROR", message: result.error.message }
+                        ]
+                    });
+                }
+
+                let currentTime = new Date().getTime();
+                let insertData = {
+                    ...payload,
+                    createdBy: userId,
+                    createdAt: currentTime,
+                    updatedAt: currentTime
+                };
+                let insertResult = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into("incident_priority");
+                Priorities = insertResult[0];
+
+                trx.commit;
+            });
+
+            return res.status(200).json({
+                data: {
+                    priorities: Priorities
+                },
+                message: "Priorities added successfully."
+            });
+        } catch (err) {
+            console.log("[controllers][generalsetup][addPriorities] :  Error", err);
+            //trx.rollback
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    updatePriorities: async (req, res) => {
+        try {
+            let Priorities = null;
+            await knex.transaction(async trx => {
+                const payload = req.body;
+
+                const schema = Joi.object().keys({
+                    id: Joi.string().required(),
+                    incidentPriorityCode: Joi.string().required(),
+                    descriptionThai: Joi.string().required(),
+                    descriptionEng: Joi.string().required()
+                });
+
+                const result = Joi.validate(payload, schema);
+                console.log(
+                    "[controllers][administrationFeatures][updatePriorities]: JOi Result",
+                    result
+                );
+
+                if (result && result.hasOwnProperty("error") && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "VALIDATION_ERROR", message: result.error.message }
+                        ]
+                    });
+                }
+
+                let currentTime = new Date().getTime();
+                let insertData = { ...payload, updatedAt: currentTime };
+                let insertResult = await knex
+                    .update(insertData)
+                    .where({ id: payload.id })
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into("incident_priority");
+                    Priorities = insertResult[0];
+
+                trx.commit;
+            });
+
+            return res.status(200).json({
+                data: {
+                    Priorities: Priorities
+                },
+                message: "Priorities details updated successfully."
+            });
+        } catch (err) {
+            console.log("[controllers][generalsetup][updatePriorities] :  Error", err);
+            //trx.rollback
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    viewPriorities: async (req, res) => {
+        try {
+            let Priorities = null;
+            await knex.transaction(async trx => {
+                let payload = req.body;
+                const schema = Joi.object().keys({
+                    id: Joi.string().required()
+                });
+                const result = Joi.validate(payload, schema);
+                if (result && result.hasOwnProperty("error") && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "VALIDATION_ERROR", message: result.error.message }
+                        ]
+                    });
+                }
+                let current = new Date().getTime();
+                let PrioritiesResult = await knex("incident_priority")
+                    .select("incident_priority.*")
+                    .where({ "id": payload.id })
+
+                    Priorities = _.omit(PrioritiesResult[0], [
+                    "createdAt",
+                    "updatedAt",
+                    "isActive"
+                ]);
+                trx.commit;
+            });
+
+
+            return res.status(200).json({
+                data: {
+                    Priorities: Priorities
+                },
+                message: "Priorities details"
+            });
+        } catch (err) {
+            console.log("[controllers][generalsetup][viewPriorities] :  Error", err);
+            //trx.rollback
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    addLocationTag: async (req, res) => {
+        try {
+            let LocationTag = null;
+            let userId = req.me.id;
+            await knex.transaction(async trx => {
+                const payload = req.body;
+
+                const schema = Joi.object().keys({
+                    title: Joi.string().required(),
+                    descriptionThai: Joi.string().required(),
+                    descriptionEng: Joi.string().required()
+                });
+
+                const result = Joi.validate(payload, schema);
+                console.log(
+                    "[controllers][administrationFeatures][addLocation]: JOi Result",
+                    result
+                );
+
+                if (result && result.hasOwnProperty("error") && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "VALIDATION_ERROR", message: result.error.message }
+                        ]
+                    });
+                }
+
+                let currentTime = new Date().getTime();
+                let insertData = {
+                    ...payload,
+                    createdBy: userId,
+                    createdAt: currentTime,
+                    updatedAt: currentTime
+                };
+                let insertResult = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into("location_tags_master");
+                LocationTag = insertResult[0];
+
+                trx.commit;
+            });
+
+            return res.status(200).json({
+                data: {
+                    locationTag: LocationTag
+                },
+                message: "LocationTag added successfully."
+            });
+        } catch (err) {
+            console.log("[controllers][generalsetup][addLocationTag] :  Error", err);
+            //trx.rollback
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    updateLocationTag: async (req, res) => {
+        try {
+            let LocationTag = null;
+            await knex.transaction(async trx => {
+                const payload = req.body;
+
+                const schema = Joi.object().keys({
+                    id: Joi.string().required(),
+                    title: Joi.string().required(),
+                    descriptionThai: Joi.string().required(),
+                    descriptionEng: Joi.string().required()
+                });
+
+                const result = Joi.validate(payload, schema);
+                console.log(
+                    "[controllers][administrationFeatures][updatePriorities]: JOi Result",
+                    result
+                );
+
+                if (result && result.hasOwnProperty("error") && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "VALIDATION_ERROR", message: result.error.message }
+                        ]
+                    });
+                }
+
+                let currentTime = new Date().getTime();
+                let insertData = { ...payload, updatedAt: currentTime };
+                let insertResult = await knex
+                    .update(insertData)
+                    .where({ id: payload.id })
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into("location_tags_master");
+                    LocationTag = insertResult[0];
+
+                trx.commit;
+            });
+
+            return res.status(200).json({
+                data: {
+                    LocationTag: LocationTag
+                },
+                message: "Location Tag details updated successfully."
+            });
+        } catch (err) {
+            console.log("[controllers][generalsetup][LocationTag] :  Error", err);
+            //trx.rollback
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    viewLocationTag: async (req, res) => {
+        try {
+            let LocationTag = null;
+            await knex.transaction(async trx => {
+                let payload = req.body;
+                const schema = Joi.object().keys({
+                    id: Joi.string().required()
+                });
+                const result = Joi.validate(payload, schema);
+                if (result && result.hasOwnProperty("error") && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "VALIDATION_ERROR", message: result.error.message }
+                        ]
+                    });
+                }
+                let current = new Date().getTime();
+                let LocationTagResult = await knex("location_tags_master")
+                    .select("location_tags_master.*")
+                    .where({ "id": payload.id })
+
+                    LocationTag = _.omit(LocationTagResult[0], [
+                    "createdAt",
+                    "updatedAt",
+                    "isActive"
+                ]);
+                trx.commit;
+            });
+
+            return res.status(200).json({
+                data: {
+                    LocationTag: LocationTag
+                },
+                message: "Location Tag details"
+            });
+        } catch (err) {
+            console.log("[controllers][generalsetup][viewLocationTag] :  Error", err);
+            //trx.rollback
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
     getGeneralDetails: async (req, res) => {
 
         try {
@@ -27,13 +337,13 @@ const serviceDetailsController = {
                 const incidentTypePayload = req.body;
 
                 DataResult = await knex('property_units')
-                .join('companies', 'property_units.companyId', '=', 'companies.id')
-                .join('projects', 'property_units.projectId', '=', 'projects.id')
-                .join('property_types', 'property_units.propertyTypeId', '=', 'property_types.id')
-                .join('buildings_and_phases', 'property_units.buildingPhaseId', '=', 'buildings_and_phases.id')
-                .join('floor_and_zones', 'property_units.floorZoneId', '=', 'floor_and_zones.id')
-                .select('companies.companyName', 'projects.projectName', 'property_types.propertyType', 'buildings_and_phases.buildingPhaseCode', 'floor_and_zones.floorZoneCode', 'property_units.*')
-                .where({ 'property_units.houseId': incidentTypePayload.houseId });
+                    .join('companies', 'property_units.companyId', '=', 'companies.id')
+                    .join('projects', 'property_units.projectId', '=', 'projects.id')
+                    .join('property_types', 'property_units.propertyTypeId', '=', 'property_types.id')
+                    .join('buildings_and_phases', 'property_units.buildingPhaseId', '=', 'buildings_and_phases.id')
+                    .join('floor_and_zones', 'property_units.floorZoneId', '=', 'floor_and_zones.id')
+                    .select('companies.companyName', 'projects.projectName', 'property_types.propertyType', 'buildings_and_phases.buildingPhaseCode', 'floor_and_zones.floorZoneCode', 'property_units.*')
+                    .where({ 'property_units.houseId': incidentTypePayload.houseId });
 
                 console.log('[controllers][servicedetails][generaldetails]: View Data', DataResult);
 
@@ -53,7 +363,7 @@ const serviceDetailsController = {
                 message: "General details list successfully !"
             });
 
-            
+
         } catch (err) {
             console.log('[controllers][entrance][signup] :  Error', err);
             //trx.rollback
@@ -87,15 +397,15 @@ const serviceDetailsController = {
             [total, rows] = await Promise.all([
                 knex.count('* as count').from("location_tags_master").first(),
                 knex("location_tags_master")
-                .select([
-                'id as ID',
-                'title as Location Tag',
-                'descriptionEng as Description English',
-                'descriptionThai as Description Thai',
-                'isActive as Status',
-                'createdAt as Date Created'
-                ])
-                .offset(offset).limit(per_page)
+                    .select([
+                        'id as ID',
+                        'title as Location Tag',
+                        'descriptionEng as Description English',
+                        'descriptionThai as Description Thai',
+                        'isActive as Status',
+                        'createdAt as Date Created'
+                    ])
+                    .offset(offset).limit(per_page)
             ])
 
 
@@ -206,15 +516,16 @@ const serviceDetailsController = {
             [total, rows] = await Promise.all([
                 knex.count('* as count').from("incident_priority").first(),
                 knex("incident_priority")
-                .select([
-                    "incidentPriorityCode as Priorities",
-                    "descriptionEng as Description English",
-                    "descriptionThai as Description Thai",
-                    'isActive as Status',
-                    'createdBy as Created By',
-                    'createdAt as Date Created'
-                ])
-                .offset(offset).limit(per_page)
+                    .select([
+                        "id",
+                        "incidentPriorityCode as Priorities",
+                        "descriptionEng as Description English",
+                        "descriptionThai as Description Thai",
+                        'isActive as Status',
+                        'createdBy as Created By',
+                        'createdAt as Date Created'
+                    ])
+                    .offset(offset).limit(per_page)
             ])
 
 
@@ -378,7 +689,7 @@ const serviceDetailsController = {
                 ],
             });
         }
-    },exportLocationTags:async (req,res)=>{
+    }, exportLocationTags: async (req, res) => {
         try {
 
             let locationTags = null;
@@ -403,18 +714,18 @@ const serviceDetailsController = {
             ])
 
 
-            var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
+            var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
             var ws = XLSX.utils.json_to_sheet(rows);
             XLSX.utils.book_append_sheet(wb, ws, "pres");
-            XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
-            let filename = "uploads/LocationTagsData-"+Date.now()+".csv";
-            let  check = XLSX.writeFile(wb,filename);
+            XLSX.write(wb, { bookType: "csv", bookSST: true, type: 'base64' })
+            let filename = "uploads/LocationTagsData-" + Date.now() + ".csv";
+            let check = XLSX.writeFile(wb, filename);
 
             return res.status(200).json({
                 data: rows,
                 message: 'Location Tags Data Export Successfully!'
             })
-            
+
 
         } catch (err) {
             console.log('[controllers][servicedetails][signup] :  Error', err);
@@ -425,7 +736,7 @@ const serviceDetailsController = {
                 ],
             });
         }
-    } 
+    }
 };
 
 module.exports = serviceDetailsController;
