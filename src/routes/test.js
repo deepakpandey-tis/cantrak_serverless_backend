@@ -3,20 +3,17 @@ const knex = require('../db/knex');
 
 
 const router = Router()
+const emailHelper = require('../helpers/email');
+
 
 router.get('/', async(req,res) => {
     try {
-        let users =null
-        await knex.transaction(async trx => {
-            users = await knex.select().returning(['*']).transacting(trx).into('users')
-            //trx.commit
-        })
         
-        res.status(200).json({
-            data: {
-                users:users
-            }
-        })
+        const status = await emailHelper.sendTemplateEmail('xyz@mail.com', 'Test Email ', 'test-email.ejs', {fullName: 'Deepak', OTP: '1111'});
+
+        res.json({
+            status
+        });
 
     } catch(err){
         res.status(200).json({failed:true})
