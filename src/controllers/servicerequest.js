@@ -661,7 +661,11 @@ const serviceRequestController = {
                             'property_units.unitNumber as Unit No',
                             'service_requests.requestedBy as Requested By',
                             'service_requests.createdAt as Date Created',
-                        ]).groupBy(["service_requests.id", "service_problems.id", 'incident_categories.id','incident_sub_categories.id','property_units.id']),
+                        ]).groupBy(["service_requests.id", 
+                         "service_problems.id",
+                         'incident_categories.id',
+                         'incident_sub_categories.id',
+                         'property_units.id']).where({'service_requests.orgId':req.orgId}),
                     knex.from("service_requests")
                         .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
                         .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
@@ -677,7 +681,7 @@ const serviceRequestController = {
                             'property_units.unitNumber as Unit No',
                             'service_requests.requestedBy as Requested By',
                             'service_requests.createdAt as Date Created',
-                        ]).offset(offset).limit(per_page)
+                        ]).offset(offset).limit(per_page).where({ 'service_requests.orgId': req.orgId })
                 ])
             } else {
                 //console.log('IN else: ')
@@ -697,7 +701,7 @@ const serviceRequestController = {
                             'property_units.unitNumber as Unit No',
                             'service_requests.requestedBy as Requested By',
                             'service_requests.createdAt as Date Created',
-                        ]).where((qb) => {
+                        ]).where({ 'service_requests.orgId': req.orgId }).where((qb) => {
                             qb.where(filters)
                             if (serviceFromDate && serviceToDate) {
                                 qb.whereBetween('service_requests.createdAt', [serviceFromDate, serviceToDate])
@@ -718,7 +722,7 @@ const serviceRequestController = {
                             'property_units.unitNumber as Unit No',
                             'service_requests.requestedBy as Requested By',
                             'service_requests.createdAt as Date Created',
-                        ]).where((qb) => {
+                        ]).where({ 'service_requests.orgId': req.orgId }).where((qb) => {
                             qb.where(filters)
                             if (serviceFromDate && serviceToDate) {
                                 qb.whereBetween('service_requests.createdAt', [serviceFromDate, serviceToDate])
