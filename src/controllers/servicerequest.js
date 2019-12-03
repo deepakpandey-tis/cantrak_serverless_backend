@@ -32,13 +32,14 @@ if (process.env.IS_OFFLINE) {
 AWS.config.update({ region: process.env.REGION || 'us-east-2' });
 
 
-const getUploadURL = async (mimeType, filename) => {
+const getUploadURL = async (mimeType,filename,type="") => {
     let re = /(?:\.([^.]+))?$/;
     let ext = re.exec(filename)[1];
+    let uploadFolder = type+"/";
     const actionId = uuidv4();
     const s3Params = {
         Bucket: process.env.S3_BUCKET_NAME,
-        Key: `${actionId}.${ext}`,
+        Key: `${uploadFolder}${actionId}.${ext}`,
         ContentType: mimeType,
         ACL: 'public-read',
     };
@@ -292,9 +293,10 @@ const serviceRequestController = {
     getImageUploadUrl: async (req, res) => {
         const mimeType = req.body.mimeType;
         const filename = req.body.filename;
+        const type     = req.body.type;
         try {
 
-            const uploadUrlData = await getUploadURL(mimeType, filename);
+            const uploadUrlData = await getUploadURL(mimeType, filename,type);
 
             res.status(200).json({
                 data: {
