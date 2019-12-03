@@ -42,6 +42,7 @@ const taskGroupRouter = require('./administration-features/task-group');
 const organisationsRouter = require('./administration-features/organisations');
 
 const pushNotificationRouter = require('./push-notification');
+const resourceRouter = require('./resource');
 
 
 /* GET home page. */
@@ -95,5 +96,6 @@ router.use('/preventive-maintenance', pmRouter)
 router.use('/task-group',taskGroupRouter);
 router.use('/administration-features/organisations',organisationsRouter)
 router.use('/role',roleRouter)
+router.use('/administration-features/resource',resourceRouter)
 
 module.exports = router;

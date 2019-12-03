@@ -17,6 +17,7 @@ const companyController = {
       let company = null;
       await knex.transaction(async trx => {
         const payload = req.body;
+        const orgId = req.orgId;
 
         const schema = Joi.object().keys({
           companyName: Joi.string().required(),
@@ -57,7 +58,8 @@ const companyController = {
         let insertData = {
           ...payload,
           createdAt: currentTime,
-          updatedAt: currentTime
+          updatedAt: currentTime,
+          orgId
         };
         let insertResult = await knex
           .insert(insertData)
