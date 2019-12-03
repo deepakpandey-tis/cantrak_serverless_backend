@@ -94,6 +94,12 @@ module.exports.server = sls(app);
 // };
 
 
+if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+  console.log(`You must set the VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY environment variables to enable push notification.`);
+  // console.log(webPush.generateVAPIDKeys());
+}
+
+
 
 
 // S3

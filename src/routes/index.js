@@ -31,21 +31,28 @@ const taxesRouter = require("./administration-features/taxes");
 const problemRouter = require('./administration-features/problem')
 const propertyTypeRouter = require('./administration-features/property-type')
 const sourceofRequestRouter = require('./administration-features/source-of-request')
-const administractionUsersRouter          = require('./administration-features/administraction-users');
+const administractionUsersRouter = require('./administration-features/administraction-users');
 const dashboardRouter = require("./dashboard")
 const imageRouter = require("./image")
+const fileRouter = require("./file")
 const pmRouter = require("./preventive-maintenance")
 const testRouter = require('./test')
 const taskGroupRouter = require('./administration-features/task-group');
+const organisationsRouter = require('./administration-features/organisations');
+
+const pushNotificationRouter = require('./push-notification');
+
 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
   res.json({ app: 'Serverless Express App' });
 });
 
+
 /**
  * Routers
  */
+router.use('/push-notification', pushNotificationRouter);
 router.use('/test', testRouter)
 router.use('/entrance', entranceRouter);
 router.use('/users', usersRouter);
@@ -60,9 +67,9 @@ router.use('/administration-features/company', companyRouter)
 router.use('/administration-features/project', projectRouter)
 router.use('/administration-features/building-phase', buildingPhaseRouter)
 router.use('/administration-features/property-unit', propertyUnitRouter)
-router.use('/administration-features/property-type',propertyTypeRouter)
-router.use('/administration-features/source-of-request',sourceofRequestRouter)
-router.use('/administration-features/administraction-users',administractionUsersRouter);
+router.use('/administration-features/property-type', propertyTypeRouter)
+router.use('/administration-features/source-of-request', sourceofRequestRouter)
+router.use('/administration-features/administraction-users', administractionUsersRouter);
 
 router.use('/teams', teamsRouter);
 router.use('/vendors', vendorRouter);
@@ -82,6 +89,8 @@ router.use('/administration-features/problem', problemRouter);
 router.use('/dashboard', dashboardRouter);
 router.use('/administration-features/problem', problemRouter)
 router.use('/image', imageRouter)
+router.use('/file', fileRouter)
 router.use('/preventive-maintenance', pmRouter)
-router.use('/task-group',taskGroupRouter);
+router.use('/task-group', taskGroupRouter);
+router.use('/administration-features/organisations', organisationsRouter)
 module.exports = router;

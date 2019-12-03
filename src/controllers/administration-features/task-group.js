@@ -323,6 +323,8 @@ const taskGroupController = {
       let payload                = req.body; 
       const schema               = Joi.object().keys({
         assetCategoryId : Joi.number().required(),
+        companyId       : Joi.number().required(),
+        projectId       : Joi.number().required(),
         pmId            : Joi.string().required(),
         //isNew           : Joi.string().required(),
         teamId          : Joi.string().required(),
@@ -347,6 +349,8 @@ const taskGroupController = {
 
       await knex.transaction(async trx=>{
            
+        // Update PM Company and Project
+        await knex('pm_master2').update({companyId:payload.companyId,projectId:payload.projectId}).where({id:payload.pmId})
 
       //return res.status(200).json("Heafdksfksdfksdfks");
 
@@ -1612,7 +1616,7 @@ const taskGroupController = {
       let updatedTaskGroupTemplate = null
       let resultScheduleData = null
       let updatedTeam = null
-      let result = await knex('task_group_templates').update({taskGroupName:req.body.taskGroupName,assetCategoryId:req.body.assetCategoryId}).where({id}).returning('*')
+      let result = await knex('task_group_templates').update({updatedAt:currentTime,taskGroupName:req.body.taskGroupName,assetCategoryId:req.body.assetCategoryId}).where({id}).returning('*')
       updatedTaskGroupTemplate = result[0]
 
       let resultSchedule = await knex('task_group_template_schedule').update({...payload,repeatOn:payload.repeatOn.length?payload.repeatOn.join(','):''})
@@ -1669,7 +1673,7 @@ const taskGroupController = {
 
       let [total, rows] = await Promise.all([
         knex('task_group_templates').select('*'),
-        knex('task_group_templates').select('*').offset(offset).limit(per_page)
+        knex('task_group_templates').select('*').offset(offset).limit(per_page).orderBy('task_group_templates.createdAt', 'desc')
       ])
 
       let count = total.length;
@@ -1705,7 +1709,7 @@ const taskGroupController = {
       .select([
         'task_group_schedule.*',
         'task_group_schedule_assign_assets.pmDate as pmDate'
-      ]).where({ 'task_group_schedule.id': scheduleId})
+      ]).where({ 'task_group_schedule.id': scheduleId })
 
       const team = await knex('assigned_service_team').select(['teamId','userId']).where({entityType:'pm_task_groups',entityId:taskGroupId})
       const additionalUsers = await knex('assigned_service_additional_users').select('userId').where({entityType:'pm_task_groups',entityId:taskGroupId})
