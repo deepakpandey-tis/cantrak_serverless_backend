@@ -10,7 +10,11 @@ const peopleController = {
         try {
 
             let people = null;
-            let role = null
+            let role   = null
+            let orgId  = req.orgId
+
+            console.log("+++++++++++++++++++++",orgId,"+++++++++++++++++++++")
+
 
             await knex.transaction(async (trx) => {
                 let peoplePayload = _.omit(req.body,'company','building','floor','houseId','project','unitNumber','houseId');
@@ -37,8 +41,16 @@ const peopleController = {
                 }
                 let insertPeopleData = { email: peoplePayload.email,houseId:houseId, createdAt: currentTime, updatedAt: currentTime }
                 // Insert into users table
-                let peopleResult = await knex.insert(insertPeopleData).returning(['*']).transacting(trx).into('users');
+                let peopleResult = await knex('users').where({email:peoplePayload.email}).returning(['*']);
                 people = peopleResult[0]
+
+                if(!people){
+                    return res.status(400).json(
+                      {
+                      message :"User does not exist!"
+                    }
+                    )
+                }
 
                 // Insert into user_roles table
 

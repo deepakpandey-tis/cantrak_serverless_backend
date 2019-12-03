@@ -444,14 +444,14 @@ const assetController = {
 
             assetData = await knex('asset_master').where({'asset_master.id':id })
                               .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
-                              .leftJoin('part_master','asset_master.partId','part_master.id')
+                              //.leftJoin('part_master','asset_master.partId','part_master.id')
                               //.leftJoin('vendor_master','asset_master.assignedVendors','vendor_master.id')
                               //.leftJoin('companies','asset_master.companyId','companies.id')
                               .select([
                                   'asset_master.*',
                                   'asset_category_master.categoryName',
-                                  'part_master.partCode',
-                                  'part_master.partName'
+                                //  'part_master.partCode',
+                                  //'part_master.partName'
                                 //  'vendor_master.name as assignedVendor'
                                 ])
             let assetDataResult = assetData[0];

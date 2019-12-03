@@ -109,6 +109,12 @@ const organisationsController = {
         .into('users');
         user  = insertUserResult[0];
 
+        let insertRoleResult = await knex.insert({"userId":user.id,"roleId":2})
+                               .returning(['*'])
+                               .transacting(trx)
+                               .into('user_roles');
+                               
+
         let organisationUpdateResult = await knex.update({organisationAdminId:user.id})
         .where({ id: organisation.id})
           .returning(["*"])
