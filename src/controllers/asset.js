@@ -442,7 +442,18 @@ const assetController = {
             let images = null
             let id = req.body.id;
 
-            assetData = await knex('asset_master').where({ id }).select('*')
+            assetData = await knex('asset_master').where({'asset_master.id':id })
+                              .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
+                              .leftJoin('part_master','asset_master.partId','part_master.id')
+                              //.leftJoin('vendor_master','asset_master.assignedVendors','vendor_master.id')
+                              //.leftJoin('companies','asset_master.companyId','companies.id')
+                              .select([
+                                  'asset_master.*',
+                                  'asset_category_master.categoryName',
+                                  'part_master.partCode',
+                                  'part_master.partName'
+                                //  'vendor_master.name as assignedVendor'
+                                ])
             let assetDataResult = assetData[0];
             let omitedAssetDataResult = _.omit(assetDataResult, ['createdAt'], ['updatedAt'], ['isActive'])
             additionalAttributes = await knex('asset_attributes').where({ assetId: id }).select()
