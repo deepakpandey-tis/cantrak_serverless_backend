@@ -14,6 +14,7 @@ const organisationsController = {
     try {
       let organisation = null;
       let user         = null;
+      let insertedResourcesResult = null
       await knex.transaction(async trx => {
         let payloadData    = req.body;
         const payload      = req.body;
@@ -23,6 +24,7 @@ const organisationsController = {
           name             : Joi.string().required(),
           userName         : Joi.string().required(),
           email            : Joi.string().required(),
+          resources        : Joi.array().required()
         });
 
         const result = Joi.validate(_.omit(payload,"mobileNo"), schema);
@@ -112,12 +114,28 @@ const organisationsController = {
           .returning(["*"])
           .transacting(trx)
         .into('organisations')
+
+
+
+        // Assign Resources to current organisation
+        let resources = req.body.resources;
+        let insertPayload = resources.map(resource => ({
+          updatedAt: currentTime,
+          createdAt: currentTime,
+          resourceId: resource,
+          orgId: organisation
+        .id}));
+        insertedResourcesResult = await knex(
+          "organisation_resources_master"
+        ).insert(insertPayload).returning(['*'])
+
+
         trx.commit;
       });
 
       return res.status(200).json({
         data: {
-          organisationResult: {...organisation,user}
+          organisationResult: { ...organisation, user, insertedResourcesResult }
         },
         message: "Organisation created successfully!."
       });
