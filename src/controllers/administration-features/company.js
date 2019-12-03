@@ -53,7 +53,7 @@ const companyController = {
             ]
           });
         }
-
+console.log('ORG ID: ',orgId)
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
@@ -131,7 +131,7 @@ const companyController = {
         let insertData = { ...payload, updatedAt: currentTime };
         let insertResult = await knex
           .update(insertData)
-          .where({ id: payload.id })
+          .where({ id: payload.id,orgId:req.orgId })
           .returning(["*"])
           .transacting(trx)
           .into("companies");
@@ -173,7 +173,7 @@ const companyController = {
         let current = new Date().getTime();
         let companyResult = await knex
           .select()
-          .where({ id: payload.id })
+          .where({ id: payload.id,orgId:req.orgId })
           .returning(["*"])
           .transacting(trx)
           .into("companies");
@@ -217,7 +217,7 @@ const companyController = {
         }
         let companyResult = await knex
           .update({ isActive: false })
-          .where({ id: payload.id })
+          .where({ id: payload.id,orgId:req.orgId })
           .returning(["*"])
           .transacting(trx)
           .into("companies");
