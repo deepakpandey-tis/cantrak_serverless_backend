@@ -109,7 +109,16 @@ const organisationsController = {
         .into('users');
         user  = insertUserResult[0];
 
-        let insertRoleResult = await knex.insert({"userId":user.id,"roleId":2})
+        let roleObejct = {
+                          userId:user.id,
+                          roleId:2,
+                          entityType:"organisations",
+                          orgId :organisation.id,
+                          createdAt:currentTime,
+                          updatedAt:currentTime,
+                          }
+
+        let insertRoleResult = await knex.insert(roleObejct)
                                .returning(['*'])
                                .transacting(trx)
                                .into('user_roles');

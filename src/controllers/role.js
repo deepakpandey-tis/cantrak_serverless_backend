@@ -38,32 +38,69 @@ const roleController = {
     /* ROLE SETUP*/
     roleSetup:async (req,res)=>{
         try{
-        //   let role     = null;
-        //   let resource = null;
-        //     await knex.transaction(trx=>{
+          let role     = null;
+          let resource = null;
+          let orgId    = req.orgId;
+            await knex.transaction(async trx=>{
 
-        //      let {roleName,resourceName} = req.body;
-        //      let payload                 = req.body;
-        //      const schema = Joi.object().keys({
-        //          roleName     : Joi.string().required(),
-        //          resourceName : Joi.array().items(Joi.string().required()).strict().required(),
-        //      })
+             let {roleName,resourceName} = req.body;
+             let payload                 = req.body;
+             const schema = Joi.object().keys({
+                 roleName     : Joi.string().required(),
+                 resourceName : Joi.array().items(Joi.string().required()).strict().required(),
+             })
 
-        //     const result = Joi.validate(payload ,schema);
-        //       console.log("[controllers][role][roleSetup]: JOi Result",result);
-        // if (result && result.hasOwnProperty("error") && result.error) {
-        //   return res.status(400).json({
-        //     errors: [
-        //       { code: "VALIDATION_ERROR", message: result.error.message }
-        //     ]
-        //   });
-        // }
+            const result = Joi.validate(payload ,schema);
+              console.log("[controllers][role][roleSetup]: JOi Result",result);
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message }
+            ]
+          });
+        }
+        let currentTime = new Date().getTime();
+            /*ROLE INSERT OPEN */
+            let insertRole  = {
+                       name:roleName,
+                       orgId:orgId,
+                       createdAt:currentTime,
+                       updatedAt:currentTime
+                             }
+           let roleResult = await knex.insert(insertRole)
+                                  .returning(['*'])
+                                  .transacting(trx)
+                                  .into('roles');
 
-        //   // let roleResult = await knex.insert({"d":"d"})
+            role          = roleResult[0];
+            /*ROLE INSERT CLOSE */           
+
+            if(resourceName.length>0){
 
 
-        //     })
+              for(let resourceId of resourceName) {
+
+              let insertData = {
+                               roleId:role.id,
+                               resourceId:resourceId,
+                               orgId :orgId,
+                               createdAt:currentTime,
+                               updatedAt:currentTime
+                               } 
+              let resourceResult = await knex.insert(insertData).returning(['*'])
+               .transacting(trx).into('role_resource_master');               
+              resource       = resourceResult[0]
+                              }
+           
+            }
+            })
              
+            return res.status(200).json({
+              data: {
+                roleResultData: {...role,...resource}
+              },
+              message: "Role Setup successfully!."
+            });
 
         }catch(err){
             res.status(500).json({
