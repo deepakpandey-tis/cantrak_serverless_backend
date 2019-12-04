@@ -4,6 +4,7 @@ const createError = require('http-errors');
 const path = require('path');
 const i18n = require('i18n');
 const indexRouter = require('./routes/index');
+const emailHelper = require('./helpers/email');
 
 
 /**
@@ -129,18 +130,18 @@ module.exports.s3hook = (event, context) => {
 
 
 // EMAIL HANDLER (Triggered From SQS)
-module.exports.sendEmail = (event, context) => {
+module.exports.emailQueueProcessor = (event, context) => {
   // console.log('Event:', JSON.stringify(event));
   // console.log('Context:', JSON.stringify(context));
 
   const recordsFromSQS = event.Records;
-  // console.log('sqs Email Records:', JSON.stringify(recordsFromSQS));
-
-  const currentRecord = recordsFromSQS[0];
-
+  const currentRecord = recordsFromSQS[0];    // Since we have kept the batchSize to only 1
   console.log('Current Record:', JSON.stringify(currentRecord));
-
   const mailOptions = JSON.parse(currentRecord.body);
 
-  console.log('Mail Options:', mailOptions);
+  (async () => {
+    await emailHelper.sendEmail(mailOptions);
+  })();
+  
+  return; 
 };

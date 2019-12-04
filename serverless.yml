@@ -80,7 +80,7 @@ functions:
       - s3: ${self:custom.bucket}
         event: s3:*
   emailSender:
-    handler: src/app.sendEmail
+    handler: src/app.emailQueueProcessor
     batchSize: 1                           # Using a batchSize of 1, so that messages succeed or fail on their own.
     reservedConcurrency: 10                # <-- Concurrency control
     events:

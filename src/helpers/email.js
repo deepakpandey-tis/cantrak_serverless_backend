@@ -1,19 +1,42 @@
-const knex = require('../db/knex');
 const Joi = require('@hapi/joi');
-const moment = require('moment');
-const uuidv4 = require('uuid/v4');
 const _ = require('lodash');
 const AWS = require('aws-sdk');
+const nodemailer = require("nodemailer");
 
 
-AWS.config.update({ region: process.env.REGION || 'us-east-2' });
 AWS.config.update({
     accessKeyId: process.env.ACCESS_KEY_ID,
     secretAccessKey: process.env.SECRET_ACCESS_KEY,
 });
 
+const SHOULD_QUEUE = true;
+
+const sendEmailMessage = async (mailOptions) => {
+    AWS.config.update({ region: process.env.REGION || 'us-east-1' });
+
+    return new Promise(async (resolve, reject) => {
+        const ses = new AWS.SES();
+
+        const transporter = nodemailer.createTransport({
+            SES: ses
+        });
+
+        transporter.sendMail(mailOptions, function (err, info) {
+            if (err) {
+                console.log("Error sending email");
+                reject(err);
+            } else {
+                console.log("Email sent successfully");
+                resolve(info);
+            }
+        });
+
+    })
+};
+
 const sendSQSMessage = async (messageBody) => {
 
+    AWS.config.update({ region: process.env.REGION || 'us-east-2' });
     const createdAt = new Date().toISOString();
 
     let params = {
@@ -111,8 +134,12 @@ const emailHelper = {
                 html: htmlEmailContents
             };
 
-            return await emailHelper.queueEmailForSend(mailOptions);
 
+            if (SHOULD_QUEUE) {
+                return await emailHelper.queueEmailForSend(mailOptions);     // Will sent the mail on queue (async)
+            } else {
+                return await emailHelper.sendEmail(mailOptions);     // Will sent the mail on queue (async)
+            }
 
         } catch (err) {
             console.log('[helpers][email][sendTemplateEmail]:  Error', err);
@@ -130,6 +157,22 @@ const emailHelper = {
             const messageSendResult = await sendSQSMessage(sqsMessageBody);
 
             return { success: true, message: 'Email Queued for sending', data: messageSendResult };
+
+        } catch (err) {
+            console.log('[helpers][email][queueEmailForSend]:  Error', err);
+            return { code: 'UNKNOWN_ERROR', message: err.message, error: err };
+        }
+    },
+
+    sendEmail: async ({ from, to, subject, html }) => {
+        try {
+
+            console.log('[helpers][email][sendEmail] : Going to Send Email');
+            // console.log('[helpers][email][queueEmailForSend] : Mail Options:', mailOptions);
+
+            const emailSendResult = await sendEmailMessage({ from, to, subject, html });
+
+            return { success: true, message: 'Email Sent Successfully', data: emailSendResult };
 
         } catch (err) {
             console.log('[helpers][email][queueEmailForSend]:  Error', err);

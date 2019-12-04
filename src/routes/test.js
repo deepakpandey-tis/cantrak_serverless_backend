@@ -9,7 +9,7 @@ const emailHelper = require('../helpers/email');
 router.get('/', async(req,res) => {
     try {
         let mailOptions = {
-            to: 'xyz@mail.com',
+            to: 'mail@deepakpandey.in',
             subject: 'Test Email ',
             template: 'test-email.ejs',
             templateData: {fullName: 'Deepak', OTP: '1111'}
