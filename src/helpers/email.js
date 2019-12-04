@@ -5,8 +5,52 @@ const uuidv4 = require('uuid/v4');
 const _ = require('lodash');
 
 
+AWS.config.update({ region: process.env.REGION || 'us-east-2' });
+
+
+const sendSQSMessage = async (messageBody) => {
+
+    const createdAt = new Date().getTime();
+
+    let params = {
+        DelaySeconds: 10,
+        MessageAttributes: {
+            "title": {
+                DataType: "String",
+                StringValue: "Email Message Body"
+            },
+            "createdAt": {
+                DataType: "String",
+                StringValue: createdAt
+            },
+            // "WeeksOn": {
+            //     DataType: "Number",
+            //     StringValue: "6"
+            // }
+        },
+        MessageBody: messageBody,
+        // MessageDeduplicationId: "TheWhistler",  // Required for FIFO queues
+        // MessageId: "Group1",  // Required for FIFO queues
+        QueueUrl: process.env.SQS_MAIL_QUEUE_URL || 'https://sqs.us-east-2.amazonaws.com/525317543069/email-messages-queue'
+    };
+
+    return new Promise(async (resolve, reject) => {
+        const sqs = new AWS.SQS();
+        sqs.sendMessage(params, (err, data) => {
+            if (err) {
+                console.log("SQS Message POST Error", err);
+                reject(err)
+            } else {
+                console.log("SQS Message POST Success", data.MessageId);
+                resolve(data);
+            }
+        });
+    })
+};
+
+
 const emailHelper = {
-    sendTemplateEmail: async ({to, subject, template, templateData, layout}) => {
+    sendTemplateEmail: async ({ to, subject, template, templateData, layout }) => {
         // const users = await knex.select().from('users');
         try {
 
@@ -72,15 +116,16 @@ const emailHelper = {
         }
     },
 
-    queueEmailForSend: async ({from, to, subject, html}) => {
+    queueEmailForSend: async ({ from, to, subject, html }) => {
         try {
 
             console.log('[helpers][email][queueEmailForSend] : Going to Queue Email for Send');
             // console.log('[helpers][email][queueEmailForSend] : Mail Options:', mailOptions);
 
+            const sqsMessageBody = JSON.stringify({ from, to, subject, html });
+            const messageSendResult = await sendSQSMessage(sqsMessageBody);
 
-
-            return { success: true, message: 'Email Queued for sending' };
+            return { success: true, message: 'Email Queued for sending', data: messageSendResult };
 
         } catch (err) {
             console.log('[helpers][email][queueEmailForSend]:  Error', err);
