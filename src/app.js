@@ -37,16 +37,16 @@ app.use((req, res, next) => {
 
 
 // i18n
-i18n.configure({
-  locales: ['en', 'et'],
-  defaultLocale: 'en',
-  cookie: 'lang',
-  objectNotation: true,
-  queryParameter: 'lang',
-  directory: path.join(__dirname, 'i18n'),
-  //updateFiles: true
-});
-app.use(i18n.init);
+// i18n.configure({
+//   locales: ['en', 'et'],
+//   defaultLocale: 'en',
+//   cookie: 'lang',
+//   objectNotation: true,
+//   queryParameter: 'lang',
+//   directory: path.join(__dirname, 'i18n'),
+//   //updateFiles: true
+// });
+// app.use(i18n.init);
 // app.get('/en', function (req, res) {
 //     // res.cookie('lang', 'en', { maxAge: 900000, httpOnly: false });
 //     // res.redirect('back');
@@ -74,6 +74,10 @@ app.use((err, req, res, next) => {
   // res.locals.error = req.app.get('env') === 'development' ? err : {};
 
   const error = req.app.get('env') !== 'production' ? err : {};
+
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, XMLHttpRequest, ngsw-bypass');
 
   res.status(err.status || 500);
   // res.render('error');
@@ -115,8 +119,28 @@ module.exports.webhook = (event, context, callback) => {
 };
 
 global.appRoot = path.resolve(__dirname);
+
 module.exports.s3hook = (event, context) => {
   console.log(JSON.stringify(event));
   console.log(JSON.stringify(context));
   console.log(JSON.stringify(process.env));
+};
+
+
+
+// EMAIL HANDLER (Triggered From SQS)
+module.exports.sendEmail = (event, context) => {
+  // console.log('Event:', JSON.stringify(event));
+  // console.log('Context:', JSON.stringify(context));
+
+  const recordsFromSQS = event.Records;
+  // console.log('sqs Email Records:', JSON.stringify(recordsFromSQS));
+
+  const currentRecord = recordsFromSQS[0];
+
+  console.log('Current Record:', JSON.stringify(currentRecord));
+
+  const mailOptions = JSON.parse(currentRecord.body);
+
+  console.log('Mail Options:', mailOptions);
 };
