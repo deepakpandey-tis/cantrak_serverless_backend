@@ -18,6 +18,7 @@ const companyController = {
       await knex.transaction(async trx => {
         const payload = req.body;
         const orgId = req.orgId;
+        const userId = req.me.id;
 
         const schema = Joi.object().keys({
           companyName: Joi.string().required(),
@@ -57,6 +58,7 @@ console.log('ORG ID: ',orgId)
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
+          createdBy: userId,
           createdAt: currentTime,
           updatedAt: currentTime,
           orgId
@@ -251,6 +253,7 @@ console.log('ORG ID: ',orgId)
         knex
           .count("* as count")
           .from("companies")
+          .where({orgId:req.orgId})
           .first(),
         knex("companies")
           .select([
@@ -264,6 +267,7 @@ console.log('ORG ID: ',orgId)
           ])
           .offset(offset)
           .limit(per_page)
+          .where({orgId:req.orgId})
       ]);
 
       let count = total.count;

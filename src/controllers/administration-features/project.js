@@ -63,6 +63,9 @@ const ProjectController = {
           updatedAt: currentTime,
           orgId:req.orgId
         };
+
+        console.log('Project Payload: ',insertData)
+
         let insertResult = await knex
           .insert(insertData)
           .returning(["*"])

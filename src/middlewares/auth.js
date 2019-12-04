@@ -25,7 +25,7 @@ const authMiddleware = {
 
                 const userId = decodedTokenData.id;
                 req.id = decodedTokenData.id;
-                req.orgId = decodedTokenData.orgId
+                req.orgId = decodedTokenData.orgId;
 
                 let currentUser = await knex('users').where({ id: decodedTokenData.id });
                 currentUser = currentUser[0];

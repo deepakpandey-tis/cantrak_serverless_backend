@@ -20,6 +20,7 @@ const teamsController = {
         // Define try/catch block
         try {
             let teamsData = null;
+            let orgId     = req.orgId
             await knex.transaction(async (trx) => {
                 const teamsPayload = req.body;
                 console.log('[controllers][teams][addNewTeam]', teamsPayload);
@@ -44,7 +45,7 @@ const teamsController = {
 
                 const currentTime = new Date().getTime();
                 // Insert into teams table
-                const insertData = { ...teamsPayload, createdAt: currentTime, updatedAt: currentTime, createdBy: 1,orgId:req.orgId };
+                const insertData = { ...teamsPayload, createdAt: currentTime, updatedAt: currentTime, createdBy: 1 ,orgId:orgId};
                 console.log('[controllers][teams][addNewTeams] : Insert Data ', insertData);
 
                 const resultTeams = await knex.insert(insertData).returning(['*']).transacting(trx).into('teams');
@@ -225,7 +226,7 @@ const teamsController = {
         // Define try/catch block
         try {
             let updateUser = null;
-
+            let orgId      = req.orgId
             const { teamId, userIds } = req.body;
             console.log('[controllers][teams][updateroles]: UpdateUserRole', userIds, teamId);
 
@@ -255,7 +256,7 @@ const teamsController = {
 
             await Parallel.map(compareData.added, async item => {
                 console.log("response", item);
-                updateUser = await knex('team_users').insert({ userId: item, teamId: teamId, createdAt: currentTime, updatedAt: currentTime }).returning(['*']);
+                updateUser = await knex('team_users').insert({ userId: item, teamId: teamId, createdAt: currentTime, updatedAt: currentTime,orgId: orgId }).returning(['*']);
                 return updateUser;
             });
 

@@ -12,11 +12,13 @@ const saltRounds = 10;
 //const trx = knex.transaction();
 
 const buildingPhaseController = {
+
   addBuildingPhase: async (req, res) => {
     try {
       let buildingPhase = null;
       let userId = req.me.id;
-     
+      let orgId = req.orgId;
+
       await knex.transaction(async trx => {
         const payload = req.body;
 
@@ -47,17 +49,18 @@ const buildingPhaseController = {
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
+          orgId: orgId,
           createdBy: userId,
           createdAt: currentTime,
           updatedAt: currentTime
         };
+
         let insertResult = await knex
           .insert(insertData)
           .returning(["*"])
           .transacting(trx)
           .into("buildings_and_phases");
         buildingPhase = insertResult[0];
-
         trx.commit;
       });
 
@@ -81,7 +84,8 @@ const buildingPhaseController = {
   updateBuildingPhase: async (req, res) => {
     try {
       let userId = req.me.id;
-     
+      let orgId = req.orgId;
+
       let buildingPhase = null;
       await knex.transaction(async trx => {
         const payload = req.body;
@@ -112,10 +116,10 @@ const buildingPhaseController = {
         }
 
         let currentTime = new Date().getTime();
-        let insertData = { ...payload, createdBy:userId, updatedAt: currentTime };
+        let insertData = { ...payload, createdBy: userId, updatedAt: currentTime };
         let insertResult = await knex
           .update(insertData)
-          .where({ id: payload.id })
+          .where({ id: payload.id, orgId: orgId })
           .returning(["*"])
           .transacting(trx)
           .into("buildings_and_phases");
@@ -146,6 +150,8 @@ const buildingPhaseController = {
       let buildingPhase = null;
       await knex.transaction(async trx => {
         let payload = req.body;
+        let orgId = req.orgId;
+
         const schema = Joi.object().keys({
           id: Joi.string().required()
         });
@@ -157,20 +163,13 @@ const buildingPhaseController = {
             ]
           });
         }
-         // let buildingPhaseResult = await knex
-        //   .select()
-        //   .where({ id: payload.id })
-        //   .returning(["*"])
-        //   .transacting(trx)
-        //   .into("buildings_and_phases");
 
         let buildingPhaseResult = await knex("buildings_and_phases")
-        .innerJoin("companies","buildings_and_phases.companyId","companies.id")
-        .innerJoin("projects","buildings_and_phases.projectId","projects.id")
-        .innerJoin("property_types","buildings_and_phases.propertyTypeId","property_types.id")
-        .select("buildings_and_phases.*","companies.companyName as companyName","companies.companyId as compId","companies.id as companyId","projects.projectName","property_types.propertyTypeCode")
-        .where({ "buildings_and_phases.id": payload.id })
-        
+          .innerJoin("companies", "buildings_and_phases.companyId", "companies.id")
+          .innerJoin("projects", "buildings_and_phases.projectId", "projects.id")
+          .innerJoin("property_types", "buildings_and_phases.propertyTypeId", "property_types.id")
+          .select("buildings_and_phases.*", "companies.companyName as companyName", "companies.companyId as compId", "companies.id as companyId", "projects.projectName", "property_types.propertyTypeCode")
+          .where({ "buildings_and_phases.id": payload.id, "building_and_phases.orgId": orgId })
 
 
         buildingPhase = _.omit(buildingPhaseResult[0], [
@@ -178,8 +177,10 @@ const buildingPhaseController = {
           "buildings_and_phases.updatedAt",
           "buildings_and_phases.isActive"
         ]);
+
         trx.commit;
       });
+
       return res.status(200).json({
         data: {
           buildingPhase: buildingPhase
@@ -202,6 +203,8 @@ const buildingPhaseController = {
       let buildingPhase = null;
       await knex.transaction(async trx => {
         let payload = req.body;
+        let orgId = req.orgId;
+
         const schema = Joi.object().keys({
           id: Joi.string().required()
         });
@@ -213,15 +216,17 @@ const buildingPhaseController = {
             ]
           });
         }
+
         let buildingPhaseResult = await knex
           .update({ isActive: false })
-          .where({ id: payload.id })
+          .where({ id: payload.id, orgId: orgId })
           .returning(["*"])
           .transacting(trx)
           .into("buildings_and_phases");
         buildingPhase = buildingPhaseResult[0];
         trx.commit;
       });
+
       return res.status(200).json({
         data: {
           buildingPhase: buildingPhase
@@ -241,6 +246,7 @@ const buildingPhaseController = {
   },
   getBuildingPhaseList: async (req, res) => {
     try {
+      let orgId = req.orgId;
       let companyId = req.query.companyId;
       let projectId = req.query.projectId;
       let reqData = req.query;
@@ -266,8 +272,9 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
-            .where({ "buildings_and_phases.isActive": true })
+            .where({ "orgId": orgId, "buildings_and_phases.isActive": true })
             .first(),
+
           knex("buildings_and_phases")
             .innerJoin(
               "projects",
@@ -279,7 +286,7 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
-            .where({ "buildings_and_phases.isActive": true })
+            .where({ "buildings_and_phases.isActive": true, "orgId": orgId })
             .select([
               "buildings_and_phases.id as id",
               "buildings_and_phases.buildingPhaseCode as Building/Phase",
@@ -322,7 +329,7 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
-            .where({ "buildings_and_phases.isActive": true })
+            .where({ "buildings_and_phases.isActive": true, "orgId": orgId })
             .first(),
           knex("buildings_and_phases")
             .innerJoin(
@@ -335,7 +342,7 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
-            .where({ "buildings_and_phases.isActive": true })
+            .where({ "buildings_and_phases.isActive": true, "orgId": orgId })
             .select([
               "buildings_and_phases.id as id",
               "buildings_and_phases.buildingPhaseCode as Building/Phase",
@@ -364,6 +371,7 @@ const buildingPhaseController = {
         if (page < 1) page = 1;
         let offset = (page - 1) * per_page;
 
+
         let [total, rows] = await Promise.all([
           knex
             .count("* as count")
@@ -381,7 +389,8 @@ const buildingPhaseController = {
             .where({
               "buildings_and_phases.isActive": true,
               "projects.id": projectId,
-              "companies.id": companyId
+              "companies.id": companyId,
+              "orgId": orgId
             })
             .first(),
           knex("buildings_and_phases")
@@ -398,7 +407,8 @@ const buildingPhaseController = {
             .where({
               "buildings_and_phases.isActive": true,
               "projects.id": projectId,
-              "companies.id": companyId
+              "companies.id": companyId,
+              "orgId": orgId
             })
             .select([
               "buildings_and_phases.id as id",
@@ -444,6 +454,7 @@ const buildingPhaseController = {
   },
   exportBuildingPhase: async (req, res) => {
     try {
+      let orgId = req.orgId;
       let companyId = req.query.companyId;
       let reqData = req.query;
       let pagination = {};
@@ -468,7 +479,7 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
-            .where({ "buildings_and_phases.isActive": true })
+            .where({ "buildings_and_phases.isActive": true, "orgId": orgId })
             .first(),
           knex("buildings_and_phases")
             .innerJoin(
@@ -481,7 +492,7 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
-            .where({ "buildings_and_phases.isActive": true })
+            .where({ "buildings_and_phases.isActive": true, "orgId": orgId })
             .select([
               "buildings_and_phases.buildingPhaseCode as Building/Phase",
               "projects.projectName as Project Name",
@@ -523,7 +534,7 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
-            .where({ "buildings_and_phases.isActive": true })
+            .where({ "buildings_and_phases.isActive": true, "orgId": orgId })
             .first(),
           knex("buildings_and_phases")
             .innerJoin(
@@ -536,7 +547,7 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
-            .where({ "buildings_and_phases.isActive": true })
+            .where({ "buildings_and_phases.isActive": true, "orgId": orgId })
             .select([
               "buildings_and_phases.buildingPhaseCode as Building/Phase",
               "projects.projectName as Project Name",
@@ -587,26 +598,29 @@ const buildingPhaseController = {
   getBuildingPhaseAllList: async (req, res) => {
     try {
       let projectId = req.query.projectId;
-       let buildingData = {};
-     
-      let [rows] = await Promise.all([         
-          knex("buildings_and_phases")
-            .innerJoin(
-              "projects",
-              "buildings_and_phases.projectId",
-              "projects.id"
-            )
-            .where({ 
-             "buildings_and_phases.isActive": true,
-             "buildings_and_phases.projectId":projectId 
-            })
-            .select([
-              "buildings_and_phases.id as id",
-              "buildings_and_phases.buildingPhaseCode"              
-            ])
-        ]);
+      let orgId = req.orgId;
 
-        buildingData.data = rows;   
+      let buildingData = {};
+
+      let [rows] = await Promise.all([
+        knex("buildings_and_phases")
+          .innerJoin(
+            "projects",
+            "buildings_and_phases.projectId",
+            "projects.id"
+          )
+          .where({
+            "buildings_and_phases.isActive": true,
+            "buildings_and_phases.projectId": projectId,
+            "orgId": orgId
+          })
+          .select([
+            "buildings_and_phases.id as id",
+            "buildings_and_phases.buildingPhaseCode"
+          ])
+      ]);
+
+      buildingData.data = rows;
 
       return res.status(200).json({
         data: {
@@ -625,12 +639,14 @@ const buildingPhaseController = {
       });
     }
   },
-  getBuildingPhaseListByProjectId: async(req,res) => {
+  getBuildingPhaseListByProjectId: async (req, res) => {
     try {
-      const {projectId} = req.body;
-      const buildings = await knex('buildings_and_phases').select('*').where({projectId})
-      return res.status(200).json({data: {buildings},message:'Buildings list'})
-    } catch(err) {
+      const { projectId } = req.body;
+      let orgId = req.orgId;
+
+      const buildings = await knex('buildings_and_phases').select('*').where({ projectId, orgId: orgId })
+      return res.status(200).json({ data: { buildings }, message: 'Buildings list' })
+    } catch (err) {
       console.log(
         "[controllers][generalsetup][viewbuildingPhase] :  Error",
         err
@@ -641,6 +657,7 @@ const buildingPhaseController = {
       });
     }
   }
+  
 };
 
 module.exports = buildingPhaseController;
