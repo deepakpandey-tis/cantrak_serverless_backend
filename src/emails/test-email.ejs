@@ -1,0 +1,10 @@
+<% /* Note: This is injected into `emails/layouts/default-layout.ejs` */ %>
+<p style="margin-bottom: 25px;">Dear <%= fullName %>,</p>
+<p style="margin-bottom: 25px;">Someone requested a OTP for login into your account. If this was not you, please
+    disregard this email. Otherwise, please find the OTP below:</p>
+<div style="margin-bottom: 25px; text-align: center;">
+    <h3><%= OTP %></h3>
+</div>
+<p style="margin-bottom: 25px;">Above mentioned OTP will be valid for only for next 15 minutes.</p>
+<p style="margin-bottom: 5px;">Sincerely,</p>
+<p style="margin-top: 0px;">The ServiceMind Team</p>
