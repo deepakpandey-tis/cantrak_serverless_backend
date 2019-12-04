@@ -34,31 +34,34 @@ const authMiddleware = {
 
                 if (currentUser.isActive) {
 
-                    let roles = await knex('user_roles').where({ userId: currentUser.id });
+                    let roles = await knex('application_user_roles').where({ userId: currentUser.id });
                     currentUser.roles = roles;
 
                     const Parallel = require('async-parallel');
-                    currentUser.roles = await Parallel.map(currentUser.roles, async item => {
-                        let roleName = await knex('roles').where({ id: item.roleId }).select('name');
+                    let roles = await Parallel.map(currentUser.roles, async item => {
+                        let roleName = await knex('application_roles').where({ id: item.roleId }).select('name');
                         roleName = roleName[0].name;
-                        let r;
-                        if (item.roleId == 1) {   // Superadmin
-                            r = {
-                                roleName: roleName
-                            }
-                        } else if (item.roleId == 7) {   // Customer
-                            r = {
-                                roleName: roleName,
-                                houseId: item.entityId
-                            }
-                        } else {
-                            r = {
-                                roleName: roleName,
-                                organisationId: item.entityId
-                            }
-                        }
-                        return r;
+                        return roleName
+                        // let r;
+                        // if (item.roleId == 1) {   // Superadmin
+                        //     r = {
+                        //         roleName: roleName
+                        //     }
+                        // } else if (item.roleId == 7) {   // Customer
+                        //     r = {
+                        //         roleName: roleName,
+                        //         houseId: item.entityId
+                        //     }
+                        // } else {
+                        //     r = {
+                        //         roleName: roleName,
+                        //         organisationId: item.entityId
+                        //     }
+                        // }
+                        // return r;
                     });
+                    currentUser.roles = roles;
+                    currentUser.applicationRoles = roles;
 
                     req.me = currentUser;
                     return next();
