@@ -44,7 +44,7 @@ const teamsController = {
 
                 const currentTime = new Date().getTime();
                 // Insert into teams table
-                const insertData = { ...teamsPayload, createdAt: currentTime, updatedAt: currentTime, createdBy: 1 };
+                const insertData = { ...teamsPayload, createdAt: currentTime, updatedAt: currentTime, createdBy: 1,orgId:req.orgId };
                 console.log('[controllers][teams][addNewTeams] : Insert Data ', insertData);
 
                 const resultTeams = await knex.insert(insertData).returning(['*']).transacting(trx).into('teams');
@@ -101,7 +101,7 @@ const teamsController = {
 
                 const currentTime = new Date().getTime();
                 // Update teams table
-                updateTeams = await knex.update({ teamName: upTeamsPayload.teamName, description: upTeamsPayload.description, updatedAt: currentTime }).where({ teamId: upTeamsPayload.teamId }).returning(['*']).transacting(trx).into('teams');
+                updateTeams = await knex.update({ teamName: upTeamsPayload.teamName, description: upTeamsPayload.description, updatedAt: currentTime }).where({ teamId: upTeamsPayload.teamId,orgId:req.orgId }).returning(['*']).transacting(trx).into('teams');
                 teamsResponse = updateTeams;
                 trx.commit;
             });
@@ -132,7 +132,7 @@ const teamsController = {
             let teamResult  = null;
             
             
-            teamResult = await  knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" group by "teams"."teamId"')               
+            teamResult = await  knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId"  where "teams"."orgId" = '+req.orgId+' group by "teams"."teamId"');
             
         
 

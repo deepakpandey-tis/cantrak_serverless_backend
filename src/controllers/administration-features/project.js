@@ -60,7 +60,8 @@ const ProjectController = {
           ...payload,
           createdBy: userId,
           createdAt: currentTime,
-          updatedAt: currentTime
+          updatedAt: currentTime,
+          orgId:req.orgId
         };
         let insertResult = await knex
           .insert(insertData)
@@ -133,7 +134,7 @@ const ProjectController = {
         let insertData = { ...payload, updatedAt: currentTime };
         let insertResult = await knex
           .update(insertData)
-          .where({ id: payload.id })
+          .where({ id: payload.id,orgId:req.orgId })
           .returning(["*"])
           .transacting(trx)
           .into("projects");
@@ -176,7 +177,7 @@ const ProjectController = {
         let ProjectResult = await knex("projects")
           .innerJoin("companies","projects.companyId","companies.id")
           .select("projects.*","companies.companyId as compId","companies.companyName")
-          .where({ "projects.id": payload.id })
+          .where({ "projects.id": payload.id,orgId:req.orgId })
           
 
 
@@ -221,7 +222,7 @@ const ProjectController = {
         }
         let ProjectResult = await knex
           .update({ isActive: false })
-          .where({ id: payload.id })
+          .where({ id: payload.id,orgId:req.orgId })
           .returning(["*"])
           .transacting(trx)
           .into("projects");

@@ -32,13 +32,14 @@ if (process.env.IS_OFFLINE) {
 AWS.config.update({ region: process.env.REGION || 'us-east-2' });
 
 
-const getUploadURL = async (mimeType, filename) => {
+const getUploadURL = async (mimeType,filename,type="") => {
     let re = /(?:\.([^.]+))?$/;
     let ext = re.exec(filename)[1];
+    let uploadFolder = type+"/";
     const actionId = uuidv4();
     const s3Params = {
         Bucket: process.env.S3_BUCKET_NAME,
-        Key: `${actionId}.${ext}`,
+        Key: `${uploadFolder}${actionId}.${ext}`,
         ContentType: mimeType,
         ACL: 'public-read',
     };
@@ -292,9 +293,10 @@ const serviceRequestController = {
     getImageUploadUrl: async (req, res) => {
         const mimeType = req.body.mimeType;
         const filename = req.body.filename;
+        const type     = req.body.type;
         try {
 
-            const uploadUrlData = await getUploadURL(mimeType, filename);
+            const uploadUrlData = await getUploadURL(mimeType, filename,type);
 
             res.status(200).json({
                 data: {
@@ -661,7 +663,11 @@ const serviceRequestController = {
                             'property_units.unitNumber as Unit No',
                             'service_requests.requestedBy as Requested By',
                             'service_requests.createdAt as Date Created',
-                        ]).groupBy(["service_requests.id", "service_problems.id", 'incident_categories.id','incident_sub_categories.id','property_units.id']),
+                        ]).groupBy(["service_requests.id", 
+                         "service_problems.id",
+                         'incident_categories.id',
+                         'incident_sub_categories.id',
+                         'property_units.id']).where({'service_requests.orgId':req.orgId}),
                     knex.from("service_requests")
                         .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
                         .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
@@ -677,7 +683,7 @@ const serviceRequestController = {
                             'property_units.unitNumber as Unit No',
                             'service_requests.requestedBy as Requested By',
                             'service_requests.createdAt as Date Created',
-                        ]).offset(offset).limit(per_page)
+                        ]).offset(offset).limit(per_page).where({ 'service_requests.orgId': req.orgId })
                 ])
             } else {
                 //console.log('IN else: ')
@@ -697,7 +703,7 @@ const serviceRequestController = {
                             'property_units.unitNumber as Unit No',
                             'service_requests.requestedBy as Requested By',
                             'service_requests.createdAt as Date Created',
-                        ]).where((qb) => {
+                        ]).where({ 'service_requests.orgId': req.orgId }).where((qb) => {
                             qb.where(filters)
                             if (serviceFromDate && serviceToDate) {
                                 qb.whereBetween('service_requests.createdAt', [serviceFromDate, serviceToDate])
@@ -718,7 +724,7 @@ const serviceRequestController = {
                             'property_units.unitNumber as Unit No',
                             'service_requests.requestedBy as Requested By',
                             'service_requests.createdAt as Date Created',
-                        ]).where((qb) => {
+                        ]).where({ 'service_requests.orgId': req.orgId }).where((qb) => {
                             qb.where(filters)
                             if (serviceFromDate && serviceToDate) {
                                 qb.whereBetween('service_requests.createdAt', [serviceFromDate, serviceToDate])
