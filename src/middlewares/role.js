@@ -64,10 +64,10 @@ const roleMiddleware = {
                     }
                 }
 
-                let finalResources = _.uniq(_.flatten(_.values(projectAcccessToResources)))
-                req.projectsHavingAccessToSpecificResources = projectAcccessToResources
-                console.log('************************Project access to resources: ************************', finalResources)
-                req.resources = finalResources
+                //let finalResources = _.uniq(_.flatten(_.values(projectAcccessToResources)))
+                //req.projectsHavingAccessToSpecificResources = projectAcccessToResources
+                console.log('************************Project access to resources: ************************', projectAcccessToResources)
+                //req.resources = finalResources
 
                 //console.log('Roles on Project: ', projects)
 
