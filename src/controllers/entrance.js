@@ -95,11 +95,11 @@ const entranceController = {
                     }
 
 
-                    let roles = await knex('user_roles').select().where({userId:loginResult.id})
+                    let roles = await knex('application_user_roles').select().where({userId:loginResult.id})
 
                     const Parallel = require('async-parallel');
                     login.user.roles = await Parallel.map(roles, async item => {
-                        let rolename = await knex('roles').where({ id: item.roleId }).select('name');
+                        let rolename = await knex('application_roles').where({ id: item.roleId }).select('name');
                         rolename = rolename[0].name;
                         return rolename;
                     });
