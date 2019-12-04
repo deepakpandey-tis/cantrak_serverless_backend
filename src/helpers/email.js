@@ -3,6 +3,7 @@ const Joi = require('@hapi/joi');
 const moment = require('moment');
 const uuidv4 = require('uuid/v4');
 const _ = require('lodash');
+const AWS   = require('aws-sdk');
 
 
 AWS.config.update({ region: process.env.REGION || 'us-east-2' });
