@@ -17,6 +17,8 @@ const companyController = {
       let company = null;
       await knex.transaction(async trx => {
         const payload = req.body;
+        const orgId = req.orgId;
+        const userId = req.me.id;
 
         const schema = Joi.object().keys({
           companyName: Joi.string().required(),
@@ -52,12 +54,14 @@ const companyController = {
             ]
           });
         }
-
+console.log('ORG ID: ',orgId)
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
+          createdBy: userId,
           createdAt: currentTime,
-          updatedAt: currentTime
+          updatedAt: currentTime,
+          orgId
         };
         let insertResult = await knex
           .insert(insertData)
@@ -129,7 +133,7 @@ const companyController = {
         let insertData = { ...payload, updatedAt: currentTime };
         let insertResult = await knex
           .update(insertData)
-          .where({ id: payload.id })
+          .where({ id: payload.id,orgId:req.orgId })
           .returning(["*"])
           .transacting(trx)
           .into("companies");
@@ -171,7 +175,7 @@ const companyController = {
         let current = new Date().getTime();
         let companyResult = await knex
           .select()
-          .where({ id: payload.id })
+          .where({ id: payload.id,orgId:req.orgId })
           .returning(["*"])
           .transacting(trx)
           .into("companies");
@@ -215,7 +219,7 @@ const companyController = {
         }
         let companyResult = await knex
           .update({ isActive: false })
-          .where({ id: payload.id })
+          .where({ id: payload.id,orgId:req.orgId })
           .returning(["*"])
           .transacting(trx)
           .into("companies");
@@ -249,6 +253,7 @@ const companyController = {
         knex
           .count("* as count")
           .from("companies")
+          .where({orgId:req.orgId})
           .first(),
         knex("companies")
           .select([
@@ -262,6 +267,7 @@ const companyController = {
           ])
           .offset(offset)
           .limit(per_page)
+          .where({orgId:req.orgId})
       ]);
 
       let count = total.count;

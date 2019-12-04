@@ -36,11 +36,13 @@ const dashboardRouter = require("./dashboard")
 const imageRouter = require("./image")
 const fileRouter = require("./file")
 const pmRouter = require("./preventive-maintenance")
+const roleRouter = require("./role")
 const testRouter = require('./test')
 const taskGroupRouter = require('./administration-features/task-group');
 const organisationsRouter = require('./administration-features/organisations');
 
 const pushNotificationRouter = require('./push-notification');
+const resourceRouter = require('./resource');
 
 
 /* GET home page. */
@@ -91,6 +93,9 @@ router.use('/administration-features/problem', problemRouter)
 router.use('/image', imageRouter)
 router.use('/file', fileRouter)
 router.use('/preventive-maintenance', pmRouter)
-router.use('/task-group', taskGroupRouter);
-router.use('/administration-features/organisations', organisationsRouter)
+router.use('/task-group',taskGroupRouter);
+router.use('/administration-features/organisations',organisationsRouter)
+router.use('/role',roleRouter)
+router.use('/administration-features/resource',resourceRouter)
+
 module.exports = router;

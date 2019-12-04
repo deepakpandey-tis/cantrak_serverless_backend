@@ -115,8 +115,17 @@ module.exports.webhook = (event, context, callback) => {
 };
 
 global.appRoot = path.resolve(__dirname);
+
 module.exports.s3hook = (event, context) => {
   console.log(JSON.stringify(event));
   console.log(JSON.stringify(context));
   console.log(JSON.stringify(process.env));
+};
+
+
+
+// EMAIL HANDLER (Triggered From SQS)
+module.exports.sendEmail = (event, context) => {
+  console.log(JSON.stringify(event));
+  console.log(JSON.stringify(context));
 };

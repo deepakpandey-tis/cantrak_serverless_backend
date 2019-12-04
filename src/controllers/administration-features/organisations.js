@@ -14,6 +14,7 @@ const organisationsController = {
     try {
       let organisation = null;
       let user         = null;
+      let insertedResourcesResult = null
       await knex.transaction(async trx => {
         let payloadData    = req.body;
         const payload      = req.body;
@@ -23,6 +24,7 @@ const organisationsController = {
           name             : Joi.string().required(),
           userName         : Joi.string().required(),
           email            : Joi.string().required(),
+          resources        : Joi.array().required()
         });
 
         const result = Joi.validate(_.omit(payload,"mobileNo"), schema);
@@ -107,17 +109,48 @@ const organisationsController = {
         .into('users');
         user  = insertUserResult[0];
 
+        let roleObejct = {
+                          userId:user.id,
+                          roleId:2,
+                          entityType:"organisations",
+                          orgId :organisation.id,
+                          createdAt:currentTime,
+                          updatedAt:currentTime,
+                          }
+
+        let insertRoleResult = await knex.insert(roleObejct)
+                               .returning(['*'])
+                               .transacting(trx)
+                               .into('user_roles');
+                               
+
         let organisationUpdateResult = await knex.update({organisationAdminId:user.id})
         .where({ id: organisation.id})
           .returning(["*"])
           .transacting(trx)
         .into('organisations')
+
+
+
+        // Assign Resources to current organisation
+        let resources = req.body.resources;
+        let insertPayload = resources.map(resource => ({
+          updatedAt: currentTime,
+          createdAt: currentTime,
+          resourceId: resource,
+          orgId: organisation
+        .id}));
+        insertedResourcesResult = await knex(
+          "organisation_resources_master"
+        ).insert(insertPayload).returning(['*'])
+
+
         trx.commit;
       });
 
       return res.status(200).json({
         data: {
-          organisationResult: {...organisation,user}
+          organisationResult: { ...organisation, user, insertedResourcesResult }
         },
         message: "Organisation created successfully!."
       });

@@ -194,6 +194,7 @@ const statusController = {
                 knex.count('* as count').from("service_status").first(),
                 knex("service_status")
                 .select([
+                    "id",
                     "statusCode as Status Code",
                     "descriptionEng as Description English",
                     "descriptionThai as Description Thai",
@@ -359,7 +360,51 @@ const statusController = {
                 ],
             });
         }
-    }
+    },
+    statusDetails: async (req, res) => {
+        try {
+            let statusDetail = null;
+            await knex.transaction(async trx => {
+                let payload = req.body;
+                const schema = Joi.object().keys({
+                    id: Joi.string().required()
+                });
+                const result = Joi.validate(payload, schema);
+                if (result && result.hasOwnProperty("error") && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "VALIDATION_ERROR", message: result.error.message }
+                        ]
+                    });
+                }
+                let current = new Date().getTime();
+                let StatusResult = await knex("service_status")
+                    .select("service_status.*")
+                    .where({ "id": payload.id })
+
+                    statusDetail = _.omit(StatusResult[0], [
+                    "createdAt",
+                    "updatedAt",
+                    "isActive"
+                ]);
+                trx.commit;
+            });
+
+
+            return res.status(200).json({
+                data: {
+                    statusDetails: statusDetail
+                },
+                message: "Status Details"
+            });
+        } catch (err) {
+            console.log("[controllers][generalsetup][viewStatus] :  Error", err);
+            //trx.rollback
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
    
 };
 

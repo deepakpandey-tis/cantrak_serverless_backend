@@ -16,6 +16,8 @@ const floorZoneController = {
     try {
       let floorZone = null;
       let userId = req.me.id;
+      let orgId = req.orgId;  
+
       await knex.transaction(async trx => {
         const payload = req.body;
         const schema = Joi.object().keys({
@@ -27,6 +29,7 @@ const floorZoneController = {
           description: Joi.string().required(),
           totalFloorArea: Joi.string().required()
         });
+
         const result = Joi.validate(payload, schema);
         console.log(
           "[controllers][administrationFeatures][addfloorZone]: JOi Result",
@@ -42,6 +45,7 @@ const floorZoneController = {
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
+          orgId: orgId,
           createdBy: userId,
           createdAt: currentTime,
           updatedAt: currentTime
@@ -74,7 +78,8 @@ const floorZoneController = {
     try {
       let floorZone = null;
       let userId = req.me.id;
-     
+      let orgId = req.orgId;  
+    
       await knex.transaction(async trx => {
         const payload = req.body;
 
@@ -107,7 +112,7 @@ const floorZoneController = {
         let insertData = { ...payload, createdBy: userId,  updatedAt: currentTime };
         let insertResult = await knex
           .update(insertData)
-          .where({ id: payload.id })
+          .where({ id: payload.id, orgId: orgId })
           .returning(["*"])
           .transacting(trx)
           .into("floor_and_zones");
@@ -134,6 +139,8 @@ const floorZoneController = {
     try {
       let floorZone = null;
       let payload = req.body;
+      let orgId = req.orgId;  
+
       const schema = Joi.object().keys({
         id: Joi.string().required()
       });
@@ -154,7 +161,7 @@ const floorZoneController = {
         .innerJoin("property_types","floor_and_zones.propertyTypeId","property_types.id")
         .innerJoin("buildings_and_phases","floor_and_zones.buildingPhaseId","buildings_and_phases.id")
         .select("floor_and_zones.*","companies.companyName as companyName","companies.companyId as compId","companies.id as companyId","projects.projectName","property_types.propertyTypeCode","buildings_and_phases.buildingPhaseCode")
-        .where({ "floor_and_zones.id": payload.id })
+        .where({ "floor_and_zones.id": payload.id, "floor_and_zones.orgId":orgId })
         
 
       floorZone = _.omit(floorZoneResult[0], [
@@ -178,6 +185,7 @@ const floorZoneController = {
   deleteFloorZone: async (req, res) => {
     try {
       let floorZone = null;
+      let orgId = req.orgId; 
       await knex.transaction(async trx => {
         let payload = req.body;
         const schema = Joi.object().keys({
@@ -193,7 +201,7 @@ const floorZoneController = {
         }
         let floorZoneResult = await knex
           .update({ isActive: false })
-          .where({ id: payload.id })
+          .where({ id: payload.id, orgId: orgId })
           .returning(["*"])
           .transacting(trx)
           .into("floor_and_zones");
@@ -216,6 +224,8 @@ const floorZoneController = {
   },
   getFloorZoneList: async (req, res) => {
     try {
+      let orgId = req.orgId; 
+    
       let reqData = req.query;
       let companyId = req.query.companyId;
       let projectId = req.query.projectId;
@@ -232,6 +242,7 @@ const floorZoneController = {
           knex.count('* as count').from("floor_and_zones")
           .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
           .leftJoin("users", "floor_and_zones.createdBy", "users.id")
+          .where({"floor_and_zones.orgId":orgId})
           .first(),
           knex("floor_and_zones")
           .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
@@ -243,11 +254,9 @@ const floorZoneController = {
             'floor_and_zones.totalFloorArea as Total Area',
             'floor_and_zones.isActive as Status',
             'users.name as Created By',
-            'floor_and_zones.createdAt as Date Created'
-            
+            'floor_and_zones.createdAt as Date Created'            
            ])
-
-          .offset(offset).limit(per_page)
+          .where({"floor_and_zones.orgId":orgId}).offset(offset).limit(per_page)
         ])
 
         let count = total.count;
@@ -277,7 +286,7 @@ const floorZoneController = {
           knex.count('* as count').from("floor_and_zones")
           .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
           .innerJoin("users", "floor_and_zones.createdBy", "users.id")
-          .where(filters)
+          .where(filters,{"floor_and_zones.orgId":orgId})
           
           .offset(offset).limit(per_page).first(),
           knex.from("floor_and_zones")
@@ -293,7 +302,7 @@ const floorZoneController = {
             'floor_and_zones.createdAt as Date Created'
             
            ])
-          .where(filters).offset(offset).limit(per_page)
+          .where(filters,{"floor_and_zones.orgId":orgId}).offset(offset).limit(per_page)
         ])
 
         let count = total.count;
@@ -323,6 +332,8 @@ const floorZoneController = {
   },
   exportFloorZone: async (req, res) => {
     try {
+    
+      let orgId = req.orgId;     
       let reqData = req.query;
       let companyId = req.query.companyId;
       let pagination = {};
@@ -339,6 +350,7 @@ const floorZoneController = {
             .from("floor_and_zones")
             .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
             .innerJoin("users", "floor_and_zones.createdBy", "users.id")
+            .where({"floor_and_zones.orgId":orgId})
             .first(),
           knex("floor_and_zones")
             .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
@@ -351,7 +363,7 @@ const floorZoneController = {
               "users.name as Created By",
               "floor_and_zones.createdAt as Date Created"
             ])
-
+            .where({"floor_and_zones.orgId":orgId})
             .offset(offset)
             .limit(per_page)
         ]);
@@ -377,7 +389,7 @@ const floorZoneController = {
             .from("floor_and_zones")
             .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
             .innerJoin("users", "floor_and_zones.createdBy", "users.id")
-            .where({ "floor_and_zones.companyId": companyId })
+            .where({ "floor_and_zones.companyId": companyId,"floor_and_zones.orgId":orgId })
 
             .offset(offset)
             .limit(per_page)
@@ -394,7 +406,7 @@ const floorZoneController = {
               "users.name as Created By",
               "floor_and_zones.createdAt as Date Created"
             ])
-            .where({ "floor_and_zones.companyId": companyId })
+            .where({ "floor_and_zones.companyId": companyId,"floor_and_zones.orgId":orgId })
             .offset(offset)
             .limit(per_page)
         ]);
@@ -431,6 +443,7 @@ const floorZoneController = {
   },
   getFloorZoneAllList: async (req, res) => {
     try {
+      let orgId = req.orgId;          
       let buildingPhaseId = req.query.buildingPhaseId;
       let pagination = {};
 
@@ -438,7 +451,7 @@ const floorZoneController = {
            knex.from("floor_and_zones")
           .innerJoin("buildings_and_phases", "floor_and_zones.buildingPhaseId", "buildings_and_phases.id")
           .select('floor_and_zones.floorZoneCode','floor_and_zones.id as id')
-          .where({ "floor_and_zones.buildingPhaseId":buildingPhaseId })
+          .where({ "floor_and_zones.buildingPhaseId":buildingPhaseId, "floor_and_zones.orgId": orgId })
         ])
 
       pagination.data = rows;      
@@ -459,8 +472,10 @@ const floorZoneController = {
   },
   getFloorZoneListByBuildingId:async(req,res) => {
     try {
+      let orgId = req.orgId;          
+     
       const {buildingPhaseId} = req.body;
-      const floor = await knex('floor_and_zones').select('*').where({buildingPhaseId})
+      const floor = await knex('floor_and_zones').select('*').where({buildingPhaseId,orgId:orgId})
       return res.status(200).json({
         data: {
           floor

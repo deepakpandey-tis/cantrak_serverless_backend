@@ -14,6 +14,7 @@ const saltRounds = 10;
 const propertyTypeController = {
   addPropertyType: async (req, res) => {
     try {
+      let orgId = req.orgId;          
       let userId = req.me.id;
 
       let propertyType = null;
@@ -45,6 +46,7 @@ const propertyTypeController = {
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
+          orgId: orgId,
           createdBy: userId,
           createdAt: currentTime,
           updatedAt: currentTime
@@ -81,6 +83,7 @@ const propertyTypeController = {
     try {
       let PropertyType = null;
       let userId = req.me.id;
+      let orgId = req.orgId;
 
       await knex.transaction(async trx => {
         const payload = req.body;
@@ -112,7 +115,7 @@ const propertyTypeController = {
         let insertData = { ...payload, createdBy: userId, updatedAt: currentTime };
         let insertResult = await knex
           .update(insertData)
-          .where({ id: payload.id })
+          .where({ id: payload.id, orgId: orgId })
           .returning(["*"])
           .transacting(trx)
           .into("property_types");
@@ -141,6 +144,8 @@ const propertyTypeController = {
   deletePropertyType: async (req, res) => {
     try {
       let propertyType = null;
+      let orgId = req.orgId;
+
       await knex.transaction(async trx => {
         let payload = req.body;
         const schema = Joi.object().keys({
@@ -156,7 +161,7 @@ const propertyTypeController = {
         }
         let propertyTypeResult = await knex
           .update({ isActive: false })
-          .where({ id: payload.id })
+          .where({ id: payload.id, orgId:orgId })
           .returning(["*"])
           .transacting(trx)
           .into("property_types");
@@ -183,6 +188,8 @@ const propertyTypeController = {
   getPropertyTypeList: async (req, res) => {
     try {
       let reqData = req.query;
+      let orgId = req.orgId;
+
       let pagination = {};
 
       let per_page = reqData.per_page || 10;
@@ -195,7 +202,7 @@ const propertyTypeController = {
           .count("* as count")
           .from("property_types")
           .innerJoin("users", "property_types.createdBy", "users.id")
-          .where({ "property_types.isActive": true })
+          .where({ "property_types.isActive": true, "property_types.orgId":orgId })
           .first(),
         knex("property_types")
           .innerJoin("users", "property_types.createdBy", "users.id")
@@ -207,7 +214,7 @@ const propertyTypeController = {
             "users.name as Created By",
             "property_types.createdAt as Date Created"
           ])
-          .where({ "property_types.isActive": true })
+          .where({ "property_types.isActive": true,"property_types.orgId":orgId })
           .offset(offset)
           .limit(per_page)
       ]);
@@ -242,6 +249,8 @@ const propertyTypeController = {
   },
   exportPropertyType: async (req, res) => {
     try {
+      let orgId = req.orgId;
+
       let reqData = req.query;
       let pagination = {};
 
@@ -255,7 +264,7 @@ const propertyTypeController = {
           .count("* as count")
           .from("property_types")
           .innerJoin("users", "property_types.createdBy", "users.id")
-          .where({ "property_types.isActive": true })
+          .where({ "property_types.isActive": true,"property_types.orgId":orgId })
           .first(),
         knex("property_types")
           .innerJoin("users", "property_types.createdBy", "users.id")
@@ -266,7 +275,7 @@ const propertyTypeController = {
             "users.name as Created By",
             "property_types.createdAt as Date Created"
           ])
-          .where({ "property_types.isActive": true })
+          .where({ "property_types.isActive": true,"property_types.orgId":orgId })
           .offset(offset)
           .limit(per_page)
       ]);
@@ -298,6 +307,8 @@ const propertyTypeController = {
   getPropertyDetails: async (req, res) => {
     try {
       let property = null;
+      let orgId = req.orgId;
+
       await knex.transaction(async trx => {
         let payload = req.body;
         const schema = Joi.object().keys({
@@ -313,7 +324,7 @@ const propertyTypeController = {
         }
         let propertyResult = await knex("property_types")
           .select()
-          .where({ "id": payload.id });
+          .where({ "id": payload.id,"orgId":orgId });
 
         property = _.omit(propertyResult[0], [
           "createdAt",
@@ -340,8 +351,9 @@ const propertyTypeController = {
   getAllPropertyTypeList: async (req, res) => {
     try {
       let pagination = {};
+      let orgId = req.orgId;
       let [result] = await Promise.all([
-        knex("property_types").select('id', 'propertyType', 'propertyTypeCode').where({ isActive : 'true'})
+        knex("property_types").select('id', 'propertyType', 'propertyTypeCode').where({ isActive : 'true', orgId:orgId})
       ]);
       pagination.data = result;
       return res.status(200).json({
