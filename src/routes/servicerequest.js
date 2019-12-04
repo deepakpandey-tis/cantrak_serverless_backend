@@ -5,6 +5,7 @@ const serviceRequestController = require('../controllers/servicerequest');
 
 const authMiddleware = require('../middlewares/auth');
 const roleMiddleware = require('../middlewares/role');
+const resourceAccessMiddleware = require("../middlewares/resourceAccessMiddleware");
 const path = require('path');
 
 /* GET users listing. */
@@ -15,7 +16,12 @@ router.post('/add-service-problems', authMiddleware.isAuthenticated, serviceRequ
 
 router.post('/update-service-request', authMiddleware.isAuthenticated, serviceRequestController.updateServiceRequest);
 
-router.post('/get-service-request-list', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, roleMiddleware.canAccessServiceRequest,serviceRequestController.getServiceRequestList)
+router.post('/get-service-request-list', 
+			authMiddleware.isAuthenticated, 
+			roleMiddleware.parseUserPermission,
+			resourceAccessMiddleware.isCMAccessible, 
+			// roleMiddleware.canAccessServiceRequest,
+			serviceRequestController.getServiceRequestList)
 
 router.post('/upload-images', authMiddleware.isAuthenticated, serviceRequestController.updateImages);
 

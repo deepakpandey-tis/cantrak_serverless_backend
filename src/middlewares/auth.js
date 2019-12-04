@@ -51,7 +51,10 @@ const authMiddleware = {
                                 roleName: roleName,
                                 houseId: item.entityId
                             }
-                        } else {
+                        } else if(Number(item.roleId) === 2) {
+                            req.orgAdmin = true;    
+                        }
+                        else {
                             r = {
                                 roleName: roleName,
                                 organisationId: item.entityId
