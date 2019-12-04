@@ -67,11 +67,16 @@ const entranceController = {
                     });
                 }
 
+                // Get organization ID
+                let orgId = loginResult.orgId;
+                //const organization = await knex('users')
+                console.log('Login Result: ',loginResult)
+
 
                 //match input password with DB
                 const match = await bcrypt.compare(loginPayload.password, loginResult.password);
                 if (match) {
-                    const loginToken = await jwt.sign({ id: loginResult.id }, process.env.JWT_PRIVATE_KEY, { expiresIn: '7h' });
+                    const loginToken = await jwt.sign({ id: loginResult.id,orgId }, process.env.JWT_PRIVATE_KEY, { expiresIn: '7h' });
                     login = { accessToken: loginToken,refreshToken:'' };
                     loginResult = _.omit(loginResult, ['password']);
 
