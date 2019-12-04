@@ -32,6 +32,7 @@ const roleMiddleware = {
                 const teamsResult = await knex('team_users').select('teamId').where({userId,orgId})
                 let teams = teamsResult.map(v => v.teamId);
                 console.log('Teams: ',teams)
+                req.teams = teams;
 
                 // Now find for these teams which role has access to which project
                 let rolesOnProject = []

@@ -11,9 +11,9 @@ const assetController = {
             let categories
         let filters = req.body;
         if(filters) {
-            categories = await knex('asset_category_master').select().where({...filters})    
+            categories = await knex('asset_category_master').select().where({...filters,orgId:req.orgId})    
         } else {
-            categories = await knex('asset_category_master').select();
+            categories = await knex('asset_category_master').select().where({orgId:req.orgId});
         }
 		res.status(200).json({
 			data: {
@@ -80,17 +80,23 @@ const assetController = {
                 let category
                 let assetCategoryId
                 let assetCategory = req.body.assetCategory;
-                category = await knex.select().where({categoryName:assetCategory}).returning(['*']).transacting(trx).into('asset_category_master')
+                category = await knex.select().where({categoryName:assetCategory,orgId:req.orgId}).returning(['*']).transacting(trx).into('asset_category_master')
                 if(category && category.length){
                     assetCategoryId = category[0].id;
                 }else {
-                    category = await knex.insert({categoryName:assetCategory,createdAt:currentTime,updatedAt:currentTime}).returning(['*']).transacting(trx).into('asset_category_master')
+                    category = await knex.insert({categoryName:assetCategory,createdAt:currentTime,updatedAt:currentTime,orgId:req.orgId}).returning(['*']).transacting(trx).into('asset_category_master')//.where({orgId:})
                     assetCategoryId = category[0].id;
                 }
 
                 // Insert in asset_master table,
 
-                let insertData = { ...assetPayload, assetCategoryId, createdAt: currentTime, updatedAt: currentTime };
+                let insertData = {
+                  ...assetPayload,
+                  assetCategoryId,
+                  createdAt: currentTime,
+                  updatedAt: currentTime,
+                  orgId: req.orgId
+                };
 
                 console.log('[controllers][asset][addAsset]: Insert Data', insertData);
                 let multiple = 1;
@@ -98,14 +104,24 @@ const assetController = {
                     multiple = Number(req.body.multiple);
                 }
                 let data = Array(multiple).fill(insertData)
-                let assetResult = await knex.insert(data).returning(['*']).transacting(trx).into('asset_master');
+                let assetResult = await knex
+                  .insert(data)
+                  .returning(["*"])
+                  .transacting(trx)
+                  .into("asset_master")
+                  //.where({ orgId: req.orgId });
 
                 asset = assetResult
 
 
                 // Add asset to a location with help of locationId
-                let locationTagPayload = {entityId: asset[0].id, entityType:'asset', locationTagId:Number(req.body.locationId),createdAt:currentTime,updatedAt:currentTime}
-                const locationResult = await knex.insert(locationTagPayload).returning(['*']).transacting(trx).into('location_tags')
+                let locationTagPayload = {entityId: asset[0].id, entityType:'asset', locationTagId:Number(req.body.locationId),createdAt:currentTime,updatedAt:currentTime,orgId:req.orgId}
+                const locationResult = await knex
+                  .insert(locationTagPayload)
+                  .returning(["*"])
+                  .transacting(trx)
+                  .into("location_tags")
+                  //.where({ orgId: req.orgId });
                 location = locationResult[0]
                 
 
@@ -113,8 +129,19 @@ const assetController = {
                 if (additionalAttributes && additionalAttributes.length > 0) {
                     for (asset of assetResult) {
                         for (attribute of additionalAttributes) {
-                            let finalAttribute = { ...attribute, assetId: asset.id, createdAt: currentTime, updatedAt: currentTime }
-                            let d = await knex.insert(finalAttribute).returning(['*']).transacting(trx).into('asset_attributes');
+                            let finalAttribute = {
+                              ...attribute,
+                              assetId: asset.id,
+                              createdAt: currentTime,
+                              updatedAt: currentTime,
+                              orgId: req.orgId
+                            };
+                            let d = await knex
+                              .insert(finalAttribute)
+                              .returning(["*"])
+                              .transacting(trx)
+                              .into("asset_attributes")
+                              //.where({ orgId: req.orgId });
                             attribs.push(d[0])
                         }
                     }
@@ -125,7 +152,19 @@ const assetController = {
                 if (imagesData && imagesData.length > 0) {
                     for (asset of assetResult) {
                         for (image of imagesData) {
-                            let d = await knex.insert({ entityId: asset.id, ...image, entityType: 'asset_master', createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('images');
+                            let d = await knex
+                              .insert({
+                                entityId: asset.id,
+                                ...image,
+                                entityType: "asset_master",
+                                createdAt: currentTime,
+                                updatedAt: currentTime,
+                                orgId: req.orgId
+                              })
+                              .returning(["*"])
+                              .transacting(trx)
+                              .into("images")
+                            //   .where({ orgId: req.orgId });
                             images.push(d[0])
                         }
                     }
@@ -136,7 +175,19 @@ const assetController = {
                 if (filesData && filesData.length > 0) {
                     for (asset of assetResult) {
                         for (file of filesData) {
-                            let d = await knex.insert({ entityId: asset.id, ...file, entityType: 'asset_master', createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('files');
+                            let d = await knex
+                              .insert({
+                                entityId: asset.id,
+                                ...file,
+                                entityType: "asset_master",
+                                createdAt: currentTime,
+                                updatedAt: currentTime,
+                                orgId: req.orgId
+                              })
+                              .returning(["*"])
+                              .transacting(trx)
+                              .into("files");
+                              //.where({ orgId: req.orgId });
                             files.push(d[0])
                         }
                     }
@@ -167,7 +218,9 @@ const assetController = {
     },
     getAllAssetList:async(req,res) => {
         try {
-            const assets = await knex('asset_master').select('id','assetName','model')
+            const assets = await knex("asset_master")
+              .select("id", "assetName", "model")
+              .where({ orgId: req.orgId });
             return res.status(200).json({
                 data: {
                     assets
@@ -248,54 +301,104 @@ const assetController = {
                 //filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
                 try {
                     [total, rows] = await Promise.all([
-                        knex.count('* as count').from("asset_master")
-                        .leftJoin('location_tags','asset_master.id','location_tags.entityId')
-                        .leftJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
-                        .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
+                      knex
+                        .count("* as count")
+                        .from("asset_master")
+                        .leftJoin(
+                          "location_tags",
+                          "asset_master.id",
+                          "location_tags.entityId"
+                        )
+                        .leftJoin(
+                          "location_tags_master",
+                          "location_tags.locationTagId",
+                          "location_tags_master.id"
+                        )
+                        .leftJoin(
+                          "asset_category_master",
+                          "asset_master.assetCategoryId",
+                          "asset_category_master.id"
+                        )
                         .where(qb => {
-                            if(assetName){
-                                qb.where('asset_master.assetName','like', `%${assetName}%`)
-                            }
-                            if(assetModel){
-                                qb.where('asset_master.model', 'like', `%${assetModel}%`)
-
-                            }
-                            if(category){
-                                qb.where('asset_category_master.categoryName', 'like', `%${category}%`)
-
-                            }
-                        }).first(),
-                        knex("asset_master")
-                        .leftJoin('location_tags','asset_master.id','location_tags.entityId')
-                        .leftJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
-                        .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
-                        .select([
-                            'asset_master.assetName as Name',
-                            'asset_master.id as ID',
-                            'location_tags_master.title as Location',
-                            'asset_master.model as Model',
-                            'asset_master.barcode as Barcode',
-                            'asset_master.areaName as Area',
-                            'asset_category_master.categoryName as Category',
-                            'asset_master.createdAt as Date Created',
-                            'asset_master.unitOfMeasure as Unit Of Measure',
-                        ])
-                        .where(qb => {
-                            if (assetName) {
-                                qb.where('asset_master.assetName', 'like', `%${assetName}%`)
-                            }
-                            if (assetModel) {
-                                qb.where('asset_master.model', 'like', `%${assetModel}%`)
-
-                            }
-                            if (category) {
-                                qb.where('asset_category_master.categoryName', 'like', `%${category}%`)
-
-                            }
+                          if (assetName) {
+                            qb.where(
+                              "asset_master.assetName",
+                              "like",
+                              `%${assetName}%`
+                            );
+                          }
+                          if (assetModel) {
+                            qb.where(
+                              "asset_master.model",
+                              "like",
+                              `%${assetModel}%`
+                            );
+                          }
+                          if (category) {
+                            qb.where(
+                              "asset_category_master.categoryName",
+                              "like",
+                              `%${category}%`
+                            );
+                          }
                         })
-                        .orderBy('asset_master.createdAt','desc')
-                        .offset(offset).limit(per_page)
-                    ])
+                        .first()
+                        .where({ 'asset_master.orgId': req.orgId }),
+                      knex("asset_master")
+                        .leftJoin(
+                          "location_tags",
+                          "asset_master.id",
+                          "location_tags.entityId"
+                        )
+                        .leftJoin(
+                          "location_tags_master",
+                          "location_tags.locationTagId",
+                          "location_tags_master.id"
+                        )
+                        .leftJoin(
+                          "asset_category_master",
+                          "asset_master.assetCategoryId",
+                          "asset_category_master.id"
+                        )
+                        .select([
+                          "asset_master.assetName as Name",
+                          "asset_master.id as ID",
+                          "location_tags_master.title as Location",
+                          "asset_master.model as Model",
+                          "asset_master.barcode as Barcode",
+                          "asset_master.areaName as Area",
+                          "asset_category_master.categoryName as Category",
+                          "asset_master.createdAt as Date Created",
+                          "asset_master.unitOfMeasure as Unit Of Measure"
+                        ])
+                        .where({ 'asset_master.orgId': req.orgId })
+                        .where(qb => {
+                          if (assetName) {
+                            qb.where(
+                              "asset_master.assetName",
+                              "like",
+                              `%${assetName}%`
+                            );
+                          }
+                          if (assetModel) {
+                            qb.where(
+                              "asset_master.model",
+                              "like",
+                              `%${assetModel}%`
+                            );
+                          }
+                          if (category) {
+                            qb.where(
+                              "asset_category_master.categoryName",
+                              "like",
+                              `%${category}%`
+                            );
+                          }
+                        })
+                        .orderBy("asset_master.createdAt", "desc")
+                        .offset(offset)
+                        .limit(per_page)
+                    ]);
                 } catch (e) {
                     // Error
                     console.log('Error: ' + e.message)
@@ -383,15 +486,20 @@ const assetController = {
 
 
             [total, rows] = await Promise.all([
-                knex.count('* as count').from("asset_master")
-                    .where({ assetCategoryId, companyId}).first(),
+              knex
+                .count("* as count")
+                .from("asset_master")
+                .where({ assetCategoryId, companyId })
+                .first()
+                .where({ orgId: req.orgId }),
 
-                knex("asset_master")
-                    .select([
-                        'id','assetName','model','barcode','areaName'
-                    ]).where({ assetCategoryId,companyId})
-                    .offset(offset).limit(per_page)
-            ])
+              knex("asset_master")
+                .select(["id", "assetName", "model", "barcode", "areaName"])
+                .where({ assetCategoryId, companyId })
+                .offset(offset)
+                .limit(per_page)
+                .where({ orgId: req.orgId })
+            ]);
 
             let count = total.count;
             pagination.total = count;
@@ -456,35 +564,66 @@ const assetController = {
                                 ])
             let assetDataResult = assetData[0];
             let omitedAssetDataResult = _.omit(assetDataResult, ['createdAt'], ['updatedAt'], ['isActive'])
-            additionalAttributes = await knex('asset_attributes').where({ assetId: id }).select()
+            additionalAttributes = await knex("asset_attributes")
+              .where({ assetId: id,orgId: req.orgId })
+              .select()
+            //   .where({  });
 
 
-            files = await knex('files').where({ entityId: id, entityType: 'asset_master' }).select();
-            images = await knex('images').where({ entityId: id, entityType: 'asset_master' }).select()
+            files = await knex("files")
+              .where({
+                entityId: id,
+                entityType: "asset_master",
+                orgId: req.orgId
+              })
+              .select();
+            //   .where({ orgId: req.orgId });
+            images = await knex("images")
+              .where({
+                entityId: id,
+                entityType: "asset_master",
+                orgId: req.orgId
+              })
+              .select()
+            //   .where({ orgId: req.orgId });
 
             console.log('[controllers][asset][getAssetDetails]: Asset Details', assetData);
             // Get asset location
-            const assetLocation = await knex('asset_location')
-                .leftJoin('companies', 'asset_location.companyId','companies.id')
-                .leftJoin('projects', 'asset_location.projectId','projects.id')
-                .leftJoin('buildings_and_phases', 'asset_location.buildingId','buildings_and_phases.id')
-                .leftJoin('floor_and_zones', 'asset_location.floorId', 'floor_and_zones.id')
-                .leftJoin('property_units', 'asset_location.unitId', 'property_units.id')
-                .select([
-                    'companies.companyName as companyName',
-                    'projects.projectName as projectName',
-                    'buildings_and_phases.description as building',
-                    'floor_and_zones.description as floorZone',
-                    'property_units.description as propertyUnit',
-                    'companies.id as companyId',
-                    'projects.id as projectId',
-                    'buildings_and_phases.id as buildingId',
-                    'floor_and_zones.id as floorId',
-                    'property_units.id as unitId',
-                    'asset_location.createdAt as startDate',
-                    'asset_location.updatedAt as endDate',
-                    'asset_location.id as assetLocationId'
-                ]).where({assetId:id})
+            const assetLocation = await knex("asset_location")
+              .leftJoin("companies", "asset_location.companyId", "companies.id")
+              .leftJoin("projects", "asset_location.projectId", "projects.id")
+              .leftJoin(
+                "buildings_and_phases",
+                "asset_location.buildingId",
+                "buildings_and_phases.id"
+              )
+              .leftJoin(
+                "floor_and_zones",
+                "asset_location.floorId",
+                "floor_and_zones.id"
+              )
+              .leftJoin(
+                "property_units",
+                "asset_location.unitId",
+                "property_units.id"
+              )
+              .select([
+                "companies.companyName as companyName",
+                "projects.projectName as projectName",
+                "buildings_and_phases.description as building",
+                "floor_and_zones.description as floorZone",
+                "property_units.description as propertyUnit",
+                "companies.id as companyId",
+                "projects.id as projectId",
+                "buildings_and_phases.id as buildingId",
+                "floor_and_zones.id as floorId",
+                "property_units.id as unitId",
+                "asset_location.createdAt as startDate",
+                "asset_location.updatedAt as endDate",
+                "asset_location.id as assetLocationId"
+              ])
+              .where({ assetId: id, orgId: req.orgId });
+            //   .where({ orgId: req.orgId });
 
             res.status(200).json({
                 data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, images,assetLocation } },
@@ -551,37 +690,82 @@ const assetController = {
                 let assetCategoryId
                 let category
                 let assetCategory = req.body.assetCategory;
-                category = await knex.select().where({ categoryName: assetCategory }).returning(['*']).transacting(trx).into('asset_category_master')
+                category = await knex
+                  .select()
+                  .where({ categoryName: assetCategory })
+                  .returning(["*"])
+                  .transacting(trx)
+                  .into("asset_category_master")
+                  .where({ orgId: req.orgId });
                 if (category && category.length) {
                     assetCategoryId = category[0].id;
                 } else {
-                    category = await knex.insert({ categoryName: assetCategory, createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('asset_category_master')
+                    category = await knex
+                      .insert({
+                        categoryName: assetCategory,
+                        createdAt: currentTime,
+                        updatedAt: currentTime,
+                        orgId: req.orgId
+                      })
+                      .returning(["*"])
+                      .transacting(trx)
+                      .into("asset_category_master");
+                    //   .where({ orgId: req.orgId });
                     assetCategoryId = category[0].id;
                 }
 
                 // Insert in images
                 if(req.body.images && req.body.images.length){
                     for (let image of req.body.images) {
-                        let insertedImageResult = await knex('images').insert({ ...image, entityId: id, entityType: 'asset_master', createdAt: currentTime, updatedAt: currentTime })
+                        let insertedImageResult = await knex("images")
+                          .insert({
+                            ...image,
+                            entityId: id,
+                            entityType: "asset_master",
+                            createdAt: currentTime,
+                            updatedAt: currentTime,
+                            orgId: req.orgId
+                          })
+                        //   .where({ orgId: req.orgId });
                         insertedImages.push(insertedImageResult[0])
                     }
                 }
                 //Insert In Files
                 if (req.body.files && req.body.files.length) {
                     for (let file of req.body.files) {
-                        let insertedFileResult = await knex('files').insert({ ...file, entityId: id, entityType: 'asset_master', createdAt: currentTime, updatedAt: currentTime })
+                        let insertedFileResult = await knex("files").insert({
+                          ...file,
+                          entityId: id,
+                          entityType: "asset_master",
+                          createdAt: currentTime,
+                          updatedAt: currentTime,
+                          orgId: req.orgId
+                        });
+                        //   .where({ orgId: req.orgId });
                         insertedFiles.push(insertedFileResult[0])
                     }
                 }
                 
                 // Update in asset_master table,
 
-                let insertData = { ...assetPayload, assetCategoryId, updatedAt: currentTime, isActive: true };
+                let insertData = {
+                  ...assetPayload,
+                  assetCategoryId,
+                  updatedAt: currentTime,
+                  isActive: true,
+                //   orgId: req.orgId
+                };
 
                 console.log('[controllers][asset][updateAssetDetails]: Update Asset Insert Data', insertData);
 
                 console.log('DATTAA ', insertData)
-                let assetResult = await knex.update(insertData).where({ id: id }).returning(['*']).transacting(trx).into('asset_master');
+                let assetResult = await knex
+                  .update(insertData)
+                  .where({ id: id, orgId: req.orgId })
+                  .returning(["*"])
+                  .transacting(trx)
+                  .into("asset_master");
+                //   .where({ orgId: req.orgId });
 
                 asset = assetResult[0]
 
@@ -591,10 +775,27 @@ const assetController = {
                         if(attribute.id){
 
                             let finalAttribute = { ...attribute, assetId: Number(id), updatedAt: currentTime }
-                            let d = await knex.update(finalAttribute).where({ id: attribute.id }).returning(['*']).transacting(trx).into('asset_attributes');
+                            let d = await knex
+                              .update(finalAttribute)
+                              .where({ id: attribute.id, orgId: req.orgId })
+                              .returning(["*"])
+                              .transacting(trx)
+                              .into("asset_attributes");
+                            //   .where({ orgId: req.orgId });
                             attribs.push(d[0])
                         } else {
-                            let d = await knex.insert({ attributeName: attribute.attributeName, attributeDescription: attribute.attributeDescription, assetId: Number(id) }).returning(['*']).transacting(trx).into('asset_attributes');
+                            let d = await knex
+                              .insert({
+                                attributeName: attribute.attributeName,
+                                attributeDescription:
+                                  attribute.attributeDescription,
+                                assetId: Number(id),
+                                orgId: req.orgId
+                              })
+                              .returning(["*"])
+                              .transacting(trx)
+                              .into("asset_attributes")
+                            //   .where({ orgId: req.orgId });
                             attribs.push(d[0])
                         
                         }
@@ -649,20 +850,69 @@ const assetController = {
 
 
                 // Now first check whether this oldAssetId exists as the newAssetId for any previous entry where endDate is null
-                let entry = await knex.select().where({ newAssetId: payload.OldAssetId, endDate: null, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('replaced_assets')
+                let entry = await knex
+                  .select()
+                  .where({
+                    newAssetId: payload.OldAssetId,
+                    endDate: null,
+                    entityType: "service_orders",
+                    orgId: req.orgId
+                  })
+                  .returning(["*"])
+                  .transacting(trx)
+                  .into("replaced_assets")
+                //   .where({ orgId: req.orgId });
 
                 if (entry.length > 0) {
                     // Update endDate of previous entry with today's date and insert new entry
-                    let updatedEntry = await knex.update({ endDate: currentTime }).where({ newAssetId: payload.OldAssetId, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('replaced_assets')
+                    let updatedEntry = await knex
+                      .update({ endDate: currentTime })
+                      .where({
+                        newAssetId: payload.OldAssetId,
+                        entityType: "service_orders",
+                        orgId: req.orgId
+                      })
+                      .returning(["*"])
+                      .transacting(trx)
+                      .into("replaced_assets");
+                    //   .where({ orgId: req.orgId });
 
                     updated = updatedEntry[0]
 
-                    let insertData = { startDate: currentTime, endDate: null, createdAt: currentTime, updatedAt: currentTime, entityId: payload.serviceOrderId, entityType: 'service_orders', ...ommitedPayload }
-                    let assetResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('replaced_assets')
+                    let insertData = {
+                      startDate: currentTime,
+                      endDate: null,
+                      createdAt: currentTime,
+                      updatedAt: currentTime,
+                      entityId: payload.serviceOrderId,
+                      entityType: "service_orders",
+                      ...ommitedPayload,
+                      orgId: req.orgId
+                    };
+                    let assetResult = await knex
+                      .insert(insertData)
+                      .returning(["*"])
+                      .transacting(trx)
+                      .into("replaced_assets")
+                    //   .where({ orgId: req.orgId });
                     asset = assetResult[0]
                 } else {
-                    let insertData = { startDate: currentTime, endDate: null, createdAt: currentTime, updatedAt: currentTime, entityId: payload.serviceOrderId, entityType: 'service_orders', ...ommitedPayload }
-                    let assetResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('replaced_assets')
+                    let insertData = {
+                      startDate: currentTime,
+                      endDate: null,
+                      createdAt: currentTime,
+                      updatedAt: currentTime,
+                      entityId: payload.serviceOrderId,
+                      entityType: "service_orders",
+                      ...ommitedPayload,
+                      orgId: req.orgId
+                    };
+                    let assetResult = await knex
+                      .insert(insertData)
+                      .returning(["*"])
+                      .transacting(trx)
+                      .into("replaced_assets")
+                    //   .where({ orgId: req.orgId });
                     asset = assetResult[0]
                 }
                 trx.commit
@@ -709,20 +959,69 @@ const assetController = {
 
 
                 // Now first check whether this oldAssetId exists as the newAssetId for any previous entry where endDate is null
-                let entry = await knex.select().where({ entityType: 'service_requests', newAssetId: payload.OldAssetId, endDate: null }).returning(['*']).transacting(trx).into('replaced_assets')
+                let entry = await knex
+                  .select()
+                  .where({
+                    entityType: "service_requests",
+                    newAssetId: payload.OldAssetId,
+                    endDate: null,
+                    orgId: req.orgId
+                  })
+                  .returning(["*"])
+                  .transacting(trx)
+                  .into("replaced_assets")
+                //   .where({ orgId: req.orgId });
 
                 if (entry.length > 0) {
                     // Update endDate of previous entry with today's date and insert new entry
-                    let updatedEntry = await knex.update({ endDate: currentTime }).where({ newAssetId: payload.OldAssetId, entityType: 'service_requests' }).returning(['*']).transacting(trx).into('replaced_assets')
+                    let updatedEntry = await knex
+                      .update({ endDate: currentTime })
+                      .where({
+                        newAssetId: payload.OldAssetId,
+                        entityType: "service_requests",
+                        orgId: req.orgId
+                      })
+                      .returning(["*"])
+                      .transacting(trx)
+                      .into("replaced_assets")
+                    //   .where({ orgId: req.orgId });
 
                     updated = updatedEntry[0]
 
-                    let insertData = { startDate: currentTime, endDate: null, createdAt: currentTime, updatedAt: currentTime, entityId: payload.serviceRequestId, entityType: 'service_requests', ...ommitedPayload }
-                    let assetResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('replaced_assets')
+                    let insertData = {
+                      startDate: currentTime,
+                      endDate: null,
+                      createdAt: currentTime,
+                      updatedAt: currentTime,
+                      entityId: payload.serviceRequestId,
+                      entityType: "service_requests",
+                      ...ommitedPayload,
+                      orgId: req.orgId
+                    };
+                    let assetResult = await knex
+                      .insert(insertData)
+                      .returning(["*"])
+                      .transacting(trx)
+                      .into("replaced_assets")
+                    //   .where({ orgId: req.orgId });
                     asset = assetResult[0]
                 } else {
-                    let insertData = { startDate: currentTime, endDate: null, createdAt: currentTime, updatedAt: currentTime, entityId: payload.serviceRequestId, entityType: 'service_requests', ...ommitedPayload }
-                    let assetResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('replaced_assets')
+                    let insertData = {
+                      startDate: currentTime,
+                      endDate: null,
+                      createdAt: currentTime,
+                      updatedAt: currentTime,
+                      entityId: payload.serviceRequestId,
+                      entityType: "service_requests",
+                      ...ommitedPayload,
+                      orgId: req.orgId
+                    };
+                    let assetResult = await knex
+                      .insert(insertData)
+                      .returning(["*"])
+                      .transacting(trx)
+                      .into("replaced_assets")
+                    //   .where({ orgId: req.orgId });
                     asset = assetResult[0]
                 }
                 trx.commit
@@ -767,17 +1066,66 @@ const assetController = {
 
                 let currentTime = new Date().getTime()
                 // Check whether this asset is already relocated once or this is the first time
-                let entryCheck = await knex.select().where({ assetId: payload.assetId, entityType: 'service_orders', endDate: null }).returning(['*']).transacting(trx).into('relocated_assets')
+                let entryCheck = await knex
+                  .select()
+                  .where({
+                    assetId: payload.assetId,
+                    entityType: "service_orders",
+                    endDate: null,
+                    orgId: req.orgId
+                  })
+                  .returning(["*"])
+                  .transacting(trx)
+                  .into("relocated_assets")
+                //   .where({ orgId: req.orgId });
                 if (entryCheck.length > 0) {
-                    let updateEntry = await knex.update({ endDate: currentTime, assetId: payload.assetId, entityType: 'service_orders', entityId: payload.serviceOrderId }).returning(['*']).transacting(trx).into('relocated_assets')
+                    let updateEntry = await knex
+                      .update({
+                        endDate: currentTime,
+                        assetId: payload.assetId,
+                        entityType: "service_orders",
+                        entityId: payload.serviceOrderId
+                      })
+                      .returning(["*"])
+                      .transacting(trx)
+                      .into("relocated_assets")
+                      .where({ orgId: req.orgId });
                     updatedEntry = updateEntry[0]
 
                     // Now insert new entry
-                    let insertEntry = await knex.insert({ assetId: payload.assetId, locationId: payload.locationId, entityId: payload.serviceOrderId, entityType: 'service_orders', startDate: currentTime, createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('relocated_assets')
+                    let insertEntry = await knex
+                      .insert({
+                        assetId: payload.assetId,
+                        locationId: payload.locationId,
+                        entityId: payload.serviceOrderId,
+                        entityType: "service_orders",
+                        startDate: currentTime,
+                        createdAt: currentTime,
+                        updatedAt: currentTime,
+                        orgId: req.orgId
+                      })
+                      .returning(["*"])
+                      .transacting(trx)
+                      .into("relocated_assets")
+                    //   .where({ orgId: req.orgId });
                     insertedEntry = insertEntry[0]
                 } else {
                     // Insert new entry with endDate equal to null
-                    let insertEntry = await knex.insert({ assetId: payload.assetId, locationId: payload.locationId, entityId: payload.serviceOrderId, entityType: 'service_orders', startDate: currentTime, createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('relocated_assets')
+                    let insertEntry = await knex
+                      .insert({
+                        assetId: payload.assetId,
+                        locationId: payload.locationId,
+                        entityId: payload.serviceOrderId,
+                        entityType: "service_orders",
+                        startDate: currentTime,
+                        createdAt: currentTime,
+                        updatedAt: currentTime,
+                        orgId: req.orgId
+                      })
+                      .returning(["*"])
+                      .transacting(trx)
+                      .into("relocated_assets")
+                    //   .where({ orgId: req.orgId });
                     insertedEntry = insertEntry[0]
                 }
 
@@ -825,17 +1173,65 @@ const assetController = {
 
                 let currentTime = new Date().getTime()
                 // Check whether this asset is already relocated once or this is the first time
-                let entryCheck = await knex.select().where({ assetId: payload.assetId, entityType: 'service_requests', endDate: null }).returning(['*']).transacting(trx).into('relocated_assets')
+                let entryCheck = await knex
+                  .select()
+                  .where({
+                    assetId: payload.assetId,
+                    entityType: "service_requests",
+                    endDate: null
+                  })
+                  .returning(["*"])
+                  .transacting(trx)
+                  .into("relocated_assets")
+                  .where({ orgId: req.orgId });
                 if (entryCheck.length > 0) {
-                    let updateEntry = await knex.update({ endDate: currentTime, assetId: payload.assetId, entityType: 'service_requests', entityId: payload.serviceRequestId }).returning(['*']).transacting(trx).into('relocated_assets')
+                    let updateEntry = await knex
+                      .update({
+                        endDate: currentTime,
+                        assetId: payload.assetId,
+                        entityType: "service_requests",
+                        entityId: payload.serviceRequestId
+                      })
+                      .returning(["*"])
+                      .transacting(trx)
+                      .into("relocated_assets")
+                      .where({ orgId: req.orgId });
                     updatedEntry = updateEntry[0]
 
                     // Now insert new entry
-                    let insertEntry = await knex.insert({ assetId: payload.assetId, locationId: payload.locationId, entityId: payload.serviceRequestId, entityType: 'service_requests', startDate: currentTime, createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('relocated_assets')
+                    let insertEntry = await knex
+                      .insert({
+                        assetId: payload.assetId,
+                        locationId: payload.locationId,
+                        entityId: payload.serviceRequestId,
+                        entityType: "service_requests",
+                        startDate: currentTime,
+                        createdAt: currentTime,
+                        updatedAt: currentTime,
+                        orgId: req.orgId
+                      })
+                      .returning(["*"])
+                      .transacting(trx)
+                      .into("relocated_assets")
+                    //   .where({ orgId: req.orgId });
                     insertedEntry = insertEntry[0]
                 } else {
                     // Insert new entry with endDate equal to null
-                    let insertEntry = await knex.insert({ assetId: payload.assetId, locationId: payload.locationId, entityId: payload.serviceRequestId, entityType: 'service_requests', startDate: currentTime, createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('relocated_assets')
+                    let insertEntry = await knex
+                      .insert({
+                        assetId: payload.assetId,
+                        locationId: payload.locationId,
+                        entityId: payload.serviceRequestId,
+                        entityType: "service_requests",
+                        startDate: currentTime,
+                        createdAt: currentTime,
+                        updatedAt: currentTime,
+                        orgId: req.orgId
+                      })
+                      .returning(["*"])
+                      .transacting(trx)
+                      .into("relocated_assets")
+                    //   .where({ orgId: req.orgId });
                     insertedEntry = insertEntry[0]
                 }
 
@@ -865,19 +1261,38 @@ const assetController = {
 
             let query = decodeURI(req.query.query).trim();
 
-            const getFilteredItems = (searchTerm) => knex('asset_master')
-                .where((qb) => {
-                    qb.where('asset_master.assetName', 'like', `%${searchTerm}%`);
+            const getFilteredItems = searchTerm =>
+              knex("asset_master")
+                .where(qb => {
+                    qb.where({'asset_master.orgId':req.orgId})
+                  qb.where("asset_master.assetName", "like", `%${searchTerm}%`);
 
-                    qb.orWhere('asset_master.barcode', 'like', `%${searchTerm}%`);
+                  qb.orWhere("asset_master.barcode", "like", `%${searchTerm}%`);
 
-                    qb.orWhere('asset_master.areaName', 'like', `%${searchTerm}%`);
-                    qb.orWhere('asset_master.assetCategory', 'like', `%${searchTerm}%`);
-                    qb.orWhere('asset_master.price', 'like', `%${searchTerm}%`);
-                    qb.orWhere('asset_master.additionalInformation', 'like', `%${searchTerm}%`);
-                    qb.orWhere('asset_master.description', 'like', `%${searchTerm}%`);
-                    qb.orWhere('asset_master.model', 'like', `%${searchTerm}%`);
-                });
+                  qb.orWhere(
+                    "asset_master.areaName",
+                    "like",
+                    `%${searchTerm}%`
+                  );
+                  qb.orWhere(
+                    "asset_master.assetCategory",
+                    "like",
+                    `%${searchTerm}%`
+                  );
+                  qb.orWhere("asset_master.price", "like", `%${searchTerm}%`);
+                  qb.orWhere(
+                    "asset_master.additionalInformation",
+                    "like",
+                    `%${searchTerm}%`
+                  );
+                  qb.orWhere(
+                    "asset_master.description",
+                    "like",
+                    `%${searchTerm}%`
+                  );
+                  qb.orWhere("asset_master.model", "like", `%${searchTerm}%`);
+                })
+                // .where({ orgId: req.orgId });
             const assets = await getFilteredItems(query)
             return res.status(200).json({
                 data: {
@@ -931,53 +1346,113 @@ const assetController = {
       
                   if (_.isEmpty(filters)) {
                       [total, rows] = await Promise.all([
-                          knex.count('* as count').from("asset_master")
-                          .innerJoin('location_tags','asset_master.id','location_tags.entityId')
-                          .innerJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
-                          .innerJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
+                        knex
+                          .count("* as count")
+                          .from("asset_master")
+                          .innerJoin(
+                            "location_tags",
+                            "asset_master.id",
+                            "location_tags.entityId"
+                          )
+                          .innerJoin(
+                            "location_tags_master",
+                            "location_tags.locationTagId",
+                            "location_tags_master.id"
+                          )
+                          .innerJoin(
+                            "asset_category_master",
+                            "asset_master.assetCategoryId",
+                            "asset_category_master.id"
+                          )
                           .first(),
-                          
-                          knex("asset_master")
-                          .innerJoin('location_tags','asset_master.id','location_tags.entityId')
-                          .innerJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
-                          .innerJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
+
+                        knex("asset_master")
+                          .innerJoin(
+                            "location_tags",
+                            "asset_master.id",
+                            "location_tags.entityId"
+                          )
+                          .innerJoin(
+                            "location_tags_master",
+                            "location_tags.locationTagId",
+                            "location_tags_master.id"
+                          )
+                          .innerJoin(
+                            "asset_category_master",
+                            "asset_master.assetCategoryId",
+                            "asset_category_master.id"
+                          )
                           .select([
-                              'asset_master.assetName as Name',
-                              'asset_master.id as ID',
-                              'location_tags_master.title as Location',
-                              'asset_master.model as Model',
-                              'asset_master.barcode as Barcode',
-                              'asset_master.areaName as Area',
-                              'asset_category_master.categoryName as Category',
-                              'asset_master.createdAt as Date Created'
+                            "asset_master.assetName as Name",
+                            "asset_master.id as ID",
+                            "location_tags_master.title as Location",
+                            "asset_master.model as Model",
+                            "asset_master.barcode as Barcode",
+                            "asset_master.areaName as Area",
+                            "asset_category_master.categoryName as Category",
+                            "asset_master.createdAt as Date Created"
                           ])
-                          .offset(offset).limit(per_page)
-                      ])
+                          .offset(offset)
+                          .limit(per_page)
+                          .where({ 'asset_master.orgId': req.orgId })
+                      ]);
                   } else {
                       filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
                       try {
                           [total, rows] = await Promise.all([
-                              knex.count('* as count').from("asset_master")
-                              .innerJoin('location_tags','asset_master.id','location_tags.entityId')
-                              .innerJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
-                              .innerJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
-                              .where(filters).offset(offset).limit(per_page).first(),
-                              knex("asset_master")
-                              .innerJoin('location_tags','asset_master.id','location_tags.entityId')
-                              .innerJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
-                              .innerJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
+                            knex
+                              .count("* as count")
+                              .from("asset_master")
+                              .innerJoin(
+                                "location_tags",
+                                "asset_master.id",
+                                "location_tags.entityId"
+                              )
+                              .innerJoin(
+                                "location_tags_master",
+                                "location_tags.locationTagId",
+                                "location_tags_master.id"
+                              )
+                              .innerJoin(
+                                "asset_category_master",
+                                "asset_master.assetCategoryId",
+                                "asset_category_master.id"
+                              )
+                              .where(filters)
+                              .offset(offset)
+                              .limit(per_page)
+                              .first(),
+                            knex("asset_master")
+                              .innerJoin(
+                                "location_tags",
+                                "asset_master.id",
+                                "location_tags.entityId"
+                              )
+                              .innerJoin(
+                                "location_tags_master",
+                                "location_tags.locationTagId",
+                                "location_tags_master.id"
+                              )
+                              .innerJoin(
+                                "asset_category_master",
+                                "asset_master.assetCategoryId",
+                                "asset_category_master.id"
+                              )
                               .select([
-                                  'asset_master.assetName as Name',
-                                  'asset_master.id as ID',
-                                  'location_tags_master.title as Location',
-                                  'asset_master.model as Model',
-                                  'asset_master.barcode as Barcode',
-                                  'asset_master.areaName as Area',
-                                  'asset_category_master.categoryName as Category',
-                                  'asset_master.createdAt as Date Created'
+                                "asset_master.assetName as Name",
+                                "asset_master.id as ID",
+                                "location_tags_master.title as Location",
+                                "asset_master.model as Model",
+                                "asset_master.barcode as Barcode",
+                                "asset_master.areaName as Area",
+                                "asset_category_master.categoryName as Category",
+                                "asset_master.createdAt as Date Created"
                               ])
-                              .where(filters).offset(offset).limit(per_page)
-                          ])
+                              .where(filters)
+                              .offset(offset)
+                              .limit(per_page)
+                              .where({ 'asset_master.orgId': req.orgId })
+                          ]);
                       } catch (e) {
                           // Error
                           console.log('Error: ' + e.message)
@@ -1030,34 +1505,58 @@ const assetController = {
 
            if(filters.buildingPhaseCode){
                // go extract buildingId
-              let buildingIdResult = await knex('buildings_and_phases').select('id').where(qb => {
-                  qb.where('buildingPhaseCode', 'like', `%${filters.buildingPhaseCode}%`);
-               })
+              let buildingIdResult = await knex("buildings_and_phases")
+                .select("id")
+                .where(qb => {
+                    qb.where({ orgId: req.orgId });
+                  qb.where(
+                    "buildingPhaseCode",
+                    "like",
+                    `%${filters.buildingPhaseCode}%`
+                  );
+                })
+                // .where({ orgId: req.orgId });
                if(buildingIdResult && buildingIdResult.length){
                    buildingId = buildingIdResult[0].id
                }
            }
 
            if(filters.companyName){
-               let buildingIdResult = await knex('companies').select('id').where(qb => {
-                   qb.where('companyName', 'like', `%${filters.companyName}%`);
-               })
+               let buildingIdResult = await knex("companies")
+                 .select("id")
+                 .where(qb => {
+                     qb.where({ orgId: req.orgId });
+                   qb.where("companyName", "like", `%${filters.companyName}%`);
+                 })
+                //  .where({ orgId: req.orgId });
                if (buildingIdResult && buildingIdResult.length) {
                    companyId = buildingIdResult[0].id
                }
            }
            if(filters.floorZoneCode){
-               let buildingIdResult = await knex('floor_and_zones').select('id').where(qb => {
-                   qb.where('floorZoneCode', 'like', `%${filters.floorZoneCode}%`);
-               })
+               let buildingIdResult = await knex("floor_and_zones")
+                 .select("id")
+                 .where(qb => {
+                     qb.where({ orgId: req.orgId });
+                   qb.where(
+                     "floorZoneCode",
+                     "like",
+                     `%${filters.floorZoneCode}%`
+                   );
+                 })
+                //  .where({ orgId: req.orgId });
                if (buildingIdResult && buildingIdResult.length) {
                    floorId = buildingIdResult[0].id
                }
            }
            if(filters.projectName){
-               let buildingIdResult = await knex('projects').select('id').where(qb => {
-                   qb.where('projectName', 'like', `%${filters.projectName}%`);
-               })
+               let buildingIdResult = await knex("projects")
+                 .select("id")
+                 .where(qb => {
+                     qb.where({ orgId: req.orgId });
+                   qb.where("projectName", "like", `%${filters.projectName}%`);
+                 })
+                //  .where({ orgId: req.orgId });
                if (buildingIdResult && buildingIdResult.length) {
                    projectId = buildingIdResult[0].id
                }
@@ -1084,25 +1583,44 @@ const assetController = {
 
             
             [total, rows] = await Promise.all([
-                knex.count('* as count').from("asset_master")
-                    .innerJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
-                    .select([
-                        'asset_master.id as id', 
-                        "assetName",
-                        "model",
-                        "barcode",
-                        "areaName"
-                    ]).where(condition).groupBy(["asset_master.id", "asset_location.id"]),
-                knex.from("asset_master")
-                    .innerJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
-                    .select([
-                        'asset_master.id as id',
-                        "assetName",
-                        "model",
-                        "barcode",
-                        "areaName"
-                    ]).where(condition).offset(offset).limit(per_page)
-            ])
+              knex
+                .count("* as count")
+                .from("asset_master")
+                .innerJoin(
+                  "asset_location",
+                  "asset_master.id",
+                  "asset_location.assetId"
+                )
+                .select([
+                  "asset_master.id as id",
+                  "assetName",
+                  "model",
+                  "barcode",
+                  "areaName"
+                ])
+                .where(condition)
+                .where({ 'asset_master.orgId': req.orgId })
+                // .where({ orgId: req.orgId })
+                .groupBy(["asset_master.id", "asset_location.id"]),
+              knex
+                .from("asset_master")
+                .innerJoin(
+                  "asset_location",
+                  "asset_master.id",
+                  "asset_location.assetId"
+                )
+                .select([
+                  "asset_master.id as id",
+                  "assetName",
+                  "model",
+                  "barcode",
+                  "areaName"
+                ])
+                .where({ 'asset_master.orgId': req.orgId })
+                .where(condition)
+                .offset(offset)
+                .limit(per_page)
+            ]);
             
 
             let count = total.length;
@@ -1147,9 +1665,20 @@ const assetController = {
             let updatedLastLocationEndDate
             if (req.body.previousLocationId){
 
-                updatedLastLocationEndDate = await knex('asset_location').update({ updatedAt: currentTime }).where({ id: req.body.previousLocationId})
+                updatedLastLocationEndDate = await knex("asset_location")
+                  .update({ updatedAt: currentTime })
+                  .where({ id: req.body.previousLocationId })
+                  .where({ orgId: req.orgId });
             }
-            const updatedAsset = await knex('asset_location').insert({...payload,createdAt:currentTime,updatedAt:currentTime}).returning(['*'])
+            const updatedAsset = await knex("asset_location")
+              .insert({
+                ...payload,
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                orgId: req.orgId
+              })
+              .returning(["*"])
+            //   .where({ orgId: req.orgId });
             return res.status(200).json({
                 data: {
                     updatedAsset,
