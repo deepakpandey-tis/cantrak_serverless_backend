@@ -38,30 +38,27 @@ const authMiddleware = {
                     currentUser.roles = roles;
 
                     const Parallel = require('async-parallel');
-                    let roles = await Parallel.map(currentUser.roles, async item => {
+                    currentUser.roles = await Parallel.map(currentUser.roles, async item => {
                         let roleName = await knex('application_roles').where({ id: item.roleId }).select('name');
                         roleName = roleName[0].name;
-                        return roleName
-                        // let r;
-                        // if (item.roleId == 1) {   // Superadmin
-                        //     r = {
-                        //         roleName: roleName
-                        //     }
-                        // } else if (item.roleId == 7) {   // Customer
-                        //     r = {
-                        //         roleName: roleName,
-                        //         houseId: item.entityId
-                        //     }
-                        // } else {
-                        //     r = {
-                        //         roleName: roleName,
-                        //         organisationId: item.entityId
-                        //     }
-                        // }
-                        // return r;
+                        let r;
+                        if (item.roleId == 1) {   // Superadmin
+                            r = {
+                                roleName: roleName
+                            }
+                        } else if (item.roleId == 7) {   // Customer
+                            r = {
+                                roleName: roleName,
+                                houseId: item.entityId
+                            }
+                        } else {
+                            r = {
+                                roleName: roleName,
+                                organisationId: item.entityId
+                            }
+                        }
+                        return r;
                     });
-                    currentUser.roles = roles;
-                    currentUser.applicationRoles = roles;
 
                     req.me = currentUser;
                     return next();
