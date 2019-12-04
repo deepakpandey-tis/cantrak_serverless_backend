@@ -100,6 +100,7 @@ const organisationsController = {
           mobileNo      : mobile,
           password      : payloadData.password,
           orgId         : organisation.id,
+          emailVerified : true,
           createdAt: currentTime,
           updatedAt: currentTime
         }
@@ -112,7 +113,6 @@ const organisationsController = {
         let roleObejct = {
                           userId:user.id,
                           roleId:2,
-                          entityType:"organisations",
                           orgId :organisation.id,
                           createdAt:currentTime,
                           updatedAt:currentTime,
@@ -121,7 +121,7 @@ const organisationsController = {
         let insertRoleResult = await knex.insert(roleObejct)
                                .returning(['*'])
                                .transacting(trx)
-                               .into('user_roles');
+                               .into('application_user_roles');
                                
 
         let organisationUpdateResult = await knex.update({organisationAdminId:user.id})
