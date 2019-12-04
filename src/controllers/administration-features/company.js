@@ -251,6 +251,7 @@ console.log('ORG ID: ',orgId)
         knex
           .count("* as count")
           .from("companies")
+          .where({orgId:req.orgId})
           .first(),
         knex("companies")
           .select([
@@ -264,6 +265,7 @@ console.log('ORG ID: ',orgId)
           ])
           .offset(offset)
           .limit(per_page)
+          .where({orgId:req.orgId})
       ]);
 
       let count = total.count;
