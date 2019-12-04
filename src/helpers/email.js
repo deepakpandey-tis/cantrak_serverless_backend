@@ -3,15 +3,18 @@ const Joi = require('@hapi/joi');
 const moment = require('moment');
 const uuidv4 = require('uuid/v4');
 const _ = require('lodash');
-const AWS   = require('aws-sdk');
+const AWS = require('aws-sdk');
 
 
 AWS.config.update({ region: process.env.REGION || 'us-east-2' });
-
+AWS.config.update({
+    accessKeyId: process.env.ACCESS_KEY_ID,
+    secretAccessKey: process.env.SECRET_ACCESS_KEY,
+});
 
 const sendSQSMessage = async (messageBody) => {
 
-    const createdAt = new Date().getTime();
+    const createdAt = new Date().toISOString();
 
     let params = {
         DelaySeconds: 10,
