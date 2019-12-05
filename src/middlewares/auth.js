@@ -53,6 +53,8 @@ const authMiddleware = {
                             }
                         } else if(Number(item.roleId) === 2) {
                             req.orgAdmin = true;    
+                        } else if(Number(item.roleId) === 3){
+                           req.orgUser  = true;
                         }
                         else {
                             r = {
