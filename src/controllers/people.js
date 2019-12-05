@@ -52,7 +52,7 @@ const peopleController = {
 
                 let insertRoleData = { roleId: peoplePayload.roleId, userId: people.id,orgId:orgId,createdAt: currentTime, updatedAt: currentTime }
 
-                let roleResult = await knex.insert(insertRoleData).returning(['*']).transacting(trx).into('user_roles');
+                let roleResult = await knex.insert(insertRoleData).returning(['*']).transacting(trx).into('organisation_user_roles');
                 role = roleResult[0];
 
                 trx.commit;
@@ -158,9 +158,10 @@ const peopleController = {
                     knex.count('* as count').from("users")
                         .leftJoin('property_units', 'users.houseId', 'property_units.houseId')
                         .leftJoin('companies','property_units.companyId','companies.id')
-                        .innerJoin('user_roles','users.id','user_roles.userId')
-                        .innerJoin('roles','user_roles.roleId','roles.id')
+                        .innerJoin('organisation_user_roles','users.id','organisation_user_roles.userId')
+                        .innerJoin('organisation_roles','organisation_user_roles.roleId','organisation_roles.id')
                         .where(qb=>{
+                            qb.where({'users.orgId':req.orgId})
                             if(name){
                                 qb.where('users.name','like',`%${name}%`)
                             }
@@ -168,17 +169,18 @@ const peopleController = {
                                 qb.where('users.email','like',`%${email}%`)
                             }
                             if(accountType){
-                                qb.where('user_roles.roleId',accountType)
+                                qb.where('organisation_user_roles.roleId',accountType)
                             }
                         })
-                        .whereNotIn('roles.name', ['superAdmin','admin'])                    
+                        .whereNotIn('organisation_roles.name', ['superAdmin','admin'])                    
                         .first(),
                         knex.from('users')
                         .leftJoin('property_units', 'users.houseId', 'property_units.houseId')
                         .leftJoin('companies','property_units.companyId','companies.id')
-                        .innerJoin('user_roles','users.id','user_roles.userId')
-                        .innerJoin('roles','user_roles.roleId','roles.id')
+                        .innerJoin('organisation_user_roles','users.id','organisation_user_roles.userId')
+                        .innerJoin('organisation_roles','organisation_user_roles.roleId','organisation_roles.id')
                         .where(qb=>{
+                            qb.where({'users.orgId':req.orgId})
                             if(name){
                                 qb.where('users.name','like',`%${name}%`)
                             }
@@ -186,10 +188,10 @@ const peopleController = {
                                 qb.where('users.email','like',`%${email}%`)
                             }
                             if(accountType){
-                                qb.where('user_roles.roleId',accountType)
+                                qb.where('organisation_user_roles.roleId',accountType)
                             }
                         })
-                        .whereNotIn('roles.name', ['superAdmin','admin'])                    
+                        .whereNotIn('organisation_roles.name', ['superAdmin','admin'])                    
                         .select([
                             'users.id as userId',
                             'users.name as name',
@@ -200,7 +202,7 @@ const peopleController = {
                             'users.lastLogin as lastVisit',
                             'companies.id as companyId',
                             'companies.companyName',
-                            'roles.name as roleName'
+                            'organisation_roles.name as roleName'
                         ])
                         .offset(offset).limit(per_page)
                 ])
@@ -208,33 +210,77 @@ const peopleController = {
             } else{
 
                 [total, rows] = await Promise.all([
-                    knex.count('* as count').from("users")
-                        .leftJoin('property_units', 'users.houseId', 'property_units.houseId')
-                        .leftJoin('companies','property_units.companyId','companies.id')
-                        .innerJoin('user_roles','users.id','user_roles.userId')
-                        .innerJoin('roles','user_roles.roleId','roles.id')
-                        .whereNotIn('roles.name', ['superAdmin','admin'])                    
-                        .first(),
-                        knex.from('users')
-                        .leftJoin('property_units', 'users.houseId', 'property_units.houseId')
-                        .leftJoin('companies','property_units.companyId','companies.id')
-                        .innerJoin('user_roles','users.id','user_roles.userId')
-                        .innerJoin('roles','user_roles.roleId','roles.id')
-                        .whereNotIn('roles.name', ['superAdmin','admin'])                    
-                        .select([
-                            'users.id as userId',
-                            'users.name as name',
-                            'users.email as email',
-                            'users.userName',
-                            'users.mobileNo',
-                            'users.houseId',
-                            'users.lastLogin as lastVisit',
-                            'companies.id as companyId',
-                            'companies.companyName',
-                            'roles.name as roleName'
-                        ])
-                        .offset(offset).limit(per_page)
-                ])
+                  knex
+                    .count("* as count")
+                    .from("users")
+                    .leftJoin(
+                      "property_units",
+                      "users.houseId",
+                      "property_units.houseId"
+                    )
+                    .leftJoin(
+                      "companies",
+                      "property_units.companyId",
+                      "companies.id"
+                    )
+                    .innerJoin(
+                      "organisation_user_roles",
+                      "users.id",
+                      "organisation_user_roles.userId"
+                    )
+                    .innerJoin(
+                      "organisation_roles",
+                      "organisation_user_roles.roleId",
+                      "organisation_roles.id"
+                    )
+                    .whereNotIn("organisation_roles.name", [
+                      "superAdmin",
+                      "admin"
+                    ])
+                    .where({ "users.orgId": req.orgId })
+                    .first(),
+                  knex
+                    .from("users")
+                    .leftJoin(
+                      "property_units",
+                      "users.houseId",
+                      "property_units.houseId"
+                    )
+                    .leftJoin(
+                      "companies",
+                      "property_units.companyId",
+                      "companies.id"
+                    )
+                    .innerJoin(
+                      "organisation_user_roles",
+                      "users.id",
+                      "organisation_user_roles.userId"
+                    )
+                    .innerJoin(
+                      "organisation_roles",
+                      "organisation_user_roles.roleId",
+                      "organisation_roles.id"
+                    )
+                    .whereNotIn("organisation_roles.name", [
+                      "superAdmin",
+                      "admin"
+                    ])
+                    .select([
+                      "users.id as userId",
+                      "users.name as name",
+                      "users.email as email",
+                      "users.userName",
+                      "users.mobileNo",
+                      "users.houseId",
+                      "users.lastLogin as lastVisit",
+                      "companies.id as companyId",
+                      "companies.companyName",
+                      "organisation_roles.name as roleName"
+                    ])
+                    .offset(offset)
+                    .limit(per_page)
+                    .where({ "users.orgId": req.orgId })
+                ]);
             }
             
             let count            = total.count;
