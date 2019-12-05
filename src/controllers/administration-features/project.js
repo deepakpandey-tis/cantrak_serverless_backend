@@ -263,9 +263,11 @@ const ProjectController = {
             .count("* as count")
             .from("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
+            .where({ "projects.orgId": req.orgId })
             .first(),
           knex("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
+            .where({ "projects.orgId": req.orgId })
             .select([
               "projects.id as id",
               "projects.projectName as Project Name",

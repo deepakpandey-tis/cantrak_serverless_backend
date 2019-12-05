@@ -83,10 +83,10 @@ const roleMiddleware = {
             }))
           );
 
-          let projectAcccessToResources = {};
+          let projectAcccessToResources = [];
           for (let project of projects) {
             console.log("Single Project: ", project);
-            let key = _.flatten(_.keys(project))[0];
+            let key = _.flatten(_.keys(project));
             let roles = _.flatten(
               _.entries(project).map(([key, v]) => {
                 return v;
@@ -98,13 +98,27 @@ const roleMiddleware = {
               let resourcesResult = await knex("role_resource_master")
                 .select("resourceId")
                 .where({ roleId: role });
-              projectAcccessToResources[key] = resourcesResult.map(v =>
-                Number(v.resourceId)
-              );
+                resourcesResult.forEach(v => {
+                  projectAcccessToResources.push({id:v.resourceId,projects:keys})
+                })
+//                projectAcccessToResources.push()
+              // projectAcccessToResources[key] = resourcesResult.map(v =>
+              //   Number(v.resourceId)
+              // );
             }
           }
 
-        //   req.userProjectResources = _.flattenDeep(
+
+        //  projectAcccessToResources = _.flattenDeep(
+        //     Object.entries(
+        //       _.groupBy(arr, v => {
+        //         return v.projectId;
+        //       })
+        //     ).map(([key, val]) => ({ [key]: val.map(v => v.roleId) }))
+        //   );
+
+           req.userProjectResources = projectAcccessToResources;
+           //_.flattenDeep(
         //     Object.entries(
         //       _.groupBy(rolesOnProject, v => {
         //         return v.projectId;

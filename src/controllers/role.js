@@ -171,21 +171,28 @@ const roleController = {
         let offset = (page - 1) * per_page;
   
          [total, rows] = await Promise.all([
-          knex
-            .count("* as count")
-            .from("organisation_roles")
-            .leftJoin('organisations','organisation_roles.orgId','organisations.id')
-            .first(),
-          knex("organisation_roles")
-            .leftJoin('organisations','organisation_roles.orgId','organisations.id')
-            .select([
-              'organisation_roles.*',
-              'organisations.organisationName'
-            ])
-            .orderBy('organisation_roles.createdAt','desc')
-            .offset(offset)
-            .limit(per_page)
-        ]);
+           knex
+             .count("* as count")
+             .from("organisation_roles")
+             .leftJoin(
+               "organisations",
+               "organisation_roles.orgId",
+               "organisations.id"
+             )
+             .where({ "organisation_roles.orgId": req.orgId })
+             .first(),
+           knex("organisation_roles")
+             .leftJoin(
+               "organisations",
+               "organisation_roles.orgId",
+               "organisations.id"
+             )
+             .where({ "organisation_roles.orgId": req.orgId })
+             .select(["organisation_roles.*", "organisations.organisationName"])
+             .orderBy("organisation_roles.createdAt", "desc")
+             .offset(offset)
+             .limit(per_page)
+         ]);
 
         let count = total.count;
         pagination.total = count;
