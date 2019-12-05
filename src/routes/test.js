@@ -1,6 +1,4 @@
 const {Router} = require("express")
-const knex = require('../db/knex');
-
 
 const router = Router()
 const emailHelper = require('../helpers/email');
