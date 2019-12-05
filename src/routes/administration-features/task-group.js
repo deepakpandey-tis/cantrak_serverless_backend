@@ -2,6 +2,7 @@ const { Router } = require("express")
 
 const router = Router()
 const authMiddleware  = require('../../middlewares/auth')
+const roleMiddleware  = require('../../middlewares/role')
 const taskGroupController = require('../../controllers/administration-features/task-group')
 
 // CREATE TASK GROUP TEMPLATE
@@ -19,7 +20,12 @@ router.post('/create-pm-taskgroup-schedule',authMiddleware.isAuthenticated,authM
 // GET TASK GROUP SCHEDULE LIST
 router.post('/get-taskgroup-schedule-list',authMiddleware.isAuthenticated,authMiddleware.isAdmin, taskGroupController.getTaskGroupScheduleList)
 
-router.post('/get-pm-list',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.getPmList)
+router.post(
+  "/get-pm-list",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  taskGroupController.getPmList
+);
 
 
 router.post('/create-brand-new-pm',authMiddleware.isAuthenticated,authMiddleware.isAdmin,taskGroupController.createBrandNewPm)
