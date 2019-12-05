@@ -248,9 +248,10 @@ const usersController = {
     getAllUsers: async (req,res) => {
         try {
             const users= await knex('users')
-                               .leftJoin('user_roles','users.id','user_roles.userId')
+                               .leftJoin('organisation_user_roles','users.id','organisation_user_roles.userId')
                                .select('users.id','users.name','users.email')
-                               .whereNotIn('user_roles.roleId', [1, 2, 7])
+                            //    .whereNotIn('organisation_user_roles.roleId', [1, 4])
+                               .where({'organisation_user_roles.orgId':req.orgId})
                                .groupBy('users.id')
 
             return res.status(200).json({
