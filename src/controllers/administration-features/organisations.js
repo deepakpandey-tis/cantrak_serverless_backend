@@ -174,6 +174,7 @@ const organisationsController = {
           name             : Joi.string().required(),
           userName         : Joi.string().required(),
           email            : Joi.string().required(),
+          resources        : Joi.array().required()
         });
 
         const result = Joi.validate(_.omit(payload,"mobileNo","id"), schema);
@@ -411,9 +412,17 @@ const organisationsController = {
             'users.userName'
           ]).where({'organisations.id':id})
 
+       let resourcesarr = []; 
+       let resourceResult =  await knex("organisation_resources_master").where({"orgId":id});
+
+       
+       for(resource of resourceResult){
+        resourcesarr.push(resource.resourceId)
+       }  
+
           return res.status(200).json({
             data: {
-              organisationDetails: result[0]
+              organisationDetails:{ ...result[0],resources: resourcesarr}
             },
             message: "Organisation Details!."
           });
