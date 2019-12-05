@@ -10,5 +10,6 @@ router.post('/delete-source-of-request', authMiddleware.isAuthenticated, sourceo
 router.get('/get-source-of-request-list', authMiddleware.isAuthenticated, sourceofRequestController.getsourceofRequestList)
  //Export Source of Request
 router.get('/export-source-of-request', authMiddleware.isAuthenticated, sourceofRequestController.exportsourceofRequest)
+router.post('/source-of-request-details', authMiddleware.isAuthenticated, sourceofRequestController.sourceofRequestDetails)
 
 module.exports = router
