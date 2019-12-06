@@ -30,6 +30,8 @@ const peopleController = {
                     });
                 }
 
+                //let roles = req.body.roles;
+
                 let currentTime = new Date().getTime();
                 let houseId  = 0;
                 if(payload.houseId){

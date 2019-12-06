@@ -3,11 +3,18 @@ const express = require("express")
 const router = express.Router()
 const authMiddleware = require('../middlewares/auth')
 const assetController = require("../controllers/asset")
+const roleMiddleware = require("../middlewares/role");
+
 
 router.post('/add-asset', authMiddleware.isAuthenticated, assetController.addAsset)
 router.post('/get-asset-list', authMiddleware.isAuthenticated, assetController.getAssetList)
 router.get('/get-all-asset-list', authMiddleware.isAuthenticated, assetController.getAllAssetList)
-router.post('/get-asset-list-by-category', authMiddleware.isAuthenticated, assetController.getAssetListByCategory)
+router.post(
+  "/get-asset-list-by-category",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  assetController.getAssetListByCategory
+);
 // router.get('/get-asset-list', authMiddleware.isAuthenticated, assetController.getAssetList)
 router.post('/get-asset-details', authMiddleware.isAuthenticated, assetController.getAssetDetails)
 router.post('/update-asset-details', authMiddleware.isAuthenticated, assetController.updateAssetDetails)
