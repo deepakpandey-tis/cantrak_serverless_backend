@@ -12,6 +12,6 @@ router.get('/get-project-list', authMiddleware.isAuthenticated, projectControlle
 /// Export Project Data 
 router.get('/export-project', authMiddleware.isAuthenticated, projectController.exportProject)
 router.get('/get-project-by-companies', projectController.getProjectByCompany)
-
+router.get('/get-project-all-list',authMiddleware.isAuthenticated,projectController.getProjectAllList)
 
 module.exports = router

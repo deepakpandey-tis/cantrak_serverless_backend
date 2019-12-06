@@ -345,7 +345,7 @@ console.log('ORG ID: ',orgId)
     try {
       let pagination = {};
       let [result] = await Promise.all([
-        knex("companies").select('id', 'companyId', 'companyName as CompanyName').where({ isActive : 'true'})
+        knex("companies").select('id', 'companyId', 'companyName as CompanyName').where({ isActive : 'true',orgId:req.orgId})
       ]);
       pagination.data = result;
       return res.status(200).json({

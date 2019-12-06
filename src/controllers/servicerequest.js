@@ -650,10 +650,10 @@ const serviceRequestController = {
             if (_.isEmpty(filters)) {
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from("service_requests")
-                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                        .innerJoin('incident_sub_categories', 'incident_categories.id', 'incident_sub_categories.incidentCategoryId')
-                        .innerJoin('property_units', 'service_requests.houseId', 'property_units.houseId')
+                        .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .leftJoin('incident_sub_categories', 'incident_categories.id', 'incident_sub_categories.incidentCategoryId')
+                        .leftJoin('property_units', 'service_requests.houseId', 'property_units.houseId')
                         .select([
                             'service_requests.id as S Id', 'service_requests.description as Description',
                             'incident_categories.descriptionEng as Category',
@@ -669,10 +669,10 @@ const serviceRequestController = {
                          'incident_sub_categories.id',
                          'property_units.id']).where({'service_requests.orgId':req.orgId}),
                     knex.from("service_requests")
-                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                        .innerJoin('incident_sub_categories', 'incident_categories.id', 'incident_sub_categories.incidentCategoryId')
-                        .innerJoin('property_units', 'service_requests.houseId', 'property_units.houseId')
+                        .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .leftJoin('incident_sub_categories', 'incident_categories.id', 'incident_sub_categories.incidentCategoryId')
+                        .leftJoin('property_units', 'service_requests.houseId', 'property_units.houseId')
                         .select([
                             'service_requests.id as S Id', 
                             'service_requests.description as Description',
@@ -690,10 +690,10 @@ const serviceRequestController = {
                 //filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from("service_requests")
-                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                        .innerJoin('incident_sub_categories', 'incident_categories.id', 'incident_sub_categories.incidentCategoryId')
-                        .innerJoin('property_units', 'service_requests.houseId', 'property_units.houseId')
+                        .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .leftJoin('incident_sub_categories', 'incident_categories.id', 'incident_sub_categories.incidentCategoryId')
+                        .leftJoin('property_units', 'service_requests.houseId', 'property_units.houseId')
                         .select([
                             'service_requests.id as S Id', 'service_requests.description as Description',
                             'incident_categories.descriptionEng as Category',
@@ -711,10 +711,10 @@ const serviceRequestController = {
 
                         }).groupBy(["service_requests.id", "service_problems.id", 'incident_categories.id','incident_sub_categories.id','property_units.id']),
                     knex.from("service_requests")
-                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                        .innerJoin('incident_sub_categories', 'incident_categories.id', 'incident_sub_categories.incidentCategoryId')
-                        .innerJoin('property_units', 'service_requests.houseId', 'property_units.houseId')
+                        .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .leftJoin('incident_sub_categories', 'incident_categories.id', 'incident_sub_categories.incidentCategoryId')
+                        .leftJoin('property_units', 'service_requests.houseId', 'property_units.houseId')
                         .select([
                             'service_requests.id as S Id', 'service_requests.description as Description',
                             'incident_categories.descriptionEng as Category',

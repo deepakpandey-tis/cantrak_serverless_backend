@@ -44,9 +44,9 @@ const userManagementController = {
 
             let roleData = null;
             // check username & password not blank
-            roleData = await knex('roles')
-            .whereNotIn('id',['1','2'])
-            .where({ isActive: 'true' }).select('id', 'name');
+            roleData = await knex('organisation_roles')
+            // .whereNotIn('id',['1','2'])
+            .where({ isActive: 'true',orgId:req.orgId }).select('id', 'name');
             console.log('[controllers][usermanagement][roles]: RoleList', roleData);
 
             res.status(200).json({

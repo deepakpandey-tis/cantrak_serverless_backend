@@ -33,8 +33,8 @@ const usersController = {
           });
         }
         // Check User Id & role Id Exist
-        let checkUseridExist = await knex.select('id').from('users').where({'id':payload.userId});
-        let checkUserroleidExist = await knex.select('id').from('roles').where({'id':payload.roleId});
+        let checkUseridExist = await knex.select('id').from('users').where({'id':payload.userId,orgId:req.orgId});
+        let checkUserroleidExist = await knex.select('id').from('roles').where({'id':payload.roleId,orgId:req.orgId});
         let checkUserroleExist = await knex.select('id').from('user_roles').where({'roleId':payload.roleId,'userId':payload.userId});
         
 

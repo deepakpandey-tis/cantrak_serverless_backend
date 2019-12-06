@@ -241,19 +241,19 @@ const entranceController = {
                 // Insert in role table,
                 const roleData = {
                     userId: user.id,
-                    roleId: 7,
+                    roleId: 4,
                     createdAt: currentTime,
                     updatedAt: currentTime
                 }
 
-                const roles = await knex.insert(roleData).returning(['*']).transacting(trx).into('user_roles');
+                const roles = await knex.insert(roleData).returning(['*']).transacting(trx).into('application_user_roles');
                 user.roles = roles;
                 trx.commit;
             });
 
             const Parallel = require('async-parallel');
             user.roles = await Parallel.map(user.roles, async item => {
-                let rolename = await knex('roles').where({ id: item.roleId }).select('name');
+                let rolename = await knex('application_roles').where({ id: item.roleId }).select('name');
                 rolename = rolename[0].name;
                 return rolename;
             });

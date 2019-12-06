@@ -263,9 +263,11 @@ const ProjectController = {
             .count("* as count")
             .from("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
+            .where({ "projects.orgId": req.orgId })
             .first(),
           knex("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
+            .where({ "projects.orgId": req.orgId })
             .select([
               "projects.id as id",
               "projects.projectName as Project Name",
@@ -476,6 +478,31 @@ const ProjectController = {
       });
     }
   },
+  getProjectAllList: async (req, res) => {
+    try {
+      
+    
+      let rows = await knex("projects")
+            .select([
+              "projects.id as id",
+              "projects.projectName"
+            ]).where({orgId:req.orgId})
+      
+      return res.status(200).json({
+        data: {
+          projects: rows
+        },
+        message: "Projects all List!"
+      });
+    } catch (err) {
+      console.log("[controllers][generalsetup][viewProject] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  }
+
 };
 
 module.exports = ProjectController;

@@ -176,18 +176,29 @@ const teamsController = {
 
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from("teams")
-                    .where({'teams.teamName':teamName})
+                    .where({'teams.teamName':teamName,'teams.orgId':req.orgId})
                     .first(),
-                    knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams.teamName" like %'+teamName+'% group by "teams"."teamId" limit '+per_page+' OFFSET '+offset+'')               
+                    knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams.teamName" like %'+teamName+'% AND where "teams"."orgId" = '+req.orgId+' group by "teams"."teamId" limit '+per_page+' OFFSET '+offset+'')               
                 ])
 
              } else{
 
             [total, rows] = await Promise.all([
-                knex.count('* as count').from("teams")
+              knex
+                .count("* as count")
+                .from("teams")
+                .where({ "teams.orgId": req.orgId })
                 .first(),
-                knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" group by "teams"."teamId" limit '+per_page+' OFFSET '+offset+'')               
-            ])
+              knex.raw(
+                'select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams"."orgId" = ' +
+                  req.orgId +
+                  ' group by "teams"."teamId" limit ' +
+                  per_page +
+                  " OFFSET " +
+                  offset +
+                  ""
+              )
+            ]);
         }
 
             // teamResult =  await knex('teams').leftJoin('team_users','team_users.teamId', '=', 'teams.teamId').select('teams.*').count("team_users.userId").groupByRaw('teams.teamId');
@@ -227,7 +238,7 @@ const teamsController = {
         try {
             let updateUser = null;
             let orgId      = req.orgId
-            const { teamId, userIds } = req.body;
+            const { teamId, userIds ,projectId,roleId} = req.body;
             console.log('[controllers][teams][updateroles]: UpdateUserRole', userIds, teamId);
 
             // get User Id List
@@ -259,6 +270,42 @@ const teamsController = {
                 updateUser = await knex('team_users').insert({ userId: item, teamId: teamId, createdAt: currentTime, updatedAt: currentTime,orgId: orgId }).returning(['*']);
                 return updateUser;
             });
+
+         /*TEAM ROLE PROJECT MASTER OPEN */
+
+         let projectRoleCheckResult  =  await knex('team_roles_project_master')
+                                        .where({'teamId':teamId,'roleId':roleId,'projectId':projectId,'orgId':orgId})
+           if(projectRoleCheckResult.length>0){
+
+             
+            let updateObject = {
+                                teamId:teamId,
+                                roleId:roleId,
+                                projectId:projectId,
+                                orgId:orgId,
+                                updatedAt:currentTime
+                               }
+
+            let updateProjectResult  =  await knex.update(updateObject).returning(['*'])
+                                        .into('team_roles_project_master')
+                                        .where({teamId:teamId,roleId:roleId,projectId:projectId,orgId:orgId})
+
+           }   else{
+
+            let insertObject = {
+                teamId:teamId,
+                roleId:roleId,
+                projectId:projectId,
+                orgId:orgId,
+                createdAt: currentTime,
+                updatedAt:currentTime
+               }
+
+             let insertProjectResult  =  await knex.insert(insertObject).returning(['*']).into('team_roles_project_master')
+           }                                     
+                                                  
+
+         /*TEAM ROLE PROJECT MASTER CLOSE */
 
             console.log('[controllers][teams][updateteams]: results', compareData);
 
