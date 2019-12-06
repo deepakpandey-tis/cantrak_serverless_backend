@@ -27,8 +27,8 @@ const satisfactionController = {
           satisfactionCode: Joi.string().required(),
           descriptionEng: Joi.string().required(),
           descriptionThai: Joi.string().required(),
-          remark: Joi.string().required(),
-          defaultFlag: Joi.string().required()
+          remark: Joi.string().allow('').optional(),
+          defaultFlag: Joi.string().allow('').optional()
         });
 
         const result = Joi.validate(satisfactionPayload, schema);
@@ -88,7 +88,6 @@ const satisfactionController = {
           .into("satisfaction");
 
         satisfactionData = satisfactionResult[0];
-
         trx.commit;
       });
 
@@ -116,6 +115,7 @@ const satisfactionController = {
       let updateSatisfactionPayload = null;
 
       await knex.transaction(async trx => {
+        
         let satisfactionPaylaod = req.body;
 
         const schema = Joi.object().keys({
@@ -123,8 +123,8 @@ const satisfactionController = {
           satisfactionCode: Joi.string().required(),
           descriptionEng: Joi.string().required(),
           descriptionThai: Joi.string().required(),
-          remark: Joi.string().required(),
-          defaultFlag: Joi.string().required()
+          remark: Joi.string().allow('').optional(),
+          defaultFlag: Joi.string().allow('').optional()
         });
 
         const result = Joi.validate(satisfactionPaylaod, schema);
@@ -279,7 +279,7 @@ const satisfactionController = {
   deleteSatisfaction: async (req, res) => {
     try {
       let orgId = req.orgId;
-      let delSatisfactionPayload = null;
+      let satisfaction = null;
 
       await knex.transaction(async trx => {
         let satisfactionPaylaod = req.body;
@@ -381,7 +381,7 @@ const satisfactionController = {
         knex
           .count("* as count")
           .from("satisfaction")
-          .where({"orgId":orgId})
+          .where({ "orgId": orgId })
           .first(),
         knex("satisfaction")
           .select([
@@ -392,7 +392,7 @@ const satisfactionController = {
             "createdby as Created By",
             "createdAt as Date Created"
           ])
-          .where({"orgId":orgId})
+          .where({ "orgId": orgId })
           .offset(offset)
           .limit(per_page)
       ]);
