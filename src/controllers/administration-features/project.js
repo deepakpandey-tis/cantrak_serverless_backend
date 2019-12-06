@@ -180,7 +180,7 @@ const ProjectController = {
         let ProjectResult = await knex("projects")
           .innerJoin("companies","projects.companyId","companies.id")
           .select("projects.*","companies.companyId as compId","companies.companyName")
-          .where({ "projects.id": payload.id,orgId:req.orgId })
+          .where({ "projects.id": payload.id,'projects.orgId':req.orgId })
           
 
 
