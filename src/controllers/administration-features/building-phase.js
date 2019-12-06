@@ -116,10 +116,10 @@ const buildingPhaseController = {
         }
 
         let currentTime = new Date().getTime();
-        let insertData = { ...payload, createdBy: userId, updatedAt: currentTime };
+        let insertData = { ...payload,  updatedAt: currentTime };
         let insertResult = await knex
           .update(insertData)
-          .where({ id: payload.id, orgId: orgId })
+          .where({ id: payload.id, orgId: orgId,createdBy: userId })
           .returning(["*"])
           .transacting(trx)
           .into("buildings_and_phases");
