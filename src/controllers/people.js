@@ -320,27 +320,40 @@ const peopleController = {
             let peopleData = null;
             let id = req.body.id;
 
-            peopleData = await knex('users')
-                               .leftJoin('property_units', 'users.houseId', 'property_units.houseId')
-                               .leftJoin('companies','property_units.companyId','companies.id')
-                               .innerJoin('user_roles','users.id','user_roles.userId')
-                               .innerJoin('roles','user_roles.roleId','roles.id')
-                               .select([
-                                   'users.id as userId',
-                                   'users.name ',
-                                   'users.mobileNo',
-                                   'users.email',
-                                   'users.houseId',
-                                   'roles.id as roleId',
-                                   'roles.name as accountType',
-                                   'companies.id as company',
-                                   'companies.companyName as companyName',
-                                   'property_units.projectId as project',
-                                   'property_units.unitNumber',
-                                   'property_units.buildingPhaseId as building',
-                                   'property_units.floorZoneId as floor'
-                               ])
-                               .where({ 'users.id':id })
+            peopleData = await knex("users")
+              .leftJoin(
+                "property_units",
+                "users.houseId",
+                "property_units.houseId"
+              )
+              .leftJoin("companies", "property_units.companyId", "companies.id")
+              .innerJoin(
+                "organisation_user_roles",
+                "users.id",
+                "organisation_user_roles.userId"
+              )
+              .innerJoin(
+                "organisation_roles",
+                "organisation_user_roles.roleId",
+                "organisation_roles.id"
+              )
+              .select([
+                "users.id as userId",
+                "users.name ",
+                "users.mobileNo",
+                "users.email",
+                "users.houseId",
+                "organisation_roles.id as roleId",
+                "organisation_roles.name as accountType",
+                "companies.id as company",
+                "companies.companyName as companyName",
+                "property_units.projectId as project",
+                "property_units.unitNumber",
+                "property_units.buildingPhaseId as building",
+                "property_units.floorZoneId as floor"
+              ])
+              .where({ "users.id": id })
+              .orderBy("organisation_user_roles.createdAt", "desc");
                                //.whereNotIn('roles.name',['superAdmin','admin'])
             
             let peopleDataResult = peopleData[0];
