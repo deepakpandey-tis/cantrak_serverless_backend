@@ -238,7 +238,7 @@ const teamsController = {
         try {
             let updateUser = null;
             let orgId      = req.orgId
-            const { teamId, userIds } = req.body;
+            const { teamId, userIds ,projectId,roleId} = req.body;
             console.log('[controllers][teams][updateroles]: UpdateUserRole', userIds, teamId);
 
             // get User Id List
@@ -270,6 +270,54 @@ const teamsController = {
                 updateUser = await knex('team_users').insert({ userId: item, teamId: teamId, createdAt: currentTime, updatedAt: currentTime,orgId: orgId }).returning(['*']);
                 return updateUser;
             });
+
+         /*TEAM ROLE PROJECT MASTER OPEN */
+        //  let arrLength  = null;
+        //  if(projectId>roleId){
+        //     arrLength   = projectId
+        //  } else if(roleId>projectId){
+        //     arrLength   = roleId
+        //  }
+
+        //  for(let i=0; i<arrLength.length; i++){
+
+        //     console.log("+++++++++++++++++++++",projectId[i],"===================")
+
+        //  }
+
+        //  let projectRoleCheckResult  =  await knex('team_roles_project_master')
+        //                                 .where({'teamId':teamId,'roleId':roleId,'projectId':projectId,'orgId':orgId})
+        //    if(projectRoleCheckResult.length>0){
+
+             
+        //     let updateObject = {
+        //                         teamId:teamId,
+        //                         roleId:roleId,
+        //                         projectId:projectId,
+        //                         orgId:orgId,
+        //                         updatedAt:currentTime
+        //                        }
+
+        //     let updateProjectResult  =  await knex.update(updateObject).returning(['*'])
+        //                                 .into('team_roles_project_master')
+        //                                 .where({teamId:teamId,roleId:roleId,projectId:projectId,orgId:orgId})
+
+        //    }   else{
+
+        //     let insertObject = {
+        //         teamId:teamId,
+        //         roleId:roleId,
+        //         projectId:projectId,
+        //         orgId:orgId,
+        //         createdAt: currentTime,
+        //         updatedAt:currentTime
+        //        }
+
+        //      let insertProjectResult  =  await knex.insert(insertObject).returning(['*']).into('team_roles_project_master')
+        //    }                                     
+                                                  
+
+         /*TEAM ROLE PROJECT MASTER CLOSE */
 
             console.log('[controllers][teams][updateteams]: results', compareData);
 

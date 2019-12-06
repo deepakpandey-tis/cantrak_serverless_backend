@@ -15,6 +15,8 @@ const propertyCategoryController = {
   addCategory: async (req, res) => {
     try {
       let incident = null;
+      let orgId = req.orgId;
+      let userId = req.me.id;
 
       await knex.transaction(async trx => {
         const categoryPayload = req.body;
@@ -42,7 +44,8 @@ const propertyCategoryController = {
 
         // Check typeCode already exists
         const existCategoryCode = await knex("incident_categories").where({
-          categoryCode: categoryPayload.categoryCode
+          categoryCode: categoryPayload.categoryCode,
+          orgId: orgId
         });
 
         console.log(
@@ -69,6 +72,8 @@ const propertyCategoryController = {
 
         const insertData = {
           ...categoryPayload,
+          orgId: orgId,
+          createdBy: userId,
           categoryCode: categoryPayload.categoryCode.toUpperCase(),
           isActive: "true",
           createdAt: currentTime,
@@ -106,9 +111,10 @@ const propertyCategoryController = {
   updateCategory: async (req, res) => {
     try {
       let incident = null;
+      let orgId = req.orgId;
+      let userId = req.me.id;
 
       await knex.transaction(async trx => {
-          
         const categoryTypePayload = req.body;
 
         console.log(
@@ -141,7 +147,8 @@ const propertyCategoryController = {
 
         // Check typeCode already exists
         const existCateoryTypeCode = await knex("incident_categories").where({
-          categoryCode: categoryTypePayload.categoryCode
+          categoryCode: categoryTypePayload.categoryCode,
+          orgId: orgId
         });
 
         console.log(
@@ -175,7 +182,7 @@ const propertyCategoryController = {
             remark: categoryTypePayload.remark,
             updatedAt: currentTime
           })
-          .where({ id: categoryTypePayload.id })
+          .where({ id: categoryTypePayload.id, orgId: orgId })
           .returning(["*"])
           .transacting(trx)
           .into("incident_categories");
@@ -183,13 +190,13 @@ const propertyCategoryController = {
         // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
 
         console.log(
-          "[controllers][Category][incidentType]: Update Data", updateDataResult
+          "[controllers][Category][incidentType]: Update Data",
+          updateDataResult
         );
 
         //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
         incident = updateDataResult[0];
         trx.commit;
-
       });
 
       res.status(200).json({
@@ -210,6 +217,7 @@ const propertyCategoryController = {
   deleteCategory: async (req, res) => {
     try {
       let incident = null;
+      let orgId = req.orgId;
 
       await knex.transaction(async trx => {
         const categoryDelPayload = req.body;
@@ -268,7 +276,7 @@ const propertyCategoryController = {
         //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
         const updateDataResult = await knex
           .update({ isActive: "false", updatedAt: currentTime })
-          .where({ id: categoryDelPayload.id })
+          .where({ id: categoryDelPayload.id, orgId: orgId })
           .returning(["*"])
           .transacting(trx)
           .into("incident_categories");
@@ -305,6 +313,7 @@ const propertyCategoryController = {
   propertyCategoryList: async (req, res) => {
     try {
       let listCategories = null;
+      let orgId = req.orgId;
 
       //await knex.transaction(async (trx) => {
 
@@ -319,7 +328,7 @@ const propertyCategoryController = {
           "users.name as Created By",
           "property_types.createdAt as Date Created"
         ])
-        .where({ "property_types.isActive": "true" });
+        .where({ "property_types.isActive": "true", orgId: orgId });
 
       //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
       //const updateDataResult = await knex.update({ isActive : 'false', updatedAt : currentTime }).where({ id: incidentTypePayload.id }).returning(['*']).transacting(trx).into('incident_type');
@@ -355,6 +364,8 @@ const propertyCategoryController = {
   categoryList: async (req, res) => {
     try {
       let listCategories = null;
+      let orgId = req.orgId;
+
       let reqData = req.query;
       let total = null;
       let rows = null;
@@ -378,6 +389,7 @@ const propertyCategoryController = {
             "createdBy as Created By",
             "createdAt as Date Created"
           ])
+          .where({ orgId: orgId })
           .offset(offset)
           .limit(per_page)
       ]);
@@ -412,16 +424,19 @@ const propertyCategoryController = {
   exportCategory: async (req, res) => {
     try {
       let listCategories = null;
+      let orgId = req.orgId;
 
       //await knex.transaction(async (trx) => {
 
-      const DataResult = await knex("incident_categories").select([
-        "categoryCode as Category",
-        "descriptionEng as Decription Eng",
-        "descriptionThai as Description Thai",
-        "isActive as Status",
-        "createdAt as Date Created"
-      ]);
+      const DataResult = await knex("incident_categories")
+        .select([
+          "categoryCode as Category",
+          "descriptionEng as Decription Eng",
+          "descriptionThai as Description Thai",
+          "isActive as Status",
+          "createdAt as Date Created"
+        ])
+        .where({ orgId: orgId });
 
       //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
       //const updateDataResult = await knex.update({ isActive : 'false', updatedAt : currentTime }).where({ id: incidentTypePayload.id }).returning(['*']).transacting(trx).into('incident_type');
@@ -464,6 +479,7 @@ const propertyCategoryController = {
   getCategoryDetails: async (req, res) => {
     try {
       let categoryDetails = null;
+      let orgId = req.orgId;
       let payload = req.body;
       const schema = Joi.object().keys({
         id: Joi.number().required()
@@ -477,7 +493,7 @@ const propertyCategoryController = {
 
       let categoryResults = await knex("incident_categories")
         .select()
-        .where({ id: payload.id });
+        .where({ id: payload.id, orgId: orgId });
 
       categoryDetails = _.omit(categoryResults[0], [
         "createdAt",
@@ -501,6 +517,7 @@ const propertyCategoryController = {
   exportPropertyCategory: async (req, res) => {
     try {
       let listCategories = null;
+      let orgId = req.orgId;
 
       //await knex.transaction(async (trx) => {
 
@@ -515,7 +532,7 @@ const propertyCategoryController = {
           "users.name as Created By",
           "property_types.createdAt as Date Created"
         ])
-        .where({ "property_types.isActive": "true" });
+        .where({ "property_types.isActive": "true", orgId: orgId });
 
       //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
       //const updateDataResult = await knex.update({ isActive : 'false', updatedAt : currentTime }).where({ id: incidentTypePayload.id }).returning(['*']).transacting(trx).into('incident_type');
@@ -557,10 +574,10 @@ const propertyCategoryController = {
   },
   // ASSET CATEGORY LIST FOR DROP DOWN
   assetCategoryList: async (req, res) => {
+    let orgId = req.orgId;
+    
     try {
-      let assetCategoryList = await knex("asset_category_master").returning(
-        "*"
-      );
+      let assetCategoryList = await knex("asset_category_master").returning("*").where({"orgId":orgId});
 
       res.status(200).json({
         data: {
@@ -579,8 +596,10 @@ const propertyCategoryController = {
 
   // Part CATEGORY LIST FOR DROP DOWN
   partCategoryList: async (req, res) => {
+    let orgId = req.orgId;
+    
     try {
-      let assetCategoryList = await knex("part_category_master").returning("*");
+      let assetCategoryList = await knex("part_category_master").returning("*").where({"orgId":orgId});
 
       res.status(200).json({
         data: {

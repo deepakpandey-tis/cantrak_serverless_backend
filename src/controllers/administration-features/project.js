@@ -478,6 +478,31 @@ const ProjectController = {
       });
     }
   },
+  getProjectAllList: async (req, res) => {
+    try {
+      
+    
+      let rows = await knex("projects")
+            .select([
+              "projects.id as id",
+              "projects.projectName"
+            ]).where({orgId:req.orgId})
+      
+      return res.status(200).json({
+        data: {
+          projects: rows
+        },
+        message: "Projects all List!"
+      });
+    } catch (err) {
+      console.log("[controllers][generalsetup][viewProject] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  }
+
 };
 
 module.exports = ProjectController;
