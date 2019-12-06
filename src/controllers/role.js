@@ -369,6 +369,24 @@ const roleController = {
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
+      },
+      /**GET ORG ROLE ALL LIST */
+      getOrgRoleAllList: async(req,res)=>{
+        try{
+          let result = await knex("organisation_roles").where({orgId:req.orgId})
+          
+          return res.status(200).json({
+            data: {
+              roles: result
+            },
+            message: "Organisation role all List!"
+          });
+
+          }catch(err){
+            res.status(500).json({
+              errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+              });
+          }
       }
 
     }

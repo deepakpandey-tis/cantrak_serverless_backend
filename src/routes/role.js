@@ -12,5 +12,7 @@ router.get('/get-org-role-list',authMiddleware.isAuthenticated,roleController.ge
 router.post('/update-role-details',authMiddleware.isAuthenticated,roleController.getUpdateRoleDetails)
 router.post('/update-org-role',authMiddleware.isAuthenticated,roleController.updateOrgRole)
 router.post('/delete-org-role',authMiddleware.isAuthenticated,roleController.deleteOrgRole)
+router.get('/get-org-role-all-list',authMiddleware.isAuthenticated,roleController.getOrgRoleAllList)
+
 
 module.exports = router
