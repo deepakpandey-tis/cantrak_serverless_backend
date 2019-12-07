@@ -622,7 +622,7 @@ const assetController = {
                 "asset_location.updatedAt as endDate",
                 "asset_location.id as assetLocationId"
               ])
-              .where({ assetId: id, orgId: req.orgId });
+              .where({ assetId: id, 'asset_location.orgId': req.orgId });
             //   .where({ orgId: req.orgId });
 
             res.status(200).json({

@@ -53,7 +53,7 @@ const roleMiddleware = {
           req.userCompanyResources = userCompanyResources;
           req.userProjectResources = userProjectResources;
           console.log(userCompanyResources, userProjectResources);
-                
+          
         }
 
         if (req.orgUser) {
@@ -75,13 +75,19 @@ const roleMiddleware = {
             ]).where({'team_users.userId':userId,'team_users.orgId':req.orgId});
 
             // let userProjectResources = result;
-
+            console.log(
+              "result***********************************************************",
+              result
+            );
+            if(result.length === 0){
+              next(createError(403))
+            }
 
             let userProjectResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, projects: value.map(a => a.projectId) })).value();
             req.userProjectResources = userProjectResources;
 
             console.log(
-              "Result***********************************************************",
+              "userProjectResources***********************************************************",
               userProjectResources
             );
         
