@@ -1,6 +1,7 @@
 const Joi = require('@hapi/joi');
 const _ = require('lodash');
-
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
 const knex = require('../db/knex');
 
 //const trx = knex.transaction();
@@ -9,17 +10,16 @@ const peopleController = {
     addPeople: async (req, res) => {
         try {
 
-            let people = null;
-            let role   = null
-            let orgId  = req.orgId
             await knex.transaction(async (trx) => {
-                let peoplePayload = _.omit(req.body,'company','building','floor','houseId','project','unitNumber','houseId');
                 let payload       = req.body;
                 const schema = Joi.object().keys({
+                    name: Joi.string().required(),
+                    userName: Joi.string().required(),
                     email: Joi.string().required(),
+                    password: Joi.string().required(),
                     roleId: Joi.string().required()
                 })
-                let result = Joi.validate(peoplePayload, schema);
+                let result = Joi.validate(payload, schema);
                 console.log('[controllers][people][addPeople]: JOi Result', result);
 
                 if (result && result.hasOwnProperty('error') && result.error) {
@@ -30,37 +30,53 @@ const peopleController = {
                     });
                 }
 
-                //let roles = req.body.roles;
+                const hash = await bcrypt.hash(
+                  payload.password,
+                  saltRounds
+                );
+                payload.password = hash;
 
                 let currentTime = new Date().getTime();
-                let houseId  = 0;
-                if(payload.houseId){
-                    houseId = payload.houseId;
-                }
-                let insertPeopleData = { email: peoplePayload.email,houseId:houseId, createdAt: currentTime, updatedAt: currentTime }
-                // Insert into users table
-                let peopleResult = await knex('users').where({email:peoplePayload.email}).returning(['*']);
-                people = peopleResult[0]
+                const people = await knex('users').insert({..._.omit(payload,'roleId'),orgId:req.orgId,createdAt:currentTime,updatedAt:currentTime}).returning(['*'])
 
-                if(!people){
-                    return res.status(400).json(
-                      {
-                      message :"User does not exist!"
-                    }
-                    )
-                }
+                //Insert Application Role
+                let applicationUserRole = await knex(
+                  "application_user_roles"
+                ).insert({
+                  roleId: 3,
+                  userId: people[0].id,
+                  createdAt: currentTime,
+                  updatedAt: currentTime,
+                  orgId: req.orgId
+                });
+
+                // Insert Organisation Role
+                let organisationUserRole = await knex('organisation_user_roles').insert({roleId:payload.roleId, userId:people[0].id,createdAt:currentTime,updatedAt:currentTime,orgId:req.orgId})
+
+                // let peopleResult = await knex('users').where({email:peoplePayload.email}).returning(['*']);
+                // people = peopleResult[0]
+
+                // if(!people){
+                //     return res.status(400).json(
+                //       {
+                //       message :"User does not exist!"
+                //     }
+                //     )
+                // }
+
+
 
                 // Insert into user_roles table
 
-                let insertRoleData = { roleId: peoplePayload.roleId, userId: people.id,orgId:orgId,createdAt: currentTime, updatedAt: currentTime }
+                // let insertRoleData = { roleId: peoplePayload.roleId, userId: people.id,orgId:orgId,createdAt: currentTime, updatedAt: currentTime }
 
-                let roleResult = await knex.insert(insertRoleData).returning(['*']).transacting(trx).into('organisation_user_roles');
-                role = roleResult[0];
+                // let roleResult = await knex.insert(insertRoleData).returning(['*']).transacting(trx).into('organisation_user_roles');
+                // role = roleResult[0];
 
                 trx.commit;
                 res.status(200).json({
-                    data: { people, role },
-                    message: "People added successfully !"
+                  data: { people, organisationUserRole, applicationUserRole },
+                  message: "People added successfully !"
                 });
             })
         } catch (err) {
@@ -295,9 +311,7 @@ const peopleController = {
             pagination.from = offset;
             pagination.data = rows;
 
-            // peopleData = await knex.select().from('users')
-            // console.log('[controllers][people][getPeopleList]: People List', peopleData);
-            // peopleData = peopleData.map(d => _.omit(d, ['password'], ['createdAt'], ['updatedAt'], ['isActive'], ['verifyToken'], ['verifyTokenExpiryTime']));
+            
 
             res.status(200).json({
                 data:{
