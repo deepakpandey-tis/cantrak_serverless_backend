@@ -78,7 +78,7 @@ const roleMiddleware = {
 
 
             let userProjectResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, projects: value.map(a => a.projectId) })).value();
-          req.userProjectResources = userProjectResources;
+            req.userProjectResources = userProjectResources;
 
             console.log(
               "Result***********************************************************",
