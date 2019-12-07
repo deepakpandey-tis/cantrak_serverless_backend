@@ -29,6 +29,7 @@ const roleMiddleware = {
         console.log("****************MSG***************", userId, orgId);
 
         if (req.orgAdmin) {
+
           console.log("this is orgAdmin");
           // get all the projects of this admin
           const projects = await knex("projects")
@@ -52,6 +53,7 @@ const roleMiddleware = {
           req.userCompanyResources = userCompanyResources;
           req.userProjectResources = userProjectResources;
           console.log(userCompanyResources, userProjectResources);
+                
         }
 
         if (req.orgUser) {

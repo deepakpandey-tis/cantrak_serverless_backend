@@ -65,6 +65,11 @@ const authMiddleware = {
                         return r;
                     });
 
+
+
+
+                    
+
                     req.me = currentUser;
                     return next();
                 }
