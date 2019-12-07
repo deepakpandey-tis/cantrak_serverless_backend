@@ -19,44 +19,87 @@ const teamsController = {
 
         // Define try/catch block
         try {
-            let teamsData = null;
-            let orgId     = req.orgId
+            let teamsData       = null;
+            let teamRoleProject = null;
+            let userAddTeam     = null;
+            let orgId           = req.orgId;
+            let roleProjectData = req.body.roleProjectData;
             await knex.transaction(async (trx) => {
                 const teamsPayload = req.body;
+                const payload      = _.omit(req.body,['roleProjectData'],['roleId'],'projectId',['userIds'])
+                
                 console.log('[controllers][teams][addNewTeam]', teamsPayload);
 
                 // validate keys
                 const schema = Joi.object().keys({
-                    teamName: Joi.string().required(),
-                    description: Joi.string().required()
+                    teamName     : Joi.string().required(),
+                    description  : Joi.string().required(),
                 });
 
                 // validate params
-                const result = Joi.validate(teamsPayload, schema);
+                const result = Joi.validate(payload, schema);
                 console.log('[controllers][teams][addNewTeam]: Joi Results', result);
 
                 if (result && result.hasOwnProperty('error') && result.error) {
                     res.status(400).json({
                         errors: [
-                            { code: "VALIDATON ERRORS", message: result.message.error }
+                            { code: "VALIDATON ERRORS", message: result.error.message }
                         ]
                     });
                 }
 
                 const currentTime = new Date().getTime();
                 // Insert into teams table
-                const insertData = { ...teamsPayload, createdAt: currentTime, updatedAt: currentTime, createdBy: 1 ,orgId:orgId};
+                const insertData = { ...payload, createdAt: currentTime, updatedAt: currentTime, createdBy: 1 ,orgId:orgId};
                 console.log('[controllers][teams][addNewTeams] : Insert Data ', insertData);
 
                 const resultTeams = await knex.insert(insertData).returning(['*']).transacting(trx).into('teams');
-                teamsData = resultTeams;
+                teamsData = resultTeams[0];
+
+                
+                /**TEAM ROLES PROJECT MASTER OPEN */
+
+            for(let i=0; i<roleProjectData.length; i++){
+                 
+
+                for(let role of roleProjectData[i].roleId){
+
+                let insertObject = {
+                            teamId:teamsData.teamId,
+                            roleId:role,
+                            projectId:roleProjectData[i].projectId,
+                            orgId:orgId,
+                            createdAt: currentTime,
+                            updatedAt:currentTime
+                           }
+            
+              let insertProjectResult  =  await knex.insert(insertObject).returning(['*']).into('team_roles_project_master')
+              teamRoleProject   = insertProjectResult
+
+                        }
+
+                    }
+                /**TEAM ROLES PROJECT MASTER CLOSE */
+
+                /**ADD TEAM USERS OPEN */
+
+            for(let user of teamsPayload.userIds){
+
+               let  userAddTeamResult  = await knex('team_users').insert({ userId: user, teamId: teamsData.teamId, createdAt: currentTime, updatedAt: currentTime,orgId: orgId }).returning(['*']);
+               userAddTeam             = userAddTeamResult
+
+                }
+                /**ADD TEAM USERS CLOSE*/
+
                 trx.commit;
             });
 
 
             res.status(200).json({
                 data: {
-                    teamsData: teamsData
+                    teamsData: teamsData,
+                    teamRoleProjectData :teamRoleProject,
+                    userAddTeamData :userAddTeam
                 },
                 message: "Teams added successfully !"
             });
@@ -78,8 +121,12 @@ const teamsController = {
         try {
             let teamsResponse = null;
             let upTeams = null;
+            let teamRoleProject = null;
+            let userAddTeam     = null;
+            let orgId           = req.orgId;
             await knex.transaction(async (trx) => {
                 const upTeamsPayload = req.body;
+                const payload      = _.omit(req.body,['roleId'],'projectId',['userIds'])
                 console.log('[controllers][teams][updateTeams] : Request Body', upTeams);
 
                 // validate keys
@@ -90,7 +137,7 @@ const teamsController = {
                 });
 
                 // validate params
-                const result = Joi.validate(upTeamsPayload, schema);
+                const result = Joi.validate(payload, schema);
 
                 if (result && result.hasOwnProperty('error') && result.error) {
                     res.status(400).json({
@@ -104,12 +151,49 @@ const teamsController = {
                 // Update teams table
                 updateTeams = await knex.update({ teamName: upTeamsPayload.teamName, description: upTeamsPayload.description, updatedAt: currentTime }).where({ teamId: upTeamsPayload.teamId,orgId:req.orgId }).returning(['*']).transacting(trx).into('teams');
                 teamsResponse = updateTeams;
+
+
+
+                /**TEAM ROLES PROJECT MASTER OPEN */
+                let deletedProject = await knex('team_roles_project_master').where({teamId: upTeamsPayload.teamId }).del();
+                let  deletedUsers  = await knex('team_users').where({teamId: upTeamsPayload.teamId }).del();
+
+                for(let role of upTeamsPayload.roleId){
+               
+
+                    let insertObject = {
+                                teamId:upTeamsPayload.teamId,
+                                roleId:role,
+                                projectId:upTeamsPayload.projectId,
+                                orgId:orgId,
+                                createdAt: currentTime,
+                                updatedAt:currentTime
+                               }
+                
+                  let insertProjectResult  =  await knex.insert(insertObject).returning(['*']).into('team_roles_project_master')
+                  teamRoleProject   = insertProjectResult
+    
+                            }
+                    /**TEAM ROLES PROJECT MASTER CLOSE */
+    
+                    /**ADD TEAM USERS OPEN */
+    
+                for(let user of upTeamsPayload.userIds){
+    
+                   let  userAddTeamResult  = await knex('team_users').insert({ userId: user, teamId: upTeamsPayload.teamId, createdAt: currentTime, updatedAt: currentTime,orgId: orgId }).returning(['*']);
+                   userAddTeam             = userAddTeamResult
+    
+                    }
+                    /**ADD TEAM USERS CLOSE*/
+
                 trx.commit;
             });
 
             res.status(200).json({
                 data: {
-                    teamsResponse: teamsResponse
+                    teamsResponse: teamsResponse,
+                    teamRoleProjectData:teamRoleProject,
+                    userAddTeamData : userAddTeam
                 },
                 message: "Teams updated successfully !"
             });
@@ -271,53 +355,6 @@ const teamsController = {
                 return updateUser;
             });
 
-         /*TEAM ROLE PROJECT MASTER OPEN */
-        //  let arrLength  = null;
-        //  if(projectId>roleId){
-        //     arrLength   = projectId
-        //  } else if(roleId>projectId){
-        //     arrLength   = roleId
-        //  }
-
-        //  for(let i=0; i<arrLength.length; i++){
-
-        //     console.log("+++++++++++++++++++++",projectId[i],"===================")
-
-        //  }
-
-        //  let projectRoleCheckResult  =  await knex('team_roles_project_master')
-        //                                 .where({'teamId':teamId,'roleId':roleId,'projectId':projectId,'orgId':orgId})
-        //    if(projectRoleCheckResult.length>0){
-
-             
-        //     let updateObject = {
-        //                         teamId:teamId,
-        //                         roleId:roleId,
-        //                         projectId:projectId,
-        //                         orgId:orgId,
-        //                         updatedAt:currentTime
-        //                        }
-
-        //     let updateProjectResult  =  await knex.update(updateObject).returning(['*'])
-        //                                 .into('team_roles_project_master')
-        //                                 .where({teamId:teamId,roleId:roleId,projectId:projectId,orgId:orgId})
-
-        //    }   else{
-
-        //     let insertObject = {
-        //         teamId:teamId,
-        //         roleId:roleId,
-        //         projectId:projectId,
-        //         orgId:orgId,
-        //         createdAt: currentTime,
-        //         updatedAt:currentTime
-        //        }
-
-        //      let insertProjectResult  =  await knex.insert(insertObject).returning(['*']).into('team_roles_project_master')
-        //    }                                     
-                                                  
-
-         /*TEAM ROLE PROJECT MASTER CLOSE */
 
             console.log('[controllers][teams][updateteams]: results', compareData);
 
@@ -441,6 +478,7 @@ const teamsController = {
 
          let result = await knex('teams')
                             .leftJoin('team_users','teams.teamId','team_users.teamId')
+                            .leftJoin('team_roles_project_master','teams.teamId','team_roles_project_master.teamId')
                             .leftJoin('users','team_users.userId','users.id')
                             .select([
                                 'teams.teamId',
@@ -449,6 +487,9 @@ const teamsController = {
                                 'users.id',
                                 'users.name',
                                'users.email',
+                               'team_roles_project_master.projectId',
+                               'team_roles_project_master.roleId',
+                               'team_users.userId as userIds',
                                'teams.createdAt'
                              ])
                              .where({'teams.teamId':teamId}).returning('*')
