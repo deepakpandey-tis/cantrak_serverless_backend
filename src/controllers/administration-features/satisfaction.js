@@ -233,18 +233,21 @@ const satisfactionController = {
         knex
           .count("* as count")
           .from("satisfaction")
-          .where({ "orgId": orgId })
+          .innerJoin("users", "users.id", "satisfaction.createdBy")    
+          .where({ "satisfaction.orgId": orgId })
           .first(),
         knex("satisfaction")
+          .innerJoin("users", "users.id", "satisfaction.createdBy")             
+          .where({ "satisfaction.orgId": orgId })
           .select([
-            "satisfactionCode as Satisfaction Code",
-            "descriptionThai as Description English",
-            "descriptionThai as Description Thai",
-            "isActive as Status",
-            "createdBy as Created By",
-            "createdAt as Date Created"
+            "satisfaction.id",
+            "satisfaction.satisfactionCode as Satisfaction Code",
+            "satisfaction.descriptionThai as Description English",
+            "satisfaction.descriptionThai as Description Thai",
+            "satisfaction.isActive as Status",
+            "users.name as Created By",
+            "satisfaction.createdAt as Date Created"
           ])
-          .where({ "orgId": orgId })
           .offset(offset)
           .limit(per_page)
       ]);
@@ -381,19 +384,21 @@ const satisfactionController = {
         knex
           .count("* as count")
           .from("satisfaction")
-          .where({ "orgId": orgId })
+          .innerJoin("users", "users.id", "satisfaction.createdBy")   
+          .where({ "satisfaction.orgId": orgId })
           .first(),
         knex("satisfaction")
+          .innerJoin("users", "users.id", "satisfaction.createdBy")    
+          .where({ "satisfaction.orgId": orgId })          
           .select([
-            "id",
-            "satisfactionCode as Satisfaction Code",
-            "descriptionThai as Description English",
-            "descriptionThai as Description Thai",
-            "isActive as Status",
-            "createdby as Created By",
-            "createdAt as Date Created"
+            "satisfaction.id",
+            "satisfaction.satisfactionCode as Satisfaction Code",
+            "satisfaction.descriptionThai as Description English",
+            "satisfaction.descriptionThai as Description Thai",
+            "satisfaction.isActive as Status",
+            "users.name as Created By",
+            "satisfaction.createdAt as Date Created"
           ])
-          .where({ "orgId": orgId })
           .offset(offset)
           .limit(per_page)
       ]);
