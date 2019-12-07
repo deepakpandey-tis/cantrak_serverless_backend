@@ -14,6 +14,7 @@ router.get('/get-satisfaction-list', authMiddleware.isAuthenticated, authMiddlew
 router.post('/delete-satisfaction', authMiddleware.isAuthenticated, authMiddleware.isAdmin, satisfactionController.deleteSatisfaction);
 // Export Satisfaction Data
 router.get('/export-satisfaction', authMiddleware.isAuthenticated, authMiddleware.isAdmin, satisfactionController.exportSatisfaction);
+router.post('/satisfaction-details', authMiddleware.isAuthenticated, authMiddleware.isAdmin, satisfactionController.satisfactionDetails);
 
 
 
