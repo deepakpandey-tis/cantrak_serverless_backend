@@ -31,14 +31,14 @@ const companyController = {
           country: Joi.string().required(),
           state: Joi.string().required(),
           city: Joi.string().required(),
-          zipCode: Joi.string().required(),
-          telephone: Joi.string().required(),
-          fax: Joi.string().required(),
-          provinceCode: Joi.string().required(),
-          amphurCode: Joi.string().required(),
-          tumbonCode: Joi.string().required(),
-          flag: Joi.string().required(),
-          logoFile: Joi.string().required()
+          zipCode: Joi.string().allow('').optional(),
+          telephone: Joi.string().allow('').optional(),
+          fax: Joi.string().allow('').optional(),
+          provinceCode: Joi.string().allow('').optional(),
+          amphurCode: Joi.string().allow('').optional(),
+          tumbonCode: Joi.string().allow('').optional(),
+          flag: Joi.string().allow('').optional(),
+          logoFile: Joi.string().allow('').optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -54,14 +54,14 @@ const companyController = {
             ]
           });
         }
-console.log('ORG ID: ',orgId)
+        console.log('ORG ID: ',orgId)
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
           createdBy: userId,
           createdAt: currentTime,
           updatedAt: currentTime,
-          orgId
+          orgId: orgId,
         };
         let insertResult = await knex
           .insert(insertData)
@@ -105,14 +105,14 @@ console.log('ORG ID: ',orgId)
           country: Joi.string().required(),
           state: Joi.string().required(),
           city: Joi.string().required(),
-          zipCode: Joi.string().required(),
-          telephone: Joi.string().required(),
-          fax: Joi.string().required(),
-          provinceCode: Joi.string().required(),
-          amphurCode: Joi.string().required(),
-          tumbonCode: Joi.string().required(),
-          flag: Joi.string().required(),
-          logoFile: Joi.string().required()
+          zipCode: Joi.string().allow('').optional(),
+          telephone: Joi.string().allow('').optional(),
+          fax: Joi.string().allow('').optional(),
+          provinceCode: Joi.string().allow('').optional(),
+          amphurCode: Joi.string().allow('').optional(),
+          tumbonCode: Joi.string().allow('').optional(),
+          flag: Joi.string().allow('').optional(),
+          logoFile: Joi.string().allow('').optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -138,7 +138,6 @@ console.log('ORG ID: ',orgId)
           .transacting(trx)
           .into("companies");
         company = insertResult[0];
-
         trx.commit;
       });
 
@@ -253,21 +252,23 @@ console.log('ORG ID: ',orgId)
         knex
           .count("* as count")
           .from("companies")
-          .where({orgId:req.orgId})
+          .innerJoin("users", "users.id", "companies.createdBy")
+          .where({"companies.orgId":req.orgId})
           .first(),
         knex("companies")
+          .innerJoin("users", "users.id", "companies.createdBy")
+          .where({"companies.orgId":req.orgId})          
           .select([
-            "id as id",
-            "companyName as Company Name",
-            "contactPerson as Contact Person",
-            "telephone as Contact Number",
-            "isActive as Status",
-            "createdBy as Created By",
-            "createdAt as Date Created"
+            "companies.id as id",
+            "companies.companyName as Company Name",
+            "companies.contactPerson as Contact Person",
+            "companies.telephone as Contact Number",
+            "companies.isActive as Status",
+            "users.name as Created By",
+            "companies.createdAt as Date Created"
           ])
           .offset(offset)
           .limit(per_page)
-          .where({orgId:req.orgId})
       ]);
 
       let count = total.count;
@@ -306,17 +307,21 @@ console.log('ORG ID: ',orgId)
       let [total, rows] = await Promise.all([
         knex
           .count("* as count")
-          .from("companies")
+          .from("companies") 
+          .innerJoin("users", "users.id", "companies.createdBy")
+          .where({"companies.orgId":req.orgId})          
           .first(),
         knex("companies")
+          .innerJoin("users", "users.id", "companies.createdBy")
+          .where({"companies.orgId":req.orgId})        
           .select([
-            "id as id",
-            "companyName as Company Name",
-            "contactPerson as Contact Person",
-            "telephone as Contact Number",
-            "isActive as Status",
-            "createdBy as Created By",
-            "createdAt as Date Created"
+            "companies.id as id",
+            "companies.companyName as Company Name",
+            "companies.contactPerson as Contact Person",
+            "companies.telephone as Contact Number",
+            "companies.isActive as Status",
+            "users.name as Created By",
+            "companies.createdAt as Date Created"           
           ])
           .offset(offset)
           .limit(per_page)
@@ -345,7 +350,7 @@ console.log('ORG ID: ',orgId)
     try {
       let pagination = {};
       let [result] = await Promise.all([
-        knex("companies").select('id', 'companyId', 'companyName as CompanyName').where({ isActive : 'true'})
+        knex("companies").select('id', 'companyId', 'companyName as CompanyName').where({ "isActive" : 'true',"orgId":req.orgId})
       ]);
       pagination.data = result;
       return res.status(200).json({

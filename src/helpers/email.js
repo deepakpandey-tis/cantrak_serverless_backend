@@ -78,7 +78,6 @@ const sendSQSMessage = async (messageBody) => {
 
 const emailHelper = {
     sendTemplateEmail: async ({ to, subject, template, templateData, layout }) => {
-        // const users = await knex.select().from('users');
         try {
 
             console.log('[helpers][email][sendTemplateEmail] To:', to);

@@ -25,20 +25,20 @@ const ProjectController = {
           projectName: Joi.string().required(),
           projectLocationThai: Joi.string().required(),
           projectLocationEng: Joi.string().required(),
-          projectStartDate: Joi.string().required(),
-          projectEndDate: Joi.string().required(),
-          branchId: Joi.string().required(),
-          ownerCode: Joi.string().required(),
-          customerCode: Joi.string().required(),
-          ventureType: Joi.string().required(),
-          locationFlag: Joi.string().required(),
-          projectType: Joi.string().required(),
-          biddingDate: Joi.string().required(),
-          projectPeriod: Joi.string().required(),
-          budgetValue: Joi.string().required(),
-          currency: Joi.string().required(),
-          secondCurrency: Joi.string().required(),
-          addressFlag: Joi.string().required()
+          projectStartDate: Joi.string().allow('').optional(),
+          projectEndDate: Joi.string().allow('').optional(),
+          branchId:Joi.string().allow('').optional(),
+          ownerCode: Joi.string().allow('').optional(),
+          customerCode: Joi.string().allow('').optional(),
+          ventureType: Joi.string().allow('').optional(),
+          locationFlag: Joi.string().allow('').optional(),
+          projectType: Joi.string().allow('').optional(),
+          biddingDate: Joi.string().allow('').optional(),
+          projectPeriod: Joi.string().allow('').optional(),
+          budgetValue:Joi.string().allow('').optional(),
+          currency:Joi.string().allow('').optional(),
+          secondCurrency: Joi.string().allow('').optional(),
+          addressFlag: Joi.string().allow('').optional()
         });
 
         const result = Joi.validate(payload, schema);
@@ -103,20 +103,20 @@ const ProjectController = {
           projectName: Joi.string().required(),
           projectLocationThai: Joi.string().required(),
           projectLocationEng: Joi.string().required(),
-          projectStartDate: Joi.string().required(),
-          projectEndDate: Joi.string().required(),
-          branchId: Joi.string().required(),
-          ownerCode: Joi.string().required(),
-          customerCode: Joi.string().required(),
-          ventureType: Joi.string().required(),
-          locationFlag: Joi.string().required(),
-          projectType: Joi.string().required(),
-          biddingDate: Joi.string().required(),
-          projectPeriod: Joi.string().required(),
-          budgetValue: Joi.string().required(),
-          currency: Joi.string().required(),
-          secondCurrency: Joi.string().required(),
-          addressFlag: Joi.string().required()
+          projectStartDate: Joi.string().allow('').optional(),
+          projectEndDate: Joi.string().allow('').optional(),
+          branchId:Joi.string().allow('').optional(),
+          ownerCode: Joi.string().allow('').optional(),
+          customerCode: Joi.string().allow('').optional(),
+          ventureType: Joi.string().allow('').optional(),
+          locationFlag: Joi.string().allow('').optional(),
+          projectType: Joi.string().allow('').optional(),
+          biddingDate: Joi.string().allow('').optional(),
+          projectPeriod: Joi.string().allow('').optional(),
+          budgetValue:Joi.string().allow('').optional(),
+          currency:Joi.string().allow('').optional(),
+          secondCurrency: Joi.string().allow('').optional(),
+          addressFlag: Joi.string().allow('').optional()
         });
 
         const result = Joi.validate(payload, schema);
@@ -180,7 +180,7 @@ const ProjectController = {
         let ProjectResult = await knex("projects")
           .innerJoin("companies","projects.companyId","companies.id")
           .select("projects.*","companies.companyId as compId","companies.companyName")
-          .where({ "projects.id": payload.id,orgId:req.orgId })
+          .where({ "projects.id": payload.id,'projects.orgId':req.orgId })
           
 
 
@@ -263,15 +263,19 @@ const ProjectController = {
             .count("* as count")
             .from("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
+            .innerJoin("users", "users.id", "projects.createdBy")
+            .where({ "projects.orgId": req.orgId })
             .first(),
           knex("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
+            .innerJoin("users", "users.id", "projects.createdBy")
+            .where({ "projects.orgId": req.orgId })
             .select([
               "projects.id as id",
               "projects.projectName as Project Name",
               "companies.companyName as Company Name",
               "projects.isActive as Status",
-              "projects.createdBy as Created By",
+              "users.name as Created By",
               "projects.createdAt as Date Created"
             ])
             .offset(offset)
@@ -298,6 +302,7 @@ const ProjectController = {
             .count("* as count")
             .from("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
+            .innerJoin("users", "users.id", "projects.createdBy")
             .where({ "projects.companyId": companyId })
             .offset(offset)
             .limit(per_page)
@@ -305,13 +310,14 @@ const ProjectController = {
           knex
             .from("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
+            .innerJoin("users", "users.id", "projects.createdBy")
             .where({ "projects.companyId": companyId })
             .select([
               "projects.id as id",
               "projects.projectName as Project Name",
               "companies.companyName as Company Name",
               "projects.isActive as Status",
-              "projects.createdBy as Created By",
+              "users.name as Created By",
               "projects.createdAt as Date Created"
             ])
             .offset(offset)
@@ -359,14 +365,16 @@ const ProjectController = {
             .count("* as count")
             .from("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
+            .innerJoin("users", "users.id", "projects.createdBy")            
             .first(),
           knex("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
+            .innerJoin("users", "users.id", "projects.createdBy")            
             .select([
               "projects.projectName as Project Name",
               "companies.companyName as Company Name",
               "projects.isActive as Status",
-              "projects.createdBy as Created By",
+              "users.name as Created By",
               "projects.createdAt as Date Created"
             ])
             .offset(offset)
@@ -476,6 +484,32 @@ const ProjectController = {
       });
     }
   },
+  getProjectAllList: async (req, res) => {
+    try {
+     
+       let orgId  =  req.orgId
+     
+      let rows = await knex("projects")
+            .select([
+              "projects.id as id",
+              "projects.projectName"
+            ]).where({orgId:req.orgId})
+      
+      return res.status(200).json({
+        data: {
+          projects: rows
+        },
+        message: "Projects all List!"
+      });
+    } catch (err) {
+      console.log("[controllers][generalsetup][viewProject] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  }
+
 };
 
 module.exports = ProjectController;

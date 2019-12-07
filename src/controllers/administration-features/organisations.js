@@ -174,6 +174,7 @@ const organisationsController = {
           name             : Joi.string().required(),
           userName         : Joi.string().required(),
           email            : Joi.string().required(),
+          resources        : Joi.array().required()
         });
 
         const result = Joi.validate(_.omit(payload,"mobileNo","id"), schema);
@@ -225,12 +226,33 @@ const organisationsController = {
           .transacting(trx)
           .into("users");
           user = insertUser[0];
+
+     
+          let resources = req.body.resources;
+
+          if(resources.length>0){
+
+            let delData = await knex('organisation_resources_master').where({orgId:payload.id}).del();
+
+            for(let resourceId of resources) {              
+            let insertData = {
+                             orgId:payload.id,
+                             resourceId: resourceId,
+                             createdAt:currentTime,
+                             updatedAt:currentTime
+                             } 
+            let resourceResult = await knex.insert(insertData).returning(['*'])
+             .transacting(trx).into('organisation_resources_master');               
+            resource       = resourceResult[0]
+                            }                
+          }
         trx.commit;
+
       });
 
       return res.status(200).json({
         data: {
-          organisation:{...organisation,...user}
+          organisation:{...organisation,...user,...resource}
         },
         message: "Organisation details updated successfully."
       });
@@ -312,6 +334,8 @@ const organisationsController = {
           .count("* as count")
           .from("organisations")
           .leftJoin('users','organisations.id','users.orgId')
+          .leftJoin('application_user_roles','users.id','application_user_roles.userId')
+          .where({'application_user_roles.roleId':2})
           .where(qb=>{
             if(organisationName){
             qb.where('organisations.organisationName','like',`%${organisationName}%`)
@@ -327,6 +351,8 @@ const organisationsController = {
           .first(),
         knex("organisations")
           .leftJoin('users','organisations.id','users.orgId')
+          .leftJoin('application_user_roles','users.id','application_user_roles.userId')
+          .where({'application_user_roles.roleId':2})
           .select([
             'organisations.*',
             'users.name',
@@ -357,9 +383,13 @@ const organisationsController = {
           .count("* as count")
           .from("organisations")
           .leftJoin('users','organisations.id','users.orgId')
+          .leftJoin('application_user_roles','users.id','application_user_roles.userId')
+          .where({'application_user_roles.roleId':2})
           .first(),
         knex("organisations")
           .leftJoin('users','organisations.id','users.orgId')
+          .leftJoin('application_user_roles','users.id','application_user_roles.userId')
+          .where({'application_user_roles.roleId':2})
           .select([
             'organisations.*',
             'users.name',
@@ -411,9 +441,20 @@ const organisationsController = {
             'users.userName'
           ]).where({'organisations.id':id})
 
+       let resourcesarr = []; 
+       let resourceResult =  await knex("organisation_resources_master")
+                             .leftJoin('resources','organisation_resources_master.resourceId','resources.id')
+                             .where({"organisation_resources_master.orgId":id});
+
+       
+       for(resource of resourceResult){
+        resourcesarr.push(resource.resourceId)
+
+       }  
+
           return res.status(200).json({
             data: {
-              organisationDetails: result[0]
+              organisationDetails:{ ...result[0],resources: resourcesarr,resourceDetail:resourceResult}
             },
             message: "Organisation Details!."
           });

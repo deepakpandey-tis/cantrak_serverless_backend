@@ -104,6 +104,80 @@ const entranceController = {
                         return rolename;
                     });
 
+                    if (login.user.roles.includes("orgAdmin")) {
+                      console.log("this is orgAdmin");
+                      // get all the projects of this admin
+                      const projects = await knex("projects")
+                        .select("id")
+                        .where({ orgId});
+                      const companies = await knex("companies")
+                        .select("id")
+                        .where({ orgId});
+                      const resources = await knex(
+                        "organisation_resources_master"
+                      )
+                        .select("resourceId as id")
+                        .where({ orgId});
+                      const userProjectResources = _.uniqBy(
+                        resources,
+                        "id"
+                      ).map(v => ({
+                        id: v.id,
+                        projects: projects.map(v => v.id)
+                      }));
+                      const userCompanyResources = _.uniqBy(
+                        resources,
+                        "id"
+                      ).map(v => ({
+                        id: v.id,
+                        companies: companies.map(v => v.id)
+                      }));
+                      //console.log(mappedProjects)
+                      login.user.userCompanyResources = userCompanyResources;
+                      login.user.userProjectResources = userProjectResources;
+                      console.log(userCompanyResources, userProjectResources);
+                    }
+
+                    if (login.user.roles.includes("orgUser")) {
+                      const result = await knex("team_users")
+                        .innerJoin(
+                          "team_roles_project_master",
+                          "team_users.teamId",
+                          "team_roles_project_master.teamId"
+                        )
+                        .innerJoin(
+                          "role_resource_master",
+                          "team_roles_project_master.roleId",
+                          "role_resource_master.roleId"
+                        )
+                        .select([
+                          "team_roles_project_master.projectId as projectId",
+                          "role_resource_master.resourceId as resourceId"
+                        ])
+                        .where({
+                          "team_users.userId": loginResult.id,
+                          "team_users.orgId": orgId,
+                          "team_roles_project_master.orgId":orgId
+                        });
+
+                      // let userProjectResources = result;
+                      console.log('Result: ',result);
+
+                      let userProjectResources = _.chain(result)
+                        .groupBy("resourceId")
+                        .map((value, key) => ({
+                          id: key,
+                          projects: value.map(a => a.projectId)
+                        }))
+                        .value();
+                      login.user.userProjectResources = userProjectResources;
+
+                      console.log(
+                        "Result***********************************************************",
+                        userProjectResources
+                      );
+                    }
+
 
                     // res.status(200).json({
                     //     data: login,
@@ -241,19 +315,19 @@ const entranceController = {
                 // Insert in role table,
                 const roleData = {
                     userId: user.id,
-                    roleId: 7,
+                    roleId: 4,
                     createdAt: currentTime,
                     updatedAt: currentTime
                 }
 
-                const roles = await knex.insert(roleData).returning(['*']).transacting(trx).into('user_roles');
+                const roles = await knex.insert(roleData).returning(['*']).transacting(trx).into('application_user_roles');
                 user.roles = roles;
                 trx.commit;
             });
 
             const Parallel = require('async-parallel');
             user.roles = await Parallel.map(user.roles, async item => {
-                let rolename = await knex('roles').where({ id: item.roleId }).select('name');
+                let rolename = await knex('application_roles').where({ id: item.roleId }).select('name');
                 rolename = rolename[0].name;
                 return rolename;
             });

@@ -12,7 +12,7 @@ router.get('/get-company-list', authMiddleware.isAuthenticated, companyControlle
 // Export Company Data
 router.get('/export-company', authMiddleware.isAuthenticated, companyController.exportCompany)
 // Get Company List For Project
-router.get('/company-lists', companyController.getCompanyListForProject)
+router.get('/company-lists',authMiddleware.isAuthenticated, companyController.getCompanyListForProject)
 
 
 module.exports = router
