@@ -29,6 +29,7 @@ const roleMiddleware = {
         console.log("****************MSG***************", userId, orgId);
 
         if (req.orgAdmin) {
+
           console.log("this is orgAdmin");
           // get all the projects of this admin
           const projects = await knex("projects")
@@ -52,6 +53,7 @@ const roleMiddleware = {
           req.userCompanyResources = userCompanyResources;
           req.userProjectResources = userProjectResources;
           console.log(userCompanyResources, userProjectResources);
+                
         }
 
         if (req.orgUser) {
@@ -76,7 +78,7 @@ const roleMiddleware = {
 
 
             let userProjectResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, projects: value.map(a => a.projectId) })).value();
-          req.userProjectResources = userProjectResources;
+            req.userProjectResources = userProjectResources;
 
             console.log(
               "Result***********************************************************",

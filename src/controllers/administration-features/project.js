@@ -486,8 +486,9 @@ const ProjectController = {
   },
   getProjectAllList: async (req, res) => {
     try {
-      
-    
+     
+       let orgId  =  req.orgId
+     
       let rows = await knex("projects")
             .select([
               "projects.id as id",
