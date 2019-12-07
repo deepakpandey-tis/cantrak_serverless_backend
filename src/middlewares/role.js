@@ -94,7 +94,7 @@ const roleMiddleware = {
       }
     } catch (err) {
       console.log(err);
-      next(createError(401));
+      next(createError(403));
       return res.status(200).json({ error: err });
     }
   },

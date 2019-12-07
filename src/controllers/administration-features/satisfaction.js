@@ -241,7 +241,7 @@ const satisfactionController = {
             "descriptionThai as Description English",
             "descriptionThai as Description Thai",
             "isActive as Status",
-            "createdby as Created By",
+            "createdBy as Created By",
             "createdAt as Date Created"
           ])
           .where({ "orgId": orgId })
@@ -385,6 +385,7 @@ const satisfactionController = {
           .first(),
         knex("satisfaction")
           .select([
+            "id",
             "satisfactionCode as Satisfaction Code",
             "descriptionThai as Description English",
             "descriptionThai as Description Thai",
@@ -417,7 +418,59 @@ const satisfactionController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+
+  // Get Satisfaction Details
+
+  satisfactionDetails: async (req, res) => {
+    try {
+      let satisfactionDetail = null;
+      let orgId = req.orgId;     
+     
+      await knex.transaction(async trx => {
+        let payload = req.body;
+        const schema = Joi.object().keys({
+          id: Joi.string().required()
+        });
+
+        const result = Joi.validate(payload, schema);
+       
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message }
+            ]
+          });
+        }
+
+        let current = new Date().getTime();
+        let satisfactionResult = await knex("satisfaction")
+          .select("satisfaction.*")
+          .where({ id: payload.id, orgId:orgId });
+
+          satisfactionDetail = _.omit(satisfactionResult[0], [
+          "createdAt",
+          "updatedAt",
+          "isActive"
+        ]);
+        trx.commit;
+      });
+
+      return res.status(200).json({
+        data: {
+          satisfactionDetails: satisfactionDetail
+        },
+        message: "Satisfaction Details"
+      });
+    } catch (err) {
+      console.log("[controllers][generalsetup][viewSatisfaction] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
+
 };
 
 module.exports = satisfactionController;
