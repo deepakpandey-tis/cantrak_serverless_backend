@@ -263,17 +263,19 @@ const ProjectController = {
             .count("* as count")
             .from("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
+            .innerJoin("users", "users.id", "projects.createdBy")
             .where({ "projects.orgId": req.orgId })
             .first(),
           knex("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
+            .innerJoin("users", "users.id", "projects.createdBy")
             .where({ "projects.orgId": req.orgId })
             .select([
               "projects.id as id",
               "projects.projectName as Project Name",
               "companies.companyName as Company Name",
               "projects.isActive as Status",
-              "projects.createdBy as Created By",
+              "users.name as Created By",
               "projects.createdAt as Date Created"
             ])
             .offset(offset)
@@ -300,6 +302,7 @@ const ProjectController = {
             .count("* as count")
             .from("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
+            .innerJoin("users", "users.id", "projects.createdBy")
             .where({ "projects.companyId": companyId })
             .offset(offset)
             .limit(per_page)
@@ -307,13 +310,14 @@ const ProjectController = {
           knex
             .from("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
+            .innerJoin("users", "users.id", "projects.createdBy")
             .where({ "projects.companyId": companyId })
             .select([
               "projects.id as id",
               "projects.projectName as Project Name",
               "companies.companyName as Company Name",
               "projects.isActive as Status",
-              "projects.createdBy as Created By",
+              "users.name as Created By",
               "projects.createdAt as Date Created"
             ])
             .offset(offset)
@@ -361,14 +365,16 @@ const ProjectController = {
             .count("* as count")
             .from("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
+            .innerJoin("users", "users.id", "projects.createdBy")            
             .first(),
           knex("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
+            .innerJoin("users", "users.id", "projects.createdBy")            
             .select([
               "projects.projectName as Project Name",
               "companies.companyName as Company Name",
               "projects.isActive as Status",
-              "projects.createdBy as Created By",
+              "users.name as Created By",
               "projects.createdAt as Date Created"
             ])
             .offset(offset)
@@ -395,6 +401,7 @@ const ProjectController = {
             .count("* as count")
             .from("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
+            .innerJoin("users", "users.id", "projects.createdBy")            
             .where({ "projects.companyId": companyId })
             .offset(offset)
             .limit(per_page)
@@ -402,12 +409,13 @@ const ProjectController = {
           knex
             .from("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
+            .innerJoin("users", "users.id", "projects.createdBy") 
             .where({ "projects.companyId": companyId })
             .select([
               "projects.projectName as Project Name",
               "companies.companyName as Company Name",
               "projects.isActive as Status",
-              "projects.createdBy as Created By",
+              "users.name as Created By",
               "projects.createdAt as Date Created"
             ])
             .offset(offset)

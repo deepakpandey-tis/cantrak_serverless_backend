@@ -4,7 +4,23 @@ const knex = require('../db/knex');
 const resourceController = {
     getResourceList: async (req,res) => {
         try {
-            const resources = await knex('resources').select('*')
+            let resources = null;
+            if(req.me.id === '59'){
+                resources = await knex('resources').select('*')
+            } else {
+                resources = await knex("resources")
+                  .innerJoin(
+                    "organisation_resources_master",
+                    "resources.id",
+                    "organisation_resources_master.resourceId"
+                  )
+                  .select([
+                    "resources.*",
+                    "organisation_resources_master.resourceId as resourceId",
+                    "organisation_resources_master.orgId as orgId"
+                  ])
+                  .where({ 'organisation_resources_master.orgId': req.orgId });
+            }
             return res.status(200).json({
                 data: {
                     resources

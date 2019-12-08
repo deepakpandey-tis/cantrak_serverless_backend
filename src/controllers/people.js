@@ -17,7 +17,7 @@ const peopleController = {
                     userName: Joi.string().required(),
                     email: Joi.string().required(),
                     password: Joi.string().required(),
-                    roleId: Joi.string().required()
+                    //roleId: Joi.string().required()
                 })
                 let result = Joi.validate(payload, schema);
                 console.log('[controllers][people][addPeople]: JOi Result', result);
@@ -37,7 +37,7 @@ const peopleController = {
                 payload.password = hash;
 
                 let currentTime = new Date().getTime();
-                const people = await knex('users').insert({..._.omit(payload,'roleId'),orgId:req.orgId,createdAt:currentTime,updatedAt:currentTime}).returning(['*'])
+                const people = await knex('users').insert({...payload,orgId:req.orgId,createdAt:currentTime,updatedAt:currentTime}).returning(['*'])
 
                 //Insert Application Role
                 let applicationUserRole = await knex(
@@ -51,7 +51,7 @@ const peopleController = {
                 });
 
                 // Insert Organisation Role
-                let organisationUserRole = await knex('organisation_user_roles').insert({roleId:payload.roleId, userId:people[0].id,createdAt:currentTime,updatedAt:currentTime,orgId:req.orgId})
+                //let organisationUserRole = await knex('organisation_user_roles').insert({roleId:payload.roleId, userId:people[0].id,createdAt:currentTime,updatedAt:currentTime,orgId:req.orgId})
 
                 // let peopleResult = await knex('users').where({email:peoplePayload.email}).returning(['*']);
                 // people = peopleResult[0]
@@ -75,7 +75,7 @@ const peopleController = {
 
                 trx.commit;
                 res.status(200).json({
-                  data: { people, organisationUserRole, applicationUserRole },
+                  data: { people, applicationUserRole },
                   message: "People added successfully !"
                 });
             })
@@ -173,57 +173,99 @@ const peopleController = {
             if(name || email  || accountType){
                
                 [total, rows] = await Promise.all([
-                    knex.count('* as count').from("users")
-                        .leftJoin('property_units', 'users.houseId', 'property_units.houseId')
-                        .leftJoin('companies','property_units.companyId','companies.id')
-                        .innerJoin('organisation_user_roles','users.id','organisation_user_roles.userId')
-                        .innerJoin('organisation_roles','organisation_user_roles.roleId','organisation_roles.id')
-                        .where(qb=>{
-                            qb.where({'users.orgId':req.orgId})
-                            if(name){
-                                qb.where('users.name','like',`%${name}%`)
-                            }
-                            if(email){
-                                qb.where('users.email','like',`%${email}%`)
-                            }
-                            if(accountType){
-                                qb.where('organisation_user_roles.roleId',accountType)
-                            }
-                        })
-                        .whereNotIn('organisation_roles.name', ['superAdmin','admin'])                    
-                        .first(),
-                        knex.from('users')
-                        .leftJoin('property_units', 'users.houseId', 'property_units.houseId')
-                        .leftJoin('companies','property_units.companyId','companies.id')
-                        .innerJoin('organisation_user_roles','users.id','organisation_user_roles.userId')
-                        .innerJoin('organisation_roles','organisation_user_roles.roleId','organisation_roles.id')
-                        .where(qb=>{
-                            qb.where({'users.orgId':req.orgId})
-                            if(name){
-                                qb.where('users.name','like',`%${name}%`)
-                            }
-                            if(email){
-                                qb.where('users.email','like',`%${email}%`)
-                            }
-                            if(accountType){
-                                qb.where('organisation_user_roles.roleId',accountType)
-                            }
-                        })
-                        .whereNotIn('organisation_roles.name', ['superAdmin','admin'])                    
-                        .select([
-                            'users.id as userId',
-                            'users.name as name',
-                            'users.email as email',
-                            'users.userName',
-                            'users.mobileNo',
-                            'users.houseId',
-                            'users.lastLogin as lastVisit',
-                            'companies.id as companyId',
-                            'companies.companyName',
-                            'organisation_roles.name as roleName'
-                        ])
-                        .offset(offset).limit(per_page)
-                ])
+                  knex
+                    .count("* as count")
+                    .from("users")
+                    .leftJoin(
+                      "property_units",
+                      "users.houseId",
+                      "property_units.houseId"
+                    )
+                    .leftJoin(
+                      "companies",
+                      "property_units.companyId",
+                      "companies.id"
+                    )
+                    // .leftJoin(
+                    //   "organisation_user_roles",
+                    //   "users.id",
+                    //   "organisation_user_roles.userId"
+                    // )
+                    // .leftJoin(
+                    //   "organisation_roles",
+                    //   "organisation_user_roles.roleId",
+                    //   "organisation_roles.id"
+                    // )
+                    .where(qb => {
+                      qb.where({ "users.orgId": req.orgId });
+                      if (name) {
+                        qb.where("users.name", "like", `%${name}%`);
+                      }
+                      if (email) {
+                        qb.where("users.email", "like", `%${email}%`);
+                      }
+                    //   if (accountType) {
+                    //     qb.where("organisation_user_roles.roleId", accountType);
+                    //   }
+                    })
+                    // .whereNotIn("organisation_roles.name", [
+                    //   "superAdmin",
+                    //   "admin"
+                    // ])
+                    .first(),
+                  knex
+                    .from("users")
+                    .leftJoin(
+                      "property_units",
+                      "users.houseId",
+                      "property_units.houseId"
+                    )
+                    .leftJoin(
+                      "companies",
+                      "property_units.companyId",
+                      "companies.id"
+                    )
+                    // .leftJoin(
+                    //   "organisation_user_roles",
+                    //   "users.id",
+                    //   "organisation_user_roles.userId"
+                    // )
+                    // .leftJoin(
+                    //   "organisation_roles",
+                    //   "organisation_user_roles.roleId",
+                    //   "organisation_roles.id"
+                    // )
+                    .where(qb => {
+                      qb.where({ "users.orgId": req.orgId });
+                      if (name) {
+                        qb.where("users.name", "like", `%${name}%`);
+                      }
+                      if (email) {
+                        qb.where("users.email", "like", `%${email}%`);
+                      }
+                    //   if (accountType) {
+                    //     qb.where("organisation_user_roles.roleId", accountType);
+                    //   }
+                    })
+                    // .whereNotIn("organisation_roles.name", [
+                    //   "superAdmin",
+                    //   "admin"
+                    // ])
+                    .select([
+                      "users.id as userId",
+                      "users.name as name",
+                      "users.email as email",
+                      "users.userName",
+                      "users.mobileNo",
+                      "users.houseId",
+                      "users.lastLogin as lastVisit",
+                      "companies.id as companyId",
+                      "companies.companyName",
+                    //   "organisation_roles.name as roleName"
+                    ])
+                    .offset(offset)
+                    .limit(per_page)
+                ]);
 
             } else{
 
@@ -241,20 +283,20 @@ const peopleController = {
                       "property_units.companyId",
                       "companies.id"
                     )
-                    .innerJoin(
-                      "organisation_user_roles",
-                      "users.id",
-                      "organisation_user_roles.userId"
-                    )
-                    .innerJoin(
-                      "organisation_roles",
-                      "organisation_user_roles.roleId",
-                      "organisation_roles.id"
-                    )
-                    .whereNotIn("organisation_roles.name", [
-                      "superAdmin",
-                      "admin"
-                    ])
+                    // .leftJoin(
+                    //   "organisation_user_roles",
+                    //   "users.id",
+                    //   "organisation_user_roles.userId"
+                    // )
+                    // .leftJoin(
+                    //   "organisation_roles",
+                    //   "organisation_user_roles.roleId",
+                    //   "organisation_roles.id"
+                    // )
+                    // .whereNotIn("organisation_roles.name", [
+                    //   "superAdmin",
+                    //   "admin"
+                    // ])
                     .where({ "users.orgId": req.orgId })
                     .first(),
                   knex
@@ -269,20 +311,20 @@ const peopleController = {
                       "property_units.companyId",
                       "companies.id"
                     )
-                    .innerJoin(
-                      "organisation_user_roles",
-                      "users.id",
-                      "organisation_user_roles.userId"
-                    )
-                    .innerJoin(
-                      "organisation_roles",
-                      "organisation_user_roles.roleId",
-                      "organisation_roles.id"
-                    )
-                    .whereNotIn("organisation_roles.name", [
-                      "superAdmin",
-                      "admin"
-                    ])
+                    // .leftJoin(
+                    //   "organisation_user_roles",
+                    //   "users.id",
+                    //   "organisation_user_roles.userId"
+                    // )
+                    // .leftJoin(
+                    //   "organisation_roles",
+                    //   "organisation_user_roles.roleId",
+                    //   "organisation_roles.id"
+                    // )
+                    // .whereNotIn("organisation_roles.name", [
+                    //   "superAdmin",
+                    //   "admin"
+                    // ])
                     .select([
                       "users.id as userId",
                       "users.name as name",
@@ -293,7 +335,7 @@ const peopleController = {
                       "users.lastLogin as lastVisit",
                       "companies.id as companyId",
                       "companies.companyName",
-                      "organisation_roles.name as roleName"
+                    //   "organisation_roles.name as roleName"
                     ])
                     .offset(offset)
                     .limit(per_page)
@@ -343,24 +385,25 @@ const peopleController = {
                 "property_units.houseId"
               )
               .leftJoin("companies", "property_units.companyId", "companies.id")
-              .innerJoin(
-                "organisation_user_roles",
-                "users.id",
-                "organisation_user_roles.userId"
-              )
-              .innerJoin(
-                "organisation_roles",
-                "organisation_user_roles.roleId",
-                "organisation_roles.id"
-              )
+              //   .innerJoin(
+              //     "organisation_user_roles",
+              //     "users.id",
+              //     "organisation_user_roles.userId"
+              //   )
+              //   .innerJoin(
+              //     "organisation_roles",
+              //     "organisation_user_roles.roleId",
+              //     "organisation_roles.id"
+              //   )
               .select([
                 "users.id as userId",
                 "users.name ",
+                "users.userName as userName",
                 "users.mobileNo",
                 "users.email",
                 "users.houseId",
-                "organisation_roles.id as roleId",
-                "organisation_roles.name as accountType",
+                // "organisation_roles.id as roleId",
+                // "organisation_roles.name as accountType",
                 "companies.id as company",
                 "companies.companyName as companyName",
                 "property_units.projectId as project",
@@ -369,7 +412,7 @@ const peopleController = {
                 "property_units.floorZoneId as floor"
               ])
               .where({ "users.id": id })
-              .orderBy("organisation_user_roles.createdAt", "desc");
+              .orderBy("users.createdAt", "desc");
                                //.whereNotIn('roles.name',['superAdmin','admin'])
             
             let peopleDataResult = peopleData[0];
