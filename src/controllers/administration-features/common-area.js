@@ -17,6 +17,9 @@ const commonAreaController = {
   addCommonArea: async (req, res) => {
     try {
       let commonArea = null;
+      let orgId = req.orgId;
+      let userId = req.me.id;
+
       await knex.transaction(async trx => {
         let commonPayload = req.body;
 
@@ -71,7 +74,8 @@ const commonAreaController = {
           isActive: "true",
           createdAt: currentTime,
           updatedAt: currentTime,
-          createdBy: 1
+          createdBy: userId,
+          orgId: orgId
         };
 
         console.log(
@@ -109,6 +113,9 @@ const commonAreaController = {
   updateCommonArea: async (req, res) => {
     try {
       let updateComPayload = null;
+      let orgId = req.orgId;
+      let userId = req.me.id;
+
 
       await knex.transaction(async trx => {
         let commonUpdatePaylaod = req.body;
@@ -174,7 +181,9 @@ const commonAreaController = {
             updatedAt: currentTime
           })
           .where({
-            id: commonUpdatePaylaod.id
+            id: commonUpdatePaylaod.id,
+            createdBy: userId,
+            orgId: orgId
           })
           .returning(["*"])
           .transacting(trx)
@@ -222,6 +231,9 @@ const commonAreaController = {
       let page = reqData.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
+      let orgId = req.orgId;
+      let userId = req.me.id;
+
 
       if (companyId) {
         [total, rows] = await Promise.all([
@@ -241,7 +253,7 @@ const commonAreaController = {
             .innerJoin("projects", "common_area.projectId", "projects.id")
             .offset(offset)
             .limit(per_page)
-            .where({ "common_area.companyId": companyId }),
+            .where({ "common_area.companyId": companyId, "common_area.orgId": orgId }),
           knex("common_area")
             .innerJoin(
               "floor_and_zones",
@@ -266,7 +278,7 @@ const commonAreaController = {
             ])
             .offset(offset)
             .limit(per_page)
-            .where({ "common_area.companyId": companyId })
+            .where({ "common_area.companyId": companyId, "common_area.orgId": orgId })
         ]);
       } else {
         [total, rows] = await Promise.all([
@@ -283,7 +295,8 @@ const commonAreaController = {
               "common_area.buildingPhaseId",
               "buildings_and_phases.id"
             )
-            .innerJoin("projects", "common_area.projectId", "projects.id"),
+            .innerJoin("projects", "common_area.projectId", "projects.id")
+            .where({ "common_area.orgId": orgId }),
           knex("common_area")
             .innerJoin(
               "floor_and_zones",
@@ -296,6 +309,7 @@ const commonAreaController = {
               "buildings_and_phases.id"
             )
             .innerJoin("projects", "common_area.projectId", "projects.id")
+            .where({ "common_area.orgId": orgId })
             .select([
               "common_area.id as id",
               "common_area.commonAreaCode as Common Area",
@@ -429,6 +443,8 @@ const commonAreaController = {
   getdetailsCommonArea: async (req, res) => {
     try {
       let viewCommonPayload = null;
+      let orgId = req.orgId;
+      
 
       await knex.transaction(async trx => {
         let viewcommonAreaPayload = req.body;
@@ -488,7 +504,7 @@ const commonAreaController = {
               "floor_and_zones.floorZoneCode",
               "common_area.*"
             )
-            .where({ "common_area.id": viewcommonAreaPayload.id });
+            .where({ "common_area.id": viewcommonAreaPayload.id, "common_area.orgId": orgId });
 
           console.log(
             "[controllers][commonArea][commonareadetails]: View Data",
@@ -559,7 +575,7 @@ const commonAreaController = {
             .innerJoin("projects", "common_area.projectId", "projects.id")
             .offset(offset)
             .limit(per_page)
-            .where({ "common_area.companyId": companyId }),
+            .where({ "common_area.companyId": companyId,"common_area.orgId": orgId }),
           knex("common_area")
             .innerJoin(
               "floor_and_zones",
@@ -583,7 +599,7 @@ const commonAreaController = {
             ])
             .offset(offset)
             .limit(per_page)
-            .where({ "common_area.companyId": companyId })
+            .where({ "common_area.companyId": companyId,"common_area.orgId": orgId })
         ]);
       } else {
         [total, rows] = await Promise.all([
@@ -600,7 +616,8 @@ const commonAreaController = {
               "common_area.buildingPhaseId",
               "buildings_and_phases.id"
             )
-            .innerJoin("projects", "common_area.projectId", "projects.id"),
+            .innerJoin("projects", "common_area.projectId", "projects.id")
+            .where({ "common_area.orgId": orgId }),
           knex("common_area")
             .innerJoin(
               "floor_and_zones",
@@ -613,6 +630,7 @@ const commonAreaController = {
               "buildings_and_phases.id"
             )
             .innerJoin("projects", "common_area.projectId", "projects.id")
+            .where({ "common_area.orgId": orgId })
             .select([
               "common_area.commonAreaCode as Common Area",
               "floor_and_zones.floorZoneCode as Floor",
