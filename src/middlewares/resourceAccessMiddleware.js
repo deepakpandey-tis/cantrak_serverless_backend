@@ -4,9 +4,9 @@ const resourceAccessMiddleware = {
   isPMAccessible: async (req, res, next) => {
     let keys = req.userProjectResources.map(v => v.id);
     if (keys.includes("1")) {
-      next();
+      return next();
     } else {
-      next(createError(403));
+      return next(createError(403));
     }
   },
   isCMAccessible: async (req, res, next) => {
