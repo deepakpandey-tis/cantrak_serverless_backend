@@ -272,7 +272,7 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
-            .where({ "orgId": orgId, "buildings_and_phases.isActive": true })
+            .where({ "buildings_and_phases.orgId": orgId, "buildings_and_phases.isActive": true })
             .first(),
 
           knex("buildings_and_phases")
@@ -286,7 +286,7 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
-            .where({ "buildings_and_phases.isActive": true, "orgId": orgId })
+            .where({ "buildings_and_phases.isActive": true, "buildings_and_phases.orgId": orgId })
             .select([
               "buildings_and_phases.id as id",
               "buildings_and_phases.buildingPhaseCode as Building/Phase",
@@ -329,7 +329,7 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
-            .where({ "buildings_and_phases.isActive": true, "orgId": orgId })
+            .where({ "buildings_and_phases.isActive": true, "buildings_and_phases.orgId": orgId })
             .first(),
           knex("buildings_and_phases")
             .innerJoin(
@@ -342,7 +342,7 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
-            .where({ "buildings_and_phases.isActive": true, "orgId": orgId })
+            .where({ "buildings_and_phases.isActive": true, "buildings_and_phases.orgId": orgId })
             .select([
               "buildings_and_phases.id as id",
               "buildings_and_phases.buildingPhaseCode as Building/Phase",
@@ -390,7 +390,7 @@ const buildingPhaseController = {
               "buildings_and_phases.isActive": true,
               "projects.id": projectId,
               "companies.id": companyId,
-              "orgId": orgId
+              "buildings_and_phases.orgId": orgId
             })
             .first(),
           knex("buildings_and_phases")
@@ -408,7 +408,7 @@ const buildingPhaseController = {
               "buildings_and_phases.isActive": true,
               "projects.id": projectId,
               "companies.id": companyId,
-              "orgId": orgId
+              "buildings_and_phases.orgId": orgId
             })
             .select([
               "buildings_and_phases.id as id",
@@ -479,7 +479,7 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
-            .where({ "buildings_and_phases.isActive": true, "orgId": orgId })
+            .where({ "buildings_and_phases.isActive": true, "buildings_and_phases.orgId": orgId })
             .first(),
           knex("buildings_and_phases")
             .innerJoin(
@@ -492,7 +492,7 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
-            .where({ "buildings_and_phases.isActive": true, "orgId": orgId })
+            .where({ "buildings_and_phases.isActive": true, "buildings_and_phases.orgId": orgId })
             .select([
               "buildings_and_phases.buildingPhaseCode as Building/Phase",
               "projects.projectName as Project Name",
@@ -534,7 +534,7 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
-            .where({ "buildings_and_phases.isActive": true, "orgId": orgId })
+            .where({ "buildings_and_phases.isActive": true, "buildings_and_phases.orgId": orgId })
             .first(),
           knex("buildings_and_phases")
             .innerJoin(
@@ -547,7 +547,7 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
-            .where({ "buildings_and_phases.isActive": true, "orgId": orgId })
+            .where({ "buildings_and_phases.isActive": true, "buildings_and_phases.orgId": orgId })
             .select([
               "buildings_and_phases.buildingPhaseCode as Building/Phase",
               "projects.projectName as Project Name",
@@ -612,7 +612,7 @@ const buildingPhaseController = {
           .where({
             "buildings_and_phases.isActive": true,
             "buildings_and_phases.projectId": projectId,
-            "orgId": orgId
+            "buildings_and_phases.orgId": orgId
           })
           .select([
             "buildings_and_phases.id as id",
@@ -656,8 +656,7 @@ const buildingPhaseController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-  }
-  
+  }  
 };
 
 module.exports = buildingPhaseController;
