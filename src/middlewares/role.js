@@ -60,11 +60,11 @@ const roleMiddleware = {
         }
 
         if (req.orgUser) {
-                           const teamsResult = await knex("team_users")
-                             .select("teamId")
-                             .where({ userId, orgId });
-                           let teams = teamsResult.map(v => Number(v.teamId));
-                           console.log("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Teams: ", teams);
+                          //  const teamsResult = await knex("team_users")
+                          //    .select("teamId")
+                          //    .where({ userId, orgId });
+                          //  let teams = teamsResult.map(v => Number(v.teamId));
+                          //  console.log("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Teams: ", teams);
                           //  req.teams = teams;
 
                           //  // Now find for these teams which role has access to which project
@@ -112,7 +112,7 @@ const roleMiddleware = {
                              .select([
                                "team_roles_project_master.projectId as projectId",
                                "role_resource_master.resourceId as resourceId"
-                             ]).where({'team_users.userId':userId,'team_users.orgId':req.orgId}).whereIn('team_users.teamId',teams);
+                             ]).where({'team_users.userId':userId,'team_users.orgId':req.orgId})//.whereIn('team_users.teamId',teams);
 
                              console.log(
                                "result***********************************************************",
