@@ -49,6 +49,9 @@ const roleMiddleware = {
             id: v.id,
             companies: companies.map(v => v.id)
           }));
+          if(userProjectResources.length === 0) {
+            return next(createError(403))
+          }
           //console.log(mappedProjects)
           req.userCompanyResources = userCompanyResources;
           req.userProjectResources = userProjectResources;
