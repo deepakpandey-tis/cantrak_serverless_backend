@@ -264,7 +264,7 @@ const propertyUnitController = {
           knex
             .count("* as count")
             .from("property_units")
-            .where({ orgId: orgId })
+            .where({"property_units.orgId":orgId })
             .first(),
           knex("property_units")
             .select([
@@ -276,7 +276,7 @@ const propertyUnitController = {
               "property_units.createdBy as Created By",
               "property_units.createdAt as Date Created"
             ])
-            .where({ orgId: orgId })
+            .where({ "property_units.orgId": orgId })
             .offset(offset)
             .limit(per_page)
         ]);
@@ -300,7 +300,7 @@ const propertyUnitController = {
           knex
             .count("* as count")
             .from("property_units")
-            .where({ orgId: orgId })
+            .where({ "property_units.orgId": orgId })
             .first(),
           knex
             .from("property_units")
@@ -314,7 +314,7 @@ const propertyUnitController = {
               "property_units.createdBy as Created By",
               "property_units.createdAt as Date Created"
             ])
-            .where({ "property_units.companyId": companyId, orgId: orgId })
+            .where({ "property_units.companyId": companyId, "property_units.orgId": orgId })
             .offset(offset)
             .limit(per_page)
         ]);
@@ -364,7 +364,7 @@ const propertyUnitController = {
           knex
             .count("* as count")
             .from("property_units")
-            .where({ orgId: orgId })
+            .where({ "property_units.orgId": orgId })
             .first(),
           knex("property_units")
             .select([
@@ -375,7 +375,7 @@ const propertyUnitController = {
               "property_units.createdBy as Created By",
               "property_units.createdAt as Date Created"
             ])
-            .where({ orgId: orgId })
+            .where({ "property_units.orgId":orgId })
             .offset(offset)
             .limit(per_page)
         ]);
@@ -399,7 +399,7 @@ const propertyUnitController = {
           knex
             .count("* as count")
             .from("property_units")
-            .where({ orgId: orgId })
+            .where({ "property_units.orgId": orgId })
             .first(),
           knex
             .from("property_units")
@@ -412,7 +412,7 @@ const propertyUnitController = {
               "property_units.createdBy as Created By",
               "property_units.createdAt as Date Created"
             ])
-            .where({ "property_units.companyId": companyId, orgId: orgId })
+            .where({ "property_units.companyId": companyId, "property_units.orgId": orgId })
             .offset(offset)
             .limit(per_page)
         ]);
