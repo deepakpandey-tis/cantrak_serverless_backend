@@ -662,6 +662,8 @@ const taskGroupController = {
       let page = reqData.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
+      //console.log('pppppppppppppppppp',req.userProjectResources)
+      // let projects = _.flatten(req.userProjectResources.map(v => v.projects))
       [total, rows] = await Promise.all([
         knex.count('* as count').from("pm_master2")
         .innerJoin('asset_category_master','pm_master2.assetCategoryId','asset_category_master.id')
@@ -669,6 +671,8 @@ const taskGroupController = {
         .where(qb => {
           qb.where(filters)
           qb.where({ 'pm_master2.orgId':req.orgId});
+          // qb.whereIn('pm_master2.projectId',_.flatten(req.userProjectResources.map(v => v.projects)))
+          //qb.where({'pm_master2.projectId':})
           if(pmPlanName){
             qb.where('pm_master2.name', 'like', `%${pmPlanName}%`)
           }
@@ -689,6 +693,8 @@ const taskGroupController = {
           'pm_master2.id as id'
         ]).where(qb => {
           qb.where(filters)
+          //qb.whereIn("pm_master2.projectId", projects);
+
           qb.where({ "pm_master2.orgId": req.orgId });
 
           if (pmPlanName) {
