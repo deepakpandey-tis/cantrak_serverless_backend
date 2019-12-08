@@ -319,7 +319,7 @@ const organisationsController = {
     try {
       let reqData    = req.query;
       let total,rows;
-      let {organisationName,userName,email} = req.body;
+      let {organisationName,userName,email,status} = req.body;
       let pagination = {};
       let per_page   = reqData.per_page || 10;
       let page       = reqData.current_page || 1;
@@ -327,7 +327,7 @@ const organisationsController = {
       let offset = (page - 1) * per_page;
 
 
-     if(organisationName || userName || email){
+     if(organisationName || userName || email || status){
 
        [total, rows] = await Promise.all([
         knex
@@ -346,6 +346,9 @@ const organisationsController = {
               if(email){
                 qb.where('users.email','like',`%${email}%`)
                 }
+                if(status){
+                  qb.where('organisations.isActive',false)
+                  }
 
           })
           .first(),
@@ -369,6 +372,10 @@ const organisationsController = {
               if(email){
                 qb.where('users.email','like',`%${email}%`)
                 }
+
+                if(status){
+                  qb.where('organisations.isActive',false)
+                  }
 
           })
           .orderBy('organisations.createdAt','desc')
@@ -385,6 +392,7 @@ const organisationsController = {
           .leftJoin('users','organisations.id','users.orgId')
           .leftJoin('application_user_roles','users.id','application_user_roles.userId')
           .where({'application_user_roles.roleId':2})
+          .where({'organisations.isActive':true})
           .first(),
         knex("organisations")
           .leftJoin('users','organisations.id','users.orgId')
@@ -396,6 +404,7 @@ const organisationsController = {
             'users.email',
             'users.mobileNo'
           ])
+          .where({'organisations.isActive':true})
           .orderBy('organisations.createdAt','desc')
           .offset(offset)
           .limit(per_page)
