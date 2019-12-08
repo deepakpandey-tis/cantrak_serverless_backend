@@ -454,12 +454,17 @@ const ProjectController = {
   getProjectByCompany: async (req, res) => {
     try {
       let companyId = req.query.companyId;
+      let projects = _.flatten(
+        req.userProjectResources.map(v => v.projects)
+      ).map(v => Number(v));
+
       let pagination = {}
       console.log("companyId",companyId);      
     
       let rows = await knex("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
             .where({ "projects.companyId": companyId, "projects.isActive": 'true' })
+            .whereIn('projects.id',projects)
             .select([
               "projects.id as id",
               "projects.projectName",
