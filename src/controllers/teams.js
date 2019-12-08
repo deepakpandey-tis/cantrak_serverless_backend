@@ -462,12 +462,11 @@ const teamsController = {
             })
 
             res.status(200).json({
-                data :{
-
-                    mainUsers,
-                    additionalUsers: usersWithRoles.filter(v => v.roleNames !== "")
-                }
-            })
+              data: {
+                mainUsers,
+                additionalUsers:mainUsers
+              }
+            });
 
         } catch(err) {
             console.log('[controllers][teams][getAssignedTeams] : Error', err);
