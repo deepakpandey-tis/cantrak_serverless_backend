@@ -124,9 +124,10 @@ const teamsController = {
             let teamRoleProject = null;
             let userAddTeam     = null;
             let orgId           = req.orgId;
+            let roleProjectData = req.body.roleProjectData;
             await knex.transaction(async (trx) => {
                 const upTeamsPayload = req.body;
-                const payload      = _.omit(req.body,['roleId'],'projectId',['userIds'])
+                const payload      = _.omit(req.body,['roleId'],'projectId',['userIds'],['roleProjectData'])
                 console.log('[controllers][teams][updateTeams] : Request Body', upTeams);
 
                 // validate keys
@@ -158,13 +159,15 @@ const teamsController = {
                 let deletedProject = await knex('team_roles_project_master').where({teamId: upTeamsPayload.teamId }).del();
                 let  deletedUsers  = await knex('team_users').where({teamId: upTeamsPayload.teamId }).del();
 
-                for(let role of upTeamsPayload.roleId){
-               
+
+                for(let i=0; i<roleProjectData.length; i++){
+            
+                  for(let role of roleProjectData[i].roleId){
 
                     let insertObject = {
                                 teamId:upTeamsPayload.teamId,
                                 roleId:role,
-                                projectId:upTeamsPayload.projectId,
+                                projectId:roleProjectData[i].projectId,
                                 orgId:orgId,
                                 createdAt: currentTime,
                                 updatedAt:currentTime
@@ -172,8 +175,8 @@ const teamsController = {
                 
                   let insertProjectResult  =  await knex.insert(insertObject).returning(['*']).into('team_roles_project_master')
                   teamRoleProject   = insertProjectResult
-    
                             }
+                        }
                     /**TEAM ROLES PROJECT MASTER CLOSE */
     
                     /**ADD TEAM USERS OPEN */
@@ -474,32 +477,53 @@ const teamsController = {
     // GET TEAM DETAILS
     getTeamDetails:async (req,res)=>{
         try{
-         let teamId = req.query.teamId;
+         let teamId        = req.query.teamId;
+         let teamResult    = null;
+         let userResult    = null;
+         let projectResult = null;
 
-         let result = await knex('teams')
-                            .leftJoin('team_users','teams.teamId','team_users.teamId')
-                            .leftJoin('team_roles_project_master','teams.teamId','team_roles_project_master.teamId')
-                            .leftJoin('users','team_users.userId','users.id')
-                            .select([
-                                'teams.teamId',
-                                'teams.teamName',
-                                'teams.description',
-                                'users.id',
-                                'users.name',
-                               'users.email',
-                               'team_roles_project_master.projectId',
-                               'team_roles_project_master.roleId',
-                               'team_users.userId as userIds',
-                               'teams.createdAt'
-                             ])
-                             .where({'teams.teamId':teamId}).returning('*')
-        
-                             res.status(200).json({
-                                data :{
-                                    teamDetails:result
-                                },
-                                message:"Team Details Successfully"
-                            })
+
+
+         [teamResult,userResult,projectResult] = await Promise.all([
+
+            knex('teams').select([
+                'teams.teamId',
+                'teams.teamName',
+                'teams.description',
+                ])
+            .where({'teams.teamId':teamId}).returning('*'),
+
+            knex('team_users')
+            .leftJoin('users','team_users.userId','users.id')   
+            .select([
+                 'users.id',
+                 'users.name',
+                 'users.email',
+                 'team_users.userId as userIds',
+                ])
+            .where({'team_users.teamId':teamId}).returning('*'),
+
+            knex('team_roles_project_master')
+            .leftJoin('projects','team_roles_project_master.projectId','projects.id')
+            .leftJoin('organisation_roles','team_roles_project_master.roleId','organisation_roles.id')
+            .select([
+                 'team_roles_project_master.projectId',
+                 'team_roles_project_master.roleId',
+                 'projects.projectName',
+                 'organisation_roles.name as roleName'
+                ])
+            .where({'team_roles_project_master.teamId':teamId}).returning('*')
+        ]) 
+
+
+       let projectUpdateDetails  = _.chain(projectResult).groupBy("projectId").map((value, key) => ({ projectId: key, roleId: value.map(a => a.roleId), })).value();
+
+                    res.status(200).json({
+                    data :{
+                        teamDetails:{...teamResult[0],usersData:userResult,projectData:projectResult,projectUpdateDetails:projectUpdateDetails},
+                    },
+                    message:"Team Details Successfully"
+                })
 
 
         }catch(err) {
