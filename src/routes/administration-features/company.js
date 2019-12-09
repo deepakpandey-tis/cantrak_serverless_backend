@@ -10,7 +10,7 @@ router.post('/view-company', authMiddleware.isAuthenticated, companyController.v
 router.post('/delete-company', authMiddleware.isAuthenticated, companyController.deleteCompany)
 router.get('/get-company-list', authMiddleware.isAuthenticated, companyController.getCompanyList)
 // Export Company Data
-router.get('/export-company', authMiddleware.isAuthenticated, companyController.exportCompany)
+router.post('/export-csv-company-data', authMiddleware.isAuthenticated, companyController.exportCsvCompanyData)
 // Get Company List For Project
 router.get('/company-lists',authMiddleware.isAuthenticated, companyController.getCompanyListForProject)
 
