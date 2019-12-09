@@ -87,6 +87,27 @@ const roleMiddleware = {
             let userProjectResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, projects: value.map(a => a.projectId) })).value();
             req.userProjectResources = userProjectResources;
 
+            // To calculate compamy we need to check which company this project belongs
+            // First get the company to which the project belongs
+            // let userCompanyResources = []
+            // for(let i=0;i<userProjectResources.length; i++){
+            //   let resourceId = userProjectResources[i].id;
+            //   let projects = userProjectResources[i].projects.map(v => Number(v));
+            //   let comps = []
+            //   for(let j=0;j<projects.length;j++){
+            //     let compRes = await knex('companies').innerJoin('projects','companies.id','projects.companyId').where({'projects.id':projects[j]}).select('companies.id')
+            //     let r = compRes[0];
+            //     comps.push(r)
+            //   }
+            //   let flattened = _.flattenDeep(comps)
+            //   userCompanyResources.push({id:resourceId,companies:flattened})
+            // }
+            // console.log(
+            //   "compannye***********************************************************USER COMPANY: ",
+            //   userCompanyResources
+            // );
+            // //const company = await knex('projects').where
+
             console.log(
               "userProjectResources***********************************************************",
               userProjectResources
