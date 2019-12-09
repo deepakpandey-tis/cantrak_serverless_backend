@@ -24,15 +24,15 @@ router.post('/part-requisition-log-list',authMiddleware.isAuthenticated,partsCon
 //FOR DROP DOWN ADJUST TYPE LIST
 router.get('/adjust-type-list',authMiddleware.isAuthenticated,partsController.adjustTypeList)
 
-var storage = multer.diskStorage({
-	destination: './src/uploads',
-	filename: function ( req, file, cb ) {
-        let ext = path.extname(file.originalname)
-        time = Date.now();
-		cb( null, 'part-details'+time+path.extname(file.originalname));
-	}
-});
-var upload = multer( { storage: storage } );
-router.post('/import-part-details',upload.single('file'),authMiddleware.isAuthenticated,partsController.importPartDetails)
+// var storage = multer.diskStorage({
+// 	destination: './src/uploads',
+// 	filename: function ( req, file, cb ) {
+//         let ext = path.extname(file.originalname)
+//         time = Date.now();
+// 		cb( null, 'part-details'+time+path.extname(file.originalname));
+// 	}
+// });
+// var upload = multer( { storage: storage } );
+// router.post('/import-part-details',upload.single('file'),authMiddleware.isAuthenticated,partsController.importPartDetails)
 router.post('/delete-part',authMiddleware.isAuthenticated,partsController.deletePart)
 module.exports = router;
