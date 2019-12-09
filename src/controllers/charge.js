@@ -1,6 +1,6 @@
 const Joi = require("@hapi/joi");
 const _ = require("lodash");
-const XLSX = require('xlsx');
+const XLSX = require("xlsx");
 const knex = require("../db/knex");
 
 //const trx = knex.transaction();
@@ -152,9 +152,8 @@ const chargeController = {
           updateChargesResult
         );
 
-
         //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
-        
+
         chargeData = updateChargesResult[0];
 
         trx.commit;
@@ -252,8 +251,10 @@ const chargeController = {
           id: chargesPaylaod.id
         });
 
-        console.log("[controllers][charge][deleteCharge]: Charge Code",
-        validChargesId);
+        console.log(
+          "[controllers][charge][deleteCharge]: Charge Code",
+          validChargesId
+        );
 
         // Return error when username exist
 
@@ -275,7 +276,10 @@ const chargeController = {
             .transacting(trx)
             .into("charge_master");
 
-          console.log("[controllers][charge][deletecharge]: Delete Data",updateDataResult);
+          console.log(
+            "[controllers][charge][deletecharge]: Delete Data",
+            updateDataResult
+          );
 
           //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
 
@@ -474,7 +478,8 @@ const chargeController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-  },exportCharge: async (req,res)=>{
+  },
+  exportCharge: async (req, res) => {
     try {
       let reqData = req.query;
       let total = null;
@@ -497,19 +502,17 @@ const chargeController = {
           .limit(per_page)
       ]);
 
+      var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
+      var ws = XLSX.utils.json_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, "pres");
+      XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
+      let filename = "uploads/ChargesData-" + Date.now() + ".csv";
+      let check = XLSX.writeFile(wb, filename);
 
-      var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
-            var ws = XLSX.utils.json_to_sheet(rows);
-            XLSX.utils.book_append_sheet(wb, ws, "pres");
-            XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
-            let filename = "uploads/ChargesData-"+Date.now()+".csv";
-            let  check = XLSX.writeFile(wb,filename);
-      
       res.status(200).json({
-        data:rows,
+        data: rows,
         message: "Charges Data Export Successfully!"
       });
-
     } catch (err) {
       console.log("[controllers][charge][getcharges] :  Error", err);
       //trx.rollback
