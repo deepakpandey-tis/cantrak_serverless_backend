@@ -9,6 +9,9 @@ const knex = require("../../db/knex");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
+const serviceRequest = require('../servicerequest')
+const fs     = require('fs');
+const request = require('request');
 //const trx = knex.transaction();
 
 const companyController = {
@@ -293,24 +296,16 @@ const companyController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-    // Export Company Data
+    
   },
-  exportCompany: async (req, res) => {
+  /* * Export csv Company Data */
+  exportCsvCompanyData: async (req, res) => {
     try {
       let reqData = req.query;
-      let pagination = {};
-      let per_page = reqData.per_page || 10;
-      let page = reqData.current_page || 1;
-      if (page < 1) page = 1;
-      let offset = (page - 1) * per_page;
+      let payload = req.body;
 
-      let [total, rows] = await Promise.all([
-        knex
-          .count("* as count")
-          .from("companies") 
-          .innerJoin("users", "users.id", "companies.createdBy")
-          .where({"companies.orgId":req.orgId})          
-          .first(),
+      let [rows] = await Promise.all([        
+
         knex("companies")
           .innerJoin("users", "users.id", "companies.createdBy")
           .where({"companies.orgId":req.orgId})        
@@ -321,25 +316,39 @@ const companyController = {
             "companies.telephone as Contact Number",
             "companies.isActive as Status",
             "users.name as Created By",
+            "companies.createdBy as Created By Id",
             "companies.createdAt as Date Created"           
           ])
-          .offset(offset)
-          .limit(per_page)
       ]);
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
       var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename = "uploads/CompanyData-" + Date.now() + ".csv";
-      let check = XLSX.writeFile(wb, filename);
+      let filename     = "CompanyData-" + Date.now() + ".csv";
+      let filepath     = "src/uploads/export/"+filename;
+      let check        = XLSX.writeFile(wb, filepath);
 
-      return res.status(200).json({
-        data: rows,
-        message: "Companies Data Export Successfully!"
-      });
+      let fileUrl =  serviceRequest.getUrl
+      
+      fileUrl('text/csv',filename,'export/company').then(d => {
+        let putUrl = d.uploadURL
+
+        let file =  fs.createReadStream(filepath).pipe(request.put(putUrl))
+
+
+
+        return res.status(200).json({
+          data: rows,
+          putUrl:putUrl,
+          file :file,
+          message: "Companies Data Export Successfully!",
+        });
+      })
+
+      //fs.createReadStream('filename').pipe(request.put(putUrl))
     } catch (err) {
-      console.log("[controllers][generalsetup][viewCompany] :  Error", err);
+      console.log("[controllers][generalsetup][exoportCompany] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
