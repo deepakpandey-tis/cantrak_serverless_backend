@@ -36,16 +36,16 @@ router.post('/delete-service-request-asset', authMiddleware.isAuthenticated, ser
 router.post('/export-service-request', authMiddleware.isAuthenticated, serviceRequestController.exportServiceRequest)
 router.post('/get-property-units',authMiddleware.isAuthenticated,serviceRequestController.getPropertyUnits)
 
-// var multer  = require('multer');
-// var storage = multer.diskStorage({
-// 	destination: './src/uploads',
-// 	filename: function ( req, file, cb ) {
-//         time = Date.now();
-// 		cb( null, 'service-request-'+time+path.extname(file.originalname));
-// 	}
-// });
-// var upload = multer( { storage: storage } );
-// router.post('/import-service-request',upload.single('file'), authMiddleware.isAuthenticated, serviceRequestController.importServiceRequest)
+var multer  = require('multer');
+var storage = multer.diskStorage({
+	destination: './src/uploads',
+	filename: function ( req, file, cb ) {
+        time = Date.now();
+		cb( null, 'service-request-'+time+path.extname(file.originalname));
+	}
+});
+var upload = multer( { storage: storage } );
+router.post('/import-service-request',upload.single('file'), authMiddleware.isAuthenticated, serviceRequestController.importServiceRequest)
 
 router.post('/get-service-request-report-data', authMiddleware.isAuthenticated,serviceRequestController.getServiceRequestReportData)
 

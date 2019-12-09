@@ -335,9 +335,6 @@ const companyController = {
         let putUrl = d.uploadURL
 
         let file =  fs.createReadStream(filepath).pipe(request.put(putUrl))
-
-
-
         return res.status(200).json({
           data: rows,
           putUrl:putUrl,
