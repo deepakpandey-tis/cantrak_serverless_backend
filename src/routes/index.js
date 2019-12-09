@@ -43,6 +43,8 @@ const organisationsRouter = require('./administration-features/organisations');
 
 const pushNotificationRouter = require('./push-notification');
 const resourceRouter = require('./resource');
+const signupRouter = require('./signup');
+
 const problemTypeRouter = require('./administration-features/problem-type');
 
 
@@ -99,5 +101,6 @@ router.use('/administration-features/organisations',organisationsRouter)
 router.use('/role',roleRouter)
 router.use('/administration-features/resource',resourceRouter)
 router.use('/administration-features/problem-type',problemTypeRouter);
+router.use("/signup", signupRouter);
 
 module.exports = router;
