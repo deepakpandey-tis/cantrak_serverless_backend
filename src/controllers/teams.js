@@ -58,6 +58,7 @@ const teamsController = {
 
                 
                 /**TEAM ROLES PROJECT MASTER OPEN */
+        if(roleProjectData){
 
             for(let i=0; i<roleProjectData.length; i++){
                  
@@ -79,6 +80,7 @@ const teamsController = {
                         }
 
                     }
+                }
                 /**TEAM ROLES PROJECT MASTER CLOSE */
 
                 /**ADD TEAM USERS OPEN */
@@ -159,7 +161,8 @@ const teamsController = {
                 let deletedProject = await knex('team_roles_project_master').where({teamId: upTeamsPayload.teamId }).del();
                 let  deletedUsers  = await knex('team_users').where({teamId: upTeamsPayload.teamId }).del();
 
-
+ 
+            if(roleProjectData){
                 for(let i=0; i<roleProjectData.length; i++){
             
                   for(let role of roleProjectData[i].roleId){
@@ -177,6 +180,7 @@ const teamsController = {
                   teamRoleProject   = insertProjectResult
                             }
                         }
+                    }
                     /**TEAM ROLES PROJECT MASTER CLOSE */
     
                     /**ADD TEAM USERS OPEN */
@@ -458,12 +462,11 @@ const teamsController = {
             })
 
             res.status(200).json({
-                data :{
-
-                    mainUsers,
-                    additionalUsers: usersWithRoles.filter(v => v.roleNames !== "")
-                }
-            })
+              data: {
+                mainUsers,
+                additionalUsers:mainUsers
+              }
+            });
 
         } catch(err) {
             console.log('[controllers][teams][getAssignedTeams] : Error', err);
@@ -516,7 +519,7 @@ const teamsController = {
         ]) 
 
 
-       let projectUpdateDetails  = _.chain(projectResult).groupBy("projectId").map((value, key) => ({ projectId: key, roleId: value.map(a => a.roleId), })).value();
+       let projectUpdateDetails  = _.chain(projectResult).groupBy("projectId").map((value, key) => ({ roleId: value.map(a => a.roleId),projectId: key })).value();
 
                     res.status(200).json({
                     data :{
