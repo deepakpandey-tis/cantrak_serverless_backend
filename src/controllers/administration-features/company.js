@@ -325,28 +325,28 @@ const companyController = {
       var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      //let filename     = "CompanyData-" + Date.now() + ".csv";
-      //let filepath     = "src/uploads/export/"+filename;
+      let filename     = "CompanyData-" + Date.now() + ".csv";
+      let filepath     = "src/uploads/export/"+filename;
       let check        = XLSX.writeFile(wb, filepath);
 
-      // let fileUrl =  serviceRequest.getUrl
+      let fileUrl =  serviceRequest.getUrl
       
-      // fileUrl('text/csv',filename,'export/company').then(d => {
-      //   let putUrl = d.uploadURL
+      fileUrl('text/csv',filename,'export/company').then(d => {
+        let putUrl = d.uploadURL
 
-      //   let file =  fs.createReadStream(filepath).pipe(request.put(putUrl))
+        let file =  fs.createReadStream(filepath).pipe(request.put(putUrl))
 
 
 
         return res.status(200).json({
           data: rows,
-  //        putUrl:putUrl,
-    //      file :file,
+          putUrl:putUrl,
+          file :file,
           message: "Companies Data Export Successfully!",
         });
-//      })
+      })
 
-
+      //fs.createReadStream('filename').pipe(request.put(putUrl))
     } catch (err) {
       console.log("[controllers][generalsetup][exoportCompany] :  Error", err);
       //trx.rollback
