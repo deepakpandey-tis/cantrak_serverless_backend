@@ -42,6 +42,7 @@ const companyController = {
           tumbonCode: Joi.string().allow('').optional(),
           flag: Joi.string().allow('').optional(),
           logoFile: Joi.string().allow('').optional(),
+          taxId: Joi.string().allow('').optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -116,6 +117,7 @@ const companyController = {
           tumbonCode: Joi.string().allow('').optional(),
           flag: Joi.string().allow('').optional(),
           logoFile: Joi.string().allow('').optional(),
+          taxId   : Joi.string().allow('').optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -326,7 +328,7 @@ const companyController = {
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename     = "CompanyData-" + Date.now() + ".csv";
-      let filepath     = "src/uploads/export/"+filename;
+      let filepath     = appRoot+"/uploads/export/"+filename;
       let check        = XLSX.writeFile(wb, filepath);
 
       let fileUrl =  serviceRequest.getUrl
@@ -339,6 +341,7 @@ const companyController = {
           data: rows,
           putUrl:putUrl,
           file :file,
+          appRoot:appRoot,
           message: "Companies Data Export Successfully!",
         });
       })
