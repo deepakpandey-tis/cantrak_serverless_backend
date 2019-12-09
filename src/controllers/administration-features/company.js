@@ -325,8 +325,8 @@ const companyController = {
       var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename     = "CompanyData-" + Date.now() + ".csv";
-      let filepath     = "src/uploads/export/"+filename;
+      //let filename     = "CompanyData-" + Date.now() + ".csv";
+      //let filepath     = "src/uploads/export/"+filename;
       let check        = XLSX.writeFile(wb, filepath);
 
       // let fileUrl =  serviceRequest.getUrl
