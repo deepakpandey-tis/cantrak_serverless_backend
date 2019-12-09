@@ -184,13 +184,14 @@ const propertyUnitController = {
           "isActive"
         ]);
         trx.commit;
+         return res.status(200).json({
+           data: {
+             propertyUnit: propertyUnit
+           },
+           message: "propertyUnit details"
+         });
       });
-      return res.status(200).json({
-        data: {
-          propertyUnit: propertyUnit
-        },
-        message: "propertyUnit details"
-      });
+     
     } catch (err) {
       console.log(
         "[controllers][generalsetup][viewpropertyUnit] :  Error",

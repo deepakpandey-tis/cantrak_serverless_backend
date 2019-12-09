@@ -601,6 +601,7 @@ const buildingPhaseController = {
       let orgId = req.orgId;
 
       let buildingData = {};
+      //console.log(orgId);
 
       let [rows] = await Promise.all([
         knex("buildings_and_phases")
@@ -610,7 +611,7 @@ const buildingPhaseController = {
             "projects.id"
           )
           .where({
-            "buildings_and_phases.isActive": true,
+            "buildings_and_phases.isActive": 'true',
             "buildings_and_phases.projectId": projectId,
             "buildings_and_phases.orgId": orgId
           })
