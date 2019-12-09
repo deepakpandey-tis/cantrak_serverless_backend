@@ -330,23 +330,43 @@ const companyController = {
       let filename     = "CompanyData-" + Date.now() + ".csv";
       let filepath     = appRoot+"/uploads/export/"+filename;
       let check        = XLSX.writeFile(wb, filepath);
+      const AWS        = require('aws-sdk');
 
-      let fileUrl =  serviceRequest.getUrl
+      fs.readFile(filepath, function(err, file_buffer) {
+      var s3 = new AWS.S3();
+      var params = {
+        Bucket: 'sls-app-resources-bucket',
+        Key: "Export/Company/"+filename,
+        Body:file_buffer
+      }
+      s3.putObject(params, function(err, data) {
+        if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            //next(err);
+        } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+        }
+      });
+    })
+
+
+    let deleteFile   = await fs.unlink(filepath,(err)=>{})
+
+      //let fileUrl =  serviceRequest.getUrl
       
-      fileUrl('text/csv',filename,'export/company').then(d => {
-        let putUrl = d.uploadURL
+      //fileUrl('text/csv',filename,'export/company').then(async d => {
+        //let putUrl = d.uploadURL
 
-        let file =  fs.createReadStream(filepath).pipe(request.put(putUrl))
+        //let file =  fs.createReadStream(filepath).pipe(request.put(putUrl))
+        //if(file){
+         // 
+        //}
         return res.status(200).json({
           data: rows,
-          putUrl:putUrl,
-          file :file,
-          appRoot:appRoot,
           message: "Companies Data Export Successfully!",
         });
-      })
-
-      //fs.createReadStream('filename').pipe(request.put(putUrl))
+      //})
     } catch (err) {
       console.log("[controllers][generalsetup][exoportCompany] :  Error", err);
       //trx.rollback
