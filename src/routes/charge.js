@@ -15,5 +15,7 @@ router.post('/add-service-request-fix-charge', authMiddleware.isAuthenticated, c
 
 // Export Charge Data
 router.get('/export-charge', authMiddleware.isAuthenticated, chargeController.exportCharge)
+router.get('/get-vat-code-list', authMiddleware.isAuthenticated,chargeController.getVatCodeList)
+router.get('/get-wht-code-list', authMiddleware.isAuthenticated,chargeController.getWhtCodeList)
 
 module.exports = router;

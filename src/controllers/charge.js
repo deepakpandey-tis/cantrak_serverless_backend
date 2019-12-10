@@ -520,6 +520,58 @@ const chargeController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  getVatCodeList: async (req, res) => {
+    try {
+      let rows = null;
+      let pagination = {};
+
+      [rows] = await Promise.all([
+        knex("taxes")
+          .select(["id as vatId","taxCode","taxPercentage"])
+      ]);
+
+      pagination.data = rows;
+
+      res.status(200).json({
+        data: {
+          vatList: pagination
+        },
+        message: "Vat Code lists !!"
+      });
+    } catch (err) {
+      console.log("[controllers][charge][vatList] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getWhtCodeList: async (req, res) => {
+    try {
+      let rows = null;
+      let pagination = {};
+
+      [rows] = await Promise.all([
+        knex("wht_master")
+          .select(["id as whtId","whtCode","taxPercentage"])
+      ]);
+
+      pagination.data = rows;
+
+      res.status(200).json({
+        data: {
+          whtList: pagination
+        },
+        message: "WHT Code lists !!"
+      });
+    } catch (err) {
+      console.log("[controllers][whht][whtList] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 

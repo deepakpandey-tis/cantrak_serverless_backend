@@ -176,7 +176,7 @@ const taxesfactionController = {
 
     getTaxesList : async (req,res) => {
         try {
-
+            
             let reqData = req.query;
             let total = null;
             let rows = null;

@@ -44,7 +44,7 @@ const organisationsRouter = require('./administration-features/organisations');
 const pushNotificationRouter = require('./push-notification');
 const resourceRouter = require('./resource');
 const problemTypeRouter = require('./administration-features/problem-type');
-
+const assetCategoryRouter = require('./administration-features/asset-category');
 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
@@ -99,5 +99,6 @@ router.use('/administration-features/organisations',organisationsRouter)
 router.use('/role',roleRouter)
 router.use('/administration-features/resource',resourceRouter)
 router.use('/administration-features/problem-type',problemTypeRouter);
+router.use('/administration-features/asset-catetory',assetCategoryRouter);
 
 module.exports = router;
