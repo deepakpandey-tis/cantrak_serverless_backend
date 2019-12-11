@@ -330,10 +330,13 @@ const companyController = {
       ]);
 
      let tempraryDirectory = null;
+     let bucketName        = null;
      if (process.env.IS_OFFLINE) {
+        bucketName        =  'sls-app-resources-bucket';
         tempraryDirectory = 'tmp/';
       } else {
         tempraryDirectory = '/tmp/';  
+        bucketName        =  process.env.S3_BUCKET_NAME;
       }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
