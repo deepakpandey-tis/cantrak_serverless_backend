@@ -330,11 +330,11 @@ const companyController = {
       ]);
 
      let tempraryDirectory = null;
-      if (process.env.dev) {
+      //if (process.env.dev && process.env.dev === 'Yes') {
         tempraryDirectory = path.join(__dirname, `../../tmp/`);
-      } else {
-        tempraryDirectory = 'tmp/';
-      }
+      //} else {
+     //   tempraryDirectory = 'tmp/';
+     // }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
       var ws = XLSX.utils.json_to_sheet(rows);
