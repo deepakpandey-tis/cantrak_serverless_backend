@@ -86,6 +86,10 @@ const roleMiddleware = {
 
             let userProjectResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, projects: value.map(a => a.projectId) })).value();
             req.userProjectResources = userProjectResources;
+            req.userCompanyResources = userProjectResources
+
+            // user => teams => roles => resources
+
 
             // To calculate compamy we need to check which company this project belongs
             // First get the company to which the project belongs

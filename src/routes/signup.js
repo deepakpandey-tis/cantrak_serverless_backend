@@ -9,7 +9,7 @@ router.get('/get-projects-list-by-company', signupController.getProjectsByCompan
 router.get('/get-buildings-list-by-project', signupController.getBuildingsByProject)
 router.get('/get-floor-list-by-building', signupController.getFloorByBuilding)
 router.get('/get-unit-list-by-floor', signupController.getUnitByFloor)
-router.get('/sign-up-urls', signupController.getSignUpUrls)
+router.post('/sign-up-urls', signupController.getSignUpUrls)
 router.post(
   "/get-sign-up-form-data-by-uuid",
   signupController.getSignUpFormDataByUUID
@@ -18,5 +18,6 @@ router.post(
 router.post('/create-user',signupController.createUser)
 
 router.post("/addSignUpUrl",signupController.addSignUpUrl);
+router.post("/updateSignUpUrl",signupController.updateSignUpUrl);
 
 module.exports = router;
