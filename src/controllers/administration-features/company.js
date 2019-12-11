@@ -331,7 +331,7 @@ const companyController = {
 
      let tempraryDirectory = null;
      // if (process.env.dev && process.env.dev) {
-        tempraryDirectory = '/tmp';//path.join(__dirname, `/tmp`);
+        tempraryDirectory = '/tmp/';//path.join(__dirname, `/tmp`);
       //} else {
         //tempraryDirectory = 'tmp/';
       //}
