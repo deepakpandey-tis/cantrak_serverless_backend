@@ -2,7 +2,7 @@ const Joi = require("@hapi/joi");
 const _ = require("lodash");
 const bcrypt = require("bcrypt");
 
-const moment = require('moment')
+const moment = require("moment");
 const saltRounds = 10;
 
 const knex = require("../db/knex");
@@ -139,22 +139,26 @@ const singupController = {
       let expiryDate = moment().add(Number(req.body.expireAfter), "days");
       let currentTime = new Date().getTime();
 
-
       // Check for already existance
-      let data = await knex('sign_up_urls').select('id').where({uuid:req.body.uuid})
-      if(data && data.length) {
-        console.log(
-          "Already exists"
-        );
+      let data = await knex("sign_up_urls")
+        .select("id")
+        .where({ uuid: req.body.uuid });
+      if (data && data.length) {
+        console.log("Already exists");
         return res.status(500).json({
-          errors: [{ code: "ALREADY_EXISTS_ERROR", message: "UUID already exists" }]
+          errors: [
+            { code: "ALREADY_EXISTS_ERROR", message: "UUID already exists" }
+          ]
         });
       }
 
-
       const result = await knex("sign_up_urls")
         .insert({
-          signUpDetails,
+          signUpDetails: {
+            ...signUpDetails,
+            orgId: req.body.orgId,
+            expireAfter: req.body.expireAfter
+          },
           uuid: req.body.uuid,
           expiryDate,
           orgId: req.body.orgId,
@@ -192,17 +196,21 @@ const singupController = {
       let expiryDate = moment().add(Number(req.body.expireAfter), "days");
       let currentTime = new Date().getTime();
 
-
       const result = await knex("sign_up_urls")
         .update({
-          signUpDetails,
+          signUpDetails: {
+            ...signUpDetails,
+            orgId: req.body.orgId,
+            expireAfter: req.body.expireAfter
+          },
           uuid: req.body.uuid,
           expiryDate,
           orgId: req.body.orgId,
           //createdAt: currentTime,
           updatedAt: currentTime,
           signUpUrl: req.body.signUpUrl
-        }).where({id:req.body.id})
+        })
+        .where({ id: req.body.id })
         .returning(["*"]);
       const finalInsertedUrl = result[0];
       return res.status(200).json({
@@ -240,6 +248,18 @@ const singupController = {
             if (filters && filters.uuid) {
               qb.where("uuid", "like", `%${filters.uuid.trim()}%`);
             }
+            if (filters && filters.companyName) {
+              qb.whereRaw(
+                `"sign_up_urls"."signUpDetails"->>'companyName' like ? `,
+                [`%${filters.companyName.trim()}%`]
+              );
+            }
+            if (filters && filters.projectName) {
+              qb.whereRaw(
+                `"sign_up_urls"."signUpDetails"->>'projectName' like ? `,
+                [`%${filters.projectName.trim()}%`]
+              );
+            }
           }),
         knex("sign_up_urls")
           //.innerJoin('companies', '')
@@ -247,6 +267,19 @@ const singupController = {
           .where(qb => {
             if (filters && filters.uuid) {
               qb.where("uuid", "like", `%${filters.uuid.trim()}%`);
+            }
+
+            if (filters && filters.companyName) {
+              qb.whereRaw(
+                `"sign_up_urls"."signUpDetails"->>'companyName' like ? `,
+                [`%${filters.companyName.trim()}%`]
+              );
+            }
+            if (filters && filters.projectName) {
+              qb.whereRaw(
+                `"sign_up_urls"."signUpDetails"->>'projectName' like ? `,
+                [`%${filters.projectName.trim()}%`]
+              );
             }
           })
           .orderBy("createdAt", "desc")
