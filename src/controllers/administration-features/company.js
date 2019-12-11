@@ -12,6 +12,7 @@ const saltRounds = 10;
 const serviceRequest = require('../servicerequest')
 const fs     = require('fs');
 const request = require('request');
+const path    = require('path')
 //const trx = knex.transaction();
 
 const companyController = {
@@ -312,41 +313,76 @@ const companyController = {
           .innerJoin("users", "users.id", "companies.createdBy")
           .where({"companies.orgId":req.orgId})        
           .select([
-            "companies.id as id",
-            "companies.companyName as Company Name",
-            "companies.contactPerson as Contact Person",
-            "companies.telephone as Contact Number",
+            "companies.orgId as ORGANIZATION_ID",
+            "companies.id as COMPANY",
+            "companies.companyName as COMPANY_NAME",            
+            "companies.description1 as COMPANY_ALTERNATE_NAME",
+            "companies.companyAddressEng as ADDRESS",
+            "companies.companyAddressThai as ALTERNATE_ADDRESS",
+            "companies.taxId as TAX_ID",
+            "companies.contactPerson as CONTACT_PERSON",
             "companies.isActive as Status",
+            "companies.telephone as Contact Number",            
             "users.name as Created By",
             "companies.createdBy as Created By Id",
             "companies.createdAt as Date Created"           
           ])
       ]);
 
+     let tempraryDirectory = null;
+     let bucketName        = null;
+     if (process.env.IS_OFFLINE) {
+        bucketName        =  'sls-app-resources-bucket';
+        tempraryDirectory = 'tmp/';
+      } else {
+        tempraryDirectory = '/tmp/';  
+        bucketName        =  process.env.S3_BUCKET_NAME;
+      }
+
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
       var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename     = "CompanyData-" + Date.now() + ".csv";
-      let filepath     = appRoot+"/uploads/export/"+filename;
+      let filepath     = tempraryDirectory+filename;
       let check        = XLSX.writeFile(wb, filepath);
+      const AWS        = require('aws-sdk');
 
-      let fileUrl =  serviceRequest.getUrl
+      fs.readFile(filepath, function(err, file_buffer) {
+      var s3 = new AWS.S3();
+      var params = {
+        Bucket: bucketName,
+        Key: "Export/Company/"+filename,
+        Body:file_buffer
+      }
+      s3.putObject(params, function(err, data) {
+        if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            //next(err);
+        } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+        }
+      });
+    })
+
+
+    let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
+
+      //let fileUrl =  serviceRequest.getUrl
       
-      fileUrl('text/csv',filename,'export/company').then(d => {
-        let putUrl = d.uploadURL
+      //fileUrl('text/csv',filename,'export/company').then(async d => {
+        //let putUrl = d.uploadURL
 
-        let file =  fs.createReadStream(filepath).pipe(request.put(putUrl))
+        //let file =  fs.createReadStream(filepath).pipe(request.put(putUrl))
+        //if(file){
+         // 
+        //}
         return res.status(200).json({
           data: rows,
-          putUrl:putUrl,
-          file :file,
-          appRoot:appRoot,
           message: "Companies Data Export Successfully!",
         });
-      })
-
-      //fs.createReadStream('filename').pipe(request.put(putUrl))
+      //})
     } catch (err) {
       console.log("[controllers][generalsetup][exoportCompany] :  Error", err);
       //trx.rollback
