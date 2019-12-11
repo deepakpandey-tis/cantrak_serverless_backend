@@ -351,7 +351,7 @@ const companyController = {
       fs.readFile(filepath, function(err, file_buffer) {
       var s3 = new AWS.S3();
       var params = {
-        Bucket: 'sls-app-resources-bucket',
+        Bucket: bucketName,
         Key: "Export/Company/"+filename,
         Body:file_buffer
       }
