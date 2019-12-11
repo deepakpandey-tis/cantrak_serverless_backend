@@ -12,6 +12,7 @@ const saltRounds = 10;
 const serviceRequest = require('../servicerequest')
 const fs     = require('fs');
 const request = require('request');
+const path    = require('path')
 //const trx = knex.transaction();
 
 const companyController = {
@@ -328,12 +329,19 @@ const companyController = {
           ])
       ]);
 
+     let tempraryDirectory = null;
+      if (process.env.dev && process.env.dev === 'Yes') {
+        tempraryDirectory = path.join(__dirname, `../../tmp/`);
+      } else {
+        tempraryDirectory = 'tmp/';
+      }
+
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
       var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename     = "CompanyData-" + Date.now() + ".csv";
-      let filepath     = "tmp/uploads/export/"+filename;
+      let filepath     = tempraryDirectory+"uploads/export/"+filename;
       let check        = XLSX.writeFile(wb, filepath);
       const AWS        = require('aws-sdk');
 
