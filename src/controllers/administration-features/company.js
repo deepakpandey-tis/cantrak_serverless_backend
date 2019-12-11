@@ -330,11 +330,11 @@ const companyController = {
       ]);
 
      let tempraryDirectory = null;
-     // if (process.env.dev && process.env.dev) {
-        tempraryDirectory = '/tmp/';//path.join(__dirname, `/tmp`);
-      //} else {
-        //tempraryDirectory = 'tmp/';
-      //}
+     if (process.env.dev && process.env.dev) {
+        tempraryDirectory = '/tmp/';
+      } else {
+        tempraryDirectory = 'tmp/';
+      }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
       var ws = XLSX.utils.json_to_sheet(rows);
@@ -364,7 +364,7 @@ const companyController = {
     })
 
 
-    //let deleteFile   = await fs.unlink(filepath,(err)=>{})
+    let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
 
       //let fileUrl =  serviceRequest.getUrl
       
