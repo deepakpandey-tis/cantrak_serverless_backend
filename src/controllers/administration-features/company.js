@@ -330,18 +330,18 @@ const companyController = {
       ]);
 
      let tempraryDirectory = null;
-      //if (process.env.dev && process.env.dev === 'Yes') {
-        tempraryDirectory = path.join(__dirname, `../../../tmp/`);
-      //} else {
-     //   tempraryDirectory = 'tmp/';
-     // }
+      if (process.env.dev && process.env.dev) {
+        tempraryDirectory = path.join(__dirname, `../../tmp/`);
+      } else {
+        tempraryDirectory = 'tmp/';
+      }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
       var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename     = "CompanyData-" + Date.now() + ".csv";
-      let filepath     = tempraryDirectory+"uploads/export/"+filename;
+      let filepath     = tempraryDirectory+filename;
       let check        = XLSX.writeFile(wb, filepath);
       const AWS        = require('aws-sdk');
 
@@ -364,7 +364,7 @@ const companyController = {
     })
 
 
-    let deleteFile   = await fs.unlink(filepath,(err)=>{})
+    //let deleteFile   = await fs.unlink(filepath,(err)=>{})
 
       //let fileUrl =  serviceRequest.getUrl
       
