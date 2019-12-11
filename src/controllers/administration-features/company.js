@@ -312,11 +312,16 @@ const companyController = {
           .innerJoin("users", "users.id", "companies.createdBy")
           .where({"companies.orgId":req.orgId})        
           .select([
-            "companies.id as id",
-            "companies.companyName as Company Name",
-            "companies.contactPerson as Contact Person",
-            "companies.telephone as Contact Number",
+            "companies.orgId as ORGANIZATION_ID",
+            "companies.id as COMPANY",
+            "companies.companyName as COMPANY_NAME",            
+            "companies.description1 as COMPANY_ALTERNATE_NAME",
+            "companies.companyAddressEng as ADDRESS",
+            "companies.companyAddressThai as ALTERNATE_ADDRESS",
+            "companies.taxId as TAX_ID",
+            "companies.contactPerson as CONTACT_PERSON",
             "companies.isActive as Status",
+            "companies.telephone as Contact Number",            
             "users.name as Created By",
             "companies.createdBy as Created By Id",
             "companies.createdAt as Date Created"           
@@ -328,7 +333,7 @@ const companyController = {
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename     = "CompanyData-" + Date.now() + ".csv";
-      let filepath     = appRoot+"/uploads/export/"+filename;
+      let filepath     = "tmp/uploads/export/"+filename;
       let check        = XLSX.writeFile(wb, filepath);
       const AWS        = require('aws-sdk');
 
