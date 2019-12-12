@@ -26,6 +26,7 @@ const propertyUnitController = {
           projectId: Joi.string().required(),
           propertyTypeId: Joi.string().required(),
           buildingPhaseId: Joi.string().required(),
+          createdBy: Joi.string().required(),
           floorZoneId: Joi.string().required(),
           unitNumber: Joi.string().required(),
           houseId: Joi.string().required(),
@@ -494,7 +495,7 @@ const propertyUnitController = {
           "floor_and_zones.floorZoneCode",
           "users.name as createdBy"
         ])
-        .where({ "property_units.id": id, "property_units:orgId": orgId });
+        .where({ "property_units.id": id, "property_units.orgId": orgId });
 
       return res.status(200).json({
         data: {
