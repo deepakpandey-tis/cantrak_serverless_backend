@@ -8,7 +8,7 @@ const assetCategoryController = require('../../controllers/administration-featur
 
 router.post('/add-asset-category', authMiddleware.isAuthenticated, assetCategoryController.addAssetCategory)
 router.post('/update-asset-category', authMiddleware.isAuthenticated, assetCategoryController.updateAssetCategory)
-router.post('/view-asset-category', authMiddleware.isAuthenticated, assetCategoryController.viewAssetCategory)
+router.post('/asset-category-details', authMiddleware.isAuthenticated, assetCategoryController.viewAssetCategory)
 router.post('/delete-asset-category', authMiddleware.isAuthenticated, assetCategoryController.deleteAssetCategory)
 /// Export Asset Category Data 
 router.get('/export-asset-category', authMiddleware.isAuthenticated, assetCategoryController.exportAssetCategory)

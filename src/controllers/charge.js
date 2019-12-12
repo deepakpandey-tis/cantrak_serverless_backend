@@ -9,21 +9,27 @@ const chargeController = {
   addCharge: async (req, res) => {
     try {
       let chargeData = null;
+      const userId = req.me.id;
+
       await knex.transaction(async trx => {
         let chargePayload = req.body;
         const schema = Joi.object().keys({
           chargeCode: Joi.string().required(),
-          chargeName: Joi.string().required(),
           descriptionThai: Joi.string().required(),
           descriptionEng: Joi.string().required(),
-          vat: Joi.string().required(),
-          vatCode: Joi.string().required(),
-          whtCode: Joi.string().required(),
           calculationUnit: Joi.string().required(),
-          glAccountCode: Joi.string().required(),
-          whtRate: Joi.string().required(),
           rate: Joi.string().required(),
-          isActive: Joi.string().required()
+          vatRate: Joi.string().required(),
+          vatId: Joi.string().required(),
+          whtId: Joi.string()
+            .allow("")
+            .optional(),
+          whtRate: Joi.string()
+            .allow("")
+            .optional(),
+          glAccountCode: Joi.string()
+            .allow("")
+            .optional()
         });
 
         let result = Joi.validate(chargePayload, schema);
@@ -41,9 +47,12 @@ const chargeController = {
         // Insert into charge codes
         let insertData = {
           ...chargePayload,
+          createdBy: userId,
+          orgId: req.orgId,
           updatedAt: currentTime,
           createdAt: currentTime
         };
+
         let chargeResult = await knex
           .insert(insertData)
           .returning(["*"])
@@ -70,21 +79,28 @@ const chargeController = {
   updateCharge: async (req, res) => {
     try {
       let chargeData = null;
+      const userId = req.me.id;
+
       await knex.transaction(async trx => {
         let chargePayload = req.body;
         const schema = Joi.object().keys({
           id: Joi.number().required(),
           chargeCode: Joi.string().required(),
-          chargeName: Joi.string().required(),
           descriptionThai: Joi.string().required(),
           descriptionEng: Joi.string().required(),
-          vat: Joi.string().required(),
-          vatCode: Joi.string().required(),
-          whtCode: Joi.string().required(),
           calculationUnit: Joi.string().required(),
-          glAccountCode: Joi.string().required(),
-          whtRate: Joi.string().required(),
-          rate: Joi.string().required()
+          rate: Joi.string().required(),
+          vatRate: Joi.string().required(),
+          vatCode: Joi.string().required(),
+          whtCode: Joi.string()
+            .allow("")
+            .optional(),
+          whtRate: Joi.string()
+            .allow("")
+            .optional(),
+          glAccountCode: Joi.string()
+            .allow("")
+            .optional()
         });
 
         let result = Joi.validate(chargePayload, schema);
@@ -139,7 +155,9 @@ const chargeController = {
             updatedAt: currentTime
           })
           .where({
-            id: chargePayload.id
+            id: chargePayload.id,
+            createdBy: userId,
+            orgId: req.orgId
           })
           .returning(["*"])
           .transacting(trx)
@@ -187,16 +205,20 @@ const chargeController = {
         knex
           .count("* as count")
           .from("charge_master")
+          .leftJoin("users", "users.id", "charge_master.createdBy")
+          .where({ "charge_master.orgId": req.orgId })
           .first(),
         knex("charge_master")
+          .leftJoin("users", "users.id", "charge_master.createdBy")
+          .where({ "charge_master.orgId": req.orgId })
           .select([
-            "chargeCode as Charges Code",
-            "chargeName as Charges Name",
-            "calculationUnit as Calculation Unit",
-            "rate as Cost",
-            "isActive as Status",
-            "createdby as Created By",
-            "createdAt as Date Created"
+            "charge_master.id",
+            "charge_master.chargeCode as Charges Code",
+            "charge_master.calculationUnit as Calculation Unit",
+            "charge_master.rate as Cost",
+            "charge_master.isActive as Status",
+            "users.name as Created By",
+            "charge_master.createdAt as Date Created"
           ])
           .offset(offset)
           .limit(per_page)
@@ -527,8 +549,7 @@ const chargeController = {
       let pagination = {};
 
       [rows] = await Promise.all([
-        knex("taxes")
-          .select(["id as vatId","taxCode","taxPercentage"])
+        knex("taxes").select(["id as vatId", "taxCode", "taxPercentage"])
       ]);
 
       pagination.data = rows;
@@ -553,8 +574,7 @@ const chargeController = {
       let pagination = {};
 
       [rows] = await Promise.all([
-        knex("wht_master")
-          .select(["id as whtId","whtCode","taxPercentage"])
+        knex("wht_master").select(["id as whtId", "whtCode", "taxPercentage"])
       ]);
 
       pagination.data = rows;
@@ -567,6 +587,51 @@ const chargeController = {
       });
     } catch (err) {
       console.log("[controllers][whht][whtList] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getChargesDetails: async (req, res) => {
+    try {
+      let chargeDetail = null;
+      await knex.transaction(async trx => {
+        let payload = req.body;
+        const schema = Joi.object().keys({
+          id: Joi.string().required()
+        });
+        const result = Joi.validate(payload, schema);
+
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message }
+            ]
+          });
+        }
+
+        let current = new Date().getTime();
+        let chargeDetail = await knex("charge_master")
+          .select("*")
+          .where({ id: payload.id });
+          
+          chargeDetail = _.omit(chargeDetail[0], [
+          "createdAt",
+          "updatedAt",
+          "isActive"
+        ]);
+        trx.commit;
+      });
+
+      return res.status(200).json({
+        data: {
+          chargesDetail: chargeDetail
+        },
+        message: "Charges details"
+      });
+    } catch (err) {
+      console.log("[controllers][generalsetup][whttax] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]

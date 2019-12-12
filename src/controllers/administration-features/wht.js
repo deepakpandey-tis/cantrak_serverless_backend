@@ -10,25 +10,25 @@ const bcrypt = require("bcrypt");
 const saltRounds = 10;
 //const trx = knex.transaction();
 
-const taxesfactionController = {
-  // Add New Taxes //
+const whtController = {
+  // Add New WHT Taxes //
 
-  addTaxes: async (req, res) => {
+  addWht: async (req, res) => {
     try {
-      let taxes = null;
+      let whtView = null;
       await knex.transaction(async trx => {
-        let taxesPayload = req.body;
+        let whtPayload = req.body;
         const userId = req.me.id;
 
         const schema = Joi.object().keys({
-          taxCode: Joi.string().required(),
+          whtCode: Joi.string().required(),
           taxPercentage: Joi.string().required(),
           descriptionEng: Joi.string().allow('').optional(),
           descriptionThai: Joi.string().allow('').optional(),
           glAccountCode: Joi.string().allow('').optional()
         });
 
-        const result = Joi.validate(taxesPayload, schema);
+        const result = Joi.validate(whtPayload, schema);
 
         if (result && result.hasOwnProperty("error") && result.error) {
           return res.status(400).json({
@@ -38,20 +38,20 @@ const taxesfactionController = {
           });
         }
 
-        const existTaxCode = await knex("taxes").where({
-          taxCode: taxesPayload.taxCode, orgId: req.orgId
+        const existWhtCode = await knex("wht_master").where({
+          whtCode: whtPayload.whtCode, orgId: req.orgId
         });
 
-        console.log("[controllers][tax][addtax]: Tax Code", existTaxCode);
+        console.log("[controllers][tax][addwht]: Wht Code", existWhtCode);
 
         // Return error when satisfaction code exist
 
-        if (existTaxCode && existTaxCode.length) {
+        if (existWhtCode && existWhtCode.length) {
           return res.status(400).json({
             errors: [
               {
                 code: "TAX_CODE_EXIST_ERROR",
-                message: "Tax Code already exist !"
+                message: "WHT Code already exist !"
               }
             ]
           });
@@ -61,8 +61,8 @@ const taxesfactionController = {
         const currentTime = new Date().getTime();
 
         const insertData = {
-          ...taxesPayload,
-          taxCode: taxesPayload.taxCode.toUpperCase(),
+          ...whtPayload,
+          whtCode: whtPayload.whtCode.toUpperCase(),
           createdBy: userId,
           orgId: req.orgId,
           isActive: "true",
@@ -76,17 +76,18 @@ const taxesfactionController = {
           .insert(insertData)
           .returning(["*"])
           .transacting(trx)
-          .into("taxes");
+          .into("wht_master");
 
-          taxes = taxResult[0];
+          whtView = taxResult[0];
 
         trx.commit;
       });
 
       res.status(200).json({
         data: {
-          tax: taxes
-        }
+          whtadds: whtView
+        },
+        message: "WHT Tax added successfully !"
       });
     } catch (err) {
       console.log("[controllers][tax][addtax] :  Error", err);
@@ -99,16 +100,16 @@ const taxesfactionController = {
 
   // Update Taxes //
 
-  updateTaxes: async (req, res) => {
+  updateWht: async (req, res) => {
     try {
-      let updateTaxPayload = null;
+      let updateWhtPayload = null;
 
       await knex.transaction(async trx => {
         let taxesPaylode = req.body;
 
         const schema = Joi.object().keys({
           id: Joi.number().required(),
-          taxCode: Joi.string().required(),
+          whtCode: Joi.string().required(),
           taxPercentage: Joi.string().required(),
           descriptionEng: Joi.string().allow('').optional(),
           descriptionThai: Joi.string().allow('').optional(),
@@ -124,8 +125,8 @@ const taxesfactionController = {
           });
         }
 
-        const existTaxesCode = await knex("taxes")
-          .where({ taxCode: taxesPaylode.taxCode.toUpperCase() })
+        const existTaxesCode = await knex("wht_master")
+          .where({ whtCode: taxesPaylode.whtCode.toUpperCase() })
           .whereNot({ id: taxesPaylode.id });
 
         console.log("[controllers][tax][updateTax]: Tax Code", existTaxesCode);
@@ -148,7 +149,7 @@ const taxesfactionController = {
 
         const updateTaxResult = await knex
           .update({
-            taxCode: taxesPaylode.taxCode.toUpperCase(),
+            whtCode: taxesPaylode.whtCode.toUpperCase(),
             glAccountCode: taxesPaylode.glAccountCode,
             descriptionEng: taxesPaylode.descriptionEng,
             descriptionThai: taxesPaylode.descriptionThai,
@@ -161,7 +162,7 @@ const taxesfactionController = {
           })
           .returning(["*"])
           .transacting(trx)
-          .into("taxes");
+          .into("wht_master");
 
         // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
 
@@ -169,16 +170,16 @@ const taxesfactionController = {
           "[controllers][tax][updateTax]: Update Taxes",updateTaxResult
         );
 
-        updateTaxPayload = updateTaxResult[0];
+        updateWhtPayload = updateTaxResult[0];
         
         trx.commit;
       });
 
       res.status(200).json({
         data: {
-          tax: updateTaxPayload
+          whtUpdate: updateWhtPayload
         },
-        message: "Tax updated successfully !"
+        message: "WHT Tax updated successfully !"
       });
     } catch (err) {
       console.log("[controllers][tax][updateTax] :  Error", err);
@@ -191,7 +192,7 @@ const taxesfactionController = {
 
   // Get List of Taxes
 
-  getTaxesList: async (req, res) => {
+  getWhtList: async (req, res) => {
     try {
       let reqData = req.query;
       let total = null;
@@ -205,23 +206,23 @@ const taxesfactionController = {
       [total, rows] = await Promise.all([
         knex
           .count("* as count")
-          .from("taxes")
-          .leftJoin("users", "users.id", "taxes.createdBy")
-          .where({ "taxes.orgId": req.orgId })
+          .from("wht_master")
+          .leftJoin("users", "users.id", "wht_master.createdBy")
+          .where({ "wht_master.orgId": req.orgId })
           .offset(offset)
           .limit(per_page)
           .first(),
         knex
-          .from("taxes")
-          .leftJoin("users", "users.id", "taxes.createdBy")
-          .where({ "taxes.orgId": req.orgId })
+          .from("wht_master")
+          .leftJoin("users", "users.id", "wht_master.createdBy")
+          .where({ "wht_master.orgId": req.orgId })
           .select([
-            "taxes.id",
-            "taxes.taxCode as Tax Code",
-            "taxes.taxPercentage as Tax Percentage",
-            "taxes.isActive as Status",
+            "wht_master.id",
+            "wht_master.whtCode as Wht Code",
+            "wht_master.taxPercentage as Tax Percentage",
+            "wht_master.isActive as Status",
             "users.name as Created By",
-            "taxes.createdAt as Date Created"
+            "wht_master.createdAt as Date Created"
           ])
           .offset(offset)
           .limit(per_page)
@@ -239,12 +240,12 @@ const taxesfactionController = {
 
       res.status(200).json({
         data: {
-          taxes: pagination
+          whtList: pagination
         },
-        message: "Tax list successfully !"
+        message: "Wht list successfully !"
       });
     } catch (err) {
-      console.log("[controllers][tax][gettax] :  Error", err);
+      console.log("[controllers][tax][getwhttax] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
@@ -254,7 +255,7 @@ const taxesfactionController = {
 
   // Delete Tax //
 
-  deleteTaxes: async (req, res) => {
+  deleteWht: async (req, res) => {
     try {
       let delTaxPayload = null;
 
@@ -335,10 +336,10 @@ const taxesfactionController = {
     }
   },
 
-  // View Details Tax //
-  viewTaxDetails: async (req, res) => {
+  // View Details Wht //
+  viewWhtDetails: async (req, res) => {
     try {
-      let vatDetail = null;
+      let whtDetail = null;
       await knex.transaction(async trx => {
         let payload = req.body;
         const schema = Joi.object().keys({
@@ -355,11 +356,11 @@ const taxesfactionController = {
         }
 
         let current = new Date().getTime();
-        let taxesResult = await knex("taxes")
-          .select("taxes.*")
-          .where({ id: payload.id, orgId: req.orgId });
+        let whtsResult = await knex("wht_master")
+          .select("wht_master.*")
+          .where({ id: payload.id });
 
-          vatDetail = _.omit(taxesResult[0], [
+          whtDetail = _.omit(whtsResult[0], [
           "createdAt",
           "updatedAt",
           "isActive"
@@ -369,13 +370,13 @@ const taxesfactionController = {
 
       return res.status(200).json({
         data: {
-           vatDetails: vatDetail
+          whtDetails: whtDetail
         },
-        message: "Vat Tax details"
+        message: "Wht Tax details"
       });
     } catch (err) {
       console.log(
-        "[controllers][generalsetup][viewtax] :  Error",
+        "[controllers][generalsetup][whttax] :  Error",
         err
       );
       //trx.rollback
@@ -386,4 +387,4 @@ const taxesfactionController = {
   }
 };
 
-module.exports = taxesfactionController;
+module.exports = whtController;

@@ -11,10 +11,10 @@ const bcrypt = require("bcrypt");
 const saltRounds = 10;
 //const trx = knex.transaction();
 
-const AssetCategoryController = {
-  addAssetCategory: async (req, res) => {
+const PartCategoryController = {
+  addPartCategory: async (req, res) => {
     try {
-      let assetCategory = null;
+      let partCategory = null;
       let userId = req.me.id;
 
       await knex.transaction(async trx => {
@@ -26,7 +26,7 @@ const AssetCategoryController = {
 
         const result = Joi.validate(payload, schema);
         console.log(
-          "[controllers][administrationFeatures][addAssetCategory]: JOi Result",
+          "[controllers][administrationFeatures][addpartCategory]: JOi Result",
           result
         );
 
@@ -38,23 +38,23 @@ const AssetCategoryController = {
           });
         }
 
-        // Check assetCategory already exists
-        const existAssetCategory = await knex("asset_category_master").where({
+        // Check partCategory already exists
+        const existpartCategory = await knex("part_category_master").where({
           categoryName: payload.categoryName, orgId:req.orgId
         });
 
         console.log(
-          "[controllers][generalsetup][addAssetCategory]: ServiceCode",existAssetCategory
+          "[controllers][generalsetup][addpartCategory]: ServiceCode",existpartCategory
         );
 
         // Return error when username exist
 
-        if (existAssetCategory && existAssetCategory.length) {
+        if (existpartCategory && existpartCategory.length) {
           return res.status(400).json({
             errors: [
               {
                 code: "TYPE_CODE_EXIST_ERROR",
-                message: "Asset Category Code already exist !"
+                message: "Part Category already exist !"
               }
             ]
           });
@@ -69,34 +69,34 @@ const AssetCategoryController = {
           orgId: req.orgId
         };
 
-        console.log("Asset Category Payload: ", insertData);
+        console.log("Part Category Payload: ", insertData);
 
         let insertResult = await knex
           .insert(insertData)
           .returning(["*"])
           .transacting(trx)
-          .into("asset_category_master");
-        assetCategory = insertResult[0];
+          .into("part_category_master");
+        partCategory = insertResult[0];
         trx.commit;
       });
 
       return res.status(200).json({
         data: {
-          assetCategory: assetCategory
+          partCategory: partCategory
         },
-        message: "Asset Category added successfully."
+        message: "Part Category added successfully."
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][AssetCategory] :  Error", err);
+      console.log("[controllers][generalsetup][partCategory] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
-  updateAssetCategory: async (req, res) => {
+  updatePartCategory: async (req, res) => {
     try {
-      let assetCategory = null;
+      let partCategory = null;
       await knex.transaction(async trx => {
         const payload = req.body;
 
@@ -107,7 +107,7 @@ const AssetCategoryController = {
 
         const result = Joi.validate(payload, schema);
         console.log(
-          "[controllers][administrationFeatures][updateAssetCategory]: JOi Result",
+          "[controllers][administrationFeatures][updatepartCategory]: JOi Result",
           result
         );
 
@@ -119,23 +119,23 @@ const AssetCategoryController = {
           });
         }
 
-        // Check assetCategory already exists
-         const existAssetCategory = await knex("asset_category_master")
+        // Check partCategory already exists
+         const existpartCategory = await knex("part_category_master")
          .where({ categoryName: payload.categoryName, orgId:req.orgId })
          .whereNot({ id: payload.id});
 
         console.log(
-          "[controllers][generalsetup][addAssetCategory]: ServiceCode",existAssetCategory
+          "[controllers][generalsetup][addpartCategory]: ServiceCode",existpartCategory
         );
 
         // Return error when username exist
 
-        if (existAssetCategory && existAssetCategory.length) {
+        if (existpartCategory && existpartCategory.length) {
           return res.status(400).json({
             errors: [
               {
                 code: "TYPE_CODE_EXIST_ERROR",
-                message: "Asset Category Code already exist !"
+                message: "Part Category already exist !"
               }
             ]
           });
@@ -148,21 +148,21 @@ const AssetCategoryController = {
           .where({ id: payload.id, orgId: req.orgId })
           .returning(["*"])
           .transacting(trx)
-          .into("asset_category_master");
-        assetCategory = insertResult[0];
+          .into("part_category_master");
+        partCategory = insertResult[0];
 
         trx.commit;
       });
 
       return res.status(200).json({
         data: {
-          assetCategory: assetCategory
+          partCategory: partCategory
         },
-        message: "Asset Category updated successfully."
+        message: "Part Category updated successfully."
       });
     } catch (err) {
       console.log(
-        "[controllers][generalsetup][updateAssetCategory] :  Error",
+        "[controllers][generalsetup][updatepartCategory] :  Error",
         err
       );
       //trx.rollback
@@ -171,15 +171,16 @@ const AssetCategoryController = {
       });
     }
   },
-  viewAssetCategory: async (req, res) => {
+  viewPartCategory: async (req, res) => {
     try {
-      let assetCategory = null;
+      let partCategory = null;
       await knex.transaction(async trx => {
         let payload = req.body;
         const schema = Joi.object().keys({
           id: Joi.string().required()
         });
         const result = Joi.validate(payload, schema);
+        
         if (result && result.hasOwnProperty("error") && result.error) {
           return res.status(400).json({
             errors: [
@@ -187,12 +188,13 @@ const AssetCategoryController = {
             ]
           });
         }
+
         let current = new Date().getTime();
-        let assetCateResult = await knex("asset_category_master")
-          .select("asset_category_master.*")
+        let assetCateResult = await knex("part_category_master")
+          .select("part_category_master.*")
           .where({ id: payload.id, orgId: req.orgId });
 
-        assetCategory = _.omit(assetCateResult[0], [
+        partCategory = _.omit(assetCateResult[0], [
           "createdAt",
           "updatedAt",
           "isActive"
@@ -202,13 +204,13 @@ const AssetCategoryController = {
 
       return res.status(200).json({
         data: {
-          assetCategory: assetCategory
+          partCategory: partCategory
         },
-        message: "Asset Category details"
+        message: "Part Category details"
       });
     } catch (err) {
       console.log(
-        "[controllers][generalsetup][viewAssetCategory] :  Error",
+        "[controllers][generalsetup][viewpartCategory] :  Error",
         err
       );
       //trx.rollback
@@ -217,7 +219,7 @@ const AssetCategoryController = {
       });
     }
   },
-  deleteAssetCategory: async (req, res) => {
+  deletePartCategory: async (req, res) => {
     try {
       let Project = null;
       await knex.transaction(async trx => {
@@ -256,7 +258,7 @@ const AssetCategoryController = {
       });
     }
   },
-  getAssetCategoryList: async (req, res) => {
+  getPartCategoryList: async (req, res) => {
     try {
       let reqData = req.query;
       let pagination = {};
@@ -269,22 +271,22 @@ const AssetCategoryController = {
       let [total, rows] = await Promise.all([
         knex
           .count("* as count")
-          .from("asset_category_master")
-          .leftJoin("users", "users.id", "asset_category_master.createdBy")
-          .where({ "asset_category_master.orgId": req.orgId })
+          .from("part_category_master")
+          .leftJoin("users", "users.id", "part_category_master.createdBy")
+          //.where({ "part_category_master.orgId": req.orgId })
           .offset(offset)
           .limit(per_page)
           .first(),
         knex
-          .from("asset_category_master")
-          .leftJoin("users", "users.id", "asset_category_master.createdBy")
-          .where({ "asset_category_master.orgId": req.orgId })
+          .from("part_category_master")
+          .leftJoin("users", "users.id", "part_category_master.createdBy")
+         // .where({ "asset_category_master.orgId": req.orgId })
           .select([
-            "asset_category_master.id",
-            "asset_category_master.categoryName as Category Name",
-            "asset_category_master.isActive as Status",
+            "part_category_master.id",
+            "part_category_master.categoryName as Category Name",
+            "part_category_master.isActive as Status",
             "users.name as Created By",
-            "asset_category_master.createdAt as Date Created"
+            "part_category_master.createdAt as Date Created"
           ])
           .offset(offset)
           .limit(per_page)
@@ -302,13 +304,13 @@ const AssetCategoryController = {
 
       return res.status(200).json({
         data: {
-          assetCategory: pagination
+          partCategory: pagination
         },
-        message: "Asset Category List!"
+        message: "Part Category List!"
       });
     } catch (err) {
       console.log(
-        "[controllers][generalsetup][viewAssetCategory] :  Error",
+        "[controllers][generalsetup][viewpartCategory] :  Error",
         err
       );
       //trx.rollback
@@ -317,7 +319,7 @@ const AssetCategoryController = {
       });
     }
   },
-  exportAssetCategory: async (req, res) => {
+  exportPartCategory: async (req, res) => {
     try {
       let companyId = req.query.companyId;
       let reqData = req.query;
@@ -422,4 +424,4 @@ const AssetCategoryController = {
   }
 };
 
-module.exports = AssetCategoryController;
+module.exports = PartCategoryController;

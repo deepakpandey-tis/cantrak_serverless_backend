@@ -12,6 +12,7 @@ router.post('/add-taxes', authMiddleware.isAuthenticated, authMiddleware.isAdmin
 router.post('/update-taxes', authMiddleware.isAuthenticated, authMiddleware.isAdmin, taxesController.updateTaxes);
 router.get('/get-taxes-list', authMiddleware.isAuthenticated, authMiddleware.isAdmin, taxesController.getTaxesList);
 router.post('/delete-taxes', authMiddleware.isAuthenticated, authMiddleware.isAdmin, taxesController.deleteTaxes);
+router.post('/get-taxes-details', authMiddleware.isAuthenticated, authMiddleware.isAdmin, taxesController.viewTaxDetails);
 
 
 module.exports = router;
