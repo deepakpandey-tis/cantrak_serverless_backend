@@ -12,7 +12,7 @@ const roleMiddleware = require('../../middlewares/role');
 router.post(
   "/add-common-area",
   authMiddleware.isAuthenticated,
-  roleMiddleware.isAdmin,
+  roleMiddleware.parseUserPermission,
   commonAreaController.addCommonArea
 );
 router.post(
