@@ -560,6 +560,23 @@ const propertyUnitController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  checkHouseId:async(req,res) => {
+    try {
+      const id = req.body.id;
+      const [houseId,houseIdData ]= await Promise.all([knex('users').where({houseId:id}).select('id'),knex('property_units').where({houseId:id}).select('*')])
+
+      return res.status(200).json({
+        data: {
+          exists: houseId,
+          houseIdData: houseIdData
+        }
+      });
+    } catch(err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 
