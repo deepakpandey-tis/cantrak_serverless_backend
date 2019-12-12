@@ -3,9 +3,10 @@ const _ = require('lodash');
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const knex = require('../db/knex');
-
+const XLSX = require("xlsx");
 //const trx = knex.transaction();
-
+const fs     = require('fs');
+const path    = require('path');
 const peopleController = {
     addPeople: async (req, res) => {
         try {
@@ -470,6 +471,148 @@ const peopleController = {
         } catch (err) {
 
         }
+    },
+    /**EXPORT PEOPLE DATA */
+    exportPeopleData:async (req,res)=>{
+      try {
+
+        let {name,email,accountType} = req.body;
+        let peopleData = null;
+        
+        let reqData    = req.query;
+        let rows 
+      
+        if(name || email  || accountType){
+           
+            [rows] = await Promise.all([
+            
+              knex
+                .from("users")
+                .leftJoin(
+                  "property_units",
+                  "users.houseId",
+                  "property_units.houseId"
+                )
+                .leftJoin(
+                  "companies",
+                  "property_units.companyId",
+                  "companies.id"
+                )
+                .where(qb => {
+                  qb.where({ "users.orgId": req.orgId });
+                  if (name) {
+                    qb.where("users.name", "like", `%${name}%`);
+                  }
+                  if (email) {
+                    qb.where("users.email", "like", `%${email}%`);
+                  }
+                })
+                
+                .select([
+                  "users.orgId as ORGANIZATION_ID",
+                  "users.id as USERID",
+                  "users.name as NAME",
+                  "users.email as EMAIL",
+                  "users.userName as USERNAME",
+                  "users.mobileNo as MOBILE_NUMBER",
+                  "users.houseId as HOUSEID",
+                  "companies.id as COMPANY_ID",
+                  "companies.companyName as COMPANY_NAME",
+                  "users.lastLogin as LAST_VISIT",
+                  "users.createdAt as DATE CREATED"
+                ])
+            ]);
+
+        } else{
+
+            [rows] = await Promise.all([
+              
+              knex
+                .from("users")
+                .leftJoin(
+                  "property_units",
+                  "users.houseId",
+                  "property_units.houseId"
+                )
+                .leftJoin(
+                  "companies",
+                  "property_units.companyId",
+                  "companies.id"
+                )
+                .select([
+                  "users.orgId as ORGANIZATION_ID",
+                  "users.id as USERID",
+                  "users.name as NAME",
+                  "users.email as EMAIL",
+                  "users.userName as USERNAME",
+                  "users.mobileNo as MOBILE_NUMBER",
+                  "users.houseId as HOUSEID",
+                  "companies.id as COMPANY_ID",
+                  "companies.companyName as COMPANY_NAME",
+                  "users.lastLogin as LAST_VISIT",
+                  "users.createdAt as DATE CREATED"
+                  
+                ])
+                .where({ "users.orgId": req.orgId })
+            ]);
+        }
+      
+
+        let tempraryDirectory = null;
+        let bucketName        = null;
+        if (process.env.IS_OFFLINE) {
+           bucketName        =  'sls-app-resources-bucket';
+           tempraryDirectory = 'tmp/';
+         } else {
+           tempraryDirectory = '/tmp/';  
+           bucketName        =  process.env.S3_BUCKET_NAME;
+         }
+   
+         var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
+         var ws = XLSX.utils.json_to_sheet(rows);
+         XLSX.utils.book_append_sheet(wb, ws, "pres");
+         XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
+         let filename     = "PeopleData-" + Date.now() + ".csv";
+         let filepath     = tempraryDirectory+filename;
+         let check        = XLSX.writeFile(wb, filepath);
+         const AWS        = require('aws-sdk');
+   
+         fs.readFile(filepath, function(err, file_buffer) {
+         var s3 = new AWS.S3();
+         var params = {
+           Bucket: bucketName,
+           Key: "Export/People/"+filename,
+           Body:file_buffer
+         }
+         s3.putObject(params, function(err, data) {
+           if (err) {
+               console.log("Error at uploadCSVFileOnS3Bucket function", err);
+               //next(err);
+           } else {
+               console.log("File uploaded Successfully");
+               //next(null, filePath);
+           }
+         });
+       })
+       //let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
+    
+        let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/People/"+filename;      
+
+        res.status(200).json({
+            data:rows,
+            message: "People List",
+            url:url
+        });
+
+
+    } catch (err) {
+        console.log('[controllers][people][getPeopleList] :  Error', err);
+        res.status(500).json({
+            errors: [
+                { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+            ],
+        });
+    }
     }
 }
 
