@@ -9,6 +9,8 @@ const knex = require("../../db/knex");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
+const fs   = require('fs');
+const path = require('path');
 //const trx = knex.transaction();
 
 const propertyTypeController = {
@@ -252,46 +254,66 @@ const propertyTypeController = {
       let orgId = req.orgId;
 
       let reqData = req.query;
-      let pagination = {};
+      let rows    = null;
 
-      let per_page = reqData.per_page || 10;
-      let page = reqData.current_page || 1;
-      if (page < 1) page = 1;
-      let offset = (page - 1) * per_page;
-
-      let [total, rows] = await Promise.all([
-        knex
-          .count("* as count")
-          .from("property_types")
-          .innerJoin("users", "property_types.createdBy", "users.id")
-          .where({ "property_types.isActive": true,"property_types.orgId":orgId })
-          .first(),
+    
+       [rows] = await Promise.all([
         knex("property_types")
-          .innerJoin("users", "property_types.createdBy", "users.id")
+          .leftJoin("users", "property_types.createdBy", "users.id")
           .select([
-            "property_types.propertyType as Property Type",
-            "property_types.propertyTypeCode as Property Type Code",
-            "property_types.isActive as Status",
-            "users.name as Created By",
-            "property_types.createdAt as Date Created"
+            "property_types.orgId as ORGANIZATION_ID",
+            "property_types.id as ID ",
+            "property_types.propertyType as PROPERTY_TYPE",
+            "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
+            "property_types.descriptionEng as DESCRIPTION",
+            "property_types.isActive as STATUS",
+            "users.name as CREATED BY",
+            "property_types.createdBy as CREATED BY ID",
+            "property_types.createdAt as DATE CREATED"
           ])
-          .where({ "property_types.isActive": true,"property_types.orgId":orgId })
-          .offset(offset)
-          .limit(per_page)
+          .where({"property_types.orgId":orgId })
       ]);
 
+     let tempraryDirectory = null;
+     let bucketName        = null;
+     if (process.env.IS_OFFLINE) {
+        bucketName        =  'sls-app-resources-bucket';
+        tempraryDirectory = 'tmp/';
+      } else {
+        tempraryDirectory = '/tmp/';  
+        bucketName        =  process.env.S3_BUCKET_NAME;
+      }
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
       var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename = "uploads/PropertyTypeData-" + Date.now() + ".csv";
-      let check = XLSX.writeFile(wb, filename);
-
+      let filename     = "PropertTypeData-" + Date.now() + ".csv";
+      let filepath     = tempraryDirectory+filename;
+      let check        = XLSX.writeFile(wb, filepath);
+      const AWS        = require('aws-sdk');
+      fs.readFile(filepath, function(err, file_buffer) {
+      var s3 = new AWS.S3();
+      var params = {
+        Bucket: bucketName,
+        Key: "Export/PropertyType/"+filename,
+        Body:file_buffer
+      }
+      s3.putObject(params, function(err, data) {
+        if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            //next(err);
+        } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+        }
+      });
+    })
+    let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
+    let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/PropertyType/"+filename;
       return res.status(200).json({
-        data: {
-          propertyType: rows
-        },
-        message: "Property Type Data Export Successfully!"
+        propertyType: rows,
+        message: "Property Type Data Export Successfully!",
+        url :url
       });
     } catch (err) {
       console.log(

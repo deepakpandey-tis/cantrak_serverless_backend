@@ -332,7 +332,7 @@ const companyController = {
      let tempraryDirectory = null;
      let bucketName        = null;
      if (process.env.IS_OFFLINE) {
-        bucketName        =  'sls-app-resources-buckets';
+        bucketName        =  'sls-app-resources-bucket';
         tempraryDirectory = 'tmp/';
       } else {
         tempraryDirectory = '/tmp/';  
@@ -365,7 +365,7 @@ const companyController = {
         }
       });
     })
-    //let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
+    let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
 
       //let fileUrl =  serviceRequest.getUrl
       
@@ -376,9 +376,11 @@ const companyController = {
         //if(file){
          // 
         //}
+        let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Company/"+filename;
         return res.status(200).json({
           data: rows,
           message: "Companies Data Export Successfully!",
+          url :url
         });
       //})
     } catch (err) {
@@ -415,7 +417,7 @@ const companyController = {
 
     try{
       if(req.file){
-
+        console.log(req.file)
         let tempraryDirectory = null;
         if (process.env.IS_OFFLINE) {
            tempraryDirectory = 'tmp/';
@@ -469,8 +471,8 @@ const companyController = {
               }
 
                }
-
-               //let deleteFile   = await fs.unlink(file_path,(err)=>{ console.log("File Deleting Error "+err) })
+               
+               let deleteFile   = await fs.unlink(file_path,(err)=>{ console.log("File Deleting Error "+err) })
                   return res.status(200).json({
                   message: "Companies Data Import Successfully!",
                 });
