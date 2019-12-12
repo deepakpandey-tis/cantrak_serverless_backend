@@ -896,6 +896,22 @@ const serviceDetailsController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  getLocationTags:async (req,res) => {
+    try {
+      const tags = await knex('location_tags_master').select('id','title').where({orgId:req.orgId})
+      return res.status(200).json({
+        data: {
+          locationTags: tags
+        }
+      })
+    } catch(err) {
+      console.log("[controllers][servicedetails][signup] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 

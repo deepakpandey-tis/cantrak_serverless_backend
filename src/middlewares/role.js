@@ -86,32 +86,29 @@ const roleMiddleware = {
 
             let userProjectResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, projects: value.map(a => a.projectId) })).value();
             req.userProjectResources = userProjectResources;
+           //req.userCompanyResources = userProjectResources
 
-            // To calculate compamy we need to check which company this project belongs
-            // First get the company to which the project belongs
-            // let userCompanyResources = []
-            // for(let i=0;i<userProjectResources.length; i++){
-            //   let resourceId = userProjectResources[i].id;
-            //   let projects = userProjectResources[i].projects.map(v => Number(v));
-            //   let comps = []
-            //   for(let j=0;j<projects.length;j++){
-            //     let compRes = await knex('companies').innerJoin('projects','companies.id','projects.companyId').where({'projects.id':projects[j]}).select('companies.id')
-            //     let r = compRes[0];
-            //     comps.push(r)
-            //   }
-            //   let flattened = _.flattenDeep(comps)
-            //   userCompanyResources.push({id:resourceId,companies:flattened})
-            // }
-            // console.log(
-            //   "compannye***********************************************************USER COMPANY: ",
-            //   userCompanyResources
-            // );
-            // //const company = await knex('projects').where
+           //let projects = result.map(v => v.projectId)
+          //  let companyResources = []
+          //  for(let i=0;i<result.length;i++){
+          //    let projectId = result[i].projectId
+          //    let resourceId = result[i].resourceId;
+          //    let companyresult = await knex('projects').where({id:projectId}).select('companyId')
+          //    companyResources.push({resourceId, companyId:companyresult[0].companyId})
+            //companyResources.push({id:resourceId, companies})
+          //  }
+           //console.log("++++++++++++++++++++++++++++", companyResources, '++++++++++++++++++++++++++++++++');
+          //   let userCompanyResources = _.chain(companyResources)
+          //     .groupBy("resourceId")
+          //     .map((value, key) => ({
+          //       id: key,
+          //       companies: value.map(a => a.companyId)
+          //     }))
+          //     .value();
+          //  req.userCompanyResources = userCompanyResources;
 
-            console.log(
-              "userProjectResources***********************************************************",
-              userProjectResources
-            );
+
+
         }
 
         let currentUser = await knex("users").where({

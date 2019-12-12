@@ -9,6 +9,10 @@ const knex = require("../../db/knex");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
+const serviceRequest = require('../servicerequest')
+const fs     = require('fs');
+const request = require('request');
+const path    = require('path')
 //const trx = knex.transaction();
 
 const companyController = {
@@ -39,6 +43,7 @@ const companyController = {
           tumbonCode: Joi.string().allow('').optional(),
           flag: Joi.string().allow('').optional(),
           logoFile: Joi.string().allow('').optional(),
+          taxId: Joi.string().allow('').optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -113,6 +118,7 @@ const companyController = {
           tumbonCode: Joi.string().allow('').optional(),
           flag: Joi.string().allow('').optional(),
           logoFile: Joi.string().allow('').optional(),
+          taxId   : Joi.string().allow('').optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -293,53 +299,92 @@ const companyController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-    // Export Company Data
+    
   },
-  exportCompany: async (req, res) => {
+  /* * Export csv Company Data */
+  exportCsvCompanyData: async (req, res) => {
     try {
       let reqData = req.query;
-      let pagination = {};
-      let per_page = reqData.per_page || 10;
-      let page = reqData.current_page || 1;
-      if (page < 1) page = 1;
-      let offset = (page - 1) * per_page;
+      let payload = req.body;
 
-      let [total, rows] = await Promise.all([
-        knex
-          .count("* as count")
-          .from("companies") 
-          .innerJoin("users", "users.id", "companies.createdBy")
-          .where({"companies.orgId":req.orgId})          
-          .first(),
+      let [rows] = await Promise.all([        
+
         knex("companies")
           .innerJoin("users", "users.id", "companies.createdBy")
           .where({"companies.orgId":req.orgId})        
           .select([
-            "companies.id as id",
-            "companies.companyName as Company Name",
-            "companies.contactPerson as Contact Person",
-            "companies.telephone as Contact Number",
-            "companies.isActive as Status",
-            "users.name as Created By",
-            "companies.createdAt as Date Created"           
+            "companies.orgId as ORGANIZATION_ID",
+            "companies.id as COMPANY",
+            "companies.companyName as COMPANY_NAME",            
+            "companies.description1 as COMPANY_ALTERNATE_NAME",
+            "companies.companyAddressEng as ADDRESS",
+            "companies.companyAddressThai as ALTERNATE_ADDRESS",
+            "companies.taxId as TAX_ID",
+            "companies.contactPerson as CONTACT_PERSON",
+            "companies.isActive as STATUS",
+            "companies.telephone as CONTACT NUMBER",            
+            "users.name as CREATED BY",
+            "companies.createdBy as CREATED BY ID",
+            "companies.createdAt as DATE CREATED"           
           ])
-          .offset(offset)
-          .limit(per_page)
       ]);
+
+     let tempraryDirectory = null;
+     let bucketName        = null;
+     if (process.env.IS_OFFLINE) {
+        bucketName        =  'sls-app-resources-bucket';
+        tempraryDirectory = 'tmp/';
+      } else {
+        tempraryDirectory = '/tmp/';  
+        bucketName        =  process.env.S3_BUCKET_NAME;
+      }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
       var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename = "uploads/CompanyData-" + Date.now() + ".csv";
-      let check = XLSX.writeFile(wb, filename);
+      let filename     = "CompanyData-" + Date.now() + ".csv";
+      let filepath     = tempraryDirectory+filename;
+      let check        = XLSX.writeFile(wb, filepath);
+      const AWS        = require('aws-sdk');
 
-      return res.status(200).json({
-        data: rows,
-        message: "Companies Data Export Successfully!"
+      fs.readFile(filepath, function(err, file_buffer) {
+      var s3 = new AWS.S3();
+      var params = {
+        Bucket: bucketName,
+        Key: "Export/Company/"+filename,
+        Body:file_buffer
+      }
+      s3.putObject(params, function(err, data) {
+        if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            //next(err);
+        } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+        }
       });
+    })
+    let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
+
+      //let fileUrl =  serviceRequest.getUrl
+      
+      //fileUrl('text/csv',filename,'export/company').then(async d => {
+        //let putUrl = d.uploadURL
+
+        //let file =  fs.createReadStream(filepath).pipe(request.put(putUrl))
+        //if(file){
+         // 
+        //}
+        let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Company/"+filename;
+        return res.status(200).json({
+          data: rows,
+          message: "Companies Data Export Successfully!",
+          url :url
+        });
+      //})
     } catch (err) {
-      console.log("[controllers][generalsetup][viewCompany] :  Error", err);
+      console.log("[controllers][generalsetup][exoportCompany] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
@@ -367,6 +412,99 @@ const companyController = {
       });
     }
     // Company List Data
+  },
+  importCompanyData: async (req,res)=>{
+
+    try{
+      if(req.file){
+        console.log(req.file)
+        let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+           tempraryDirectory = 'tmp/';
+         } else {
+           tempraryDirectory = '/tmp/';  
+         }
+           let resultData  = null;
+            let file_path  = tempraryDirectory+req.file.filename;
+              let wb       = XLSX.readFile(file_path,{ type: 'binary'});
+              let ws       = wb.Sheets[wb.SheetNames[0]];
+              let data     = XLSX.utils.sheet_to_json(ws, {type:'string',header: 'A',raw: false});
+              //data         = JSON.stringify(data);
+              let result   = null;
+              
+              if(data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" || data[0].A == "ORGANIZATION_ID" && data[0].B == "COMPANY" && data[0].C == "COMPANY_NAME" &&
+                  data[0].D == "COMPANY_ALTERNATE_NAME" && data[0].E == "ADDRESS" && data[0].F == "ALTERNATE_ADDRESS" &&
+                  data[0].G == "TAX_ID" && data[0].H == "CONTACT_PERSON" && data[0].I == "STATUS" &&
+                  data[0].J == "CONTACT NUMBER" && data[0].K == "CREATED BY" && data[0].L == "CREATED BY ID" &&
+                  data[0].M == "DATE CREATED"
+              ){
+
+                if(data.length>0){
+
+                  let i = 0;
+               for(let companyData of data){
+                 i++;
+
+                if(i>1){
+                  
+                let checkExist = await knex('companies').select('companyName')
+                                 .where({companyName:companyData.C,orgId:companyData.A})
+                if(checkExist.length<1){
+
+                  let currentTime = new Date().getTime();
+                  let insertData = {
+                                orgId :companyData.A,
+                                companyName:companyData.C,
+                                description1:companyData.D,
+                                companyAddressEng:companyData.E,
+                                companyAddressThai:companyData.F,
+                                taxId:companyData.G,
+                                contactPerson:companyData.H,
+                                telephone:companyData.J,
+                                isActive:companyData.I,
+                                createdBy:companyData.L,
+                                createdAt:currentTime
+                                   }
+                                  
+                   resultData = await knex.insert(insertData).returning(['*']).into('companies');
+                } 
+              }
+
+               }
+               
+               let deleteFile   = await fs.unlink(file_path,(err)=>{ console.log("File Deleting Error "+err) })
+                  return res.status(200).json({
+                  message: "Companies Data Import Successfully!",
+                });
+
+               
+                }
+
+              } else {
+
+                return res.status(400).json({
+                  errors: [
+                    { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+                  ]
+                });
+              }
+      } else{
+
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
+
+      }
+
+    } catch (err) {
+      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 

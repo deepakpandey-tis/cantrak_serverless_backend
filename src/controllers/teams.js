@@ -9,6 +9,9 @@ const knex = require('../db/knex');
 const XLSX = require('xlsx');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
+const fs = require('fs')
+const path = require('path')
+
 //const trx = knex.transaction();
 
 /* Define Controller */
@@ -224,7 +227,7 @@ const teamsController = {
             let teamResult  = null;
             
             
-            teamResult = await  knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId"  where "teams"."orgId" = '+req.orgId+' group by "teams"."teamId"');
+            teamResult = await  knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId"  where "teams"."orgId" = '+req.orgId+' group by "teams"."teamId" order by "teams"."createdAt" desc');
             
         
 
@@ -418,21 +421,58 @@ const teamsController = {
     exportTeams: async (req,res)=>{
 
         try {
+            let rows      = null;
             let teamResult = null;
 
-            // teamResult =  await knex('teams').leftJoin('team_users','team_users.teamId', '=', 'teams.teamId').select('teams.*').count("team_users.userId").groupByRaw('teams.teamId');
-            teamResult = await knex.raw('select "teams".*, count("team_users"."userId") from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" group by "teams"."teamId"');
-            teamResult = { teams: teamResult.rows };
+
+            [rows] = await Promise.all([
+                knex.raw(
+                  'select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams"."orgId" = ' +
+                    req.orgId +
+                    ' group by "teams"."teamId"')
+              ]);
+             
+            let tempraryDirectory = null;
+            let bucketName        = null;
+            if (process.env.IS_OFFLINE) {
+            bucketName        =  'sls-app-resources-bucket';
+            tempraryDirectory = 'tmp/';
+            } else {
+            tempraryDirectory = '/tmp/';  
+            bucketName        =  process.env.S3_BUCKET_NAME;
+            }
             var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
-            var ws = XLSX.utils.json_to_sheet(teamResult.teams);
+            var ws = XLSX.utils.json_to_sheet(rows.rows);
             XLSX.utils.book_append_sheet(wb, ws, "pres");
             XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
-            let filename = "uploads/TeamData-"+Date.now()+".csv";
-            let  check = XLSX.writeFile(wb,filename);
+            let filename     = "TeamData-" + Date.now() + ".csv";
+            let filepath     = tempraryDirectory+filename;
+            let check        = XLSX.writeFile(wb, filepath);
+            const AWS        = require('aws-sdk');
 
+      fs.readFile(filepath, function(err, file_buffer) {
+      var s3 = new AWS.S3();
+      var params = {
+        Bucket: bucketName,
+        Key: "Export/Team/"+filename,
+        Body:file_buffer
+      }
+      s3.putObject(params, function(err, data) {
+        if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            //next(err);
+        } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+        }
+      });
+    })
+    let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
+    let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Team/"+filename;
             res.status(200).json({
                 data: teamResult,
-                message: "Team Data Export Successfully"
+                message: "Team Data Export Successfully",
+                url:url
             })
 
         } catch (err) {

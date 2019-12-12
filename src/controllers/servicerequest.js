@@ -18,6 +18,7 @@ const https = require('https');
 
 if (process.env.IS_OFFLINE) {
     AWS.config.update({
+        
         accessKeyId: 'S3RVER',
         secretAccessKey: 'S3RVER',
     });
@@ -1187,7 +1188,8 @@ const serviceRequestController = {
     },
     getServiceRequestByMonth: async(req,res) => {
         
-    }
+    },
+    getUrl:getUploadURL
 };
 
 // Y, M, D

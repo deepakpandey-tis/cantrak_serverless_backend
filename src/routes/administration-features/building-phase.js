@@ -2,6 +2,7 @@ const { Router } = require("express")
 
 const router = Router()
 const authMiddleware = require('../../middlewares/auth')
+
 const buildingPhaseController = require('../../controllers/administration-features/building-phase')
 
 router.post('/add-building-phase', authMiddleware.isAuthenticated, buildingPhaseController.addBuildingPhase)
@@ -12,7 +13,7 @@ router.post('/get-building-phase-by-project-id', authMiddleware.isAuthenticated,
 router.get('/get-building-phase-list', authMiddleware.isAuthenticated, buildingPhaseController.getBuildingPhaseList)
 // Export Building Phase
 router.get('/export-building-phase', authMiddleware.isAuthenticated, buildingPhaseController.exportBuildingPhase)
-router.get('/get-buildings-phases-all-list', buildingPhaseController.getBuildingPhaseAllList)
+router.get('/get-buildings-phases-all-list',authMiddleware.isAuthenticated, buildingPhaseController.getBuildingPhaseAllList)
 
 
 

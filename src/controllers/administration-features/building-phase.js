@@ -9,6 +9,8 @@ const knex = require("../../db/knex");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
+const fs     = require('fs');
+const path    = require('path')
 //const trx = knex.transaction();
 
 const buildingPhaseController = {
@@ -457,132 +459,113 @@ const buildingPhaseController = {
       let orgId = req.orgId;
       let companyId = req.query.companyId;
       let reqData = req.query;
-      let pagination = {};
+      let rows    = null;
 
       if (!companyId) {
-        let per_page = reqData.per_page || 10;
-        let page = reqData.current_page || 1;
-        if (page < 1) page = 1;
-        let offset = (page - 1) * per_page;
-
-        let [total, rows] = await Promise.all([
-          knex
-            .count("* as count")
-            .from("buildings_and_phases")
-            .innerJoin(
-              "projects",
-              "buildings_and_phases.projectId",
-              "projects.id"
-            )
-            .innerJoin(
-              "companies",
-              "buildings_and_phases.companyId",
-              "companies.id"
-            )
-            .where({ "buildings_and_phases.isActive": true, "buildings_and_phases.orgId": orgId })
-            .first(),
+      
+        [rows] = await Promise.all([
           knex("buildings_and_phases")
-            .innerJoin(
+            .leftJoin(
               "projects",
               "buildings_and_phases.projectId",
               "projects.id"
             )
-            .innerJoin(
+            .leftJoin(
               "companies",
               "buildings_and_phases.companyId",
               "companies.id"
             )
-            .where({ "buildings_and_phases.isActive": true, "buildings_and_phases.orgId": orgId })
+            .where({"buildings_and_phases.orgId": orgId })
             .select([
-              "buildings_and_phases.buildingPhaseCode as Building/Phase",
-              "projects.projectName as Project Name",
-              "companies.companyName as Company Name",
-              "buildings_and_phases.isActive as Status",
-              "buildings_and_phases.createdBy as Created By",
-              "buildings_and_phases.createdAt as Date Created"
+              "buildings_and_phases.orgId as ORGANIZATION_ID",
+              "buildings_and_phases.companyId as COMPANY",
+              "companies.companyName as COMPANY NAME",
+              "buildings_and_phases.projectId as PROJECT",
+              "projects.projectName as PROJECT NAME",
+              "buildings_and_phases.propertyTypeId as PROPERTY_TYPE_CODE",
+              "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
+              "buildings_and_phases.description as DESCRIPTION",
+              "buildings_and_phases.isActive as STATUS",
+              "buildings_and_phases.createdBy as CREATED BY ID",
+              "buildings_and_phases.createdAt as DATE CREATED"
             ])
-            .offset(offset)
-            .limit(per_page)
         ]);
-
-        let count = total.count;
-        pagination.total = count;
-        pagination.per_page = per_page;
-        pagination.offset = offset;
-        pagination.to = offset + rows.length;
-        pagination.last_page = Math.ceil(count / per_page);
-        pagination.current_page = page;
-        pagination.from = offset;
-        pagination.data = rows;
       } else {
-        let per_page = reqData.per_page || 10;
-        let page = reqData.current_page || 1;
-        if (page < 1) page = 1;
-        let offset = (page - 1) * per_page;
-
-        let [total, rows] = await Promise.all([
-          knex
-            .count("* as count")
-            .from("buildings_and_phases")
-            .innerJoin(
-              "projects",
-              "buildings_and_phases.projectId",
-              "projects.id"
-            )
-            .innerJoin(
-              "companies",
-              "buildings_and_phases.companyId",
-              "companies.id"
-            )
-            .where({ "buildings_and_phases.isActive": true, "buildings_and_phases.orgId": orgId })
-            .first(),
+        
+         [rows] = await Promise.all([
           knex("buildings_and_phases")
-            .innerJoin(
+            .leftJoin(
               "projects",
               "buildings_and_phases.projectId",
               "projects.id"
             )
-            .innerJoin(
+            .leftJoin(
               "companies",
               "buildings_and_phases.companyId",
               "companies.id"
             )
-            .where({ "buildings_and_phases.isActive": true, "buildings_and_phases.orgId": orgId })
+            .where({"buildings_and_phases.companyId":companyId,"buildings_and_phases.orgId": orgId })
             .select([
-              "buildings_and_phases.buildingPhaseCode as Building/Phase",
-              "projects.projectName as Project Name",
-              "companies.companyName as Company Name",
-              "buildings_and_phases.isActive as Status",
-              "buildings_and_phases.createdBy as Created By",
-              "buildings_and_phases.createdAt as Date Created"
+              "buildings_and_phases.orgId as ORGANIZATION_ID",
+              "buildings_and_phases.companyId as COMPANY",
+              "companies.companyName as COMPANY NAME",
+              "buildings_and_phases.projectId as PROJECT",
+              "projects.projectName as PROJECT NAME",
+              "buildings_and_phases.propertyTypeId as PROPERTY_TYPE_CODE",
+              "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
+              "buildings_and_phases.description as DESCRIPTION",
+              "buildings_and_phases.isActive as STATUS",
+              "buildings_and_phases.createdBy as CREATED BY ID",
+              "buildings_and_phases.createdAt as DATE CREATED"
             ])
-            .offset(offset)
-            .limit(per_page)
+            
         ]);
-
-        let count = total.count;
-        pagination.total = count;
-        pagination.per_page = per_page;
-        pagination.offset = offset;
-        pagination.to = offset + rows.length;
-        pagination.last_page = Math.ceil(count / per_page);
-        pagination.current_page = page;
-        pagination.from = offset;
-        pagination.data = rows;
       }
 
+      let tempraryDirectory = null;
+      let bucketName        = null;
+      if (process.env.IS_OFFLINE) {
+         bucketName        =  'sls-app-resources-bucket';
+         tempraryDirectory = 'tmp/';
+       } else {
+         tempraryDirectory = '/tmp/';  
+         bucketName        =  process.env.S3_BUCKET_NAME;
+       }
+
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(pagination.data);
+      var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename = "uploads/BuildingPhaseData-" + Date.now() + ".csv";
-      let check = XLSX.writeFile(wb, filename);
+      let filename     = "BuildingPhaseData-" + Date.now() + ".csv";
+      let filepath     = tempraryDirectory+filename;
+      let check        = XLSX.writeFile(wb, filepath);
+      const AWS        = require('aws-sdk');
+      fs.readFile(filepath, function(err, file_buffer) {
+      var s3 = new AWS.S3();
+      var params = {
+        Bucket: bucketName,
+        Key: "Export/BuildingPhase/"+filename,
+        Body:file_buffer
+      }
+      s3.putObject(params, function(err, data) {
+        if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            //next(err);
+        } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+        }
+      });
+    })
+    let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
+    let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/BuildingPhase/"+filename;  
 
       return res.status(200).json({
         data: {
-          buildingPhases: pagination.data
+          buildingPhases: rows
         },
-        message: "Building Phases Data Export Successfully!"
+        message: "Building Phases Data Export Successfully!",
+        url:url
       });
     } catch (err) {
       console.log(
@@ -601,6 +584,7 @@ const buildingPhaseController = {
       let orgId = req.orgId;
 
       let buildingData = {};
+      //console.log(orgId);
 
       let [rows] = await Promise.all([
         knex("buildings_and_phases")
@@ -610,7 +594,7 @@ const buildingPhaseController = {
             "projects.id"
           )
           .where({
-            "buildings_and_phases.isActive": true,
+            "buildings_and_phases.isActive": 'true',
             "buildings_and_phases.projectId": projectId,
             "buildings_and_phases.orgId": orgId
           })

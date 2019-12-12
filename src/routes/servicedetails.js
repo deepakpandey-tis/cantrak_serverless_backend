@@ -24,7 +24,7 @@ router.post('/update-location-tags', authMiddleware.isAuthenticated, serviceDeta
 router.post('/location-tags-details', authMiddleware.isAuthenticated, serviceDetailsController.viewLocationTag);
 
 
-
+router.get('/get-location-tag-names',authMiddleware.isAuthenticated,serviceDetailsController.getLocationTags)
 
 
 module.exports = router;

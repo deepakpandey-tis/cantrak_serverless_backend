@@ -17,5 +17,7 @@ router.get('/export-property-unit', authMiddleware.isAuthenticated, propertyUnit
 // PROPERTY UNIT DETAILS
 router.post('/get-property-unit-details', authMiddleware.isAuthenticated, propertyUnitController.getPropertyUnitDetails)
 
+router.post("/check-house-id",authMiddleware.isAuthenticated,propertyUnitController.checkHouseId);
 
 module.exports = router
+

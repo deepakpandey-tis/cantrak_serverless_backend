@@ -6,7 +6,9 @@ const _      = require('lodash');
 const knex   = require('../../db/knex');
 const trx    = knex.transaction();
 const { RRule, RRuleSet, rrulestr } = require("rrule");
-
+const XLSX = require("xlsx");
+const fs   = require('fs');
+const path = require('path');
 const taskGroupController = {
 
   // Create Task Group Template
@@ -1707,10 +1709,13 @@ const taskGroupController = {
       let page = reqData.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
+      let orgId   = req.orgId;
 
       let [total, rows] = await Promise.all([
-        knex('task_group_templates').select('*'),
+        knex('task_group_templates').select('*')
+        .where({"task_group_templates.orgId":orgId}),
         knex('task_group_templates').select('*').offset(offset).limit(per_page).orderBy('task_group_templates.createdAt', 'desc')
+        .where({"task_group_templates.orgId":orgId})
       ])
 
       let count = total.length;
@@ -1854,6 +1859,84 @@ const taskGroupController = {
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
         ],
       });  
+    }
+  }
+  ,
+/***EXPORT TASK GROUP TEMPLATE DATA */
+exportTaskGroupTemplateData: async (req,res) => {
+    try {
+
+      let reqData = req.query;
+      let orgId   = req.orgId
+      let rows    = null;
+       [rows] = await Promise.all([
+        knex('task_group_templates').
+        select([
+          'orgId as ORGANIZATION_ID',
+          'id as ID',
+          'taskGroupName as TASKGROUP_NAME',
+           "assetCategoryId as ASSET_CATEGORY_ID",
+           "pmId as  PM_ID",
+           "isActive as STATUS",
+           "createdBy as CREATED BY ID",
+           "createdAt as DATE CREATED",     
+        ])
+        .where({"task_group_templates.orgId":orgId})
+        .orderBy('task_group_templates.createdAt', 'desc')
+      ])
+    
+
+      let tempraryDirectory = null;
+     let bucketName        = null;
+     if (process.env.IS_OFFLINE) {
+        bucketName        =  'sls-app-resources-bucket';
+        tempraryDirectory = 'tmp/';
+      } else {
+        tempraryDirectory = '/tmp/';  
+        bucketName        =  process.env.S3_BUCKET_NAME;
+      }
+
+      var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
+      var ws = XLSX.utils.json_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, "pres");
+      XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
+      let filename     = "TaskGroupTemplateData-" + Date.now() + ".csv";
+      let filepath     = tempraryDirectory+filename;
+      let check        = XLSX.writeFile(wb, filepath);
+      const AWS        = require('aws-sdk');
+
+      fs.readFile(filepath, function(err, file_buffer) {
+      var s3 = new AWS.S3();
+      var params = {
+        Bucket: bucketName,
+        Key: "Export/Task_Group_Template/"+filename,
+        Body:file_buffer
+      }
+      s3.putObject(params, function(err, data) {
+        if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            //next(err);
+        } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+        }
+      });
+    })
+    let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })  
+    let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Task_Group_Template/"+filename;
+
+      return res.status(200).json({
+        data: rows,
+        message: 'Task group template data export successfully!',
+        url:url
+      })
+    } catch(err) {
+      console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });   
     }
   }
 }
