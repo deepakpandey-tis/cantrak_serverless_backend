@@ -322,6 +322,15 @@ const entranceController = {
 
                 const roles = await knex.insert(roleData).returning(['*']).transacting(trx).into('application_user_roles');
                 user.roles = roles;
+
+
+                // Insert into user_house_allocation
+                const userHouseAllocationInsertData = {userId:user.id,houseId:signupPayload.houseId,createdAt:currentTime,updatedAt:currentTime,orgId:req.orgId}
+                const insertedResult  = await knex('user_house_allocation').insert(userHouseAllocationInsertData).returning(['*'])
+                user.userHouseAllocation = insertedResult[0]
+
+
+
                 trx.commit;
             });
 

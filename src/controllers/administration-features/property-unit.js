@@ -29,6 +29,7 @@ const propertyUnitController = {
           projectId: Joi.string().required(),
           propertyTypeId: Joi.string().required(),
           buildingPhaseId: Joi.string().required(),
+          createdBy: Joi.string().required(),
           floorZoneId: Joi.string().required(),
           unitNumber: Joi.string().required(),
           houseId: Joi.string().required(),
@@ -519,7 +520,7 @@ const propertyUnitController = {
           "floor_and_zones.floorZoneCode",
           "users.name as createdBy"
         ])
-        .where({ "property_units.id": id, "property_units:orgId": orgId });
+        .where({ "property_units.id": id, "property_units.orgId": orgId });
 
       return res.status(200).json({
         data: {
@@ -580,6 +581,23 @@ const propertyUnitController = {
         message: "Property Unit List"
       });
     } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  checkHouseId:async(req,res) => {
+    try {
+      const id = req.body.id;
+      const [houseId,houseIdData ]= await Promise.all([knex('users').where({houseId:id}).select('id'),knex('property_units').where({houseId:id}).select('*')])
+
+      return res.status(200).json({
+        data: {
+          exists: houseId,
+          houseIdData: houseIdData
+        }
+      });
+    } catch(err) {
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
