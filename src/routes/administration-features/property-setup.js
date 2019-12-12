@@ -8,13 +8,13 @@ const authMiddleware = require('../../middlewares/auth');
 
 /* GET users listing. */
 
-router.post('/add-incident-type', authMiddleware.isAuthenticated, authMiddleware.isAdmin, propertySetupController.incidentTypeAdd);
+router.post('/add-incident-type', authMiddleware.isAuthenticated,  propertySetupController.incidentTypeAdd);
 
-router.post('/update-incident-type', authMiddleware.isAuthenticated, authMiddleware.isAdmin, propertySetupController.incidentTypeUpdate);
+router.post('/update-incident-type', authMiddleware.isAuthenticated,  propertySetupController.incidentTypeUpdate);
 
-router.post('/delete-incident-type', authMiddleware.isAuthenticated, authMiddleware.isAdmin, propertySetupController.incidentTypeDelete);
+router.post('/delete-incident-type', authMiddleware.isAuthenticated,  propertySetupController.incidentTypeDelete);
 
-router.get('/incident-list', authMiddleware.isAuthenticated, authMiddleware.isAdmin, propertySetupController.incidentList);
+router.get('/incident-list', authMiddleware.isAuthenticated,  propertySetupController.incidentList);
 
 module.exports = router;
  
