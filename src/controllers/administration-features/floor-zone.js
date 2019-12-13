@@ -9,6 +9,8 @@ const knex = require("../../db/knex");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
+const fs   = require('fs')
+const path = require('path')
 //const trx = knex.transaction();
 
 const floorZoneController = {
@@ -336,102 +338,105 @@ const floorZoneController = {
       let orgId = req.orgId;     
       let reqData = req.query;
       let companyId = req.query.companyId;
-      let pagination = {};
+      let rows      = null;
 
       if (!companyId) {
-        let per_page = reqData.per_page || 10;
-        let page = reqData.current_page || 1;
-        if (page < 1) page = 1;
-        let offset = (page - 1) * per_page;
-
-        let [total, rows] = await Promise.all([
-          knex
-            .count("* as count")
-            .from("floor_and_zones")
-            .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
-            .innerJoin("users", "floor_and_zones.createdBy", "users.id")
-            .where({"floor_and_zones.orgId":orgId})
-            .first(),
+        [rows] = await Promise.all([
           knex("floor_and_zones")
-            .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
-            .innerJoin("users", "floor_and_zones.createdBy", "users.id")
+            .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
+            .leftJoin("projects", "floor_and_zones.projectId", "projects.id")
+            .leftJoin("buildings_and_phases", "floor_and_zones.buildingPhaseId", "buildings_and_phases.id")
+            .leftJoin("users", "floor_and_zones.createdBy", "users.id")
             .select([
-              "floor_and_zones.floorZoneCode as Floor/Zone",
-              "floor_and_zones.description as Description",
-              "floor_and_zones.totalFloorArea as Total Area",
-              "floor_and_zones.isActive as Status",
-              "users.name as Created By",
-              "floor_and_zones.createdAt as Date Created"
+              "floor_and_zones.orgId as ORGANIZATION_ID",
+              "floor_and_zones.companyId as COMPANY",
+              "companies.companyName as COMPANY NAME",
+              "floor_and_zones.projectId as PROJECT",
+              "projects.projectName as PROJECT NAME",
+              "floor_and_zones.propertyTypeId as PROPERTY_TYPE_CODE",
+              "floor_and_zones.buildingPhaseId as BUILDING_PHASE_CODE ID",
+              "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
+              "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
+              "floor_and_zones.description as DESCRIPTION",
+              "floor_and_zones.totalFloorArea as TOTAL FLOOR AREA",
+              "floor_and_zones.isActive as STATUS",
+              "users.name as CREATED BY",
+              "floor_and_zones.createdBy as CREATED BY ID",
+              "floor_and_zones.createdAt as DATE CREATED"
             ])
             .where({"floor_and_zones.orgId":orgId})
-            .offset(offset)
-            .limit(per_page)
         ]);
-
-        let count = total.count;
-        pagination.total = count;
-        pagination.per_page = per_page;
-        pagination.offset = offset;
-        pagination.to = offset + rows.length;
-        pagination.last_page = Math.ceil(count / per_page);
-        pagination.current_page = page;
-        pagination.from = offset;
-        pagination.data = rows;
       } else {
-        let per_page = reqData.per_page || 10;
-        let page = reqData.current_page || 1;
-        if (page < 1) page = 1;
-        let offset = (page - 1) * per_page;
-
-        let [total, rows] = await Promise.all([
-          knex
-            .count("* as count")
-            .from("floor_and_zones")
-            .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
-            .innerJoin("users", "floor_and_zones.createdBy", "users.id")
-            .where({ "floor_and_zones.companyId": companyId,"floor_and_zones.orgId":orgId })
-
-            .offset(offset)
-            .limit(per_page)
-            .first(),
+        
+        [rows] = await Promise.all([
           knex
             .from("floor_and_zones")
-            .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
-            .innerJoin("users", "floor_and_zones.createdBy", "users.id")
+            .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
+            .leftJoin("projects", "floor_and_zones.projectId", "projects.id")
+            .leftJoin("buildings_and_phases", "floor_and_zones.buildingPhaseId", "buildings_and_phases.id")
+            .leftJoin("users", "floor_and_zones.createdBy", "users.id")
             .select([
-              "floor_and_zones.floorZoneCode as Floor/Zone",
-              "floor_and_zones.description as Description",
-              "floor_and_zones.totalFloorArea as Total Area",
-              "floor_and_zones.isActive as Status",
-              "users.name as Created By",
-              "floor_and_zones.createdAt as Date Created"
+              "floor_and_zones.orgId as ORGANIZATION_ID",
+              "floor_and_zones.companyId as COMPANY",
+              "companies.companyName as COMPANY NAME",
+              "floor_and_zones.projectId as PROJECT",
+              "projects.projectName as PROJECT NAME",
+              "floor_and_zones.propertyTypeId as PROPERTY_TYPE_CODE",
+              "floor_and_zones.buildingPhaseId as BUILDING_PHASE_CODE ID",
+              "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
+              "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
+              "floor_and_zones.description as DESCRIPTION",
+              "floor_and_zones.totalFloorArea as TOTAL FLOOR AREA",
+              "floor_and_zones.isActive as STATUS",
+              "users.name as CREATED BY",
+              "floor_and_zones.createdBy as CREATED BY ID",
+              "floor_and_zones.createdAt as DATE CREATED"
             ])
             .where({ "floor_and_zones.companyId": companyId,"floor_and_zones.orgId":orgId })
-            .offset(offset)
-            .limit(per_page)
         ]);
-
-        let count = total.count;
-        pagination.total = count;
-        pagination.per_page = per_page;
-        pagination.offset = offset;
-        pagination.to = offset + rows.length;
-        pagination.last_page = Math.ceil(count / per_page);
-        pagination.current_page = page;
-        pagination.from = offset;
-        pagination.data = rows;
       }
 
+     let tempraryDirectory = null;
+     let bucketName        = null;
+     if (process.env.IS_OFFLINE) {
+        bucketName        =  'sls-app-resources-bucket';
+        tempraryDirectory = 'tmp/';
+      } else {
+        tempraryDirectory = '/tmp/';  
+        bucketName        =  process.env.S3_BUCKET_NAME;
+      }
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(pagination.data);
+      var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename = "uploads/FloorZoneData-" + Date.now() + ".csv";
-      let check = XLSX.writeFile(wb, filename);
-
+      let filename     = "FloorZoneData-" + Date.now() + ".csv";
+      let filepath     = tempraryDirectory+filename;
+      let check        = XLSX.writeFile(wb, filepath);
+      const AWS        = require('aws-sdk');
+      fs.readFile(filepath, function(err, file_buffer) {
+      var s3 = new AWS.S3();
+      var params = {
+        Bucket: bucketName,
+        Key: "Export/FloorZone/"+filename,
+        Body:file_buffer
+      }
+      s3.putObject(params, function(err, data) {
+        if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            //next(err);
+        } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+        }
+      });
+    })
+    let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
+    let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/FloorZone/"+filename;
+    
       return res.status(200).json({
-        data: pagination.data,
-        message: "Floor/Zones Data Export Successfully!"
+        data: rows,
+        message: "Floor/Zones Data Export Successfully!",
+        url:url
       });
     } catch (err) {
       console.log("[controllers][generalsetup][viewfloorZone] :  Error", err);

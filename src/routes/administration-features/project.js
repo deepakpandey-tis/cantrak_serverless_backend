@@ -23,4 +23,28 @@ router.get(
 );
 router.get('/get-project-all-list',authMiddleware.isAuthenticated,projectController.getProjectAllList)
 
+/**IMPORT PROJECT DATA */
+const path       = require('path');
+let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+           tempraryDirectory = 'tmp/';
+         } else {
+           tempraryDirectory = '/tmp/';  
+         }
+var multer  = require('multer');
+var storage = multer.diskStorage({
+	destination: tempraryDirectory,
+	filename: function ( req, file, cb ) {
+        let ext =  path.extname(file.originalname)
+        if(ext=='.csv'){
+        time = Date.now();
+        cb( null, 'ProjectData-'+time+ext);
+        }else{
+            return false
+        }
+	}
+});
+var upload = multer( { storage: storage } );
+router.post('/import-project-data',upload.single('file'), authMiddleware.isAuthenticated, projectController.importProjectData)
+
 module.exports = router

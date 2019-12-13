@@ -245,6 +245,7 @@ const singupController = {
         knex("sign_up_urls")
           .select("*")
           .where(qb => {
+            qb.where({orgId:req.orgId})
             if (filters && filters.uuid) {
               qb.where("uuid", "like", `%${filters.uuid.trim()}%`);
             }
@@ -265,6 +266,7 @@ const singupController = {
           //.innerJoin('companies', '')
           .select("*")
           .where(qb => {
+            qb.where({ orgId: req.orgId });
             if (filters && filters.uuid) {
               qb.where("uuid", "like", `%${filters.uuid.trim()}%`);
             }

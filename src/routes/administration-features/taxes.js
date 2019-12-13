@@ -8,11 +8,12 @@ const authMiddleware = require('../../middlewares/auth');
 
 /* GET users listing. */
 
-router.post('/add-taxes', authMiddleware.isAuthenticated, authMiddleware.isAdmin, taxesController.addTaxes);
-router.post('/update-taxes', authMiddleware.isAuthenticated, authMiddleware.isAdmin, taxesController.updateTaxes);
-router.get('/get-taxes-list', authMiddleware.isAuthenticated, authMiddleware.isAdmin, taxesController.getTaxesList);
-router.post('/delete-taxes', authMiddleware.isAuthenticated, authMiddleware.isAdmin, taxesController.deleteTaxes);
-
+router.post('/add-taxes', authMiddleware.isAuthenticated,  taxesController.addTaxes);
+router.post('/update-taxes', authMiddleware.isAuthenticated,  taxesController.updateTaxes);
+router.get('/get-taxes-list', authMiddleware.isAuthenticated,  taxesController.getTaxesList);
+router.post('/delete-taxes', authMiddleware.isAuthenticated,  taxesController.deleteTaxes);
+router.post('/get-taxes-details', authMiddleware.isAuthenticated,taxesController.viewTaxDetails);
+router.get('/export-tax-data',authMiddleware.isAuthenticated,taxesController.exportTaxeData);
 
 module.exports = router;
  

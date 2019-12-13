@@ -9,6 +9,8 @@ const knex = require("../../db/knex");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
+const fs     = require('fs');
+const path    = require('path')
 //const trx = knex.transaction();
 
 const ProjectController = {
@@ -352,96 +354,98 @@ const ProjectController = {
     try {
       let companyId = req.query.companyId;
       let reqData = req.query;
-      let pagination = {};
+      let rows      = null;
+      let orgId     = req.orgId;
 
       if (!companyId) {
-        let per_page = reqData.per_page || 10;
-        let page = reqData.current_page || 1;
-        if (page < 1) page = 1;
-        let offset = (page - 1) * per_page;
+        
 
-        let [total, rows] = await Promise.all([
-          knex
-            .count("* as count")
-            .from("projects")
-            .innerJoin("companies", "projects.companyId", "companies.id")
-            .innerJoin("users", "users.id", "projects.createdBy")            
-            .first(),
+         [rows] = await Promise.all([
+  
           knex("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
             .innerJoin("users", "users.id", "projects.createdBy")            
+            .where({ "projects.orgId":orgId })
             .select([
-              "projects.projectName as Project Name",
-              "companies.companyName as Company Name",
-              "projects.isActive as Status",
-              "users.name as Created By",
-              "projects.createdAt as Date Created"
+              "projects.orgId as ORGANIZATION_ID",
+              "projects.id as PROJECT",
+              "projects.projectName as PROJECT_NAME",
+              "companies.id as COMPANY",
+              "companies.companyName as COMPANY_NAME",
+              "projects.projectLocationEng as PROJECT_LOCATION",
+              "projects.projectStartDate as PROJECT_START_DATE",
+              "projects.projectEndDate as PROJECT_END_DATE",
+              "projects.isActive as STATUS",
+              "users.name as CREATED BY",
+              "projects.createdBy as CREATED BY ID",
+              "projects.createdAt as DATE CREATED"
             ])
-            .offset(offset)
-            .limit(per_page)
         ]);
-
-        let count = total.count;
-        pagination.total = count;
-        pagination.per_page = per_page;
-        pagination.offset = offset;
-        pagination.to = offset + rows.length;
-        pagination.last_page = Math.ceil(count / per_page);
-        pagination.current_page = page;
-        pagination.from = offset;
-        pagination.data = rows;
       } else {
-        let per_page = reqData.per_page || 10;
-        let page = reqData.current_page || 1;
-        if (page < 1) page = 1;
-        let offset = (page - 1) * per_page;
+        
 
-        let [total, rows] = await Promise.all([
-          knex
-            .count("* as count")
-            .from("projects")
-            .innerJoin("companies", "projects.companyId", "companies.id")
-            .innerJoin("users", "users.id", "projects.createdBy")            
-            .where({ "projects.companyId": companyId })
-            .offset(offset)
-            .limit(per_page)
-            .first(),
+         [rows] = await Promise.all([
           knex
             .from("projects")
             .innerJoin("companies", "projects.companyId", "companies.id")
             .innerJoin("users", "users.id", "projects.createdBy") 
-            .where({ "projects.companyId": companyId })
+            .where({ "projects.companyId": companyId,"projects.orgId":orgId})
             .select([
-              "projects.projectName as Project Name",
-              "companies.companyName as Company Name",
-              "projects.isActive as Status",
-              "users.name as Created By",
-              "projects.createdAt as Date Created"
+              "projects.orgId as ORGANIZATION_ID",
+              "projects.id as PROJECT",
+              "projects.projectName as PROJECT_NAME",
+              "companies.id as COMPANY",
+              "companies.companyName as COMPANY_NAME",
+              "projects.projectLocationEng as PROJECT_LOCATION",
+              "projects.projectStartDate as PROJECT_START_DATE",
+              "projects.projectEndDate as PROJECT_END_DATE",
+              "projects.isActive as STATUS",
+              "users.name as CREATED BY",
+              "projects.createdBy as CREATED BY ID",
+              "projects.createdAt as DATE CREATED"
             ])
-            .offset(offset)
-            .limit(per_page)
         ]);
-
-        let count = total.count;
-        pagination.total = count;
-        pagination.per_page = per_page;
-        pagination.offset = offset;
-        pagination.to = offset + rows.length;
-        pagination.last_page = Math.ceil(count / per_page);
-        pagination.current_page = page;
-        pagination.from = offset;
-        pagination.data = rows;
+      }
+    let tempraryDirectory = null;
+     let bucketName        = null;
+     if (process.env.IS_OFFLINE) {
+        bucketName        =  'sls-app-resources-bucket';
+        tempraryDirectory = 'tmp/';
+      } else {
+        tempraryDirectory = '/tmp/';  
+        bucketName        =  process.env.S3_BUCKET_NAME;
       }
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(pagination.data);
+      var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename = "uploads/ProjectData-" + Date.now() + ".csv";
-      let check = XLSX.writeFile(wb, filename);
-
+      let filename     = "ProjectData-" + Date.now() + ".csv";
+      let filepath     = tempraryDirectory+filename;
+      let check        = XLSX.writeFile(wb, filepath);
+      const AWS        = require('aws-sdk');
+      fs.readFile(filepath, function(err, file_buffer) {
+      var s3 = new AWS.S3();
+      var params = {
+        Bucket: bucketName,
+        Key: "Export/Project/"+filename,
+        Body:file_buffer
+      }
+      s3.putObject(params, function(err, data) {
+        if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            //next(err);
+        } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+        }
+      });
+    })
+//    let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
+    let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Project/"+filename;
       return res.status(200).json({
-        data: pagination.data,
-        message: "Project Data Export Successfully!"
+        data: rows,
+        message: "Project Data Export Successfully!",
+        url :url
       });
     } catch (err) {
       console.log("[controllers][generalsetup][viewProject] :  Error", err);
@@ -510,6 +514,102 @@ const ProjectController = {
       });
     } catch (err) {
       console.log("[controllers][generalsetup][viewProject] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  /**IMPORT PROJECT DATA */
+  importProjectData: async (req,res)=>{
+
+    try{
+
+      if(req.file){        
+        let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+           tempraryDirectory = 'tmp/';
+         } else {
+           tempraryDirectory = '/tmp/';  
+         }
+           let resultData  = null;
+            let file_path  = tempraryDirectory+req.file.filename;
+              let wb       = XLSX.readFile(file_path,{ type: 'binary'});
+              let ws       = wb.Sheets[wb.SheetNames[0]];
+              let data     = XLSX.utils.sheet_to_json(ws, {type:'string',header: 'A',raw: false});
+                  
+              console.log("=======",data[0],"+++++++++++++++")
+
+              let result   = null;
+              
+              if(data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" || data[0].A == "ORGANIZATION_ID" && data[0].B == "PROJECT" && data[0].C == "PROJECT_NAME" &&
+                  data[0].D == "COMPANY" && data[0].E == "COMPANY_NAME" && data[0].F == "PROJECT_LOCATION" &&
+                  data[0].G == "PROJECT_START_DATE" && data[0].H == "PROJECT_END_DATE" && data[0].I == "STATUS" &&
+                  data[0].J == "CREATED BY" && data[0].K == "CREATED BY ID" &&
+                  data[0].K == "DATE CREATED"
+              ){
+
+                if(data.length>0){
+
+                  let i = 0;
+               for(let companyData of data){
+                 i++;
+
+                if(i>1){
+                  
+                let checkExist = await knex('companies').select('companyName')
+                                 .where({companyName:companyData.C,orgId:companyData.A})
+                if(checkExist.length<1){
+
+                  let currentTime = new Date().getTime();
+                  let insertData = {
+                                orgId :companyData.A,
+                                companyName:companyData.C,
+                                description1:companyData.D,
+                                companyAddressEng:companyData.E,
+                                companyAddressThai:companyData.F,
+                                taxId:companyData.G,
+                                contactPerson:companyData.H,
+                                telephone:companyData.J,
+                                isActive:companyData.I,
+                                createdBy:companyData.L,
+                                createdAt:currentTime
+                                   }
+                                  
+                   resultData = await knex.insert(insertData).returning(['*']).into('companies');
+                } 
+              }
+
+               }
+               
+               let deleteFile   = await fs.unlink(file_path,(err)=>{ console.log("File Deleting Error "+err) })
+                  return res.status(200).json({
+                  message: "Projects Data Import Successfully!",
+                });
+
+               
+                }
+
+              } else {
+
+                return res.status(400).json({
+                  errors: [
+                    { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+                  ]
+                });
+              }
+      } else{
+
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
+
+      }
+
+    } catch (err) {
+      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]

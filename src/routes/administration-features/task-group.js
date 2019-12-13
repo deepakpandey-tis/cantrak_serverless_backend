@@ -202,4 +202,10 @@ router.post(
 );
 
 
+router.get(
+  "/export-task-group-template-data",
+  authMiddleware.isAuthenticated,
+  taskGroupController.exportTaskGroupTemplateData
+);
+
 module.exports = router
