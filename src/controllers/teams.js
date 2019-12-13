@@ -421,15 +421,32 @@ const teamsController = {
     exportTeams: async (req,res)=>{
 
         try {
-            let rows      = null;
+            let rows       = null;
             let teamResult = null;
-
+            let orgId      = req.orgId;
 
             [rows] = await Promise.all([
-                knex.raw(
-                  'select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams"."orgId" = ' +
-                    req.orgId +
-                    ' group by "teams"."teamId"')
+                
+            knex("team_roles_project_master")
+            .leftJoin("teams", "team_roles_project_master.teamId", "teams.teamId")
+            .leftJoin("projects", "team_roles_project_master.projectId", "projects.id")
+            .leftJoin("companies", "projects.companyId", "companies.id")
+            .leftJoin("users","teams.createdBy","users.id")
+            .where({ "teams.orgId": orgId })
+            .select([
+              "teams.orgId as ORGANIZATION_ID",
+              "teams.teamCode as DEPARTMENT_CODE",
+              "teams.teamName as DEPARTMENT_NAME",
+              "teams.description as DEPARTMENT_ALTERNATE_NAME",
+              "companies.companyId as COMPANY",
+              "companies.companyName as COMPANY_NAME",
+              "projects.project as PROJECT",
+              "projects.projectName as PROJECT_NAME",
+              "team_roles_project_master.isActive as STATUS",
+              "users.name as CREATED_BY",
+              "team_roles_project_master.createdBy as CREATED_BY_ID",
+              "team_roles_project_master.createdAt as DATE_CREATED"
+            ])
               ]);
              
             let tempraryDirectory = null;
@@ -442,7 +459,7 @@ const teamsController = {
             bucketName        =  process.env.S3_BUCKET_NAME;
             }
             var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
-            var ws = XLSX.utils.json_to_sheet(rows.rows);
+            var ws = XLSX.utils.json_to_sheet(rows);
             XLSX.utils.book_append_sheet(wb, ws, "pres");
             XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
             let filename     = "TeamData-" + Date.now() + ".csv";
@@ -467,7 +484,7 @@ const teamsController = {
         }
       });
     })
-    let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
+    //let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
     let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Team/"+filename;
             res.status(200).json({
                 data: teamResult,
@@ -613,7 +630,197 @@ const teamsController = {
         } catch (err) {
 
         }
+    },
+     /**IMPORT TEAM DATA */
+     importTeamData: async (req,res)=>{
+
+    try {
+      if (req.file) {
+        let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+          tempraryDirectory = 'tmp/';
+        } else {
+          tempraryDirectory = '/tmp/';
+        }
+        let resultData = null;
+        let file_path = tempraryDirectory + req.file.filename;
+        let wb = XLSX.readFile(file_path, { type: 'binary' });
+        let ws = wb.Sheets[wb.SheetNames[0]];
+        let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
+
+        let totalData = data.length - 1;
+        let fail = 0;
+        let success = 0;
+        let projectSuccess = 0;
+        let projectFail    = 0; 
+        console.log("=======", data[0], "+++++++++++++++")
+        let result = null;
+
+        if (data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" || data[0].A == "ORGANIZATION_ID" &&
+          data[0].B == "DEPARTMENT_CODE" &&
+          data[0].C == "DEPARTMENT_NAME" &&
+          data[0].D == "DEPARTMENT_ALTERNATE_NAME" &&
+          data[0].E == "COMPANY" &&
+          data[0].F == "COMPANY_NAME" &&
+          data[0].G == "PROJECT" &&
+          data[0].H == "PROJECT_NAME" &&
+          data[0].I == "STATUS" &&
+          data[0].J == "CREATED_BY" &&
+          data[0].K == "CREATED_BY_ID" &&
+          data[0].L == "DATE_CREATED"
+
+        ) {
+
+          if (data.length > 0) {
+
+            let i = 0;
+            let currentTime = new Date().getTime();
+            for (let teamData of data) {
+              i++;
+
+              /**GET COMPANY ID OPEN */
+              //let companyData = await knex('companies').select('id').where({companyId: teamData.E});
+             // let companyId   = null;
+            //   if(!companyData && !companyData.length){
+            //     continue;
+            //   } 
+              //if(companyData && companyData.length){
+                //companyId    = companyData[0].id
+              //}
+              /**GET COMPANY ID CLOSE */
+
+              /**GET PROJECT ID OPEN */
+              let projectId   = null;
+              if(teamData.G){
+              let projectData = await knex('projects').select('id').where({project: teamData.G});
+             
+            //   if(!projectData && !projectData.length){
+            //     continue;
+            //   } 
+              if(projectData && projectData.length){
+                projectId    = projectData[0].id
+              }
+            }
+              /**GET PROJECT ID CLOSE */
+             
+
+              if (i > 1) {
+
+                let checkExist = await knex('teams').select("teamId")
+                  .where({ teamName: teamData.C, teamCode: teamData.B })
+                if (checkExist.length < 1) {
+
+                  
+                  let insertData = {
+                    orgId          : req.orgId,
+                    teamName       : teamData.C,
+                    teamCode       : teamData.B,
+                    description    : teamData.D,
+                    isActive       : teamData.I,
+                    createdBy      : teamData.K,
+                    createdAt      : currentTime,
+                    updatedAt      : currentTime,
+                  }
+                  resultData = await knex.insert(insertData).returning(['*']).into('teams');
+
+                  if (resultData && resultData.length) {
+                    success++;
+                  }
+                  let teamId = resultData[0].teamId;
+
+                  if(projectId){
+                  let checkRoleMaster = await knex('team_roles_project_master').select("id")
+                  .where({teamId:teamId,projectId:projectId})
+
+                  if (checkRoleMaster.length < 1) {
+
+                    let insertProjectData = {
+                                          orgId     : req.orgId,
+                                          teamId    : teamId,
+                                          projectId : projectId,
+                                          createdBy : teamData.K,
+                                          createdAt : currentTime,
+                                          updatedAt : currentTime,
+                                           }
+                    resultProjectData = await knex.insert(insertProjectData).returning(['*']).into('team_roles_project_master');
+               
+                    if (resultProjectData && resultProjectData.length) {
+                        projectSuccess++;
+                      }
+                  } else{
+                      projectFail++;
+                  }
+                }
+
+                  
+                } else {
+
+                    if(projectId){
+                 let checkRoleMaster = await knex('team_roles_project_master').select("id")
+                  .where({teamId:checkExist[0].teamId,projectId:projectId})
+                  if (checkRoleMaster.length < 1) {
+                    let insertProjectData = {
+                                          orgId     : req.orgId,
+                                          teamId    : teamId,
+                                          projectId : projectId,
+                                          createdBy : teamData.K,
+                                          createdAt : currentTime,
+                                          updatedAt : currentTime,
+                                           }
+                    resultProjectData = await knex.insert(insertProjectData).returning(['*']).into('team_roles_project_master');
+                    if (resultProjectData && resultProjectData.length) {
+                        projectSuccess++;
+                      }
+                  } else {
+                      projectFail++;
+                  } 
+                }
+                  fail++;
+                }
+              }
+
+            }
+
+            let message   = null;
+            if(totalData==success){
+              message = "We have processed ( "+totalData+" ) entries and added them successfully!";
+            }else {
+              message = "We have processed ( "+totalData+" ) entries out of which only ( "+parseInt(success)+parseInt(projectSuccess) + " ) are added and others are failed ( "+fail+ " ) due to validation!";
+            }
+
+            let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
+            return res.status(200).json({
+              message: message,
+            });
+
+          }
+
+        } else {
+
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+            ]
+          });
+        }
+      } else {
+
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
+
+      }
+
+    } catch (err) {
+      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
     }
+  }
     
 }
 
