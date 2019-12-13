@@ -440,7 +440,7 @@ const ProjectController = {
         }
       });
     })
-    let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
+//    let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
     let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Project/"+filename;
       return res.status(200).json({
         data: rows,
@@ -514,6 +514,102 @@ const ProjectController = {
       });
     } catch (err) {
       console.log("[controllers][generalsetup][viewProject] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  /**IMPORT PROJECT DATA */
+  importProjectData: async (req,res)=>{
+
+    try{
+
+      if(req.file){        
+        let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+           tempraryDirectory = 'tmp/';
+         } else {
+           tempraryDirectory = '/tmp/';  
+         }
+           let resultData  = null;
+            let file_path  = tempraryDirectory+req.file.filename;
+              let wb       = XLSX.readFile(file_path,{ type: 'binary'});
+              let ws       = wb.Sheets[wb.SheetNames[0]];
+              let data     = XLSX.utils.sheet_to_json(ws, {type:'string',header: 'A',raw: false});
+                  
+              console.log("=======",data[0],"+++++++++++++++")
+
+              let result   = null;
+              
+              if(data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" || data[0].A == "ORGANIZATION_ID" && data[0].B == "PROJECT" && data[0].C == "PROJECT_NAME" &&
+                  data[0].D == "COMPANY" && data[0].E == "COMPANY_NAME" && data[0].F == "PROJECT_LOCATION" &&
+                  data[0].G == "PROJECT_START_DATE" && data[0].H == "PROJECT_END_DATE" && data[0].I == "STATUS" &&
+                  data[0].J == "CREATED BY" && data[0].K == "CREATED BY ID" &&
+                  data[0].K == "DATE CREATED"
+              ){
+
+                if(data.length>0){
+
+                  let i = 0;
+               for(let companyData of data){
+                 i++;
+
+                if(i>1){
+                  
+                let checkExist = await knex('companies').select('companyName')
+                                 .where({companyName:companyData.C,orgId:companyData.A})
+                if(checkExist.length<1){
+
+                  let currentTime = new Date().getTime();
+                  let insertData = {
+                                orgId :companyData.A,
+                                companyName:companyData.C,
+                                description1:companyData.D,
+                                companyAddressEng:companyData.E,
+                                companyAddressThai:companyData.F,
+                                taxId:companyData.G,
+                                contactPerson:companyData.H,
+                                telephone:companyData.J,
+                                isActive:companyData.I,
+                                createdBy:companyData.L,
+                                createdAt:currentTime
+                                   }
+                                  
+                   resultData = await knex.insert(insertData).returning(['*']).into('companies');
+                } 
+              }
+
+               }
+               
+               let deleteFile   = await fs.unlink(file_path,(err)=>{ console.log("File Deleting Error "+err) })
+                  return res.status(200).json({
+                  message: "Projects Data Import Successfully!",
+                });
+
+               
+                }
+
+              } else {
+
+                return res.status(400).json({
+                  errors: [
+                    { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+                  ]
+                });
+              }
+      } else{
+
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
+
+      }
+
+    } catch (err) {
+      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
