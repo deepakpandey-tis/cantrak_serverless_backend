@@ -26,9 +26,15 @@ const taxesfactionController = {
         const schema = Joi.object().keys({
           taxCode: Joi.string().required(),
           taxPercentage: Joi.string().required(),
-          descriptionEng: Joi.string().allow('').optional(),
-          descriptionThai: Joi.string().allow('').optional(),
-          glAccountCode: Joi.string().allow('').optional()
+          descriptionEng: Joi.string()
+            .allow("")
+            .optional(),
+          descriptionThai: Joi.string()
+            .allow("")
+            .optional(),
+          glAccountCode: Joi.string()
+            .allow("")
+            .optional()
         });
 
         const result = Joi.validate(taxesPayload, schema);
@@ -42,7 +48,8 @@ const taxesfactionController = {
         }
 
         const existTaxCode = await knex("taxes").where({
-          taxCode: taxesPayload.taxCode, orgId: req.orgId
+          taxCode: taxesPayload.taxCode,
+          orgId: req.orgId
         });
 
         console.log("[controllers][tax][addtax]: Tax Code", existTaxCode);
@@ -81,7 +88,7 @@ const taxesfactionController = {
           .transacting(trx)
           .into("taxes");
 
-          taxes = taxResult[0];
+        taxes = taxResult[0];
 
         trx.commit;
       });
@@ -113,9 +120,15 @@ const taxesfactionController = {
           id: Joi.number().required(),
           taxCode: Joi.string().required(),
           taxPercentage: Joi.string().required(),
-          descriptionEng: Joi.string().allow('').optional(),
-          descriptionThai: Joi.string().allow('').optional(),
-          glAccountCode: Joi.string().allow('').optional()
+          descriptionEng: Joi.string()
+            .allow("")
+            .optional(),
+          descriptionThai: Joi.string()
+            .allow("")
+            .optional(),
+          glAccountCode: Joi.string()
+            .allow("")
+            .optional()
         });
 
         const result = Joi.validate(taxesPaylode, schema);
@@ -169,11 +182,12 @@ const taxesfactionController = {
         // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
 
         console.log(
-          "[controllers][tax][updateTax]: Update Taxes",updateTaxResult
+          "[controllers][tax][updateTax]: Update Taxes",
+          updateTaxResult
         );
 
         updateTaxPayload = updateTaxResult[0];
-        
+
         trx.commit;
       });
 
@@ -348,7 +362,7 @@ const taxesfactionController = {
           id: Joi.string().required()
         });
         const result = Joi.validate(payload, schema);
-        
+
         if (result && result.hasOwnProperty("error") && result.error) {
           return res.status(400).json({
             errors: [
@@ -362,7 +376,7 @@ const taxesfactionController = {
           .select("taxes.*")
           .where({ id: payload.id, orgId: req.orgId });
 
-          vatDetail = _.omit(taxesResult[0], [
+        vatDetail = _.omit(taxesResult[0], [
           "createdAt",
           "updatedAt",
           "isActive"
@@ -372,15 +386,12 @@ const taxesfactionController = {
 
       return res.status(200).json({
         data: {
-           vatDetails: vatDetail
+          vatDetails: vatDetail
         },
         message: "Vat Tax details"
       });
     } catch (err) {
-      console.log(
-        "[controllers][generalsetup][viewtax] :  Error",
-        err
-      );
+      console.log("[controllers][generalsetup][viewtax] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
@@ -391,12 +402,11 @@ const taxesfactionController = {
   exportTaxeData: async (req, res) => {
     try {
       let reqData = req.query;
-      let orgId   = req.orgId
-      
+      let orgId = req.orgId;
+
       let rows = null;
 
       [rows] = await Promise.all([
-      
         knex
           .from("taxes")
           .leftJoin("users", "users.id", "taxes.createdBy")
@@ -413,53 +423,151 @@ const taxesfactionController = {
       ]);
 
       let tempraryDirectory = null;
-     let bucketName        = null;
-     if (process.env.IS_OFFLINE) {
-        bucketName        =  'sls-app-resources-bucket';
-        tempraryDirectory = 'tmp/';
+      let bucketName = null;
+      if (process.env.IS_OFFLINE) {
+        bucketName = "sls-app-resources-bucket";
+        tempraryDirectory = "tmp/";
       } else {
-        tempraryDirectory = '/tmp/';  
-        bucketName        =  process.env.S3_BUCKET_NAME;
+        tempraryDirectory = "/tmp/";
+        bucketName = process.env.S3_BUCKET_NAME;
       }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
       var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename     = "TaxData-" + Date.now() + ".csv";
-      let filepath     = tempraryDirectory+filename;
-      let check        = XLSX.writeFile(wb, filepath);
-      const AWS        = require('aws-sdk');
+      let filename = "TaxData-" + Date.now() + ".csv";
+      let filepath = tempraryDirectory + filename;
+      let check = XLSX.writeFile(wb, filepath);
+      const AWS = require("aws-sdk");
 
       fs.readFile(filepath, function(err, file_buffer) {
-      var s3 = new AWS.S3();
-      var params = {
-        Bucket: bucketName,
-        Key: "Export/Tax/"+filename,
-        Body:file_buffer
-      }
-      s3.putObject(params, function(err, data) {
-        if (err) {
+        var s3 = new AWS.S3();
+        var params = {
+          Bucket: bucketName,
+          Key: "Export/Tax/" + filename,
+          Body: file_buffer
+        };
+        s3.putObject(params, function(err, data) {
+          if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             //next(err);
-        } else {
+          } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
-        }
+          }
+        });
       });
-    })
-    //let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
-    let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Tax/"+filename;
+      //let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
+      let url =
+        "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Tax/" +
+        filename;
 
       res.status(200).json({
         data: {
           taxes: rows
         },
         message: "Tax list successfully !",
-        url:url
+        url: url
       });
     } catch (err) {
       console.log("[controllers][tax][gettax] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  importTaxData: async (req, res) => {
+    try {
+      if (req.file) {
+        console.log(req.file);
+        let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+          tempraryDirectory = "tmp/";
+        } else {
+          tempraryDirectory = "/tmp/";
+        }
+        let resultData = null;
+        let file_path = tempraryDirectory + req.file.filename;
+        let wb = XLSX.readFile(file_path, { type: "binary" });
+        let ws = wb.Sheets[wb.SheetNames[0]];
+        let data = XLSX.utils.sheet_to_json(ws, {
+          type: "string",
+          header: "A",
+          raw: false
+        });
+        //data         = JSON.stringify(data);
+        let result = null;
+
+        //console.log('DATA: ',data)
+
+        if (
+          data[0].A == "ORGANIZATION_ID" ||
+          (data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" &&
+            data[0].B == "TAX CODE" &&
+            data[0].C == "TAX PERCENTAGE" &&
+            data[0].D == "STATUS" &&
+            data[0].E == "CREATED BY ID" &&
+            data[0].F == "CREATED BY" &&
+            data[0].G == "DATE CREATED")
+        ) {
+          if (data.length > 0) {
+            let i = 0;
+            console.log("Data[0]", data[0]);
+            for (let taxData of data) {
+              i++;
+              if (i > 1) {
+                let checkExist = await knex("taxes")
+                  .select("taxCode")
+                  .where({
+                    taxCode: taxData.B,
+                    orgId: taxData.A
+                  });
+                if (checkExist.length < 1) {
+                  let insertData = {
+                    orgId: taxData.A,
+                    taxCode:taxData.B,
+                    taxPercentage:taxData.C,
+                    isActive: taxData.D,
+                    createdBy: taxData.E,
+                    createdAt: taxData.G
+                  };
+
+                  resultData = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .into("taxes");
+                }
+              }
+            }
+
+            let deleteFile = await fs.unlink(file_path, err => {
+              console.log("File Deleting Error " + err);
+            });
+            return res.status(200).json({
+              message: "Tax Data Import Successfully!"
+            });
+          }
+        } else {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+            ]
+          });
+        }
+      } else {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
+      }
+    } catch (err) {
+      console.log(
+        "[controllers][propertysetup][importCompanyData] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]

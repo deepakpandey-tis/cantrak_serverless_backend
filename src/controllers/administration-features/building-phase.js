@@ -502,6 +502,11 @@ const buildingPhaseController = {
               "projects.id"
             )
             .leftJoin(
+              "property_types",
+              "buildings_and_phases.propertyTypeId",
+              "property_types.id"
+            )
+            .leftJoin(
               "companies",
               "buildings_and_phases.companyId",
               "companies.id"
@@ -513,7 +518,7 @@ const buildingPhaseController = {
               "companies.companyName as COMPANY NAME",
               "buildings_and_phases.projectId as PROJECT",
               "projects.projectName as PROJECT NAME",
-              "buildings_and_phases.propertyTypeId as PROPERTY_TYPE_CODE",
+              "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
               "buildings_and_phases.description as DESCRIPTION",
               "buildings_and_phases.isActive as STATUS",
@@ -725,11 +730,24 @@ const buildingPhaseController = {
             for (let buildingData of data) {
               // Find Company primary key
               let companyId = null;
-              let projectId = null
+              let projectId = null;
+              let propertyTypeId = null
 
 
               let companyIdResult = await knex('companies').select('id').where({companyId:buildingData.B})
               let projectIdResult = await knex('projects').select('id').where({project:buildingData.D})
+              let propertyTypeIdResult = await knex("property_types")
+                .select("id")
+                .where({ propertyTypeCode: buildingData.F });
+
+              if (propertyTypeIdResult && propertyTypeIdResult.length) {
+                propertyTypeId = propertyTypeIdResult[0].id;
+              }
+              if (!propertyTypeId) {
+                console.log("breaking due to: ", propertyTypeId);
+                continue;
+              }
+
               if(companyIdResult && companyIdResult.length){
                 companyId = companyIdResult[0].id;
               }
@@ -760,9 +778,9 @@ const buildingPhaseController = {
                     companyId: companyId,
                     projectId: projectId,
                     buildingPhaseCode: buildingData.G,
-                    propertyTypeId: buildingData.F,
+                    propertyTypeId: propertyTypeId,
                     description: buildingData.H,
-                    isActive:buildingData.I,
+                    isActive: buildingData.I,
                     createdBy: buildingData.J,
                     createdAt: buildingData.K
                   };

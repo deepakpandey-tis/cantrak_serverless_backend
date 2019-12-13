@@ -1,4 +1,6 @@
 const { Router } = require("express")
+const path = require("path");
+
 
 const router = Router()
 const authMiddleware = require('../../middlewares/auth')
@@ -18,6 +20,35 @@ router.get('/export-property-unit', authMiddleware.isAuthenticated, propertyUnit
 router.post('/get-property-unit-details', authMiddleware.isAuthenticated, propertyUnitController.getPropertyUnitDetails)
 
 router.post("/check-house-id",authMiddleware.isAuthenticated,propertyUnitController.checkHouseId);
+
+
+/**IMPORT Building DATA */
+let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+           tempraryDirectory = 'tmp/';
+         } else {
+           tempraryDirectory = '/tmp/';  
+         }
+var multer  = require('multer');
+var storage = multer.diskStorage({
+	destination: tempraryDirectory,
+	filename: function ( req, file, cb ) {
+        let ext =  path.extname(file.originalname)
+        if(ext=='.csv'){
+        time = Date.now();
+        cb( null, 'propertyUnitData-'+time+ext);
+        }else{
+            return false
+        }
+	}
+});
+var upload = multer( { storage: storage } );
+router.post(
+  "/import-property-unit-data",
+  upload.single("file"),
+  authMiddleware.isAuthenticated,
+  propertyUnitController.importPropertyUnitData
+);
 
 module.exports = router
 
