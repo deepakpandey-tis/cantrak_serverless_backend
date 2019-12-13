@@ -91,16 +91,10 @@ const chargeController = {
           calculationUnit: Joi.string().required(),
           rate: Joi.string().required(),
           vatRate: Joi.string().required(),
-          vatCode: Joi.string().required(),
-          whtCode: Joi.string()
-            .allow("")
-            .optional(),
-          whtRate: Joi.string()
-            .allow("")
-            .optional(),
-          glAccountCode: Joi.string()
-            .allow("")
-            .optional()
+          vatId: Joi.string().required(),
+          whtId: Joi.string().allow("").optional(),
+          whtRate: Joi.string().allow("").optional(),
+          glAccountCode: Joi.string().allow("").optional()
         });
 
         let result = Joi.validate(chargePayload, schema);
@@ -612,26 +606,27 @@ const chargeController = {
         }
 
         let current = new Date().getTime();
-        let chargeDetail = await knex("charge_master")
-          .select("*")
-          .where({ id: payload.id });
-          
-          chargeDetail = _.omit(chargeDetail[0], [
-          "createdAt",
-          "updatedAt",
-          "isActive"
+        let chargesResult = await knex("charge_master")
+          .leftJoin("taxes", "charge_master.vatId", "taxes.id")
+          .leftJoin("wht_master", "charge_master.whtId", "wht_master.id")
+          .where({ "charge_master.id": payload.id, "charge_master.orgId": req.orgId })
+          .select("charge_master.*","taxes.taxCode","wht_master.whtCode");        
+        chargeDetail = _.omit(chargesResult[0], [
+          "charge_master.createdAt",
+          "charge_master.updatedAt",
+          "charge_master.isActive"
         ]);
         trx.commit;
       });
 
       return res.status(200).json({
         data: {
-          chargesDetail: chargeDetail
+          chargesDetails: chargeDetail
         },
         message: "Charges details"
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][whttax] :  Error", err);
+      console.log("[controllers][generalsetup][viewtax] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
