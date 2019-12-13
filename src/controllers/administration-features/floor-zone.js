@@ -347,22 +347,22 @@ const floorZoneController = {
             .leftJoin("projects", "floor_and_zones.projectId", "projects.id")
             .leftJoin("buildings_and_phases", "floor_and_zones.buildingPhaseId", "buildings_and_phases.id")
             .leftJoin("users", "floor_and_zones.createdBy", "users.id")
+            .leftJoin("property_types", "floor_and_zones.propertyTypeId", "property_types.id")
             .select([
               "floor_and_zones.orgId as ORGANIZATION_ID",
-              "floor_and_zones.companyId as COMPANY",
-              "companies.companyName as COMPANY NAME",
-              "floor_and_zones.projectId as PROJECT",
-              "projects.projectName as PROJECT NAME",
-              "floor_and_zones.propertyTypeId as PROPERTY_TYPE_CODE",
-              "floor_and_zones.buildingPhaseId as BUILDING_PHASE_CODE ID",
+              "companies.companyId as COMPANY",
+              "companies.companyName as COMPANY_NAME",
+              "projects.project as PROJECT",
+              "projects.projectName as PROJECT_NAME",
+              "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
               "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
               "floor_and_zones.description as DESCRIPTION",
-              "floor_and_zones.totalFloorArea as TOTAL FLOOR AREA",
+              "floor_and_zones.totalFloorArea as TOTAL_FLOOR_AREA",
               "floor_and_zones.isActive as STATUS",
-              "users.name as CREATED BY",
-              "floor_and_zones.createdBy as CREATED BY ID",
-              "floor_and_zones.createdAt as DATE CREATED"
+              "users.name as CREATED_BY",
+              "floor_and_zones.createdBy as CREATED_BY_ID",
+              "floor_and_zones.createdAt as DATE_CREATED"
             ])
             .where({"floor_and_zones.orgId":orgId})
         ]);
@@ -375,22 +375,22 @@ const floorZoneController = {
             .leftJoin("projects", "floor_and_zones.projectId", "projects.id")
             .leftJoin("buildings_and_phases", "floor_and_zones.buildingPhaseId", "buildings_and_phases.id")
             .leftJoin("users", "floor_and_zones.createdBy", "users.id")
+            .leftJoin("property_types", "floor_and_zones.propertyTypeId", "property_types.id")
             .select([
               "floor_and_zones.orgId as ORGANIZATION_ID",
-              "floor_and_zones.companyId as COMPANY",
-              "companies.companyName as COMPANY NAME",
-              "floor_and_zones.projectId as PROJECT",
-              "projects.projectName as PROJECT NAME",
-              "floor_and_zones.propertyTypeId as PROPERTY_TYPE_CODE",
-              "floor_and_zones.buildingPhaseId as BUILDING_PHASE_CODE ID",
+              "companies.companyId as COMPANY",
+              "companies.companyName as COMPANY_NAME",
+              "projects.project as PROJECT",
+              "projects.projectName as PROJECT_NAME",
+              "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
               "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
               "floor_and_zones.description as DESCRIPTION",
-              "floor_and_zones.totalFloorArea as TOTAL FLOOR AREA",
+              "floor_and_zones.totalFloorArea as TOTAL_FLOOR_AREA",
               "floor_and_zones.isActive as STATUS",
-              "users.name as CREATED BY",
-              "floor_and_zones.createdBy as CREATED BY ID",
-              "floor_and_zones.createdAt as DATE CREATED"
+              "users.name as CREATED_BY",
+              "floor_and_zones.createdBy as CREATED_BY_ID",
+              "floor_and_zones.createdAt as DATE_CREATED"
             ])
             .where({ "floor_and_zones.companyId": companyId,"floor_and_zones.orgId":orgId })
         ]);
@@ -494,6 +494,165 @@ const floorZoneController = {
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
         ],
+      });
+    }
+  },
+  /**IMPORT FLOOR ZONE DATA */
+  importFloorZoneData: async (req,res)=>{
+
+    try {
+      if (req.file) {
+        let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+          tempraryDirectory = 'tmp/';
+        } else {
+          tempraryDirectory = '/tmp/';
+        }
+        let resultData = null;
+        let file_path = tempraryDirectory + req.file.filename;
+        let wb = XLSX.readFile(file_path, { type: 'binary' });
+        let ws = wb.Sheets[wb.SheetNames[0]];
+        let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
+
+        let totalData = data.length - 1;
+        let fail = 0;
+        let success = 0;
+        console.log("=======", data[0], "+++++++++++++++")
+        let result = null;
+
+        if (data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" || data[0].A == "ORGANIZATION_ID" &&
+          data[0].B == "COMPANY" &&
+          data[0].C == "COMPANY_NAME" &&
+          data[0].D == "PROJECT" &&
+          data[0].E == "PROJECT_NAME" &&
+          data[0].F == "PROPERTY_TYPE_CODE" &&
+          data[0].G == "BUILDING_PHASE_CODE" &&
+          data[0].H == "FLOOR_ZONE_CODE" &&
+          data[0].I == "DESCRIPTION" &&
+          data[0].J == "TOTAL_FLOOR_AREA" &&
+          data[0].K == "STATUS" &&
+          data[0].L == "CREATED_BY" &&
+          data[0].M == "CREATED_BY_ID" &&
+          data[0].N == "DATE_CREATED"
+
+        ) {
+
+          if (data.length > 0) {
+
+            let i = 0;
+            for (let floorData of data) {
+              i++;
+
+              let companyData = await knex('companies').select('id').where({companyId: floorData.B});
+              let companyId   = null;
+              if(!companyData && !companyData.length){
+                continue;
+              } 
+              if(companyData && companyData.length){
+                companyId    = companyData[0].id
+              }
+
+              let projectData = await knex('projects').select('id').where({project: floorData.D});
+              let projectId   = null;
+              if(!projectData && !projectData.length){
+                continue;
+              } 
+              if(projectData && projectData.length){
+                projectId    = projectData[0].id
+              }
+             /**GET PROPERTY TYPE ID OPEN */
+              let propertTypeData = await knex('property_types').select('id').where({propertyTypeCode: floorData.F});
+              let propertyTypeId   = null;
+              if(!propertTypeData && !propertTypeData.length){
+                continue;
+              } 
+              if(propertTypeData && propertTypeData.length){
+                propertyTypeId    = propertTypeData[0].id
+              }
+              /**GET PROPERTY TYPE ID CLOSE */
+
+              /**GET BUILDING PHASE ID OPEN */
+              let buildingData = await knex('buildings_and_phases').select('id').where({buildingPhaseCode: floorData.G});
+              let buildingId   = null;
+              if(!buildingData && !buildingData.length){
+                continue;
+              } 
+              if(buildingData && buildingData.length){
+                buildingId    = buildingData[0].id
+              }
+              /**GET BUILDING PHASE ID CLOSE */
+
+              if (i > 1) {
+
+                let checkExist = await knex('floor_and_zones').select("floorZoneCode")
+                  .where({ floorZoneCode: floorData.H, orgId: floorData.A })
+                if (checkExist.length < 1) {
+
+
+                  let currentTime = new Date().getTime();
+                  let insertData = {
+                    orgId          : req.orgId,
+                    companyId      : companyId,
+                    projectId      : projectId,
+                    propertyTypeId : propertyTypeId,
+                    buildingPhaseId: buildingId,
+                    floorZoneCode  : floorData.H,
+                    description    : floorData.I,
+                    totalFloorArea : floorData.J,
+                    isActive       : floorData.K,
+                    createdBy      : projectData.M,
+                    createdAt      : currentTime,
+                    updatedAt      : currentTime,
+                  }
+
+                  resultData = await knex.insert(insertData).returning(['*']).into('floor_and_zones');
+                  if (resultData && resultData.length) {
+                    success++;
+                  }
+                } else {
+                  fail++;
+                }
+              }
+
+            }
+
+            let message   = null;
+            if(totalData==success){
+              message = "We have processed ( "+totalData+" ) entries and added them successfully!";
+            }else {
+              message = "We have processed ( "+totalData+" ) entries out of which only ( "+success+ " ) are added and others are failed ( "+fail+ " ) due to validation!";
+            }
+
+            let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
+            return res.status(200).json({
+              message: message,
+            });
+
+          }
+
+        } else {
+
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+            ]
+          });
+        }
+      } else {
+
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
+
+      }
+
+    } catch (err) {
+      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   }

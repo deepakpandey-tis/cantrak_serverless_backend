@@ -1,5 +1,5 @@
 const { Router } = require("express")
-const path       = require('path');
+
 
 const router = Router()
 const authMiddleware = require('../../middlewares/auth')
@@ -16,6 +16,7 @@ router.post('/export-csv-company-data', authMiddleware.isAuthenticated, companyC
 router.get('/company-lists',authMiddleware.isAuthenticated, companyController.getCompanyListForProject)
 
 /**IMPORT COMPANY DATA */
+const path       = require('path');
 let tempraryDirectory = null;
         if (process.env.IS_OFFLINE) {
            tempraryDirectory = 'tmp/';
