@@ -8,6 +8,9 @@ const knex = require("../../db/knex");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
+const XLSX = require("xlsx");
+const fs     = require('fs');
+const path    = require('path')
 //const trx = knex.transaction();
 
 const taxesfactionController = {
@@ -378,6 +381,85 @@ const taxesfactionController = {
         "[controllers][generalsetup][viewtax] :  Error",
         err
       );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  // EXPORT TAX DATA
+  exportTaxeData: async (req, res) => {
+    try {
+      let reqData = req.query;
+      let orgId   = req.orgId
+      
+      let rows = null;
+
+      [rows] = await Promise.all([
+      
+        knex
+          .from("taxes")
+          .leftJoin("users", "users.id", "taxes.createdBy")
+          .where({ "taxes.orgId": req.orgId })
+          .select([
+            "taxes.orgId as ORGANIZATION_ID",
+            "taxes.taxCode as TAX CODE",
+            "taxes.taxPercentage as TAX PERCENTAGE",
+            "taxes.isActive as STATUS",
+            "taxes.createdBy as CREATED BY ID",
+            "users.name as CREATED BY",
+            "taxes.createdAt as DATE CREATED"
+          ])
+      ]);
+
+      let tempraryDirectory = null;
+     let bucketName        = null;
+     if (process.env.IS_OFFLINE) {
+        bucketName        =  'sls-app-resources-bucket';
+        tempraryDirectory = 'tmp/';
+      } else {
+        tempraryDirectory = '/tmp/';  
+        bucketName        =  process.env.S3_BUCKET_NAME;
+      }
+
+      var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
+      var ws = XLSX.utils.json_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, "pres");
+      XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
+      let filename     = "TaxData-" + Date.now() + ".csv";
+      let filepath     = tempraryDirectory+filename;
+      let check        = XLSX.writeFile(wb, filepath);
+      const AWS        = require('aws-sdk');
+
+      fs.readFile(filepath, function(err, file_buffer) {
+      var s3 = new AWS.S3();
+      var params = {
+        Bucket: bucketName,
+        Key: "Export/Tax/"+filename,
+        Body:file_buffer
+      }
+      s3.putObject(params, function(err, data) {
+        if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            //next(err);
+        } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+        }
+      });
+    })
+    //let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
+    let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Tax/"+filename;
+
+      res.status(200).json({
+        data: {
+          taxes: rows
+        },
+        message: "Tax list successfully !",
+        url:url
+      });
+    } catch (err) {
+      console.log("[controllers][tax][gettax] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]

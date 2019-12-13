@@ -13,7 +13,7 @@ router.post('/update-taxes', authMiddleware.isAuthenticated,  taxesController.up
 router.get('/get-taxes-list', authMiddleware.isAuthenticated,  taxesController.getTaxesList);
 router.post('/delete-taxes', authMiddleware.isAuthenticated,  taxesController.deleteTaxes);
 router.post('/get-taxes-details', authMiddleware.isAuthenticated,taxesController.viewTaxDetails);
-
+router.get('/export-tax-data',authMiddleware.isAuthenticated,taxesController.exportTaxeData);
 
 module.exports = router;
  
