@@ -8,6 +8,10 @@ const knex = require("../../db/knex");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
+
+const XLSX = require("xlsx");
+const fs = require("fs");
+const path = require("path");
 //const trx = knex.transaction();
 
 const whtController = {
@@ -23,9 +27,15 @@ const whtController = {
         const schema = Joi.object().keys({
           whtCode: Joi.string().required(),
           taxPercentage: Joi.string().required(),
-          descriptionEng: Joi.string().allow('').optional(),
-          descriptionThai: Joi.string().allow('').optional(),
-          glAccountCode: Joi.string().allow('').optional()
+          descriptionEng: Joi.string()
+            .allow("")
+            .optional(),
+          descriptionThai: Joi.string()
+            .allow("")
+            .optional(),
+          glAccountCode: Joi.string()
+            .allow("")
+            .optional()
         });
 
         const result = Joi.validate(whtPayload, schema);
@@ -39,7 +49,8 @@ const whtController = {
         }
 
         const existWhtCode = await knex("wht_master").where({
-          whtCode: whtPayload.whtCode, orgId: req.orgId
+          whtCode: whtPayload.whtCode,
+          orgId: req.orgId
         });
 
         console.log("[controllers][tax][addwht]: Wht Code", existWhtCode);
@@ -78,7 +89,7 @@ const whtController = {
           .transacting(trx)
           .into("wht_master");
 
-          whtView = taxResult[0];
+        whtView = taxResult[0];
 
         trx.commit;
       });
@@ -111,9 +122,15 @@ const whtController = {
           id: Joi.number().required(),
           whtCode: Joi.string().required(),
           taxPercentage: Joi.string().required(),
-          descriptionEng: Joi.string().allow('').optional(),
-          descriptionThai: Joi.string().allow('').optional(),
-          glAccountCode: Joi.string().allow('').optional()
+          descriptionEng: Joi.string()
+            .allow("")
+            .optional(),
+          descriptionThai: Joi.string()
+            .allow("")
+            .optional(),
+          glAccountCode: Joi.string()
+            .allow("")
+            .optional()
         });
 
         const result = Joi.validate(taxesPaylode, schema);
@@ -167,11 +184,12 @@ const whtController = {
         // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
 
         console.log(
-          "[controllers][tax][updateTax]: Update Taxes",updateTaxResult
+          "[controllers][tax][updateTax]: Update Taxes",
+          updateTaxResult
         );
 
         updateWhtPayload = updateTaxResult[0];
-        
+
         trx.commit;
       });
 
@@ -346,7 +364,7 @@ const whtController = {
           id: Joi.string().required()
         });
         const result = Joi.validate(payload, schema);
-        
+
         if (result && result.hasOwnProperty("error") && result.error) {
           return res.status(400).json({
             errors: [
@@ -360,7 +378,7 @@ const whtController = {
           .select("wht_master.*")
           .where({ id: payload.id });
 
-          whtDetail = _.omit(whtsResult[0], [
+        whtDetail = _.omit(whtsResult[0], [
           "createdAt",
           "updatedAt",
           "isActive"
@@ -375,8 +393,181 @@ const whtController = {
         message: "Wht Tax details"
       });
     } catch (err) {
+      console.log("[controllers][generalsetup][whttax] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  exportWhtData: async (req, res) => {
+    try {
+      let reqData = req.query;
+      let orgId = req.orgId;
+
+      let rows = null;
+
+      [rows] = await Promise.all([
+        knex
+          .from("wht_master")
+          .leftJoin("users", "users.id", "wht_master.createdBy")
+          .where({ "wht_master.orgId": req.orgId })
+          .select([
+            "wht_master.orgId as ORGANIZATION_ID",
+            "wht_master.whtCode as WHT CODE",
+            "wht_master.taxPercentage as TAX PERCENTAGE",
+            "wht_master.isActive as STATUS",
+            "wht_master.createdBy as CREATED BY ID",
+            "users.name as CREATED BY",
+            "wht_master.createdAt as DATE CREATED"
+          ])
+      ]);
+
+      let tempraryDirectory = null;
+      let bucketName = null;
+      if (process.env.IS_OFFLINE) {
+        bucketName = "sls-app-resources-bucket";
+        tempraryDirectory = "tmp/";
+      } else {
+        tempraryDirectory = "/tmp/";
+        bucketName = process.env.S3_BUCKET_NAME;
+      }
+
+      var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
+      var ws = XLSX.utils.json_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, "pres");
+      XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
+      let filename = "WhtData-" + Date.now() + ".csv";
+      let filepath = tempraryDirectory + filename;
+      let check = XLSX.writeFile(wb, filepath);
+      const AWS = require("aws-sdk");
+
+      fs.readFile(filepath, function(err, file_buffer) {
+        var s3 = new AWS.S3();
+        var params = {
+          Bucket: bucketName,
+          Key: "Export/Wht/" + filename,
+          Body: file_buffer,
+          ACL: 'public-read'
+        };
+        s3.putObject(params, function(err, data) {
+          if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            //next(err);
+          } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+          }
+        });
+      });
+      //let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
+      let url =
+        "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Wht/" +
+        filename;
+
+      res.status(200).json({
+        data: {
+          taxes: rows
+        },
+        message: "Wht list successfully !",
+        url: url
+      });
+    } catch (err) {
+      console.log("[controllers][tax][gettax] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  importWhtData: async (req, res) => {
+    try {
+      if (req.file) {
+        console.log(req.file);
+        let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+          tempraryDirectory = "tmp/";
+        } else {
+          tempraryDirectory = "/tmp/";
+        }
+        let resultData = null;
+        let file_path = tempraryDirectory + req.file.filename;
+        let wb = XLSX.readFile(file_path, { type: "binary" });
+        let ws = wb.Sheets[wb.SheetNames[0]];
+        let data = XLSX.utils.sheet_to_json(ws, {
+          type: "string",
+          header: "A",
+          raw: false
+        });
+        //data         = JSON.stringify(data);
+        let result = null;
+
+        //console.log('DATA: ',data)
+
+        if (
+          data[0].A == "ORGANIZATION_ID" ||
+          (data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" &&
+            data[0].B == "WHT CODE" &&
+            data[0].C == "TAX PERCENTAGE" &&
+            data[0].D == "STATUS" &&
+            data[0].E == "CREATED BY ID" &&
+            data[0].F == "CREATED BY" &&
+            data[0].G == "DATE CREATED")
+        ) {
+          if (data.length > 0) {
+            let i = 0;
+            console.log("Data[0]", data[0]);
+            for (let whtData of data) {
+              i++;
+              if (i > 1) {
+                let checkExist = await knex("wht_master")
+                  .select("whtCode")
+                  .where({
+                    whtCode: whtData.B,
+                    orgId: whtData.A
+                  });
+                if (checkExist.length < 1) {
+                  let insertData = {
+                    orgId: whtData.A,
+                    whtCode: whtData.B,
+                    taxPercentage: whtData.C,
+                    isActive: whtData.D,
+                    createdBy: whtData.E,
+                    createdAt: whtData.G
+                  };
+
+                  resultData = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .into("wht_master");
+                }
+              }
+            }
+
+            let deleteFile = await fs.unlink(file_path, err => {
+              console.log("File Deleting Error " + err);
+            });
+            return res.status(200).json({
+              message: "WHT Data Import Successfully!"
+            });
+          }
+        } else {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+            ]
+          });
+        }
+      } else {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
+      }
+    } catch (err) {
       console.log(
-        "[controllers][generalsetup][whttax] :  Error",
+        "[controllers][propertysetup][importCompanyData] :  Error",
         err
       );
       //trx.rollback

@@ -285,12 +285,12 @@ const buildingPhaseController = {
           knex
             .count("* as count")
             .from("buildings_and_phases")
-            .innerJoin(
+            .leftJoin(
               "projects",
               "buildings_and_phases.projectId",
               "projects.id"
             )
-            .innerJoin(
+            .leftJoin(
               "companies",
               "buildings_and_phases.companyId",
               "companies.id"
@@ -302,12 +302,12 @@ const buildingPhaseController = {
             .first(),
 
           knex("buildings_and_phases")
-            .innerJoin(
+            .leftJoin(
               "projects",
               "buildings_and_phases.projectId",
               "projects.id"
             )
-            .innerJoin(
+            .leftJoin(
               "companies",
               "buildings_and_phases.companyId",
               "companies.id"
@@ -348,12 +348,12 @@ const buildingPhaseController = {
           knex
             .count("* as count")
             .from("buildings_and_phases")
-            .innerJoin(
+            .leftJoin(
               "projects",
               "buildings_and_phases.projectId",
               "projects.id"
             )
-            .innerJoin(
+            .leftJoin(
               "companies",
               "buildings_and_phases.companyId",
               "companies.id"
@@ -364,12 +364,12 @@ const buildingPhaseController = {
             })
             .first(),
           knex("buildings_and_phases")
-            .innerJoin(
+            .leftJoin(
               "projects",
               "buildings_and_phases.projectId",
               "projects.id"
             )
-            .innerJoin(
+            .leftJoin(
               "companies",
               "buildings_and_phases.companyId",
               "companies.id"
@@ -410,12 +410,12 @@ const buildingPhaseController = {
           knex
             .count("* as count")
             .from("buildings_and_phases")
-            .innerJoin(
+            .leftJoin(
               "projects",
               "buildings_and_phases.projectId",
               "projects.id"
             )
-            .innerJoin(
+            .leftJoin(
               "companies",
               "buildings_and_phases.companyId",
               "companies.id"
@@ -428,12 +428,12 @@ const buildingPhaseController = {
             })
             .first(),
           knex("buildings_and_phases")
-            .innerJoin(
+            .leftJoin(
               "projects",
               "buildings_and_phases.projectId",
               "projects.id"
             )
-            .innerJoin(
+            .leftJoin(
               "companies",
               "buildings_and_phases.companyId",
               "companies.id"
@@ -502,23 +502,28 @@ const buildingPhaseController = {
               "projects.id"
             )
             .leftJoin(
+              "property_types",
+              "buildings_and_phases.propertyTypeId",
+              "property_types.id"
+            )
+            .leftJoin(
               "companies",
               "buildings_and_phases.companyId",
               "companies.id"
             )
             .where({ "buildings_and_phases.orgId": orgId })
             .select([
-              "buildings_and_phases.orgId as ORGANIZATION_ID",
+              // "buildings_and_phases.orgId as ORGANIZATION_ID",
               "buildings_and_phases.companyId as COMPANY",
               "companies.companyName as COMPANY NAME",
               "buildings_and_phases.projectId as PROJECT",
               "projects.projectName as PROJECT NAME",
-              "buildings_and_phases.propertyTypeId as PROPERTY_TYPE_CODE",
+              "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
               "buildings_and_phases.description as DESCRIPTION",
               "buildings_and_phases.isActive as STATUS",
-              "buildings_and_phases.createdBy as CREATED BY ID",
-              "buildings_and_phases.createdAt as DATE CREATED"
+              // "buildings_and_phases.createdBy as CREATED BY ID",
+              // "buildings_and_phases.createdAt as DATE CREATED"
             ])
         ]);
       } else {
@@ -539,7 +544,7 @@ const buildingPhaseController = {
               "buildings_and_phases.orgId": orgId
             })
             .select([
-              "buildings_and_phases.orgId as ORGANIZATION_ID",
+              //"buildings_and_phases.orgId as ORGANIZATION_ID",
               "buildings_and_phases.companyId as COMPANY",
               "companies.companyName as COMPANY NAME",
               "buildings_and_phases.projectId as PROJECT",
@@ -548,8 +553,8 @@ const buildingPhaseController = {
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
               "buildings_and_phases.description as DESCRIPTION",
               "buildings_and_phases.isActive as STATUS",
-              "buildings_and_phases.createdBy as CREATED BY ID",
-              "buildings_and_phases.createdAt as DATE CREATED"
+              // "buildings_and_phases.createdBy as CREATED BY ID",
+              // "buildings_and_phases.createdAt as DATE CREATED"
             ])
         ]);
       }
@@ -577,32 +582,40 @@ const buildingPhaseController = {
         var params = {
           Bucket: bucketName,
           Key: "Export/BuildingPhase/" + filename,
-          Body: file_buffer
+          Body: file_buffer,
+          ACL: 'public-read'
         };
         s3.putObject(params, function(err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             //next(err);
+            res.status(500).json({
+                  errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });             
+
           } else {
             console.log("File uploaded Successfully");
+           
             //next(null, filePath);
+          fs.unlink(filepath, err => {
+            console.log("File Deleting Error " + err);
+          });
+          let url =
+            "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/BuildingPhase/" +
+            filename;
+
+          return res.status(200).json({
+            data: {
+              buildingPhases: rows
+            },
+            message: "Building Phases Data Export Successfully!",
+            url: url
+          });
           }
         });
       });
-      let deleteFile = await fs.unlink(filepath, err => {
-        console.log("File Deleting Error " + err);
-      });
-      let url =
-        "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/BuildingPhase/" +
-        filename;
 
-      return res.status(200).json({
-        data: {
-          buildingPhases: rows
-        },
-        message: "Building Phases Data Export Successfully!",
-        url: url
-      });
+      
     } catch (err) {
       console.log(
         "[controllers][generalsetup][viewbuildingPhase] :  Error",
@@ -706,17 +719,19 @@ const buildingPhaseController = {
         //console.log('DATA: ',data)
 
         if (
-          (data[0].A == "ORGANIZATION_ID" || data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" &&
-            data[0].B == "COMPANY" &&
-            data[0].C == "COMPANY NAME" &&
-            data[0].D == "PROJECT" &&
-            data[0].E == "PROJECT NAME" &&
-            data[0].F == "PROPERTY_TYPE_CODE" &&
-            data[0].G == "BUILDING_PHASE_CODE" &&
-            data[0].H == "DESCRIPTION" &&
-            data[0].I == "STATUS" &&
-            data[0].J == "CREATED BY ID" &&
-            data[0].K == "DATE CREATED"
+          (
+            //data[0].A == "ORGANIZATION_ID" || data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" &&
+            data[0].A == "Ã¯Â»Â¿COMPANY" || data[0].A == "COMPANY" &&
+            data[0].B == "COMPANY NAME" &&
+            data[0].C == "PROJECT" &&
+            data[0].D == "PROJECT NAME" &&
+            data[0].E == "PROPERTY_TYPE_CODE" &&
+            data[0].F == "BUILDING_PHASE_CODE" &&
+            data[0].G == "DESCRIPTION" 
+            //&&
+            // data[0].I == "STATUS" &&
+            // data[0].J == "CREATED BY ID" &&
+            // data[0].K == "DATE CREATED"
             )
         ) {
           if (data.length > 0) {
@@ -725,11 +740,24 @@ const buildingPhaseController = {
             for (let buildingData of data) {
               // Find Company primary key
               let companyId = null;
-              let projectId = null
+              let projectId = null;
+              let propertyTypeId = null
 
 
-              let companyIdResult = await knex('companies').select('id').where({companyId:buildingData.B})
-              let projectIdResult = await knex('projects').select('id').where({project:buildingData.D})
+              let companyIdResult = await knex('companies').select('id').where({companyId:buildingData.A})
+              let projectIdResult = await knex('projects').select('id').where({project:buildingData.C})
+              let propertyTypeIdResult = await knex("property_types")
+                .select("id")
+                .where({ propertyTypeCode: buildingData.E });
+
+              if (propertyTypeIdResult && propertyTypeIdResult.length) {
+                propertyTypeId = propertyTypeIdResult[0].id;
+              }
+              if (!propertyTypeId) {
+                console.log("breaking due to: ", propertyTypeId);
+                continue;
+              }
+
               if(companyIdResult && companyIdResult.length){
                 companyId = companyIdResult[0].id;
               }
@@ -748,23 +776,24 @@ const buildingPhaseController = {
               i++;
 
               if (i > 1) {
-                let checkExist = await knex("buildings_and_phases")
-                  .select("buildingPhaseCode")
-                  .where({
-                    buildingPhaseCode: buildingData.G,
-                    orgId: buildingData.A
-                  });
-                if (checkExist.length < 1) {
+                // let checkExist = await knex("buildings_and_phases")
+                //   .select("buildingPhaseCode")
+                //   .where({
+                //     buildingPhaseCode: buildingData.F,
+                //     orgId: req.orgId
+                //   });
+                //if (checkExist.length < 1) {
                   let insertData = {
-                    orgId: buildingData.A,
+                    orgId: req.orgId,
                     companyId: companyId,
                     projectId: projectId,
-                    buildingPhaseCode: buildingData.G,
-                    propertyTypeId: buildingData.F,
-                    description: buildingData.H,
-                    isActive:buildingData.I,
-                    createdBy: buildingData.J,
-                    createdAt: buildingData.K
+                    buildingPhaseCode: buildingData.F,
+                    propertyTypeId: propertyTypeId,
+                    description: buildingData.G,
+                    // isActive: buildingData.H,
+                    // createdBy: buildingData.I,
+                    createdAt: currentTime,
+                    updatedAt: currentTime
                   };
 
                   resultData = await knex
@@ -772,7 +801,7 @@ const buildingPhaseController = {
                     .returning(["*"])
                     .into("buildings_and_phases");
                 }
-              }
+              //}
             }
 
             let deleteFile = await fs.unlink(file_path, err => {
