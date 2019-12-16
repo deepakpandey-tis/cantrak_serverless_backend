@@ -359,7 +359,7 @@ const floorZoneController = {
               "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
               "floor_and_zones.description as DESCRIPTION",
               "floor_and_zones.totalFloorArea as TOTAL_FLOOR_AREA",
-              "floor_and_zones.isActive as STATUS",
+              //"floor_and_zones.isActive as STATUS",
               //"users.name as CREATED_BY",
               //"floor_and_zones.createdBy as CREATED_BY_ID",
               //"floor_and_zones.createdAt as DATE_CREATED"
@@ -377,7 +377,7 @@ const floorZoneController = {
             .leftJoin("users", "floor_and_zones.createdBy", "users.id")
             .leftJoin("property_types", "floor_and_zones.propertyTypeId", "property_types.id")
             .select([
-              "floor_and_zones.orgId as ORGANIZATION_ID",
+              //"floor_and_zones.orgId as ORGANIZATION_ID",
               "companies.companyId as COMPANY",
               "companies.companyName as COMPANY_NAME",
               "projects.project as PROJECT",
@@ -387,10 +387,10 @@ const floorZoneController = {
               "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
               "floor_and_zones.description as DESCRIPTION",
               "floor_and_zones.totalFloorArea as TOTAL_FLOOR_AREA",
-              "floor_and_zones.isActive as STATUS",
-              "users.name as CREATED_BY",
-              "floor_and_zones.createdBy as CREATED_BY_ID",
-              "floor_and_zones.createdAt as DATE_CREATED"
+              //"floor_and_zones.isActive as STATUS",
+              // "users.name as CREATED_BY",
+              // "floor_and_zones.createdBy as CREATED_BY_ID",
+              // "floor_and_zones.createdAt as DATE_CREATED"
             ])
             .where({ "floor_and_zones.companyId": companyId, "floor_and_zones.orgId": orgId })
         ]);
@@ -525,75 +525,83 @@ const floorZoneController = {
         console.log("=======", data[0], "+++++++++++++++")
         let result = null;
 
-        if (data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" || data[0].A == "ORGANIZATION_ID" &&
-          data[0].B == "COMPANY" &&
-          data[0].C == "COMPANY_NAME" &&
-          data[0].D == "PROJECT" &&
-          data[0].E == "PROJECT_NAME" &&
-          data[0].F == "PROPERTY_TYPE_CODE" &&
-          data[0].G == "BUILDING_PHASE_CODE" &&
-          data[0].H == "FLOOR_ZONE_CODE" &&
-          data[0].I == "DESCRIPTION" &&
-          data[0].J == "TOTAL_FLOOR_AREA" &&
-          data[0].K == "STATUS" &&
-          data[0].L == "CREATED_BY" &&
-          data[0].M == "CREATED_BY_ID" &&
-          data[0].N == "DATE_CREATED"
-
+        if (
+          //data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" || data[0].A == "ORGANIZATION_ID" &&
+          data[0].A == "Ã¯Â»Â¿COMPANY" ||
+          (data[0].A == "COMPANY" &&
+            data[0].B == "COMPANY_NAME" &&
+            data[0].C == "PROJECT" &&
+            data[0].D == "PROJECT_NAME" &&
+            data[0].E == "PROPERTY_TYPE_CODE" &&
+            data[0].F == "BUILDING_PHASE_CODE" &&
+            data[0].G == "FLOOR_ZONE_CODE" 
+            //&&
+            //data[0].H == "DESCRIPTION" &&
+            //data[0].I == "TOTAL_FLOOR_AREA"
+            )
+          //&&
+          // data[0].K == "STATUS" &&
+          // data[0].L == "CREATED_BY" &&
+          // data[0].M == "CREATED_BY_ID" &&
+          // data[0].N == "DATE_CREATED"
         ) {
-
           if (data.length > 0) {
-
             let i = 0;
             for (let floorData of data) {
               i++;
 
-              let companyData = await knex('companies').select('id').where({ companyId: floorData.B });
+              let companyData = await knex("companies")
+                .select("id")
+                .where({ companyId: floorData.A });
               let companyId = null;
               if (!companyData && !companyData.length) {
                 continue;
               }
               if (companyData && companyData.length) {
-                companyId = companyData[0].id
+                companyId = companyData[0].id;
               }
 
-              let projectData = await knex('projects').select('id').where({ project: floorData.D });
+              let projectData = await knex("projects")
+                .select("id")
+                .where({ project: floorData.C });
               let projectId = null;
               if (!projectData && !projectData.length) {
                 continue;
               }
               if (projectData && projectData.length) {
-                projectId = projectData[0].id
+                projectId = projectData[0].id;
               }
               /**GET PROPERTY TYPE ID OPEN */
-              let propertTypeData = await knex('property_types').select('id').where({ propertyTypeCode: floorData.F });
+              let propertTypeData = await knex("property_types")
+                .select("id")
+                .where({ propertyTypeCode: floorData.E });
               let propertyTypeId = null;
               if (!propertTypeData && !propertTypeData.length) {
                 continue;
               }
               if (propertTypeData && propertTypeData.length) {
-                propertyTypeId = propertTypeData[0].id
+                propertyTypeId = propertTypeData[0].id;
               }
               /**GET PROPERTY TYPE ID CLOSE */
 
               /**GET BUILDING PHASE ID OPEN */
-              let buildingData = await knex('buildings_and_phases').select('id').where({ buildingPhaseCode: floorData.G });
+              let buildingData = await knex("buildings_and_phases")
+                .select("id")
+                .where({ buildingPhaseCode: floorData.F });
               let buildingId = null;
               if (!buildingData && !buildingData.length) {
                 continue;
               }
               if (buildingData && buildingData.length) {
-                buildingId = buildingData[0].id
+                buildingId = buildingData[0].id;
               }
               /**GET BUILDING PHASE ID CLOSE */
 
               if (i > 1) {
-
-                let checkExist = await knex('floor_and_zones').select("floorZoneCode")
-                  .where({ floorZoneCode: floorData.H, orgId: req.orgId })
-                if (checkExist.length < 1) {
-
-
+                // let checkExist = await knex("floor_and_zones")
+                //   .select("floorZoneCode")
+                //   .where({ floorZoneCode: floorData.G, orgId: req.orgId });
+                //if (checkExist.length < 1) {
                   let currentTime = new Date().getTime();
                   let insertData = {
                     orgId: req.orgId,
@@ -601,42 +609,53 @@ const floorZoneController = {
                     projectId: projectId,
                     propertyTypeId: propertyTypeId,
                     buildingPhaseId: buildingId,
-                    floorZoneCode: floorData.H,
-                    description: floorData.I,
-                    totalFloorArea: floorData.J,
-                    isActive: floorData.K,
-                    createdBy: floorData.M,
+                    floorZoneCode: floorData.G,
+                    //description: floorData.H,
+                    //totalFloorArea: floorData.I,
+                    // isActive: floorData.K,
+                    // createdBy: floorData.M,
                     createdAt: currentTime,
-                    updatedAt: currentTime,
-                  }
+                    updatedAt: currentTime
+                  };
 
-                  resultData = await knex.insert(insertData).returning(['*']).into('floor_and_zones');
+                  resultData = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .into("floor_and_zones");
                   if (resultData && resultData.length) {
                     success++;
                   }
-                } else {
-                  fail++;
-                }
+                // } else {
+                //   fail++;
+                // }
               }
-
             }
 
             let message = null;
             if (totalData == success) {
-              message = "We have processed ( " + totalData + " ) entries and added them successfully!";
+              message =
+                "We have processed ( " +
+                totalData +
+                " ) entries and added them successfully!";
             } else {
-              message = "We have processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
+              message =
+                "We have processed ( " +
+                totalData +
+                " ) entries out of which only ( " +
+                success +
+                " ) are added and others are failed ( " +
+                fail +
+                " ) due to validation!";
             }
 
-            let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
-            return res.status(200).json({
-              message: message,
+            let deleteFile = await fs.unlink(file_path, err => {
+              console.log("File Deleting Error " + err);
             });
-
+            return res.status(200).json({
+              message: message
+            });
           }
-
         } else {
-
           return res.status(400).json({
             errors: [
               { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
