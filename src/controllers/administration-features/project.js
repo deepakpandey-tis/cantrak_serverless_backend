@@ -547,43 +547,41 @@ const ProjectController = {
 
         if (
           //data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" || data[0].A == "ORGANIZATION_ID" &&
-          data[0].A == "PROJECT" &&
-          data[0].B == "PROJECT_NAME" &&
-          data[0].C == "COMPANY" &&
-          data[0].D == "COMPANY_NAME" &&
-          data[0].E == "PROJECT_LOCATION" &&
-          data[0].F == "PROJECT_START_DATE" &&
-          data[0].G == "PROJECT_END_DATE" &&
-          data[0].H == "STATUS"
+          data[0].A == "Ã¯Â»Â¿PROJECT" ||
+          (data[0].A == "PROJECT" &&
+            data[0].B == "PROJECT_NAME" &&
+            data[0].C == "COMPANY" &&
+            data[0].D == "COMPANY_NAME" &&
+            data[0].E == "PROJECT_LOCATION" &&
+            data[0].F == "PROJECT_START_DATE" &&
+            data[0].G == "PROJECT_END_DATE" &&
+            data[0].H == "STATUS")
           //  &&
           // data[0].J == "CREATED BY" &&
           // data[0].K == "CREATED BY ID" &&
           // data[0].L == "DATE CREATED"
         ) {
-
           if (data.length > 0) {
-
             let i = 0;
             for (let projectData of data) {
               i++;
 
-              let companyData = await knex('companies').select('id').where({companyId: projectData.C});
-              let companyId   = null;
-              if(!companyData && !companyData.length){
+              let companyData = await knex("companies")
+                .select("id")
+                .where({ companyId: projectData.C });
+              let companyId = null;
+              if (!companyData && !companyData.length) {
                 continue;
-              } 
-              if(companyData && companyData.length){
-                companyId    = companyData[0].id
+              }
+              if (companyData && companyData.length) {
+                companyId = companyData[0].id;
               }
 
               if (i > 1) {
-
-                let checkExist = await knex('projects').select('projectName')
-                  .where({ projectName: projectData.B, orgId: req.orgId })
+                let checkExist = await knex("projects")
+                  .select("projectName")
+                  .where({ projectName: projectData.B, orgId: req.orgId });
                 if (checkExist.length < 1) {
-
-              
-
                   let currentTime = new Date().getTime();
                   let insertData = {
                     orgId: req.orgId,
@@ -596,10 +594,13 @@ const ProjectController = {
                     isActive: projectData.H,
                     //createdBy: projectData.K,
                     createdAt: currentTime,
-                    updatedAt: currentTime,
-                  }
+                    updatedAt: currentTime
+                  };
 
-                  resultData = await knex.insert(insertData).returning(['*']).into('projects');
+                  resultData = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .into("projects");
                   if (resultData && resultData.length) {
                     success++;
                   }
@@ -607,25 +608,33 @@ const ProjectController = {
                   fail++;
                 }
               }
-
             }
 
-            let message   = null;
-            if(totalData==success){
-              message = "We have processed ( "+totalData+" ) entries and added them successfully!";
-            }else {
-              message = "We have processed ( "+totalData+" ) entries out of which only ( "+success+ " ) are added and others are failed ( "+fail+ " ) due to validation!";
+            let message = null;
+            if (totalData == success) {
+              message =
+                "We have processed ( " +
+                totalData +
+                " ) entries and added them successfully!";
+            } else {
+              message =
+                "We have processed ( " +
+                totalData +
+                " ) entries out of which only ( " +
+                success +
+                " ) are added and others are failed ( " +
+                fail +
+                " ) due to validation!";
             }
 
-            let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
-            return res.status(200).json({
-              message: message,
+            let deleteFile = await fs.unlink(file_path, err => {
+              console.log("File Deleting Error " + err);
             });
-
+            return res.status(200).json({
+              message: message
+            });
           }
-
         } else {
-
           return res.status(400).json({
             errors: [
               { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
