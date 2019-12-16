@@ -10,6 +10,8 @@ const knex = require("../../db/knex");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 //const trx = knex.transaction();
+const fs = require('fs');
+const path = require('path');
 
 const sourceofRequestController = {
   addsourceofRequest: async (req, res) => {
@@ -233,52 +235,73 @@ const sourceofRequestController = {
     }
     // Export Source of Request Data
   },
-  exportsourceofRequest: async (req, res) => {
+  exportSourceOfRequest: async (req, res) => {
     try {
       let orgId = req.orgId;
-    
       let reqData = req.query;
-      let pagination = {};
 
-      let per_page = reqData.per_page || 10;
-      let page = reqData.current_page || 1;
-      if (page < 1) page = 1;
-      let offset = (page - 1) * per_page;
-
-      let [total, rows] = await Promise.all([
-        knex
-          .count("* as count")
-          .from("source_of_request")
-          .where({"orgId":orgId})
-          .first(),
+      let [rows] = await Promise.all([
         knex("source_of_request")
           .select([
-            "requestCode as Source Code",
-            "descriptionEng as Description English",
-            "descriptionThai as Description Thai",
-            "isActive as Status",
-            "createdby as Created By",
-            "createdAt as Date Created"
+            "requestCode as SOURCE_CODE",
+            "descriptionEng as DESCRIPTION",
+            "descriptionThai as DESCRIPTION_ALTERNATE",
+            "isActive as STATUS"
           ])
           .where({"orgId":orgId})
-          .offset(offset)
-          .limit(per_page)
       ]);
+
+      let tempraryDirectory = null;
+      let bucketName = null;
+      if (process.env.IS_OFFLINE) {
+        bucketName = 'sls-app-resources-bucket';
+        tempraryDirectory = 'tmp/';
+      } else {
+        tempraryDirectory = '/tmp/';
+        bucketName = process.env.S3_BUCKET_NAME;
+      }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
       var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename = "uploads/SourceofRequestData-" + Date.now() + ".csv";
-      let check = XLSX.writeFile(wb, filename);
+      let filename = "SourceOfRequestData-" + Date.now() + ".csv";
+      let filepath = tempraryDirectory + filename;
+      let check = XLSX.writeFile(wb, filepath);
+      const AWS = require('aws-sdk');
 
-      return res.status(200).json({
-        data: {
-          sourceofRequest: rows
-        },
-        message: "Source of Request Data Export Successfully!"
-      });
-    } catch (err) {
+      fs.readFile(filepath, function (err, file_buffer) {
+        var s3 = new AWS.S3();
+        var params = {
+          Bucket: bucketName,
+          Key: "Export/Source_of_Request/" + filename,
+          Body: file_buffer,
+          ACL: 'public-read'
+        }
+        s3.putObject(params, function (err, data) {
+          if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            res.status(500).json({
+              errors: [
+                { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+              ],
+            });
+            //next(err);
+          } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+            let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
+            let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Source_of_Request/" + filename;
+            res.status(200).json({
+              data: rows,
+              message: "Source of Request List",
+              url: url
+            });
+          }
+        });
+      })
+
+   } catch (err) {
       console.log(
         "[controllers][generalsetup][viewbuildingPhase] :  Error",
         err
