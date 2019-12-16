@@ -13,7 +13,7 @@ router.get('/get-floor-zone-list', authMiddleware.isAuthenticated, floorZoneCont
 // Export Floor Zone Data
 router.get('/export-floor-zone', authMiddleware.isAuthenticated, floorZoneController.exportFloorZone)
 router.get('/get-floor-zone-all-list', floorZoneController.getFloorZoneAllList)
-/**IMPORT COMPANY DATA */
+/**IMPORT FLOOR/ZONE DATA */
 const path       = require('path');
 let tempraryDirectory = null;
         if (process.env.IS_OFFLINE) {

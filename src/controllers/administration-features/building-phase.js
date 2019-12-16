@@ -582,7 +582,8 @@ const buildingPhaseController = {
         var params = {
           Bucket: bucketName,
           Key: "Export/BuildingPhase/" + filename,
-          Body: file_buffer
+          Body: file_buffer,
+          ACL: 'public-read'
         };
         s3.putObject(params, function(err, data) {
           if (err) {

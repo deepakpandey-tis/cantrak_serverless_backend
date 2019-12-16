@@ -418,7 +418,8 @@ const floorZoneController = {
       var params = {
         Bucket: bucketName,
         Key: "Export/FloorZone/"+filename,
-        Body:file_buffer
+        Body:file_buffer,
+        ACL: 'public-read'
       }
       s3.putObject(params, function(err, data) {
         if (err) {
@@ -600,7 +601,7 @@ const floorZoneController = {
                     description    : floorData.I,
                     totalFloorArea : floorData.J,
                     isActive       : floorData.K,
-                    createdBy      : projectData.M,
+                    createdBy      : floorData.M,
                     createdAt      : currentTime,
                     updatedAt      : currentTime,
                   }
