@@ -434,7 +434,6 @@ const teamsController = {
                     .leftJoin("users", "teams.createdBy", "users.id")
                     .where({ "teams.orgId": orgId })
                     .select([
-                        "teams.orgId as ORGANIZATION_ID",
                         "teams.teamCode as DEPARTMENT_CODE",
                         "teams.teamName as DEPARTMENT_NAME",
                         "teams.description as DEPARTMENT_ALTERNATE_NAME",
@@ -442,10 +441,7 @@ const teamsController = {
                         "companies.companyName as COMPANY_NAME",
                         "projects.project as PROJECT",
                         "projects.projectName as PROJECT_NAME",
-                        "team_roles_project_master.isActive as STATUS",
-                        "users.name as CREATED_BY",
-                        "team_roles_project_master.createdBy as CREATED_BY_ID",
-                        "team_roles_project_master.createdAt as DATE_CREATED"
+                        "team_roles_project_master.isActive as STATUS"
                     ])
             ]);
 
@@ -663,19 +659,14 @@ const teamsController = {
                 console.log("=======", data[0], "+++++++++++++++")
                 let result = null;
 
-                if (data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" || data[0].A == "ORGANIZATION_ID" &&
-                    data[0].B == "DEPARTMENT_CODE" &&
-                    data[0].C == "DEPARTMENT_NAME" &&
-                    data[0].D == "DEPARTMENT_ALTERNATE_NAME" &&
-                    data[0].E == "COMPANY" &&
-                    data[0].F == "COMPANY_NAME" &&
-                    data[0].G == "PROJECT" &&
-                    data[0].H == "PROJECT_NAME" &&
-                    data[0].I == "STATUS" &&
-                    data[0].J == "CREATED_BY" &&
-                    data[0].K == "CREATED_BY_ID" &&
-                    data[0].L == "DATE_CREATED"
-
+                if (data[0].A == "Ã¯Â»Â¿DEPARTMENT_CODE" || data[0].A == "DEPARTMENT_CODE" &&
+                    data[0].B == "DEPARTMENT_NAME" &&
+                    data[0].C == "DEPARTMENT_ALTERNATE_NAME" &&
+                    data[0].D == "COMPANY" &&
+                    data[0].E == "COMPANY_NAME" &&
+                    data[0].F == "PROJECT" &&
+                    data[0].G == "PROJECT_NAME" &&
+                    data[0].H == "STATUS"
                 ) {
 
                     if (data.length > 0) {
@@ -699,7 +690,7 @@ const teamsController = {
                             /**GET PROJECT ID OPEN */
                             let projectId = null;
                             if (teamData.G) {
-                                let projectData = await knex('projects').select('id').where({ project: teamData.G });
+                                let projectData = await knex('projects').select('id').where({ project: teamData.F });
 
                                 //   if(!projectData && !projectData.length){
                                 //     continue;
@@ -714,15 +705,14 @@ const teamsController = {
                             if (i > 1) {
 
                                 let checkExist = await knex('teams').select("teamId")
-                                    .where({ teamName: teamData.C, teamCode: teamData.B })
+                                    .where({ teamName: teamData.B, teamCode: teamData.A })
                                 if (checkExist.length < 1) {
                                     let insertData = {
                                         orgId: req.orgId,
-                                        teamName: teamData.C,
-                                        teamCode: teamData.B,
-                                        description: teamData.D,
-                                        isActive: teamData.I,
-                                        createdBy: teamData.K,
+                                        teamName: teamData.B,
+                                        teamCode: teamData.A,
+                                        description: teamData.C,
+                                        isActive: true,
                                         createdAt: currentTime,
                                         updatedAt: currentTime,
                                     }
@@ -743,7 +733,6 @@ const teamsController = {
                                                 orgId: req.orgId,
                                                 teamId: teamId,
                                                 projectId: projectId,
-                                                createdBy: teamData.K,
                                                 createdAt: currentTime,
                                                 updatedAt: currentTime,
                                             }
@@ -768,7 +757,6 @@ const teamsController = {
                                                 orgId: req.orgId,
                                                 teamId: teamId,
                                                 projectId: projectId,
-                                                createdBy: teamData.K,
                                                 createdAt: currentTime,
                                                 updatedAt: currentTime,
                                             }
@@ -790,7 +778,7 @@ const teamsController = {
                         if (totalData == success) {
                             message = "We have processed ( " + totalData + " ) entries and added them successfully!";
                         } else {
-                            message = "We have processed ( " + totalData + " ) entries out of which only ( " + parseInt(success) + parseInt(projectSuccess) + " ) are added and others are failed ( " + fail + " ) due to validation!";
+                            message = "We have processed ( " + totalData + " ) entries out of which only ( " +success+" ) are added and others are failed ( " + fail + " ) due to validation!";
                         }
 
                         let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
