@@ -487,17 +487,28 @@ const peopleController = {
             [rows] = await Promise.all([
             
               knex
-                .from("users")
-                .leftJoin(
-                  "property_units",
-                  "users.houseId",
-                  "property_units.houseId"
-                )
-                .leftJoin(
-                  "companies",
-                  "property_units.companyId",
-                  "companies.id"
-                )
+              .from("team_users")
+              .leftJoin(
+                "users",
+                "team_users.userId",
+                "users.id",
+              )
+              .leftJoin(
+                "teams",
+                "team_users.teamId",
+                "teams.teamId"
+              )
+              .select([
+                "users.orgId as ORGANIZATION_ID",
+                "users.userCode as HUMAN_CODE",
+                "users.nameThai as NAME_1",
+                "users.name as NAME_2",
+                "users.email as EMAIL",
+                "users.isActive as STATUS",
+                "users.updatedAt as END_EFFECTIVE_DATE",
+                "users.createdAt as START_EFFECTIVE_DATE",                  
+                "teams.teamCode as DEPARTMENT_CODE"                  
+              ])
                 .where(qb => {
                   qb.where({ "users.orgId": req.orgId });
                   if (name) {
@@ -507,20 +518,6 @@ const peopleController = {
                     qb.where("users.email", "like", `%${email}%`);
                   }
                 })
-                
-                .select([
-                  "users.orgId as ORGANIZATION_ID",
-                  "users.id as USERID",
-                  "users.name as NAME",
-                  "users.email as EMAIL",
-                  "users.userName as USERNAME",
-                  "users.mobileNo as MOBILE_NUMBER",
-                  "users.houseId as HOUSEID",
-                  "companies.id as COMPANY_ID",
-                  "companies.companyName as COMPANY_NAME",
-                  "users.lastLogin as LAST_VISIT",
-                  "users.createdAt as DATE CREATED"
-                ])
             ]);
 
         } else{
@@ -528,30 +525,27 @@ const peopleController = {
             [rows] = await Promise.all([
               
               knex
-                .from("users")
+                .from("team_users")
                 .leftJoin(
-                  "property_units",
-                  "users.houseId",
-                  "property_units.houseId"
+                  "users",
+                  "team_users.userId",
+                  "users.id",
                 )
                 .leftJoin(
-                  "companies",
-                  "property_units.companyId",
-                  "companies.id"
+                  "teams",
+                  "team_users.teamId",
+                  "teams.teamId"
                 )
                 .select([
                   "users.orgId as ORGANIZATION_ID",
-                  "users.id as USERID",
-                  "users.name as NAME",
+                  "users.userCode as HUMAN_CODE",
+                  "users.nameThai as NAME_1",
+                  "users.name as NAME_2",
                   "users.email as EMAIL",
-                  "users.userName as USERNAME",
-                  "users.mobileNo as MOBILE_NUMBER",
-                  "users.houseId as HOUSEID",
-                  "companies.id as COMPANY_ID",
-                  "companies.companyName as COMPANY_NAME",
-                  "users.lastLogin as LAST_VISIT",
-                  "users.createdAt as DATE CREATED"
-                  
+                  "users.isActive as STATUS",
+                  "users.updatedAt as END_EFFECTIVE_DATE",
+                  "users.createdAt as START_EFFECTIVE_DATE",                  
+                  "teams.teamCode as DEPARTMENT_CODE"                  
                 ])
                 .where({ "users.orgId": req.orgId })
             ]);
@@ -569,7 +563,7 @@ const peopleController = {
          }
    
          var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-         var ws = XLSX.utils.json_to_sheet(rows);
+         var ws = XLSX.utils.json_to_sheet(_.uniqBy(rows,"EMAIL"));
          XLSX.utils.book_append_sheet(wb, ws, "pres");
          XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
          let filename     = "PeopleData-" + Date.now() + ".csv";
@@ -582,7 +576,8 @@ const peopleController = {
          var params = {
            Bucket: bucketName,
            Key: "Export/People/"+filename,
-           Body:file_buffer
+           Body:file_buffer,
+           ACL: 'public-read'
          }
          s3.putObject(params, function(err, data) {
            if (err) {
@@ -613,7 +608,130 @@ const peopleController = {
             ],
         });
     }
+    },
+     /**IMPORT HUMANS/PEOPLE DATA */
+importPeopleData: async (req,res)=>{
+
+    try {
+      if (req.file) {
+        let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+          tempraryDirectory = 'tmp/';
+        } else {
+          tempraryDirectory = '/tmp/';
+        }
+        let resultData = null;
+        let file_path = tempraryDirectory + req.file.filename;
+        let wb = XLSX.readFile(file_path, { type: 'binary' });
+        let ws = wb.Sheets[wb.SheetNames[0]];
+        let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
+
+        let totalData = data.length - 1;
+        let fail = 0;
+        let success = 0;
+        console.log("=======", data[0], "+++++++++++++++")
+        let result = null;
+
+        if (data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" || data[0].A == "ORGANIZATION_ID" &&
+          data[0].B == "HUMAN_CODE" &&
+          data[0].C == "NAME_1" &&
+          data[0].D == "NAME_2" &&
+          data[0].E == "EMAIL" &&
+          data[0].F == "STATUS" &&
+          data[0].G == "END_EFFECTIVE_DATE" &&
+          data[0].H == "START_EFFECTIVE_DATE" &&
+          data[0].I == "DEPARTMENT_CODE"
+        ) {
+
+          if (data.length > 0) {
+
+            let i = 0;
+            for (let PeopleData of data) {
+              i++;
+
+              let teamData = await knex('teams').select('teamId').where({teamCode: PeopleData.I});
+              let teamId   = null;
+              if(!teamData && !teamData.length){
+                continue;
+              } 
+              if(teamData && teamData.length){
+                teamId    = teamData[0].teamId
+              }
+
+
+              if (i > 1) {
+
+                let checkExist = await knex('users').select("id")
+                  .where({nameThai:peopleData.C,name:peopleData.D, userCode: PeopleData.B, orgId: PeopleData.A })
+                if (checkExist.length < 1) {
+
+
+                  //let endDate   = Math.round(new Date().getTime()/1000);
+                  //let startDate = Math.round(new Date().getTime()/1000);
+
+                  let currentTime = new Date().getTime();
+                  let insertData = {
+                    orgId     : req.orgId,
+                    name      : peopleData.D,
+                    nameThai  : peopleData.C,
+                    email     : peopleData.E,
+                    userCode  : peopleData.B,
+                    isActive  : peopleData.F,
+                    createdAt : currentTime,
+                    updatedAt : currentTime,
+                  }
+
+                  resultData = await knex.insert(insertData).returning(['*']).into('floor_and_zones');
+                  if (resultData && resultData.length) {
+                    success++;
+                  }
+                } else {
+                  fail++;
+                }
+              }
+
+            }
+
+            let message   = null;
+            if(totalData==success){
+              message = "We have processed ( "+totalData+" ) entries and added them successfully!";
+            }else {
+              message = "We have processed ( "+totalData+" ) entries out of which only ( "+success+ " ) are added and others are failed ( "+fail+ " ) due to validation!";
+            }
+
+            let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
+            return res.status(200).json({
+              message: message,
+            });
+
+          }
+
+        } else {
+
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+            ]
+          });
+        }
+      } else {
+
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
+
+      }
+
+    } catch (err) {
+      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
     }
+  }
 }
 
 module.exports = peopleController

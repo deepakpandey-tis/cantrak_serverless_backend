@@ -1910,7 +1910,8 @@ exportTaskGroupTemplateData: async (req,res) => {
       var params = {
         Bucket: bucketName,
         Key: "Export/Task_Group_Template/"+filename,
-        Body:file_buffer
+        Body:file_buffer,
+        ACL: 'public-read'
       }
       s3.putObject(params, function(err, data) {
         if (err) {

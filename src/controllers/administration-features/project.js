@@ -428,7 +428,8 @@ const ProjectController = {
         var params = {
           Bucket: bucketName,
           Key: "Export/Project/" + filename,
-          Body: file_buffer
+          Body: file_buffer,
+          ACL: 'public-read'
         }
         s3.putObject(params, function (err, data) {
           if (err) {
