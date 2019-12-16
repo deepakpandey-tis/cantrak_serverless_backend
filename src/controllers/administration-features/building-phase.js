@@ -285,12 +285,12 @@ const buildingPhaseController = {
           knex
             .count("* as count")
             .from("buildings_and_phases")
-            .innerJoin(
+            .leftJoin(
               "projects",
               "buildings_and_phases.projectId",
               "projects.id"
             )
-            .innerJoin(
+            .leftJoin(
               "companies",
               "buildings_and_phases.companyId",
               "companies.id"
@@ -302,12 +302,12 @@ const buildingPhaseController = {
             .first(),
 
           knex("buildings_and_phases")
-            .innerJoin(
+            .leftJoin(
               "projects",
               "buildings_and_phases.projectId",
               "projects.id"
             )
-            .innerJoin(
+            .leftJoin(
               "companies",
               "buildings_and_phases.companyId",
               "companies.id"
@@ -348,12 +348,12 @@ const buildingPhaseController = {
           knex
             .count("* as count")
             .from("buildings_and_phases")
-            .innerJoin(
+            .leftJoin(
               "projects",
               "buildings_and_phases.projectId",
               "projects.id"
             )
-            .innerJoin(
+            .leftJoin(
               "companies",
               "buildings_and_phases.companyId",
               "companies.id"
@@ -364,12 +364,12 @@ const buildingPhaseController = {
             })
             .first(),
           knex("buildings_and_phases")
-            .innerJoin(
+            .leftJoin(
               "projects",
               "buildings_and_phases.projectId",
               "projects.id"
             )
-            .innerJoin(
+            .leftJoin(
               "companies",
               "buildings_and_phases.companyId",
               "companies.id"
@@ -410,12 +410,12 @@ const buildingPhaseController = {
           knex
             .count("* as count")
             .from("buildings_and_phases")
-            .innerJoin(
+            .leftJoin(
               "projects",
               "buildings_and_phases.projectId",
               "projects.id"
             )
-            .innerJoin(
+            .leftJoin(
               "companies",
               "buildings_and_phases.companyId",
               "companies.id"
@@ -428,12 +428,12 @@ const buildingPhaseController = {
             })
             .first(),
           knex("buildings_and_phases")
-            .innerJoin(
+            .leftJoin(
               "projects",
               "buildings_and_phases.projectId",
               "projects.id"
             )
-            .innerJoin(
+            .leftJoin(
               "companies",
               "buildings_and_phases.companyId",
               "companies.id"
@@ -513,7 +513,7 @@ const buildingPhaseController = {
             )
             .where({ "buildings_and_phases.orgId": orgId })
             .select([
-              "buildings_and_phases.orgId as ORGANIZATION_ID",
+              // "buildings_and_phases.orgId as ORGANIZATION_ID",
               "buildings_and_phases.companyId as COMPANY",
               "companies.companyName as COMPANY NAME",
               "buildings_and_phases.projectId as PROJECT",
@@ -522,8 +522,8 @@ const buildingPhaseController = {
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
               "buildings_and_phases.description as DESCRIPTION",
               "buildings_and_phases.isActive as STATUS",
-              "buildings_and_phases.createdBy as CREATED BY ID",
-              "buildings_and_phases.createdAt as DATE CREATED"
+              // "buildings_and_phases.createdBy as CREATED BY ID",
+              // "buildings_and_phases.createdAt as DATE CREATED"
             ])
         ]);
       } else {
@@ -544,7 +544,7 @@ const buildingPhaseController = {
               "buildings_and_phases.orgId": orgId
             })
             .select([
-              "buildings_and_phases.orgId as ORGANIZATION_ID",
+              //"buildings_and_phases.orgId as ORGANIZATION_ID",
               "buildings_and_phases.companyId as COMPANY",
               "companies.companyName as COMPANY NAME",
               "buildings_and_phases.projectId as PROJECT",
@@ -553,8 +553,8 @@ const buildingPhaseController = {
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
               "buildings_and_phases.description as DESCRIPTION",
               "buildings_and_phases.isActive as STATUS",
-              "buildings_and_phases.createdBy as CREATED BY ID",
-              "buildings_and_phases.createdAt as DATE CREATED"
+              // "buildings_and_phases.createdBy as CREATED BY ID",
+              // "buildings_and_phases.createdAt as DATE CREATED"
             ])
         ]);
       }
@@ -589,26 +589,33 @@ const buildingPhaseController = {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             //next(err);
+            res.status(500).json({
+                  errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });             
+
           } else {
             console.log("File uploaded Successfully");
+           
             //next(null, filePath);
+          fs.unlink(filepath, err => {
+            console.log("File Deleting Error " + err);
+          });
+          let url =
+            "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/BuildingPhase/" +
+            filename;
+
+          return res.status(200).json({
+            data: {
+              buildingPhases: rows
+            },
+            message: "Building Phases Data Export Successfully!",
+            url: url
+          });
           }
         });
       });
-      let deleteFile = await fs.unlink(filepath, err => {
-        console.log("File Deleting Error " + err);
-      });
-      let url =
-        "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/BuildingPhase/" +
-        filename;
 
-      return res.status(200).json({
-        data: {
-          buildingPhases: rows
-        },
-        message: "Building Phases Data Export Successfully!",
-        url: url
-      });
+      
     } catch (err) {
       console.log(
         "[controllers][generalsetup][viewbuildingPhase] :  Error",
