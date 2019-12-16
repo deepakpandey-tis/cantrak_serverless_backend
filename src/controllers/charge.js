@@ -2,6 +2,7 @@ const Joi = require("@hapi/joi");
 const _ = require("lodash");
 const XLSX = require("xlsx");
 const knex = require("../db/knex");
+const fs = require("fs")
 
 //const trx = knex.transaction();
 
@@ -92,9 +93,15 @@ const chargeController = {
           rate: Joi.string().required(),
           vatRate: Joi.string().required(),
           vatId: Joi.string().required(),
-          whtId: Joi.string().allow("").optional(),
-          whtRate: Joi.string().allow("").optional(),
-          glAccountCode: Joi.string().allow("").optional()
+          whtId: Joi.string()
+            .allow("")
+            .optional(),
+          whtRate: Joi.string()
+            .allow("")
+            .optional(),
+          glAccountCode: Joi.string()
+            .allow("")
+            .optional()
         });
 
         let result = Joi.validate(chargePayload, schema);
@@ -495,42 +502,119 @@ const chargeController = {
       });
     }
   },
+  // exportCharge: async (req, res) => {
+  //   try {
+  //     let reqData = req.query;
+  //     let total = null;
+  //     let rows = null;
+  //     let pagination = {};
+  //     let per_page = reqData.per_page || 10;
+  //     let page = reqData.current_page || 1;
+  //     if (page < 1) page = 1;
+  //     let offset = (page - 1) * per_page;
+
+  //     [total, rows] = await Promise.all([
+  //       knex
+  //         .count("* as count")
+  //         .from("charge_master")
+  //         .first(),
+  //       knex
+  //         .select("*")
+  //         .from("charge_master")
+  //         .offset(offset)
+  //         .limit(per_page)
+  //     ]);
+
+  //     var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
+  //     var ws = XLSX.utils.json_to_sheet(rows);
+  //     XLSX.utils.book_append_sheet(wb, ws, "pres");
+  //     XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
+  //     let filename = "uploads/ChargesData-" + Date.now() + ".csv";
+  //     let check = XLSX.writeFile(wb, filename);
+
+  //     res.status(200).json({
+  //       data: rows,
+  //       message: "Charges Data Export Successfully!"
+  //     });
+  //   } catch (err) {
+  //     console.log("[controllers][charge][getcharges] :  Error", err);
+  //     //trx.rollback
+  //     res.status(500).json({
+  //       errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+  //     });
+  //   }
+  // },
   exportCharge: async (req, res) => {
     try {
+      let orgId = req.orgId;
       let reqData = req.query;
-      let total = null;
       let rows = null;
-      let pagination = {};
-      let per_page = reqData.per_page || 10;
-      let page = reqData.current_page || 1;
-      if (page < 1) page = 1;
-      let offset = (page - 1) * per_page;
 
-      [total, rows] = await Promise.all([
-        knex
-          .count("* as count")
-          .from("charge_master")
-          .first(),
-        knex
-          .select("*")
-          .from("charge_master")
-          .offset(offset)
-          .limit(per_page)
-      ]);
+        [rows] = await Promise.all([
+          knex("charge_master")
+            .where({ "charge_master.orgId": orgId })
+            .select([
+              "chargeCode as CHARGE_CODE",
+              "descriptionEng as DESCRIPTION",
+              "vatRate as VAT",
+              "whtRate as WHT"
+            ])
+        ]);
+
+      let tempraryDirectory = null;
+      let bucketName = null;
+      if (process.env.IS_OFFLINE) {
+        bucketName = "sls-app-resources-bucket";
+        tempraryDirectory = "tmp/";
+      } else {
+        tempraryDirectory = "/tmp/";
+        bucketName = process.env.S3_BUCKET_NAME;
+      }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
       var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename = "uploads/ChargesData-" + Date.now() + ".csv";
-      let check = XLSX.writeFile(wb, filename);
+      let filename = "ChargeData-" + Date.now() + ".csv";
+      let filepath = tempraryDirectory + filename;
+      let check = XLSX.writeFile(wb, filepath);
+      const AWS = require("aws-sdk");
+      fs.readFile(filepath, function(err, file_buffer) {
+        var s3 = new AWS.S3();
+        var params = {
+          Bucket: bucketName,
+          Key: "Export/Charge/" + filename,
+          Body: file_buffer
+        };
+        s3.putObject(params, function(err, data) {
+          if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            //next(err);
+          } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+          }
+        });
+      });
+      let deleteFile = await fs.unlink(filepath, err => {
+        console.log("File Deleting Error " + err);
+      });
+      let url =
+        "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Charge/" +
+        filename;
 
-      res.status(200).json({
-        data: rows,
-        message: "Charges Data Export Successfully!"
+      return res.status(200).json({
+        data: {
+          buildingPhases: rows
+        },
+        message: "Charge Data Export Successfully!",
+        url: url
       });
     } catch (err) {
-      console.log("[controllers][charge][getcharges] :  Error", err);
+      console.log(
+        "[controllers][generalsetup][viewbuildingPhase] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
@@ -609,8 +693,11 @@ const chargeController = {
         let chargesResult = await knex("charge_master")
           .leftJoin("taxes", "charge_master.vatId", "taxes.id")
           .leftJoin("wht_master", "charge_master.whtId", "wht_master.id")
-          .where({ "charge_master.id": payload.id, "charge_master.orgId": req.orgId })
-          .select("charge_master.*","taxes.taxCode","wht_master.whtCode");        
+          .where({
+            "charge_master.id": payload.id,
+            "charge_master.orgId": req.orgId
+          })
+          .select("charge_master.*", "taxes.taxCode", "wht_master.whtCode");
         chargeDetail = _.omit(chargesResult[0], [
           "charge_master.createdAt",
           "charge_master.updatedAt",

@@ -264,13 +264,13 @@ const ProjectController = {
           knex
             .count("* as count")
             .from("projects")
-            .innerJoin("companies", "projects.companyId", "companies.id")
-            .innerJoin("users", "users.id", "projects.createdBy")
+            .leftJoin("companies", "projects.companyId", "companies.id")
+            .leftJoin("users", "users.id", "projects.createdBy")
             .where({ "projects.orgId": req.orgId })
             .first(),
           knex("projects")
-            .innerJoin("companies", "projects.companyId", "companies.id")
-            .innerJoin("users", "users.id", "projects.createdBy")
+            .leftJoin("companies", "projects.companyId", "companies.id")
+            .leftJoin("users", "users.id", "projects.createdBy")
             .where({ "projects.orgId": req.orgId })
             .select([
               "projects.id as id",
@@ -303,16 +303,16 @@ const ProjectController = {
           knex
             .count("* as count")
             .from("projects")
-            .innerJoin("companies", "projects.companyId", "companies.id")
-            .innerJoin("users", "users.id", "projects.createdBy")
+            .leftJoin("companies", "projects.companyId", "companies.id")
+            .leftJoin("users", "users.id", "projects.createdBy")
             .where({ "projects.companyId": companyId })
             .offset(offset)
             .limit(per_page)
             .first(),
           knex
             .from("projects")
-            .innerJoin("companies", "projects.companyId", "companies.id")
-            .innerJoin("users", "users.id", "projects.createdBy")
+            .leftJoin("companies", "projects.companyId", "companies.id")
+            .leftJoin("users", "users.id", "projects.createdBy")
             .where({ "projects.companyId": companyId })
             .select([
               "projects.id as id",
@@ -367,7 +367,7 @@ const ProjectController = {
             .leftJoin("users", "users.id", "projects.createdBy")
             .where({ "projects.orgId": orgId })
             .select([
-              "projects.orgId as ORGANIZATION_ID",
+              // "projects.orgId as ORGANIZATION_ID",
               "projects.project as PROJECT",
               "projects.projectName as PROJECT_NAME",
               "companies.companyId as COMPANY",
@@ -376,9 +376,9 @@ const ProjectController = {
               "projects.projectStartDate as PROJECT_START_DATE",
               "projects.projectEndDate as PROJECT_END_DATE",
               "projects.isActive as STATUS",
-              "users.name as CREATED BY",
-              "projects.createdBy as CREATED BY ID",
-              "projects.createdAt as DATE CREATED"
+              // "users.name as CREATED BY",
+              // "projects.createdBy as CREATED BY ID",
+              // "projects.createdAt as DATE CREATED"
             ])
         ]);
       } else {
@@ -391,7 +391,7 @@ const ProjectController = {
             .leftJoin("users", "users.id", "projects.createdBy")
             .where({ "projects.companyId": companyId, "projects.orgId": orgId })
             .select([
-              "projects.orgId as ORGANIZATION_ID",
+              // "projects.orgId as ORGANIZATION_ID",
               "projects.project as PROJECT",
               "projects.projectName as PROJECT_NAME",
               "companies.companyId as COMPANY",
@@ -400,9 +400,9 @@ const ProjectController = {
               "projects.projectStartDate as PROJECT_START_DATE",
               "projects.projectEndDate as PROJECT_END_DATE",
               "projects.isActive as STATUS",
-              "users.name as CREATED BY",
-              "projects.createdBy as CREATED BY ID",
-              "projects.createdAt as DATE CREATED"
+              // "users.name as CREATED BY",
+              // "projects.createdBy as CREATED BY ID",
+              // "projects.createdAt as DATE CREATED"
             ])
         ]);
       }
@@ -545,18 +545,20 @@ const ProjectController = {
         console.log("=======", data[0], "+++++++++++++++")
         let result = null;
 
-        if (data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" || data[0].A == "ORGANIZATION_ID" &&
-          data[0].B == "PROJECT" &&
-          data[0].C == "PROJECT_NAME" &&
-          data[0].D == "COMPANY" &&
-          data[0].E == "COMPANY_NAME" &&
-          data[0].F == "PROJECT_LOCATION" &&
-          data[0].G == "PROJECT_START_DATE" &&
-          data[0].H == "PROJECT_END_DATE" &&
-          data[0].I == "STATUS" &&
-          data[0].J == "CREATED BY" &&
-          data[0].K == "CREATED BY ID" &&
-          data[0].L == "DATE CREATED"
+        if (
+          //data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" || data[0].A == "ORGANIZATION_ID" &&
+          data[0].A == "PROJECT" &&
+          data[0].B == "PROJECT_NAME" &&
+          data[0].C == "COMPANY" &&
+          data[0].D == "COMPANY_NAME" &&
+          data[0].E == "PROJECT_LOCATION" &&
+          data[0].F == "PROJECT_START_DATE" &&
+          data[0].G == "PROJECT_END_DATE" &&
+          data[0].H == "STATUS"
+          //  &&
+          // data[0].J == "CREATED BY" &&
+          // data[0].K == "CREATED BY ID" &&
+          // data[0].L == "DATE CREATED"
         ) {
 
           if (data.length > 0) {
@@ -565,7 +567,7 @@ const ProjectController = {
             for (let projectData of data) {
               i++;
 
-              let companyData = await knex('companies').select('id').where({companyId: projectData.D});
+              let companyData = await knex('companies').select('id').where({companyId: projectData.C});
               let companyId   = null;
               if(!companyData && !companyData.length){
                 continue;
@@ -577,7 +579,7 @@ const ProjectController = {
               if (i > 1) {
 
                 let checkExist = await knex('projects').select('projectName')
-                  .where({ projectName: projectData.C, orgId: projectData.A })
+                  .where({ projectName: projectData.B, orgId: req.orgId })
                 if (checkExist.length < 1) {
 
               
@@ -586,13 +588,13 @@ const ProjectController = {
                   let insertData = {
                     orgId: req.orgId,
                     companyId: companyId,
-                    projectName: projectData.C,
-                    project: projectData.B,
-                    projectLocationEng: projectData.F,
-                    projectStartDate: projectData.G,
-                    projectEndDate: projectData.H,
-                    isActive: projectData.I,
-                    createdBy: projectData.K,
+                    projectName: projectData.B,
+                    project: projectData.A,
+                    projectLocationEng: projectData.E,
+                    projectStartDate: projectData.F,
+                    projectEndDate: projectData.G,
+                    isActive: projectData.H,
+                    //createdBy: projectData.K,
                     createdAt: currentTime,
                     updatedAt: currentTime,
                   }
