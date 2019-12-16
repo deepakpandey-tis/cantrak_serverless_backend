@@ -261,15 +261,15 @@ const propertyTypeController = {
         knex("property_types")
           .leftJoin("users", "property_types.createdBy", "users.id")
           .select([
-            "property_types.orgId as ORGANIZATION_ID",
+            //"property_types.orgId as ORGANIZATION_ID",
             "property_types.id as ID ",
             "property_types.propertyType as PROPERTY_TYPE",
             "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
             "property_types.descriptionEng as DESCRIPTION",
             "property_types.isActive as STATUS",
-            "users.name as CREATED BY",
-            "property_types.createdBy as CREATED BY ID",
-            "property_types.createdAt as DATE CREATED"
+            //"users.name as CREATED BY",
+            //"property_types.createdBy as CREATED BY ID",
+            //"property_types.createdAt as DATE CREATED"
           ])
           .where({"property_types.orgId":orgId })
       ]);
