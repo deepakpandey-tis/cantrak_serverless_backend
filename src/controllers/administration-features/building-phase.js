@@ -719,17 +719,19 @@ const buildingPhaseController = {
         //console.log('DATA: ',data)
 
         if (
-          (data[0].A == "ORGANIZATION_ID" || data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" &&
-            data[0].B == "COMPANY" &&
-            data[0].C == "COMPANY NAME" &&
-            data[0].D == "PROJECT" &&
-            data[0].E == "PROJECT NAME" &&
-            data[0].F == "PROPERTY_TYPE_CODE" &&
-            data[0].G == "BUILDING_PHASE_CODE" &&
-            data[0].H == "DESCRIPTION" &&
-            data[0].I == "STATUS" &&
-            data[0].J == "CREATED BY ID" &&
-            data[0].K == "DATE CREATED"
+          (
+            //data[0].A == "ORGANIZATION_ID" || data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" &&
+            data[0].A == "Ã¯Â»Â¿COMPANY" || data[0].A == "COMPANY" &&
+            data[0].B == "COMPANY NAME" &&
+            data[0].C == "PROJECT" &&
+            data[0].D == "PROJECT NAME" &&
+            data[0].E == "PROPERTY_TYPE_CODE" &&
+            data[0].F == "BUILDING_PHASE_CODE" &&
+            data[0].G == "DESCRIPTION" 
+            //&&
+            // data[0].I == "STATUS" &&
+            // data[0].J == "CREATED BY ID" &&
+            // data[0].K == "DATE CREATED"
             )
         ) {
           if (data.length > 0) {
@@ -742,11 +744,11 @@ const buildingPhaseController = {
               let propertyTypeId = null
 
 
-              let companyIdResult = await knex('companies').select('id').where({companyId:buildingData.B})
-              let projectIdResult = await knex('projects').select('id').where({project:buildingData.D})
+              let companyIdResult = await knex('companies').select('id').where({companyId:buildingData.A})
+              let projectIdResult = await knex('projects').select('id').where({project:buildingData.C})
               let propertyTypeIdResult = await knex("property_types")
                 .select("id")
-                .where({ propertyTypeCode: buildingData.F });
+                .where({ propertyTypeCode: buildingData.E });
 
               if (propertyTypeIdResult && propertyTypeIdResult.length) {
                 propertyTypeId = propertyTypeIdResult[0].id;
@@ -777,20 +779,20 @@ const buildingPhaseController = {
                 let checkExist = await knex("buildings_and_phases")
                   .select("buildingPhaseCode")
                   .where({
-                    buildingPhaseCode: buildingData.G,
+                    buildingPhaseCode: buildingData.F,
                     orgId: req.orgId
                   });
                 if (checkExist.length < 1) {
                   let insertData = {
-                    orgId: buildingData.A,
+                    orgId: req.orgId,
                     companyId: companyId,
                     projectId: projectId,
-                    buildingPhaseCode: buildingData.G,
+                    buildingPhaseCode: buildingData.F,
                     propertyTypeId: propertyTypeId,
-                    description: buildingData.H,
-                    isActive: buildingData.I,
-                    createdBy: buildingData.J,
-                    createdAt: buildingData.K
+                    description: buildingData.G,
+                    // isActive: buildingData.H,
+                    // createdBy: buildingData.I,
+                    // createdAt: buildingData.J
                   };
 
                   resultData = await knex
