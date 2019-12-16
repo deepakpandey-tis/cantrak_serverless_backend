@@ -478,20 +478,26 @@ const teamsController = {
                 s3.putObject(params, function (err, data) {
                     if (err) {
                         console.log("Error at uploadCSVFileOnS3Bucket function", err);
+                        res.status(500).json({
+                            errors: [
+                                { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                            ]
+                        });
                         //next(err);
                     } else {
                         console.log("File uploaded Successfully");
                         //next(null, filePath);
+                        let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
+                        let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Team/" + filename;
+                        res.status(200).json({
+                            data: teamResult,
+                            message: "Team Data Export Successfully",
+                            url: url
+                        })
                     }
                 });
             })
-            //let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
-            let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Team/" + filename;
-            res.status(200).json({
-                data: teamResult,
-                message: "Team Data Export Successfully",
-                url: url
-            })
+
 
         } catch (err) {
             console.log('[controllers][teams][getTeamList] : Error', err);
@@ -710,8 +716,6 @@ const teamsController = {
                                 let checkExist = await knex('teams').select("teamId")
                                     .where({ teamName: teamData.C, teamCode: teamData.B })
                                 if (checkExist.length < 1) {
-
-
                                     let insertData = {
                                         orgId: req.orgId,
                                         teamName: teamData.C,

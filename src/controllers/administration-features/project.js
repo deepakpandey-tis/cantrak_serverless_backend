@@ -435,19 +435,23 @@ const ProjectController = {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             //next(err);
+            res.status(500).json({
+              errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
+            let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
+            let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Project/" + filename;
+            return res.status(200).json({
+              data: rows,
+              message: "Project Data Export Successfully!",
+              url: url
+            });
           }
         });
       })
-      let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
-      let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Project/" + filename;
-      return res.status(200).json({
-        data: rows,
-        message: "Project Data Export Successfully!",
-        url: url
-      });
+
     } catch (err) {
       console.log("[controllers][generalsetup][viewProject] :  Error", err);
       //trx.rollback
