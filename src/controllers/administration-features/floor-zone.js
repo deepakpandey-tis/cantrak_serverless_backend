@@ -586,7 +586,7 @@ const floorZoneController = {
               if (i > 1) {
 
                 let checkExist = await knex('floor_and_zones').select("floorZoneCode")
-                  .where({ floorZoneCode: floorData.H, orgId: floorData.A })
+                  .where({ floorZoneCode: floorData.H, orgId: req.orgId })
                 if (checkExist.length < 1) {
 
 

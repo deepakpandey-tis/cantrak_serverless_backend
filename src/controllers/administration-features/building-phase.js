@@ -778,7 +778,7 @@ const buildingPhaseController = {
                   .select("buildingPhaseCode")
                   .where({
                     buildingPhaseCode: buildingData.G,
-                    orgId: buildingData.A
+                    orgId: req.orgId
                   });
                 if (checkExist.length < 1) {
                   let insertData = {
