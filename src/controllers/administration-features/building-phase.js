@@ -776,13 +776,13 @@ const buildingPhaseController = {
               i++;
 
               if (i > 1) {
-                let checkExist = await knex("buildings_and_phases")
-                  .select("buildingPhaseCode")
-                  .where({
-                    buildingPhaseCode: buildingData.F,
-                    orgId: req.orgId
-                  });
-                if (checkExist.length < 1) {
+                // let checkExist = await knex("buildings_and_phases")
+                //   .select("buildingPhaseCode")
+                //   .where({
+                //     buildingPhaseCode: buildingData.F,
+                //     orgId: req.orgId
+                //   });
+                //if (checkExist.length < 1) {
                   let insertData = {
                     orgId: req.orgId,
                     companyId: companyId,
@@ -792,7 +792,8 @@ const buildingPhaseController = {
                     description: buildingData.G,
                     // isActive: buildingData.H,
                     // createdBy: buildingData.I,
-                    // createdAt: buildingData.J
+                    createdAt: currentTime,
+                    updatedAt: currentTime
                   };
 
                   resultData = await knex
@@ -800,7 +801,7 @@ const buildingPhaseController = {
                     .returning(["*"])
                     .into("buildings_and_phases");
                 }
-              }
+              //}
             }
 
             let deleteFile = await fs.unlink(file_path, err => {
