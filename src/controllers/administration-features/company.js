@@ -463,7 +463,7 @@ const companyController = {
                     companyAddressThai: companyData.E,
                     taxId: companyData.F,
                     contactPerson: companyData.G,
-                    isActive: companyData.H,
+                    isActive: true,
                     createdAt: currentTime,
                     updatedAt: currentTime
                   }

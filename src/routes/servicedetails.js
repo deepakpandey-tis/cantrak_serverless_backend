@@ -25,6 +25,6 @@ router.post('/location-tags-details', authMiddleware.isAuthenticated, serviceDet
 
 
 router.get('/get-location-tag-names',authMiddleware.isAuthenticated,serviceDetailsController.getLocationTags)
-
+router.get('/export-priority-data',authMiddleware.isAuthenticated,serviceDetailsController.exportPriorityData)
 
 module.exports = router;
