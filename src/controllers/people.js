@@ -646,10 +646,10 @@ importPeopleData: async (req,res)=>{
           if (data.length > 0) {
 
             let i = 0;
-            for (let PeopleData of data) {
+            for (let peopleData of data) {
               i++;
 
-              let teamData = await knex('teams').select('teamId').where({teamCode: PeopleData.I});
+              let teamData = await knex('teams').select('teamId').where({teamCode: peopleData.I});
               let teamId   = null;
               if(!teamData && !teamData.length){
                 continue;
@@ -662,7 +662,7 @@ importPeopleData: async (req,res)=>{
               if (i > 1) {
 
                 let checkExist = await knex('users').select("id")
-                  .where({nameThai:peopleData.C,name:peopleData.D, userCode: PeopleData.B, orgId: PeopleData.A })
+                  .where({nameThai:peopleData.C,name:peopleData.D, userCode: peopleData.B, orgId: req.orgId })
                 if (checkExist.length < 1) {
 
 
@@ -681,7 +681,28 @@ importPeopleData: async (req,res)=>{
                     updatedAt : currentTime,
                   }
 
-                  resultData = await knex.insert(insertData).returning(['*']).into('floor_and_zones');
+                  resultData = await knex.insert(insertData).returning(['*']).into('users');
+
+                  if(resultData[0].id){
+                        let insertRole =  {
+                                  orgId : req.orgId,
+                                  userId:resultData[0].id,
+                                  roleId:3,
+                                  createdAt:currentTime,
+                                  updatedAt:currentTime
+                                          }
+                    let roleResult =  await knex.insert(insertRole).returning(['*']).into('application_user_roles');
+
+                    let insertTeam = {
+                                     orgId    : req.orgId,
+                                     teamId   : teamId,
+                                     userId   : resultData[0].id,
+                                     createdAt: currentTime,
+                                     updatedAt: currentTime
+                                     }
+                                  }
+
+
                   if (resultData && resultData.length) {
                     success++;
                   }

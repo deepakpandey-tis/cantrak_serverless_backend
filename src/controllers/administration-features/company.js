@@ -258,11 +258,11 @@ const companyController = {
         knex
           .count("* as count")
           .from("companies")
-          .innerJoin("users", "users.id", "companies.createdBy")
+          .leftJoin("users", "users.id", "companies.createdBy")
           .where({ "companies.orgId": req.orgId })
           .first(),
         knex("companies")
-          .innerJoin("users", "users.id", "companies.createdBy")
+          .leftJoin("users", "users.id", "companies.createdBy")
           .where({ "companies.orgId": req.orgId })
           .select([
             "companies.id as id",
@@ -313,7 +313,7 @@ const companyController = {
           .innerJoin("users", "users.id", "companies.createdBy")
           .where({ "companies.orgId": req.orgId })
           .select([
-            "companies.orgId as ORGANIZATION_ID",
+            //"companies.orgId as ORGANIZATION_ID",
             "companies.companyId as COMPANY",
             "companies.companyName as COMPANY_NAME",
             "companies.description1 as COMPANY_ALTERNATE_NAME",
@@ -322,10 +322,10 @@ const companyController = {
             "companies.taxId as TAX_ID",
             "companies.contactPerson as CONTACT_PERSON",
             "companies.isActive as STATUS",
-            "companies.telephone as CONTACT NUMBER",
-            "users.name as CREATED BY",
-            "companies.createdBy as CREATED BY ID",
-            "companies.createdAt as DATE CREATED"
+            //"companies.telephone as CONTACT_NUMBER",
+            //"users.name as CREATED BY",
+            //"companies.createdBy as CREATED BY ID",
+            //"companies.createdAt as DATE CREATED"
           ])
       ]);
 
@@ -431,24 +431,20 @@ const companyController = {
         let ws = wb.Sheets[wb.SheetNames[0]];
         let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
         //data         = JSON.stringify(data);
+        console.log("+++++++++++++",data,"=========")
         let totalData = data.length - 1;
         let fail = 0;
         let success = 0;
         let result = null;
 
-        if (data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" || data[0].A == "ORGANIZATION_ID" &&
-          data[0].B == "COMPANY" &&
-          data[0].C == "COMPANY_NAME" &&
-          data[0].D == "COMPANY_ALTERNATE_NAME" &&
-          data[0].E == "ADDRESS" &&
-          data[0].F == "ALTERNATE_ADDRESS" &&
-          data[0].G == "TAX_ID" &&
-          data[0].H == "CONTACT_PERSON" &&
-          data[0].I == "STATUS" &&
-          data[0].J == "CONTACT NUMBER" &&
-          data[0].K == "CREATED BY" &&
-          data[0].L == "CREATED BY ID" &&
-          data[0].M == "DATE CREATED"
+         if(data[0].A == "COMPANY" || data[0].A=="Ã¯Â»Â¿COMPANY" && 
+          data[0].B == "COMPANY_NAME" &&
+          data[0].C == "COMPANY_ALTERNATE_NAME" &&
+          data[0].D == "ADDRESS" &&
+          data[0].E == "ALTERNATE_ADDRESS" &&
+          data[0].F == "TAX_ID" &&
+          data[0].G == "CONTACT_PERSON" &&
+          data[0].H == "STATUS"
         ) {
 
           if (data.length > 0) {
@@ -460,23 +456,22 @@ const companyController = {
               if (i > 1) {
 
                 let checkExist = await knex('companies').select('companyName')
-                  .where({ companyName: companyData.C, orgId: companyData.A })
+                  .where({ companyName: companyData.B, orgId: req.orgId })
                 if (checkExist.length < 1) {
 
                   let currentTime = new Date().getTime();
                   let insertData = {
                     orgId: req.orgId,
-                    companyId: companyData.B,
-                    companyName: companyData.C,
-                    description1: companyData.D,
-                    companyAddressEng: companyData.E,
-                    companyAddressThai: companyData.F,
-                    taxId: companyData.G,
-                    contactPerson: companyData.H,
-                    telephone: companyData.J,
-                    isActive: companyData.I,
-                    createdBy: companyData.L,
-                    createdAt: currentTime
+                    companyId: companyData.A,
+                    companyName: companyData.B,
+                    description1: companyData.C,
+                    companyAddressEng: companyData.D,
+                    companyAddressThai: companyData.E,
+                    taxId: companyData.F,
+                    contactPerson: companyData.G,      
+                    isActive: companyData.H,
+                    createdAt:currentTime,
+                    updatedAt:currentTime
                   }
 
                   resultData = await knex.insert(insertData).returning(['*']).into('companies');

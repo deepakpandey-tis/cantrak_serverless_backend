@@ -367,7 +367,7 @@ const ProjectController = {
             .leftJoin("users", "users.id", "projects.createdBy")
             .where({ "projects.orgId": orgId })
             .select([
-              "projects.orgId as ORGANIZATION_ID",
+              //"projects.orgId as ORGANIZATION_ID",
               "projects.project as PROJECT",
               "projects.projectName as PROJECT_NAME",
               "companies.companyId as COMPANY",
@@ -376,9 +376,9 @@ const ProjectController = {
               "projects.projectStartDate as PROJECT_START_DATE",
               "projects.projectEndDate as PROJECT_END_DATE",
               "projects.isActive as STATUS",
-              "users.name as CREATED BY",
-              "projects.createdBy as CREATED BY ID",
-              "projects.createdAt as DATE CREATED"
+              //"users.name as CREATED BY",
+              //"projects.createdBy as CREATED BY ID",
+              //"projects.createdAt as DATE CREATED"
             ])
         ]);
       } else {
@@ -391,7 +391,7 @@ const ProjectController = {
             .leftJoin("users", "users.id", "projects.createdBy")
             .where({ "projects.companyId": companyId, "projects.orgId": orgId })
             .select([
-              "projects.orgId as ORGANIZATION_ID",
+              //"projects.orgId as ORGANIZATION_ID",
               "projects.project as PROJECT",
               "projects.projectName as PROJECT_NAME",
               "companies.companyId as COMPANY",
@@ -400,9 +400,9 @@ const ProjectController = {
               "projects.projectStartDate as PROJECT_START_DATE",
               "projects.projectEndDate as PROJECT_END_DATE",
               "projects.isActive as STATUS",
-              "users.name as CREATED BY",
-              "projects.createdBy as CREATED BY ID",
-              "projects.createdAt as DATE CREATED"
+              //"users.name as CREATED BY",
+              //"projects.createdBy as CREATED BY ID",
+              //"projects.createdAt as DATE CREATED"
             ])
         ]);
       }
@@ -553,10 +553,7 @@ const ProjectController = {
           data[0].F == "PROJECT_LOCATION" &&
           data[0].G == "PROJECT_START_DATE" &&
           data[0].H == "PROJECT_END_DATE" &&
-          data[0].I == "STATUS" &&
-          data[0].J == "CREATED BY" &&
-          data[0].K == "CREATED BY ID" &&
-          data[0].L == "DATE CREATED"
+          data[0].I == "STATUS"
         ) {
 
           if (data.length > 0) {
@@ -577,7 +574,7 @@ const ProjectController = {
               if (i > 1) {
 
                 let checkExist = await knex('projects').select('projectName')
-                  .where({ projectName: projectData.C, orgId: projectData.A })
+                  .where({ projectName: projectData.C, orgId: req.orgId})
                 if (checkExist.length < 1) {
 
               
