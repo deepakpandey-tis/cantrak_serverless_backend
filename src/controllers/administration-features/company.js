@@ -359,30 +359,24 @@ const companyController = {
         s3.putObject(params, function (err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            res.status(500).json({
+              errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
             //next(err);
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
+            let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
+            let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Company/" + filename;
+            return res.status(200).json({
+              data: rows,
+              message: "Companies Data Export Successfully!",
+              url: url
+            });
           }
         });
       })
-      let deleteFile = await fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
 
-      //let fileUrl =  serviceRequest.getUrl
-
-      //fileUrl('text/csv',filename,'export/company').then(async d => {
-      //let putUrl = d.uploadURL
-
-      //let file =  fs.createReadStream(filepath).pipe(request.put(putUrl))
-      //if(file){
-      // 
-      //}
-      let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Company/" + filename;
-      return res.status(200).json({
-        data: rows,
-        message: "Companies Data Export Successfully!",
-        url: url
-      });
       //})
     } catch (err) {
       console.log("[controllers][generalsetup][exoportCompany] :  Error", err);
@@ -431,13 +425,13 @@ const companyController = {
         let ws = wb.Sheets[wb.SheetNames[0]];
         let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
         //data         = JSON.stringify(data);
-        console.log("+++++++++++++",data,"=========")
+        console.log("+++++++++++++", data, "=========")
         let totalData = data.length - 1;
         let fail = 0;
         let success = 0;
         let result = null;
 
-         if(data[0].A == "COMPANY" || data[0].A=="Ã¯Â»Â¿COMPANY" && 
+        if (data[0].A == "COMPANY" || data[0].A == "Ã¯Â»Â¿COMPANY" &&
           data[0].B == "COMPANY_NAME" &&
           data[0].C == "COMPANY_ALTERNATE_NAME" &&
           data[0].D == "ADDRESS" &&
@@ -468,10 +462,10 @@ const companyController = {
                     companyAddressEng: companyData.D,
                     companyAddressThai: companyData.E,
                     taxId: companyData.F,
-                    contactPerson: companyData.G,      
+                    contactPerson: companyData.G,
                     isActive: companyData.H,
-                    createdAt:currentTime,
-                    updatedAt:currentTime
+                    createdAt: currentTime,
+                    updatedAt: currentTime
                   }
 
                   resultData = await knex.insert(insertData).returning(['*']).into('companies');
@@ -484,11 +478,11 @@ const companyController = {
                 }
               }
             }
-            let message   = null;
-            if(totalData==success){
-              message = "We have processed ( "+totalData+" ) entries and added them successfully!";
-            }else {
-              message = "We have processed ( "+totalData+" ) entries out of which only ( "+success+ " ) are added and others are failed ( "+fail+ " ) due to validation!";
+            let message = null;
+            if (totalData == success) {
+              message = "We have processed ( " + totalData + " ) entries and added them successfully!";
+            } else {
+              message = "We have processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
             }
             let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
             return res.status(200).json({
