@@ -10,6 +10,9 @@ const bcrypt = require("bcrypt");
 const XLSX = require("xlsx");
 const saltRounds = 10;
 //const trx = knex.transaction();
+const fs = require('fs');
+const path = require('path');
+//const trx = knex.transaction();
 
 const serviceDetailsController = {
   addPriorities: async (req, res) => {
@@ -912,7 +915,90 @@ const serviceDetailsController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+
+/**Export Priorities Data  */
+
+exportPriorityData: async (req, res) => {
+  try {
+    let locationTags = null;
+    let userId = req.me.id;
+    let orgId  = req.orgId;
+  
+    let reqData = req.query;
+    let total, rows;
+
+    [rows] = await Promise.all([
+      knex("incident_priority")
+        .select([
+          "incidentPriorityCode as PRIORITY_CODE",
+          "descriptionEng as DESCRIPTION",
+          "descriptionThai as DESCRIPTION_ALTERNATE",
+          "isActive as STATUS",
+        ])
+        .where({"orgId":orgId})
+    ]);
+
+
+    let tempraryDirectory = null;
+    let bucketName = null;
+    if (process.env.IS_OFFLINE) {
+      bucketName = 'sls-app-resources-bucket';
+      tempraryDirectory = 'tmp/';
+    } else {
+      tempraryDirectory = '/tmp/';
+      bucketName = process.env.S3_BUCKET_NAME;
+    }
+
+    var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
+    var ws = XLSX.utils.json_to_sheet(rows);
+    XLSX.utils.book_append_sheet(wb, ws, "pres");
+    XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
+    let filename = "PriorityData-" + Date.now() + ".csv";
+    let filepath = tempraryDirectory + filename;
+    let check = XLSX.writeFile(wb, filepath);
+    const AWS = require('aws-sdk');
+
+    fs.readFile(filepath, function (err, file_buffer) {
+      var s3 = new AWS.S3();
+      var params = {
+        Bucket: bucketName,
+        Key: "Export/Priority/" + filename,
+        Body: file_buffer,
+        ACL: 'public-read'
+      }
+      s3.putObject(params, function (err, data) {
+        if (err) {
+          console.log("Error at uploadCSVFileOnS3Bucket function", err);
+          res.status(500).json({
+            errors: [
+              { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+            ],
+          });
+          //next(err);
+        } else {
+          console.log("File uploaded Successfully");
+          //next(null, filePath);
+          let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
+          let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Priority/" + filename;
+          res.status(200).json({
+            data: rows,
+            message: "Priority List",
+            url: url
+          });
+        }
+      });
+    })
+    
+  } catch (err) {
+    console.log("[controllers][servicedetails][signup] :  Error", err);
+    //trx.rollback
+    res.status(500).json({
+      errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+    });
   }
+},
+
 };
 
 module.exports = serviceDetailsController;

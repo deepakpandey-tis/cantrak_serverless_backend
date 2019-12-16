@@ -478,14 +478,10 @@ const peopleController = {
 
       let { name, email, accountType } = req.body;
       let peopleData = null;
-
       let reqData = req.query;
       let rows
-
       if (name || email || accountType) {
-
         [rows] = await Promise.all([
-
           knex
             .from("team_users")
             .leftJoin(
@@ -499,14 +495,14 @@ const peopleController = {
               "teams.teamId"
             )
             .select([
-              "users.orgId as ORGANIZATION_ID",
+              //"users.orgId as ORGANIZATION_ID",
               "users.userCode as HUMAN_CODE",
               "users.nameThai as NAME_1",
               "users.name as NAME_2",
               "users.email as EMAIL",
               "users.isActive as STATUS",
-              "users.updatedAt as END_EFFECTIVE_DATE",
-              "users.createdAt as START_EFFECTIVE_DATE",
+              //"users.updatedAt as END_EFFECTIVE_DATE",
+              //"users.createdAt as START_EFFECTIVE_DATE",
               "teams.teamCode as DEPARTMENT_CODE"
             ])
             .where(qb => {
@@ -523,7 +519,6 @@ const peopleController = {
       } else {
 
         [rows] = await Promise.all([
-
           knex
             .from("team_users")
             .leftJoin(
@@ -537,21 +532,19 @@ const peopleController = {
               "teams.teamId"
             )
             .select([
-              "users.orgId as ORGANIZATION_ID",
+              //"users.orgId as ORGANIZATION_ID",
               "users.userCode as HUMAN_CODE",
               "users.nameThai as NAME_1",
               "users.name as NAME_2",
               "users.email as EMAIL",
               "users.isActive as STATUS",
-              "users.updatedAt as END_EFFECTIVE_DATE",
-              "users.createdAt as START_EFFECTIVE_DATE",
+              //"users.updatedAt as END_EFFECTIVE_DATE",
+              //"users.createdAt as START_EFFECTIVE_DATE",
               "teams.teamCode as DEPARTMENT_CODE"
             ])
             .where({ "users.orgId": req.orgId })
         ]);
       }
-
-
       let tempraryDirectory = null;
       let bucketName = null;
       if (process.env.IS_OFFLINE) {
@@ -563,7 +556,7 @@ const peopleController = {
       }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(_.uniqBy(rows, "EMAIL"));
+      var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "PeopleData-" + Date.now() + ".csv";
@@ -591,7 +584,7 @@ const peopleController = {
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
-            let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
+            //let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
             let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/People/" + filename;
             res.status(200).json({
               data: rows,
@@ -601,9 +594,6 @@ const peopleController = {
           }
         });
       })
-
-
-
     } catch (err) {
       console.log('[controllers][people][getPeopleList] :  Error', err);
       res.status(500).json({
@@ -617,6 +607,9 @@ const peopleController = {
   importPeopleData: async (req, res) => {
 
     try {
+      let orgId = req.orgId;
+
+      console.log("====================",orgId,"==========================")
       if (req.file) {
         let tempraryDirectory = null;
         if (process.env.IS_OFFLINE) {
@@ -636,15 +629,12 @@ const peopleController = {
         console.log("=======", data[0], "+++++++++++++++")
         let result = null;
 
-        if (data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" || data[0].A == "ORGANIZATION_ID" &&
-          data[0].B == "HUMAN_CODE" &&
-          data[0].C == "NAME_1" &&
-          data[0].D == "NAME_2" &&
-          data[0].E == "EMAIL" &&
-          data[0].F == "STATUS" &&
-          data[0].G == "END_EFFECTIVE_DATE" &&
-          data[0].H == "START_EFFECTIVE_DATE" &&
-          data[0].I == "DEPARTMENT_CODE"
+        if (data[0].A == "Ã¯Â»Â¿HUMAN_CODE" || data[0].A == "HUMAN_CODE" &&
+          data[0].B == "NAME_1" &&
+          data[0].C == "NAME_2" &&
+          data[0].D == "EMAIL" &&
+          data[0].E == "STATUS" &&
+          data[0].F == "DEPARTMENT_CODE"
         ) {
 
           if (data.length > 0) {
@@ -653,7 +643,7 @@ const peopleController = {
             for (let peopleData of data) {
               i++;
 
-              let teamData = await knex('teams').select('teamId').where({ teamCode: peopleData.I });
+              let teamData = await knex('teams').select('teamId').where({ teamCode: peopleData.F });
               let teamId = null;
               if (!teamData && !teamData.length) {
                 continue;
@@ -666,7 +656,7 @@ const peopleController = {
               if (i > 1) {
 
                 let checkExist = await knex('users').select("id")
-                  .where({ nameThai: peopleData.C, name: peopleData.D, userCode: peopleData.B, orgId: req.orgId })
+                  .where({name: peopleData.C, userCode: peopleData.A, orgId: req.orgId })
                 if (checkExist.length < 1) {
 
 
@@ -675,23 +665,24 @@ const peopleController = {
 
                   let currentTime = new Date().getTime();
                   let insertData = {
-                    orgId: req.orgId,
-                    name: peopleData.D,
-                    nameThai: peopleData.C,
-                    email: peopleData.E,
-                    userCode: peopleData.B,
-                    isActive: peopleData.F,
+                    orgId    : req.orgId,
+                    name     : peopleData.C,
+                    nameThai : peopleData.B,
+                    email    : peopleData.D,
+                    userCode : peopleData.A,
+                    isActive : true,
                     createdAt: currentTime,
                     updatedAt: currentTime,
+                    emailVerified:true
                   }
 
                   resultData = await knex.insert(insertData).returning(['*']).into('users');
 
                   if (resultData[0].id) {
                     let insertRole = {
-                      orgId: req.orgId,
-                      userId: resultData[0].id,
-                      roleId: 3,
+                      orgId  : req.orgId,
+                      userId : resultData[0].id,
+                      roleId : 3,
                       createdAt: currentTime,
                       updatedAt: currentTime
                     }
@@ -704,6 +695,9 @@ const peopleController = {
                       createdAt: currentTime,
                       updatedAt: currentTime
                     }
+
+                    let teamResult = await knex.insert(insertTeam).returning(['*']).into('team_users');
+
                   }
 
 
