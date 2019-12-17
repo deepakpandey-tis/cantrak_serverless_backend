@@ -744,11 +744,13 @@ const buildingPhaseController = {
               let propertyTypeId = null
 
 
-              let companyIdResult = await knex('companies').select('id').where({companyId:buildingData.A})
-              let projectIdResult = await knex('projects').select('id').where({project:buildingData.C})
+              let companyIdResult = await knex('companies').select('id').where({companyId:buildingData.A,orgId:req.orgId})
+              let projectIdResult = await knex("projects")
+                .select("id")
+                .where({ project: buildingData.C, orgId: req.orgId });
               let propertyTypeIdResult = await knex("property_types")
                 .select("id")
-                .where({ propertyTypeCode: buildingData.E });
+                .where({ propertyTypeCode: buildingData.E, orgId: req.orgId });
 
               if (propertyTypeIdResult && propertyTypeIdResult.length) {
                 propertyTypeId = propertyTypeIdResult[0].id;

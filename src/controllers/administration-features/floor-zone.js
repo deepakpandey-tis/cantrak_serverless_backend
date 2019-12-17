@@ -552,7 +552,7 @@ const floorZoneController = {
 
               let companyData = await knex("companies")
                 .select("id")
-                .where({ companyId: floorData.A });
+                .where({ companyId: floorData.A,orgId:req.orgId });
               let companyId = null;
               if (!companyData && !companyData.length) {
                 continue;
@@ -563,7 +563,7 @@ const floorZoneController = {
 
               let projectData = await knex("projects")
                 .select("id")
-                .where({ project: floorData.C });
+                .where({ project: floorData.C, orgId: req.orgId });
               let projectId = null;
               if (!projectData && !projectData.length) {
                 continue;
@@ -574,7 +574,7 @@ const floorZoneController = {
               /**GET PROPERTY TYPE ID OPEN */
               let propertTypeData = await knex("property_types")
                 .select("id")
-                .where({ propertyTypeCode: floorData.E });
+                .where({ propertyTypeCode: floorData.E, orgId: req.orgId });
               let propertyTypeId = null;
               if (!propertTypeData && !propertTypeData.length) {
                 continue;
@@ -587,7 +587,7 @@ const floorZoneController = {
               /**GET BUILDING PHASE ID OPEN */
               let buildingData = await knex("buildings_and_phases")
                 .select("id")
-                .where({ buildingPhaseCode: floorData.F });
+                .where({ buildingPhaseCode: floorData.F, orgId: req.orgId });
               let buildingId = null;
               if (!buildingData && !buildingData.length) {
                 continue;
