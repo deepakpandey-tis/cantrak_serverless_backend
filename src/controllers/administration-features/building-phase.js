@@ -514,14 +514,14 @@ const buildingPhaseController = {
             .where({ "buildings_and_phases.orgId": orgId })
             .select([
               // "buildings_and_phases.orgId as ORGANIZATION_ID",
-              "buildings_and_phases.companyId as COMPANY",
+              "companies.companyId as COMPANY",
               "companies.companyName as COMPANY NAME",
-              "buildings_and_phases.projectId as PROJECT",
+              "projects.project as PROJECT",
               "projects.projectName as PROJECT NAME",
               "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
               "buildings_and_phases.description as DESCRIPTION",
-              "buildings_and_phases.isActive as STATUS",
+              "buildings_and_phases.isActive as STATUS"
               // "buildings_and_phases.createdBy as CREATED BY ID",
               // "buildings_and_phases.createdAt as DATE CREATED"
             ])
@@ -545,14 +545,14 @@ const buildingPhaseController = {
             })
             .select([
               //"buildings_and_phases.orgId as ORGANIZATION_ID",
-              "buildings_and_phases.companyId as COMPANY",
+              "companies.companyId as COMPANY",
               "companies.companyName as COMPANY NAME",
-              "buildings_and_phases.projectId as PROJECT",
+              "projects.project as PROJECT",
               "projects.projectName as PROJECT NAME",
               "buildings_and_phases.propertyTypeId as PROPERTY_TYPE_CODE",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
               "buildings_and_phases.description as DESCRIPTION",
-              "buildings_and_phases.isActive as STATUS",
+              "buildings_and_phases.isActive as STATUS"
               // "buildings_and_phases.createdBy as CREATED BY ID",
               // "buildings_and_phases.createdAt as DATE CREATED"
             ])
@@ -776,6 +776,7 @@ const buildingPhaseController = {
               i++;
 
               if (i > 1) {
+                let currentTime = new Date().getTime()
                 // let checkExist = await knex("buildings_and_phases")
                 //   .select("buildingPhaseCode")
                 //   .where({
