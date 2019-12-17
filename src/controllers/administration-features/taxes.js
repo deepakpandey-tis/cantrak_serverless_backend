@@ -412,13 +412,8 @@ const taxesfactionController = {
           .leftJoin("users", "users.id", "taxes.createdBy")
           .where({ "taxes.orgId": req.orgId })
           .select([
-            "taxes.orgId as ORGANIZATION_ID",
             "taxes.taxCode as TAX CODE",
-            "taxes.taxPercentage as TAX PERCENTAGE",
-            "taxes.isActive as STATUS",
-            "taxes.createdBy as CREATED BY ID",
-            "users.name as CREATED BY",
-            "taxes.createdAt as DATE CREATED"
+            "taxes.taxPercentage as TAX PERCENTAGE"            
           ])
       ]);
 
@@ -499,20 +494,17 @@ const taxesfactionController = {
           raw: false
         });
         //data         = JSON.stringify(data);
-        let result = null;
+        let result = null; 
+        let currentTime = new Date().getTime();
+       
 
         //console.log('DATA: ',data)
 
-        if (
-          data[0].A == "ORGANIZATION_ID" ||
-          (data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" &&
-            data[0].B == "TAX CODE" &&
-            data[0].C == "TAX PERCENTAGE" &&
-            data[0].D == "STATUS" &&
-            data[0].E == "CREATED BY ID" &&
-            data[0].F == "CREATED BY" &&
-            data[0].G == "DATE CREATED")
-        ) {
+        if((
+            data[0].A == "TAX CODE" &&
+            data[0].B == "TAX PERCENTAGE"
+          ))
+          {
           if (data.length > 0) {
             let i = 0;
             console.log("Data[0]", data[0]);
@@ -522,17 +514,17 @@ const taxesfactionController = {
                 let checkExist = await knex("taxes")
                   .select("taxCode")
                   .where({
-                    taxCode: taxData.B,
-                    orgId: taxData.A
+                    taxCode: taxData.A,
+                    orgId: req.orgId
                   });
                 if (checkExist.length < 1) {
                   let insertData = {
-                    orgId: taxData.A,
-                    taxCode:taxData.B,
-                    taxPercentage:taxData.C,
-                    isActive: taxData.D,
-                    createdBy: taxData.E,
-                    createdAt: taxData.G
+                    orgId: req.orgId,
+                    taxCode:taxData.A,
+                    taxPercentage:taxData.B,
+                    isActive: true,
+                    createdBy: req.me.id,
+                    createdAt: currentTime
                   };
 
                   resultData = await knex
