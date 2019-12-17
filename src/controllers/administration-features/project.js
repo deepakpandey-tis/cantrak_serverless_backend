@@ -25,22 +25,22 @@ const ProjectController = {
           companyId: Joi.string().required(),
           project: Joi.string().required(),
           projectName: Joi.string().required(),
-          projectLocationThai: Joi.string().required(),
-          projectLocationEng: Joi.string().required(),
-          projectStartDate: Joi.string().allow('').optional(),
-          projectEndDate: Joi.string().allow('').optional(),
-          branchId: Joi.string().allow('').optional(),
-          ownerCode: Joi.string().allow('').optional(),
-          customerCode: Joi.string().allow('').optional(),
-          ventureType: Joi.string().allow('').optional(),
-          locationFlag: Joi.string().allow('').optional(),
-          projectType: Joi.string().allow('').optional(),
-          biddingDate: Joi.string().allow('').optional(),
-          projectPeriod: Joi.string().allow('').optional(),
-          budgetValue: Joi.string().allow('').optional(),
-          currency: Joi.string().allow('').optional(),
-          secondCurrency: Joi.string().allow('').optional(),
-          addressFlag: Joi.string().allow('').optional()
+          projectLocationThai: Joi.string().allow('').optional(),
+          projectLocationEng: Joi.string().allow('').optional(),
+          currency: Joi.string().allow('').optional()
+          // projectStartDate: Joi.string().allow('').optional(),
+          // projectEndDate: Joi.string().allow('').optional(),
+          // branchId: Joi.string().allow('').optional(),
+          // ownerCode: Joi.string().allow('').optional(),
+          // customerCode: Joi.string().allow('').optional(),
+          // ventureType: Joi.string().allow('').optional(),
+          // locationFlag: Joi.string().allow('').optional(),
+          // projectType: Joi.string().allow('').optional(),
+          // biddingDate: Joi.string().allow('').optional(),
+          // projectPeriod: Joi.string().allow('').optional(),
+          // budgetValue: Joi.string().allow('').optional(),
+          // secondCurrency: Joi.string().allow('').optional(),
+          // addressFlag: Joi.string().allow('').optional()
         });
 
         const result = Joi.validate(payload, schema);
@@ -104,21 +104,21 @@ const ProjectController = {
           project: Joi.string().required(),
           projectName: Joi.string().required(),
           projectLocationThai: Joi.string().required(),
-          projectLocationEng: Joi.string().required(),
-          projectStartDate: Joi.string().allow('').optional(),
-          projectEndDate: Joi.string().allow('').optional(),
-          branchId: Joi.string().allow('').optional(),
-          ownerCode: Joi.string().allow('').optional(),
-          customerCode: Joi.string().allow('').optional(),
-          ventureType: Joi.string().allow('').optional(),
-          locationFlag: Joi.string().allow('').optional(),
-          projectType: Joi.string().allow('').optional(),
-          biddingDate: Joi.string().allow('').optional(),
-          projectPeriod: Joi.string().allow('').optional(),
-          budgetValue: Joi.string().allow('').optional(),
-          currency: Joi.string().allow('').optional(),
-          secondCurrency: Joi.string().allow('').optional(),
-          addressFlag: Joi.string().allow('').optional()
+          projectLocationEng: Joi.string().allow('').optional(),
+          currency: Joi.string().allow('').optional()
+          // projectStartDate: Joi.string().allow('').optional(),
+          // projectEndDate: Joi.string().allow('').optional(),
+          // branchId: Joi.string().allow('').optional(),
+          // ownerCode: Joi.string().allow('').optional(),
+          // customerCode: Joi.string().allow('').optional(),
+          // ventureType: Joi.string().allow('').optional(),
+          // locationFlag: Joi.string().allow('').optional(),
+          // projectType: Joi.string().allow('').optional(),
+          // biddingDate: Joi.string().allow('').optional(),
+          // projectPeriod: Joi.string().allow('').optional(),
+          // budgetValue: Joi.string().allow('').optional(),
+          // secondCurrency: Joi.string().allow('').optional(),
+          // addressFlag: Joi.string().allow('').optional()
         });
 
         const result = Joi.validate(payload, schema);
@@ -183,8 +183,6 @@ const ProjectController = {
           .innerJoin("companies", "projects.companyId", "companies.id")
           .select("projects.*", "companies.companyId as compId", "companies.companyName")
           .where({ "projects.id": payload.id, 'projects.orgId': req.orgId })
-
-
 
         Project = _.omit(ProjectResult[0], [
           "createdAt",
@@ -359,7 +357,6 @@ const ProjectController = {
 
       if (!companyId) {
 
-
         [rows] = await Promise.all([
 
           knex("projects")
@@ -373,16 +370,15 @@ const ProjectController = {
               "companies.companyId as COMPANY",
               "companies.companyName as COMPANY_NAME",
               "projects.projectLocationEng as PROJECT_LOCATION",
-              "projects.projectStartDate as PROJECT_START_DATE",
-              "projects.projectEndDate as PROJECT_END_DATE",
-              "projects.isActive as STATUS",
+              "projects.projectLocationThai as PROJECT_LOCATION_ALTERNATE_LANGUAGE",
+              "projects.currency as CURRENCY"
               // "users.name as CREATED BY",
               // "projects.createdBy as CREATED BY ID",
               // "projects.createdAt as DATE CREATED"
             ])
         ]);
-      } else {
 
+      } else {
 
         [rows] = await Promise.all([
           knex
@@ -397,15 +393,15 @@ const ProjectController = {
               "companies.companyId as COMPANY",
               "companies.companyName as COMPANY_NAME",
               "projects.projectLocationEng as PROJECT_LOCATION",
-              "projects.projectStartDate as PROJECT_START_DATE",
-              "projects.projectEndDate as PROJECT_END_DATE",
-              "projects.isActive as STATUS",
+              "projects.projectLocationThai as PROJECT_LOCATION_ALTERNATE_LANGUAGE",
+              "projects.currency as CURRENCY"
               // "users.name as CREATED BY",
               // "projects.createdBy as CREATED BY ID",
               // "projects.createdAt as DATE CREATED"
             ])
         ]);
       }
+
       let tempraryDirectory = null;
       let bucketName = null;
       if (process.env.IS_OFFLINE) {
@@ -527,7 +523,6 @@ const ProjectController = {
   },
   /**IMPORT PROJECT DATA */
   importProjectData: async (req, res) => {
-
     try {
 
       if (req.file) {
@@ -557,9 +552,8 @@ const ProjectController = {
             data[0].C == "COMPANY" &&
             data[0].D == "COMPANY_NAME" &&
             data[0].E == "PROJECT_LOCATION" &&
-            data[0].F == "PROJECT_START_DATE" &&
-            data[0].G == "PROJECT_END_DATE" &&
-            data[0].H == "STATUS")
+            data[0].F == "PROJECT_LOCATION_ALTERNATE_LANGUAGE" &&
+            data[0].G == "CURRENCY")
           //  &&
           // data[0].J == "CREATED BY" &&
           // data[0].K == "CREATED BY ID" &&
@@ -593,10 +587,10 @@ const ProjectController = {
                     projectName: projectData.B,
                     project: projectData.A,
                     projectLocationEng: projectData.E,
-                    projectStartDate: projectData.F,
-                    projectEndDate: projectData.G,
-                    isActive: projectData.H,
-                    //createdBy: projectData.K,
+                    projectLocationThai: projectData.F,
+                    currency: projectData.G,
+                    isActive: true,
+                   // createdBy: req.me.id,
                     createdAt: currentTime,
                     updatedAt: currentTime
                   };
@@ -617,12 +611,12 @@ const ProjectController = {
             let message = null;
             if (totalData == success) {
               message =
-                "We have processed ( " +
+                "System have processed ( " +
                 totalData +
                 " ) entries and added them successfully!";
             } else {
               message =
-                "We have processed ( " +
+                "System have processed ( " +
                 totalData +
                 " ) entries out of which only ( " +
                 success +
