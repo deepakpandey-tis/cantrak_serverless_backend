@@ -413,13 +413,8 @@ const whtController = {
           .leftJoin("users", "users.id", "wht_master.createdBy")
           .where({ "wht_master.orgId": req.orgId })
           .select([
-            "wht_master.orgId as ORGANIZATION_ID",
-            "wht_master.whtCode as WHT CODE",
-            "wht_master.taxPercentage as TAX PERCENTAGE",
-            "wht_master.isActive as STATUS",
-            "wht_master.createdBy as CREATED BY ID",
-            "users.name as CREATED BY",
-            "wht_master.createdAt as DATE CREATED"
+            "wht_master.whtCode as WHT_CODE",
+            "wht_master.taxPercentage as TAX_PERCENTAGE"
           ])
       ]);
 
@@ -501,19 +496,15 @@ const whtController = {
         });
         //data         = JSON.stringify(data);
         let result = null;
-
+        let currentTime = new Date().getTime();
+       
         //console.log('DATA: ',data)
 
-        if (
-          data[0].A == "ORGANIZATION_ID" ||
-          (data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" &&
-            data[0].B == "WHT CODE" &&
-            data[0].C == "TAX PERCENTAGE" &&
-            data[0].D == "STATUS" &&
-            data[0].E == "CREATED BY ID" &&
-            data[0].F == "CREATED BY" &&
-            data[0].G == "DATE CREATED")
-        ) {
+        if ((
+            data[0].A == "WHT_CODE" &&
+            data[0].B == "TAX_PERCENTAGE"
+          )) 
+          {
           if (data.length > 0) {
             let i = 0;
             console.log("Data[0]", data[0]);
@@ -523,17 +514,17 @@ const whtController = {
                 let checkExist = await knex("wht_master")
                   .select("whtCode")
                   .where({
-                    whtCode: whtData.B,
-                    orgId: whtData.A
+                    whtCode: whtData.A,
+                    orgId: req.orgId
                   });
                 if (checkExist.length < 1) {
                   let insertData = {
-                    orgId: whtData.A,
-                    whtCode: whtData.B,
-                    taxPercentage: whtData.C,
-                    isActive: whtData.D,
-                    createdBy: whtData.E,
-                    createdAt: whtData.G
+                    orgId: req.orgId,
+                    whtCode: whtData.A,
+                    taxPercentage: whtData.B,
+                    isActive: true,
+                    createdBy: req.me.id,
+                    createdAt: currentTime
                   };
 
                   resultData = await knex

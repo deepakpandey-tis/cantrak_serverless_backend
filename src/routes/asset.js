@@ -80,12 +80,12 @@ router.get(
   assetController.assetSearch
 );
 // Export Asset Data 
-router.post(
-  "/export-asset",
-  authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  assetController.exportAsset
-);
+// router.post(
+//   "/export-asset",
+//   authMiddleware.isAuthenticated,
+//   roleMiddleware.parseUserPermission,
+//   assetController.exportAsset
+// );
 router.post(
   "/get-asset-categories",
   authMiddleware.isAuthenticated,
@@ -98,5 +98,39 @@ router.post(
   roleMiddleware.parseUserPermission,
   assetController.getAssetListByLocation
 );
+
+router.get(
+  "/export-asset-data",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  assetController.exportAssetData
+);
+
+
+
+/**IMPORT COMPANY DATA */
+const path       = require('path');
+let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+           tempraryDirectory = 'tmp/';
+         } else {
+           tempraryDirectory = '/tmp/';  
+         }
+var multer  = require('multer');
+var storage = multer.diskStorage({
+	destination: tempraryDirectory,
+	filename: function ( req, file, cb ) {
+        let ext =  path.extname(file.originalname)
+        if(ext=='.csv'){
+        time = Date.now();
+        cb( null, 'assetData-'+time+ext);
+        }else{
+            return false
+        }
+	}
+});
+var upload = multer( { storage: storage } );
+router.post('/import-asset-data',upload.single('file'), authMiddleware.isAuthenticated, assetController.importAssetData)
+
 
 module.exports = router
