@@ -406,8 +406,8 @@ const companyController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-    // Company List Data
   },
+  // Company List Data
   importCompanyData: async (req, res) => {
 
     try {

@@ -21,7 +21,7 @@ router.post('/get-category-details',authMiddleware.isAuthenticated,  propertyCat
 
 //Export Property  Category Data
 router.get('/export-property-category', authMiddleware.isAuthenticated,  propertyCategoryController.exportPropertyCategory);
-//Export Category Data
+//Export Problem Category Data
 router.get('/export-category', authMiddleware.isAuthenticated,  propertyCategoryController.exportCategory);
 //DROP DOWN ASSET LIST
 router.get('/asset-category-list', authMiddleware.isAuthenticated, propertyCategoryController.assetCategoryList);

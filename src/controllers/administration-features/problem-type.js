@@ -4,11 +4,10 @@ const uuidv4 = require("uuid/v4");
 var jwt = require("jsonwebtoken");
 const _ = require("lodash");
 const XLSX = require("xlsx");
-
 const knex = require("../../db/knex");
-
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
+const fs = require('fs');
 //const trx = knex.transaction();
 
 const problemTypeController = {
@@ -215,14 +214,14 @@ const problemTypeController = {
         knex
           .count("* as count")
           .from("incident_type")
-          .innerJoin("users", "users.id", "incident_type.createdBy")
+          .leftJoin("users", "users.id", "incident_type.createdBy")
           .where({ "incident_type.orgId": req.orgId })
           .offset(offset)
           .limit(per_page)
           .first(),
         knex
           .from("incident_type")
-          .innerJoin("users", "users.id", "incident_type.createdBy")
+          .leftJoin("users", "users.id", "incident_type.createdBy")
           .where({ "incident_type.orgId": req.orgId })
           .select([
             "incident_type.id as id",
@@ -303,6 +302,80 @@ const problemTypeController = {
         "[controllers][problem][viewProblemTypeDetails] :  Error",
         err
       );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  /**EXPORT PROBLEM TYPE DATA */
+  exportProblemTypeData:async (req,res)=>{
+
+    try {
+      let reqData = req.query;
+      let rows;
+      [rows] = await Promise.all([
+        knex
+          .from("incident_type")
+          .where({ "incident_type.orgId": req.orgId })
+          .select([
+            "incident_type.typeCode as PROBLEM_TYPE_CODE",
+            "incident_type.descriptionEng as DESCRIPTION",
+            "incident_type.descriptionThai as ALTERNATE_DESCRIPTION",
+            "incident_type.isActive as STATUS"
+          ])
+      ]);
+
+      let tempraryDirectory = null;
+      let bucketName = null;
+      if (process.env.IS_OFFLINE) {
+        bucketName = 'sls-app-resources-bucket';
+        tempraryDirectory = 'tmp/';
+      } else {
+        tempraryDirectory = '/tmp/';
+        bucketName = process.env.S3_BUCKET_NAME;
+      }
+      var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
+      var ws = XLSX.utils.json_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, "pres");
+      XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
+      let filename = "ProblemTypeData-" + Date.now() + ".csv";
+      let filepath = tempraryDirectory + filename;
+      let check = XLSX.writeFile(wb, filepath);
+      const AWS = require('aws-sdk');
+
+      fs.readFile(filepath, function (err, file_buffer) {
+        var s3 = new AWS.S3();
+        var params = {
+          Bucket: bucketName,
+          Key: "Export/Problem_Type/" + filename,
+          Body: file_buffer,
+          ACL: 'public-read'
+        }
+        s3.putObject(params, function (err, data) {
+          if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            res.status(500).json({
+              errors: [
+                { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+              ],
+            });
+            //next(err);
+          } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+            let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
+            let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Problem_Type/" + filename;
+            res.status(200).json({
+              data: rows,
+              message: "Problem Type  data export successfully!",
+              url: url
+            });
+          }
+        });
+      })  
+    } catch (err) {
+      console.log("[controllers][generalsetup][viewProblemType] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]

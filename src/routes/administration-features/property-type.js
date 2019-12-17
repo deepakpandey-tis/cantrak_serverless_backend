@@ -12,7 +12,28 @@ router.get('/get-property-type-list', authMiddleware.isAuthenticated, propertyTy
 router.get('/export-property-type', authMiddleware.isAuthenticated, propertyTypeController.exportPropertyType)
 router.post('/view-property-type-details', authMiddleware.isAuthenticated, propertyTypeController.getPropertyDetails)
 router.get('/get-all-property-type', authMiddleware.isAuthenticated, propertyTypeController.getAllPropertyTypeList)
-//router.get('/export-problem-category-data', authMiddleware.isAuthenticated, propertyTypeController.exportProblemCategoryData)
-
+/**IMPORT PROPERTY TYPE DATA */
+const path       = require('path');
+let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+           tempraryDirectory = 'tmp/';
+         } else {
+           tempraryDirectory = '/tmp/';  
+         }
+var multer  = require('multer');
+var storage = multer.diskStorage({
+	destination: tempraryDirectory,
+	filename: function ( req, file, cb ) {
+        let ext =  path.extname(file.originalname)
+        if(ext=='.csv'){
+        time = Date.now();
+        cb( null, 'PropertTypeData-'+time+ext);
+        }else{
+            return false
+        }
+	}
+});
+var upload = multer( { storage: storage } );
+router.post('/import-property-type-data',upload.single('file'), authMiddleware.isAuthenticated, propertyTypeController.importPropertyTypeData)
 
 module.exports = router

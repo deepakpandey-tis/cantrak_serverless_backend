@@ -4,12 +4,10 @@ const uuidv4 = require('uuid/v4');
 var jwt = require('jsonwebtoken');
 const _ = require('lodash');
 const XLSX  = require('xlsx');
-
-
 const knex = require('../../db/knex');
-
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
+const fs = require('fs');
 //const trx = knex.transaction();
 
 const problemController = {
@@ -30,9 +28,9 @@ const problemController = {
       if (_.isEmpty(filters)) {
         [total, rows] = await Promise.all([
           knex.count('* as count').from("incident_sub_categories")
-          .innerJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id'),
+          .leftJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id'),
           knex("incident_sub_categories")
-          .innerJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
+          .leftJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
           .select([
             'incident_sub_categories.id as ID',
             'incident_categories.categoryCode as Problem Code',
@@ -43,6 +41,7 @@ const problemController = {
             'incident_sub_categories.createdAt as Date Created',
 
           ])
+          .where({'incident_sub_categories.orgId':req.orgId})
           .offset(offset).limit(per_page)
         ])
       } else {
@@ -62,7 +61,6 @@ const problemController = {
               'incident_categories.descriptionEng as Category',
               'incident_sub_categories.isActive as Status',
               'incident_sub_categories.createdAt as Date Created',
-  
             ])
             .where(filters).offset(offset).limit(per_page)
           ])
@@ -96,76 +94,94 @@ const problemController = {
         ],
       });
     }
-    // Export Problem Data
   },
+  /**EXPORT PROBLEM SUB CATEGORY DATA */
   exportProblem:async (req,res)=>{
     try {
 
       let reqData = req.query;
       let filters = req.body;
-      let total, rows
-
-      let pagination = {};
-      let per_page = reqData.per_page || 10;
-      let page = reqData.current_page || 1;
-      if (page < 1) page = 1;
-      let offset = (page - 1) * per_page;
+      let rows    = null;
+      let orgId   = req.orgId;
 
       if (_.isEmpty(filters)) {
-        [total, rows] = await Promise.all([
-          knex.count('* as count').from("incident_sub_categories")
-          .innerJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id'),
-          knex("incident_sub_categories")
-          .innerJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
-          .select([
-            'incident_categories.categoryCode as Problem Code',
-            'incident_sub_categories.descriptionEng as Description(Eng)',
-            'incident_sub_categories.descriptionThai as Description(Thai)',
-            'incident_categories.descriptionEng as Category',
-            'incident_sub_categories.isActive as Status',
-            'incident_sub_categories.createdAt as Date Created',
 
+        [rows] = await Promise.all([
+          knex("incident_sub_categories")
+          .leftJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
+          .select([
+            'incident_categories.categoryCode as PROBLEM_CODE',
+            'incident_sub_categories.descriptionEng as DESCRIPTION',
+            'incident_sub_categories.descriptionThai as ALTERNATE_DESCRIPTION',
+            'incident_sub_categories.isActive as STATUS',
           ])
-          .offset(offset).limit(per_page)
+          .where({'incident_sub_categories.orgId':orgId})
         ])
       } else {
         filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
-        try {
-          [total, rows] = await Promise.all([
-            knex.count('* as count').from("incident_sub_categories")
-            .innerJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
-            .where(filters).offset(offset).limit(per_page),
+
+          [rows] = await Promise.all([
             knex("incident_sub_categories")
-            .innerJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
-            .select([
-              'incident_categories.categoryCode as Problem Code',
-              'incident_sub_categories.descriptionEng as Description(Eng)',
-              'incident_sub_categories.descriptionThai as Description(Thai)',
-              'incident_categories.descriptionEng as Category',
-              'incident_sub_categories.isActive as Status',
-              'incident_sub_categories.createdAt as Date Created',
-  
-            ])
-            .where(filters).offset(offset).limit(per_page)
+          .leftJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
+          .select([
+            'incident_categories.categoryCode as PROBLEM_CODE',
+            'incident_sub_categories.descriptionEng as DESCRIPTION',
+            'incident_sub_categories.descriptionThai as ALTERNATE_DESCRIPTION',
+            'incident_sub_categories.isActive as STATUS',
           ])
-        } catch (e) {
-          // Error
-          console.log('Error: ' + e.message)
-        }
+          .where({'incident_sub_categories.orgId':orgId})
+          .where(filters)
+          ])
       }
 
-      
-      
-      var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
+      let tempraryDirectory = null;
+      let bucketName = null;
+      if (process.env.IS_OFFLINE) {
+        bucketName = 'sls-app-resources-bucket';
+        tempraryDirectory = 'tmp/';
+      } else {
+        tempraryDirectory = '/tmp/';
+        bucketName = process.env.S3_BUCKET_NAME;
+      }
+
+      var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
       var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
-      XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
-      let filename = "uploads/ProblemData-"+Date.now()+".csv";
-      let  check = XLSX.writeFile(wb,filename);
+      XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
+      let filename = "ProblemSubcategoryData-" + Date.now() + ".csv";
+      let filepath = tempraryDirectory + filename;
+      let check = XLSX.writeFile(wb, filepath);
+      const AWS = require('aws-sdk');
 
-      return res.status(200).json({
-        data: rows,
-        message: 'Problem Data Export Successfully!'
+      fs.readFile(filepath, function (err, file_buffer) {
+        var s3 = new AWS.S3();
+        var params = {
+          Bucket: bucketName,
+          Key: "Export/Problem_Subcategory/" + filename,
+          Body: file_buffer,
+          ACL: 'public-read'
+        }
+        s3.putObject(params, function (err, data) {
+          if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            res.status(500).json({
+              errors: [
+                { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+              ],
+            });
+            //next(err);
+          } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+            let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
+            let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Problem_Subcategory/" + filename;
+            res.status(200).json({
+              data: rows,
+              message: "Problem Subcategory data export successfully!",
+              url: url
+            });
+          }
+        });
       })
     } catch (err) {
       console.log('[controllers][quotation][list] :  Error', err);
