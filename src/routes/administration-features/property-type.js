@@ -12,5 +12,7 @@ router.get('/get-property-type-list', authMiddleware.isAuthenticated, propertyTy
 router.get('/export-property-type', authMiddleware.isAuthenticated, propertyTypeController.exportPropertyType)
 router.post('/view-property-type-details', authMiddleware.isAuthenticated, propertyTypeController.getPropertyDetails)
 router.get('/get-all-property-type', authMiddleware.isAuthenticated, propertyTypeController.getAllPropertyTypeList)
+//router.get('/export-problem-category-data', authMiddleware.isAuthenticated, propertyTypeController.exportProblemCategoryData)
+
 
 module.exports = router

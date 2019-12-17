@@ -4,11 +4,11 @@ const uuidv4 = require("uuid/v4");
 var jwt = require("jsonwebtoken");
 const _ = require("lodash");
 const XLSX = require("xlsx");
-
 const knex = require("../../db/knex");
-
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
+const fs = require('fs');
+const path = require('path');
 //const trx = knex.transaction();
 
 const PartCategoryController = {
@@ -262,6 +262,7 @@ const PartCategoryController = {
     try {
       let reqData = req.query;
       let pagination = {};
+      let orgId   = req.orgId;
 
       let per_page = reqData.per_page || 10;
       let page = reqData.current_page || 1;
@@ -273,14 +274,13 @@ const PartCategoryController = {
           .count("* as count")
           .from("part_category_master")
           .leftJoin("users", "users.id", "part_category_master.createdBy")
-          //.where({ "part_category_master.orgId": req.orgId })
+          .where({"part_category_master.orgId":orgId})
           .offset(offset)
           .limit(per_page)
           .first(),
         knex
           .from("part_category_master")
           .leftJoin("users", "users.id", "part_category_master.createdBy")
-         // .where({ "asset_category_master.orgId": req.orgId })
           .select([
             "part_category_master.id",
             "part_category_master.categoryName as Category Name",
@@ -288,6 +288,7 @@ const PartCategoryController = {
             "users.name as Created By",
             "part_category_master.createdAt as Date Created"
           ])
+          .where({"part_category_master.orgId":orgId})
           .offset(offset)
           .limit(per_page)
       ]);
@@ -322,100 +323,69 @@ const PartCategoryController = {
   exportPartCategory: async (req, res) => {
     try {
       let companyId = req.query.companyId;
-      let reqData = req.query;
-      let pagination = {};
-
-      if (!companyId) {
-        let per_page = reqData.per_page || 10;
-        let page = reqData.current_page || 1;
-        if (page < 1) page = 1;
-        let offset = (page - 1) * per_page;
-
-        let [total, rows] = await Promise.all([
-          knex
-            .count("* as count")
-            .from("projects")
-            .innerJoin("companies", "projects.companyId", "companies.id")
-            .innerJoin("users", "users.id", "projects.createdBy")
-            .first(),
-          knex("projects")
-            .innerJoin("companies", "projects.companyId", "companies.id")
-            .innerJoin("users", "users.id", "projects.createdBy")
-            .select([
-              "projects.projectName as Project Name",
-              "companies.companyName as Company Name",
-              "projects.isActive as Status",
-              "users.name as Created By",
-              "projects.createdAt as Date Created"
-            ])
-            .offset(offset)
-            .limit(per_page)
-        ]);
-
-        let count = total.count;
-        pagination.total = count;
-        pagination.per_page = per_page;
-        pagination.offset = offset;
-        pagination.to = offset + rows.length;
-        pagination.last_page = Math.ceil(count / per_page);
-        pagination.current_page = page;
-        pagination.from = offset;
-        pagination.data = rows;
+      let reqData   = req.query;
+    
+      let [rows] = await Promise.all([
+        knex
+          .from("part_category_master")
+          .where({"part_category_master.orgId": req.orgId })
+          .select([
+            "part_category_master.categoryName as CATEGORY_NAME",
+            "part_category_master.isActive as STATUS",
+          ])
+      ]);
+      let tempraryDirectory = null;
+      let bucketName = null;
+      if (process.env.IS_OFFLINE) {
+        bucketName = 'sls-app-resources-bucket';
+        tempraryDirectory = 'tmp/';
       } else {
-        let per_page = reqData.per_page || 10;
-        let page = reqData.current_page || 1;
-        if (page < 1) page = 1;
-        let offset = (page - 1) * per_page;
-
-        let [total, rows] = await Promise.all([
-          knex
-            .count("* as count")
-            .from("projects")
-            .innerJoin("companies", "projects.companyId", "companies.id")
-            .innerJoin("users", "users.id", "projects.createdBy")
-            .where({ "projects.companyId": companyId })
-            .offset(offset)
-            .limit(per_page)
-            .first(),
-          knex
-            .from("projects")
-            .innerJoin("companies", "projects.companyId", "companies.id")
-            .innerJoin("users", "users.id", "projects.createdBy")
-            .where({ "projects.companyId": companyId })
-            .select([
-              "projects.projectName as Project Name",
-              "companies.companyName as Company Name",
-              "projects.isActive as Status",
-              "users.name as Created By",
-              "projects.createdAt as Date Created"
-            ])
-            .offset(offset)
-            .limit(per_page)
-        ]);
-
-        let count = total.count;
-        pagination.total = count;
-        pagination.per_page = per_page;
-        pagination.offset = offset;
-        pagination.to = offset + rows.length;
-        pagination.last_page = Math.ceil(count / per_page);
-        pagination.current_page = page;
-        pagination.from = offset;
-        pagination.data = rows;
+        tempraryDirectory = '/tmp/';
+        bucketName = process.env.S3_BUCKET_NAME;
       }
+
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(pagination.data);
+      var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename = "uploads/ProjectData-" + Date.now() + ".csv";
-      let check = XLSX.writeFile(wb, filename);
+      let filename = "PartCategoryData-" + Date.now() + ".csv";
+      let filepath = tempraryDirectory + filename;
+      let check = XLSX.writeFile(wb, filepath);
+      const AWS = require('aws-sdk');
 
-      return res.status(200).json({
-        data: pagination.data,
-        message: "Project Data Export Successfully!"
-      });
+      fs.readFile(filepath, function (err, file_buffer) {
+        var s3 = new AWS.S3();
+        var params = {
+          Bucket: bucketName,
+          Key: "Export/Part_Category/" + filename,
+          Body: file_buffer,
+          ACL: 'public-read'
+        }
+        s3.putObject(params, function (err, data) {
+          if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            res.status(500).json({
+              errors: [
+                { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+              ],
+            });
+            //next(err);
+          } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+            let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
+            let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Part_Category/" + filename;
+            res.status(200).json({
+              data: rows,
+              message: "Part Category Data Export Successfully!",
+              url: url
+            });
+          }
+        });
+      })
+      
     } catch (err) {
-      console.log("[controllers][generalsetup][viewProject] :  Error", err);
+      console.log("[controllers][partcategory][exportPartCategoy] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]

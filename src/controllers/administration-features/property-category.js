@@ -9,6 +9,8 @@ const knex = require("../../db/knex");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
+const fs = require('fs');
+const path = require('path');
 //const trx = knex.transaction();
 
 const propertyCategoryController = {
@@ -421,13 +423,10 @@ const propertyCategoryController = {
       });
     }
   },
+  /**EXPORT PROBLEM CATEGORY */
   exportCategory: async (req, res) => {
     try {
-      let listCategories = null;
       let orgId = req.orgId;
-
-      //await knex.transaction(async (trx) => {
-
       const DataResult = await knex("incident_categories")
         .select([
           "categoryCode as Category",
@@ -438,25 +437,10 @@ const propertyCategoryController = {
         ])
         .where({ orgId: orgId });
 
-      //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
-      //const updateDataResult = await knex.update({ isActive : 'false', updatedAt : currentTime }).where({ id: incidentTypePayload.id }).returning(['*']).transacting(trx).into('incident_type');
-
-      // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
-
-      console.log(
-        "[controllers][category][categoryDelete]: View Data",
-        DataResult
-      );
-
-      //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
-
-      listCategories = DataResult;
-
-      //  trx.commit;
-      //});
+    
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(listCategories);
+      var ws = XLSX.utils.json_to_sheet(DataResult);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "uploads/CategoryData-" + Date.now() + ".csv";
@@ -464,7 +448,7 @@ const propertyCategoryController = {
 
       res.status(200).json({
         data: {
-          categories: listCategories
+          categories: DataResult
         },
         message: "Categories list successfully !"
       });
@@ -614,7 +598,10 @@ const propertyCategoryController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-  }
+  },
+
+
+
 };
 
 module.exports = propertyCategoryController;
