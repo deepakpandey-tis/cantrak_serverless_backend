@@ -451,7 +451,7 @@ const companyController = {
 
                 let checkExist = await knex('companies').select('companyName')
                   .where({ companyName: companyData.B, orgId: req.orgId })
-                  console.log('Check list company: ',checkList)
+                  console.log("Check list company: ", checkExist);
                 if (checkExist.length < 1) {
 
                   let currentTime = new Date().getTime();

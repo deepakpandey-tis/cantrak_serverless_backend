@@ -588,7 +588,7 @@ const peopleController = {
             let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/People/" + filename;
             res.status(200).json({
               data: rows,
-              message: "People List",
+              message: "People data export successfully!",
               url: url
             });
           }
