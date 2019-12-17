@@ -566,7 +566,7 @@ const ProjectController = {
 
               let companyData = await knex("companies")
                 .select("id")
-                .where({ companyId: projectData.C });
+                .where({ companyId: projectData.C,orgId:req.orgId });
               let companyId = null;
               if (!companyData && !companyData.length) {
                 continue;
