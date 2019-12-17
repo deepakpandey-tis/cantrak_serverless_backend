@@ -95,16 +95,11 @@ const chargeController = {
           rate: Joi.string().required(),
           vatRate: Joi.string().required(),
           vatId: Joi.string().required(),
-          whtId: Joi.string()
-            .allow("")
-            .optional(),
-          whtRate: Joi.string()
-            .allow("")
-            .optional(),
-          glAccountCode: Joi.string()
-            .allow("")
-            .optional()
+          whtId: Joi.string().allow("").optional(),
+          whtRate: Joi.string().allow("").optional(),
+          glAccountCode: Joi.allow("").optional()
         });
+         
 
         let result = Joi.validate(chargePayload, schema);
         console.log("[controllers][charge][updateCharge]: JOi Result", result);
@@ -663,8 +658,11 @@ const chargeController = {
           .select([
             "charge_master.chargeCode as CHARGE_CODE",
             "charge_master.descriptionEng as DESCRIPTION",
+            "charge_master.descriptionEng as DESCRIPTIONTH",
             "taxes.taxPercentage as VAT",
-            "wht_master.taxPercentage as WHT"
+            "taxes.taxCode as VAT_CODE",
+            "wht_master.taxPercentage as WHT_RATE",
+            "wht_master.whtCode as WHT_CODE"
           ])
       ]);
 
@@ -770,22 +768,37 @@ const chargeController = {
               let whtId = null;
 
 
-              let taxesIdResult = await knex('taxes').select('id').where({"taxCode":chargesData.E})
-              let whtIdResult = await knex('wht_master').select('id').where({"whtCode":chargesData.G})
-              if(vatId && vatId.length){
+              let taxesIdResult = await knex('taxes').select('id').where({taxCode:chargesData.E})
+              console.log("TaxIdResult", taxesIdResult);
+              if(!chargesData.F && !chargesData.G){
+                  whtId = null;
+                  whtRate = null;
+                  console.log('wht id not found: ',whtId)
+              }else{
+                let whtIdResult = await knex('wht_master').select('id').where({whtCode:chargesData.G})
+                if (whtIdResult && whtIdResult.length) {
+                    whtId = whtIdResult[0].id;
+                    whtRate = chargesData.F;
+                    console.log('wht id found: ',whtId)              
+                }
+                console.log("WhtIdResult", whtIdResult);
+              }
+
+             
+              if(taxesIdResult && taxesIdResult.length){
                 vatId = taxesIdResult[0].id;
+                console.log('vat id found: ',vatId)
+               
               }
               if(!vatId){
-                console.log('breaking due to: ',vatId)
+                console.log('breaking due to vat id: ',vatId)
                 continue;
               }
-              if (whtIdResult && whtIdResult.length) {
-                  whtId = whtIdResult[0].id;
-              }
-              if (!whtId) {
-                console.log("breaking due to: ", whtId);
-                continue;
-              }
+            
+              // if (!whtId) {
+              //   console.log("breaking due to wht id: ", whtId);
+              //   continue;
+              // }
 
               i++;
 
@@ -804,7 +817,7 @@ const chargeController = {
                     descriptionEng: chargesData.C,
                     vatRate: chargesData.D,
                     vatId: vatId,
-                    whtRate: chargesData.F,
+                    whtRate: whtRate,
                     whtId: whtId,
                     isActive:true,
                     createdBy: req.me.id,
