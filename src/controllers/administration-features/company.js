@@ -32,16 +32,6 @@ const companyController = {
           contactPerson: Joi.string().required(),
           companyAddressEng: Joi.string().required(),
           companyAddressThai: Joi.string().required(),
-          country: Joi.string().required(),
-          state: Joi.string().required(),
-          city: Joi.string().required(),
-          zipCode: Joi.string().allow('').optional(),
-          telephone: Joi.string().allow('').optional(),
-          fax: Joi.string().allow('').optional(),
-          provinceCode: Joi.string().allow('').optional(),
-          amphurCode: Joi.string().allow('').optional(),
-          tumbonCode: Joi.string().allow('').optional(),
-          flag: Joi.string().allow('').optional(),
           logoFile: Joi.string().allow('').optional(),
           taxId: Joi.string().allow('').optional(),
         });
@@ -406,8 +396,8 @@ const companyController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-    // Company List Data
   },
+  // Company List Data
   importCompanyData: async (req, res) => {
 
     try {
@@ -481,9 +471,9 @@ const companyController = {
             }
             let message = null;
             if (totalData == success) {
-              message = "We have processed ( " + totalData + " ) entries and added them successfully!";
+              message = "System has processed processed ( " + totalData + " ) entries and added them successfully!";
             } else {
-              message = "We have processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
+              message = "System has processed processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
             }
             let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
             return res.status(200).json({

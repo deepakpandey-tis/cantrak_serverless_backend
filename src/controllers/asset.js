@@ -3,6 +3,9 @@ const _ = require('lodash');
 
 const knex = require('../db/knex');
 const XLSX = require('xlsx');
+const fs = require('fs')
+const request = require("request");
+const path = require("path");
 
 const assetController = {
     getAssetCategories: async (req,res) => {
@@ -1311,177 +1314,177 @@ const assetController = {
             });
         }
     },
-    exportAsset: async(req,res)=>{
-        try {
+    // exportAsset: async(req,res)=>{
+    //     try {
 
-            let reqData = req.query;
-            let filters = {}
-            let total, rows
-            let {
-                assetName,
-                assetModel,
-                area,
-                category
-                } = req.body;
+    //         let reqData = req.query;
+    //         let filters = {}
+    //         let total, rows
+    //         let {
+    //             assetName,
+    //             assetModel,
+    //             area,
+    //             category
+    //             } = req.body;
 
-                let pagination = {};
-                let per_page = reqData.per_page || 10;
-                let page = reqData.current_page || 1;
-                if (page < 1) page = 1;
-                let offset = (page - 1) * per_page;
+    //             let pagination = {};
+    //             let per_page = reqData.per_page || 10;
+    //             let page = reqData.current_page || 1;
+    //             if (page < 1) page = 1;
+    //             let offset = (page - 1) * per_page;
 
-                if(assetName){
-                    filters['asset_master.assetName'] = assetName
-                   }
-                   if(assetModel){
-                      filters['asset_master.model'] = assetModel
-                   }
-                   if(area){
-                      filters['asset_master.areaName'] = area
-                   }
-                   if(category){
-                      filters['asset_category_master.categoryName'] = category
-                   }
+    //             if(assetName){
+    //                 filters['asset_master.assetName'] = assetName
+    //                }
+    //                if(assetModel){
+    //                   filters['asset_master.model'] = assetModel
+    //                }
+    //                if(area){
+    //                   filters['asset_master.areaName'] = area
+    //                }
+    //                if(category){
+    //                   filters['asset_category_master.categoryName'] = category
+    //                }
        
       
-                  if (_.isEmpty(filters)) {
-                      [total, rows] = await Promise.all([
-                        knex
-                          .count("* as count")
-                          .from("asset_master")
-                          .innerJoin(
-                            "location_tags",
-                            "asset_master.id",
-                            "location_tags.entityId"
-                          )
-                          .innerJoin(
-                            "location_tags_master",
-                            "location_tags.locationTagId",
-                            "location_tags_master.id"
-                          )
-                          .innerJoin(
-                            "asset_category_master",
-                            "asset_master.assetCategoryId",
-                            "asset_category_master.id"
-                          )
-                          .first(),
+    //               if (_.isEmpty(filters)) {
+    //                   [total, rows] = await Promise.all([
+    //                     knex
+    //                       .count("* as count")
+    //                       .from("asset_master")
+    //                       .innerJoin(
+    //                         "location_tags",
+    //                         "asset_master.id",
+    //                         "location_tags.entityId"
+    //                       )
+    //                       .innerJoin(
+    //                         "location_tags_master",
+    //                         "location_tags.locationTagId",
+    //                         "location_tags_master.id"
+    //                       )
+    //                       .innerJoin(
+    //                         "asset_category_master",
+    //                         "asset_master.assetCategoryId",
+    //                         "asset_category_master.id"
+    //                       )
+    //                       .first(),
 
-                        knex("asset_master")
-                          .innerJoin(
-                            "location_tags",
-                            "asset_master.id",
-                            "location_tags.entityId"
-                          )
-                          .innerJoin(
-                            "location_tags_master",
-                            "location_tags.locationTagId",
-                            "location_tags_master.id"
-                          )
-                          .innerJoin(
-                            "asset_category_master",
-                            "asset_master.assetCategoryId",
-                            "asset_category_master.id"
-                          )
-                          .select([
-                            "asset_master.assetName as Name",
-                            "asset_master.id as ID",
-                            "location_tags_master.title as Location",
-                            "asset_master.model as Model",
-                            "asset_master.barcode as Barcode",
-                            "asset_master.areaName as Area",
-                            "asset_category_master.categoryName as Category",
-                            "asset_master.createdAt as Date Created"
-                          ])
-                          .offset(offset)
-                          .limit(per_page)
-                          .where({ 'asset_master.orgId': req.orgId })
-                      ]);
-                  } else {
-                      filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
-                      try {
-                          [total, rows] = await Promise.all([
-                            knex
-                              .count("* as count")
-                              .from("asset_master")
-                              .innerJoin(
-                                "location_tags",
-                                "asset_master.id",
-                                "location_tags.entityId"
-                              )
-                              .innerJoin(
-                                "location_tags_master",
-                                "location_tags.locationTagId",
-                                "location_tags_master.id"
-                              )
-                              .innerJoin(
-                                "asset_category_master",
-                                "asset_master.assetCategoryId",
-                                "asset_category_master.id"
-                              )
-                              .where(filters)
-                              .offset(offset)
-                              .limit(per_page)
-                              .first(),
-                            knex("asset_master")
-                              .innerJoin(
-                                "location_tags",
-                                "asset_master.id",
-                                "location_tags.entityId"
-                              )
-                              .innerJoin(
-                                "location_tags_master",
-                                "location_tags.locationTagId",
-                                "location_tags_master.id"
-                              )
-                              .innerJoin(
-                                "asset_category_master",
-                                "asset_master.assetCategoryId",
-                                "asset_category_master.id"
-                              )
-                              .select([
-                                "asset_master.assetName as Name",
-                                "asset_master.id as ID",
-                                "location_tags_master.title as Location",
-                                "asset_master.model as Model",
-                                "asset_master.barcode as Barcode",
-                                "asset_master.areaName as Area",
-                                "asset_category_master.categoryName as Category",
-                                "asset_master.createdAt as Date Created"
-                              ])
-                              .where(filters)
-                              .offset(offset)
-                              .limit(per_page)
-                              .where({ 'asset_master.orgId': req.orgId })
-                          ]);
-                      } catch (e) {
-                          // Error
-                          console.log('Error: ' + e.message)
-                      }
-                  }
+    //                     knex("asset_master")
+    //                       .innerJoin(
+    //                         "location_tags",
+    //                         "asset_master.id",
+    //                         "location_tags.entityId"
+    //                       )
+    //                       .innerJoin(
+    //                         "location_tags_master",
+    //                         "location_tags.locationTagId",
+    //                         "location_tags_master.id"
+    //                       )
+    //                       .innerJoin(
+    //                         "asset_category_master",
+    //                         "asset_master.assetCategoryId",
+    //                         "asset_category_master.id"
+    //                       )
+    //                       .select([
+    //                         "asset_master.assetName as Name",
+    //                         "asset_master.id as ID",
+    //                         "location_tags_master.title as Location",
+    //                         "asset_master.model as Model",
+    //                         "asset_master.barcode as Barcode",
+    //                         "asset_master.areaName as Area",
+    //                         "asset_category_master.categoryName as Category",
+    //                         "asset_master.createdAt as Date Created"
+    //                       ])
+    //                       .offset(offset)
+    //                       .limit(per_page)
+    //                       .where({ 'asset_master.orgId': req.orgId })
+    //                   ]);
+    //               } else {
+    //                   filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
+    //                   try {
+    //                       [total, rows] = await Promise.all([
+    //                         knex
+    //                           .count("* as count")
+    //                           .from("asset_master")
+    //                           .innerJoin(
+    //                             "location_tags",
+    //                             "asset_master.id",
+    //                             "location_tags.entityId"
+    //                           )
+    //                           .innerJoin(
+    //                             "location_tags_master",
+    //                             "location_tags.locationTagId",
+    //                             "location_tags_master.id"
+    //                           )
+    //                           .innerJoin(
+    //                             "asset_category_master",
+    //                             "asset_master.assetCategoryId",
+    //                             "asset_category_master.id"
+    //                           )
+    //                           .where(filters)
+    //                           .offset(offset)
+    //                           .limit(per_page)
+    //                           .first(),
+    //                         knex("asset_master")
+    //                           .innerJoin(
+    //                             "location_tags",
+    //                             "asset_master.id",
+    //                             "location_tags.entityId"
+    //                           )
+    //                           .innerJoin(
+    //                             "location_tags_master",
+    //                             "location_tags.locationTagId",
+    //                             "location_tags_master.id"
+    //                           )
+    //                           .innerJoin(
+    //                             "asset_category_master",
+    //                             "asset_master.assetCategoryId",
+    //                             "asset_category_master.id"
+    //                           )
+    //                           .select([
+    //                             "asset_master.assetName as Name",
+    //                             "asset_master.id as ID",
+    //                             "location_tags_master.title as Location",
+    //                             "asset_master.model as Model",
+    //                             "asset_master.barcode as Barcode",
+    //                             "asset_master.areaName as Area",
+    //                             "asset_category_master.categoryName as Category",
+    //                             "asset_master.createdAt as Date Created"
+    //                           ])
+    //                           .where(filters)
+    //                           .offset(offset)
+    //                           .limit(per_page)
+    //                           .where({ 'asset_master.orgId': req.orgId })
+    //                       ]);
+    //                   } catch (e) {
+    //                       // Error
+    //                       console.log('Error: ' + e.message)
+    //                   }
+    //               }
       
-                  var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
-                  var ws = XLSX.utils.json_to_sheet(rows);
-                  XLSX.utils.book_append_sheet(wb, ws, "pres");
-                  XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
-                  let filename = "uploads/AssetData-"+Date.now()+".csv";
-                  let  check = XLSX.writeFile(wb,filename);
+    //               var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
+    //               var ws = XLSX.utils.json_to_sheet(rows);
+    //               XLSX.utils.book_append_sheet(wb, ws, "pres");
+    //               XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
+    //               let filename = "uploads/AssetData-"+Date.now()+".csv";
+    //               let  check = XLSX.writeFile(wb,filename);
       
-                  return res.status(200).json({
-                      data:rows,
-                      message:"Asset Data Export Successfully!"
-                  })
+    //               return res.status(200).json({
+    //                   data:rows,
+    //                   message:"Asset Data Export Successfully!"
+    //               })
       
                   
       
-              } catch (err) {
-                  console.log('[controllers][asset][getAssets] :  Error', err);
-                  res.status(500).json({
-                    errors: [
-                        { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
-                    ],
-                });
-            }
-    },
+    //           } catch (err) {
+    //               console.log('[controllers][asset][getAssets] :  Error', err);
+    //               res.status(500).json({
+    //                 errors: [
+    //                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+    //                 ],
+    //             });
+    //         }
+    // },
     getAssetListByLocation: async (req,res) => {
         try {  
 
@@ -1693,7 +1696,221 @@ const assetController = {
                 ],
             });
         }
+    },
+    exportAssetData:async(req,res)=>{
+      try {
+       
+
+        const assetResult = await knex("asset_master")
+          .leftJoin(
+            "asset_category_master",
+            "asset_master.assetCategoryId",
+            "asset_category_master.id"
+          )
+          .select([
+            "asset_master.assetCode as ASSET_CODE",
+            "asset_master.assetName as ASSET_NAME",
+            "asset_master.unitOfMeasure as UNIT_OF_MEASURE",
+            "asset_master.model as MODEL_CODE",
+            "asset_category_master.assetCategoryCode as ASSET_CATEGORY_CODE",
+            "asset_category_master.categoryName as ASSET_CATEGORY_NAME"
+          ])
+          .where({ 'asset_master.orgId': req.orgId });
+        let assets = assetResult
+
+
+
+
+
+
+
+
+
+      let tempraryDirectory = null;
+      let bucketName = null;
+      if (process.env.IS_OFFLINE) {
+        bucketName = "sls-app-resources-bucket";
+        tempraryDirectory = "tmp/";
+      } else {
+        tempraryDirectory = "/tmp/";
+        bucketName = process.env.S3_BUCKET_NAME;
+      }
+
+      var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
+      var ws = XLSX.utils.json_to_sheet(assets);
+      XLSX.utils.book_append_sheet(wb, ws, "pres");
+      XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
+      let filename = "AssetData-" + Date.now() + ".csv";
+      let filepath = tempraryDirectory + filename;
+      let check = XLSX.writeFile(wb, filepath);
+      const AWS = require("aws-sdk");
+      fs.readFile(filepath, function(err, file_buffer) {
+        var s3 = new AWS.S3();
+        var params = {
+          Bucket: bucketName,
+          Key: "Export/Asset/" + filename,
+          Body: file_buffer,
+          ACL: "public-read"
+        };
+        s3.putObject(params, function(err, data) {
+          if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            //next(err);
+            res.status(500).json({
+              errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+          } else {
+            console.log("File uploaded Successfully");
+
+            //next(null, filePath);
+            fs.unlink(filepath, err => {
+              console.log("File Deleting Error " + err);
+            });
+            let url =
+              "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Asset/" +
+              filename;
+
+            return res.status(200).json({
+              data: {
+                assets: assets
+              },
+              message: "Asset Data Export Successfully!",
+              url: url
+            });
+          }
+        });
+      });
+
+
+
+
+
+
+      } catch(err) {
+        console.log(err)
+        res.status(500).json({
+          errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        });
+      }
+    },
+   importAssetData: async (req, res) => {
+
+    try {
+      if (req.file) {
+        console.log(req.file)
+        let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+          tempraryDirectory = 'tmp/';
+        } else {
+          tempraryDirectory = '/tmp/';
+        }
+        let resultData = null;
+        let file_path = tempraryDirectory + req.file.filename;
+        let wb = XLSX.readFile(file_path, { type: 'string' });
+        let ws = wb.Sheets[wb.SheetNames[0]];
+        let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
+        //data         = JSON.stringify(data);
+        console.log("+++++++++++++", data, "=========")
+        let totalData = data.length - 1;
+        let fail = 0;
+        let success = 0;
+        let result = null;
+
+        if (data[0].A == "ASSET_CODE" || data[0].A == "Ã¯Â»Â¿ASSET_CODE" &&
+          data[0].B == "ASSET_NAME" &&
+          data[0].C == "UNIT_OF_MEASURE" &&
+          data[0].D == "MODEL_CODE" &&
+          data[0].E == "ASSET_CATEGORY_CODE" &&
+          data[0].F == "ASSET_CATEGORY_NAME"
+          // data[0].G == "CONTACT_PERSON" &&
+          // data[0].H == "STATUS"
+        ) {
+
+          if (data.length > 0) {
+
+            let i = 0;
+            for (let assetData of data) {
+              i++;
+
+              if (i > 1) {
+                //let currentTime = new Date().getTime()
+                // let checkExist = await knex('asset_master').select('companyName')
+                //   .where({ companyName: assetData.B, orgId: req.orgId })
+                //   console.log("Check list company: ", checkExist);
+                //if (checkExist.length < 1) {
+
+                  // Check if this asset category exists
+                  // if not create new and put that id
+                  let assetCategoryId = ''
+                  const cat = await knex('asset_category_master').where({categoryName:assetData.F,orgId:req.orgId}).select('id')
+                  if(cat && cat.length) {
+                    assetCategoryId = cat[0].id;
+                  } else {
+                    const catResult = await knex('asset_category_master').insert({categoryName:assetData.F,assetCategoryCode:assetData.E,orgId:req.orgId}).returning(['id'])
+                    assetCategoryId = catResult[0].id;
+                  }
+
+                  let currentTime = new Date().getTime();
+                  let insertData = {
+                    orgId: req.orgId,
+                    assetCode: assetData.A,
+                    assetName: assetData.B,
+                    unitOfMeasure: assetData.C,
+                    model: assetData.D,
+                    assetCategoryId,
+                    isActive: true,
+                    createdAt: currentTime,
+                    updatedAt: currentTime
+                  }
+
+                  resultData = await knex.insert(insertData).returning(['*']).into('asset_master');
+
+                  if (resultData && resultData.length) {
+                    success++;
+                  }
+                // } else {
+                //   fail++;
+                // }
+              }
+            }
+            let message = null;
+            if (totalData == success) {
+              message = "system has processed ( " + totalData + " ) entries and added them successfully!";
+            } else {
+              message = "system has processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added";
+            }
+            let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
+            return res.status(200).json({
+              message: message,
+            });
+          }
+
+        } else {
+
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+            ]
+          });
+        }
+      } else {
+
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
+
+      }
+
+    } catch (err) {
+      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
     }
+  }
 }
 
 module.exports = assetController;
