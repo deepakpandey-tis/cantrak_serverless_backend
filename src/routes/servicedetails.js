@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
-
 const serviceDetailsController = require('../controllers/servicedetails');
-
 const authMiddleware = require('../middlewares/auth');
 
 
@@ -24,7 +22,31 @@ router.post('/update-location-tags', authMiddleware.isAuthenticated, serviceDeta
 router.post('/location-tags-details', authMiddleware.isAuthenticated, serviceDetailsController.viewLocationTag);
 
 
-router.get('/get-location-tag-names',authMiddleware.isAuthenticated,serviceDetailsController.getLocationTags)
-router.get('/export-priority-data',authMiddleware.isAuthenticated,serviceDetailsController.exportPriorityData)
+router.get('/get-location-tag-names',authMiddleware.isAuthenticated,serviceDetailsController.getLocationTags);
+router.get('/export-priority-data',authMiddleware.isAuthenticated,serviceDetailsController.exportPriorityData);
 
+
+/**IMPORT Service Details DATA */
+const path       = require('path');
+let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+           tempraryDirectory = 'tmp/';
+         } else {
+           tempraryDirectory = '/tmp/';  
+         }
+var multer  = require('multer');
+var storage = multer.diskStorage({
+	destination: tempraryDirectory,
+	filename: function ( req, file, cb ) {
+        let ext =  path.extname(file.originalname)
+        if(ext=='.csv'){
+        time = Date.now();
+        cb( null, 'PriorityData-'+time+ext);
+        }else{
+            return false
+        }
+	}
+});
+var upload = multer( { storage: storage } );
+router.post('/import-priority-data',upload.single("file"),authMiddleware.isAuthenticated,serviceDetailsController.importPrioritiesData);
 module.exports = router;

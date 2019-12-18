@@ -3,15 +3,14 @@ const moment = require("moment");
 const uuidv4 = require("uuid/v4");
 var jwt = require("jsonwebtoken");
 const _ = require("lodash");
-
 const knex = require("../db/knex");
-
 const bcrypt = require("bcrypt");
-const XLSX = require("xlsx");
 const saltRounds = 10;
 //const trx = knex.transaction();
-const fs = require('fs');
-const path = require('path');
+const XLSX = require("xlsx");
+const fs = require("fs");
+const path = require("path");
+const request = require("request");
 //const trx = knex.transaction();
 
 const serviceDetailsController = {
@@ -19,8 +18,8 @@ const serviceDetailsController = {
     try {
       let Priorities = null;
       let userId = req.me.id;
-      let orgId  = req.orgId;
-       
+      let orgId = req.orgId;
+
       await knex.transaction(async trx => {
         const payload = req.body;
 
@@ -80,8 +79,8 @@ const serviceDetailsController = {
     try {
       let Priorities = null;
       let userId = req.me.id;
-      let orgId  = req.orgId;
-      
+      let orgId = req.orgId;
+
       await knex.transaction(async trx => {
         const payload = req.body;
 
@@ -140,8 +139,8 @@ const serviceDetailsController = {
     try {
       let Priorities = null;
       let userId = req.me.id;
-      let orgId  = req.orgId;
-     
+      let orgId = req.orgId;
+
       await knex.transaction(async trx => {
         let payload = req.body;
         const schema = Joi.object().keys({
@@ -186,8 +185,8 @@ const serviceDetailsController = {
     try {
       let LocationTag = null;
       let userId = req.me.id;
-      let orgId  = req.orgId;
-     
+      let orgId = req.orgId;
+
       await knex.transaction(async trx => {
         const payload = req.body;
 
@@ -247,8 +246,8 @@ const serviceDetailsController = {
     try {
       let LocationTag = null;
       let userId = req.me.id;
-      let orgId  = req.orgId;
-     
+      let orgId = req.orgId;
+
       await knex.transaction(async trx => {
         const payload = req.body;
 
@@ -304,8 +303,8 @@ const serviceDetailsController = {
     try {
       let LocationTag = null;
       let userId = req.me.id;
-      let orgId  = req.orgId;
-    
+      let orgId = req.orgId;
+
       await knex.transaction(async trx => {
         let payload = req.body;
         const schema = Joi.object().keys({
@@ -322,7 +321,7 @@ const serviceDetailsController = {
         let current = new Date().getTime();
         let LocationTagResult = await knex("location_tags_master")
           .select("location_tags_master.*")
-          .where({ id: payload.id, orgId:orgId, userId:userId  });
+          .where({ id: payload.id, orgId: orgId, userId: userId });
 
         LocationTag = _.omit(LocationTagResult[0], [
           "createdAt",
@@ -351,8 +350,7 @@ const serviceDetailsController = {
       let generalDetails = null;
       let DataResult = null;
       let userId = req.me.id;
-      let orgId  = req.orgId;
-    
+      let orgId = req.orgId;
 
       await knex.transaction(async trx => {
         // Insert in users table,
@@ -387,7 +385,10 @@ const serviceDetailsController = {
             "floor_and_zones.floorZoneCode",
             "property_units.*"
           )
-          .where({ "property_units.houseId": incidentTypePayload.houseId, "property_units.orgId": orgId });
+          .where({
+            "property_units.houseId": incidentTypePayload.houseId,
+            "property_units.orgId": orgId
+          });
 
         console.log(
           "[controllers][servicedetails][generaldetails]: View Data",
@@ -428,8 +429,8 @@ const serviceDetailsController = {
     try {
       let locationTags = null;
       let userId = req.me.id;
-      let orgId  = req.orgId;
-    
+      let orgId = req.orgId;
+
       let reqData = req.query;
       //let filters = req.body;
       let total, rows;
@@ -449,7 +450,7 @@ const serviceDetailsController = {
         knex
           .count("* as count")
           .from("location_tags_master")
-          .where({"orgId": orgId})
+          .where({ orgId: orgId })
           .first(),
         knex("location_tags_master")
           .select([
@@ -460,7 +461,7 @@ const serviceDetailsController = {
             "isActive as Status",
             "createdAt as Date Created"
           ])
-          .where({"orgId": orgId})
+          .where({ orgId: orgId })
           .offset(offset)
           .limit(per_page)
       ]);
@@ -506,13 +507,13 @@ const serviceDetailsController = {
     try {
       let sourceRequest = null;
       let userId = req.me.id;
-      let orgId  = req.orgId;
-    
+      let orgId = req.orgId;
+
       await knex.transaction(async trx => {
         // Get Location Tag List,
         const DataResult = await knex("source_of_request").where({
           isActive: "true",
-          orgId:orgId
+          orgId: orgId
         });
 
         //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
@@ -550,8 +551,8 @@ const serviceDetailsController = {
     try {
       let locationTags = null;
       let userId = req.me.id;
-      let orgId  = req.orgId;
-    
+      let orgId = req.orgId;
+
       let reqData = req.query;
       //let filters = req.body;
       let total, rows;
@@ -571,7 +572,7 @@ const serviceDetailsController = {
         knex
           .count("* as count")
           .from("incident_priority")
-          .where({"orgId":orgId})
+          .where({ orgId: orgId })
           .first(),
         knex("incident_priority")
           .select([
@@ -583,7 +584,7 @@ const serviceDetailsController = {
             "createdBy as Created By",
             "createdAt as Date Created"
           ])
-          .where({"orgId":orgId})
+          .where({ orgId: orgId })
           .offset(offset)
           .limit(per_page)
       ]);
@@ -629,8 +630,8 @@ const serviceDetailsController = {
     try {
       let serviceRequestList = null;
       let userId = req.me.id;
-      let orgId  = req.orgId;
-      
+      let orgId = req.orgId;
+
       await knex.transaction(async trx => {
         // Get Location Tag List,
         const DataResult = await knex("service_requests").where({
@@ -680,8 +681,8 @@ const serviceDetailsController = {
       let problemResult = null;
       let problemImages = null;
       let userId = req.me.id;
-      let orgId  = req.orgId;
-     
+      let orgId = req.orgId;
+
       await knex.transaction(async trx => {
         const viewRequestPayload = req.body;
         console.log(
@@ -736,7 +737,10 @@ const serviceDetailsController = {
             "floor_and_zones.floorZoneCode",
             "property_units.*"
           )
-          .where({ "property_units.houseId": DataResult[0].houseId, "property_units.orgId": orgId });
+          .where({
+            "property_units.houseId": DataResult[0].houseId,
+            "property_units.orgId": orgId
+          });
 
         console.log(
           "[controllers][servicedetails][serviceRequestDetails]: View Data",
@@ -784,7 +788,10 @@ const serviceDetailsController = {
             "incident_sub_categories.descriptionEng as subcategory",
             "service_problems.*"
           )
-          .where({ "service_problems.serviceRequestId": DataResult[0].id, "service_problems.orgId": orgId });
+          .where({
+            "service_problems.serviceRequestId": DataResult[0].id,
+            "service_problems.orgId": orgId
+          });
 
         console.log(
           "[controllers][servicedetails][serviceProblemDetails]: View Data",
@@ -814,7 +821,10 @@ const serviceDetailsController = {
             "service_problems.id"
           )
           .select("images.s3Url")
-          .where({ "images.entityType": "service_problems", "images.orgId": orgId });
+          .where({
+            "images.entityType": "service_problems",
+            "images.orgId": orgId
+          });
 
         console.log(
           "[controllers][servicedetails][images]: View Data",
@@ -850,68 +860,69 @@ const serviceDetailsController = {
     try {
       let locationTags = null;
       let userId = req.me.id;
-      let orgId  = req.orgId;
+      let orgId = req.orgId;
       let reqData = req.query;
       let rows;
-    [rows] = await Promise.all([
-      knex("location_tags_master")
-        .select([
-          "title as TITLE",
-          "descriptionEng as DESCRIPTION",
-          "descriptionThai as ALTERNATE_DESCRIPTION",
-          "isActive as STATUS",
-        ])
-        .where({"location_tags_master.orgId": orgId})
-    ]);
+      [rows] = await Promise.all([
+        knex("location_tags_master")
+          .select([
+            "title as TITLE",
+            "descriptionEng as DESCRIPTION",
+            "descriptionThai as ALTERNATE_DESCRIPTION"
+          ])
+          .where({ "location_tags_master.orgId": orgId })
+      ]);
 
-    let tempraryDirectory = null;
-    let bucketName = null;
-    if (process.env.IS_OFFLINE) {
-      bucketName = 'sls-app-resources-bucket';
-      tempraryDirectory = 'tmp/';
-    } else {
-      tempraryDirectory = '/tmp/';
-      bucketName = process.env.S3_BUCKET_NAME;
-    }
-    var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-    var ws = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, "pres");
-    XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-    let filename = "LocationTagData-" + Date.now() + ".csv";
-    let filepath = tempraryDirectory + filename;
-    let check = XLSX.writeFile(wb, filepath);
-    const AWS = require('aws-sdk');
-
-    fs.readFile(filepath, function (err, file_buffer) {
-      var s3 = new AWS.S3();
-      var params = {
-        Bucket: bucketName,
-        Key: "Export/LocationTag/" + filename,
-        Body: file_buffer,
-        ACL: 'public-read'
+      let tempraryDirectory = null;
+      let bucketName = null;
+      if (process.env.IS_OFFLINE) {
+        bucketName = "sls-app-resources-bucket";
+        tempraryDirectory = "tmp/";
+      } else {
+        tempraryDirectory = "/tmp/";
+        bucketName = process.env.S3_BUCKET_NAME;
       }
-      s3.putObject(params, function (err, data) {
-        if (err) {
-          console.log("Error at uploadCSVFileOnS3Bucket function", err);
-          res.status(500).json({
-            errors: [
-              { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
-            ],
-          });
-          //next(err);
-        } else {
-          console.log("File uploaded Successfully");
-          //next(null, filePath);
-          let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
-          let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/LocationTag/" + filename;
-          res.status(200).json({
-            data: rows,
-            message: "Location Tags List!",
-            url: url
-          });
-        }
+      var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
+      var ws = XLSX.utils.json_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, "pres");
+      XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
+      let filename = "LocationTagData-" + Date.now() + ".csv";
+      let filepath = tempraryDirectory + filename;
+      let check = XLSX.writeFile(wb, filepath);
+      const AWS = require("aws-sdk");
+
+      fs.readFile(filepath, function(err, file_buffer) {
+        var s3 = new AWS.S3();
+        var params = {
+          Bucket: bucketName,
+          Key: "Export/LocationTag/" + filename,
+          Body: file_buffer,
+          ACL: "public-read"
+        };
+        s3.putObject(params, function(err, data) {
+          if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            res.status(500).json({
+              errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+            //next(err);
+          } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+            let deleteFile = fs.unlink(filepath, err => {
+              console.log("File Deleting Error " + err);
+            });
+            let url =
+              "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/LocationTag/" +
+              filename;
+            res.status(200).json({
+              data: rows,
+              message: "Location Tags List!",
+              url: url
+            });
+          }
+        });
       });
-    })
     } catch (err) {
       console.log("[controllers][servicedetails][signup] :  Error", err);
       //trx.rollback
@@ -920,15 +931,17 @@ const serviceDetailsController = {
       });
     }
   },
-  getLocationTags:async (req,res) => {
+  getLocationTags: async (req, res) => {
     try {
-      const tags = await knex('location_tags_master').select('id','title').where({orgId:req.orgId})
+      const tags = await knex("location_tags_master")
+        .select("id", "title")
+        .where({ orgId: req.orgId });
       return res.status(200).json({
         data: {
           locationTags: tags
         }
-      })
-    } catch(err) {
+      });
+    } catch (err) {
       console.log("[controllers][servicedetails][signup] :  Error", err);
       //trx.rollback
       res.status(500).json({
@@ -937,168 +950,265 @@ const serviceDetailsController = {
     }
   },
 
-/**Export Priorities Data  */
+  /**Export Priorities Data  */
 
-exportPriorityData: async (req, res) => {
-  try {
-    let locationTags = null;
-    let userId = req.me.id;
-    let orgId  = req.orgId;
-  
-    let reqData = req.query;
-    let total, rows;
+  exportPriorityData: async (req, res) => {
+    try {
+      let userId = req.me.id;
+      let orgId = req.orgId;
 
-    [rows] = await Promise.all([
-      knex("incident_priority")
-        .select([
-          "incidentPriorityCode as PRIORITY_CODE",
-          "descriptionEng as DESCRIPTION",
-          "descriptionThai as DESCRIPTION_ALTERNATE",
-          "isActive as STATUS",
-        ])
-        .where({"orgId":orgId})
-    ]);
+      let reqData = req.query;
+      let rows;
 
+      [rows] = await Promise.all([
+        knex("incident_priority")
+          .select([
+            "incidentPriorityCode as PRIORITY_CODE",
+            "descriptionEng as DESCRIPTION",
+            "descriptionThai as DESCRIPTION_ALTERNATE"
+          ])
+          .where({"orgId": orgId })
+      ]);
 
-    let tempraryDirectory = null;
-    let bucketName = null;
-    if (process.env.IS_OFFLINE) {
-      bucketName = 'sls-app-resources-bucket';
-      tempraryDirectory = 'tmp/';
-    } else {
-      tempraryDirectory = '/tmp/';
-      bucketName = process.env.S3_BUCKET_NAME;
-    }
-
-    var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-    var ws = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, "pres");
-    XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-    let filename = "PriorityData-" + Date.now() + ".csv";
-    let filepath = tempraryDirectory + filename;
-    let check = XLSX.writeFile(wb, filepath);
-    const AWS = require('aws-sdk');
-
-    fs.readFile(filepath, function (err, file_buffer) {
-      var s3 = new AWS.S3();
-      var params = {
-        Bucket: bucketName,
-        Key: "Export/Priority/" + filename,
-        Body: file_buffer,
-        ACL: 'public-read'
+      let tempraryDirectory = null;
+      let bucketName = null;
+      if (process.env.IS_OFFLINE) {
+        bucketName = "sls-app-resources-bucket";
+        tempraryDirectory = "tmp/";
+      } else {
+        tempraryDirectory = "/tmp/";
+        bucketName = process.env.S3_BUCKET_NAME;
       }
-      s3.putObject(params, function (err, data) {
-        if (err) {
-          console.log("Error at uploadCSVFileOnS3Bucket function", err);
-          res.status(500).json({
-            errors: [
-              { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
-            ],
-          });
-          //next(err);
+
+      var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
+      var ws = XLSX.utils.json_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, "pres");
+      XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
+      let filename = "PriorityData-" + Date.now() + ".csv";
+      let filepath = tempraryDirectory + filename;
+      let check = XLSX.writeFile(wb, filepath);
+      const AWS = require("aws-sdk");
+
+      fs.readFile(filepath, function(err, file_buffer) {
+        var s3 = new AWS.S3();
+        var params = {
+          Bucket: bucketName,
+          Key: "Export/Priority/" + filename,
+          Body: file_buffer,
+          ACL: "public-read"
+        };
+        s3.putObject(params, function(err, data) {
+          if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            res.status(500).json({
+              errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+            //next(err);
+          } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+            let deleteFile = fs.unlink(filepath, err => {
+              console.log("File Deleting Error " + err);
+            });
+            let url =
+              "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Priority/" +
+              filename;
+            res.status(200).json({
+              data: rows,
+              message: "Priority List",
+              url: url
+            });
+          }
+        });
+      });
+    } catch (err) {
+      console.log("[controllers][servicedetails][signup] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+
+  /**Import Priorities Data  */
+
+  importPrioritiesData: async (req, res) => {
+    try {
+      if (req.file) {
+        console.log(req.file);
+        let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+          tempraryDirectory = "tmp/";
         } else {
-          console.log("File uploaded Successfully");
-          //next(null, filePath);
-          let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
-          let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Priority/" + filename;
-          res.status(200).json({
-            data: rows,
-            message: "Priority List",
-            url: url
+          tempraryDirectory = "/tmp/";
+        }
+        let resultData = null;
+        let file_path = tempraryDirectory + req.file.filename;
+        let wb = XLSX.readFile(file_path, { type: "binary" });
+        let ws = wb.Sheets[wb.SheetNames[0]];
+        let data = XLSX.utils.sheet_to_json(ws, {
+          type: "string",
+          header: "A",
+          raw: false
+        });
+        //data         = JSON.stringify(data);
+        let result = null;
+        let currentTime = new Date().getTime();
+        //console.log('DATA: ',data)
+
+        if (( data[0].A == "PRIORITY_CODE" &&
+            data[0].B == "DESCRIPTION" &&
+            data[0].C == "DESCRIPTION_ALTERNATE"
+          )) 
+          {
+          if (data.length > 0) {
+            let i = 0;
+            console.log('Data[0]', data[0])
+            for (let priorityData of data) {
+             
+              i++;
+
+              if (i > 1) {
+                let checkExist = await knex("incident_priority")
+                  .select("incidentPriorityCode")
+                  .where({
+                    incidentPriorityCode: priorityData.A,
+                    orgId: req.orgId
+                  });
+                if (checkExist.length < 1) {
+                  let insertData = {
+                    orgId: req.orgId,
+                    incidentPriorityCode: priorityData.A,
+                    descriptionEng: priorityData.B,
+                    descriptionThai: priorityData.C,
+                    isActive:true,
+                    createdBy: req.me.id,
+                    createdAt: currentTime
+                  };
+
+                  resultData = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .into("incident_priority");
+                }
+              }
+            }
+
+            let deleteFile = await fs.unlink(file_path, err => {
+              console.log("File Deleting Error " + err);
+            });
+            return res.status(200).json({
+              message: "Charges Data Import Successfully!"
+            });
+          }
+        } else {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+            ]
           });
         }
-      });
-    })
-    
-  } catch (err) {
-    console.log("[controllers][servicedetails][signup] :  Error", err);
-    //trx.rollback
-    res.status(500).json({
-      errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-    });
-  }
-},
-/**EXPORT LOCATION TAG DATA */
-
-exportLocationTagData: async (req, res) => {
-  try {
-    let locationTags = null;
-    let userId = req.me.id;
-    let orgId  = req.orgId;
-  
-    let reqData = req.query;
-    let rows;
-    [rows] = await Promise.all([
-      knex("location_tags_master")
-        .select([
-          "title as TITLE",
-          "descriptionEng as DESCRIPTION",
-          "descriptionThai as ALTERNATE_DESCRIPTION",
-          "isActive as STATUS",
-        ])
-        .where({"orgId": orgId})
-    ]);
-
-    let tempraryDirectory = null;
-    let bucketName = null;
-    if (process.env.IS_OFFLINE) {
-      bucketName = 'sls-app-resources-bucket';
-      tempraryDirectory = 'tmp/';
-    } else {
-      tempraryDirectory = '/tmp/';
-      bucketName = process.env.S3_BUCKET_NAME;
-    }
-
-    var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-    var ws = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, "pres");
-    XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-    let filename = "LocationTagData-" + Date.now() + ".csv";
-    let filepath = tempraryDirectory + filename;
-    let check = XLSX.writeFile(wb, filepath);
-    const AWS = require('aws-sdk');
-
-    fs.readFile(filepath, function (err, file_buffer) {
-      var s3 = new AWS.S3();
-      var params = {
-        Bucket: bucketName,
-        Key: "Export/LocationTag/" + filename,
-        Body: file_buffer,
-        ACL: 'public-read'
+      } else {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
       }
-      s3.putObject(params, function (err, data) {
-        if (err) {
-          console.log("Error at uploadCSVFileOnS3Bucket function", err);
-          res.status(500).json({
-            errors: [
-              { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
-            ],
-          });
-          //next(err);
-        } else {
-          console.log("File uploaded Successfully");
-          //next(null, filePath);
-          let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
-          let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/LocationTag/" + filename;
-          res.status(200).json({
-            data: rows,
-            message: "Location Tags List!",
-            url: url
-          });
-        }
+    } catch (err) {
+      console.log(
+        "[controllers][propertysetup][importCompanyData] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
-    })
-  
-  } catch (err) {
-    console.log("[controllers][servicedetails][signup] :  Error", err);
-    //trx.rollback
-    res.status(500).json({
-      errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-    });
+    }
+  },
+
+  // End
+
+  /**EXPORT LOCATION TAG DATA */
+
+  exportLocationTagData: async (req, res) => {
+    try {
+      let locationTags = null;
+      let userId = req.me.id;
+      let orgId = req.orgId;
+
+      let reqData = req.query;
+      let rows;
+      [rows] = await Promise.all([
+        knex("location_tags_master")
+          .select([
+            "title as TITLE",
+            "descriptionEng as DESCRIPTION",
+            "descriptionThai as ALTERNATE_DESCRIPTION",
+            "isActive as STATUS"
+          ])
+          .where({ orgId: orgId })
+      ]);
+
+      let tempraryDirectory = null;
+      let bucketName = null;
+      if (process.env.IS_OFFLINE) {
+        bucketName = "sls-app-resources-bucket";
+        tempraryDirectory = "tmp/";
+      } else {
+        tempraryDirectory = "/tmp/";
+        bucketName = process.env.S3_BUCKET_NAME;
+      }
+
+      var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
+      var ws = XLSX.utils.json_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, "pres");
+      XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
+      let filename = "LocationTagData-" + Date.now() + ".csv";
+      let filepath = tempraryDirectory + filename;
+      let check = XLSX.writeFile(wb, filepath);
+      const AWS = require("aws-sdk");
+
+      fs.readFile(filepath, function(err, file_buffer) {
+        var s3 = new AWS.S3();
+        var params = {
+          Bucket: bucketName,
+          Key: "Export/LocationTag/" + filename,
+          Body: file_buffer,
+          ACL: "public-read"
+        };
+        s3.putObject(params, function(err, data) {
+          if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            res.status(500).json({
+              errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+            //next(err);
+          } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+            let deleteFile = fs.unlink(filepath, err => {
+              console.log("File Deleting Error " + err);
+            });
+            let url =
+              "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/LocationTag/" +
+              filename;
+            res.status(200).json({
+              data: rows,
+              message: "Location Tags List!",
+              url: url
+            });
+          }
+        });
+      });
+    } catch (err) {
+      console.log("[controllers][servicedetails][signup] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
-}
-
-
 };
 
 module.exports = serviceDetailsController;
