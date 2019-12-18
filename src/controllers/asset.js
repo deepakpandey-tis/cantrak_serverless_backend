@@ -1806,7 +1806,7 @@ const assetController = {
         }
         let resultData = null;
         let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: 'string' });
+        let wb = XLSX.readFile(file_path, { type: "base64" });
         let ws = wb.Sheets[wb.SheetNames[0]];
         let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
         //data         = JSON.stringify(data);
