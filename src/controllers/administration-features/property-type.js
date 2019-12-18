@@ -433,7 +433,6 @@ const propertyTypeController = {
 
                 let checkExist = await knex('property_types').select('id')
                   .where({ propertyType: propertyData.B, propertyTypeCode: propertyData.A })
-                  console.log("Check list company: ", checkExist);
                 if (checkExist.length < 1) {
 
                   let currentTime = new Date().getTime();
