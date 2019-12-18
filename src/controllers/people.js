@@ -500,7 +500,7 @@ const peopleController = {
               "users.nameThai as NAME_1",
               "users.name as NAME_2",
               "users.email as EMAIL",
-              "users.isActive as STATUS",
+              // "users.isActive as STATUS",
               //"users.updatedAt as END_EFFECTIVE_DATE",
               //"users.createdAt as START_EFFECTIVE_DATE",
               "teams.teamCode as DEPARTMENT_CODE"
@@ -537,7 +537,7 @@ const peopleController = {
               "users.nameThai as NAME_1",
               "users.name as NAME_2",
               "users.email as EMAIL",
-              "users.isActive as STATUS",
+              // "users.isActive as STATUS",
               //"users.updatedAt as END_EFFECTIVE_DATE",
               //"users.createdAt as START_EFFECTIVE_DATE",
               "teams.teamCode as DEPARTMENT_CODE"
@@ -633,8 +633,8 @@ const peopleController = {
           data[0].B == "NAME_1" &&
           data[0].C == "NAME_2" &&
           data[0].D == "EMAIL" &&
-          data[0].E == "STATUS" &&
-          data[0].F == "DEPARTMENT_CODE"
+          // data[0]. == "STATUS" &&
+          data[0].E == "DEPARTMENT_CODE"
         ) {
 
           if (data.length > 0) {
@@ -643,7 +643,7 @@ const peopleController = {
             for (let peopleData of data) {
               i++;
 
-              let teamData = await knex('teams').select('teamId').where({ teamCode: peopleData.F });
+              let teamData = await knex('teams').select('teamId').where({ teamCode: peopleData.E,orgId:req.orgId });
               let teamId = null;
               if (!teamData && !teamData.length) {
                 continue;

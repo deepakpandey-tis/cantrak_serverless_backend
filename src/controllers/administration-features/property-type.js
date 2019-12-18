@@ -264,7 +264,7 @@ const propertyTypeController = {
             "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
             "property_types.propertyType as PROPERTY_TYPE",
             "property_types.descriptionEng as DESCRIPTION",
-            "property_types.isActive as STATUS",
+            // "property_types.isActive as STATUS",
             //"users.name as CREATED BY",
             //"property_types.createdBy as CREATED BY ID",
             //"property_types.createdAt as DATE CREATED"
@@ -419,8 +419,9 @@ const propertyTypeController = {
 
         if (data[0].A == "Ã¯Â»Â¿PROPERTY_TYPE_CODE" || data[0].A == "PROPERTY_TYPE_CODE" &&
           data[0].B == "PROPERTY_TYPE" &&
-          data[0].C == "DESCRIPTION" &&
-          data[0].D == "STATUS"
+          data[0].C == "DESCRIPTION" 
+          //&&
+          //data[0].D == "STATUS"
         ) {
 
           if (data.length > 0) {
@@ -432,8 +433,7 @@ const propertyTypeController = {
               if (i > 1) {
 
                 let checkExist = await knex('property_types').select('id')
-                  .where({ propertyType: propertyData.B, propertyTypeCode: propertyData.A })
-                  console.log("Check list company: ", checkExist);
+                  .where({ propertyType: propertyData.B, propertyTypeCode: propertyData.A,orgId:req.orgId })
                 if (checkExist.length < 1) {
 
                   let currentTime = new Date().getTime();

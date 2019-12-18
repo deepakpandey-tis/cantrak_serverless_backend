@@ -3,6 +3,7 @@ const _ = require('lodash');
 
 const knex = require('../db/knex');
 const XLSX = require('xlsx');
+const fs = require("fs")
 
 //const trx = knex.transaction();
 
@@ -65,6 +66,7 @@ const partsController = {
                          //knex.raw('SUM(quantity)')
 
                     ])
+                    .where({'part_master.orgId':req.orgId})
                     .orderBy('part_master.createdAt','desc')
                     //.groupBy(['part_master.id','part_ledger.id'])
                     .offset(offset).limit(per_page)
@@ -76,6 +78,7 @@ const partsController = {
                         knex.count('* as count').from("part_master")
                         .innerJoin('part_category_master','part_master.partCategory','part_category_master.id')
                         .where(qb => {
+                            qb.where({ 'part_master.orgId': req.orgId });
                             if (partName) {
                                 qb.where('part_master.partName', 'like', `%${partName}%`)
                             }
@@ -112,6 +115,7 @@ const partsController = {
                     //.groupBy(['part_master.id','part_ledger.id'])
                         //.where(filters)
                         .where(qb => {
+                            qb.where({'part_master.orgId':req.orgId})
                             if (partName) {
                                 qb.where('part_master.partName', 'like', `%${partName}%`)
                             }
@@ -586,104 +590,105 @@ const partsController = {
                 ],
             });
         }
-    },exportPart:async (req,res)=>{
+    },
+    // exportPart:async (req,res)=>{
         
-        try{ 
-            let partData = null;
-            let reqData = req.query;
-            let total, rows
+    //     try{ 
+    //         let partData = null;
+    //         let reqData = req.query;
+    //         let total, rows
 
-            let pagination = {};
-            let per_page = reqData.per_page || 10;
-            let page = reqData.current_page || 1;
-            if (page < 1) page = 1;
-            let offset = (page - 1) * per_page;
-
-
-            let { partName,
-                partCode,
-                partCategory } = req.body;
+    //         let pagination = {};
+    //         let per_page = reqData.per_page || 10;
+    //         let page = reqData.current_page || 1;
+    //         if (page < 1) page = 1;
+    //         let offset = (page - 1) * per_page;
 
 
-            let filters = {}
-
-            if (partName) {
-                filters['part_master.partName'] = partName
-            }
-
-            if (partCode) {
-                filters['part_master.partCode'] = partCode
-            }
-
-            if (partCategory) {
-                filters['part_master.partCategory'] = partCategory
-            }
+    //         let { partName,
+    //             partCode,
+    //             partCategory } = req.body;
 
 
+    //         let filters = {}
 
-            if (_.isEmpty(filters)) {
-                [total, rows] = await Promise.all([
-                    knex.count('* as count').from("part_ledger")
-                    .innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
-                    knex.from('part_ledger').
-                    innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
-                    .select([
-                        'part_master.partName as Name',
-                        'part_master.partCode as ID',
-                        'part_ledger.quantity as Quantity',
-                        'part_ledger.unitCost as Price',
-                        'part_master.partCategory as Category',
-                        'part_master.barcode as Barcode',
-                        'part_ledger.createdAt as Date Added'
+    //         if (partName) {
+    //             filters['part_master.partName'] = partName
+    //         }
 
-                    ])
-                    .offset(offset).limit(per_page)
-                ])
-            } else {
-                //filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
-                try {
-                    [total, rows] = await Promise.all([
-                        knex.count('* as count').from("part_ledger").innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
-                        knex.from('part_ledger').innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
-                        .select([
-                        'part_master.partName as Name',
-                        'part_master.partCode as ID',
-                        'part_ledger.quantity as Quantity',
-                        'part_ledger.unitCost as Price',
-                        'part_master.partCategory as Category',
-                        'part_master.barcode as Barcode',
-                        'part_ledger.createdAt as Date Added'
+    //         if (partCode) {
+    //             filters['part_master.partCode'] = partCode
+    //         }
 
-                    ])
-                        .where(filters).offset(offset).limit(per_page)
-                    ])
-                } catch (e) {
-                    // Error
-                }
-            }
+    //         if (partCategory) {
+    //             filters['part_master.partCategory'] = partCategory
+    //         }
+
+
+
+    //         if (_.isEmpty(filters)) {
+    //             [total, rows] = await Promise.all([
+    //                 knex.count('* as count').from("part_ledger")
+    //                 .innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
+    //                 knex.from('part_ledger').
+    //                 innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
+    //                 .select([
+    //                     'part_master.partName as Name',
+    //                     'part_master.partCode as ID',
+    //                     'part_ledger.quantity as Quantity',
+    //                     'part_ledger.unitCost as Price',
+    //                     'part_master.partCategory as Category',
+    //                     'part_master.barcode as Barcode',
+    //                     'part_ledger.createdAt as Date Added'
+
+    //                 ])
+    //                 .offset(offset).limit(per_page)
+    //             ])
+    //         } else {
+    //             //filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
+    //             try {
+    //                 [total, rows] = await Promise.all([
+    //                     knex.count('* as count').from("part_ledger").innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
+    //                     knex.from('part_ledger').innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
+    //                     .select([
+    //                     'part_master.partName as Name',
+    //                     'part_master.partCode as ID',
+    //                     'part_ledger.quantity as Quantity',
+    //                     'part_ledger.unitCost as Price',
+    //                     'part_master.partCategory as Category',
+    //                     'part_master.barcode as Barcode',
+    //                     'part_ledger.createdAt as Date Added'
+
+    //                 ])
+    //                     .where(filters).offset(offset).limit(per_page)
+    //                 ])
+    //             } catch (e) {
+    //                 // Error
+    //             }
+    //         }
 
     
-            var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
-            var ws = XLSX.utils.json_to_sheet(rows);
-            XLSX.utils.book_append_sheet(wb, ws, "pres");
-            XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
-            let filename = "uploads/Parts-"+Date.now()+".csv";
-            let  check = XLSX.writeFile(wb,filename);
+    //         var wb = XLSX.utils.book_new({sheet:"Sheet JS"});
+    //         var ws = XLSX.utils.json_to_sheet(rows);
+    //         XLSX.utils.book_append_sheet(wb, ws, "pres");
+    //         XLSX.write(wb, {bookType:"csv", bookSST:true, type: 'base64'})
+    //         let filename = "uploads/Parts-"+Date.now()+".csv";
+    //         let  check = XLSX.writeFile(wb,filename);
             
-                return res.status(200).json({
-                    data:rows,
-                    message:"Parts Data Export Successfully!"
-                })
+    //             return res.status(200).json({
+    //                 data:rows,
+    //                 message:"Parts Data Export Successfully!"
+    //             })
                 
             
-         } catch(err){
-             return res.status(500).json({
-                errors: [
-                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
-                ],
-             })
-         }   
-    },
+    //      } catch(err){
+    //          return res.status(500).json({
+    //             errors: [
+    //                 { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+    //             ],
+    //          })
+    //      }   
+    // },
     // Part List for DropDown
     partList : async (req,res)=>{
 
@@ -1069,7 +1074,220 @@ const partsController = {
                 ],
             })
         }
+    },
+    importPartData: async (req, res) => {
+//req.setTimeout(900000);
+    try {
+      if (req.file) {
+        console.log(req.file)
+        let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+          tempraryDirectory = 'tmp/';
+        } else {
+          tempraryDirectory = '/tmp/';
+        }
+        let resultData = null;
+        let file_path = tempraryDirectory + req.file.filename;
+        let wb = XLSX.readFile(file_path, { type: 'string' });
+        let ws = wb.Sheets[wb.SheetNames[0]];
+        let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
+        //data         = JSON.stringify(data);
+        console.log("+++++++++++++", data, "=========")
+        let totalData = data.length - 1;
+        let fail = 0;
+        let success = 0;
+        let result = null;
+
+        if (data[0].A == "Ã¯Â»Â¿PART_CODE" || data[0].A == "PART_CODE" &&
+          data[0].B == "PART_NAME" &&
+          data[0].C == "UNIT_OF_MEASURE" &&
+        //   data[0].D == "MODEL_CODE" &&
+          data[0].D == "PART_CATEGORY_CODE" &&
+          data[0].E == "PART_CATEGORY_NAME"
+          // data[0].G == "CONTACT_PERSON" &&
+          // data[0].H == "STATUS"
+        ) {
+
+          if (data.length > 0) {
+
+            let i = 0;
+            for (let partData of data) {
+              i++;
+
+              if (i > 1) {
+                //let currentTime = new Date().getTime()
+                // let checkExist = await knex('asset_master').select('companyName')
+                //   .where({ companyName: partData.B, orgId: req.orgId })
+                //   console.log("Check list company: ", checkExist);
+                //if (checkExist.length < 1) {
+
+                  // Check if this asset category exists
+                  // if not create new and put that id
+                  let partCategoryId = ''
+                  const cat = await knex('part_category_master').where({categoryName:partData.E,orgId:req.orgId}).select('id')
+                  if(cat && cat.length) {
+                    partCategoryId = cat[0].id;
+                  } else {
+                    const catResult = await knex("part_category_master")
+                      .insert({
+                        categoryName: partData.E,
+                        partCategoryCode: partData.D,
+                        orgId: req.orgId
+                      })
+                      .returning(["id"]);
+                    partCategoryId = catResult[0].id;
+                  }
+
+                  let currentTime = new Date().getTime();
+                  let insertData = {
+                    orgId: req.orgId,
+                    partCode: partData.A,
+                    partName: partData.B,
+                    unitOfMeasure: partData.C,
+                    partCategory:partCategoryId,
+                    isActive: true,
+                    createdAt: currentTime,
+                    updatedAt: currentTime
+                  }
+
+                  resultData = await knex.insert(insertData).returning(['*']).into('part_master');
+
+                  if (resultData && resultData.length) {
+                    success++;
+                  }
+                // } else {
+                //   fail++;
+                // }
+              }
+            }
+            let message = null;
+            if (totalData == success) {
+              message = "system has processed ( " + totalData + " ) entries and added them successfully!";
+            } else {
+              message = "system has processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added";
+            }
+            let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
+            return res.status(200).json({
+              message: message,
+            });
+          }
+
+        } else {
+
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+            ]
+          });
+        }
+      } else {
+
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
+
+      }
+
+    } catch (err) {
+      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
     }
+  },
+  exportPartData: async(req,res) => {
+      try {
+        const parts = await knex("part_master")
+          .innerJoin(
+            "part_category_master",
+            "part_master.partCategory",
+            "part_category_master.id"
+          )
+          .select([
+            "part_master.partCode as PART_CODE",
+            "part_master.partName as PART_NAME",
+            "part_master.unitOfMeasure as UNIT_OF_MEASURE",
+            "part_category_master.partCategoryCode as PART_CATEGORY_CODE",
+            "part_category_master.categoryName as PART_CATEGORY_NAME"
+          ]).where({'part_master.orgId':req.orgId});
+
+
+
+
+
+
+
+
+      let tempraryDirectory = null;
+      let bucketName = null;
+      if (process.env.IS_OFFLINE) {
+        bucketName = "sls-app-resources-bucket";
+        tempraryDirectory = "tmp/";
+      } else {
+        tempraryDirectory = "/tmp/";
+        bucketName = process.env.S3_BUCKET_NAME;
+      }
+
+      var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
+      var ws = XLSX.utils.json_to_sheet(parts);
+      XLSX.utils.book_append_sheet(wb, ws, "pres");
+      XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
+      let filename = "PartData-" + Date.now() + ".csv";
+      let filepath = tempraryDirectory + filename;
+      let check = XLSX.writeFile(wb, filepath);
+      const AWS = require("aws-sdk");
+      fs.readFile(filepath, function(err, file_buffer) {
+        var s3 = new AWS.S3();
+        var params = {
+          Bucket: bucketName,
+          Key: "Export/Part/" + filename,
+          Body: file_buffer,
+          ACL: "public-read"
+        };
+        s3.putObject(params, function(err, data) {
+          if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            //next(err);
+            res.status(500).json({
+              errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+          } else {
+            console.log("File uploaded Successfully");
+
+            //next(null, filePath);
+            fs.unlink(filepath, err => {
+              console.log("File Deleting Error " + err);
+            });
+            let url =
+              "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Part/" +
+              filename;
+
+            return res.status(200).json({
+              data: {
+                parts: parts
+              },
+              message: "Part Data Export Successfully!",
+              url: url
+            });
+          }
+        });
+      });
+
+
+
+
+      } catch(err) {
+
+            console.log(err);
+            res.status(500).json({
+            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+
+      }
+  }
  }
 
 module.exports = partsController;
