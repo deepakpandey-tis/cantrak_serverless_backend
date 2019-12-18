@@ -27,11 +27,11 @@ const companyController = {
         const schema = Joi.object().keys({
           companyName: Joi.string().required(),
           companyId: Joi.string().required(),
-          descriptionEng: Joi.string().required(),
-          description1: Joi.string().required(),
-          contactPerson: Joi.string().required(),
-          companyAddressEng: Joi.string().required(),
-          companyAddressThai: Joi.string().required(),
+          descriptionEng: Joi.string().allow('').optional(),
+          description1: Joi.string().allow('').optional(),
+          contactPerson: Joi.string().allow('').optional(),
+          companyAddressEng: Joi.string().allow('').optional(),
+          companyAddressThai: Joi.string().allow('').optional(),
           logoFile: Joi.string().allow('').optional(),
           taxId: Joi.string().allow('').optional(),
         });
@@ -311,7 +311,7 @@ const companyController = {
             "companies.companyAddressThai as ALTERNATE_ADDRESS",
             "companies.taxId as TAX_ID",
             "companies.contactPerson as CONTACT_PERSON",
-            "companies.isActive as STATUS",
+            // "companies.isActive as STATUS",
             //"companies.telephone as CONTACT_NUMBER",
             //"users.name as CREATED BY",
             //"companies.createdBy as CREATED BY ID",
@@ -427,8 +427,9 @@ const companyController = {
           data[0].D == "ADDRESS" &&
           data[0].E == "ALTERNATE_ADDRESS" &&
           data[0].F == "TAX_ID" &&
-          data[0].G == "CONTACT_PERSON" &&
-          data[0].H == "STATUS"
+          data[0].G == "CONTACT_PERSON" 
+          //&&
+          // data[0].H == "STATUS"
         ) {
 
           if (data.length > 0) {
