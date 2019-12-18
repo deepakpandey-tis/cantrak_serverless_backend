@@ -51,13 +51,13 @@ router.get(
   resourceAccessMiddleware.isPartAccessible,
   partsController.searchParts
 );
-router.post(
-  "/export-part",
-  authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPartAccessible,
-  partsController.exportPart
-);
+// router.post(
+//   "/export-part",
+//   authMiddleware.isAuthenticated,
+//   roleMiddleware.parseUserPermission,
+//   resourceAccessMiddleware.isPartAccessible,
+//   partsController.exportPart
+// );
 router.get(
   "/part-list",
   authMiddleware.isAuthenticated,
@@ -119,4 +119,48 @@ router.post(
   resourceAccessMiddleware.isPartAccessible,
   partsController.deletePart
 );
+
+
+
+
+/**IMPORT COMPANY DATA */
+const path       = require('path');
+let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+           tempraryDirectory = 'tmp/';
+         } else {
+           tempraryDirectory = '/tmp/';  
+         }
+var multer  = require('multer');
+var storage = multer.diskStorage({
+	destination: tempraryDirectory,
+	filename: function ( req, file, cb ) {
+        let ext =  path.extname(file.originalname)
+        if(ext=='.csv'){
+        time = Date.now();
+        cb( null, 'partData-'+time+ext);
+        }else{
+            return false
+        }
+	}
+});
+var upload = multer( { storage: storage } );
+
+router.post(
+  "/import-part-data",
+  upload.single("file"),
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPartAccessible,
+  partsController.importPartData
+);
+
+router.get(
+  "/export-part-data",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPartAccessible,
+  partsController.exportPartData
+);
+
 module.exports = router;
