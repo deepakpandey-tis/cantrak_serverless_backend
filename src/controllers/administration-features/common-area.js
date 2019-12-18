@@ -9,8 +9,8 @@ const knex = require("../../db/knex");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
-const fs    = require('fs');
-const path  = require('path');
+const fs = require('fs');
+const path = require('path');
 //const trx = knex.transaction();
 
 const commonAreaController = {
@@ -242,32 +242,32 @@ const commonAreaController = {
           knex
             .count("* as count")
             .from("common_area")
-            .innerJoin(
+            .leftJoin(
               "floor_and_zones",
               "common_area.floorZoneId",
               "floor_and_zones.id"
             )
-            .innerJoin(
+            .leftJoin(
               "buildings_and_phases",
               "common_area.buildingPhaseId",
               "buildings_and_phases.id"
             )
-            .innerJoin("projects", "common_area.projectId", "projects.id")
+            .leftJoin("projects", "common_area.projectId", "projects.id")
             .offset(offset)
             .limit(per_page)
             .where({ "common_area.companyId": companyId, "common_area.orgId": orgId }),
           knex("common_area")
-            .innerJoin(
+            .leftJoin(
               "floor_and_zones",
               "common_area.floorZoneId",
               "floor_and_zones.id"
             )
-            .innerJoin(
+            .leftJoin(
               "buildings_and_phases",
               "common_area.buildingPhaseId",
               "buildings_and_phases.id"
             )
-            .innerJoin("projects", "common_area.projectId", "projects.id")
+            .leftJoin("projects", "common_area.projectId", "projects.id")
             .select([
               "common_area.id as id",
               "common_area.commonAreaCode as Common Area",
@@ -287,30 +287,30 @@ const commonAreaController = {
           knex
             .count("* as count")
             .from("common_area")
-            .innerJoin(
+            .leftJoin(
               "floor_and_zones",
               "common_area.floorZoneId",
               "floor_and_zones.id"
             )
-            .innerJoin(
+            .leftJoin(
               "buildings_and_phases",
               "common_area.buildingPhaseId",
               "buildings_and_phases.id"
             )
-            .innerJoin("projects", "common_area.projectId", "projects.id")
+            .leftJoin("projects", "common_area.projectId", "projects.id")
             .where({ "common_area.orgId": orgId }),
           knex("common_area")
-            .innerJoin(
+            .leftJoin(
               "floor_and_zones",
               "common_area.floorZoneId",
               "floor_and_zones.id"
             )
-            .innerJoin(
+            .leftJoin(
               "buildings_and_phases",
               "common_area.buildingPhaseId",
               "buildings_and_phases.id"
             )
-            .innerJoin("projects", "common_area.projectId", "projects.id")
+            .leftJoin("projects", "common_area.projectId", "projects.id")
             .where({ "common_area.orgId": orgId })
             .select([
               "common_area.id as id",
@@ -446,7 +446,7 @@ const commonAreaController = {
     try {
       let viewCommonPayload = null;
       let orgId = req.orgId;
-      
+
 
       await knex.transaction(async trx => {
         let viewcommonAreaPayload = req.body;
@@ -551,16 +551,16 @@ const commonAreaController = {
     try {
       let reqData = req.query;
       let rows = null;
-      let companyId  = req.query.companyId;
-      let orgId      = req.orgId;
-      
+      let companyId = req.query.companyId;
+      let orgId = req.orgId;
+
       if (companyId) {
         [rows] = await Promise.all([
           knex("common_area")
             .leftJoin(
               "floor_and_zones",
               "common_area.floorZoneId",
-              "common_area.id"
+              "floor_and_zones.id"
             )
             .leftJoin(
               "buildings_and_phases",
@@ -573,24 +573,17 @@ const commonAreaController = {
               "common_area.companyId",
               "companies.id"
             )
+            .leftJoin("property_types", "common_area.propertyTypeId", "property_types.id")
             .select([
-              "common_area.orgId as ORGANIZATION_ID",
-              "common_area.companyId as COMPANY",
-              "companies.companyName as COMPANY NAME",
-              "common_area.projectId as PROJECT",
-              "projects.projectName as PROJECT NAME",
-              "common_area.propertyTypeId as PROPERTY_TYPE_CODE",
-              "common_area.buildingPhaseId as BUILDING_PHASE_CODE_ID",
+              "companies.companyId as COMPANY",
+              "projects.project as PROJECT",
+              "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
-              "common_area.floorZoneId as FLOOR_ZONE_CODE_ID",
               "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
-              "common_area.commonAreaCode as COMMON AREA CODE",
+              "common_area.commonAreaCode as COMMON_AREA_CODE",
               "common_area.description as DESCRIPTION",
-              "common_area.isActive as STAUS",
-              "common_area.createdBy as CREATED BY ID",
-              "common_area.createdAt as DATE CREATED"
             ])
-            .where({ "common_area.companyId": companyId,"common_area.orgId": orgId })
+            .where({ "common_area.companyId": companyId, "common_area.orgId": orgId })
         ]);
       } else {
         [rows] = await Promise.all([
@@ -598,7 +591,7 @@ const commonAreaController = {
             .leftJoin(
               "floor_and_zones",
               "common_area.floorZoneId",
-              "common_area.id"
+              "floor_and_zones.id"
             )
             .leftJoin(
               "buildings_and_phases",
@@ -611,74 +604,256 @@ const commonAreaController = {
               "common_area.companyId",
               "companies.id"
             )
-            .where({ "common_area.orgId": orgId })
+            .leftJoin("property_types", "common_area.propertyTypeId", "property_types.id")
             .select([
-              "common_area.orgId as ORGANIZATION_ID",
-              "common_area.companyId as COMPANY",
-              "companies.companyName as COMPANY NAME",
-              "common_area.projectId as PROJECT",
-              "projects.projectName as PROJECT NAME",
-              "common_area.propertyTypeId as PROPERTY_TYPE_CODE",
-              "common_area.buildingPhaseId as BUILDING_PHASE_CODE_ID",
+              "companies.companyId as COMPANY",
+              "projects.project as PROJECT",
+              "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
-              "common_area.floorZoneId as FLOOR_ZONE_CODE_ID",
               "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
-              "common_area.commonAreaCode as COMMON AREA CODE",
+              "common_area.commonAreaCode as COMMON_AREA_CODE",
               "common_area.description as DESCRIPTION",
-              "common_area.isActive as STAUS",
-              "common_area.createdBy as CREATED BY ID",
-              "common_area.createdAt as DATE CREATED"
             ])
+            .where({ "common_area.orgId": orgId })
         ]);
       }
 
       let tempraryDirectory = null;
-     let bucketName        = null;
-     if (process.env.IS_OFFLINE) {
-        bucketName        =  'sls-app-resources-bucket';
+      let bucketName = null;
+      if (process.env.IS_OFFLINE) {
+        bucketName = 'sls-app-resources-bucket';
         tempraryDirectory = 'tmp/';
       } else {
-        tempraryDirectory = '/tmp/';  
-        bucketName        =  process.env.S3_BUCKET_NAME;
+        tempraryDirectory = '/tmp/';
+        bucketName = process.env.S3_BUCKET_NAME;
       }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
       var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename     = "CommonAreaData-" + Date.now() + ".csv";
-      let filepath     = tempraryDirectory+filename;
-      let check        = XLSX.writeFile(wb, filepath);
-      const AWS        = require('aws-sdk');
+      let filename = "CommonAreaData-" + Date.now() + ".csv";
+      let filepath = tempraryDirectory + filename;
+      let check = XLSX.writeFile(wb, filepath);
+      const AWS = require('aws-sdk');
 
-      fs.readFile(filepath, function(err, file_buffer) {
-      var s3 = new AWS.S3();
-      var params = {
-        Bucket: bucketName,
-        Key: "Export/CommonArea/"+filename,
-        Body:file_buffer,
-        ACL: 'public-read'
-      }
-      s3.putObject(params, function(err, data) {
-        if (err) {
+      fs.readFile(filepath, function (err, file_buffer) {
+        var s3 = new AWS.S3();
+        var params = {
+          Bucket: bucketName,
+          Key: "Export/CommonArea/" + filename,
+          Body: file_buffer,
+          ACL: 'public-read'
+        }
+        s3.putObject(params, function (err, data) {
+          if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             //next(err);
-        } else {
+          } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
-        }
-      });
-    })
-    //let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
+          }
+        });
+      })
+      //let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
 
-    let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/CommonArea/"+filename;
+      let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/CommonArea/" + filename;
       res.status(200).json({
         data: rows,
         message: "Common Area Data Export Successfully !",
-        url:url
+        url: url
       });
     } catch (err) {
       console.log("[controllers][commonArea][getcommonArea] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  /**IMPORT COMMON AREA DATA */
+  importCommonAreaData: async (req, res) => {
+
+    try {
+      if (req.file) {
+        console.log(req.file);
+        let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+          tempraryDirectory = "tmp/";
+        } else {
+          tempraryDirectory = "/tmp/";
+        }
+        let resultData = null;
+        let file_path = tempraryDirectory + req.file.filename;
+        let wb = XLSX.readFile(file_path, { type: "binary" });
+        let ws = wb.Sheets[wb.SheetNames[0]];
+        let data = XLSX.utils.sheet_to_json(ws, {
+          type: "string",
+          header: "A",
+          raw: false
+        });
+        //data         = JSON.stringify(data);
+        console.log("data============", data, "Data===========")
+        let result = null;
+        //console.log('DATA: ',data)
+        let totalData = data.length - 1;
+        let fail = 0;
+        let success = 0;
+        if (
+          data[0].A == "Ã¯Â»Â¿COMPANY" || data[0].A == "COMPANY" &&
+          data[0].B == "PROJECT" &&
+          data[0].C == "PROPERTY_TYPE_CODE" &&
+          data[0].D == "BUILDING_PHASE_CODE" &&
+          data[0].E == "FLOOR_ZONE_CODE" &&
+          data[0].F == "COMMON_AREA_CODE" &&
+          data[0].G == "DESCRIPTION"
+        ) {
+          if (data.length > 0) {
+            let i = 0;
+            console.log('Data[0]', data[0])
+            for (let commonData of data) {
+              // Find Company primary key
+              let companyId = null;
+              let projectId = null;
+              let propertyTypeId = null;
+              let buildingPhaseId = null;
+              let floorZoneId = null;
+
+
+              let companyIdResult = await knex('companies').select('id').where({ companyId: commonData.A, orgId: req.orgId })
+
+              let projectIdResult = await knex("projects")
+                .select("id")
+                .where({ project: commonData.B, orgId: req.orgId });
+
+              let propertyTypeIdResult = await knex("property_types")
+                .select("id")
+                .where({ propertyTypeCode: commonData.C, orgId: req.orgId });
+
+              let buildingResult = await knex("buildings_and_phases")
+                .select("id")
+                .where({ buildingPhaseCode: commonData.D, orgId: req.orgId });
+
+              let floorResult = await knex("floor_and_zones")
+                .select("id")
+                .where({ floorZoneCode: commonData.E, orgId: req.orgId });
+
+              if (propertyTypeIdResult && propertyTypeIdResult.length) {
+                propertyTypeId = propertyTypeIdResult[0].id;
+              }
+              if (!propertyTypeId) {
+                fail++;
+                console.log("breaking due to Property type id: ", propertyTypeId);
+                continue;
+              }
+
+              if (companyIdResult && companyIdResult.length) {
+                companyId = companyIdResult[0].id;
+              }
+              if (!companyId) {
+                fail++;
+                console.log('breaking due to Company Id: ', companyId)
+                continue;
+
+              }
+              if (projectIdResult && projectIdResult.length) {
+                projectId = projectIdResult[0].id;
+              }
+              if (!projectId) {
+                fail++;
+                console.log("breaking due to Project Id: ", projectId);
+                continue;
+              }
+              if (buildingResult && buildingResult.length) {
+                buildingPhaseId = buildingResult[0].id;
+              }
+              if (!buildingPhaseId) {
+                fail++;
+                console.log("breaking due to building phase id: ", buildingPhaseId);
+                continue;
+              }
+              if (floorResult && floorResult.length) {
+                floorZoneId = floorResult[0].id;
+              }
+              if (!floorZoneId) {
+                fail++;
+                console.log("breaking due to Floor zone id: ", floorZoneId);
+                continue;
+              }
+
+              i++;
+
+              if (i > 1) {
+                let currentTime = new Date().getTime()
+                let checkExist = await knex("common_area")
+                  .select("commonAreaCode")
+                  .where({
+                    companyId: companyId,
+                    projectId: projectId,
+                    propertyTypeId: propertyTypeId,
+                    buildingPhaseId: buildingPhaseId,
+                    floorZoneId: floorZoneId,
+                    commonAreaCode: commonData.F,
+                    orgId: req.orgId
+                  });
+                if (checkExist.length < 1) {
+                  let insertData = {
+                    orgId: req.orgId,
+                    companyId: companyId,
+                    projectId: projectId,
+                    propertyTypeId: propertyTypeId,
+                    buildingPhaseId: buildingPhaseId,
+                    floorZoneId: floorZoneId,
+                    commonAreaCode: commonData.F,
+                    description: commonData.G,
+                    createdAt: currentTime,
+                    updatedAt: currentTime
+                  };
+
+                  resultData = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .into("common_area");
+                  if (resultData && resultData.length) {
+                    success++;
+                  }
+
+                } else {
+                  fail++;
+                }
+              }
+            }
+
+            let message = null;
+            if (totalData == success) {
+              message = "System have processed ( " + totalData + " ) entries and added them successfully!";
+            } else {
+              message = "System have processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
+            }
+            let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
+            return res.status(200).json({
+              message: message,
+            });
+          }
+        } else {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+            ]
+          });
+        }
+      } else {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
+      }
+    } catch (err) {
+      console.log(
+        "[controllers][propertysetup][importCompanyData] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]

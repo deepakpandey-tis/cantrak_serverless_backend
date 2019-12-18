@@ -308,7 +308,7 @@ const propertyUnitController = {
             .first(),
           knex
             .from("property_units")
-            .innerJoin("companies", "property_units.companyId", "companies.id")
+            .leftJoin("companies", "property_units.companyId", "companies.id")
             .select([
               "property_units.id as id",
               "property_units.unitNumber as Unit No",
@@ -367,6 +367,11 @@ const propertyUnitController = {
             .leftJoin("companies", "property_units.companyId", "companies.id")
             .leftJoin("projects", "property_units.projectId", "projects.id")
             .leftJoin(
+              "property_types",
+              "property_units.propertyTypeId",
+              "property_types.id"
+            )
+            .leftJoin(
               "buildings_and_phases",
               "property_units.buildingPhaseId",
               "buildings_and_phases.id"
@@ -378,23 +383,23 @@ const propertyUnitController = {
             )
             .leftJoin("users", "property_units.createdBy", "users.id")
             .select([
-              "property_units.orgId as ORGANIZATION_ID",
-              "property_units.companyId as COMPANY",
+              // "property_units.orgId as ORGANIZATION_ID",
+              "companies.companyId as COMPANY",
               "companies.companyName as COMPANY NAME",
-              "property_units.projectId as PROJECT",
+              "projects.project as PROJECT",
               "projects.projectName as PROJECT NAME",
-              "property_units.propertyTypeId as PROPERTY_TYPE_CODE",
+              "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
               // "property_units.buildingPhaseId as BUILDING_PHASE_CODE ID",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
               // "property_units.floorZoneId as FLOOR_ZONE_CODE ID",
               "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
               "property_units.unitNumber as UNIT_NUMBER",
               "property_units.description as DESCRIPTION",
-              "property_units.area as ACTUAL SALE AREA",
-              "property_units.isActive as STAUS",
-              "users.name as CREATED BY",
-              "property_units.createdBy as CREATED BY ID",
-              "property_units.createdAt as DATE CREATED"
+              "property_units.area as ACTUAL SALE AREA"
+              // "property_units.isActive as STAUS",
+              // "users.name as CREATED BY",
+              // "property_units.createdBy as CREATED BY ID",
+              // "property_units.createdAt as DATE CREATED"
             ])
             .where({ "property_units.orgId": orgId })
         ]);
@@ -421,23 +426,25 @@ const propertyUnitController = {
             )
             .leftJoin("users", "property_units.createdBy", "users.id")
             .select([
-              "property_units.orgId as ORGANIZATION_ID",
-              "property_units.companyId as COMPANY",
+              // "property_units.orgId as ORGANIZATION_ID",
+              "companies.companyId as COMPANY",
               "companies.companyName as COMPANY NAME",
-              "property_units.projectId as PROJECT",
+              "projects.project as PROJECT",
               "projects.projectName as PROJECT NAME",
+              // "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
               "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
+
               // "property_units.buildingPhaseId as BUILDING_PHASE_CODE ID",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
               // "property_units.floorZoneId as FLOOR_ZONE_CODE ID",
               "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
               "property_units.unitNumber as UNIT_NUMBER",
               "property_units.description as DESCRIPTION",
-              "property_units.area as ACTUAL SALE AREA",
-              "property_units.isActive as STATUS",
-              "users.name as CREATED BY",
-              "property_units.createdBy as CREATED BY ID",
-              "property_units.createdAt as DATE CREATED"
+              "property_units.area as ACTUAL SALE AREA"
+              // "property_units.isActive as STATUS",
+              // "users.name as CREATED BY",
+              // "property_units.createdBy as CREATED BY ID",
+              // "property_units.createdAt as DATE CREATED"
             ])
             .where({
               "property_units.companyId": companyId,
@@ -661,126 +668,133 @@ const propertyUnitController = {
         //console.log('DATA: ',data)
 
         if (
-          data[0].A == "ORGANIZATION_ID" ||
-          (data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" &&
-            data[0].B == "COMPANY" &&
-            data[0].C == "COMPANY NAME" &&
-            data[0].D == "PROJECT" &&
-            data[0].E == "PROJECT NAME" &&
-            data[0].F == "PROPERTY_TYPE_CODE" &&
+          data[0].A == "Ã¯Â»Â¿COMPANY" ||
+          //data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" &&
+          (data[0].A == "COMPANY" &&
+            data[0].B == "COMPANY NAME" &&
+            data[0].C == "PROJECT" &&
+            data[0].D == "PROJECT NAME" &&
+            data[0].E == "PROPERTY_TYPE_CODE" &&
             // data[0].G == "BUILDING_PHASE_CODE ID" &&
-            data[0].G == "BUILDING_PHASE_CODE" &&
+            data[0].F == "BUILDING_PHASE_CODE" &&
             // data[0].I == "FLOOR_ZONE_CODE ID" &&
-            data[0].H == "FLOOR_ZONE_CODE" &&
-            data[0].I == "UNIT_NUMBER" &&
-            data[0].J == "DESCRIPTION" &&
-            data[0].K == "ACTUAL SALE AREA" &&
-            data[0].L == "STATUS" &&
-            data[0].M == "CREATED BY" &&
-            data[0].N == "CREATED BY ID" &&
-            data[0].O == "DATE CREATED")
+            data[0].G == "FLOOR_ZONE_CODE" &&
+            data[0].H == "UNIT_NUMBER" &&
+            data[0].I == "DESCRIPTION" &&
+            data[0].J == "ACTUAL SALE AREA")
+          // &&
+          // data[0].L == "STATUS" &&
+          // data[0].M == "CREATED BY" &&
+          // data[0].N == "CREATED BY ID" &&
+          // data[0].O == "DATE CREATED"
         ) {
           if (data.length > 0) {
             let i = 0;
             console.log("Data[0]", data[0]);
             for (let propertyUnitData of data) {
               // Query from different tables and get data
-             let companyId = null;
-             let projectId = null;
-             let propertyTypeId = null;
-             let buildingPhaseId = null
-             let floorZoneId = null
-              console.log({propertyUnitData})
+              let companyId = null;
+              let projectId = null;
+              let propertyTypeId = null;
+              let buildingPhaseId = null;
+              let floorZoneId = null;
+              console.log({ propertyUnitData });
               let buildingPhaseIdResult = await knex("buildings_and_phases")
                 .select("id")
-                .where({ buildingPhaseCode: propertyUnitData.G });
+                .where({
+                  buildingPhaseCode: propertyUnitData.F,
+                  orgId: req.orgId
+                });
               let floorZoneIdResult = await knex("floor_and_zones")
-                   .select("id")
-                   .where({ floorZoneCode: propertyUnitData.H });
+                .select("id")
+                .where({ floorZoneCode: propertyUnitData.G, orgId: req.orgId });
 
-             let companyIdResult = await knex("companies")
-               .select("id")
-               .where({ companyId: propertyUnitData.B });
-             let projectIdResult = await knex("projects")
-               .select("id")
-               .where({ project: propertyUnitData.D });
-             let propertyTypeIdResult = await knex("property_types")
-               .select("id")
-               .where({ propertyTypeCode: propertyUnitData.F });
+              let companyIdResult = await knex("companies")
+                .select("id")
+                .where({ companyId: propertyUnitData.A });
+              let projectIdResult = await knex("projects")
+                .select("id")
+                .where({ project: propertyUnitData.C, orgId: req.orgId });
+              let propertyTypeIdResult = await knex("property_types")
+                .select("id")
+                .where({
+                  propertyTypeCode: propertyUnitData.E,
+                  orgId: req.orgId
+                });
 
-              console.log({buildingPhaseIdResult,floorZoneIdResult})
-            if (
-              buildingPhaseIdResult &&
-              buildingPhaseIdResult.length
-            ) {
-              buildingPhaseId = buildingPhaseIdResult[0].id;
-            }
+              console.log({ buildingPhaseIdResult, floorZoneIdResult });
+              if (buildingPhaseIdResult && buildingPhaseIdResult.length) {
+                buildingPhaseId = buildingPhaseIdResult[0].id;
+              }
               if (floorZoneIdResult && floorZoneIdResult.length) {
                 floorZoneId = floorZoneIdResult[0].id;
               }
 
-             if (propertyTypeIdResult && propertyTypeIdResult.length) {
-               propertyTypeId = propertyTypeIdResult[0].id;
-             }
-             if (companyIdResult && companyIdResult.length) {
-               companyId = companyIdResult[0].id;
-             }
-             if (projectIdResult && projectIdResult.length) {
-               projectId = projectIdResult[0].id;
-             }
+              if (propertyTypeIdResult && propertyTypeIdResult.length) {
+                propertyTypeId = propertyTypeIdResult[0].id;
+              }
+              if (companyIdResult && companyIdResult.length) {
+                companyId = companyIdResult[0].id;
+              }
+              if (projectIdResult && projectIdResult.length) {
+                projectId = projectIdResult[0].id;
+              }
 
-             console.log({propertyTypeId,buildingPhaseId,floorZoneId,companyId,projectId})
+              console.log('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',{
+                propertyTypeId,
+                buildingPhaseId,
+                floorZoneId,
+                companyId,
+                projectId
+              });
 
-             if (!propertyTypeId) {
-               continue;
-             }
-             if (!buildingPhaseId) {
-               continue;
-             }
-             if (!floorZoneId) {
-               continue;
-             }
+              if (!propertyTypeId) {
+                continue;
+              }
+              if (!buildingPhaseId) {
+                continue;
+              }
+              if (!floorZoneId) {
+                continue;
+              }
 
-             if (!companyId) {
-               continue;
-             }
-             if (!projectId) {
-               continue;
-             }
-
-
-
+              if (!companyId) {
+                continue;
+              }
+              if (!projectId) {
+                continue;
+              }
 
               //i++;
               //if (i > 1) {
-                // let checkExist = await knex("property_units")
-                //   .select("whtCode")
-                //   .where({
-                //     whtCode: propertyUnitData.B,
-                //     orgId: propertyUnitData.A
-                //   });
-                // if (checkExist.length < 1) {
-                  let insertData = {
-                    orgId: propertyUnitData.A,
-                    companyId,
-                    projectId,
-                    propertyTypeId,
-                    buildingPhaseId,
-                    floorZoneId,
-                    area: propertyUnitData.K,
-                    unitNumber: propertyUnitData.I,
-                    description: propertyUnitData.J,
-                    isActive: propertyUnitData.L,
-                    createdBy: propertyUnitData.N,
-                    createdAt: propertyUnitData.O,
-                    updatedAt: propertyUnitData.O
-                  };
+              // let checkExist = await knex("property_units")
+              //   .select("whtCode")
+              //   .where({
+              //     whtCode: propertyUnitData.B,
+              //     orgId: propertyUnitData.A
+              //   });
+              // if (checkExist.length < 1) {
+              let insertData = {
+                orgId: req.orgId,
+                companyId,
+                projectId,
+                propertyTypeId,
+                buildingPhaseId,
+                floorZoneId,
+                area: propertyUnitData.J,
+                unitNumber: propertyUnitData.H,
+                description: propertyUnitData.I,
+                isActive: true,
+                createdBy: req.me.id,
+                createdAt: new Date().getTime(),
+                updatedAt: new Date().getTime()
+              };
 
-                  resultData = await knex
-                    .insert(insertData)
-                    .returning(["*"])
-                    .into("property_units");
-                // }
+              resultData = await knex
+                .insert(insertData)
+                .returning(["*"])
+                .into("property_units");
+              // }
               // }
             }
 

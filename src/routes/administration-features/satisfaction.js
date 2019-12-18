@@ -16,6 +16,29 @@ router.post('/delete-satisfaction', authMiddleware.isAuthenticated,  satisfactio
 router.get('/export-satisfaction', authMiddleware.isAuthenticated,  satisfactionController.exportSatisfaction);
 router.post('/satisfaction-details', authMiddleware.isAuthenticated,  satisfactionController.satisfactionDetails);
 
+/**IMPORT STATUS DATA */
+const path       = require('path');
+let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+           tempraryDirectory = 'tmp/';
+         } else {
+           tempraryDirectory = '/tmp/';  
+         }
+var multer  = require('multer');
+var storage = multer.diskStorage({
+	destination: tempraryDirectory,
+	filename: function ( req, file, cb ) {
+        let ext =  path.extname(file.originalname)
+        if(ext=='.csv'){
+        time = Date.now();
+        cb( null, 'SatisfactionData-'+time+ext);
+        }else{
+            return false
+        }
+	}
+});
+var upload = multer( { storage: storage } );
+router.post('/import-satisfaction-data',upload.single('file'), authMiddleware.isAuthenticated, satisfactionController.importSatisfactionData)
 
 
 module.exports = router;

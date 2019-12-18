@@ -6,7 +6,6 @@ const commonAreaController = require('../../controllers/administration-features/
 const authMiddleware = require('../../middlewares/auth');
 const roleMiddleware = require('../../middlewares/role');
 
-
 /* GET users listing. */
 
 router.post(
@@ -46,6 +45,36 @@ router.get(
   roleMiddleware.parseUserPermission,
   commonAreaController.exportCommonArea
 );
+
+/**IMPORT COMMON AREA DATA */
+const path   = require('path');
+let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+           tempraryDirectory = 'tmp/';
+         } else {
+           tempraryDirectory = '/tmp/';  
+         }
+var multer  = require('multer');
+var storage = multer.diskStorage({
+	destination: tempraryDirectory,
+	filename: function ( req, file, cb ) {
+        let ext =  path.extname(file.originalname)
+        if(ext=='.csv'){
+        time = Date.now();
+        cb( null, 'CommonAreaData-'+time+ext);
+        }else{
+            return false
+        }
+	}
+});
+var upload = multer( { storage: storage } );
+router.post(
+  "/import-common-area-data",
+  upload.single("file"),
+  authMiddleware.isAuthenticated,
+  commonAreaController.importCommonAreaData
+);
+
 
 
 module.exports = router;

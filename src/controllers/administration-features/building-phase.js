@@ -521,7 +521,7 @@ const buildingPhaseController = {
               "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
               "buildings_and_phases.description as DESCRIPTION",
-              "buildings_and_phases.isActive as STATUS"
+              // "buildings_and_phases.isActive as STATUS"
               // "buildings_and_phases.createdBy as CREATED BY ID",
               // "buildings_and_phases.createdAt as DATE CREATED"
             ])
@@ -552,7 +552,7 @@ const buildingPhaseController = {
               "buildings_and_phases.propertyTypeId as PROPERTY_TYPE_CODE",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
               "buildings_and_phases.description as DESCRIPTION",
-              "buildings_and_phases.isActive as STATUS"
+              // "buildings_and_phases.isActive as STATUS"
               // "buildings_and_phases.createdBy as CREATED BY ID",
               // "buildings_and_phases.createdAt as DATE CREATED"
             ])
@@ -737,11 +737,14 @@ const buildingPhaseController = {
           if (data.length > 0) {
             let i = 0;
             console.log('Data[0]', data[0])
+              let success = 0;
+
             for (let buildingData of data) {
               // Find Company primary key
               let companyId = null;
               let projectId = null;
               let propertyTypeId = null
+              console.log('ORGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGID: ',req.orgId)
 
 
               let companyIdResult = await knex('companies').select('id').where({companyId:buildingData.A,orgId:req.orgId})
@@ -751,33 +754,47 @@ const buildingPhaseController = {
               let propertyTypeIdResult = await knex("property_types")
                 .select("id")
                 .where({ propertyTypeCode: buildingData.E, orgId: req.orgId });
-
+              console.log(
+                "propertyTypeIdResult*****************************************: ",
+                propertyTypeIdResult
+              );
               if (propertyTypeIdResult && propertyTypeIdResult.length) {
                 propertyTypeId = propertyTypeIdResult[0].id;
+
               }
-              if (!propertyTypeId) {
-                console.log("breaking due to: ", propertyTypeId);
-                continue;
-              }
+              
 
               if(companyIdResult && companyIdResult.length){
-                companyId = companyIdResult[0].id;
-              }
-              if(!companyId){
-                console.log('breaking due to: ',companyId)
-                continue;
+              companyId = companyIdResult[0].id;
+
               }
               if (projectIdResult && projectIdResult.length) {
                 projectId = projectIdResult[0].id;
+
+            }
+              if(!companyId){
+                console.log("breaking due to: null companyId");
+                continue;
               }
               if (!projectId) {
-                console.log("breaking due to: ", projectId);
+                console.log("breaking due to: null projectId");
+                continue;
+              }
+              if (!propertyTypeId) {
+                console.log("breaking due to: null propertyTypeId");
                 continue;
               }
 
+              console.log('^&&&&&&&&&&&&&&&&&&&&&&&&&&&& IDS &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&^',companyId,projectId,propertyTypeId)
+
               i++;
 
-              if (i > 1) {
+              const checkExistance = await knex('buildings_and_phases').where({orgId:req.orgId,buildingPhaseCode:buildingData.F})
+              if(checkExistance.length){
+                continue;
+              } 
+
+              //if (i > 1) {
                 let currentTime = new Date().getTime()
                 // let checkExist = await knex("buildings_and_phases")
                 //   .select("buildingPhaseCode")
@@ -786,6 +803,7 @@ const buildingPhaseController = {
                 //     orgId: req.orgId
                 //   });
                 //if (checkExist.length < 1) {
+                  success++;
                   let insertData = {
                     orgId: req.orgId,
                     companyId: companyId,
@@ -803,7 +821,7 @@ const buildingPhaseController = {
                     .insert(insertData)
                     .returning(["*"])
                     .into("buildings_and_phases");
-                }
+                //}
               //}
             }
 
@@ -811,7 +829,7 @@ const buildingPhaseController = {
               console.log("File Deleting Error " + err);
             });
             return res.status(200).json({
-              message: "Buildings Data Import Successfully!"
+              message: success+" rows imported successfully!"
             });
           }
         } else {
