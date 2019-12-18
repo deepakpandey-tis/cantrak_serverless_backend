@@ -634,12 +634,12 @@ const floorZoneController = {
             let message = null;
             if (totalData == success) {
               message =
-                "We have processed ( " +
+                "System has processed ( " +
                 totalData +
                 " ) entries and added them successfully!";
             } else {
               message =
-                "We have processed ( " +
+                "System has processed ( " +
                 totalData +
                 " ) entries out of which only ( " +
                 success +
