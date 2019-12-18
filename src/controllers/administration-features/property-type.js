@@ -203,11 +203,11 @@ const propertyTypeController = {
         knex
           .count("* as count")
           .from("property_types")
-          .innerJoin("users", "property_types.createdBy", "users.id")
+          .leftJoin("users", "property_types.createdBy", "users.id")
           .where({ "property_types.isActive": true, "property_types.orgId": orgId })
           .first(),
         knex("property_types")
-          .innerJoin("users", "property_types.createdBy", "users.id")
+          .leftJoin("users", "property_types.createdBy", "users.id")
           .select([
             "property_types.id",
             "property_types.propertyType as Property Type",
@@ -255,16 +255,14 @@ const propertyTypeController = {
 
       let reqData = req.query;
       let rows = null;
-
-
       [rows] = await Promise.all([
         knex("property_types")
           .leftJoin("users", "property_types.createdBy", "users.id")
           .select([
             //"property_types.orgId as ORGANIZATION_ID",
             //"property_types.id as ID ",
-            "property_types.propertyType as PROPERTY_TYPE",
             "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
+            "property_types.propertyType as PROPERTY_TYPE",
             "property_types.descriptionEng as DESCRIPTION",
             "property_types.isActive as STATUS",
             //"users.name as CREATED BY",
@@ -309,7 +307,7 @@ const propertyTypeController = {
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
-            let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
+            //let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
             let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/PropertyType/" + filename;
             return res.status(200).json({
               propertyType: rows,
@@ -397,6 +395,106 @@ const propertyTypeController = {
       });
     }
   },
+   /**IMPORT PROPERTY TYPE DATA */
+   importPropertyTypeData: async (req, res) => {
+    try {
+      if (req.file) {
+        console.log(req.file)
+        let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+          tempraryDirectory = 'tmp/';
+        } else {
+          tempraryDirectory = '/tmp/';
+        }
+        let resultData = null;
+        let file_path = tempraryDirectory + req.file.filename;
+        let wb = XLSX.readFile(file_path, { type: 'binary' });
+        let ws = wb.Sheets[wb.SheetNames[0]];
+        let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
+        console.log("+++++++++++++", data, "=========")
+        let totalData = data.length - 1;
+        let fail = 0;
+        let success = 0;
+        let result = null;
+
+        if (data[0].A == "Ã¯Â»Â¿PROPERTY_TYPE_CODE" || data[0].A == "PROPERTY_TYPE_CODE" &&
+          data[0].B == "PROPERTY_TYPE" &&
+          data[0].C == "DESCRIPTION" &&
+          data[0].D == "STATUS"
+        ) {
+
+          if (data.length > 0) {
+
+            let i = 0;
+            for (let propertyData of data) {
+              i++;
+
+              if (i > 1) {
+
+                let checkExist = await knex('property_types').select('id')
+                  .where({ propertyType: propertyData.B, propertyTypeCode: propertyData.A })
+                  console.log("Check list company: ", checkExist);
+                if (checkExist.length < 1) {
+
+                  let currentTime = new Date().getTime();
+                  let insertData = {
+                    orgId: req.orgId,
+                    propertyTypeCode: propertyData.A,
+                    propertyType: propertyData.B,
+                    descriptionEng: propertyData.C,
+                    isActive: true,
+                    createdAt: currentTime,
+                    updatedAt: currentTime
+                  }
+
+                  resultData = await knex.insert(insertData).returning(['*']).into('property_types');
+
+                  if (resultData && resultData.length) {
+                    success++;
+                  }
+                } else {
+                  fail++;
+                }
+              }
+            }
+            let message = null;
+            if (totalData == success) {
+              message = "System have processed ( " + totalData + " ) entries and added them successfully!";
+            } else {
+              message = "System have processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
+            }
+            let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
+            return res.status(200).json({
+              message: message,
+            });
+          }
+
+        } else {
+
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+            ]
+          });
+        }
+      } else {
+
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
+
+      }
+
+    } catch (err) {
+      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  }
 };
 
 module.exports = propertyTypeController;

@@ -429,29 +429,61 @@ const propertyCategoryController = {
       let orgId = req.orgId;
       const DataResult = await knex("incident_categories")
         .select([
-          "categoryCode as Category",
-          "descriptionEng as Decription Eng",
-          "descriptionThai as Description Thai",
-          "isActive as Status",
-          "createdAt as Date Created"
+          "categoryCode as CATEGORY_CODE",
+          "descriptionEng as DESCRIPTION",
+          "descriptionThai as ALTERNATE_DESCRIPTION",
+          "isActive as STATUS"
         ])
         .where({ orgId: orgId });
 
-    
-
-      var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(DataResult);
-      XLSX.utils.book_append_sheet(wb, ws, "pres");
-      XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename = "uploads/CategoryData-" + Date.now() + ".csv";
-      let check = XLSX.writeFile(wb, filename);
-
-      res.status(200).json({
-        data: {
-          categories: DataResult
-        },
-        message: "Categories list successfully !"
-      });
+        let tempraryDirectory = null;
+        let bucketName = null;
+        if (process.env.IS_OFFLINE) {
+          bucketName = 'sls-app-resources-bucket';
+          tempraryDirectory = 'tmp/';
+        } else {
+          tempraryDirectory = '/tmp/';
+          bucketName = process.env.S3_BUCKET_NAME;
+        }
+        var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
+        var ws = XLSX.utils.json_to_sheet(DataResult);
+        XLSX.utils.book_append_sheet(wb, ws, "pres");
+        XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
+        let filename = "ProblemCategoryData-" + Date.now() + ".csv";
+        let filepath = tempraryDirectory + filename;
+        let check = XLSX.writeFile(wb, filepath);
+        const AWS = require('aws-sdk');
+  
+        fs.readFile(filepath, function (err, file_buffer) {
+          var s3 = new AWS.S3();
+          var params = {
+            Bucket: bucketName,
+            Key: "Export/Problem_Category/" + filename,
+            Body: file_buffer,
+            ACL: 'public-read'
+          }
+          s3.putObject(params, function (err, data) {
+            if (err) {
+              console.log("Error at uploadCSVFileOnS3Bucket function", err);
+              res.status(500).json({
+                errors: [
+                  { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+              });
+              //next(err);
+            } else {
+              console.log("File uploaded Successfully");
+              //next(null, filePath);
+              let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
+              let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Problem_Category/" + filename;
+              res.status(200).json({
+                data: DataResult,
+                message: "Problem category data export successfully!",
+                url: url
+              });
+            }
+          });
+        })
     } catch (err) {
       console.log("[controllers][category][categoryList] :  Error", err);
       //trx.rollback

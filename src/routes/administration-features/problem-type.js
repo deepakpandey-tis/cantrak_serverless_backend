@@ -9,7 +9,7 @@ router.post('/update-problem-type', authMiddleware.isAuthenticated, problemTypeC
 router.post('/problem-type-details', authMiddleware.isAuthenticated, problemTypeController.viewProblemType)
 // router.post('/delete-project', authMiddleware.isAuthenticated, projectController.deleteProject)
 router.get('/get-problem-type-list', authMiddleware.isAuthenticated, problemTypeController.getProblemTypeList)
-/// Export Project Data 
-//router.get('/export-project', authMiddleware.isAuthenticated, projectController.exportProject)
+/**EXPORT PROBLEM TYPE DATA*/
+router.get('/export-problem-type-data', authMiddleware.isAuthenticated, problemTypeController.exportProblemTypeData)
 
 module.exports = router
