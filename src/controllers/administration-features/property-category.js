@@ -9,8 +9,8 @@ const knex = require("../../db/knex");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 //const trx = knex.transaction();
 
 const propertyCategoryController = {
@@ -439,43 +439,59 @@ const propertyCategoryController = {
       let tempraryDirectory = null;
       let bucketName = null;
       if (process.env.IS_OFFLINE) {
-        bucketName = 'sls-app-resources-bucket';
-        tempraryDirectory = 'tmp/';
+        bucketName = "sls-app-resources-bucket";
+        tempraryDirectory = "tmp/";
       } else {
-        tempraryDirectory = '/tmp/';
+        tempraryDirectory = "/tmp/";
         bucketName = process.env.S3_BUCKET_NAME;
       }
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(DataResult);
+
+      var ws;
+      if (DataResult && DataResult.length) {
+        ws = XLSX.utils.json_to_sheet(DataResult);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          {
+            CATEGORY_CODE: "",
+            DESCRIPTION: "",
+            ALTERNATE_DESCRIPTION: "",
+            REMARK: ""
+          }
+        ]);
+      }
+
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "ProblemCategoryData-" + Date.now() + ".csv";
       let filepath = tempraryDirectory + filename;
       let check = XLSX.writeFile(wb, filepath);
-      const AWS = require('aws-sdk');
+      const AWS = require("aws-sdk");
 
-      fs.readFile(filepath, function (err, file_buffer) {
+      fs.readFile(filepath, function(err, file_buffer) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
           Key: "Export/Problem_Category/" + filename,
           Body: file_buffer,
-          ACL: 'public-read'
-        }
-        s3.putObject(params, function (err, data) {
+          ACL: "public-read"
+        };
+        s3.putObject(params, function(err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             res.status(500).json({
-              errors: [
-                { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
-              ],
+              errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
             //next(err);
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
-            let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
-            let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Problem_Category/" + filename;
+            let deleteFile = fs.unlink(filepath, err => {
+              console.log("File Deleting Error " + err);
+            });
+            let url =
+              "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Problem_Category/" +
+              filename;
             res.status(200).json({
               data: DataResult,
               message: "Problem category data export successfully!",
@@ -483,7 +499,7 @@ const propertyCategoryController = {
             });
           }
         });
-      })
+      });
     } catch (err) {
       console.log("[controllers][category][categoryList] :  Error", err);
       //trx.rollback
@@ -593,7 +609,9 @@ const propertyCategoryController = {
     let orgId = req.orgId;
 
     try {
-      let assetCategoryList = await knex("asset_category_master").returning("*").where({ "orgId": orgId });
+      let assetCategoryList = await knex("asset_category_master")
+        .returning("*")
+        .where({ orgId: orgId });
 
       res.status(200).json({
         data: {
@@ -615,7 +633,9 @@ const propertyCategoryController = {
     let orgId = req.orgId;
 
     try {
-      let assetCategoryList = await knex("part_category_master").returning("*").where({ "orgId": orgId });
+      let assetCategoryList = await knex("part_category_master")
+        .returning("*")
+        .where({ orgId: orgId });
 
       res.status(200).json({
         data: {
@@ -635,54 +655,60 @@ const propertyCategoryController = {
   importProblemCategoryData: async (req, res) => {
     try {
       if (req.file) {
-        console.log(req.file)
+        console.log(req.file);
         let tempraryDirectory = null;
         if (process.env.IS_OFFLINE) {
-          tempraryDirectory = 'tmp/';
+          tempraryDirectory = "tmp/";
         } else {
-          tempraryDirectory = '/tmp/';
+          tempraryDirectory = "/tmp/";
         }
         let resultData = null;
         let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: 'binary' });
+        let wb = XLSX.readFile(file_path, { type: "binary" });
         let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
-        console.log("+++++++++++++", data, "=========")
+        let data = XLSX.utils.sheet_to_json(ws, {
+          type: "string",
+          header: "A",
+          raw: false
+        });
+        console.log("+++++++++++++", data, "=========");
         let totalData = data.length - 1;
         let fail = 0;
         let success = 0;
         let result = null;
 
-        if (data[0].A == "Ã¯Â»Â¿CATEGORY_CODE" || data[0].A == "CATEGORY_CODE" &&
-          data[0].B == "DESCRIPTION" &&
-          data[0].C == "ALTERNATE_DESCRIPTION" &&
-          data[0].D == "REMARK"
+        if (
+          data[0].A == "Ã¯Â»Â¿CATEGORY_CODE" ||
+          (data[0].A == "CATEGORY_CODE" &&
+            data[0].B == "DESCRIPTION" &&
+            data[0].C == "ALTERNATE_DESCRIPTION" &&
+            data[0].D == "REMARK")
         ) {
-
           if (data.length > 0) {
-
             let i = 0;
             for (let categoryData of data) {
               i++;
 
               if (i > 1) {
-
-                let checkExist = await knex('incident_categories').select('id')
-                  .where({ categoryCode: categoryData.A, orgId: req.orgId })
+                let checkExist = await knex("incident_categories")
+                  .select("id")
+                  .where({ categoryCode: categoryData.A, orgId: req.orgId });
                 if (checkExist.length < 1) {
-
                   let currentTime = new Date().getTime();
                   let insertData = {
-                    orgId          : req.orgId,
-                    categoryCode   : categoryData.A,
-                    descriptionEng : categoryData.B,
+                    orgId: req.orgId,
+                    categoryCode: categoryData.A,
+                    descriptionEng: categoryData.B,
                     descriptionThai: categoryData.C,
-                    remark         : categoryData.D,
-                    createdAt      : currentTime,
-                    updatedAt      : currentTime
-                  }
+                    remark: categoryData.D,
+                    createdAt: currentTime,
+                    updatedAt: currentTime
+                  };
 
-                  resultData = await knex.insert(insertData).returning(['*']).into('incident_categories');
+                  resultData = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .into("incident_categories");
 
                   if (resultData && resultData.length) {
                     success++;
@@ -694,18 +720,28 @@ const propertyCategoryController = {
             }
             let message = null;
             if (totalData == success) {
-              message = "System have processed ( " + totalData + " ) entries and added them successfully!";
+              message =
+                "System have processed ( " +
+                totalData +
+                " ) entries and added them successfully!";
             } else {
-              message = "System have processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
+              message =
+                "System have processed ( " +
+                totalData +
+                " ) entries out of which only ( " +
+                success +
+                " ) are added and others are failed ( " +
+                fail +
+                " ) due to validation!";
             }
-            let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
+            let deleteFile = await fs.unlink(file_path, err => {
+              console.log("File Deleting Error " + err);
+            });
             return res.status(200).json({
-              message: message,
+              message: message
             });
           }
-
         } else {
-
           return res.status(400).json({
             errors: [
               { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
@@ -713,7 +749,6 @@ const propertyCategoryController = {
           });
         }
       } else {
-
         return res.status(400).json({
           errors: [
             { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
@@ -721,14 +756,16 @@ const propertyCategoryController = {
         });
       }
     } catch (err) {
-      console.log("[controllers][propertycategory][importProblemCategoryData] :  Error", err);
+      console.log(
+        "[controllers][propertycategory][importProblemCategoryData] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   }
-
 };
 
 module.exports = propertyCategoryController;

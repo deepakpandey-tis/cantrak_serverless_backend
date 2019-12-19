@@ -10,8 +10,8 @@ const knex = require("../../db/knex");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 //const trx = knex.transaction();
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 const statusController = {
   // Add New Status //
@@ -70,8 +70,8 @@ const statusController = {
 
         const insertData = {
           ...statusPayload,
-          createdBy:userId,
-          orgId:orgId,
+          createdBy: userId,
+          orgId: orgId,
           statusCode: statusPayload.statusCode.toUpperCase(),
           isActive: "true",
           createdAt: currentTime,
@@ -215,7 +215,7 @@ const statusController = {
 
   getStatusList: async (req, res) => {
     try {
-      let orgId = req.orgId;   
+      let orgId = req.orgId;
       let reqData = req.query;
       let total = null;
       let rows = null;
@@ -230,7 +230,7 @@ const statusController = {
         knex
           .count("* as count")
           .from("service_status")
-          .where({"orgId": orgId})
+          .where({ orgId: orgId })
           .first(),
         knex("service_status")
           .select([
@@ -239,10 +239,10 @@ const statusController = {
             "descriptionEng as Description English",
             "descriptionThai as Description Thai",
             "isActive as Status",
-          //  "createdby as Created By",
+            //  "createdby as Created By",
             "createdAt as Date Created"
           ])
-          .where({"orgId": orgId})         
+          .where({ orgId: orgId })
           .offset(offset)
           .limit(per_page)
       ]);
@@ -277,8 +277,8 @@ const statusController = {
   deleteStatus: async (req, res) => {
     try {
       let delCommonPayload = null;
-      let orgId = req.orgId;   
-    
+      let orgId = req.orgId;
+
       await knex.transaction(async trx => {
         let statusPaylaod = req.body;
 
@@ -319,7 +319,7 @@ const statusController = {
             })
             .where({
               id: statusPaylaod.id,
-              orgId:orgId
+              orgId: orgId
             })
             .returning(["*"])
             .transacting(trx)
@@ -364,7 +364,7 @@ const statusController = {
   },
   exportStatus: async (req, res) => {
     try {
-      let orgId = req.orgId;     
+      let orgId = req.orgId;
       let reqData = req.query;
       let rows = null;
       [rows] = await Promise.all([
@@ -372,52 +372,66 @@ const statusController = {
           .select([
             "statusCode as STATUS_CODE",
             "descriptionEng as DESCRIPTION",
-            "descriptionThai as ALTERNATE_DESCRIPTION",
+            "descriptionThai as ALTERNATE_DESCRIPTION"
           ])
-          .where({"orgId": orgId})
+          .where({ orgId: orgId })
       ]);
 
       let tempraryDirectory = null;
       let bucketName = null;
       if (process.env.IS_OFFLINE) {
-        bucketName = 'sls-app-resources-bucket';
-        tempraryDirectory = 'tmp/';
+        bucketName = "sls-app-resources-bucket";
+        tempraryDirectory = "tmp/";
       } else {
-        tempraryDirectory = '/tmp/';
+        tempraryDirectory = "/tmp/";
         bucketName = process.env.S3_BUCKET_NAME;
       }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(rows);
+
+      var ws;
+
+      if (rows && rows.length) {
+        ws = XLSX.utils.json_to_sheet(rows);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          {
+            STATUS_CODE: "",
+            DESCRIPTION: "",
+            ALTERNATE_DESCRIPTION: ""
+          }
+        ]);
+      }
+
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "ServiceStatusData-" + Date.now() + ".csv";
       let filepath = tempraryDirectory + filename;
       let check = XLSX.writeFile(wb, filepath);
-      const AWS = require('aws-sdk');
+      const AWS = require("aws-sdk");
 
-      fs.readFile(filepath, function (err, file_buffer) {
+      fs.readFile(filepath, function(err, file_buffer) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
           Key: "Export/Service_Status/" + filename,
           Body: file_buffer,
-          ACL: 'public-read'
-        }
-        s3.putObject(params, function (err, data) {
+          ACL: "public-read"
+        };
+        s3.putObject(params, function(err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             res.status(500).json({
-              errors: [
-                { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
-              ],
+              errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
             //next(err);
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
             //let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
-            let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Service_Status/" + filename;
+            let url =
+              "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Service_Status/" +
+              filename;
             res.status(200).json({
               data: rows,
               message: "Status Data Export Successfully!",
@@ -425,7 +439,7 @@ const statusController = {
             });
           }
         });
-      })
+      });
     } catch (err) {
       console.log("[controllers][status][getstatus] :  Error", err);
       //trx.rollback
@@ -437,8 +451,8 @@ const statusController = {
   statusDetails: async (req, res) => {
     try {
       let statusDetail = null;
-      let orgId = req.orgId;     
-     
+      let orgId = req.orgId;
+
       await knex.transaction(async trx => {
         let payload = req.body;
         const schema = Joi.object().keys({
@@ -455,7 +469,7 @@ const statusController = {
         let current = new Date().getTime();
         let StatusResult = await knex("service_status")
           .select("service_status.*")
-          .where({ id: payload.id, orgId:orgId });
+          .where({ id: payload.id, orgId: orgId });
 
         statusDetail = _.omit(StatusResult[0], [
           "createdAt",
@@ -479,45 +493,48 @@ const statusController = {
       });
     }
   },
-   /**IMPORT SERVICE STATUS DATA */
-   importServiceStatusData: async (req, res) => {
+  /**IMPORT SERVICE STATUS DATA */
+  importServiceStatusData: async (req, res) => {
     try {
       if (req.file) {
-        console.log(req.file)
+        console.log(req.file);
         let tempraryDirectory = null;
         if (process.env.IS_OFFLINE) {
-          tempraryDirectory = 'tmp/';
+          tempraryDirectory = "tmp/";
         } else {
-          tempraryDirectory = '/tmp/';
+          tempraryDirectory = "/tmp/";
         }
         let resultData = null;
         let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: 'binary' });
+        let wb = XLSX.readFile(file_path, { type: "binary" });
         let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
-        console.log("+++++++++++++", data, "=========")
+        let data = XLSX.utils.sheet_to_json(ws, {
+          type: "string",
+          header: "A",
+          raw: false
+        });
+        console.log("+++++++++++++", data, "=========");
         let totalData = data.length - 1;
         let fail = 0;
         let success = 0;
         let result = null;
 
-        if (data[0].A == "Ã¯Â»Â¿STATUS_CODE" || data[0].A == "STATUS_CODE" &&
-          data[0].B == "DESCRIPTION" &&
-          data[0].C == "ALTERNATE_DESCRIPTION"
-          ) {
-
+        if (
+          data[0].A == "Ã¯Â»Â¿STATUS_CODE" ||
+          (data[0].A == "STATUS_CODE" &&
+            data[0].B == "DESCRIPTION" &&
+            data[0].C == "ALTERNATE_DESCRIPTION")
+        ) {
           if (data.length > 0) {
-
             let i = 0;
             for (let statusData of data) {
               i++;
 
               if (i > 1) {
-
-                let checkExist = await knex('service_status').select('id')
-                  .where({statusCode: statusData.A, orgId:req.orgId })
+                let checkExist = await knex("service_status")
+                  .select("id")
+                  .where({ statusCode: statusData.A, orgId: req.orgId });
                 if (checkExist.length < 1) {
-
                   let currentTime = new Date().getTime();
                   let insertData = {
                     orgId: req.orgId,
@@ -526,9 +543,12 @@ const statusController = {
                     descriptionThai: statusData.C,
                     createdAt: currentTime,
                     updatedAt: currentTime
-                  }
+                  };
 
-                  resultData = await knex.insert(insertData).returning(['*']).into('service_status');
+                  resultData = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .into("service_status");
 
                   if (resultData && resultData.length) {
                     success++;
@@ -540,18 +560,28 @@ const statusController = {
             }
             let message = null;
             if (totalData == success) {
-              message = "System have processed ( " + totalData + " ) entries and added them successfully!";
+              message =
+                "System have processed ( " +
+                totalData +
+                " ) entries and added them successfully!";
             } else {
-              message = "System have processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
+              message =
+                "System have processed ( " +
+                totalData +
+                " ) entries out of which only ( " +
+                success +
+                " ) are added and others are failed ( " +
+                fail +
+                " ) due to validation!";
             }
-            let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
+            let deleteFile = await fs.unlink(file_path, err => {
+              console.log("File Deleting Error " + err);
+            });
             return res.status(200).json({
-              message: message,
+              message: message
             });
           }
-
         } else {
-
           return res.status(400).json({
             errors: [
               { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
@@ -559,17 +589,17 @@ const statusController = {
           });
         }
       } else {
-
         return res.status(400).json({
           errors: [
             { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
           ]
         });
-
       }
-
     } catch (err) {
-      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      console.log(
+        "[controllers][propertysetup][importCompanyData] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
