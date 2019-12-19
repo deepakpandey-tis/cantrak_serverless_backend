@@ -245,8 +245,7 @@ const sourceofRequestController = {
           .select([
             "requestCode as SOURCE_CODE",
             "descriptionEng as DESCRIPTION",
-            "descriptionThai as DESCRIPTION_ALTERNATE",
-            "isActive as STATUS"
+            "descriptionThai as DESCRIPTION_ALTERNATE"
           ])
           .where({"orgId":orgId})
       ]);
@@ -351,6 +350,106 @@ const sourceofRequestController = {
       });
     } catch (err) {
       console.log("[controllers][generalsetup][sourceOfRequest] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  // importSourceOfRequest Import Data
+  importSourceOfRequest: async (req, res) => {
+    try {
+      if (req.file) {
+        console.log(req.file)
+        let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+          tempraryDirectory = 'tmp/';
+        } else {
+          tempraryDirectory = '/tmp/';
+        }
+        let resultData = null;
+        let file_path = tempraryDirectory + req.file.filename;
+        let wb = XLSX.readFile(file_path, { type: 'binary' });
+        let ws = wb.Sheets[wb.SheetNames[0]];
+        let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
+        //data         = JSON.stringify(data);
+        console.log("+++++++++++++", data, "=========")
+        let totalData = data.length - 1;
+        let fail = 0;
+        let success = 0;
+        let result = null;
+
+        if (data[0].A == "SOURCE_CODE" || data[0].A == "Ã¯Â»Â¿SOURCE_CODE" &&
+          data[0].B == "DESCRIPTION" &&
+          data[0].C == "DESCRIPTION_ALTERNATE" 
+        ) {
+
+          if (data.length > 0) {
+
+            let i = 0;
+            for (let requestData of data) {
+              i++;
+
+              if (i > 1) {
+
+                let checkExist = await knex('source_of_request').select('requestCode')
+                  .where({ requestCode: requestData.A, orgId: req.orgId })
+                  console.log("Check list company: ", checkExist);
+                if (checkExist.length < 1) {
+
+                  let currentTime = new Date().getTime();
+                  let insertData = {
+                    orgId: req.orgId,
+                    requestCode: requestData.A,
+                    descriptionEng: requestData.B,
+                    descriptionThai: requestData.C,
+                    isActive: true,
+                    createdAt: currentTime,
+                    updatedAt: currentTime
+                  }
+
+                  resultData = await knex.insert(insertData).returning(['*']).into('source_of_request');
+
+                  if (resultData && resultData.length) {
+                    success++;
+                  }
+                } else {
+                  fail++;
+                }
+              }
+            }
+            let message = null;
+            if (totalData == success) {
+              message = "System has processed processed ( " + totalData + " ) entries and added them successfully!";
+            } else {
+              message = "System has processed processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
+            }
+            let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
+            return res.status(200).json({
+              message: message,
+            });
+          }
+
+        } else {
+
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+            ]
+          });
+        }
+      } else {
+
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
+
+      }
+
+    } catch (err) {
+      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
