@@ -441,7 +441,7 @@ const teamsController = {
                         "companies.companyName as COMPANY_NAME",
                         "projects.project as PROJECT",
                         "projects.projectName as PROJECT_NAME",
-                        "team_roles_project_master.isActive as STATUS"
+                        // "team_roles_project_master.isActive as STATUS"
                     ])
             ]);
 
@@ -665,8 +665,9 @@ const teamsController = {
                     data[0].D == "COMPANY" &&
                     data[0].E == "COMPANY_NAME" &&
                     data[0].F == "PROJECT" &&
-                    data[0].G == "PROJECT_NAME" &&
-                    data[0].H == "STATUS"
+                    data[0].G == "PROJECT_NAME" 
+                    // &&
+                    // data[0].H == "STATUS"
                 ) {
 
                     if (data.length > 0) {
@@ -690,7 +691,7 @@ const teamsController = {
                             /**GET PROJECT ID OPEN */
                             let projectId = null;
                             if (teamData.G) {
-                                let projectData = await knex('projects').select('id').where({ project: teamData.F });
+                                let projectData = await knex('projects').select('id').where({ project: teamData.F,orgId:req.orgId });
 
                                 //   if(!projectData && !projectData.length){
                                 //     continue;
@@ -705,7 +706,7 @@ const teamsController = {
                             if (i > 1) {
 
                                 let checkExist = await knex('teams').select("teamId")
-                                    .where({ teamName: teamData.B, teamCode: teamData.A })
+                                    .where({ teamName: teamData.B, teamCode: teamData.A,orgId:req.orgId })
                                 if (checkExist.length < 1) {
                                     let insertData = {
                                         orgId: req.orgId,
@@ -725,7 +726,7 @@ const teamsController = {
 
                                     if (projectId) {
                                         let checkRoleMaster = await knex('team_roles_project_master').select("id")
-                                            .where({ teamId: teamId, projectId: projectId })
+                                            .where({ teamId: teamId, projectId: projectId,orgId:req.orgId })
 
                                         if (checkRoleMaster.length < 1) {
 
@@ -751,7 +752,7 @@ const teamsController = {
 
                                     if (projectId) {
                                         let checkRoleMaster = await knex('team_roles_project_master').select("id")
-                                            .where({ teamId: checkExist[0].teamId, projectId: projectId })
+                                            .where({ teamId: checkExist[0].teamId, projectId: projectId,orgId:req.orgId })
                                         if (checkRoleMaster.length < 1) {
                                             let insertProjectData = {
                                                 orgId: req.orgId,
@@ -776,9 +777,9 @@ const teamsController = {
 
                         let message = null;
                         if (totalData == success) {
-                            message = "We have processed ( " + totalData + " ) entries and added them successfully!";
+                            message = "System has processed ( " + totalData + " ) entries and added them successfully!";
                         } else {
-                            message = "We have processed ( " + totalData + " ) entries out of which only ( " +success+" ) are added and others are failed ( " + fail + " ) due to validation!";
+                            message = "System has processed ( " + totalData + " ) entries out of which only ( " +success+" ) are added and others are failed ( " + fail + " ) due to validation!";
                         }
 
                         let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })

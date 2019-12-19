@@ -283,6 +283,12 @@ const propertyTypeController = {
       }
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
       var ws = XLSX.utils.json_to_sheet(rows);
+
+      // if(rows && rows.length) {
+
+      // }
+
+
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "PropertTypeData-" + Date.now() + ".csv";

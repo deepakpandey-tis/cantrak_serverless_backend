@@ -750,51 +750,53 @@ const chargeController = {
         let currentTime = new Date().getTime();
         //console.log('DATA: ',data)
 
-        if (( data[0].A == "CHARGE_CODE" &&
+        if (
+          data[0].A == "Ã¯Â»Â¿CHARGE_CODE" ||
+          (data[0].A == "CHARGE_CODE" &&
             data[0].B == "DESCRIPTION" &&
             data[0].C == "DESCRIPTIONTH" &&
             data[0].D == "VAT" &&
             data[0].E == "VAT_CODE" &&
             data[0].F == "WHT_RATE" &&
-            data[0].G == "WHT_CODE"         
-          )) 
-          {
+            data[0].G == "WHT_CODE")
+        ) {
           if (data.length > 0) {
             let i = 0;
-            console.log('Data[0]', data[0])
+            console.log("Data[0]", data[0]);
             for (let chargesData of data) {
               // Find Company primary key
               let vatId = null;
               let whtId = null;
 
-
-              let taxesIdResult = await knex('taxes').select('id').where({taxCode:chargesData.E})
+              let taxesIdResult = await knex("taxes")
+                .select("id")
+                .where({ taxCode: chargesData.E,orgId:req.orgId });
               console.log("TaxIdResult", taxesIdResult);
-              if(!chargesData.F && !chargesData.G){
-                  whtId = null;
-                  whtRate = null;
-                  console.log('wht id not found: ',whtId)
-              }else{
-                let whtIdResult = await knex('wht_master').select('id').where({whtCode:chargesData.G})
+              if (!chargesData.F && !chargesData.G) {
+                whtId = null;
+                whtRate = null;
+                console.log("wht id not found: ", whtId);
+              } else {
+                let whtIdResult = await knex("wht_master")
+                  .select("id")
+                  .where({ whtCode: chargesData.G,orgId:req.orgId });
                 if (whtIdResult && whtIdResult.length) {
-                    whtId = whtIdResult[0].id;
-                    whtRate = chargesData.F;
-                    console.log('wht id found: ',whtId)              
+                  whtId = whtIdResult[0].id;
+                  whtRate = chargesData.F;
+                  console.log("wht id found: ", whtId);
                 }
                 console.log("WhtIdResult", whtIdResult);
               }
 
-             
-              if(taxesIdResult && taxesIdResult.length){
+              if (taxesIdResult && taxesIdResult.length) {
                 vatId = taxesIdResult[0].id;
-                console.log('vat id found: ',vatId)
-               
+                console.log("vat id found: ", vatId);
               }
-              if(!vatId){
-                console.log('breaking due to vat id: ',vatId)
+              if (!vatId) {
+                console.log("breaking due to vat id: ", vatId);
                 continue;
               }
-            
+
               // if (!whtId) {
               //   console.log("breaking due to wht id: ", whtId);
               //   continue;
@@ -819,7 +821,7 @@ const chargeController = {
                     vatId: vatId,
                     whtRate: whtRate,
                     whtId: whtId,
-                    isActive:true,
+                    isActive: true,
                     createdBy: req.me.id,
                     createdAt: currentTime
                   };

@@ -500,11 +500,10 @@ const taxesfactionController = {
 
         //console.log('DATA: ',data)
 
-        if((
-            data[0].A == "TAX CODE" &&
-            data[0].B == "TAX PERCENTAGE"
-          ))
-          {
+        if (
+          data[0].A == "Ã¯Â»Â¿TAX CODE" ||
+          (data[0].A == "TAX CODE" && data[0].B == "TAX PERCENTAGE")
+        ) {
           if (data.length > 0) {
             let i = 0;
             console.log("Data[0]", data[0]);
@@ -520,8 +519,8 @@ const taxesfactionController = {
                 if (checkExist.length < 1) {
                   let insertData = {
                     orgId: req.orgId,
-                    taxCode:taxData.A,
-                    taxPercentage:taxData.B,
+                    taxCode: taxData.A,
+                    taxPercentage: taxData.B,
                     isActive: true,
                     createdBy: req.me.id,
                     createdAt: currentTime

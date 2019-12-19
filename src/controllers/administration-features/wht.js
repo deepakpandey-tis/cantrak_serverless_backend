@@ -500,11 +500,10 @@ const whtController = {
        
         //console.log('DATA: ',data)
 
-        if ((
-            data[0].A == "WHT_CODE" &&
-            data[0].B == "TAX_PERCENTAGE"
-          )) 
-          {
+        if (
+          data[0].A == "Ã¯Â»Â¿WHT_CODE" ||
+          (data[0].A == "WHT_CODE" && data[0].B == "TAX_PERCENTAGE")
+        ) {
           if (data.length > 0) {
             let i = 0;
             console.log("Data[0]", data[0]);
