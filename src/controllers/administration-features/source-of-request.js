@@ -189,7 +189,7 @@ const sourceofRequestController = {
       let [total, rows] = await Promise.all([
         knex
           .count("* as count")
-          .from("source_of_request")
+          .from("source_of_request")          
           .where({"orgId": orgId})
           .first(),
         knex("source_of_request")
@@ -245,7 +245,7 @@ const sourceofRequestController = {
           .select([
             "requestCode as SOURCE_CODE",
             "descriptionEng as DESCRIPTION",
-            "descriptionThai as DESCRIPTION_ALTERNATE"
+            "descriptionThai as ALTERNATE_DESCRIPTION"
           ])
           .where({"orgId":orgId})
       ]);
@@ -381,7 +381,7 @@ const sourceofRequestController = {
 
         if (data[0].A == "SOURCE_CODE" || data[0].A == "Ã¯Â»Â¿SOURCE_CODE" &&
           data[0].B == "DESCRIPTION" &&
-          data[0].C == "DESCRIPTION_ALTERNATE" 
+          data[0].C == "ALTERNATE_DESCRIPTION" 
         ) {
 
           if (data.length > 0) {
