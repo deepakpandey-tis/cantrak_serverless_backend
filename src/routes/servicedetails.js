@@ -26,7 +26,7 @@ router.get('/get-location-tag-names',authMiddleware.isAuthenticated,serviceDetai
 router.get('/export-priority-data',authMiddleware.isAuthenticated,serviceDetailsController.exportPriorityData);
 
 
-/**IMPORT Service Details DATA */
+/**IMPORT Priority Data */
 const path       = require('path');
 let tempraryDirectory = null;
         if (process.env.IS_OFFLINE) {
@@ -48,5 +48,32 @@ var storage = multer.diskStorage({
 	}
 });
 var upload = multer( { storage: storage } );
+
+// Import Location Tags
+let tempraryDirectory1 = null;
+        if (process.env.IS_OFFLINE) {
+          tempraryDirectory1 = 'tmp/';
+         } else {
+          tempraryDirectory1 = '/tmp/';  
+         }
+var multer1  = require('multer');
+var storage1 = multer1.diskStorage({
+	destination: tempraryDirectory1,
+	filename: function ( req, file, cb ) {
+        let ext1 =  path.extname(file.originalname)
+        if(ext1=='.csv'){
+        time1 = Date.now();
+        cb( null, 'LocationTagData-'+time1+ext1);
+        }else{
+            return false
+        }
+	}
+});
+var upload1 = multer( { storage: storage1 } );
+
+
 router.post('/import-priority-data',upload.single("file"),authMiddleware.isAuthenticated,serviceDetailsController.importPrioritiesData);
+router.post('/import-location-tag',upload1.single("file"),authMiddleware.isAuthenticated,serviceDetailsController.importLocationTag);
+
+
 module.exports = router;

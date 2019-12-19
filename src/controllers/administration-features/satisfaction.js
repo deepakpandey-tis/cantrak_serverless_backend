@@ -10,8 +10,8 @@ const knex = require("../../db/knex");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 //const trx = knex.transaction();
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 const satisfactionController = {
   // Add New Satisfaction //
 
@@ -28,8 +28,12 @@ const satisfactionController = {
           satisfactionCode: Joi.string().required(),
           descriptionEng: Joi.string().required(),
           descriptionThai: Joi.string().required(),
-          remark: Joi.string().allow('').optional(),
-          defaultFlag: Joi.string().allow('').optional()
+          remark: Joi.string()
+            .allow("")
+            .optional(),
+          defaultFlag: Joi.string()
+            .allow("")
+            .optional()
         });
 
         const result = Joi.validate(satisfactionPayload, schema);
@@ -116,7 +120,6 @@ const satisfactionController = {
       let updateSatisfactionPayload = null;
 
       await knex.transaction(async trx => {
-        
         let satisfactionPaylaod = req.body;
 
         const schema = Joi.object().keys({
@@ -124,8 +127,12 @@ const satisfactionController = {
           satisfactionCode: Joi.string().required(),
           descriptionEng: Joi.string().required(),
           descriptionThai: Joi.string().required(),
-          remark: Joi.string().allow('').optional(),
-          defaultFlag: Joi.string().allow('').optional()
+          remark: Joi.string()
+            .allow("")
+            .optional(),
+          defaultFlag: Joi.string()
+            .allow("")
+            .optional()
         });
 
         const result = Joi.validate(satisfactionPaylaod, schema);
@@ -221,7 +228,7 @@ const satisfactionController = {
       let reqData = req.query;
       let orgId = req.orgId;
 
-     console.log("==============",orgId,"=================")
+      console.log("==============", orgId, "=================");
 
       let total = null;
       let rows = null;
@@ -236,11 +243,11 @@ const satisfactionController = {
         knex
           .count("* as count")
           .from("satisfaction")
-          .leftJoin("users", "users.id", "satisfaction.createdBy")    
+          .leftJoin("users", "users.id", "satisfaction.createdBy")
           .where({ "satisfaction.orgId": orgId })
           .first(),
         knex("satisfaction")
-          .leftJoin("users", "users.id", "satisfaction.createdBy")             
+          .leftJoin("users", "users.id", "satisfaction.createdBy")
           .where({ "satisfaction.orgId": orgId })
           .select([
             "satisfaction.id",
@@ -376,58 +383,70 @@ const satisfactionController = {
       let reqData = req.query;
       let rows = null;
       let companyId = reqData.companyId;
-    
+
       [rows] = await Promise.all([
         knex("satisfaction")
-          .where({ "satisfaction.orgId": orgId })          
+          .where({ "satisfaction.orgId": orgId })
           .select([
             "satisfaction.satisfactionCode as SATISFACTION_CODE",
             "satisfaction.descriptionEng as DESCRIPTION",
-            "satisfaction.descriptionThai as ALTERNATE_DESCRIPTION",
+            "satisfaction.descriptionThai as ALTERNATE_DESCRIPTION"
           ])
       ]);
 
       let tempraryDirectory = null;
       let bucketName = null;
       if (process.env.IS_OFFLINE) {
-        bucketName = 'sls-app-resources-bucket';
-        tempraryDirectory = 'tmp/';
+        bucketName = "sls-app-resources-bucket";
+        tempraryDirectory = "tmp/";
       } else {
-        tempraryDirectory = '/tmp/';
+        tempraryDirectory = "/tmp/";
         bucketName = process.env.S3_BUCKET_NAME;
       }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(rows);
+      var ws;
+      if (rows && rows.length) {
+        ws = XLSX.utils.json_to_sheet(rows);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          {
+            SATISFACTION_CODE: "",
+            DESCRIPTION: "",
+            ALTERNATE_DESCRIPTION: ""
+          }
+        ]);
+      }
+
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "SatisfactionData-" + Date.now() + ".csv";
       let filepath = tempraryDirectory + filename;
       let check = XLSX.writeFile(wb, filepath);
-      const AWS = require('aws-sdk');
+      const AWS = require("aws-sdk");
 
-      fs.readFile(filepath, function (err, file_buffer) {
+      fs.readFile(filepath, function(err, file_buffer) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
           Key: "Export/Satisfaction/" + filename,
           Body: file_buffer,
-          ACL: 'public-read'
-        }
-        s3.putObject(params, function (err, data) {
+          ACL: "public-read"
+        };
+        s3.putObject(params, function(err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             res.status(500).json({
-              errors: [
-                { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
-              ],
+              errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
             //next(err);
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
             //let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
-            let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Satisfaction/" + filename;
+            let url =
+              "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Satisfaction/" +
+              filename;
             res.status(200).json({
               data: rows,
               message: "Satisfaction data export successfully!",
@@ -435,7 +454,7 @@ const satisfactionController = {
             });
           }
         });
-      })
+      });
     } catch (err) {
       console.log("[controllers][satisfaction][getsatisfaction] :  Error", err);
       //trx.rollback
@@ -450,8 +469,8 @@ const satisfactionController = {
   satisfactionDetails: async (req, res) => {
     try {
       let satisfactionDetail = null;
-      let orgId = req.orgId;     
-     
+      let orgId = req.orgId;
+
       await knex.transaction(async trx => {
         let payload = req.body;
         const schema = Joi.object().keys({
@@ -459,7 +478,7 @@ const satisfactionController = {
         });
 
         const result = Joi.validate(payload, schema);
-       
+
         if (result && result.hasOwnProperty("error") && result.error) {
           return res.status(400).json({
             errors: [
@@ -471,9 +490,9 @@ const satisfactionController = {
         let current = new Date().getTime();
         let satisfactionResult = await knex("satisfaction")
           .select("satisfaction.*")
-          .where({ id: payload.id, orgId:orgId });
+          .where({ id: payload.id, orgId: orgId });
 
-          satisfactionDetail = _.omit(satisfactionResult[0], [
+        satisfactionDetail = _.omit(satisfactionResult[0], [
           "createdAt",
           "updatedAt",
           "isActive"
@@ -488,51 +507,58 @@ const satisfactionController = {
         message: "Satisfaction Details"
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][viewSatisfaction] :  Error", err);
+      console.log(
+        "[controllers][generalsetup][viewSatisfaction] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
-   /**IMPORT SATISFACTION DATA */
-   importSatisfactionData: async (req, res) => {
+  /**IMPORT SATISFACTION DATA */
+  importSatisfactionData: async (req, res) => {
     try {
       if (req.file) {
-        console.log(req.file)
+        console.log(req.file);
         let tempraryDirectory = null;
         if (process.env.IS_OFFLINE) {
-          tempraryDirectory = 'tmp/';
+          tempraryDirectory = "tmp/";
         } else {
-          tempraryDirectory = '/tmp/';
+          tempraryDirectory = "/tmp/";
         }
         let resultData = null;
         let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: 'binary' });
+        let wb = XLSX.readFile(file_path, { type: "binary" });
         let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
-        console.log("+++++++++++++", data, "=========")
+        let data = XLSX.utils.sheet_to_json(ws, {
+          type: "string",
+          header: "A",
+          raw: false
+        });
+        console.log("+++++++++++++", data, "=========");
         let totalData = data.length - 1;
         let fail = 0;
         let success = 0;
         let result = null;
 
-        if (data[0].A == "Ã¯Â»Â¿SATISFACTION_CODE" || data[0].A == "SATISFACTION_CODE" &&
-          data[0].B == "DESCRIPTION" &&
-          data[0].C == "ALTERNATE_DESCRIPTION"
-          ) {
+        if (
+          data[0].A == "Ã¯Â»Â¿SATISFACTION_CODE" ||
+          (data[0].A == "SATISFACTION_CODE" &&
+            data[0].B == "DESCRIPTION" &&
+            data[0].C == "ALTERNATE_DESCRIPTION")
+        ) {
           if (data.length > 0) {
-
             let i = 0;
             for (let statusData of data) {
               i++;
 
               if (i > 1) {
-
-                let checkExist = await knex('satisfaction').select('id')
-                  .where({satisfactionCode: statusData.A, orgId:req.orgId })
+                let checkExist = await knex("satisfaction")
+                  .select("id")
+                  .where({ satisfactionCode: statusData.A, orgId: req.orgId });
                 if (checkExist.length < 1) {
-
                   let currentTime = new Date().getTime();
                   let insertData = {
                     orgId: req.orgId,
@@ -541,9 +567,12 @@ const satisfactionController = {
                     descriptionThai: statusData.C,
                     createdAt: currentTime,
                     updatedAt: currentTime
-                  }
+                  };
 
-                  resultData = await knex.insert(insertData).returning(['*']).into('satisfaction');
+                  resultData = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .into("satisfaction");
 
                   if (resultData && resultData.length) {
                     success++;
@@ -555,18 +584,28 @@ const satisfactionController = {
             }
             let message = null;
             if (totalData == success) {
-              message = "System have processed ( " + totalData + " ) entries and added them successfully!";
+              message =
+                "System have processed ( " +
+                totalData +
+                " ) entries and added them successfully!";
             } else {
-              message = "System have processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
+              message =
+                "System have processed ( " +
+                totalData +
+                " ) entries out of which only ( " +
+                success +
+                " ) are added and others are failed ( " +
+                fail +
+                " ) due to validation!";
             }
-            let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
+            let deleteFile = await fs.unlink(file_path, err => {
+              console.log("File Deleting Error " + err);
+            });
             return res.status(200).json({
-              message: message,
+              message: message
             });
           }
-
         } else {
-
           return res.status(400).json({
             errors: [
               { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
@@ -574,24 +613,23 @@ const satisfactionController = {
           });
         }
       } else {
-
         return res.status(400).json({
           errors: [
             { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
           ]
         });
-
       }
-
     } catch (err) {
-      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      console.log(
+        "[controllers][propertysetup][importCompanyData] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   }
-
 };
 
 module.exports = satisfactionController;

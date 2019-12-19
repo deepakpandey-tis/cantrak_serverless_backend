@@ -10,8 +10,8 @@ const knex = require("../../db/knex");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 //const trx = knex.transaction();
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 const sourceofRequestController = {
   addsourceofRequest: async (req, res) => {
@@ -25,8 +25,12 @@ const sourceofRequestController = {
 
       const schema = Joi.object().keys({
         requestCode: Joi.string().required(),
-        descriptionThai: Joi.string().optional().allow(""),
-        descriptionEng: Joi.string().optional().allow("")
+        descriptionThai: Joi.string()
+          .optional()
+          .allow(""),
+        descriptionEng: Joi.string()
+          .optional()
+          .allow("")
       });
 
       const result = Joi.validate(payload, schema);
@@ -87,8 +91,12 @@ const sourceofRequestController = {
       const schema = Joi.object().keys({
         id: Joi.string().required(),
         requestCode: Joi.string().required(),
-        descriptionThai: Joi.string().optional().allow(""),
-        descriptionEng: Joi.string().optional().allow("")
+        descriptionThai: Joi.string()
+          .optional()
+          .allow(""),
+        descriptionEng: Joi.string()
+          .optional()
+          .allow("")
       });
 
       const result = Joi.validate(payload, schema);
@@ -190,7 +198,7 @@ const sourceofRequestController = {
         knex
           .count("* as count")
           .from("source_of_request")
-          .where({"orgId": orgId})
+          .where({ orgId: orgId })
           .first(),
         knex("source_of_request")
           .select([
@@ -202,7 +210,7 @@ const sourceofRequestController = {
             "createdBy as Created By",
             "createdAt as Date Created"
           ])
-          .where({"orgId": orgId})
+          .where({ orgId: orgId })
           .offset(offset)
           .limit(per_page)
       ]);
@@ -245,52 +253,67 @@ const sourceofRequestController = {
           .select([
             "requestCode as SOURCE_CODE",
             "descriptionEng as DESCRIPTION",
-            "descriptionThai as DESCRIPTION_ALTERNATE"
+            "descriptionThai as ALTERNATE_DESCRIPTION"
           ])
-          .where({"orgId":orgId})
+          .where({ orgId: orgId })
       ]);
 
       let tempraryDirectory = null;
       let bucketName = null;
       if (process.env.IS_OFFLINE) {
-        bucketName = 'sls-app-resources-bucket';
-        tempraryDirectory = 'tmp/';
+        bucketName = "sls-app-resources-bucket";
+        tempraryDirectory = "tmp/";
       } else {
-        tempraryDirectory = '/tmp/';
+        tempraryDirectory = "/tmp/";
         bucketName = process.env.S3_BUCKET_NAME;
       }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(rows);
+      var ws;
+
+      if (rows && rows.length) {
+        ws = XLSX.utils.json_to_sheet(rows);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          {
+            SOURCE_CODE: "",
+            DESCRIPTION: "",
+            ALTERNATE_DESCRIPTION: ""
+          }
+        ]);
+      }
+
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "SourceOfRequestData-" + Date.now() + ".csv";
       let filepath = tempraryDirectory + filename;
       let check = XLSX.writeFile(wb, filepath);
-      const AWS = require('aws-sdk');
+      const AWS = require("aws-sdk");
 
-      fs.readFile(filepath, function (err, file_buffer) {
+      fs.readFile(filepath, function(err, file_buffer) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
           Key: "Export/Source_of_Request/" + filename,
           Body: file_buffer,
-          ACL: 'public-read'
-        }
-        s3.putObject(params, function (err, data) {
+          ACL: "public-read"
+        };
+        s3.putObject(params, function(err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             res.status(500).json({
-              errors: [
-                { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
-              ],
+              errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
             //next(err);
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
-            let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
-            let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Source_of_Request/" + filename;
+            let deleteFile = fs.unlink(filepath, err => {
+              console.log("File Deleting Error " + err);
+            });
+            let url =
+              "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Source_of_Request/" +
+              filename;
             res.status(200).json({
               data: rows,
               message: "Source of Request List",
@@ -298,9 +321,8 @@ const sourceofRequestController = {
             });
           }
         });
-      })
-
-   } catch (err) {
+      });
+    } catch (err) {
       console.log(
         "[controllers][generalsetup][viewbuildingPhase] :  Error",
         err
@@ -330,12 +352,12 @@ const sourceofRequestController = {
         let current = new Date().getTime();
         let sourceOfReqeustResult = await knex
           .select()
-          .where({ id: payload.id,orgId:req.orgId })
+          .where({ id: payload.id, orgId: req.orgId })
           .returning(["*"])
           .transacting(trx)
           .into("source_of_request");
 
-          requestDetails = _.omit(sourceOfReqeustResult[0], [
+        requestDetails = _.omit(sourceOfReqeustResult[0], [
           "createdAt",
           "updatedAt",
           "isActive"
@@ -360,43 +382,46 @@ const sourceofRequestController = {
   importSourceOfRequest: async (req, res) => {
     try {
       if (req.file) {
-        console.log(req.file)
+        console.log(req.file);
         let tempraryDirectory = null;
         if (process.env.IS_OFFLINE) {
-          tempraryDirectory = 'tmp/';
+          tempraryDirectory = "tmp/";
         } else {
-          tempraryDirectory = '/tmp/';
+          tempraryDirectory = "/tmp/";
         }
         let resultData = null;
         let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: 'binary' });
+        let wb = XLSX.readFile(file_path, { type: "binary" });
         let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
+        let data = XLSX.utils.sheet_to_json(ws, {
+          type: "string",
+          header: "A",
+          raw: false
+        });
         //data         = JSON.stringify(data);
-        console.log("+++++++++++++", data, "=========")
+        console.log("+++++++++++++", data, "=========");
         let totalData = data.length - 1;
         let fail = 0;
         let success = 0;
         let result = null;
 
-        if (data[0].A == "SOURCE_CODE" || data[0].A == "Ã¯Â»Â¿SOURCE_CODE" &&
-          data[0].B == "DESCRIPTION" &&
-          data[0].C == "DESCRIPTION_ALTERNATE" 
+        if (
+          data[0].A == "SOURCE_CODE" ||
+          (data[0].A == "Ã¯Â»Â¿SOURCE_CODE" &&
+            data[0].B == "DESCRIPTION" &&
+            data[0].C == "ALTERNATE_DESCRIPTION")
         ) {
-
           if (data.length > 0) {
-
             let i = 0;
             for (let requestData of data) {
               i++;
 
               if (i > 1) {
-
-                let checkExist = await knex('source_of_request').select('requestCode')
-                  .where({ requestCode: requestData.A, orgId: req.orgId })
-                  console.log("Check list company: ", checkExist);
+                let checkExist = await knex("source_of_request")
+                  .select("requestCode")
+                  .where({ requestCode: requestData.A, orgId: req.orgId });
+                console.log("Check list company: ", checkExist);
                 if (checkExist.length < 1) {
-
                   let currentTime = new Date().getTime();
                   let insertData = {
                     orgId: req.orgId,
@@ -406,9 +431,12 @@ const sourceofRequestController = {
                     isActive: true,
                     createdAt: currentTime,
                     updatedAt: currentTime
-                  }
+                  };
 
-                  resultData = await knex.insert(insertData).returning(['*']).into('source_of_request');
+                  resultData = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .into("source_of_request");
 
                   if (resultData && resultData.length) {
                     success++;
@@ -420,18 +448,28 @@ const sourceofRequestController = {
             }
             let message = null;
             if (totalData == success) {
-              message = "System has processed processed ( " + totalData + " ) entries and added them successfully!";
+              message =
+                "System has processed processed ( " +
+                totalData +
+                " ) entries and added them successfully!";
             } else {
-              message = "System has processed processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
+              message =
+                "System has processed processed ( " +
+                totalData +
+                " ) entries out of which only ( " +
+                success +
+                " ) are added and others are failed ( " +
+                fail +
+                " ) due to validation!";
             }
-            let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
+            let deleteFile = await fs.unlink(file_path, err => {
+              console.log("File Deleting Error " + err);
+            });
             return res.status(200).json({
-              message: message,
+              message: message
             });
           }
-
         } else {
-
           return res.status(400).json({
             errors: [
               { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
@@ -439,17 +477,17 @@ const sourceofRequestController = {
           });
         }
       } else {
-
         return res.status(400).json({
           errors: [
             { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
           ]
         });
-
       }
-
     } catch (err) {
-      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      console.log(
+        "[controllers][propertysetup][importCompanyData] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]

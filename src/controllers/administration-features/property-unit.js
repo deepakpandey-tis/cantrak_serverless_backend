@@ -9,8 +9,8 @@ const knex = require("../../db/knex");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
-const fs   = require('fs')
-const path = require('path')
+const fs = require("fs");
+const path = require("path");
 
 //const trx = knex.transaction();
 
@@ -463,7 +463,28 @@ const propertyUnitController = {
       }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(rows);
+      var ws
+      
+      if (rows && rows.length) {
+        ws = XLSX.utils.json_to_sheet(rows);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          {
+            COMPANY: "",
+            "COMPANY NAME": "",
+            PROJECT: "",
+            "PROJECT NAME": "",
+            PROPERTY_TYPE_CODE: "",
+
+            BUILDING_PHASE_CODE: "",
+            FLOOR_ZONE_CODE: "",
+            UNIT_NUMBER: "",
+            DESCRIPTION: "",
+            "SALE AREA": ""
+          }
+        ]);
+      }
+
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "PropertyUnitData-" + Date.now() + ".csv";
@@ -476,7 +497,7 @@ const propertyUnitController = {
           Bucket: bucketName,
           Key: "Export/PropertyUnit/" + filename,
           Body: file_buffer,
-          ACL: 'public-read'
+          ACL: "public-read"
         };
         s3.putObject(params, function(err, data) {
           if (err) {
@@ -740,13 +761,16 @@ const propertyUnitController = {
                 projectId = projectIdResult[0].id;
               }
 
-              console.log('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',{
-                propertyTypeId,
-                buildingPhaseId,
-                floorZoneId,
-                companyId,
-                projectId
-              });
+              console.log(
+                "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
+                {
+                  propertyTypeId,
+                  buildingPhaseId,
+                  floorZoneId,
+                  companyId,
+                  projectId
+                }
+              );
 
               if (!propertyTypeId) {
                 continue;

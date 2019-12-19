@@ -450,18 +450,21 @@ const serviceDetailsController = {
         knex
           .count("* as count")
           .from("location_tags_master")
-          .where({ orgId: orgId })
+          .leftJoin("users", "location_tags_master.createdBy", "users.id")
+          .where({ "location_tags_master.orgId": orgId })
           .first(),
         knex("location_tags_master")
+          .leftJoin("users", "location_tags_master.createdBy", "users.id")
+          .where({ "location_tags_master.orgId": orgId })
           .select([
-            "id as ID",
-            "title as Location Tag",
-            "descriptionEng as Description English",
-            "descriptionThai as Description Thai",
-            "isActive as Status",
-            "createdAt as Date Created"
+            "location_tags_master.id as ID",
+            "location_tags_master.title as Location Tag",
+            "location_tags_master.descriptionEng as Description English",
+            "location_tags_master.descriptionThai as Description Thai",
+            "location_tags_master.isActive as Status",
+            "location_tags_master.createdAt as Date Created",
+            "users.name as Created By"
           ])
-          .where({ orgId: orgId })
           .offset(offset)
           .limit(per_page)
       ]);
@@ -572,19 +575,21 @@ const serviceDetailsController = {
         knex
           .count("* as count")
           .from("incident_priority")
-          .where({ orgId: orgId })
+          .leftJoin("users", "incident_priority.createdBy", "users.id")
+          .where({ "incident_priority.orgId": orgId })
           .first(),
         knex("incident_priority")
+          .leftJoin("users", "incident_priority.createdBy", "users.id")
+          .where({ "incident_priority.orgId": orgId })
           .select([
-            "id",
-            "incidentPriorityCode as Priorities",
-            "descriptionEng as Description English",
-            "descriptionThai as Description Thai",
-            "isActive as Status",
-            "createdBy as Created By",
-            "createdAt as Date Created"
+            "incident_priority.id as id",
+            "incident_priority.incidentPriorityCode as Priorities",
+            "incident_priority.descriptionEng as Description English",
+            "incident_priority.descriptionThai as Description Thai",
+            "incident_priority.isActive as Status",
+            "users.name as Created By",
+            "incident_priority.createdAt as Date Created"
           ])
-          .where({ orgId: orgId })
           .offset(offset)
           .limit(per_page)
       ]);
@@ -931,24 +936,24 @@ const serviceDetailsController = {
       });
     }
   },
-  getLocationTags: async (req, res) => {
-    try {
-      const tags = await knex("location_tags_master")
-        .select("id", "title")
-        .where({ orgId: req.orgId });
-      return res.status(200).json({
-        data: {
-          locationTags: tags
-        }
-      });
-    } catch (err) {
-      console.log("[controllers][servicedetails][signup] :  Error", err);
-      //trx.rollback
-      res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-      });
-    }
-  },
+  // getLocationTags: async (req, res) => {
+  //   try {
+  //     const tags = await knex("location_tags_master")
+  //       .select("id", "title")
+  //       .where({ orgId: req.orgId });
+  //     return res.status(200).json({
+  //       data: {
+  //         locationTags: tags
+  //       }
+  //     });
+  //   } catch (err) {
+  //     console.log("[controllers][servicedetails][signup] :  Error", err);
+  //     //trx.rollback
+  //     res.status(500).json({
+  //       errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+  //     });
+  //   }
+  // },
 
   /**Export Priorities Data  */
 
@@ -965,9 +970,9 @@ const serviceDetailsController = {
           .select([
             "incidentPriorityCode as PRIORITY_CODE",
             "descriptionEng as DESCRIPTION",
-            "descriptionThai as DESCRIPTION_ALTERNATE"
+            "descriptionThai as ALTERNATE_DESCRIPTION"
           ])
-          .where({"orgId": orgId })
+          .where({ orgId: orgId })
       ]);
 
       let tempraryDirectory = null;
@@ -1056,16 +1061,15 @@ const serviceDetailsController = {
         let currentTime = new Date().getTime();
         //console.log('DATA: ',data)
 
-        if (( data[0].A == "PRIORITY_CODE" &&
-            data[0].B == "DESCRIPTION" &&
-            data[0].C == "DESCRIPTION_ALTERNATE"
-          )) 
-          {
+        if (
+          data[0].A == "Ã¯Â»Â¿PRIORITY_CODE" || data[0].A == "PRIORITY_CODE" &&
+          data[0].B == "DESCRIPTION" &&
+          data[0].C == "ALTERNATE_DESCRIPTION"
+        ) {
           if (data.length > 0) {
             let i = 0;
-            console.log('Data[0]', data[0])
+            console.log("Data[0]", data[0]);
             for (let priorityData of data) {
-             
               i++;
 
               if (i > 1) {
@@ -1081,9 +1085,10 @@ const serviceDetailsController = {
                     incidentPriorityCode: priorityData.A,
                     descriptionEng: priorityData.B,
                     descriptionThai: priorityData.C,
-                    isActive:true,
+                    isActive: true,
                     createdBy: req.me.id,
-                    createdAt: currentTime
+                    createdAt: currentTime,
+                    updatedAt: currentTime
                   };
 
                   resultData = await knex
@@ -1094,12 +1099,16 @@ const serviceDetailsController = {
               }
             }
 
+            
+
             let deleteFile = await fs.unlink(file_path, err => {
               console.log("File Deleting Error " + err);
             });
             return res.status(200).json({
-              message: "Charges Data Import Successfully!"
+              message: "Priority Data Import Successfully!"
             });
+
+
           }
         } else {
           return res.status(400).json({
@@ -1128,81 +1137,98 @@ const serviceDetailsController = {
   },
 
   // End
+ 
 
-  /**EXPORT LOCATION TAG DATA */
+  /**Import Priorities Data  */
 
-  exportLocationTagData: async (req, res) => {
+  importLocationTag: async (req, res) => {
     try {
-      let locationTags = null;
-      let userId = req.me.id;
-      let orgId = req.orgId;
+      if (req.file) {
+        console.log(req.file);
+        let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+          tempraryDirectory = "tmp/";
+        } else {
+          tempraryDirectory = "/tmp/";
+        }
+        let resultData = null;
+        let file_path = tempraryDirectory + req.file.filename;
+        let wb = XLSX.readFile(file_path, { type: "binary" });
+        let ws = wb.Sheets[wb.SheetNames[0]];
+        let data = XLSX.utils.sheet_to_json(ws, {
+          type: "string",
+          header: "A",
+          raw: false
+        });
+        //data         = JSON.stringify(data);
+        let result = null;
+        let currentTime = new Date().getTime();
+        //console.log('DATA: ',data)
 
-      let reqData = req.query;
-      let rows;
-      [rows] = await Promise.all([
-        knex("location_tags_master")
-          .select([
-            "title as TITLE",
-            "descriptionEng as DESCRIPTION",
-            "descriptionThai as ALTERNATE_DESCRIPTION",
-            "isActive as STATUS"
-          ])
-          .where({ orgId: orgId })
-      ]);
+        if (
+          data[0].A == "Ã¯Â»Â¿TITLE" || data[0].A == "TITLE" &&
+          data[0].B == "DESCRIPTION" &&
+          data[0].C == "ALTERNATE_DESCRIPTION"
+        ) {
+          if (data.length > 0) {
+            let i = 0;
+            console.log("Data[0]", data[0]);
+            for (let locationTagData of data) {
+              i++;
 
-      let tempraryDirectory = null;
-      let bucketName = null;
-      if (process.env.IS_OFFLINE) {
-        bucketName = "sls-app-resources-bucket";
-        tempraryDirectory = "tmp/";
-      } else {
-        tempraryDirectory = "/tmp/";
-        bucketName = process.env.S3_BUCKET_NAME;
-      }
+              if (i > 1) {
+                let checkExist = await knex("location_tags_master")
+                  .select("title")
+                  .where({
+                    title: locationTagData.A,
+                    orgId: req.orgId
+                  });
+                if (checkExist.length < 1) {
+                  let insertData = {
+                    orgId: req.orgId,
+                    title: locationTagData.A,
+                    descriptionEng: locationTagData.B,
+                    descriptionThai: locationTagData.C,
+                    isActive: true,
+                    createdBy: req.me.id,
+                    createdAt: currentTime,
+                    updatedAt: currentTime
+                  };
 
-      var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(rows);
-      XLSX.utils.book_append_sheet(wb, ws, "pres");
-      XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename = "LocationTagData-" + Date.now() + ".csv";
-      let filepath = tempraryDirectory + filename;
-      let check = XLSX.writeFile(wb, filepath);
-      const AWS = require("aws-sdk");
+                  resultData = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .into("location_tags_master");
+                }
+              }
+            }
 
-      fs.readFile(filepath, function(err, file_buffer) {
-        var s3 = new AWS.S3();
-        var params = {
-          Bucket: bucketName,
-          Key: "Export/LocationTag/" + filename,
-          Body: file_buffer,
-          ACL: "public-read"
-        };
-        s3.putObject(params, function(err, data) {
-          if (err) {
-            console.log("Error at uploadCSVFileOnS3Bucket function", err);
-            res.status(500).json({
-              errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-            });
-            //next(err);
-          } else {
-            console.log("File uploaded Successfully");
-            //next(null, filePath);
-            let deleteFile = fs.unlink(filepath, err => {
+            let deleteFile = await fs.unlink(file_path, err => {
               console.log("File Deleting Error " + err);
             });
-            let url =
-              "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/LocationTag/" +
-              filename;
-            res.status(200).json({
-              data: rows,
-              message: "Location Tags List!",
-              url: url
+            return res.status(200).json({
+              message: "Location Tag Data Import Successfully!"
             });
           }
+        } else {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+            ]
+          });
+        }
+      } else {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
         });
-      });
+      }
     } catch (err) {
-      console.log("[controllers][servicedetails][signup] :  Error", err);
+      console.log(
+        "[controllers][propertysetup][importCompanyData] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
