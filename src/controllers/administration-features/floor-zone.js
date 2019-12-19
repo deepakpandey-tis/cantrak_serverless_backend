@@ -9,8 +9,8 @@ const knex = require("../../db/knex");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
-const fs = require('fs')
-const path = require('path')
+const fs = require("fs");
+const path = require("path");
 //const trx = knex.transaction();
 
 const floorZoneController = {
@@ -111,7 +111,11 @@ const floorZoneController = {
         }
 
         let currentTime = new Date().getTime();
-        let insertData = { ...payload, createdBy: userId, updatedAt: currentTime };
+        let insertData = {
+          ...payload,
+          createdBy: userId,
+          updatedAt: currentTime
+        };
         let insertResult = await knex
           .update(insertData)
           .where({ id: payload.id, orgId: orgId })
@@ -160,11 +164,29 @@ const floorZoneController = {
       let floorZoneResult = await knex("floor_and_zones")
         .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
         .innerJoin("projects", "floor_and_zones.projectId", "projects.id")
-        .innerJoin("property_types", "floor_and_zones.propertyTypeId", "property_types.id")
-        .innerJoin("buildings_and_phases", "floor_and_zones.buildingPhaseId", "buildings_and_phases.id")
-        .select("floor_and_zones.*", "companies.companyName as companyName", "companies.companyId as compId", "companies.id as companyId", "projects.projectName", "property_types.propertyTypeCode", "buildings_and_phases.buildingPhaseCode")
-        .where({ "floor_and_zones.id": payload.id, "floor_and_zones.orgId": orgId })
-
+        .innerJoin(
+          "property_types",
+          "floor_and_zones.propertyTypeId",
+          "property_types.id"
+        )
+        .innerJoin(
+          "buildings_and_phases",
+          "floor_and_zones.buildingPhaseId",
+          "buildings_and_phases.id"
+        )
+        .select(
+          "floor_and_zones.*",
+          "companies.companyName as companyName",
+          "companies.companyId as compId",
+          "companies.id as companyId",
+          "projects.projectName",
+          "property_types.propertyTypeCode",
+          "buildings_and_phases.buildingPhaseCode"
+        )
+        .where({
+          "floor_and_zones.id": payload.id,
+          "floor_and_zones.orgId": orgId
+        });
 
       floorZone = _.omit(floorZoneResult[0], [
         "createdAt",
@@ -241,7 +263,9 @@ const floorZoneController = {
         let offset = (page - 1) * per_page;
 
         let [total, rows] = await Promise.all([
-          knex.count('* as count').from("floor_and_zones")
+          knex
+            .count("* as count")
+            .from("floor_and_zones")
             .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
             .leftJoin("users", "floor_and_zones.createdBy", "users.id")
             .where({ "floor_and_zones.orgId": orgId })
@@ -250,16 +274,18 @@ const floorZoneController = {
             .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
             .leftJoin("users", "floor_and_zones.createdBy", "users.id")
             .select([
-              'floor_and_zones.floorZoneCode as Floor/Zone',
-              'floor_and_zones.id as id',
-              'floor_and_zones.description as Description',
-              'floor_and_zones.totalFloorArea as Total Area',
-              'floor_and_zones.isActive as Status',
-              'users.name as Created By',
-              'floor_and_zones.createdAt as Date Created'
+              "floor_and_zones.floorZoneCode as Floor/Zone",
+              "floor_and_zones.id as id",
+              "floor_and_zones.description as Description",
+              "floor_and_zones.totalFloorArea as Total Area",
+              "floor_and_zones.isActive as Status",
+              "users.name as Created By",
+              "floor_and_zones.createdAt as Date Created"
             ])
-            .where({ "floor_and_zones.orgId": orgId }).offset(offset).limit(per_page)
-        ])
+            .where({ "floor_and_zones.orgId": orgId })
+            .offset(offset)
+            .limit(per_page)
+        ]);
 
         let count = total.count;
         pagination.total = count;
@@ -285,27 +311,33 @@ const floorZoneController = {
         }
 
         let [total, rows] = await Promise.all([
-          knex.count('* as count').from("floor_and_zones")
+          knex
+            .count("* as count")
+            .from("floor_and_zones")
             .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
             .leftJoin("users", "floor_and_zones.createdBy", "users.id")
             .where(filters, { "floor_and_zones.orgId": orgId })
 
-            .offset(offset).limit(per_page).first(),
-          knex.from("floor_and_zones")
+            .offset(offset)
+            .limit(per_page)
+            .first(),
+          knex
+            .from("floor_and_zones")
             .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
             .leftJoin("users", "floor_and_zones.createdBy", "users.id")
             .select([
-              'floor_and_zones.floorZoneCode as Floor/Zone',
-              'floor_and_zones.description as Description',
-              'floor_and_zones.id as id',
-              'floor_and_zones.totalFloorArea as Total Area',
-              'floor_and_zones.isActive as Status',
-              'users.name as Created By',
-              'floor_and_zones.createdAt as Date Created'
-
+              "floor_and_zones.floorZoneCode as Floor/Zone",
+              "floor_and_zones.description as Description",
+              "floor_and_zones.id as id",
+              "floor_and_zones.totalFloorArea as Total Area",
+              "floor_and_zones.isActive as Status",
+              "users.name as Created By",
+              "floor_and_zones.createdAt as Date Created"
             ])
-            .where(filters, { "floor_and_zones.orgId": orgId }).offset(offset).limit(per_page)
-        ])
+            .where(filters, { "floor_and_zones.orgId": orgId })
+            .offset(offset)
+            .limit(per_page)
+        ]);
 
         let count = total.count;
         pagination.total = count;
@@ -334,7 +366,6 @@ const floorZoneController = {
   },
   exportFloorZone: async (req, res) => {
     try {
-
       let orgId = req.orgId;
       let reqData = req.query;
       let companyId = req.query.companyId;
@@ -345,9 +376,17 @@ const floorZoneController = {
           knex("floor_and_zones")
             .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
             .leftJoin("projects", "floor_and_zones.projectId", "projects.id")
-            .leftJoin("buildings_and_phases", "floor_and_zones.buildingPhaseId", "buildings_and_phases.id")
+            .leftJoin(
+              "buildings_and_phases",
+              "floor_and_zones.buildingPhaseId",
+              "buildings_and_phases.id"
+            )
             .leftJoin("users", "floor_and_zones.createdBy", "users.id")
-            .leftJoin("property_types", "floor_and_zones.propertyTypeId", "property_types.id")
+            .leftJoin(
+              "property_types",
+              "floor_and_zones.propertyTypeId",
+              "property_types.id"
+            )
             .select([
               // "floor_and_zones.orgId as ORGANIZATION_ID",
               "companies.companyId as COMPANY",
@@ -358,7 +397,7 @@ const floorZoneController = {
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
               "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
               "floor_and_zones.description as DESCRIPTION",
-              "floor_and_zones.totalFloorArea as TOTAL_FLOOR_AREA",
+              "floor_and_zones.totalFloorArea as TOTAL_FLOOR_AREA"
               //"floor_and_zones.isActive as STATUS",
               //"users.name as CREATED_BY",
               //"floor_and_zones.createdBy as CREATED_BY_ID",
@@ -367,15 +406,22 @@ const floorZoneController = {
             .where({ "floor_and_zones.orgId": orgId })
         ]);
       } else {
-
         [rows] = await Promise.all([
           knex
             .from("floor_and_zones")
             .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
             .leftJoin("projects", "floor_and_zones.projectId", "projects.id")
-            .leftJoin("buildings_and_phases", "floor_and_zones.buildingPhaseId", "buildings_and_phases.id")
+            .leftJoin(
+              "buildings_and_phases",
+              "floor_and_zones.buildingPhaseId",
+              "buildings_and_phases.id"
+            )
             .leftJoin("users", "floor_and_zones.createdBy", "users.id")
-            .leftJoin("property_types", "floor_and_zones.propertyTypeId", "property_types.id")
+            .leftJoin(
+              "property_types",
+              "floor_and_zones.propertyTypeId",
+              "property_types.id"
+            )
             .select([
               //"floor_and_zones.orgId as ORGANIZATION_ID",
               "companies.companyId as COMPANY",
@@ -386,42 +432,64 @@ const floorZoneController = {
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
               "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
               "floor_and_zones.description as DESCRIPTION",
-              "floor_and_zones.totalFloorArea as TOTAL_FLOOR_AREA",
+              "floor_and_zones.totalFloorArea as TOTAL_FLOOR_AREA"
               //"floor_and_zones.isActive as STATUS",
               // "users.name as CREATED_BY",
               // "floor_and_zones.createdBy as CREATED_BY_ID",
               // "floor_and_zones.createdAt as DATE_CREATED"
             ])
-            .where({ "floor_and_zones.companyId": companyId, "floor_and_zones.orgId": orgId })
+            .where({
+              "floor_and_zones.companyId": companyId,
+              "floor_and_zones.orgId": orgId
+            })
         ]);
       }
 
       let tempraryDirectory = null;
       let bucketName = null;
       if (process.env.IS_OFFLINE) {
-        bucketName = 'sls-app-resources-bucket';
-        tempraryDirectory = 'tmp/';
+        bucketName = "sls-app-resources-bucket";
+        tempraryDirectory = "tmp/";
       } else {
-        tempraryDirectory = '/tmp/';
+        tempraryDirectory = "/tmp/";
         bucketName = process.env.S3_BUCKET_NAME;
       }
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(rows);
+      var ws;
+
+      if (rows && rows.length) {
+        ws = XLSX.utils.json_to_sheet(rows);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          {
+            COMPANY: "",
+            COMPANY_NAME: "",
+            PROJECT: "",
+            PROJECT_NAME: "",
+            PROPERTY_TYPE_CODE: "",
+            BUILDING_PHASE_CODE: "",
+            FLOOR_ZONE_CODE: "",
+            DESCRIPTION: "",
+            TOTAL_FLOOR_AREA: ""
+          }
+        ]);
+      }
+
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "FloorZoneData-" + Date.now() + ".csv";
       let filepath = tempraryDirectory + filename;
       let check = XLSX.writeFile(wb, filepath);
-      const AWS = require('aws-sdk');
-      fs.readFile(filepath, function (err, file_buffer) {
+      const AWS = require("aws-sdk");
+      fs.readFile(filepath, function(err, file_buffer) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
           Key: "Export/FloorZone/" + filename,
           Body: file_buffer,
-          ACL: 'public-read'
-        }
-        s3.putObject(params, function (err, data) {
+          ACL: "public-read"
+        };
+        s3.putObject(params, function(err, data) {
           if (err) {
             res.status(500).json({
               errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
@@ -431,8 +499,12 @@ const floorZoneController = {
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
-            let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
-            let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/FloorZone/" + filename;
+            let deleteFile = fs.unlink(filepath, err => {
+              console.log("File Deleting Error " + err);
+            });
+            let url =
+              "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/FloorZone/" +
+              filename;
 
             return res.status(200).json({
               data: rows,
@@ -441,8 +513,7 @@ const floorZoneController = {
             });
           }
         });
-      })
-
+      });
     } catch (err) {
       console.log("[controllers][generalsetup][viewfloorZone] :  Error", err);
       //trx.rollback
@@ -458,11 +529,19 @@ const floorZoneController = {
       let pagination = {};
 
       let [rows] = await Promise.all([
-        knex.from("floor_and_zones")
-          .leftJoin("buildings_and_phases", "floor_and_zones.buildingPhaseId", "buildings_and_phases.id")
-          .select('floor_and_zones.floorZoneCode', 'floor_and_zones.id as id')
-          .where({ "floor_and_zones.buildingPhaseId": buildingPhaseId, "floor_and_zones.orgId": orgId })
-      ])
+        knex
+          .from("floor_and_zones")
+          .leftJoin(
+            "buildings_and_phases",
+            "floor_and_zones.buildingPhaseId",
+            "buildings_and_phases.id"
+          )
+          .select("floor_and_zones.floorZoneCode", "floor_and_zones.id as id")
+          .where({
+            "floor_and_zones.buildingPhaseId": buildingPhaseId,
+            "floor_and_zones.orgId": orgId
+          })
+      ]);
 
       pagination.data = rows;
 
@@ -485,44 +564,47 @@ const floorZoneController = {
       let orgId = req.orgId;
 
       const { buildingPhaseId } = req.body;
-      const floor = await knex('floor_and_zones').select('*').where({ buildingPhaseId, orgId: orgId })
+      const floor = await knex("floor_and_zones")
+        .select("*")
+        .where({ buildingPhaseId, orgId: orgId });
       return res.status(200).json({
         data: {
           floor
         },
-        message: 'Floor zone list'
-      })
+        message: "Floor zone list"
+      });
     } catch (err) {
-      console.log('[controllers][generalsetup][viewfloorZone] :  Error', err);
+      console.log("[controllers][generalsetup][viewfloorZone] :  Error", err);
       //trx.rollback
       res.status(500).json({
-        errors: [
-          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
-        ],
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
   /**IMPORT FLOOR ZONE DATA */
   importFloorZoneData: async (req, res) => {
-
     try {
       if (req.file) {
         let tempraryDirectory = null;
         if (process.env.IS_OFFLINE) {
-          tempraryDirectory = 'tmp/';
+          tempraryDirectory = "tmp/";
         } else {
-          tempraryDirectory = '/tmp/';
+          tempraryDirectory = "/tmp/";
         }
         let resultData = null;
         let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: 'binary' });
+        let wb = XLSX.readFile(file_path, { type: "binary" });
         let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
+        let data = XLSX.utils.sheet_to_json(ws, {
+          type: "string",
+          header: "A",
+          raw: false
+        });
 
         let totalData = data.length - 1;
         let fail = 0;
         let success = 0;
-        console.log("=======", data[0], "+++++++++++++++")
+        console.log("=======", data[0], "+++++++++++++++");
         let result = null;
 
         if (
@@ -534,11 +616,10 @@ const floorZoneController = {
             data[0].D == "PROJECT_NAME" &&
             data[0].E == "PROPERTY_TYPE_CODE" &&
             data[0].F == "BUILDING_PHASE_CODE" &&
-            data[0].G == "FLOOR_ZONE_CODE" 
-            //&&
-            //data[0].H == "DESCRIPTION" &&
-            //data[0].I == "TOTAL_FLOOR_AREA"
-            )
+            data[0].G == "FLOOR_ZONE_CODE")
+          //&&
+          //data[0].H == "DESCRIPTION" &&
+          //data[0].I == "TOTAL_FLOOR_AREA"
           //&&
           // data[0].K == "STATUS" &&
           // data[0].L == "CREATED_BY" &&
@@ -552,7 +633,7 @@ const floorZoneController = {
 
               let companyData = await knex("companies")
                 .select("id")
-                .where({ companyId: floorData.A,orgId:req.orgId });
+                .where({ companyId: floorData.A, orgId: req.orgId });
               let companyId = null;
               if (!companyData && !companyData.length) {
                 continue;
@@ -602,29 +683,29 @@ const floorZoneController = {
                 //   .select("floorZoneCode")
                 //   .where({ floorZoneCode: floorData.G, orgId: req.orgId });
                 //if (checkExist.length < 1) {
-                  let currentTime = new Date().getTime();
-                  let insertData = {
-                    orgId: req.orgId,
-                    companyId: companyId,
-                    projectId: projectId,
-                    propertyTypeId: propertyTypeId,
-                    buildingPhaseId: buildingId,
-                    floorZoneCode: floorData.G,
-                    //description: floorData.H,
-                    //totalFloorArea: floorData.I,
-                    // isActive: floorData.K,
-                    // createdBy: floorData.M,
-                    createdAt: currentTime,
-                    updatedAt: currentTime
-                  };
+                let currentTime = new Date().getTime();
+                let insertData = {
+                  orgId: req.orgId,
+                  companyId: companyId,
+                  projectId: projectId,
+                  propertyTypeId: propertyTypeId,
+                  buildingPhaseId: buildingId,
+                  floorZoneCode: floorData.G,
+                  //description: floorData.H,
+                  //totalFloorArea: floorData.I,
+                  // isActive: floorData.K,
+                  // createdBy: floorData.M,
+                  createdAt: currentTime,
+                  updatedAt: currentTime
+                };
 
-                  resultData = await knex
-                    .insert(insertData)
-                    .returning(["*"])
-                    .into("floor_and_zones");
-                  if (resultData && resultData.length) {
-                    success++;
-                  }
+                resultData = await knex
+                  .insert(insertData)
+                  .returning(["*"])
+                  .into("floor_and_zones");
+                if (resultData && resultData.length) {
+                  success++;
+                }
                 // } else {
                 //   fail++;
                 // }
@@ -663,17 +744,17 @@ const floorZoneController = {
           });
         }
       } else {
-
         return res.status(400).json({
           errors: [
             { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
           ]
         });
-
       }
-
     } catch (err) {
-      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      console.log(
+        "[controllers][propertysetup][importCompanyData] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]

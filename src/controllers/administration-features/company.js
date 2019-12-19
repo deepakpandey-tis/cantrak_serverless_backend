@@ -9,10 +9,10 @@ const knex = require("../../db/knex");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
-const serviceRequest = require('../servicerequest')
-const fs = require('fs');
-const request = require('request');
-const path = require('path')
+const serviceRequest = require("../servicerequest");
+const fs = require("fs");
+const request = require("request");
+const path = require("path");
 //const trx = knex.transaction();
 
 const companyController = {
@@ -27,13 +27,27 @@ const companyController = {
         const schema = Joi.object().keys({
           companyName: Joi.string().required(),
           companyId: Joi.string().required(),
-          descriptionEng: Joi.string().allow('').optional(),
-          description1: Joi.string().allow('').optional(),
-          contactPerson: Joi.string().allow('').optional(),
-          companyAddressEng: Joi.string().allow('').optional(),
-          companyAddressThai: Joi.string().allow('').optional(),
-          logoFile: Joi.string().allow('').optional(),
-          taxId: Joi.string().allow('').optional(),
+          descriptionEng: Joi.string()
+            .allow("")
+            .optional(),
+          description1: Joi.string()
+            .allow("")
+            .optional(),
+          contactPerson: Joi.string()
+            .allow("")
+            .optional(),
+          companyAddressEng: Joi.string()
+            .allow("")
+            .optional(),
+          companyAddressThai: Joi.string()
+            .allow("")
+            .optional(),
+          logoFile: Joi.string()
+            .allow("")
+            .optional(),
+          taxId: Joi.string()
+            .allow("")
+            .optional()
         });
 
         const result = Joi.validate(payload, schema);
@@ -49,14 +63,14 @@ const companyController = {
             ]
           });
         }
-        console.log('ORG ID: ', orgId)
+        console.log("ORG ID: ", orgId);
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
           createdBy: userId,
           createdAt: currentTime,
           updatedAt: currentTime,
-          orgId: orgId,
+          orgId: orgId
         };
         let insertResult = await knex
           .insert(insertData)
@@ -100,15 +114,33 @@ const companyController = {
           country: Joi.string().required(),
           state: Joi.string().required(),
           city: Joi.string().required(),
-          zipCode: Joi.string().allow('').optional(),
-          telephone: Joi.string().allow('').optional(),
-          fax: Joi.string().allow('').optional(),
-          provinceCode: Joi.string().allow('').optional(),
-          amphurCode: Joi.string().allow('').optional(),
-          tumbonCode: Joi.string().allow('').optional(),
-          flag: Joi.string().allow('').optional(),
-          logoFile: Joi.string().allow('').optional(),
-          taxId: Joi.string().allow('').optional(),
+          zipCode: Joi.string()
+            .allow("")
+            .optional(),
+          telephone: Joi.string()
+            .allow("")
+            .optional(),
+          fax: Joi.string()
+            .allow("")
+            .optional(),
+          provinceCode: Joi.string()
+            .allow("")
+            .optional(),
+          amphurCode: Joi.string()
+            .allow("")
+            .optional(),
+          tumbonCode: Joi.string()
+            .allow("")
+            .optional(),
+          flag: Joi.string()
+            .allow("")
+            .optional(),
+          logoFile: Joi.string()
+            .allow("")
+            .optional(),
+          taxId: Joi.string()
+            .allow("")
+            .optional()
         });
 
         const result = Joi.validate(payload, schema);
@@ -289,7 +321,6 @@ const companyController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-
   },
   /* * Export csv Company Data */
   exportCsvCompanyData: async (req, res) => {
@@ -298,7 +329,6 @@ const companyController = {
       let payload = req.body;
 
       let [rows] = await Promise.all([
-
         knex("companies")
           .innerJoin("users", "users.id", "companies.createdBy")
           .where({ "companies.orgId": req.orgId })
@@ -310,7 +340,7 @@ const companyController = {
             "companies.companyAddressEng as ADDRESS",
             "companies.companyAddressThai as ALTERNATE_ADDRESS",
             "companies.taxId as TAX_ID",
-            "companies.contactPerson as CONTACT_PERSON",
+            "companies.contactPerson as CONTACT_PERSON"
             // "companies.isActive as STATUS",
             //"companies.telephone as CONTACT_NUMBER",
             //"users.name as CREATED BY",
@@ -322,31 +352,48 @@ const companyController = {
       let tempraryDirectory = null;
       let bucketName = null;
       if (process.env.IS_OFFLINE) {
-        bucketName = 'sls-app-resources-bucket';
-        tempraryDirectory = 'tmp/';
+        bucketName = "sls-app-resources-bucket";
+        tempraryDirectory = "tmp/";
       } else {
-        tempraryDirectory = '/tmp/';
+        tempraryDirectory = "/tmp/";
         bucketName = process.env.S3_BUCKET_NAME;
       }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(rows);
+      var ws;
+
+      if (rows && rows.length) {
+        ws = XLSX.utils.json_to_sheet(rows);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          {
+            COMPANY: "",
+            COMPANY_NAME: "",
+            COMPANY_ALTERNATE_NAME: "",
+            ADDRESS: "",
+            ALTERNATE_ADDRESS: "",
+            TAX_ID: "",
+            CONTACT_PERSON: ""
+          }
+        ]);
+      }
+
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "CompanyData-" + Date.now() + ".csv";
       let filepath = tempraryDirectory + filename;
       let check = XLSX.writeFile(wb, filepath);
-      const AWS = require('aws-sdk');
+      const AWS = require("aws-sdk");
 
-      fs.readFile(filepath, function (err, file_buffer) {
+      fs.readFile(filepath, function(err, file_buffer) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
           Key: "Export/Company/" + filename,
           Body: file_buffer,
-          ACL: 'public-read'
-        }
-        s3.putObject(params, function (err, data) {
+          ACL: "public-read"
+        };
+        s3.putObject(params, function(err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             res.status(500).json({
@@ -356,8 +403,12 @@ const companyController = {
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
-            let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
-            let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Company/" + filename;
+            let deleteFile = fs.unlink(filepath, err => {
+              console.log("File Deleting Error " + err);
+            });
+            let url =
+              "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Company/" +
+              filename;
             return res.status(200).json({
               data: rows,
               message: "Companies Data Export Successfully!",
@@ -365,7 +416,7 @@ const companyController = {
             });
           }
         });
-      })
+      });
 
       //})
     } catch (err) {
@@ -380,7 +431,9 @@ const companyController = {
     try {
       let pagination = {};
       let [result] = await Promise.all([
-        knex("companies").select('id', 'companyId', 'companyName as CompanyName').where({ "isActive": 'true', "orgId": req.orgId })
+        knex("companies")
+          .select("id", "companyId", "companyName as CompanyName")
+          .where({ isActive: "true", orgId: req.orgId })
       ]);
       pagination.data = result;
       return res.status(200).json({
@@ -399,52 +452,54 @@ const companyController = {
   },
   // Company List Data
   importCompanyData: async (req, res) => {
-
     try {
       if (req.file) {
-        console.log(req.file)
+        console.log(req.file);
         let tempraryDirectory = null;
         if (process.env.IS_OFFLINE) {
-          tempraryDirectory = 'tmp/';
+          tempraryDirectory = "tmp/";
         } else {
-          tempraryDirectory = '/tmp/';
+          tempraryDirectory = "/tmp/";
         }
         let resultData = null;
         let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: 'binary' });
+        let wb = XLSX.readFile(file_path, { type: "binary" });
         let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
+        let data = XLSX.utils.sheet_to_json(ws, {
+          type: "string",
+          header: "A",
+          raw: false
+        });
         //data         = JSON.stringify(data);
-        console.log("+++++++++++++", data, "=========")
+        console.log("+++++++++++++", data, "=========");
         let totalData = data.length - 1;
         let fail = 0;
         let success = 0;
         let result = null;
 
-        if (data[0].A == "COMPANY" || data[0].A == "Ã¯Â»Â¿COMPANY" &&
-          data[0].B == "COMPANY_NAME" &&
-          data[0].C == "COMPANY_ALTERNATE_NAME" &&
-          data[0].D == "ADDRESS" &&
-          data[0].E == "ALTERNATE_ADDRESS" &&
-          data[0].F == "TAX_ID" &&
-          data[0].G == "CONTACT_PERSON" 
+        if (
+          data[0].A == "COMPANY" ||
+          (data[0].A == "Ã¯Â»Â¿COMPANY" &&
+            data[0].B == "COMPANY_NAME" &&
+            data[0].C == "COMPANY_ALTERNATE_NAME" &&
+            data[0].D == "ADDRESS" &&
+            data[0].E == "ALTERNATE_ADDRESS" &&
+            data[0].F == "TAX_ID" &&
+            data[0].G == "CONTACT_PERSON")
           //&&
           // data[0].H == "STATUS"
         ) {
-
           if (data.length > 0) {
-
             let i = 0;
             for (let companyData of data) {
               i++;
 
               if (i > 1) {
-
-                let checkExist = await knex('companies').select('companyName')
-                  .where({ companyName: companyData.B, orgId: req.orgId })
-                  console.log("Check list company: ", checkExist);
+                let checkExist = await knex("companies")
+                  .select("companyName")
+                  .where({ companyName: companyData.B, orgId: req.orgId });
+                console.log("Check list company: ", checkExist);
                 if (checkExist.length < 1) {
-
                   let currentTime = new Date().getTime();
                   let insertData = {
                     orgId: req.orgId,
@@ -458,9 +513,12 @@ const companyController = {
                     isActive: true,
                     createdAt: currentTime,
                     updatedAt: currentTime
-                  }
+                  };
 
-                  resultData = await knex.insert(insertData).returning(['*']).into('companies');
+                  resultData = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .into("companies");
 
                   if (resultData && resultData.length) {
                     success++;
@@ -472,18 +530,28 @@ const companyController = {
             }
             let message = null;
             if (totalData == success) {
-              message = "System has processed processed ( " + totalData + " ) entries and added them successfully!";
+              message =
+                "System has processed processed ( " +
+                totalData +
+                " ) entries and added them successfully!";
             } else {
-              message = "System has processed processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
+              message =
+                "System has processed processed ( " +
+                totalData +
+                " ) entries out of which only ( " +
+                success +
+                " ) are added and others are failed ( " +
+                fail +
+                " ) due to validation!";
             }
-            let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
+            let deleteFile = await fs.unlink(file_path, err => {
+              console.log("File Deleting Error " + err);
+            });
             return res.status(200).json({
-              message: message,
+              message: message
             });
           }
-
         } else {
-
           return res.status(400).json({
             errors: [
               { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
@@ -491,17 +559,17 @@ const companyController = {
           });
         }
       } else {
-
         return res.status(400).json({
           errors: [
             { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
           ]
         });
-
       }
-
     } catch (err) {
-      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      console.log(
+        "[controllers][propertysetup][importCompanyData] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]

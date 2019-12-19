@@ -9,8 +9,8 @@ const knex = require("../../db/knex");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
-const fs     = require('fs');
-const path    = require('path')
+const fs = require("fs");
+const path = require("path");
 const request = require("request");
 //const trx = knex.transaction();
 
@@ -520,7 +520,7 @@ const buildingPhaseController = {
               "projects.projectName as PROJECT NAME",
               "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
-              "buildings_and_phases.description as DESCRIPTION",
+              "buildings_and_phases.description as DESCRIPTION"
               // "buildings_and_phases.isActive as STATUS"
               // "buildings_and_phases.createdBy as CREATED BY ID",
               // "buildings_and_phases.createdAt as DATE CREATED"
@@ -551,7 +551,7 @@ const buildingPhaseController = {
               "projects.projectName as PROJECT NAME",
               "buildings_and_phases.propertyTypeId as PROPERTY_TYPE_CODE",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
-              "buildings_and_phases.description as DESCRIPTION",
+              "buildings_and_phases.description as DESCRIPTION"
               // "buildings_and_phases.isActive as STATUS"
               // "buildings_and_phases.createdBy as CREATED BY ID",
               // "buildings_and_phases.createdAt as DATE CREATED"
@@ -570,7 +570,24 @@ const buildingPhaseController = {
       }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(rows);
+      var ws;
+
+      if (rows && rows.length) {
+        ws = XLSX.utils.json_to_sheet(rows);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          {
+            COMPANY: "",
+            "COMPANY NAME": "",
+            PROJECT: "",
+            "PROJECT NAME": "",
+            PROPERTY_TYPE_CODE: "",
+            BUILDING_PHASE_CODE: "",
+            DESCRIPTION: ""
+          }
+        ]);
+      }
+
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "BuildingPhaseData-" + Date.now() + ".csv";
@@ -583,39 +600,36 @@ const buildingPhaseController = {
           Bucket: bucketName,
           Key: "Export/BuildingPhase/" + filename,
           Body: file_buffer,
-          ACL: 'public-read'
+          ACL: "public-read"
         };
         s3.putObject(params, function(err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             //next(err);
             res.status(500).json({
-                  errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-            });             
-
+              errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
           } else {
             console.log("File uploaded Successfully");
-           
-            //next(null, filePath);
-          fs.unlink(filepath, err => {
-            console.log("File Deleting Error " + err);
-          });
-          let url =
-            "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/BuildingPhase/" +
-            filename;
 
-          return res.status(200).json({
-            data: {
-              buildingPhases: rows
-            },
-            message: "Building Phases Data Export Successfully!",
-            url: url
-          });
+            //next(null, filePath);
+            fs.unlink(filepath, err => {
+              console.log("File Deleting Error " + err);
+            });
+            let url =
+              "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/BuildingPhase/" +
+              filename;
+
+            return res.status(200).json({
+              data: {
+                buildingPhases: rows
+              },
+              message: "Building Phases Data Export Successfully!",
+              url: url
+            });
           }
         });
       });
-
-      
     } catch (err) {
       console.log(
         "[controllers][generalsetup][viewbuildingPhase] :  Error",
@@ -719,35 +733,38 @@ const buildingPhaseController = {
         //console.log('DATA: ',data)
 
         if (
-          (
-            //data[0].A == "ORGANIZATION_ID" || data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" &&
-            data[0].A == "Ã¯Â»Â¿COMPANY" || data[0].A == "COMPANY" &&
+          //data[0].A == "ORGANIZATION_ID" || data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" &&
+          data[0].A == "Ã¯Â»Â¿COMPANY" ||
+          (data[0].A == "COMPANY" &&
             data[0].B == "COMPANY NAME" &&
             data[0].C == "PROJECT" &&
             data[0].D == "PROJECT NAME" &&
             data[0].E == "PROPERTY_TYPE_CODE" &&
             data[0].F == "BUILDING_PHASE_CODE" &&
-            data[0].G == "DESCRIPTION" 
-            //&&
-            // data[0].I == "STATUS" &&
-            // data[0].J == "CREATED BY ID" &&
-            // data[0].K == "DATE CREATED"
-            )
+            data[0].G == "DESCRIPTION")
+          //&&
+          // data[0].I == "STATUS" &&
+          // data[0].J == "CREATED BY ID" &&
+          // data[0].K == "DATE CREATED"
         ) {
           if (data.length > 0) {
             let i = 0;
-            console.log('Data[0]', data[0])
-              let success = 0;
+            console.log("Data[0]", data[0]);
+            let success = 0;
 
             for (let buildingData of data) {
               // Find Company primary key
               let companyId = null;
               let projectId = null;
-              let propertyTypeId = null
-              console.log('ORGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGID: ',req.orgId)
+              let propertyTypeId = null;
+              console.log(
+                "ORGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGID: ",
+                req.orgId
+              );
 
-
-              let companyIdResult = await knex('companies').select('id').where({companyId:buildingData.A,orgId:req.orgId})
+              let companyIdResult = await knex("companies")
+                .select("id")
+                .where({ companyId: buildingData.A, orgId: req.orgId });
               let projectIdResult = await knex("projects")
                 .select("id")
                 .where({ project: buildingData.C, orgId: req.orgId });
@@ -760,19 +777,15 @@ const buildingPhaseController = {
               );
               if (propertyTypeIdResult && propertyTypeIdResult.length) {
                 propertyTypeId = propertyTypeIdResult[0].id;
-
               }
-              
 
-              if(companyIdResult && companyIdResult.length){
-              companyId = companyIdResult[0].id;
-
+              if (companyIdResult && companyIdResult.length) {
+                companyId = companyIdResult[0].id;
               }
               if (projectIdResult && projectIdResult.length) {
                 projectId = projectIdResult[0].id;
-
-            }
-              if(!companyId){
+              }
+              if (!companyId) {
                 console.log("breaking due to: null companyId");
                 continue;
               }
@@ -785,43 +798,51 @@ const buildingPhaseController = {
                 continue;
               }
 
-              console.log('^&&&&&&&&&&&&&&&&&&&&&&&&&&&& IDS &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&^',companyId,projectId,propertyTypeId)
+              console.log(
+                "^&&&&&&&&&&&&&&&&&&&&&&&&&&&& IDS &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&^",
+                companyId,
+                projectId,
+                propertyTypeId
+              );
 
               i++;
 
-              const checkExistance = await knex('buildings_and_phases').where({orgId:req.orgId,buildingPhaseCode:buildingData.F})
-              if(checkExistance.length){
+              const checkExistance = await knex("buildings_and_phases").where({
+                orgId: req.orgId,
+                buildingPhaseCode: buildingData.F
+              });
+              if (checkExistance.length) {
                 continue;
-              } 
+              }
 
               //if (i > 1) {
-                let currentTime = new Date().getTime()
-                // let checkExist = await knex("buildings_and_phases")
-                //   .select("buildingPhaseCode")
-                //   .where({
-                //     buildingPhaseCode: buildingData.F,
-                //     orgId: req.orgId
-                //   });
-                //if (checkExist.length < 1) {
-                  success++;
-                  let insertData = {
-                    orgId: req.orgId,
-                    companyId: companyId,
-                    projectId: projectId,
-                    buildingPhaseCode: buildingData.F,
-                    propertyTypeId: propertyTypeId,
-                    description: buildingData.G,
-                    // isActive: buildingData.H,
-                    // createdBy: buildingData.I,
-                    createdAt: currentTime,
-                    updatedAt: currentTime
-                  };
+              let currentTime = new Date().getTime();
+              // let checkExist = await knex("buildings_and_phases")
+              //   .select("buildingPhaseCode")
+              //   .where({
+              //     buildingPhaseCode: buildingData.F,
+              //     orgId: req.orgId
+              //   });
+              //if (checkExist.length < 1) {
+              success++;
+              let insertData = {
+                orgId: req.orgId,
+                companyId: companyId,
+                projectId: projectId,
+                buildingPhaseCode: buildingData.F,
+                propertyTypeId: propertyTypeId,
+                description: buildingData.G,
+                // isActive: buildingData.H,
+                // createdBy: buildingData.I,
+                createdAt: currentTime,
+                updatedAt: currentTime
+              };
 
-                  resultData = await knex
-                    .insert(insertData)
-                    .returning(["*"])
-                    .into("buildings_and_phases");
-                //}
+              resultData = await knex
+                .insert(insertData)
+                .returning(["*"])
+                .into("buildings_and_phases");
+              //}
               //}
             }
 
@@ -829,7 +850,7 @@ const buildingPhaseController = {
               console.log("File Deleting Error " + err);
             });
             return res.status(200).json({
-              message: success+" rows imported successfully!"
+              message: success + " rows imported successfully!"
             });
           }
         } else {

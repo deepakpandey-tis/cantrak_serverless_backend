@@ -12,4 +12,28 @@ router.get('/get-problem-type-list', authMiddleware.isAuthenticated, problemType
 /**EXPORT PROBLEM TYPE DATA*/
 router.get('/export-problem-type-data', authMiddleware.isAuthenticated, problemTypeController.exportProblemTypeData)
 
+/**IMPORT PROBLEM TYPE DATA */
+const path       = require('path');
+let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+           tempraryDirectory = 'tmp/';
+         } else {
+           tempraryDirectory = '/tmp/';  
+         }
+var multer  = require('multer');
+var storage = multer.diskStorage({
+	destination: tempraryDirectory,
+	filename: function ( req, file, cb ) {
+        let ext =  path.extname(file.originalname)
+        if(ext=='.csv'){
+        time = Date.now();
+        cb( null, 'ProblemTypeData-'+time+ext);
+        }else{
+            return false
+        }
+	}
+});
+var upload = multer( { storage: storage } );
+router.post('/import-problem-type-data',upload.single('file'), authMiddleware.isAuthenticated, problemTypeController.importProblemTypeData)
+
 module.exports = router

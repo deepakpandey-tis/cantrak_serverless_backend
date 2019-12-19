@@ -40,6 +40,5 @@ var storage = multer.diskStorage({
 var upload = multer( { storage: storage } );
 router.post('/import-service-status-data',upload.single('file'), authMiddleware.isAuthenticated, statusController.importServiceStatusData)
 
-
 module.exports = router;
  
