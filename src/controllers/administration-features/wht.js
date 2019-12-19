@@ -429,7 +429,19 @@ const whtController = {
       }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(rows);
+      var ws;
+
+      if (rows && rows.length) {
+        ws = XLSX.utils.json_to_sheet(rows);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          {
+            WHT_CODE: "",
+            TAX_PERCENTAGE: ""
+          }
+        ]);
+      }
+
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "WhtData-" + Date.now() + ".csv";
@@ -443,7 +455,7 @@ const whtController = {
           Bucket: bucketName,
           Key: "Export/Wht/" + filename,
           Body: file_buffer,
-          ACL: 'public-read'
+          ACL: "public-read"
         };
         s3.putObject(params, function(err, data) {
           if (err) {
@@ -497,7 +509,7 @@ const whtController = {
         //data         = JSON.stringify(data);
         let result = null;
         let currentTime = new Date().getTime();
-       
+
         //console.log('DATA: ',data)
 
         if (

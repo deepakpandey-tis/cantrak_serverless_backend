@@ -9,8 +9,8 @@ const knex = require("../../db/knex");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const XLSX = require("xlsx");
-const fs     = require('fs');
-const path    = require('path')
+const fs = require("fs");
+const path = require("path");
 //const trx = knex.transaction();
 
 const taxesfactionController = {
@@ -413,7 +413,7 @@ const taxesfactionController = {
           .where({ "taxes.orgId": req.orgId })
           .select([
             "taxes.taxCode as TAX CODE",
-            "taxes.taxPercentage as TAX PERCENTAGE"            
+            "taxes.taxPercentage as TAX PERCENTAGE"
           ])
       ]);
 
@@ -428,7 +428,19 @@ const taxesfactionController = {
       }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(rows);
+      var ws;
+
+      if (rows && rows.length) {
+        ws = XLSX.utils.json_to_sheet(rows);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          {
+            "TAX CODE": "",
+            "TAX PERCENTAGE": ""
+          }
+        ]);
+      }
+
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "TaxData-" + Date.now() + ".csv";
@@ -442,7 +454,7 @@ const taxesfactionController = {
           Bucket: bucketName,
           Key: "Export/Tax/" + filename,
           Body: file_buffer,
-          ACL: 'public-read'
+          ACL: "public-read"
         };
         s3.putObject(params, function(err, data) {
           if (err) {
@@ -494,9 +506,8 @@ const taxesfactionController = {
           raw: false
         });
         //data         = JSON.stringify(data);
-        let result = null; 
+        let result = null;
         let currentTime = new Date().getTime();
-       
 
         //console.log('DATA: ',data)
 

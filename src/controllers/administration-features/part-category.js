@@ -453,7 +453,7 @@ const PartCategoryController = {
                     categoryName: partCategoryData.A,
                     orgId: req.orgId
                   });
-                if (checkExist.length < 1 && partCategoryData.B) {
+                if (checkExist.length < 1 && partCategoryData.A) {
                   // let categoryIdResult = await knex("companies")
                   //   .select("id")
                   //   .where({
