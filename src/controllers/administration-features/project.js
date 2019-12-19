@@ -412,7 +412,23 @@ const ProjectController = {
         bucketName = process.env.S3_BUCKET_NAME;
       }
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(rows);
+      var ws;
+      if (rows && rows.length) {
+        ws = XLSX.utils.json_to_sheet(rows);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          { 
+              PROJECT:"",
+              PROJECT_NAME:"",
+              COMPANY:"",
+              COMPANY_NAME:"",
+              PROJECT_LOCATION:"",
+              PROJECT_LOCATION_ALTERNATE_LANGUAGE:"",
+              CURRENCY:""
+          }
+        ]);
+      }
+      //var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "ProjectData-" + Date.now() + ".csv";

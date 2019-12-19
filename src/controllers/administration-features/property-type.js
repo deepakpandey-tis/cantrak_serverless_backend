@@ -282,13 +282,24 @@ const propertyTypeController = {
         bucketName = process.env.S3_BUCKET_NAME;
       }
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(rows);
+      //var ws = XLSX.utils.json_to_sheet(rows);
 
       // if(rows && rows.length) {
 
       // }
 
-
+      var ws;
+      if (rows && rows.length) {
+        ws = XLSX.utils.json_to_sheet(rows);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          { 
+            PROPERTY_TYPE_CODE:"",
+            PROPERTY_TYPE:"",
+            DESCRIPTION:"",
+          }
+        ]);
+      }
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "PropertTypeData-" + Date.now() + ".csv";
@@ -313,7 +324,7 @@ const propertyTypeController = {
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
-            //let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
+            let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
             let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/PropertyType/" + filename;
             return res.status(200).json({
               propertyType: rows,
