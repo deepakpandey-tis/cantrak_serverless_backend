@@ -352,6 +352,7 @@ const serviceDetailsController = {
       let userId = req.me.id;
       let orgId = req.orgId;
 
+
       await knex.transaction(async trx => {
         // Insert in users table,
         const incidentTypePayload = req.body;
@@ -359,30 +360,18 @@ const serviceDetailsController = {
         DataResult = await knex("property_units")
           .join("companies", "property_units.companyId", "=", "companies.id")
           .join("projects", "property_units.projectId", "=", "projects.id")
-          .join(
-            "property_types",
-            "property_units.propertyTypeId",
-            "=",
-            "property_types.id"
-          )
-          .join(
-            "buildings_and_phases",
-            "property_units.buildingPhaseId",
-            "=",
-            "buildings_and_phases.id"
-          )
-          .join(
-            "floor_and_zones",
-            "property_units.floorZoneId",
-            "=",
-            "floor_and_zones.id"
-          )
+          .join("property_types","property_units.propertyTypeId","=","property_types.id")
+          .join("buildings_and_phases","property_units.buildingPhaseId","=","buildings_and_phases.id")
+          .join("floor_and_zones","property_units.floorZoneId","=","floor_and_zones.id")
+          .join("service_requests","property_units.houseId", "=", "service_requests.houseId")
           .select(
             "companies.companyName",
             "projects.projectName",
             "property_types.propertyType",
             "buildings_and_phases.buildingPhaseCode",
             "floor_and_zones.floorZoneCode",
+            "service_requests.description",
+            "service_requests.serviceType",
             "property_units.*"
           )
           .where({
@@ -391,8 +380,7 @@ const serviceDetailsController = {
           });
 
         console.log(
-          "[controllers][servicedetails][generaldetails]: View Data",
-          DataResult
+          "[controllers][servicedetails][generaldetails]: View Data", DataResult
         );
 
         //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
@@ -407,8 +395,8 @@ const serviceDetailsController = {
         );
 
         generalDetails = DataResult;
-
         trx.commit;
+
       });
 
       res.status(200).json({
