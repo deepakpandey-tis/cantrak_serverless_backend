@@ -76,4 +76,6 @@ router.post('/import-priority-data',upload.single("file"),authMiddleware.isAuthe
 router.post('/import-location-tag',upload1.single("file"),authMiddleware.isAuthenticated,serviceDetailsController.importLocationTag);
 
 
+router.get('/get-location-tag-all-list',authMiddleware.isAuthenticated,serviceDetailsController.getLocatioTagAllList);
+
 module.exports = router;

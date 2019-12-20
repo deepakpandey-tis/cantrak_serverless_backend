@@ -479,6 +479,8 @@ const ProjectController = {
         req.userProjectResources.map(v => v.projects)
       ).map(v => Number(v));
 
+      console.log("==========",projects,"==========")
+
       let pagination = {}
       console.log("companyId", companyId);
 

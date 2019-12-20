@@ -1234,6 +1234,25 @@ const serviceDetailsController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  /***GET LOCATION TAG ALL LIST */
+  getLocatioTagAllList:async (req,res)=>{
+
+    try{
+      let orgId  = req.orgId;
+      let result = await knex('location_tags_master').where({'orgId':orgId})
+      return res.status(200).json({
+        data:result,
+        message: "Location list!"
+      });
+
+  } catch (err) {
+   
+    res.status(500).json({
+      errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+    });
+  }
+
   }
 };
 

@@ -859,6 +859,25 @@ const commonAreaController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  /**GET ALL LIST COMMON AREA BY FLOOR ID */
+  getCommonAreaAllList:async (req,res)=>{
+   
+    try{
+      let orgId   = req.orgId;
+      let floorId = req.query.floorId;
+      let result  = await knex('common_area').where({isActive:true,'floorZoneId':floorId,orgId:orgId});
+
+      return res.status(200).json({
+        data:result,
+        message:"Common Area List",
+      });
+
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 
