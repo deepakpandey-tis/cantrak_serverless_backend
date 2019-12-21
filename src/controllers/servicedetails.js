@@ -1239,6 +1239,7 @@ const serviceDetailsController = {
   getLocatioTagAllList:async (req,res)=>{
 
     try{
+      
       let orgId  = req.orgId;
       let result = await knex('location_tags_master').where({'orgId':orgId})
       return res.status(200).json({

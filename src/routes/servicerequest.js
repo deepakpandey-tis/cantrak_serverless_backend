@@ -49,4 +49,10 @@ router.post('/get-property-units',authMiddleware.isAuthenticated,serviceRequestC
 
 router.post('/get-service-request-report-data', authMiddleware.isAuthenticated,serviceRequestController.getServiceRequestReportData)
 
+/**GET COMPANY ,PROJECT , BUILDING ,FLOOR BY HOUSE ID */
+router.get('/get-house-details',authMiddleware.isAuthenticated,serviceRequestController.getHouseDetailData)
+
+/*** CREATE SERVICE REQUEST */
+router.post('/create-service-request', authMiddleware.isAuthenticated,serviceRequestController.createServiceRequest)
+
 module.exports = router;
