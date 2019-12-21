@@ -106,14 +106,22 @@ const companyController = {
           id: Joi.string().required(),
           companyName: Joi.string().required(),
           companyId: Joi.string().required(),
-          descriptionEng: Joi.string().required(),
-          description1: Joi.string().required(),
-          contactPerson: Joi.string().required(),
-          companyAddressEng: Joi.string().required(),
-          companyAddressThai: Joi.string().required(),
-          country: Joi.string().required(),
-          state: Joi.string().required(),
-          city: Joi.string().required(),
+          descriptionEng: Joi.string().allow("")
+            .optional(),
+          description1: Joi.string().allow("")
+            .optional(),
+          contactPerson: Joi.string().allow("")
+            .optional(),
+          companyAddressEng: Joi.string().allow("")
+            .optional(),
+          companyAddressThai: Joi.string().allow("")
+            .optional(),
+          country: Joi.string().allow("")
+            .optional(),
+          state: Joi.string().allow("")
+            .optional(),
+          city: Joi.string().allow("")
+            .optional(),
           zipCode: Joi.string()
             .allow("")
             .optional(),

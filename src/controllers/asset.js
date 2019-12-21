@@ -252,7 +252,7 @@ const assetController = {
                 assetName,
                 assetModel,
                 // area,
-                category
+                category,
                 } = req.body;
             let pagination = {};
             let per_page = reqData.per_page || 10;
@@ -1910,7 +1910,7 @@ const assetController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-  }
+  },
 }
 
 module.exports = assetController;
