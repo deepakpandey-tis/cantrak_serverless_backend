@@ -352,30 +352,40 @@ const serviceDetailsController = {
       let userId = req.me.id;
       let orgId = req.orgId;
 
-
       await knex.transaction(async trx => {
         // Insert in users table,
-        const incidentTypePayload = req.body;
+        const incidentRequestPayload = req.body;
+
+        // Get HouseId By Service Request Id
+        const requestResult = await knex("service_requests").where({
+          isActive: "true",
+          id:incidentRequestPayload.id,
+          orgId: orgId
+        });
+        
+        let houseId = requestResult[0].houseId;
 
         DataResult = await knex("property_units")
-          .join("companies", "property_units.companyId", "=", "companies.id")
-          .join("projects", "property_units.projectId", "=", "projects.id")
-          .join("property_types","property_units.propertyTypeId","=","property_types.id")
-          .join("buildings_and_phases","property_units.buildingPhaseId","=","buildings_and_phases.id")
-          .join("floor_and_zones","property_units.floorZoneId","=","floor_and_zones.id")
-          .join("service_requests","property_units.houseId", "=", "service_requests.houseId")
+          .leftJoin("companies", "property_units.companyId", "=", "companies.id")
+          .leftJoin("projects", "property_units.projectId", "=", "projects.id")
+          .leftJoin("property_types","property_units.propertyTypeId","=","property_types.id")
+          .leftJoin("buildings_and_phases","property_units.buildingPhaseId","=","buildings_and_phases.id")
+          .leftJoin("floor_and_zones","property_units.floorZoneId","=","floor_and_zones.id")
+          .leftJoin("service_requests","property_units.houseId", "=", "service_requests.houseId")
+          
           .select(
             "companies.companyName",
             "projects.projectName",
             "property_types.propertyType",
             "buildings_and_phases.buildingPhaseCode",
             "floor_and_zones.floorZoneCode",
-            "service_requests.description",
+            "service_requests.description as descriptions",
+            "service_requests.location",
             "service_requests.serviceType",
             "property_units.*"
           )
           .where({
-            "property_units.houseId": incidentTypePayload.houseId,
+            "property_units.houseId": houseId,
             "property_units.orgId": orgId
           });
 
@@ -387,6 +397,7 @@ const serviceDetailsController = {
 
         DataResult = _.omit(
           DataResult[0],
+          ["description"],
           ["companyId"],
           ["projectId"],
           ["propertyTypeId"],

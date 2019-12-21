@@ -744,6 +744,7 @@ const serviceRequestController = {
             )
             .select([
               "service_requests.id as S Id",
+              "service_requests.houseId as houseId",
               "service_requests.description as Description",
               "incident_categories.descriptionEng as Category",
               "incident_sub_categories.descriptionEng as Problem",
@@ -785,6 +786,7 @@ const serviceRequestController = {
             )
             .select([
               "service_requests.id as S Id",
+              "service_requests.houseId as houseId",
               "service_requests.description as Description",
               "incident_categories.descriptionEng as Category",
               "incident_sub_categories.descriptionEng as Problem",
