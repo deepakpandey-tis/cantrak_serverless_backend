@@ -112,7 +112,9 @@ const serviceRequestController = {
       let images = null;
 
       await knex.transaction(async trx => {
+        let orgId    = req.orgId;
         const serviceProblemPayload = _.omit(req.body, ["images"]);
+        let payload = req.body;
         console.log("[controllers][service][problem]", serviceProblemPayload);
 
         // validate keys
@@ -145,7 +147,8 @@ const serviceRequestController = {
         const insertData = {
           ...serviceProblemPayload,
           createdAt: currentTime,
-          updatedAt: currentTime
+          updatedAt: currentTime,
+          orgId:orgId
         };
 
         console.log("[controllers][service][problem]: Insert Data", insertData);
@@ -160,19 +163,27 @@ const serviceRequestController = {
 
         // Add to images with serviceRequestId and service_requests
         if (req.body.images && req.body.images.length) {
-          images = req.body.images.map(image => ({
-            ...image,
-            createdAt: currentTime,
-            updatedAt: currentTime,
-            entityId: serviceProblem.id,
-            entityType: "service_problems"
-          }));
-          let addedImages = await knex
-            .insert(images)
-            .returning(["*"])
-            .transacting(trx)
-            .into("images");
-          images = addedImages;
+
+          let imagesData = req.body.images;
+          for (image of imagesData) {
+            let d = await knex.insert({ entityId: payload.serviceRequestId, ...image, entityType: 'service_problems', createdAt: currentTime, updatedAt: currentTime ,orgId:orgId}).returning(['*']).transacting(trx).into('images');
+            //images.push(d[0])
+          }
+
+
+          // images = req.body.images.map(image => ({
+          //   ...image,
+          //   createdAt: currentTime,
+          //   updatedAt: currentTime,
+          //   entityId: serviceProblem.id,
+          //   entityType: "service_problems"
+          // }));
+          // let addedImages = await knex
+          //   .insert(images)
+          //   .returning(["*"])
+          //   .transacting(trx)
+          //   .into("images");
+          // images = addedImages;
         }
 
         trx.commit;
@@ -1221,7 +1232,7 @@ const serviceRequestController = {
       //  uploadURL = uploadURL.replace("https://", "http://").replace(".com", ".com:8000");
       //}
       //console.log("++++++++++",uploadURL,"+====================")
-      await s3.putObject(s3Params, function(err, data) {
+      await s3.putObject(s3Params, function (err, data) {
         if (err) {
           console.log("Error==", err, "Error");
         } else {
@@ -1468,11 +1479,11 @@ const serviceRequestController = {
       });
     }
   },
-  getServiceRequestByMonth: async (req, res) => {},
+  getServiceRequestByMonth: async (req, res) => { },
   getUrl: getUploadURL,
-  getServiceRequestAssignedAssets:async(req,res)=>{
-    try{
-      let {serviceRequestId} = req.body;
+  getServiceRequestAssignedAssets: async (req, res) => {
+    try {
+      let { serviceRequestId } = req.body;
       let reqData = req.query
       let total, rows;
 
@@ -1481,73 +1492,73 @@ const serviceRequestController = {
       let page = reqData.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
-      [total,rows] = await Promise.all([
+      [total, rows] = await Promise.all([
         knex("asset_master")
-        .innerJoin(
-          "asset_category_master",
-          "asset_master.assetCategoryId",
-          "asset_category_master"
-        )
-        .innerJoin(
-          "assigned_assets",
-          "asset_master.id",
-          "assigned_assets.entityId"
-        )
-        .innerJoin("companies","asset_master.companyId","companies.id")
-        .select([
-          "asset_master.assetName as assetName",
-          "asset_master.model as model",
-          "asset_category_master.categoryName as categoryName",
-          "companies.companyName as companyName"
-        ])
-        .where({
-          entityType: "service_requests",
-          entityId: serviceRequestId,
-          orgId: req.orgId
-        }),
-        
+          .innerJoin(
+            "asset_category_master",
+            "asset_master.assetCategoryId",
+            "asset_category_master"
+          )
+          .innerJoin(
+            "assigned_assets",
+            "asset_master.id",
+            "assigned_assets.entityId"
+          )
+          .innerJoin("companies", "asset_master.companyId", "companies.id")
+          .select([
+            "asset_master.assetName as assetName",
+            "asset_master.model as model",
+            "asset_category_master.categoryName as categoryName",
+            "companies.companyName as companyName"
+          ])
+          .where({
+            entityType: "service_requests",
+            entityId: serviceRequestId,
+            orgId: req.orgId
+          }),
+
         knex("asset_master")
-        .innerJoin(
-          "asset_category_master",
-          "asset_master.assetCategoryId",
-          "asset_category_master"
-        )
-        .innerJoin(
-          "assigned_assets",
-          "asset_master.id",
-          "assigned_assets.entityId"
-        )
-        .innerJoin("companies","asset_master.companyId","companies.id")
-        .select([
-          "asset_master.assetName as assetName",
-          "asset_master.model as model",
-          "asset_category_master.categoryName as categoryName",
-          "companies.companyName as companyName"
-        ])
-        .where({
-          entityType: "service_requests",
-          entityId: serviceRequestId,
-          orgId: req.orgId
-        }).limit(per_page).offset(offset)])
+          .innerJoin(
+            "asset_category_master",
+            "asset_master.assetCategoryId",
+            "asset_category_master"
+          )
+          .innerJoin(
+            "assigned_assets",
+            "asset_master.id",
+            "assigned_assets.entityId"
+          )
+          .innerJoin("companies", "asset_master.companyId", "companies.id")
+          .select([
+            "asset_master.assetName as assetName",
+            "asset_master.model as model",
+            "asset_category_master.categoryName as categoryName",
+            "companies.companyName as companyName"
+          ])
+          .where({
+            entityType: "service_requests",
+            entityId: serviceRequestId,
+            orgId: req.orgId
+          }).limit(per_page).offset(offset)])
 
 
-        let count = total.length;
-        pagination.total = count;
-        pagination.per_page = per_page;
-        pagination.offset = offset;
-        pagination.to = offset + rows.length;
-        pagination.last_page = Math.ceil(count / per_page);
-        pagination.current_page = page;
-        pagination.from = offset;
-        pagination.data = rows;
+      let count = total.length;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
 
       return res.status(200).json({
-        data:{
-          assets:pagination
+        data: {
+          assets: pagination
         }
       })
 
-    }catch(err){
+    } catch (err) {
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
@@ -1555,133 +1566,153 @@ const serviceRequestController = {
   },
 
   /**CREATE SERVICE REQUEST */
-  createServiceRequest:async (req,res)=>{
+  createServiceRequest: async (req, res) => {
 
-    try{
-        let result;
-        let orgId       = req.orgId;
-        await knex.transaction(async (trx) => {
-        let payload  = req.body;
+    try {
+      let result;
+      let orgId = req.orgId;
+      await knex.transaction(async (trx) => {
+        let payload = _.omit(req.body, ["images"]);
         const schema = Joi.object().keys({
-            serviceRequestId: Joi.number().required(),
-            areaName: Joi.string().allow("").optional(),
-            building: Joi.string().required(),
-            commonArea: Joi.string().allow("").optional(),
-            company: Joi.string().required(),
-            description: Joi.string().required(),
-            floor: Joi.string().required(),
-            house: Joi.string().required(),
-            location: Joi.string().allow("").optional(),
-            locationTags: Joi.array().items(Joi.number().optional()),
-            project: Joi.string().required(),
-            serviceType: Joi.string().required(),
-            unit: Joi.string().required(),
-            userId: Joi.string().required(),
+          serviceRequestId: Joi.number().required(),
+          areaName: Joi.string().allow("").optional(),
+          building: Joi.string().required(),
+          commonArea: Joi.string().allow("").optional(),
+          company: Joi.string().required(),
+          description: Joi.string().required(),
+          floor: Joi.string().required(),
+          house: Joi.string().required(),
+          location: Joi.string().allow("").optional(),
+          locationTags: Joi.array().items(Joi.number().optional()),
+          project: Joi.string().required(),
+          serviceType: Joi.string().required(),
+          unit: Joi.string().required(),
+          userId: Joi.string().required(),
+          priority:Joi.string().allow("").optional(),
         });
 
         const result = Joi.validate(payload, schema);
         console.log('[controllers][service][problem]: JOi Result', result);
 
         if (result && result.hasOwnProperty('error') && result.error) {
-            return res.status(400).json({
-                errors: [
-                    { code: 'VALIDATION_ERROR', message: result.error.message }
-                ],
-            });
-        }
-        const currentTime   = new Date().getTime();
-
-        let common 
-        let insertData; 
-        if(payload.commonArea){
-          insertData    = { 
-            description :payload.description,
-            projectId   :payload.project,
-            houseId     :payload.house,
-            commonId    :payload.commonArea,
-            requestedBy :payload.userId,
-            serviceType :payload.serviceType,
-            location    :payload.location,
-            priority    :"HIGH",
-            serviceStatusCode:"O",
-            orgId       :orgId,
-            createdAt   :currentTime,
-            updatedAt   :currentTime 
-                       }
-        }else{
-          insertData    = { 
-            description :payload.description,
-            projectId   :payload.project,
-            houseId     :payload.house,
-            requestedBy :payload.userId,
-            serviceType :payload.serviceType,
-            location    :payload.location,
-            priority    :"HIGH",
-            serviceStatusCode:"O",
-            orgId       :orgId,
-            createdAt   :currentTime,
-            updatedAt   :currentTime 
-                       }
-        }
-
-
-       
-        
-    let  serviceResult =       await knex.update(insertData).where({id:payload.serviceRequestId})
-                                 .returning(['*']).transacting(trx)
-                                 .into('service_requests');
-        for(let locationId of payload.locationTags){
-        const insertLocation = {
-            entityId      : payload.serviceRequestId,
-            entityType    : "service_requests",
-            locationTagId : locationId,
-            orgId         : orgId,
-            createdAt     : currentTime,
-            updatedAt      : currentTime
-                           }
-        let locationResult = await knex.insert(insertLocation).returning(['*']).transacting(trx).into('location_tags')
-                        }
-
-            trx.commit;
-        })
-        return res.status(200).json({
-            //data:result,
-            message: 'Service Request created successfully'
-        })
-
-    }catch(err) {
-        return res.status(500).json({
+          return res.status(400).json({
             errors: [
-                { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+              { code: 'VALIDATION_ERROR', message: result.error.message }
             ],
-        })
+          });
+        }
+        const currentTime = new Date().getTime();
+
+        /*UPDATE SERVICE REQUEST DATA OPEN */
+        let common
+        let priority;
+        if(payload.priority){
+          priority = payload.priority;
+        } else{
+          priority = "HIGH";
+        }
+        let insertData;
+        if (payload.commonArea) {
+          insertData = {
+            description: payload.description,
+            projectId: payload.project,
+            houseId: payload.house,
+            commonId: payload.commonArea,
+            requestedBy: payload.userId,
+            serviceType: payload.serviceType,
+            location: payload.location,
+            priority: priority,
+            serviceStatusCode: "O",
+            orgId: orgId,
+            createdAt: currentTime,
+            updatedAt: currentTime
+          }
+        } else {
+          insertData = {
+            description: payload.description,
+            projectId: payload.project,
+            houseId: payload.house,
+            requestedBy: payload.userId,
+            serviceType: payload.serviceType,
+            location: payload.location,
+            priority: priority,
+            serviceStatusCode: "O",
+            orgId: orgId,
+            createdAt: currentTime,
+            updatedAt: currentTime
+          }
+        }
+        let serviceResult = await knex.update(insertData).where({ id: payload.serviceRequestId })
+          .returning(['*']).transacting(trx)
+          .into('service_requests');
+        /*UPDATE SERVICE REQUEST DATA CLOSE */
+
+        /*INSERT LOCATION TAGS DATA OPEN */
+        for (let locationId of payload.locationTags) {
+          const insertLocation = {
+            entityId: payload.serviceRequestId,
+            entityType: "service_requests",
+            locationTagId: locationId,
+            orgId: orgId,
+            createdAt: currentTime,
+            updatedAt: currentTime
+          }
+          let locationResult = await knex.insert(insertLocation).returning(['*']).transacting(trx).into('location_tags')
+
+        }
+        /*INSERT LOCATION TAGS DATA CLOSE*/
+
+        /*INSERT IMAGE TABLE DATA OPEN */
+
+        if (req.body.images && req.body.images.length) {
+
+          let imagesData = req.body.images;
+          for (image of imagesData) {
+            let d = await knex.insert({ entityId: payload.serviceRequestId, ...image, entityType: 'service_requests', createdAt: currentTime, updatedAt: currentTime,orgId:orgId}).returning(['*']).transacting(trx).into('images');
+          }
+        }
+        /*INSERT IMAGE TABLE DATA CLOSE */
+
+        trx.commit;
+      })
+      return res.status(200).json({
+        //data:result,
+        message: 'Service Request created successfully'
+      })
+
+    } catch (err) {
+      return res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      })
     }
-},
-/**GET COMPANY ,PROJECT , BUILDING ,FLOOR BY HOUSE ID */
-getHouseDetailData:async (req,res)=>{
-     
-  try{
+  },
+  /**GET COMPANY ,PROJECT , BUILDING ,FLOOR BY HOUSE ID */
+  getHouseDetailData: async (req, res) => {
+
+    try {
 
       let houseId = req.query.houseId;
-      let orgId   = req.orgId;
-      let company,project,propertyType,building,floor;
-      let result  = await knex.from('property_units')
-                          .select('*')
-                          .where({'property_units.houseId':houseId,'orgId':orgId})
-  return res.status(200).json({
-      data:{
-          unit :result[0]
-          },
-      message: 'House Details'
-  })                   
-  }catch(err) {
-      return res.status(500).json({
-          errors: [
-              { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
-          ],
+      let orgId = req.orgId;
+      let company, project, propertyType, building, floor;
+      let result = await knex.from('property_units')
+        .select('*')
+        .where({ 'property_units.houseId': houseId, 'orgId': orgId })
+      return res.status(200).json({
+        data: {
+          unit: result[0]
+        },
+        message: 'House Details'
       })
+    } catch (err) {
+      return res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      })
+    }
   }
-}
 };
 
 // Y, M, D
