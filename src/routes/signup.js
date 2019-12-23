@@ -20,5 +20,6 @@ router.post('/create-user',signupController.createUser)
 
 router.post("/addSignUpUrl",signupController.addSignUpUrl);
 router.post("/updateSignUpUrl",signupController.updateSignUpUrl);
+router.get('/verify-account/:token',signupController.verifyAccount)
 
 module.exports = router;

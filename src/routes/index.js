@@ -49,6 +49,8 @@ const problemTypeRouter = require('./administration-features/problem-type');
 const assetCategoryRouter = require('./administration-features/asset-category');
 const partCategoryRouter = require('./administration-features/part-category');
 const whtRouter = require("./administration-features/wht");
+const customerRouter = require("./administration-features/customers");
+
 
 
 /* GET home page. */
@@ -108,5 +110,7 @@ router.use('/administration-features/asset-category',assetCategoryRouter);
 router.use('/administration-features/part-category',partCategoryRouter);
 router.use('/administration-features/wht',whtRouter);
 router.use("/signup", signupRouter);
+router.use('/administration-features/customers',customerRouter);
+
 
 module.exports = router;

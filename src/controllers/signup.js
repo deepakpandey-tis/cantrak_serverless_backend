@@ -3,10 +3,12 @@ const _ = require("lodash");
 const bcrypt = require("bcrypt");
 
 const moment = require("moment");
+const emailHelper = require('../helpers/email')
 const saltRounds = 10;
 
 const knex = require("../db/knex");
 const XLSX = require("xlsx");
+const uuid = require('uuid/v4')
 
 const singupController = {
   getCompaniesList: async (req, res) => {
@@ -358,12 +360,43 @@ const singupController = {
       ]);
       let hash = await bcrypt.hash(payload.password, saltRounds);
       payload.password = hash;
+      let uuidv4 = uuid()
       const insertedUser = await knex("users")
-        .insert(payload)
+        .insert({...payload,verifyToken:uuidv4})
         .returning(["*"]);
       console.log(payload);
-      return res.status(200).json({ insertedUser });
+
+      let currentTime = new Date().getTime()
+      // Insert this users role as customer
+      const roleInserted = await knex('application_user_roles').insert({userId:insertedUser[0].id,roleId:4,createdAt:currentTime,updatedAt:currentTime}).returning(['*'])
+
+      let user = insertedUser[0]
+      console.log('User: ',insertedUser)
+      if(insertedUser && insertedUser.length){
+        await emailHelper.sendTemplateEmail({to:user.email,subject:'Verify Account',template:'test-email.ejs',templateData:{fullName:user.name,OTP:'http://localhost:4200/signup/verify-account/'+user.verifyToken}})
+      }
+
+      return res.status(200).json({ insertedUser, roleInserted });
     } catch (err) {
+      console.log(
+        "[controllers][survey Orders][getSurveyOrders] :  Error",
+        err
+      );
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  verifyAccount: async(req,res) => {
+    try {
+      let user = await knex('users').select('*').where({verifyToken:req.params.token})
+      if(user && user.length){
+        await knex('users').update({emailVerified:true}).where({id:user[0].id})
+        return res.status(200).json({verified:true,message:'Successfully Verified!'})
+      } else {
+        return res.status(200).json({ verified: false, message: "Failed! Token Invalid." });
+      }
+    } catch(err) {
       console.log(
         "[controllers][survey Orders][getSurveyOrders] :  Error",
         err

@@ -135,9 +135,11 @@ const emailHelper = {
 
 
             if (SHOULD_QUEUE) {
-                return await emailHelper.queueEmailForSend(mailOptions);     // Will sent the mail on queue (async)
+                await emailHelper.queueEmailForSend(mailOptions);     // Will sent the mail on queue (async)
+                return; 
             } else {
-                return await emailHelper.sendEmail(mailOptions);     // Will sent the mail on queue (async)
+                 await emailHelper.sendEmail(mailOptions);     // Will sent the mail on queue (async)
+                 return;
             }
 
         } catch (err) {

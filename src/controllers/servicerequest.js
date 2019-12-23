@@ -1494,52 +1494,52 @@ const serviceRequestController = {
       let offset = (page - 1) * per_page;
       [total, rows] = await Promise.all([
         knex("asset_master")
-          .innerJoin(
-            "asset_category_master",
-            "asset_master.assetCategoryId",
-            "asset_category_master"
-          )
-          .innerJoin(
-            "assigned_assets",
-            "asset_master.id",
-            "assigned_assets.entityId"
-          )
-          .innerJoin("companies", "asset_master.companyId", "companies.id")
-          .select([
-            "asset_master.assetName as assetName",
-            "asset_master.model as model",
-            "asset_category_master.categoryName as categoryName",
-            "companies.companyName as companyName"
-          ])
-          .where({
-            entityType: "service_requests",
-            entityId: serviceRequestId,
-            orgId: req.orgId
-          }),
-
+        .leftJoin(
+          "asset_category_master",
+          "asset_master.assetCategoryId",
+          "asset_category_master.id"
+        )
+        .leftJoin(
+          "assigned_assets",
+          "asset_master.id",
+          "assigned_assets.entityId"
+        )
+        .leftJoin("companies","asset_master.companyId","companies.id")
+        .select([
+          "asset_master.assetName as assetName",
+          "asset_master.model as model",
+          "asset_category_master.categoryName as categoryName",
+          "companies.companyName as companyName"
+        ])
+        .where({
+          entityType: "service_requests",
+          entityId: serviceRequestId,
+          'asset_master.orgId': req.orgId
+        }),
+        
         knex("asset_master")
-          .innerJoin(
-            "asset_category_master",
-            "asset_master.assetCategoryId",
-            "asset_category_master"
-          )
-          .innerJoin(
-            "assigned_assets",
-            "asset_master.id",
-            "assigned_assets.entityId"
-          )
-          .innerJoin("companies", "asset_master.companyId", "companies.id")
-          .select([
-            "asset_master.assetName as assetName",
-            "asset_master.model as model",
-            "asset_category_master.categoryName as categoryName",
-            "companies.companyName as companyName"
-          ])
-          .where({
-            entityType: "service_requests",
-            entityId: serviceRequestId,
-            orgId: req.orgId
-          }).limit(per_page).offset(offset)])
+        .leftJoin(
+          "asset_category_master",
+          "asset_master.assetCategoryId",
+          "asset_category_master.id"
+        )
+        .leftJoin(
+          "assigned_assets",
+          "asset_master.id",
+          "assigned_assets.entityId"
+        )
+        .leftJoin("companies","asset_master.companyId","companies.id")
+        .select([
+          "asset_master.assetName as assetName",
+          "asset_master.model as model",
+          "asset_category_master.categoryName as categoryName",
+          "companies.companyName as companyName"
+        ])
+        .where({
+          entityType: "service_requests",
+          entityId: serviceRequestId,
+          'asset_master.orgId': req.orgId
+        }).limit(per_page).offset(offset)])
 
 
       let count = total.length;

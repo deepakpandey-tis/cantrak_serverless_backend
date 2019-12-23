@@ -513,13 +513,13 @@ const surveyOrderController = {
           .count("* as count")
           .from("survey_orders")
           .where({ serviceRequestId: serviceRequestId })
-          .innerJoin(
+          .leftJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
             "service_requests.id"
           )
-          .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
-          .innerJoin('users','assigned_service_team.userId','users.id')
+          .leftJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
+          .leftJoin('users','assigned_service_team.userId','users.id')
           .groupBy(["service_requests.id", "survey_orders.id",'assigned_service_team.id','users.id'])
           .select([
             "survey_orders.id as S Id",
@@ -538,13 +538,13 @@ const surveyOrderController = {
           .select()
           .from("survey_orders")
           .where({ serviceRequestId: serviceRequestId })
-          .innerJoin(
+          .leftJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
             "service_requests.id"
           )
-          .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
-          .innerJoin('users','assigned_service_team.userId','users.id')
+          .leftJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
+          .leftJoin('users','assigned_service_team.userId','users.id')
           .select([
             "survey_orders.id as S Id",
             "service_requests.description as Description",
@@ -565,13 +565,13 @@ const surveyOrderController = {
         total = await knex
           .count("* as count")
           .from("survey_orders")
-          .innerJoin(
+          .leftJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
             "service_requests.id"
           )
-          .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
-          .innerJoin('users','assigned_service_team.userId','users.id')
+          .leftJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
+          .leftJoin('users','assigned_service_team.userId','users.id')
           .groupBy(["service_requests.id", "survey_orders.id",'assigned_service_team.id','users.id'])
           .select([
             "survey_orders.id as S Id",
@@ -589,13 +589,13 @@ const surveyOrderController = {
         rows = await knex
           .select()
           .from("survey_orders")
-          .innerJoin(
+          .leftJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
             "service_requests.id"
           )
-          .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
-          .innerJoin('users','assigned_service_team.userId','users.id')
+          .leftJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
+          .leftJoin('users','assigned_service_team.userId','users.id')
 
           .select([
             "survey_orders.id as S Id",
