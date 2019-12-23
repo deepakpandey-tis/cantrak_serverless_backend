@@ -1483,17 +1483,17 @@ const serviceRequestController = {
       let offset = (page - 1) * per_page;
       [total,rows] = await Promise.all([
         knex("asset_master")
-        .innerJoin(
+        .leftJoin(
           "asset_category_master",
           "asset_master.assetCategoryId",
-          "asset_category_master"
+          "asset_category_master.id"
         )
-        .innerJoin(
+        .leftJoin(
           "assigned_assets",
           "asset_master.id",
           "assigned_assets.entityId"
         )
-        .innerJoin("companies","asset_master.companyId","companies.id")
+        .leftJoin("companies","asset_master.companyId","companies.id")
         .select([
           "asset_master.assetName as assetName",
           "asset_master.model as model",
@@ -1503,21 +1503,21 @@ const serviceRequestController = {
         .where({
           entityType: "service_requests",
           entityId: serviceRequestId,
-          orgId: req.orgId
+          'asset_master.orgId': req.orgId
         }),
         
         knex("asset_master")
-        .innerJoin(
+        .leftJoin(
           "asset_category_master",
           "asset_master.assetCategoryId",
-          "asset_category_master"
+          "asset_category_master.id"
         )
-        .innerJoin(
+        .leftJoin(
           "assigned_assets",
           "asset_master.id",
           "assigned_assets.entityId"
         )
-        .innerJoin("companies","asset_master.companyId","companies.id")
+        .leftJoin("companies","asset_master.companyId","companies.id")
         .select([
           "asset_master.assetName as assetName",
           "asset_master.model as model",
@@ -1527,7 +1527,7 @@ const serviceRequestController = {
         .where({
           entityType: "service_requests",
           entityId: serviceRequestId,
-          orgId: req.orgId
+          'asset_master.orgId': req.orgId
         }).limit(per_page).offset(offset)])
 
 
