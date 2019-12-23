@@ -20,7 +20,6 @@ router.post('/get-service-request-list',
 			authMiddleware.isAuthenticated, 
 			roleMiddleware.parseUserPermission,
 			resourceAccessMiddleware.isCMAccessible, 
-			// roleMiddleware.canAccessServiceRequest,
 			serviceRequestController.getServiceRequestList)
 
 router.post('/upload-images', authMiddleware.isAuthenticated, serviceRequestController.updateImages);
@@ -36,17 +35,13 @@ router.post('/delete-service-request-asset', authMiddleware.isAuthenticated, ser
 router.post('/export-service-request', authMiddleware.isAuthenticated, serviceRequestController.exportServiceRequest)
 router.post('/get-property-units',authMiddleware.isAuthenticated,serviceRequestController.getPropertyUnits)
 
-// var multer  = require('multer');
-// var storage = multer.diskStorage({
-// 	destination: './src/uploads',
-// 	filename: function ( req, file, cb ) {
-//         time = Date.now();
-// 		cb( null, 'service-request-'+time+path.extname(file.originalname));
-// 	}
-// });
-// var upload = multer( { storage: storage } );
-// router.post('/import-service-request',upload.single('file'), authMiddleware.isAuthenticated, serviceRequestController.importServiceRequest)
-
 router.post('/get-service-request-report-data', authMiddleware.isAuthenticated,serviceRequestController.getServiceRequestReportData)
+router.post("/get-service-request-assigned-assets",authMiddleware.isAuthenticated,serviceRequestController.getServiceRequestAssignedAssets);
+
+/**GET COMPANY ,PROJECT , BUILDING ,FLOOR BY HOUSE ID */
+router.get('/get-house-details',authMiddleware.isAuthenticated,serviceRequestController.getHouseDetailData)
+
+/*** CREATE SERVICE REQUEST */
+router.post('/create-service-request', authMiddleware.isAuthenticated,serviceRequestController.createServiceRequest)
 
 module.exports = router;

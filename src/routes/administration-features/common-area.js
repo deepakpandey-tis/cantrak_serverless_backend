@@ -75,7 +75,13 @@ router.post(
   commonAreaController.importCommonAreaData
 );
 
-
+/**GET ALL LIST COMMON AREA BY FLOOR ID */
+router.get(
+  "/get-common-area-all-list",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  commonAreaController.getCommonAreaAllList
+);
 
 module.exports = router;
  

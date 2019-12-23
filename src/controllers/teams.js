@@ -507,8 +507,8 @@ const teamsController = {
     getMainAndAdditionalUsersByTeamId: async (req, res) => {
         try {
             let teamId = req.body.teamId;
-            let mainUsers = await knex('team_users').innerJoin('users', 'team_users.userId', 'users.id').select(['users.id as id', 'users.name as name']).where({ 'team_users.teamId': teamId })
-            let additionalUsers = await knex('users').select(['id', 'name'])
+            let mainUsers = await knex('team_users').innerJoin('users', 'team_users.userId', 'users.id').select(['users.id as id', 'users.name as name']).where({ 'team_users.teamId': teamId,'users.orgId':req.orgId })
+            let additionalUsers = await knex('users').select(['id', 'name']).where({orgId:req.orgId})
             //additionalUsers = additionalUsers.map(user => _.omit(user, ['password','username']))
 
             const Parallel = require('async-parallel')

@@ -656,6 +656,11 @@ const buildingPhaseController = {
             "buildings_and_phases.projectId",
             "projects.id"
           )
+          .leftJoin(
+            "property_types",
+            "buildings_and_phases.propertyTypeId",
+            "property_types.id"
+          )
           .where({
             "buildings_and_phases.isActive": "true",
             "buildings_and_phases.projectId": projectId,
@@ -663,7 +668,9 @@ const buildingPhaseController = {
           })
           .select([
             "buildings_and_phases.id as id",
-            "buildings_and_phases.buildingPhaseCode"
+            "buildings_and_phases.buildingPhaseCode",
+            "property_types.propertyType",
+            "property_types.propertyTypeCode",
           ])
       ]);
 
