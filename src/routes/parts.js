@@ -163,4 +163,12 @@ router.get(
   partsController.exportPartData
 );
 
+router.post(
+  "/get-service-request-assigned-parts",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPartAccessible,
+  partsController.getServiceRequestAssignedParts
+);
+
 module.exports = router;

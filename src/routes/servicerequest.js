@@ -44,4 +44,11 @@ router.get('/get-house-details',authMiddleware.isAuthenticated,serviceRequestCon
 /*** CREATE SERVICE REQUEST */
 router.post('/create-service-request', authMiddleware.isAuthenticated,serviceRequestController.createServiceRequest)
 
+/*GET HOUSE ID BY UNIT NO. */
+router.get('/get-houseid-by-unit-no', authMiddleware.isAuthenticated,serviceRequestController.getHouseIdByUnitNo)
+/*GET SERVICE REQUEST DETAILS BY SERVICE REQUEST ID. */
+router.get('/get-service-request-detail-by-id', authMiddleware.isAuthenticated,serviceRequestController.getServiceRequestDetailById)
+
+/*** UPDATE SERVICE REQUEST */
+router.post('/edit-service-request', authMiddleware.isAuthenticated,serviceRequestController.editServiceRequest)
 module.exports = router;
