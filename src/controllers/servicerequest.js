@@ -1712,6 +1712,10 @@ const serviceRequestController = {
         ],
       })
     }
+  },
+
+  getServiceRequestDeatail: async(req,res) => {
+    
   }
 };
 
