@@ -532,7 +532,7 @@ const surveyOrderController = {
         total = await knex
           .count("* as count")
           .from("survey_orders")
-          .where({ serviceRequestId: serviceRequestId, orgId: req.orgId })
+          .where({ "survey_orders.serviceRequestId": serviceRequestId, "survey_orders.orgId": req.orgId })
           .leftJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
@@ -566,7 +566,7 @@ const surveyOrderController = {
         rows = await knex
           .select()
           .from("survey_orders")
-          .where({ serviceRequestId: serviceRequestId, orgId: req.orgId })
+          .where({ "survey_orders.serviceRequestId": serviceRequestId, "survey_orders.orgId": req.orgId })
           .leftJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
@@ -615,7 +615,7 @@ const surveyOrderController = {
             "assigned_service_team.id",
             "users.id"
           ])
-          .where({ orgId: req.orgId })
+          .where({ "survey_orders.orgId": req.orgId })
           .select([
             "survey_orders.id as S Id",
             "service_requests.description as Description",
@@ -639,11 +639,10 @@ const surveyOrderController = {
           )
           .leftJoin(
             "assigned_service_team",
-            "service_requests.id",
+            "survey_orders.id",
             "assigned_service_team.entityId"
           )
           .leftJoin("users", "assigned_service_team.userId", "users.id")
-
           .select([
             "survey_orders.id as S Id",
             "service_requests.description as Description",
@@ -655,7 +654,7 @@ const surveyOrderController = {
             "survey_orders.surveyOrderStatus as Status",
             "survey_orders.createdAt as Date Created"
           ])
-          .where({ orgId: req.orgId })
+          .where({ "survey_orders.orgId": req.orgId })
           .offset(offset)
           .limit(per_page);
       }
