@@ -659,6 +659,7 @@ const quotationsController = {
               "quotations.serviceRequestId",
               "service_requests.id"
             )
+            .where("quotations.orgId", req.orgId)
             .groupBy(["quotations.id", "service_requests.id"]),
           knex
             .from("quotations")
@@ -667,14 +668,15 @@ const quotationsController = {
               "quotations.serviceRequestId",
               "service_requests.id"
             )
+            .where("quotations.orgId", req.orgId)
             .select([
-              "quotations.id as Q Id",
+              "quotations.id as QId",
               "service_requests.description as Description",
               "service_requests.serviceType as Type",
               "service_requests.priority as Priority",
-              "quotations.createdBy as Created By",
+              "quotations.createdBy as CreatedBy",
               "quotations.quotationStatus as Status",
-              "quotations.createdAt as Date Created"
+              "quotations.createdAt as DateCreated"
             ])
             .offset(offset)
             .limit(per_page)
@@ -710,6 +712,7 @@ const quotationsController = {
                     quotationTo
                   ]);
                 }
+                qb.where("quotations.orgId", req.orgId)
               })
               .groupBy([
                 "quotations.id",
@@ -747,6 +750,7 @@ const quotationsController = {
                     quotationTo
                   ]);
                 }
+                qb.where("quotations.orgId", req.orgId)
               })
               .offset(offset)
               .limit(per_page)
