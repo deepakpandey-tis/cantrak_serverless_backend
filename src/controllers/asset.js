@@ -372,7 +372,8 @@ const assetController = {
                           "asset_master.areaName as Area",
                           "asset_category_master.categoryName as Category",
                           "asset_master.createdAt as Date Created",
-                          "asset_master.unitOfMeasure as Unit Of Measure"
+                          "asset_master.unitOfMeasure as Unit Of Measure",
+                          "asset_master.price as Price"
                         ])
                         .where({ 'asset_master.orgId': req.orgId })
                         .where(qb => {

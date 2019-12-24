@@ -445,7 +445,7 @@ const surveyOrderController = {
             if (dueFromDate || dueToDate) {
               qb.whereBetween("o.appointedDate", [dueFromDate, dueToDate]);
             }
-            qb.where("orgId", req.orgId);
+            qb.where("o.orgId", req.orgId);
           })
           .leftJoin("service_requests as s", "o.serviceRequestId", "s.id")
           .leftJoin(
@@ -505,7 +505,7 @@ const surveyOrderController = {
             if (dueFromDate || dueToDate) {
               qb.whereBetween("o.appointedDate", [dueFromDate, dueToDate]);
             }
-            qb.where("orgId", req.orgId);
+            qb.where("o.orgId", req.orgId);
           })
           .leftJoin("service_requests as s", "o.serviceRequestId", "s.id")
           .leftJoin(
