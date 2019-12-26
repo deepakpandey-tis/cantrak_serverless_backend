@@ -23,7 +23,7 @@ const serviceOrderController = {
 
                 const schema = Joi.object().keys({
                     serviceRequestId: Joi.string().required(),
-                    orderDueDate: Joi.string().required()
+                    orderDueDate: Joi.number().required()
                 })
 
                 let result = Joi.validate(serviceOrderPayload, schema);
@@ -44,7 +44,7 @@ const serviceOrderController = {
 
                 // Insert into service_orders
 
-                let inserServiceOrderPayload = { ...serviceOrderPayload, createdAt: currentTime, updatedAt: currentTime }
+                let inserServiceOrderPayload = { ...serviceOrderPayload, createdAt: currentTime, updatedAt: currentTime,orgId:req.orgId }
                 let serviceOrderResults = await knex.insert(inserServiceOrderPayload).returning(['*']).transacting(trx).into('service_orders')
                 serviceOrder = serviceOrderResults[0]
 
@@ -93,14 +93,14 @@ const serviceOrderController = {
 
 
                 if (images && images.length) {
-                    images = req.body.images.map(image => ({ ...image, createdAt: currentTime, updatedAt: currentTime, entityId: serviceOrder.id, entityType: 'service_orders' }));
+                    images = req.body.images.map(image => ({ ...image, createdAt: currentTime, updatedAt: currentTime, entityId: serviceOrder.id, entityType: 'service_orders',orgId:req.orgId }));
                     let addedImages = await knex.insert(images).returning(['*']).transacting(trx).into('images')
                     images = addedImages
                 }
 
                 // Insert into assigned_service_team table
                 let { teamId, mainUserId, additionalUsers } = req.body;
-                const assignedServiceTeamPayload = { teamId, userId: mainUserId, entityId: serviceOrder.id, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime }
+                const assignedServiceTeamPayload = { teamId, userId: mainUserId, entityId: serviceOrder.id, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime,orgId:req.orgId }
                 let assignedServiceTeamResult = await knex.insert(assignedServiceTeamPayload).returning(['*']).transacting(trx).into('assigned_service_team')
                 let assignedServiceTeam = assignedServiceTeamResult[0]
 
@@ -123,13 +123,33 @@ const serviceOrderController = {
                     // Remove old users
 
                     for (user of selectedUsers) {
-                        await knex.del().where({ entityId: serviceOrder.id, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_service_additional_users')
+                        await knex
+                          .del()
+                          .where({
+                            entityId: serviceOrder.id,
+                            entityType: "service_orders",
+                            orgId: req.orgId
+                          })
+                          .returning(["*"])
+                          .transacting(trx)
+                          .into("assigned_service_additional_users");
                     }
 
                     // Insert New Users
 
                     for (user of assignedServiceAdditionalUsers) {
-                        let userResult = await knex.insert({ userId: user, entityId: serviceOrder.id, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('assigned_service_additional_users')
+                        let userResult = await knex
+                          .insert({
+                            userId: user,
+                            entityId: serviceOrder.id,
+                            entityType: "service_orders",
+                            createdAt: currentTime,
+                            updatedAt: currentTime,
+                            orgId: req.orgId
+                          })
+                          .returning(["*"])
+                          .transacting(trx)
+                          .into("assigned_service_additional_users");
                         additionalUsersResultantArray.push(userResult[0])
                     }
                     trx.commit;
@@ -157,7 +177,7 @@ const serviceOrderController = {
     getServiceOrderList: async (req, res) => {
         try {
             //const serviceOrders = await knex('service_orders').select();
-
+            console.log('ORG ID: ************************************************: ',req.orgId)
             let { serviceRequestId,
                 description,
                 serviceOrderStatus,
@@ -313,11 +333,11 @@ const serviceOrderController = {
             
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from('service_orders')
-                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                        .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
-                        .innerJoin('users','assigned_service_team.userId','users.id')
+                        .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .leftJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
+                        .leftJoin('users','assigned_service_team.userId','users.id')
                         .select([
                             'service_orders.id as So Id',
                             'service_requests.description as Description',
@@ -330,6 +350,7 @@ const serviceOrderController = {
                              'serviceOrderStatus as Status',
                             'service_orders.createdAt as Date Created'
                         ]).where((qb) => {
+                            qb.where({ 'service_orders.orgId': req.orgId });
 
                             if (filters) {
                                 qb.where(filters);
@@ -346,11 +367,11 @@ const serviceOrderController = {
 
                         }).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id','assigned_service_team.id','users.id']),
                     knex.from('service_orders')
-                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                        .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
-                        .innerJoin('users','assigned_service_team.userId','users.id')
+                        .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .leftJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
+                        .leftJoin('users','assigned_service_team.userId','users.id')
                         .select([
                             'service_orders.id as So Id',
                             'service_requests.description as Description',
@@ -364,7 +385,7 @@ const serviceOrderController = {
                             'service_orders.createdAt as Date Created'
                             
                         ]).where((qb) => {
-
+                            qb.where({'service_orders.orgId':req.orgId})
                             if (filters) {
                                 qb.where(filters);
                             }
@@ -385,9 +406,9 @@ const serviceOrderController = {
             if (_.isEmpty(filters)) {
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from('service_orders')
-                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
                         .select([
                             'service_orders.id as So Id',
                             'service_requests.description as Description',
@@ -399,11 +420,11 @@ const serviceOrderController = {
                              'orderDueDate as Due Date',
                              'serviceOrderStatus as Status',
                             'service_orders.createdAt as Date Created'
-                        ]).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id']),
+                        ]).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id']).where({'service_orders.orgId':req.orgId}),
                     knex.from('service_orders')
-                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
                         .select([
                         'service_orders.id as So Id',
                         'service_requests.description as Description',
@@ -415,16 +436,16 @@ const serviceOrderController = {
                         'orderDueDate as Due Date',
                         'serviceOrderStatus as Status',
                         'service_orders.createdAt as Date Created'
-                        ]).offset(offset).limit(per_page)
+                        ]).offset(offset).limit(per_page).where({'service_orders.orgId':req.orgId})
                 ])
             } else {
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from('service_orders')
-                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                        .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
-                        .innerJoin('users','assigned_service_team.userId','users.id')
+                        .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .leftJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
+                        .leftJoin('users','assigned_service_team.userId','users.id')
                         .select([
                             'service_orders.id as So Id',
                             'service_requests.description as Description',
@@ -437,6 +458,7 @@ const serviceOrderController = {
                              'serviceOrderStatus as Status',
                             'service_orders.createdAt as Date Created'
                         ]).where((qb) => {
+                            qb.where({ 'service_orders.orgId': req.orgId });
 
                             if (filters) {
                                 qb.where(filters);
@@ -453,11 +475,11 @@ const serviceOrderController = {
 
                         }).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id','assigned_service_team.id','users.id']),
                     knex.from('service_orders')
-                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                        .innerJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
-                        .innerJoin('users','assigned_service_team.userId','users.id')
+                        .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                        .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                        .leftJoin('assigned_service_team','service_requests.id','assigned_service_team.entityId')
+                        .leftJoin('users','assigned_service_team.userId','users.id')
                         .select([
                             'service_orders.id as So Id',
                             'service_requests.description as Description',
@@ -471,6 +493,7 @@ const serviceOrderController = {
                             'service_orders.createdAt as Date Created'
                             
                         ]).where((qb) => {
+                            qb.where({ 'service_orders.orgId': req.orgId });
 
                             if (filters) {
                                 qb.where(filters);
