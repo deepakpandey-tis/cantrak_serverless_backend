@@ -564,9 +564,17 @@ const floorZoneController = {
       let orgId = req.orgId;
 
       const { buildingPhaseId } = req.body;
-      const floor = await knex("floor_and_zones")
+
+      let floor;
+      if(buildingPhaseId){
+       floor = await knex("floor_and_zones")
         .select("*")
         .where({ buildingPhaseId, orgId: orgId });
+      } else {
+        floor = await knex("floor_and_zones")
+        .select("*")
+        .where({orgId: orgId });
+      }
       return res.status(200).json({
         data: {
           floor

@@ -638,20 +638,21 @@ const serviceRequestController = {
     try {
       let reqData = req.query;
       let {
-        description,
-        completedOn,
-        serviceFrom,
-        serviceTo,
-        id,
-        location,
-        serviceStatus,
-        priority,
-        unitNo,
-        createdBy,
-        serviceType,
-        recuring,
+        assignedTo,
+        closingDate,
         completedBy,
-        assignedTo
+        description,
+        dueDateFrom,
+        dueDateTo,
+        location,
+        priority,
+        requestedBy,
+        serviceFrom,
+        serviceId,
+        serviceTo,
+        serviceType,
+        status,
+        unit
       } = req.body;
       let total, rows;
 
@@ -670,8 +671,8 @@ const serviceRequestController = {
       // serviceFrom -serviceTo = createdAt
 
       // Service ID
-      if (id) {
-        filters["service_requests.id"] = id;
+      if (serviceId) {
+        filters["service_requests.id"] = serviceId;
       }
 
       // Location
@@ -679,8 +680,8 @@ const serviceRequestController = {
         filters["service_requests.location"] = location;
       }
       //  Service Status
-      if (serviceStatus) {
-        filters["service_requests.serviceStatusCode"] = serviceStatus;
+      if (status) {
+        filters["service_requests.serviceStatusCode"] = status;
       }
 
       // Service From Data & to Date
@@ -696,20 +697,16 @@ const serviceRequestController = {
         serviceToDate = new Date(serviceTo).getTime();
       }
 
-      if (completedOn) {
-        filters["service_requests.completedOn"] = completedOn;
+      if (closingDate) {
+        filters["service_requests.completedOn"] = closingDate;
       }
 
       if (priority) {
         filters["service_requests.priority"] = priority;
       }
 
-      if (unitNo) {
-        filters["property_units.unitNumber"] = unitNo;
-      }
-
-      if (createdBy) {
-        filters["service_requests.createdBy"] = createdBy;
+      if (unit) {
+        filters["property_units.id"] = unit;
       }
 
       if (serviceType) {
@@ -717,18 +714,24 @@ const serviceRequestController = {
       }
 
       if (completedBy) {
-        filters["service_requests.closedby"] = completedBy;
+        filters["service_requests.closedBy"] = completedBy;
       }
 
       if (assignedTo) {
-        filters["service_requests.assignedTo"] = assignedTo;
+        filters["assigned_service_team.userId"] = assignedTo;
       }
 
-      //    if(recuring){
-      //     filters['service_requests.recuring'] = recuring
-      //    }
+      if(requestedBy){
+        filters["service_requests.requestedBy"] = requestedBy;
+      }
+     let dueFrom ,dueTo;
+      if(dueDateFrom && dueDateTo){
+        dueFrom = new Date(dueDateFrom).getTime()
+        dueTo   = new Date(dueDateTo).getTime()
+      }
 
-      if (_.isEmpty(filters)) {
+      if (_.isEmpty(filters) && _.isEmpty(serviceFrom && serviceTo) && _.isEmpty(dueDateFrom && dueDateTo)  ) {
+
         [total, rows] = await Promise.all([
           knex
             .count("* as count")
@@ -811,6 +814,10 @@ const serviceRequestController = {
             .limit(per_page)
             .where({ "service_requests.orgId": req.orgId })
         ]);
+      
+      
+      
+      
       } else {
         //console.log('IN else: ')
         //filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
@@ -838,6 +845,13 @@ const serviceRequestController = {
               "service_requests.houseId",
               "property_units.houseId"
             )
+
+            .leftJoin(
+              "assigned_service_team",
+              "service_requests.id",
+              "assigned_service_team.entityId"
+            )
+            
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
@@ -851,13 +865,30 @@ const serviceRequestController = {
             ])
             .where({ "service_requests.orgId": req.orgId })
             .where(qb => {
-              qb.where(filters);
+              if(location){
+                qb.where('service_requests.location','iLIKE',`%${location}%`)
+              }
+              if(description){
+                qb.where('service_requests.description','iLIKE',`%${description}%`)
+              }
               if (serviceFromDate && serviceToDate) {
                 qb.whereBetween("service_requests.createdAt", [
                   serviceFromDate,
                   serviceToDate
                 ]);
               }
+              if (dueDateFrom && dueDateTo) {
+
+                console.log("dsfsdfsdfsdfsdfffffffffffffffffff=========")
+                qb.whereBetween("service_requests.createdAt", [
+                  dueFrom,
+                  dueTo
+                ]);
+                qb.where({closedBy:""})
+              }
+              qb.where(filters);
+              
+              
             })
             .groupBy([
               "service_requests.id",
@@ -888,6 +919,11 @@ const serviceRequestController = {
               "service_requests.houseId",
               "property_units.houseId"
             )
+            .leftJoin(
+              "assigned_service_team",
+              "service_requests.id",
+              "assigned_service_team.entityId"
+            )
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
@@ -901,13 +937,29 @@ const serviceRequestController = {
             ])
             .where({ "service_requests.orgId": req.orgId })
             .where(qb => {
-              qb.where(filters);
+              if(location){
+                qb.where('service_requests.location','iLIKE',`%${location}%`)
+              }
+              if(description){
+                qb.where('service_requests.description','iLIKE',`%${description}%`)
+              }
+              
               if (serviceFromDate && serviceToDate) {
                 qb.whereBetween("service_requests.createdAt", [
                   serviceFromDate,
                   serviceToDate
                 ]);
               }
+
+              if (dueDateFrom && dueDateTo) {
+                qb.whereBetween("service_requests.createdAt", [
+                  dueFrom,
+                  dueTo
+                ]);
+                qb.where({closedBy:""})
+              }
+              qb.where(filters);
+              
             })
             .offset(offset)
             .limit(per_page)

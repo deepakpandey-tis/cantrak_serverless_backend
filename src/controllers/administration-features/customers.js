@@ -22,19 +22,33 @@ const customerController = {
         return res.status(200).json({ userDetails: userDetails[0] });
       }
 
-
       let filters = {}
-      let {userName,email,mobileNo,project,company,building} = req.body;
-      if(userName){
-        filters['users.userName'] = userName;
+      let {name,email,mobile,company,project,building,floor,houseId} = req.body;
+      if(name){
+        //filters['users.name'] = name;
       }
       if(email){
-          filters['users.email'] = email
+          //filters['users.email'] = email
       }
-      if(mobileNo){
-          filters['users.mobileNo'] = email;
+      if(mobile){
+          //filters['users.mobileNo'] = mobile;
       }
-      
+
+      if(company){
+        filters['property_units.companyId'] = company;
+      }
+      if(project){
+        filters['property_units.projectId'] = project;
+      }
+      if(building){
+        filters['property_units.buildingPhaseId'] = building;
+      }
+      if(floor){
+        filters['property_units.floorZoneId'] = floor;
+      }
+      if(houseId){
+        filters['property_units.houseId'] = houseId;
+      }
 
 
 
@@ -57,18 +71,43 @@ const customerController = {
             "users.id",
             "application_user_roles.userId"
           )
+          .leftJoin(
+            "user_house_allocation",
+            "users.id",
+            "user_house_allocation.userId"
+          )
+          .leftJoin(
+            "property_units",
+            "user_house_allocation.houseId",
+            "property_units.houseId"
+          )
           .select([
             "users.name as name",
             "users.email as email",
             "users.houseId as houseId",
             "users.id as userId"
           ])
+          
           .where({
             "application_user_roles.roleId": 4,
             "users.orgId": req.orgId
           })
           .andWhere(qb => {
-            if (Object.keys(filters).length) {
+            if (Object.keys(filters).length || name ||email || mobile) {
+
+              if(name){
+                
+                qb.where('users.name','iLIKE',`%${name}%`)
+              }
+
+              if(email){
+                qb.where('users.email','iLIKE',`%${email}%`)
+              }
+
+              if(mobile){
+                qb.where('users.mobileNo','iLIKE',`%${mobile}%`)
+              }
+
               qb.where(filters);
             }
           }),
@@ -77,6 +116,16 @@ const customerController = {
             "application_user_roles",
             "users.id",
             "application_user_roles.userId"
+          )
+          .leftJoin(
+            "user_house_allocation",
+            "users.id",
+            "user_house_allocation.userId"
+          )
+          .leftJoin(
+            "property_units",
+            "user_house_allocation.houseId",
+            "property_units.houseId"
           )
           .select([
             "users.name as name",
@@ -89,7 +138,20 @@ const customerController = {
             "users.orgId": req.orgId
           })
           .andWhere(qb => {
-            if (Object.keys(filters).length) {
+            if (Object.keys(filters).length || name ||email || mobile) {
+
+              if(name){
+                
+                qb.where('users.name','iLIKE',`%${name}%`)
+              }
+
+              if(email){
+                qb.where('users.email','iLIKE',`%${email}%`)
+              }
+
+              if(mobile){
+                qb.where('users.mobileNo','iLIKE',`%${mobile}%`)
+              }
               qb.where(filters);
             }
           })
