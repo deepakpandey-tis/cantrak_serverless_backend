@@ -372,7 +372,18 @@ const serviceDetailsController = {
           .leftJoin("buildings_and_phases","property_units.buildingPhaseId","=","buildings_and_phases.id")
           .leftJoin("floor_and_zones","property_units.floorZoneId","=","floor_and_zones.id")
           .leftJoin("service_requests","property_units.houseId", "=", "service_requests.houseId")
-          
+        // DataResult = await knex("service_requests")
+        //   .leftJoin(
+        //     "property_units",
+        //     "service_requests.houseId",
+        //     "=",
+        //     "property_units.houseId"
+        //   )
+          // .leftJoin("floor_and_zones","property_units.floorZoneId","=","floor_and_zones.id")
+          // .leftJoin("buildings_and_phases","property_units.buildingPhaseId","=","buildings_and_phases.id")
+          // .leftJoin("property_types","property_units.propertyTypeId","=","property_types.id")
+          // .leftJoin("projects", "property_units.projectId", "=", "projects.id")
+          // .leftJoin("companies", "property_units.companyId", "=", "companies.id")
           .select(
             "companies.companyName",
             "projects.projectName",
@@ -382,11 +393,12 @@ const serviceDetailsController = {
             "service_requests.description as descriptions",
             "service_requests.location",
             "service_requests.serviceType",
+            "service_requests.serviceStatusCode as serviceStatusCode",
             "property_units.*"
           )
           .where({
             "property_units.houseId": houseId,
-            "property_units.orgId": orgId
+            "service_requests.orgId": orgId
           });
 
         console.log(

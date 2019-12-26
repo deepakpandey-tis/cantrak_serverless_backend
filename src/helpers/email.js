@@ -9,7 +9,7 @@ AWS.config.update({
     secretAccessKey: process.env.SECRET_ACCESS_KEY,
 });
 
-const SHOULD_QUEUE = true;
+const SHOULD_QUEUE = false;
 
 const sendEmailMessage = async (mailOptions) => {
     AWS.config.update({ region: process.env.REGION || 'us-east-1' });
