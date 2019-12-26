@@ -51,4 +51,11 @@ router.get('/get-service-request-detail-by-id', authMiddleware.isAuthenticated,s
 
 /*** UPDATE SERVICE REQUEST */
 router.post('/edit-service-request', authMiddleware.isAuthenticated,serviceRequestController.editServiceRequest)
+
+router.post('/decline-service-request',authMiddleware.isAuthenticated,serviceRequestController.declineServiceRequest)
+router.post(
+  "/approve-service-request",
+  authMiddleware.isAuthenticated,
+  serviceRequestController.approveServiceRequest
+);
 module.exports = router;

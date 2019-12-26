@@ -50,5 +50,8 @@ router.post(
   propertyUnitController.importPropertyUnitData
 );
 
+/*GET ALL PROPERTY UNIT LIST FOR DROP DOWN */
+router.get("/get-all-property-unit",authMiddleware.isAuthenticated,propertyUnitController.getAllPropertyUnit);
+
 module.exports = router
 

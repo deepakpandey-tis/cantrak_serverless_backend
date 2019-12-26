@@ -698,9 +698,16 @@ const buildingPhaseController = {
       const { projectId } = req.body;
       let orgId = req.orgId;
 
-      const buildings = await knex("buildings_and_phases")
+      let buildings;
+      if(projectId){
+      buildings = await knex("buildings_and_phases")
         .select("*")
         .where({ projectId, orgId: orgId });
+      } else{
+        buildings = await knex("buildings_and_phases")
+        .select("*")
+        .where({orgId: orgId });
+      }
       return res
         .status(200)
         .json({ data: { buildings }, message: "Buildings list" });
