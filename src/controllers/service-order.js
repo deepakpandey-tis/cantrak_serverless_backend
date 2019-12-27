@@ -785,7 +785,7 @@ const serviceOrderController = {
 
                 let assignedAssetInsertPayload = _.omit(assignedAssetPayload, ['serviceOrderId'])
 
-                let insertData = { ...assignedAssetInsertPayload, entityId: assignedAssetPayload.serviceOrderId, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime }
+                let insertData = { ...assignedAssetInsertPayload, entityId: assignedAssetPayload.serviceOrderId, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime, orgId:req.orgId }
                 let assetResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('assigned_assets')
                 assignedAsset = assetResult[0]
                 trx.commit
@@ -1285,7 +1285,112 @@ const serviceOrderController = {
                 ],
              })
          }   
+    },
+
+    getServiceOrderAssignedAssets: async (req, res) => {
+    try {
+      let { serviceOrderId } = req.body;
+      let reqData = req.query;
+      let total, rows;
+
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+      [total, rows] = await Promise.all([
+        knex("assigned_assets")
+          .leftJoin(
+            "asset_master",
+            "assigned_assets.assetId",
+            "asset_master.id"
+          )
+          .leftJoin(
+            "asset_category_master",
+            "asset_master.assetCategoryId",
+            "asset_category_master.id"
+          )
+          // .leftJoin(
+          //   "assigned_assets",
+          //   "asset_master.id",
+          //   "assigned_assets.assetId"
+          // )
+          .leftJoin("companies", "asset_master.companyId", "companies.id")
+          .select([
+            "asset_master.id as id",
+            "asset_master.assetName as assetName",
+            "asset_master.model as model",
+            "asset_category_master.categoryName as categoryName",
+            "companies.companyName as companyName"
+          ])
+          .where({
+            entityType: "service_orders",
+            entityId: serviceOrderId,
+            "asset_master.orgId": req.orgId
+          }),
+
+        knex("assigned_assets")
+          .leftJoin(
+            "asset_master",
+            "assigned_assets.assetId",
+            "asset_master.id"
+          )
+          .leftJoin(
+            "asset_category_master",
+            "asset_master.assetCategoryId",
+            "asset_category_master.id"
+          )
+         
+          .leftJoin("companies", "asset_master.companyId", "companies.id")
+          // .leftJoin(
+          //   "asset_category_master",
+          //   "asset_master.assetCategoryId",
+          //   "asset_category_master.id"
+          // )
+          // .leftJoin(
+          //   "assigned_assets",
+          //   "asset_master.id",
+          //   "assigned_assets.entityId"
+          // )
+          // .leftJoin("companies", "asset_master.companyId", "companies.id")
+          .select([
+            "asset_master.id as id",
+
+            "asset_master.assetName as assetName",
+            "asset_master.model as model",
+            "asset_category_master.categoryName as categoryName",
+            "companies.companyName as companyName"
+          ])
+          .where({
+            entityType: "service_orders",
+            entityId: serviceOrderId,
+            "asset_master.orgId": req.orgId
+          })
+          .limit(per_page)
+          .offset(offset)
+      ]);
+
+      let count = total.length;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+      return res.status(200).json({
+        data: {
+          assets: pagination
+        }
+      });
+    } catch (err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
     }
+  },
 }
 
 module.exports = serviceOrderController;
