@@ -46,7 +46,8 @@ const customerController = {
             "companies.companyName",
             "floor_and_zones.floorZoneCode",
             "property_units.unitNumber",
-            "property_units.houseId as house"
+            "property_units.houseId as house",
+            "user_house_allocation.status"
           ])
           .where({ 'users.id': customerId });
         return res.status(200).json({ userDetails: userDetails });
@@ -229,9 +230,25 @@ const customerController = {
   },
   disassociateHouse:async(req,res) => {
       try {
-        const updatedCustomer = await knex('users').update({houseId:0}).where({id:req.body.customerId}).returning(['name'])
+
+       let houseId = req.body.houseId;
+       let updatedCustomer;
+       let message;
+       let checkStatus  = await knex.from('user_house_allocation').where({houseId}).returning(['*'])
+       if(checkStatus && checkStatus.length){
+ 
+        if(checkStatus[0].status==="1"){
+          updatedCustomer = await knex('user_house_allocation').update({status:0}).where({houseId:houseId}).returning(['*'])
+          message = "House Id Disassociate successfully!";
+        } else {
+          updatedCustomer = await knex('user_house_allocation').update({status:1}).where({houseId:houseId}).returning(['*'])
+          message = "House Id Associate successfully!";
+        }
+        
+       }
         return res.status(200).json({data: {
-            customer:updatedCustomer
+            customer:updatedCustomer,
+            message:message
         }})
       } catch(err) {
            console.log(
