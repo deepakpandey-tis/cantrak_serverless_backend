@@ -659,7 +659,7 @@ const quotationsController = {
           knex
             .count("* as count")
             .from("quotations")
-            .leftJoin(
+            .innerJoin(
               "service_requests",
               "quotations.serviceRequestId",
               "service_requests.id"
@@ -668,7 +668,7 @@ const quotationsController = {
             .groupBy(["quotations.id", "service_requests.id"]),
           knex
             .from("quotations")
-            .leftJoin(
+            .innerJoin(
               "service_requests",
               "quotations.serviceRequestId",
               "service_requests.id"
@@ -676,6 +676,7 @@ const quotationsController = {
             .where("quotations.orgId", req.orgId)
             .select([
               "quotations.id as QId",
+              "quotations.serviceRequestId as serviceRequestId",              
               "service_requests.description as Description",
               "service_requests.serviceType as Type",
               "service_requests.priority as Priority",
@@ -739,7 +740,8 @@ const quotationsController = {
               )
               .innerJoin("users", "assigned_service_team.userId", "users.id")
               .select([
-                "quotations.id as Q Id",
+                "quotations.id as QId",
+                "quotations.serviceRequestId as serviceRequestId",
                 "service_requests.description as Description",
                 "service_requests.serviceType as Type",
                 "service_requests.priority as Priority",

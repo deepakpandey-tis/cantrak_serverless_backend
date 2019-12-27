@@ -9,7 +9,8 @@ const knex = require("../../db/knex");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 //const trx = knex.transaction();
-
+const uuid = require('uuid/v4')
+const emailHelper = require('../../helpers/email')
 const customerController = {
   getCustomers: async (req, res) => {
     try {
@@ -217,7 +218,18 @@ const customerController = {
   },
   resetPassword: async (req, res) => {
     try {
-      return res.status(200).json({ message: "Resetting password" });
+
+      let id = req.query.id;
+      let uuidv4 = uuid()
+      let updatedCustomer;
+      let subject = "Reset Password"
+      updatedCustomer = await knex('users').update({"verifyToken":uuidv4,"password":""}).where({id:id}).returning(['*'])
+      let email = updatedCustomer[0].email;
+      await emailHelper.sendTemplateEmail({to:email,subject:subject,template:'test-email.ejs',templateData:{fullName:updatedCustomer[0].name,OTP:'http://localhost:4200/reset-password/'+uuidv4}})
+      return res.status(200).json({ 
+        data: updatedCustomer[0],
+        message: "Password Reset request successfully!"
+      });
     } catch (err) {
       console.log(
         "[controllers][survey Orders][getSurveyOrders] :  Error",
