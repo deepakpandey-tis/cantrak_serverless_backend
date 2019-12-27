@@ -19,4 +19,6 @@ router.post(
 );
 // Service order Export Data 
 router.post('/export-service-order', authMiddleware.isAuthenticated, serviceOrderController.exportServiceOrder)
+
+router.get('/get-new-service-order-id',authMiddleware.isAuthenticated,serviceOrderController.getNewServiceOrderId)
 module.exports = router;
