@@ -17,9 +17,39 @@ const customerController = {
       let customerId = req.query.customerId;
       if (customerId) {
         userDetails = await knex("users")
-          .select("*")
-          .where({ id: customerId });
-        return res.status(200).json({ userDetails: userDetails[0] });
+         .leftJoin('user_house_allocation','users.id','user_house_allocation.userId')
+         .leftJoin('property_units','user_house_allocation.houseId','property_units.houseId')
+         .leftJoin(
+          "buildings_and_phases",
+          "property_units.buildingPhaseId",
+          "buildings_and_phases.id"
+        )
+        .leftJoin(
+          "projects",
+          "property_units.projectId",
+          "projects.id"
+        )
+        .leftJoin(
+          "companies",
+          "property_units.companyId",
+          "companies.id"
+        )
+        .leftJoin(
+          "floor_and_zones",
+          "property_units.floorZoneId",
+          "floor_and_zones.id"
+        )
+          .select([
+            "users.*",
+            "buildings_and_phases.buildingPhaseCode",
+            "projects.projectName",
+            "companies.companyName",
+            "floor_and_zones.floorZoneCode",
+            "property_units.unitNumber",
+            "property_units.houseId as house"
+          ])
+          .where({ 'users.id': customerId });
+        return res.status(200).json({ userDetails: userDetails });
       }
 
       let filters = {}
