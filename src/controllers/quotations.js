@@ -22,10 +22,12 @@ const quotationsController = {
         // Insert in users table,
         const currentTime = new Date().getTime();
         //console.log('[controllers][entrance][signup]: Expiry Time', tokenExpiryTime);
-
+        let orgId = req.orgId;
+       
         const insertData = {
           moderationStatus: 0,
           isActive: "true",
+          orgId: orgId,
           createdAt: currentTime,
           updatedAt: currentTime
         };
@@ -65,7 +67,8 @@ const quotationsController = {
     try {
       let assignedServiceTeam = null;
       let additionalUsersList = [];
-
+      let orgId = req.orgId;
+       
       await knex.transaction(async trx => {
         let images = [];
 
@@ -73,8 +76,7 @@ const quotationsController = {
         images = req.body.images;
 
         console.log(
-          "[controllers][quotations][updateQuotation] : Quotation Body",
-          quotationPayload
+          "[controllers][quotations][updateQuotation] : Quotation Body",quotationPayload
         );
 
         // validate keys
@@ -93,7 +95,7 @@ const quotationsController = {
           serviceCharge: Joi.string().required(),
           additionalCost: Joi.string().required(),
           teamId: Joi.string().required(),
-          userId: Joi.string().required(),
+          mainUserId: Joi.string().required(),
           additionalUsers: Joi.array().required()
         });
 
@@ -110,7 +112,7 @@ const quotationsController = {
             ]
           });
         }
-
+        
         // Insert in quotation table,
         const currentTime = new Date().getTime();
 
@@ -161,7 +163,7 @@ const quotationsController = {
         // Start quotation service charges table,
 
         let quotationCharges = await knex("quotation_service_charges")
-          .where({ quotationId: quotationPayload.quotationId })
+          .where({ quotationId: quotationPayload.quotationId,orgId: orgId })
           .select("id");
 
         if (quotationCharges.length > 0) {
@@ -196,7 +198,8 @@ const quotationsController = {
             additionalCost: quotationPayload.additionalCost,
             quotationId: quotationPayload.quotationId,
             createdAt: currentTime,
-            updatedAt: currentTime
+            updatedAt: currentTime,
+            orgId: orgId
           };
 
           console.log(
@@ -228,7 +231,7 @@ const quotationsController = {
           const updateQuotationTeam = await knex
             .update({
               teamId: quotationPayload.teamId,
-              userId: quotationPayload.userId,
+              userId: quotationPayload.mainUserId,
               updatedAt: currentTime
             })
             .where({
@@ -250,11 +253,12 @@ const quotationsController = {
 
           const insertAssignedTeam = {
             teamId: quotationPayload.teamId,
-            userId: quotationPayload.userId,
+            userId: quotationPayload.mainUserId,
             entityId: quotationPayload.quotationId,
             entityType: "quotations",
             createdAt: currentTime,
-            updatedAt: currentTime
+            updatedAt: currentTime,
+            orgId: orgId
           };
 
           //console.log('[controllers][quotation][addQuotationTeam]: Insert Data', insertChargesData);
@@ -272,10 +276,10 @@ const quotationsController = {
 
         // Here 3 operations will take place
         /*
-                    1. Select users based on entity id and entity type
-                    2. Remove Those users 
-                    3. Add new users                    
-                */
+          1. Select users based on entity id and entity type
+          2. Remove Those users 
+          3. Add new users                    
+        */
 
         let assignedQuotationAddUsers = quotationPayload.additionalUsers;
 
@@ -335,7 +339,8 @@ const quotationsController = {
                 entityId: quotationPayload.quotationId,
                 entityType: "quotations",
                 createdAt: currentTime,
-                updatedAt: currentTime
+                updatedAt: currentTime,
+                orgId: orgId
               })
               .returning(["*"])
               .transacting(trx)
@@ -654,7 +659,7 @@ const quotationsController = {
           knex
             .count("* as count")
             .from("quotations")
-            .innerJoin(
+            .leftJoin(
               "service_requests",
               "quotations.serviceRequestId",
               "service_requests.id"
@@ -663,7 +668,7 @@ const quotationsController = {
             .groupBy(["quotations.id", "service_requests.id"]),
           knex
             .from("quotations")
-            .innerJoin(
+            .leftJoin(
               "service_requests",
               "quotations.serviceRequestId",
               "service_requests.id"

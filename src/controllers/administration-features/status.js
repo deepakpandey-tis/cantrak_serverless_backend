@@ -605,6 +605,25 @@ const statusController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  /*GET ALL STATUS LIST FOR DROP DOWN */
+  getAllStatus:async (req,res)=>{
+    try{
+
+      let orgId  = req.orgId;
+      let result = await knex.from('service_status')
+                   .select('id',"statusCode","descriptionEng",)
+                   .where({orgId})
+      return res.status(200).json({
+        data:result,
+        message:"All Status list"
+      });
+
+    }catch(err){
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 

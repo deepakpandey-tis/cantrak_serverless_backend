@@ -853,6 +853,25 @@ const propertyUnitController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  /*GET ALL PROPERTY UNIT LIST FOR DROP DOWN */
+  getAllPropertyUnit:async (req,res)=>{
+    try{
+
+      let orgId  = req.orgId;
+      let result = await knex.from('property_units')
+                   .select('id',"unitNumber",'description')
+                   .where({orgId})
+      return res.status(200).json({
+        data:result,
+        message:"All property unit list"
+      });
+
+    }catch(err){
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 
