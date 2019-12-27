@@ -20,9 +20,22 @@ const companyController = {
     try {
       let company = null;
       await knex.transaction(async trx => {
-        const payload = req.body;
+        const payload = _.omit(req.body, ["logoFile"]);
         const orgId = req.orgId;
         const userId = req.me.id;
+
+        if(payload.taxId){
+
+          // if(payload.taxId.length==13 && Number.isInteger(payload.taxId)){
+
+          // } else{
+          //   return res.status(400).json({
+          //     errors: [
+          //       { code: "VALIDATION_ERROR", message: "Enter Valid Tax Id" }
+          //     ]
+          //   });
+          // }
+        }
 
         const schema = Joi.object().keys({
           companyName: Joi.string().required(),
@@ -45,7 +58,7 @@ const companyController = {
           logoFile: Joi.string()
             .allow("")
             .optional(),
-          taxId: Joi.string()
+          taxId: Joi.number()
             .allow("")
             .optional()
         });
@@ -64,10 +77,17 @@ const companyController = {
           });
         }
         console.log("ORG ID: ", orgId);
+       let logo = "";
+        if(req.body.logoFile){
+          for (image of req.body.logoFile) {
+          logo = image.s3Url;
+          }
+        }
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
           createdBy: userId,
+          logoFile:logo,
           createdAt: currentTime,
           updatedAt: currentTime,
           orgId: orgId
@@ -79,6 +99,9 @@ const companyController = {
           .into("companies");
         company = insertResult[0];
 
+ 
+
+        
         trx.commit;
       });
 
@@ -100,7 +123,8 @@ const companyController = {
     try {
       let company = null;
       await knex.transaction(async trx => {
-        const payload = req.body;
+        let orgId = req.orgId;
+        const payload = _.omit(req.body, ["logoFile"]);
 
         const schema = Joi.object().keys({
           id: Joi.string().required(),
@@ -146,7 +170,7 @@ const companyController = {
           logoFile: Joi.string()
             .allow("")
             .optional(),
-          taxId: Joi.string()
+          taxId: Joi.number()
             .allow("")
             .optional()
         });
@@ -166,7 +190,19 @@ const companyController = {
         }
 
         let currentTime = new Date().getTime();
-        let insertData = { ...payload, updatedAt: currentTime };
+        let logo = "";
+        if(req.body.logoFile){
+          for (image of req.body.logoFile) {
+          logo = image.s3Url;
+          }
+        }
+        console.log("==============",req.body.logoFile)
+        let insertData;
+       if(req.body.logoFile.length){
+        insertData = { ...payload,logoFile:logo, updatedAt: currentTime };
+       } else{
+        insertData = { ...payload, updatedAt: currentTime };
+       }
         let insertResult = await knex
           .update(insertData)
           .where({ id: payload.id, orgId: req.orgId })
@@ -174,6 +210,9 @@ const companyController = {
           .transacting(trx)
           .into("companies");
         company = insertResult[0];
+
+     
+
         trx.commit;
       });
 
