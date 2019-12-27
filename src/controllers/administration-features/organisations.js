@@ -338,13 +338,13 @@ const organisationsController = {
           .where({'application_user_roles.roleId':2})
           .where(qb=>{
             if(organisationName){
-            qb.where('organisations.organisationName','like',`%${organisationName}%`)
+            qb.where('organisations.organisationName','iLIKE',`%${organisationName}%`)
             }
             if(userName){
-              qb.where('users.name','like',`%${userName}%`)
+              qb.where('users.name','iLIKE',`%${userName}%`)
               }
               if(email){
-                qb.where('users.email','like',`%${email}%`)
+                qb.where('users.email','iLIKE',`%${email}%`)
                 }
                 if(status){
                   qb.where('organisations.isActive',false)
@@ -364,13 +364,13 @@ const organisationsController = {
           ])
           .where(qb=>{
             if(organisationName){
-            qb.where('organisations.organisationName','like',`%${organisationName}%`)
+            qb.where('organisations.organisationName','iLIKE',`%${organisationName}%`)
             }
             if(userName){
-              qb.where('users.name','like',`%${userName}%`)
+              qb.where('users.name','iLIKE',`%${userName}%`)
               }
               if(email){
-                qb.where('users.email','like',`%${email}%`)
+                qb.where('users.email','iLIKE',`%${email}%`)
                 }
 
                 if(status){
