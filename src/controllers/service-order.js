@@ -22,8 +22,8 @@ const serviceOrderController = {
                 serviceOrderPayload = _.omit(serviceOrderPayload, ['serviceRequest', 'teamId', 'mainUserId', 'additionalUsers', 'images'])
 
                 const schema = Joi.object().keys({
-                    serviceRequestId: Joi.string().required(),
-                    orderDueDate: Joi.number().required()
+                    serviceRequestId: Joi.number().required(),
+                    orderDueDate: Joi.date().required()
                 })
 
                 let result = Joi.validate(serviceOrderPayload, schema);
@@ -44,7 +44,13 @@ const serviceOrderController = {
 
                 // Insert into service_orders
 
-                let inserServiceOrderPayload = { ...serviceOrderPayload, createdAt: currentTime, updatedAt: currentTime,orgId:req.orgId }
+                let inserServiceOrderPayload = {
+                  ...serviceOrderPayload,
+                  orderDueDate: new Date(serviceOrderPayload.orderDueDate).getTime(),
+                  createdAt: currentTime,
+                  updatedAt: currentTime,
+                  orgId: req.orgId
+                };
                 let serviceOrderResults = await knex.insert(inserServiceOrderPayload).returning(['*']).transacting(trx).into('service_orders')
                 serviceOrder = serviceOrderResults[0]
 
@@ -1391,6 +1397,21 @@ const serviceOrderController = {
       });
     }
   },
+  getNewServiceOrderId:async (req,res) => {
+      try {
+        const serviceOrder = await knex('service_orders').insert({}).returning(['*'])
+        return res.status(200).json({
+          data: {
+            serviceOrder
+          },
+          message:'Service Order Generated successfully!'
+        });
+      } catch(err) {
+          return res.status(500).json({
+            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+          }); 
+      }
+  }
 }
 
 module.exports = serviceOrderController;
