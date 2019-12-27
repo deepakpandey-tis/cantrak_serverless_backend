@@ -45,7 +45,7 @@ const companyController = {
           logoFile: Joi.string()
             .allow("")
             .optional(),
-          taxId: Joi.string()
+          taxId: Joi.number()
             .allow("")
             .optional()
         });
