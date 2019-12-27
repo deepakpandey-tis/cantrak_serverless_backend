@@ -703,12 +703,12 @@ const quotationsController = {
                 "quotations.serviceRequestId",
                 "service_requests.id"
               )
-              .innerJoin(
+              .leftJoin(
                 "assigned_service_team",
                 "service_requests.id",
                 "assigned_service_team.entityId"
               )
-              .innerJoin("users", "assigned_service_team.userId", "users.id")
+              .leftJoin("users", "assigned_service_team.userId", "users.id")
 
               .where(qb => {
                 qb.where(filters);
@@ -733,12 +733,12 @@ const quotationsController = {
                 "quotations.serviceRequestId",
                 "service_requests.id"
               )
-              .innerJoin(
+              .leftJoin(
                 "assigned_service_team",
                 "service_requests.id",
                 "assigned_service_team.entityId"
               )
-              .innerJoin("users", "assigned_service_team.userId", "users.id")
+              .leftJoin("users", "assigned_service_team.userId", "users.id")
               .select([
                 "quotations.id as QId",
                 "quotations.serviceRequestId as serviceRequestId",

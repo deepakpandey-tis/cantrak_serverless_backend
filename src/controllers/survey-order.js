@@ -328,7 +328,7 @@ const surveyOrderController = {
         // ASSIGNED BY
         if (
           (servicePayload.assignedBy != "undefined",
-          servicePayload.assignedBy != "" && servicePayload.assignedBy)
+            servicePayload.assignedBy != "" && servicePayload.assignedBy)
         ) {
           filterList["o.createdBy"] = servicePayload.assignedBy;
         }
@@ -336,7 +336,7 @@ const surveyOrderController = {
         // CREATED BY
         if (
           (servicePayload.createdBy != "undefined",
-          servicePayload.createdBy != "" && servicePayload.createdBy)
+            servicePayload.createdBy != "" && servicePayload.createdBy)
         ) {
           filterList["o.createdBy"] = servicePayload.createdBy;
         }
@@ -447,7 +447,7 @@ const surveyOrderController = {
             }
             qb.where("o.orgId", req.orgId);
           })
-          .leftJoin("service_requests as s", "o.serviceRequestId", "s.id")
+          .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
           .leftJoin(
             "service_status AS status",
             "o.surveyOrderStatus",
@@ -507,7 +507,7 @@ const surveyOrderController = {
             }
             qb.where("o.orgId", req.orgId);
           })
-          .leftJoin("service_requests as s", "o.serviceRequestId", "s.id")
+          .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
           .leftJoin(
             "service_status AS status",
             "o.surveyOrderStatus",
@@ -533,7 +533,7 @@ const surveyOrderController = {
           .count("* as count")
           .from("survey_orders")
           .where({ "survey_orders.serviceRequestId": serviceRequestId, "survey_orders.orgId": req.orgId })
-          .leftJoin(
+          .innerJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
             "service_requests.id"
@@ -567,7 +567,7 @@ const surveyOrderController = {
           .select()
           .from("survey_orders")
           .where({ "survey_orders.serviceRequestId": serviceRequestId, "survey_orders.orgId": req.orgId })
-          .leftJoin(
+          .innerJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
             "service_requests.id"
@@ -598,7 +598,7 @@ const surveyOrderController = {
         total = await knex
           .count("* as count")
           .from("survey_orders")
-          .leftJoin(
+          .innerJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
             "service_requests.id"
@@ -630,9 +630,8 @@ const surveyOrderController = {
 
         // For get the rows With pagination
         rows = await knex
-          .select()
           .from("survey_orders")
-          .leftJoin(
+          .innerJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
             "service_requests.id"
@@ -705,17 +704,26 @@ const surveyOrderController = {
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
         });
       }
-      surveyOrderResult = await knex
-        .from("survey_orders")
-        .select()
-        .where({ id: surveyOrderid });
-      surveyOrder = surveyOrderResult[0];
-      serviceRequestResult = await knex("service_requests")
-        .select()
-        .where({ id: surveyOrder.serviceRequestId, orgId: req.orgId });
-      serviceRequest = serviceRequestResult[0];
+
+      let results = await knex.raw(`select "survey_orders"."id" as "SId","service_requests"."description" as "description","survey_orders"."appointedDate" as "appointedDate","users"."name" as "assignedTo","service_requests"."id" as "SRId","service_requests"."priority" as "priority","survey_orders"."createdBy" as "createdBy", "survey_orders"."surveyOrderStatus" as "status","survey_orders"."createdAt" as "dateCreated" from "survey_orders" inner join "service_requests" on "survey_orders"."serviceRequestId" = "service_requests"."id" left join "assigned_service_team" on "survey_orders"."id" = "assigned_service_team"."entityId" left join "users" on "assigned_service_team"."userId" = "users"."id" where "survey_orders"."orgId" = ${req.orgId} and "survey_orders"."id" = ${surveyOrderid} and "assigned_service_team"."entityType"='survey_orders'` )
+      
+      console.log("results", results.rows);
+
+      // surveyOrderResult = await knex
+      //   .from("survey_orders")
+      //   .select()
+      //   .where({ id: surveyOrderid });
+      // surveyOrder = surveyOrderResult[0];
+
+      // serviceRequestResult = await knex("service_requests")
+      //   .select()
+      //   .where({ id: surveyOrder.serviceRequestId, orgId: req.orgId });
+      // serviceRequest = serviceRequestResult[0];
+
+     let resultData = results.rows;
+
       return res.status(200).json({
-        data: { surveyOrder, serviceRequest },
+        data:  { resultData } ,
         message: "Survey Order Details"
       });
 
@@ -1014,7 +1022,7 @@ const surveyOrderController = {
         // ASSIGNED BY
         if (
           (servicePayload.assignedBy != "undefined",
-          servicePayload.assignedBy != "" && servicePayload.assignedBy)
+            servicePayload.assignedBy != "" && servicePayload.assignedBy)
         ) {
           filterList["o.createdBy"] = servicePayload.assignedBy;
         }
@@ -1022,7 +1030,7 @@ const surveyOrderController = {
         // CREATED BY
         if (
           (servicePayload.createdBy != "undefined",
-          servicePayload.createdBy != "" && servicePayload.createdBy)
+            servicePayload.createdBy != "" && servicePayload.createdBy)
         ) {
           filterList["o.createdBy"] = servicePayload.createdBy;
         }
@@ -1218,7 +1226,7 @@ const surveyOrderController = {
         total = await knex
           .count("* as count")
           .from("survey_orders")
-          .where({ serviceRequestId: serviceRequestId,orgId: req.orgId  })
+          .where({ serviceRequestId: serviceRequestId, orgId: req.orgId })
           .innerJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
@@ -1252,7 +1260,7 @@ const surveyOrderController = {
         rows = await knex
           .select()
           .from("survey_orders")
-          .where({ serviceRequestId: serviceRequestId,orgId: req.orgId })
+          .where({ serviceRequestId: serviceRequestId, orgId: req.orgId })
           .innerJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
@@ -1295,7 +1303,7 @@ const surveyOrderController = {
             "assigned_service_team.entityId"
           )
           .innerJoin("users", "assigned_service_team.userId", "users.id")
-          .where({orgId: req.orgId})
+          .where({ orgId: req.orgId })
           .groupBy([
             "service_requests.id",
             "survey_orders.id",
@@ -1341,7 +1349,7 @@ const surveyOrderController = {
             "survey_orders.surveyOrderStatus as Status",
             "survey_orders.createdAt as Date Created"
           ])
-          .where({orgId: req.orgId})
+          .where({ orgId: req.orgId })
           .offset(offset)
           .limit(per_page);
       }
