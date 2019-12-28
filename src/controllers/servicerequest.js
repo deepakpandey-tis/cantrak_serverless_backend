@@ -730,16 +730,16 @@ const serviceRequestController = {
         filters["assigned_service_team.userId"] = assignedTo;
       }
 
-      if(requestedBy){
+      if (requestedBy) {
         filters["service_requests.requestedBy"] = requestedBy;
       }
-     let dueFrom ,dueTo;
-      if(dueDateFrom && dueDateTo){
+      let dueFrom, dueTo;
+      if (dueDateFrom && dueDateTo) {
         dueFrom = new Date(dueDateFrom).getTime()
-        dueTo   = new Date(dueDateTo).getTime()
+        dueTo = new Date(dueDateTo).getTime()
       }
 
-      if (_.isEmpty(filters) && _.isEmpty(serviceFrom && serviceTo) && _.isEmpty(dueDateFrom && dueDateTo)  ) {
+      if (_.isEmpty(filters) && _.isEmpty(serviceFrom && serviceTo) && _.isEmpty(dueDateFrom && dueDateTo)) {
 
         [total, rows] = await Promise.all([
           knex
@@ -823,10 +823,10 @@ const serviceRequestController = {
             .limit(per_page)
             .where({ "service_requests.orgId": req.orgId })
         ]);
-      
-      
-      
-      
+
+
+
+
       } else {
         //console.log('IN else: ')
         //filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
@@ -860,7 +860,7 @@ const serviceRequestController = {
               "service_requests.id",
               "assigned_service_team.entityId"
             )
-            
+
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
@@ -874,11 +874,11 @@ const serviceRequestController = {
             ])
             .where({ "service_requests.orgId": req.orgId })
             .where(qb => {
-              if(location){
-                qb.where('service_requests.location','iLIKE',`%${location}%`)
+              if (location) {
+                qb.where('service_requests.location', 'iLIKE', `%${location}%`)
               }
-              if(description){
-                qb.where('service_requests.description','iLIKE',`%${description}%`)
+              if (description) {
+                qb.where('service_requests.description', 'iLIKE', `%${description}%`)
               }
               if (serviceFromDate && serviceToDate) {
                 qb.whereBetween("service_requests.createdAt", [
@@ -893,11 +893,11 @@ const serviceRequestController = {
                   dueFrom,
                   dueTo
                 ]);
-                qb.where({closedBy:""})
+                qb.where({ closedBy: "" })
               }
               qb.where(filters);
-              
-              
+
+
             })
             .groupBy([
               "service_requests.id",
@@ -946,13 +946,13 @@ const serviceRequestController = {
             ])
             .where({ "service_requests.orgId": req.orgId })
             .where(qb => {
-              if(location){
-                qb.where('service_requests.location','iLIKE',`%${location}%`)
+              if (location) {
+                qb.where('service_requests.location', 'iLIKE', `%${location}%`)
               }
-              if(description){
-                qb.where('service_requests.description','iLIKE',`%${description}%`)
+              if (description) {
+                qb.where('service_requests.description', 'iLIKE', `%${description}%`)
               }
-              
+
               if (serviceFromDate && serviceToDate) {
                 qb.whereBetween("service_requests.createdAt", [
                   serviceFromDate,
@@ -965,10 +965,10 @@ const serviceRequestController = {
                   dueFrom,
                   dueTo
                 ]);
-                qb.where({closedBy:""})
+                qb.where({ closedBy: "" })
               }
               qb.where(filters);
-              
+
             })
             .offset(offset)
             .limit(per_page)
@@ -1293,7 +1293,7 @@ const serviceRequestController = {
       //  uploadURL = uploadURL.replace("https://", "http://").replace(".com", ".com:8000");
       //}
       //console.log("++++++++++",uploadURL,"+====================")
-      await s3.putObject(s3Params, function(err, data) {
+      await s3.putObject(s3Params, function (err, data) {
         if (err) {
           console.log("Error==", err, "Error");
         } else {
@@ -1540,7 +1540,7 @@ const serviceRequestController = {
       });
     }
   },
-  getServiceRequestByMonth: async (req, res) => {},
+  getServiceRequestByMonth: async (req, res) => { },
   getUrl: getUploadURL,
   getServiceRequestAssignedAssets: async (req, res) => {
     try {
@@ -1595,7 +1595,7 @@ const serviceRequestController = {
             "asset_master.assetCategoryId",
             "asset_category_master.id"
           )
-         
+
           .leftJoin("companies", "asset_master.companyId", "companies.id")
           // .leftJoin(
           //   "asset_category_master",
