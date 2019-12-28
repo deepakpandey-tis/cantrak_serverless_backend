@@ -374,7 +374,11 @@ const organisationsController = {
                 }
 
                 if(status){
-                  qb.where('organisations.isActive',false)
+                  if(status==1){
+                  qb.where('organisations.isActive',true)
+                  }else{
+                    qb.where('organisations.isActive',false)
+                  }
                   }
 
           })
@@ -392,7 +396,7 @@ const organisationsController = {
           .leftJoin('users','organisations.id','users.orgId')
           .leftJoin('application_user_roles','users.id','application_user_roles.userId')
           .where({'application_user_roles.roleId':2})
-          .where({'organisations.isActive':true})
+          //.where({'organisations.isActive':true})
           .first(),
         knex("organisations")
           .leftJoin('users','organisations.id','users.orgId')
@@ -404,7 +408,7 @@ const organisationsController = {
             'users.email',
             'users.mobileNo'
           ])
-          .where({'organisations.isActive':true})
+          //.where({'organisations.isActive':true})
           .orderBy('organisations.createdAt','desc')
           .offset(offset)
           .limit(per_page)
