@@ -378,7 +378,8 @@ const peopleController = {
 
       let peopleData = null;
       let id = req.body.id;
-
+      let userResult;
+      let projectResult;
       peopleData = await knex("users")
         .leftJoin(
           "property_units",
@@ -386,31 +387,26 @@ const peopleController = {
           "property_units.houseId"
         )
         .leftJoin("companies", "property_units.companyId", "companies.id")
-        //   .innerJoin(
-        //     "organisation_user_roles",
-        //     "users.id",
-        //     "organisation_user_roles.userId"
-        //   )
-        //   .innerJoin(
-        //     "organisation_roles",
-        //     "organisation_user_roles.roleId",
-        //     "organisation_roles.id"
-        //   )
+        .leftJoin("organisations", "users.orgId", "organisations.id")
+        .leftJoin("team_users", "users.id", "team_users.userId")
+        .leftJoin("teams", "team_users.teamId", "teams.teamId")
+        .leftJoin("team_roles_project_master", "team_users.teamId", "team_roles_project_master.teamId")
+        .leftJoin('projects', 'team_roles_project_master.projectId', 'projects.id')
+        .leftJoin('organisation_roles', 'team_roles_project_master.roleId', 'organisation_roles.id')
         .select([
           "users.id as userId",
           "users.name ",
           "users.userName as userName",
           "users.mobileNo",
           "users.email",
-          "users.houseId",
-          // "organisation_roles.id as roleId",
-          // "organisation_roles.name as accountType",
-          "companies.id as company",
-          "companies.companyName as companyName",
-          "property_units.projectId as project",
-          "property_units.unitNumber",
-          "property_units.buildingPhaseId as building",
-          "property_units.floorZoneId as floor"
+          "organisations.organisationName",
+          'team_roles_project_master.projectId',
+          'team_roles_project_master.roleId',
+          'projects.projectName',
+          'organisation_roles.name as roleName',
+          "teams.teamId",
+          "teams.teamName",
+          "teams.teamCode",
         ])
         .where({ "users.id": id })
         .orderBy("users.createdAt", "desc");
@@ -422,7 +418,7 @@ const peopleController = {
       console.log('[controllers][people][getPeopleDetails]: People Details', peopleDataResult);
 
       res.status(200).json({
-        data: { people: omitedPeopleDataResult },
+        data: { people: omitedPeopleDataResult ,projectData:peopleData},
         message: "People Details"
       });
 
