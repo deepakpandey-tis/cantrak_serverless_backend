@@ -1653,7 +1653,7 @@ const serviceRequestController = {
       let result;
       let orgId = req.orgId;
       await knex.transaction(async trx => {
-        let payload = _.omit(req.body, ["images"]);
+        let payload = _.omit(req.body, ["images","isSo"]);
         const schema = Joi.object().keys({
           serviceRequestId: Joi.number().required(),
           areaName: Joi.string()
@@ -1726,7 +1726,9 @@ const serviceRequestController = {
             serviceStatusCode: "O",
             orgId: orgId,
             createdAt: currentTime,
-            updatedAt: currentTime
+            updatedAt: currentTime,
+            isCreatedFromSo:req.body.isSo?true:false,
+            state: req.body.isSo?2:1
           };
         } else {
           insertData = {
@@ -1740,7 +1742,9 @@ const serviceRequestController = {
             serviceStatusCode: "O",
             orgId: orgId,
             createdAt: currentTime,
-            updatedAt: currentTime
+            updatedAt: currentTime,
+            isCreatedFromSo: req.body.isSo ? true : false,
+            state: req.body.isSo ? 2 : 1
           };
         }
         let serviceResult = await knex
