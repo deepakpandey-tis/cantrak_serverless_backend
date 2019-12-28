@@ -1,9 +1,64 @@
 const Joi = require("@hapi/joi");
+const moment = require("moment");
+const uuidv4 = require("uuid/v4");
+var jwt = require("jsonwebtoken");
 const _ = require("lodash");
+const multer = require("multer");
+const multerS3 = require("multer-s3");
 
 const knex = require("../db/knex");
-const XLSX = require("xlsx");
+
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
 //const trx = knex.transaction();
+const AWS = require("aws-sdk");
+const XLSX = require("xlsx");
+const fs = require("fs");
+const https = require("https");
+
+if (process.env.IS_OFFLINE) {
+  AWS.config.update({
+    accessKeyId: "S3RVER",
+    secretAccessKey: "S3RVER"
+  });
+}
+// } else {
+//     AWS.config.update({
+//         accessKeyId: process.env.S3_ACCESS_KEY_ID,
+//         secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+//     });
+// }
+
+AWS.config.update({ region: process.env.REGION || "us-east-2" });
+
+const getUploadURL = async (mimeType, filename, type = "") => {
+  let re = /(?:\.([^.]+))?$/;
+  let ext = re.exec(filename)[1];
+  let uploadFolder = type + "/";
+  const actionId = uuidv4();
+  const s3Params = {
+    Bucket: process.env.S3_BUCKET_NAME,
+    Key: `${uploadFolder}${actionId}.${ext}`,
+    ContentType: mimeType,
+    ACL: "public-read"
+  };
+  return new Promise(async (resolve, reject) => {
+    const s3 = new AWS.S3();
+    let uploadURL = await s3.getSignedUrl("putObject", s3Params);
+    if (Boolean(process.env.IS_OFFLINE)) {
+      uploadURL = uploadURL
+        .replace("https://", "http://")
+        .replace(".com", ".com:8000");
+    }
+    resolve({
+      isBase64Encoded: false,
+      headers: { "Access-Control-Allow-Origin": "*" },
+      uploadURL: uploadURL,
+      photoFilename: `${actionId}.${ext}`
+    });
+  });
+};
+
 
 const surveyOrderController = {
   addSurveyOrder: async (req, res) => {
@@ -739,15 +794,37 @@ const surveyOrderController = {
       });
     }
   },
+
+  getImageUploadUrl: async (req, res) => {
+    const mimeType = req.body.mimeType;
+    const filename = req.body.filename;
+    const type = req.body.type;
+    try {
+      const uploadUrlData = await getUploadURL(mimeType, filename, type);
+
+      res.status(200).json({
+        data: {
+          uploadUrlData: uploadUrlData
+        },
+        message: "Upload Url generated succesfully!"
+      });
+    } catch (err) {
+      console.log("[controllers][service][getImageUploadUrl] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+
   updateSurveyOrderNotes: async (req, res) => {
     // Define try/catch block
     try {
       let surveyNotesResponse = null;
-      let upNotesPayload = null;
       let problemImagesData = [];
       let noteImagesData = [];
       await knex.transaction(async trx => {
-        upNotesPayload = req.body;
+        let upNotesPayload = _.omit(req.body, ["images"]);
         console.log(
           "[controllers][survey][updateNotes] : Request Body",
           upNotesPayload
@@ -756,14 +833,12 @@ const surveyOrderController = {
         // validate keys
         const schema = Joi.object().keys({
           surveyOrderId: Joi.number().required(),
-          description: Joi.string().required(),
-          problemsImages: Joi.array().required(),
-          notesImages: Joi.array().required()
+          description: Joi.string().required()
         });
 
-        let problemImages = upNotesPayload.problemsImages;
-        let noteImages = upNotesPayload.notesImages;
-        // validate params
+        // let problemImages = upNotesPayload.problemsImages;
+        // let noteImages = upNotesPayload.notesImages;
+        // // validate params
         const result = Joi.validate(upNotesPayload, schema);
 
         if (result && result.hasOwnProperty("error") && result.error) {
@@ -795,54 +870,75 @@ const surveyOrderController = {
           .into("survey_order_post_update");
         notesData = resultSurveyNotes;
         surveyNoteId = notesData[0];
-        // Insert Problems Images
-        for (prodImg of problemImages) {
-          let insertProblemData = {
-            entityId: surveyNoteId.id,
-            entityType: "survey_order_post_update",
-            s3Url: prodImg.s3Url,
-            name: prodImg.name,
-            title: prodImg.title,
-            orgId: req.orgId,
-            createdAt: currentTime,
-            updatedAt: currentTime
-          };
-          let resultProblemsImg = await knex
-            .insert(insertProblemData)
-            .returning(["*"])
-            .transacting(trx)
-            .into("images");
-          console.log("problemImageResponse", resultProblemsImg);
-          problemImagesData.push(resultProblemsImg[0]);
+
+
+         /*INSERT IMAGE TABLE DATA OPEN */
+
+         if (req.body.images && req.body.images.length) {
+          let imagesData = req.body.images;
+          for (image of imagesData) {
+            let d = await knex
+              .insert({
+                entityId: surveyNoteId.id,
+                ...image,
+                entityType: "survey_order_notes",
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                orgId: req.orgId
+              })
+              .returning(["*"])
+              .transacting(trx)
+              .into("images");
+          }
         }
+        /*INSERT IMAGE TABLE DATA CLOSE */
+
+        // // Insert Problems Images
+        // for (prodImg of problemImages) {
+        //   let insertProblemData = {
+        //     entityId: surveyNoteId.id,
+        //     entityType: "survey_order_post_update",
+        //     s3Url: prodImg.s3Url,
+        //     name: prodImg.name,
+        //     title: prodImg.title,
+        //     orgId: req.orgId,
+        //     createdAt: currentTime,
+        //     updatedAt: currentTime
+        //   };
+        //   let resultProblemsImg = await knex
+        //     .insert(insertProblemData)
+        //     .returning(["*"])
+        //     .transacting(trx)
+        //     .into("images");
+        //   console.log("problemImageResponse", resultProblemsImg);
+        //   problemImagesData.push(resultProblemsImg[0]);
+        // }
 
         // Insert Problems Images
-        for (noteImg of noteImages) {
-          let insertNoteData = {
-            entityId: upNotesPayload.surveyOrderId,
-            entityType: "survey_order",
-            s3Url: noteImg.s3Url,
-            name: noteImg.name,
-            title: noteImg.title,
-            orgId: req.orgId,
-            createdAt: currentTime,
-            updatedAt: currentTime
-          };
-          let resultSurveyNotesImg = await knex
-            .insert(insertNoteData)
-            .returning(["*"])
-            .transacting(trx)
-            .into("images");
-          noteImagesData.push(resultSurveyNotesImg[0]);
-        }
+        // for (noteImg of noteImages) {
+        //   let insertNoteData = {
+        //     entityId: upNotesPayload.surveyOrderId,
+        //     entityType: "survey_order",
+        //     s3Url: noteImg.s3Url,
+        //     name: noteImg.name,
+        //     title: noteImg.title,
+        //     orgId: req.orgId,
+        //     createdAt: currentTime,
+        //     updatedAt: currentTime
+        //   };
+        //   let resultSurveyNotesImg = await knex
+        //     .insert(insertNoteData)
+        //     .returning(["*"])
+        //     .transacting(trx)
+        //     .into("images");
+        //   noteImagesData.push(resultSurveyNotesImg[0]);
+        // }
         trx.commit;
 
         res.status(200).json({
           data: {
             surveyNotesResponse: {
-              notesData,
-              problemImage: problemImagesData,
-              noteImage: noteImagesData
+              notesData
             }
           },
           message: "Survey Note updated successfully !"

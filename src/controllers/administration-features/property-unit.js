@@ -644,9 +644,9 @@ const propertyUnitController = {
     try {
       const id = req.body.id;
       const [houseId, houseIdData] = await Promise.all([
-        knex("users")
+        knex("user_house_allocation")
           .where({ houseId: id })
-          .select("id"),
+          .select("userId"),
         knex("property_units")
           .where({ houseId: id })
           .select("*")
