@@ -270,12 +270,12 @@ const buildingPhaseController = {
   getBuildingPhaseList: async (req, res) => {
     try {
       let orgId = req.orgId;
-      let companyId = req.query.companyId;
+      let companyId = req.body.companyId;
       let projectId = req.query.projectId;
       let reqData = req.query;
       let pagination = {};
 
-      if (!companyId && !projectId) {
+      if (!companyId) {
         let per_page = reqData.per_page || 10;
         let page = reqData.current_page || 1;
         if (page < 1) page = 1;
@@ -338,7 +338,9 @@ const buildingPhaseController = {
         pagination.current_page = page;
         pagination.from = offset;
         pagination.data = rows;
-      } else if (companyId && !projectId) {
+      } else if (companyId) {
+
+        console.log("=======================",companyId)
         let per_page = reqData.per_page || 10;
         let page = reqData.current_page || 1;
         if (page < 1) page = 1;
@@ -359,6 +361,7 @@ const buildingPhaseController = {
               "companies.id"
             )
             .where({
+              "buildings_and_phases.companyId": companyId,
               "buildings_and_phases.isActive": true,
               "buildings_and_phases.orgId": orgId
             })
@@ -375,6 +378,7 @@ const buildingPhaseController = {
               "companies.id"
             )
             .where({
+              "buildings_and_phases.companyId": companyId,
               "buildings_and_phases.isActive": true,
               "buildings_and_phases.orgId": orgId
             })
@@ -400,73 +404,7 @@ const buildingPhaseController = {
         pagination.current_page = page;
         pagination.from = offset;
         pagination.data = rows;
-      } else if (companyId && projectId) {
-        let per_page = reqData.per_page || 10;
-        let page = reqData.current_page || 1;
-        if (page < 1) page = 1;
-        let offset = (page - 1) * per_page;
-
-        let [total, rows] = await Promise.all([
-          knex
-            .count("* as count")
-            .from("buildings_and_phases")
-            .leftJoin(
-              "projects",
-              "buildings_and_phases.projectId",
-              "projects.id"
-            )
-            .leftJoin(
-              "companies",
-              "buildings_and_phases.companyId",
-              "companies.id"
-            )
-            .where({
-              "buildings_and_phases.isActive": true,
-              "projects.id": projectId,
-              "companies.id": companyId,
-              "buildings_and_phases.orgId": orgId
-            })
-            .first(),
-          knex("buildings_and_phases")
-            .leftJoin(
-              "projects",
-              "buildings_and_phases.projectId",
-              "projects.id"
-            )
-            .leftJoin(
-              "companies",
-              "buildings_and_phases.companyId",
-              "companies.id"
-            )
-            .where({
-              "buildings_and_phases.isActive": true,
-              "projects.id": projectId,
-              "companies.id": companyId,
-              "buildings_and_phases.orgId": orgId
-            })
-            .select([
-              "buildings_and_phases.id as id",
-              "buildings_and_phases.buildingPhaseCode as Building/Phase",
-              "projects.projectName as Project Name",
-              "companies.companyName as Company Name",
-              "buildings_and_phases.isActive as Status",
-              "buildings_and_phases.createdBy as Created By",
-              "buildings_and_phases.createdAt as Date Created"
-            ])
-            .offset(offset)
-            .limit(per_page)
-        ]);
-
-        let count = total.count;
-        pagination.total = count;
-        pagination.per_page = per_page;
-        pagination.offset = offset;
-        pagination.to = offset + rows.length;
-        pagination.last_page = Math.ceil(count / per_page);
-        pagination.current_page = page;
-        pagination.from = offset;
-        pagination.data = rows;
-      }
+      } 
 
       return res.status(200).json({
         data: {

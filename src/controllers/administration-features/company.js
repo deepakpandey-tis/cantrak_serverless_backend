@@ -190,7 +190,7 @@ const companyController = {
         }
 
         let currentTime = new Date().getTime();
-        let logo = "";
+        let logo;
         if(req.body.logoFile){
           for (image of req.body.logoFile) {
           logo = image.s3Url;

@@ -11,7 +11,7 @@ router.post('/update-building-phase', authMiddleware.isAuthenticated, buildingPh
 router.post('/view-building-phase', authMiddleware.isAuthenticated, buildingPhaseController.viewBuildingPhase)
 router.post('/delete-building-phase', authMiddleware.isAuthenticated, buildingPhaseController.deleteBuildingPhase)
 router.post('/get-building-phase-by-project-id', authMiddleware.isAuthenticated, buildingPhaseController.getBuildingPhaseListByProjectId)
-router.get('/get-building-phase-list', authMiddleware.isAuthenticated, buildingPhaseController.getBuildingPhaseList)
+router.post('/get-building-phase-list', authMiddleware.isAuthenticated, buildingPhaseController.getBuildingPhaseList)
 // Export Building Phase
 router.get('/export-building-phase', authMiddleware.isAuthenticated, buildingPhaseController.exportBuildingPhase)
 router.get('/get-buildings-phases-all-list',authMiddleware.isAuthenticated, buildingPhaseController.getBuildingPhaseAllList)

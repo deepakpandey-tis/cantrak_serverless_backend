@@ -35,7 +35,8 @@ const teamsController = {
 
                 // validate keys
                 const schema = Joi.object().keys({
-                    teamName: Joi.string().required(),
+                    teamCode : Joi.string().required(), 
+                    teamName : Joi.string().required(),
                     description: Joi.string().required(),
                 });
 
@@ -139,7 +140,8 @@ const teamsController = {
                 const schema = Joi.object().keys({
                     teamId: Joi.number().required(),
                     teamName: Joi.string().required(),
-                    description: Joi.string().required()
+                    description: Joi.string().required(),
+                    teamCode: Joi.string().required(),
                 });
 
                 // validate params
@@ -155,7 +157,7 @@ const teamsController = {
 
                 const currentTime = new Date().getTime();
                 // Update teams table
-                updateTeams = await knex.update({ teamName: upTeamsPayload.teamName, description: upTeamsPayload.description, updatedAt: currentTime }).where({ teamId: upTeamsPayload.teamId, orgId: req.orgId }).returning(['*']).transacting(trx).into('teams');
+                updateTeams = await knex.update({ teamCode:upTeamsPayload.teamCode,teamName: upTeamsPayload.teamName, description: upTeamsPayload.description, updatedAt: currentTime }).where({ teamId: upTeamsPayload.teamId, orgId: req.orgId }).returning(['*']).transacting(trx).into('teams');
                 teamsResponse = updateTeams;
 
 
@@ -226,7 +228,6 @@ const teamsController = {
 
             let teamResult = null;
 
-
             teamResult = await knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId"  where "teams"."orgId" = ' + req.orgId + ' group by "teams"."teamId" order by "teams"."createdAt" desc');
 
 
@@ -267,12 +268,12 @@ const teamsController = {
             let offset = (page - 1) * per_page;
 
             if (teamName) {
-
+      
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from("teams")
                         .where({ 'teams.teamName': teamName, 'teams.orgId': req.orgId })
                         .first(),
-                    knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams.teamName" like %' + teamName + '% AND where "teams"."orgId" = ' + req.orgId + ' group by "teams"."teamId" limit ' + per_page + ' OFFSET ' + offset + '')
+                    knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams"."orgId" = ' + req.orgId + ' and "teams"."teamName" = "'+teamName+'" group by "teams"."teamId" limit ' + per_page + ' OFFSET ' + offset + '')
                 ])
 
             } else {
@@ -553,6 +554,7 @@ const teamsController = {
                     'teams.teamId',
                     'teams.teamName',
                     'teams.description',
+                    'teams.teamCode',
                 ])
                     .where({ 'teams.teamId': teamId }).returning('*'),
 
