@@ -12,7 +12,7 @@ router.get('/generate-quotations-id', authMiddleware.isAuthenticated, quotationC
 
 router.post('/update-quotations', authMiddleware.isAuthenticated, quotationController.updateQuotations);
 
-router.get('/get-quotation-details', authMiddleware.isAuthenticated, quotationController.getQuotationDetails);
+router.post('/get-quotation-details', authMiddleware.isAuthenticated, quotationController.getQuotationDetails);
 
 
 // router.post('/upload-images', authMiddleware.isAuthenticated, serviceRequestController.updateImages);
