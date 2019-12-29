@@ -8,7 +8,7 @@ router.post('/add-people', authMiddleware.isAuthenticated, peopleController.addP
 router.post('/update-people-details', authMiddleware.isAuthenticated, peopleController.updatePeopleDetails)
 router.post('/get-people-list', authMiddleware.isAuthenticated, peopleController.getPeopleList);
 router.post('/get-people-details', authMiddleware.isAuthenticated, peopleController.getPeopleDetails)
-router.post('/remove-people', authMiddleware.isAuthenticated, authMiddleware.isAdmin, peopleController.removePeople)
+router.post('/remove-people', authMiddleware.isAuthenticated, authMiddleware.isOrgAdmin, peopleController.removePeople)
 router.post('/export-people-data',authMiddleware.isAuthenticated, peopleController.exportPeopleData)
 
 /**IMPORT PEOPLE DATA */
