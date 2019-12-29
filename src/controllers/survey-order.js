@@ -983,6 +983,10 @@ const surveyOrderController = {
           orgId: req.orgId
         });
       surveyOrderNoteList = surveyOrderNoteResult;
+      // let results = await knex.raw(`select "survey_order_post_update"."*","images"."description" as "description","survey_orders"."appointedDate" as "appointedDate","users"."name" as "assignedTo","service_requests"."id" as "SRId","service_requests"."priority" as "priority","survey_orders"."createdBy" as "createdBy", "survey_orders"."surveyOrderStatus" as "status","survey_orders"."createdAt" as "dateCreated" from "survey_orders" inner join "service_requests" on "survey_orders"."serviceRequestId" = "service_requests"."id" left join "assigned_service_team" on "survey_orders"."id" = "assigned_service_team"."entityId" left join "users" on "assigned_service_team"."userId" = "users"."id" where "survey_orders"."orgId" = ${req.orgId} and "survey_orders"."id" = ${surveyOrderid} and "assigned_service_team"."entityType"='survey_orders'` )
+        
+
+
 
       return res.status(200).json({
         data: surveyOrderNoteList,
