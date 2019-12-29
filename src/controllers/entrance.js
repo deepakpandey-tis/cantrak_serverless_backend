@@ -37,12 +37,12 @@ const entranceController = {
             }
 
             // check username & password not blank
-            const validUser = await knex('users').where(function () {
+            loginResult = await knex('users').where(function () {
                 this.where('userName', loginPayload.userName)
-            }).orWhere({ mobileNo: loginPayload.userName }).orWhere({ email: loginPayload.userName });
+            }).orWhere({ mobileNo: loginPayload.userName }).orWhere({ email: loginPayload.userName }).first();
 
-            console.log('[controllers][entrance][login]: ValidateUsername', validUser);
-            if (validUser.length < 1) {
+            // console.log('[controllers][entrance][login]: ValidateUsername', loginResult);
+            if (!loginResult) {
                 return res.status(400).json({
                     errors: [
                         { code: 'ACCOUNT_NOT_FOUND_ERROR', message: 'Invalid credentials' }
@@ -50,142 +50,138 @@ const entranceController = {
                 });
             }
 
-            loginResult = validUser[0];
-            // console.log('[controllers][entrance][login]: ValidatePassword', loginResult.password);
+            // // check email is verified
+            // const verifyEmail = await knex('users').where({ email: loginResult.email, emailVerified: 'true' });
+            // console.log('[controllers][entrance][login]: Email verify', verifyEmail);
 
-            if (loginResult) {
+            if (!loginResult.emailVerified) {
+                return res.status(400).json({
+                    errors: [
+                        { code: 'EMAIL_VERIFICATION_ERROR', message: 'Please verify email id before login !' }
+                    ],
+                });
+            }
 
-                // check email is verified
-                const verifyEmail = await knex('users').where({ email: loginResult.email, emailVerified: 'true' });
-                console.log('[controllers][entrance][login]: Email verify', verifyEmail);
+            // Get organization ID
+            let orgId = loginResult.orgId;
+            //const organization = await knex('users')
+            console.log('Login Result: ',loginResult)
 
-                if (verifyEmail && verifyEmail.length < 1) {
+
+            //match input password with DB
+            const match = await bcrypt.compare(loginPayload.password, loginResult.password);
+            if (match) {
+                const loginToken = await jwt.sign({ id: loginResult.id,orgId }, process.env.JWT_PRIVATE_KEY, { expiresIn: '7h' });
+                login = { accessToken: loginToken,refreshToken:'' };
+
+                // check account status is active
+                // const verifyStatus = await knex('users').where({ isActive: 'false', id: loginResult.id });
+                // console.log('[controllers][entrance][login]: Account Blocked', verifyStatus);
+
+                if (!loginResult.isActive) {
                     return res.status(400).json({
                         errors: [
-                            { code: 'EMAIL_VERFICATION_ERROR', message: 'Please verify email id before login !' }
+                            { code: 'ACCOUNT_BLOCKED_ERROR', message: 'Your account has been blocked, Please contact to administration !' }
                         ],
                     });
                 }
 
-                // Get organization ID
-                let orgId = loginResult.orgId;
-                //const organization = await knex('users')
-                console.log('Login Result: ',loginResult)
+                login.user =  _.omit(loginResult, ['password']);
 
-
-                //match input password with DB
-                const match = await bcrypt.compare(loginPayload.password, loginResult.password);
-                if (match) {
-                    const loginToken = await jwt.sign({ id: loginResult.id,orgId }, process.env.JWT_PRIVATE_KEY, { expiresIn: '7h' });
-                    login = { accessToken: loginToken,refreshToken:'' };
-                    loginResult = _.omit(loginResult, ['password']);
-
-                    login.user = loginResult;
-
-                    // check account status is active
-                    const verifyStatus = await knex('users').where({ isActive: 'false', id: loginResult.id });
-                    console.log('[controllers][entrance][login]: Account Blocked', verifyStatus);
-
-                    if (verifyStatus && verifyStatus.length) {
-                        return res.status(400).json({
-                            errors: [
-                                { code: 'ACCOUNT_BLOCKED_ERROR', message: 'Your account has been blocked, Please contact to administration !' }
-                            ],
-                        });
-                    }
-
-
-                    let roles = await knex('application_user_roles').select().where({userId:loginResult.id})
-
-                    const Parallel = require('async-parallel');
-                    login.user.roles = await Parallel.map(roles, async item => {
-                        let rolename = await knex('application_roles').where({ id: item.roleId }).select('name');
-                        rolename = rolename[0].name;
-                        return rolename;
-                    });
-
-                    if (login.user.roles.includes("orgAdmin")) {
-                      console.log("this is orgAdmin");
-                      // get all the projects of this admin
-                      const projects = await knex("projects")
-                        .select("id")
-                        .where({ orgId});
-                      const companies = await knex("companies")
-                        .select("id")
-                        .where({ orgId});
-                      const resources = await knex(
-                        "organisation_resources_master"
-                      )
-                        .select("resourceId as id")
-                        .where({ orgId});
-                      const userProjectResources = _.uniqBy(
-                        resources,
-                        "id"
-                      ).map(v => ({
-                        id: v.id,
-                        projects: projects.map(v => v.id)
-                      }));
-                      const userCompanyResources = _.uniqBy(
-                        resources,
-                        "id"
-                      ).map(v => ({
-                        id: v.id,
-                        companies: companies.map(v => v.id)
-                      }));
-                      //console.log(mappedProjects)
-                      login.user.userCompanyResources = userCompanyResources;
-                      login.user.userProjectResources = userProjectResources;
-                      console.log(userCompanyResources, userProjectResources);
-                    }
-
-                    if (login.user.roles.includes("orgUser")) {
-                      const result = await knex("team_users")
-                        .innerJoin(
-                          "team_roles_project_master",
-                          "team_users.teamId",
-                          "team_roles_project_master.teamId"
-                        )
-                        .innerJoin(
-                          "role_resource_master",
-                          "team_roles_project_master.roleId",
-                          "role_resource_master.roleId"
-                        )
-                        .select([
-                          "team_roles_project_master.projectId as projectId",
-                          "role_resource_master.resourceId as resourceId"
-                        ])
-                        .where({
-                          "team_users.userId": loginResult.id,
-                          "team_users.orgId": orgId,
-                          "team_roles_project_master.orgId":orgId
-                        });
-
-                      // let userProjectResources = result;
-                      console.log('Result: ',result);
-
-                      let userProjectResources = _.chain(result)
-                        .groupBy("resourceId")
-                        .map((value, key) => ({
-                          id: key,
-                          projects: value.map(a => a.projectId)
-                        }))
-                        .value();
-                      login.user.userProjectResources = userProjectResources;
-
-                      console.log(
-                        "Result***********************************************************",
-                        userProjectResources
-                      );
-                    }
-
-
-                    // res.status(200).json({
-                    //     data: login,
-                    //     message: "Login successfull"
-                    // });
-                    res.status(200).json(login)
+                // An user can have atmost one application role
+                let userApplicationRole = await knex('application_user_roles').where({ userId: loginResult.id }).first();
+                switch (Number(userApplicationRole.roleId)) {
+                    case 1:
+                        login.user.isSuperAdmin = true;
+                        login.user.roles = ['superAdmin'];
+                        break;
+                    case 2:
+                        login.user.isOrgAdmin = true;
+                        login.user.roles = ['orgAdmin'];
+                        break;
+                    case 3:
+                        login.user.isOrgUser = true;
+                        login.user.roles = ['orgUser'];
+                        break;
+                    case 4:
+                        login.user.isCustomer = true;
+                        login.user.roles = ['customer'];
+                        break;
                 }
 
+
+                if (login.user.isOrgAdmin) {
+                  console.log("this is orgAdmin");
+                  // get all the projects of this admin
+                  const projects = await knex("projects")
+                    .select("id")
+                    .where({ orgId});
+                  const companies = await knex("companies")
+                    .select("id")
+                    .where({ orgId});
+                  const resources = await knex(
+                    "organisation_resources_master"
+                  )
+                    .select("resourceId as id")
+                    .where({ orgId});
+                  const userProjectResources = _.uniqBy(
+                    resources,
+                    "id"
+                  ).map(v => ({
+                    id: v.id,
+                    projects: projects.map(v => v.id)
+                  }));
+                  const userCompanyResources = _.uniqBy(
+                    resources,
+                    "id"
+                  ).map(v => ({
+                    id: v.id,
+                    companies: companies.map(v => v.id)
+                  }));
+                  //console.log(mappedProjects)
+                  login.user.userCompanyResources = userCompanyResources;
+                  login.user.userProjectResources = userProjectResources;
+                  console.log(userCompanyResources, userProjectResources);
+                }
+
+                if (login.user.isOrgUser) {
+                  const result = await knex("team_users")
+                    .innerJoin(
+                      "team_roles_project_master",
+                      "team_users.teamId",
+                      "team_roles_project_master.teamId"
+                    )
+                    .innerJoin(
+                      "role_resource_master",
+                      "team_roles_project_master.roleId",
+                      "role_resource_master.roleId"
+                    )
+                    .select([
+                      "team_roles_project_master.projectId as projectId",
+                      "role_resource_master.resourceId as resourceId"
+                    ])
+                    .where({
+                      "team_users.userId": loginResult.id,
+                      "team_users.orgId": orgId,
+                      "team_roles_project_master.orgId":orgId
+                    });
+
+                  // let userProjectResources = result;
+                  console.log('Result: ',result);
+
+                  let userProjectResources = _.chain(result)
+                    .groupBy("resourceId")
+                    .map((value, key) => ({
+                      id: key,
+                      projects: value.map(a => a.projectId)
+                    }))
+                    .value();
+                  login.user.userProjectResources = userProjectResources;
+
+                }
+
+                console.log("[controllers][entrance][login] : LoginResponse::", login);
+                res.status(200).json(login)
             }
 
         } catch (err) {
@@ -368,7 +364,7 @@ const entranceController = {
 
             res.status(200).json({
                 data: { user: req.me },
-                message: "Login successfull"
+                message: "Login successful"
             });
 
         } catch (err) {
