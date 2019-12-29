@@ -1360,6 +1360,79 @@ const partsController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
         });
       }
+  },
+  getServiceOrderAssignedParts: async(req,res) => {
+      try {
+         let reqData = req.query;
+         let total, rows;
+
+         let pagination = {};
+         let per_page = reqData.per_page || 10;
+         let page = reqData.current_page || 1;
+         if (page < 1) page = 1;
+         let offset = (page - 1) * per_page;
+
+         let { serviceOrderId } = req.body;
+
+
+        [total, rows] = await Promise.all([
+          knex("part_master")
+            .innerJoin(
+              "assigned_parts",
+              "part_master.id",
+              "assigned_parts.partId"
+            )
+            .select([
+              "part_master.partName as partName",
+              "part_master.id as id",
+              "part_master.partCode as partCode"
+            ])
+            .where({
+              entityId: serviceOrderId,
+              entityType: "service_orders"
+            }),
+          knex("part_master")
+            .innerJoin(
+              "assigned_parts",
+              "part_master.id",
+              "assigned_parts.partId"
+            )
+            .select([
+              "part_master.partName as partName",
+              "part_master.id as id",
+              "part_master.partCode as partCode"
+            ])
+            .where({
+              entityId: serviceOrderId,
+              entityType: "service_orders"
+            })
+            .offset(offset)
+            .limit(per_page)
+        ]);
+
+
+         let count = total.length;
+         pagination.total = count;
+         pagination.per_page = per_page;
+         pagination.offset = offset;
+         pagination.to = offset + rows.length;
+         pagination.last_page = Math.ceil(count / per_page);
+         pagination.current_page = page;
+         pagination.from = offset;
+         pagination.data = rows;
+
+        return res.status(200).json({
+            data: {
+                assignedParts:pagination
+            }
+        })
+
+
+      } catch(err) {
+        return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        });
+      }
   }
  }
 

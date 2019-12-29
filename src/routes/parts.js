@@ -169,6 +169,12 @@ router.post(
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPartAccessible,
   partsController.getServiceRequestAssignedParts
-);
+);    
+
+router.post("/get-service-order-assigned-parts",
+authMiddleware.isAuthenticated,
+roleMiddleware.parseUserPermission,
+resourceAccessMiddleware.isPartAccessible,
+partsController.getServiceOrderAssignedParts)
 
 module.exports = router;
