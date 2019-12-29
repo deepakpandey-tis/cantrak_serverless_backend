@@ -24,11 +24,11 @@ const propertysubCategoryController = {
 
         // validate keys
         const schema = Joi.object().keys({
-          incidentCategoryId: Joi.string().required(),
+          incidentCategoryId: Joi.number().required(),
           descriptionEng: Joi.string().required(),
           descriptionThai: Joi.string().required(),
           remark: Joi.string().required(),
-          incidentTypeId: Joi.string().required()
+          incidentTypeId: Joi.number().required()
         });
 
         const result = Joi.validate(subcategoryPayload, schema);
@@ -63,7 +63,6 @@ const propertysubCategoryController = {
 
         const insertData = {
           ...subcategoryPayload,
-          createdBy: userId,
           orgId: orgId,
           isActive: "true",
           createdAt: currentTime,
@@ -115,11 +114,11 @@ const propertysubCategoryController = {
         // validate keys
         const schema = Joi.object().keys({
           id: Joi.number().required(),
-          incidentCategoryId: Joi.string().required(),
+          incidentCategoryId: Joi.number().required(),
           descriptionEng: Joi.string().required(),
           descriptionThai: Joi.string().required(),
           remark: Joi.string().required(),
-          incidentTypeId: Joi.string().required()
+          incidentTypeId: Joi.number().required()
         });
 
         const result = Joi.validate(subCategoryPayload, schema);
@@ -158,11 +157,12 @@ const propertysubCategoryController = {
         //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
         const updateDataResult = await knex
           .update({
-            descriptionEng: subCategoryPayload.descriptionEng,
-            descriptionThai: subCategoryPayload.descriptionThai,
+            // descriptionEng: subCategoryPayload.descriptionEng,
+            // descriptionThai: subCategoryPayload.descriptionThai,
+            ...subCategoryPayload,
             updatedAt: currentTime
           })
-          .where({ id: subCategoryPayload.id, orgId: orgId, createdBy: userId })
+          .where({ id: subCategoryPayload.id})
           .returning(["*"])
           .transacting(trx)
           .into("incident_sub_categories");
@@ -365,6 +365,24 @@ const propertysubCategoryController = {
         },
         message: "List of sub categories"
       });
+    } catch (err) {
+      console.log("[controllers][subcategory][subcategoryList] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  /*GET PROBLEM TYPE ALL LIST FOR DROPDOWN */
+  getProblemTypeAllList:async (req,res)=>{
+    try{
+      let orgId = req.orgId;
+      let result = await knex.from('incident_type').where({orgId})
+      return res.status(200).json({
+        data: result,
+        message: "List of Problem type"
+      });
+
     } catch (err) {
       console.log("[controllers][subcategory][subcategoryList] :  Error", err);
       //trx.rollback

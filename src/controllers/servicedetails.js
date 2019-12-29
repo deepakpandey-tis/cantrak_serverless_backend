@@ -252,7 +252,7 @@ const serviceDetailsController = {
         const payload = req.body;
 
         const schema = Joi.object().keys({
-          id: Joi.string().required(),
+          id: Joi.number().required(),
           title: Joi.string().required(),
           descriptionThai: Joi.string().required(),
           descriptionEng: Joi.string().required()
@@ -321,7 +321,7 @@ const serviceDetailsController = {
         let current = new Date().getTime();
         let LocationTagResult = await knex("location_tags_master")
           .select("location_tags_master.*")
-          .where({ id: payload.id, orgId: orgId, userId: userId });
+          .where({ id: payload.id, orgId: orgId});
 
         LocationTag = _.omit(LocationTagResult[0], [
           "createdAt",
