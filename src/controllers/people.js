@@ -178,8 +178,13 @@ const peopleController = {
             .count("* as count")
             .from("users")
             .leftJoin(
+              "user_house_allocation",
+              "users.id",
+              "user_house_allocation.userId"
+            )
+            .leftJoin(
               "property_units",
-              "users.houseId",
+              "user_house_allocation.houseId",
               "property_units.houseId"
             )
             .leftJoin(
@@ -217,8 +222,13 @@ const peopleController = {
           knex
             .from("users")
             .leftJoin(
+              "user_house_allocation",
+              "users.id",
+              "user_house_allocation.userId"
+            )
+            .leftJoin(
               "property_units",
-              "users.houseId",
+              "user_house_allocation.houseId",
               "property_units.houseId"
             )
             .leftJoin(
@@ -258,7 +268,7 @@ const peopleController = {
               "users.email as email",
               "users.userName",
               "users.mobileNo",
-              "users.houseId",
+              "property_units.houseId",
               "users.lastLogin as lastVisit",
               "companies.id as companyId",
               "companies.companyName",
@@ -275,8 +285,13 @@ const peopleController = {
             .count("* as count")
             .from("users")
             .leftJoin(
+              "user_house_allocation",
+              "users.id",
+              "user_house_allocation.userId"
+            )
+            .leftJoin(
               "property_units",
-              "users.houseId",
+              "user_house_allocation.houseId",
               "property_units.houseId"
             )
             .leftJoin(
@@ -303,8 +318,13 @@ const peopleController = {
           knex
             .from("users")
             .leftJoin(
+              "user_house_allocation",
+              "users.id",
+              "user_house_allocation.userId"
+            )
+            .leftJoin(
               "property_units",
-              "users.houseId",
+              "user_house_allocation.houseId",
               "property_units.houseId"
             )
             .leftJoin(
@@ -332,7 +352,7 @@ const peopleController = {
               "users.email as email",
               "users.userName",
               "users.mobileNo",
-              "users.houseId",
+              "property_units.houseId",
               "users.lastLogin as lastVisit",
               "companies.id as companyId",
               "companies.companyName",
@@ -381,9 +401,14 @@ const peopleController = {
       let userResult;
       let projectResult;
       peopleData = await knex("users")
+      .leftJoin(
+        "user_house_allocation",
+        "users.id",
+        "user_house_allocation.userId"
+      )
         .leftJoin(
           "property_units",
-          "users.houseId",
+          "user_house_allocation.houseId",
           "property_units.houseId"
         )
         .leftJoin("companies", "property_units.companyId", "companies.id")

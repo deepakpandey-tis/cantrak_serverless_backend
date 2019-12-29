@@ -195,8 +195,9 @@ const problemController = {
   },
   getIncidentCategories:async(req,res) => {
     try {
+      let orgId = req.orgId
       //const incidentCategoryId = req.body.incidentCategoryId;
-      const categories = await knex('incident_categories')//.where({incidentCategoryId})
+      const categories = await knex.from('incident_categories').where({orgId:orgId})
       return res.status(200).json({
         data: {
           categories
@@ -242,13 +243,16 @@ const problemController = {
         knex("incident_sub_categories")
         .innerJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
         .select([
+          'incident_sub_categories.id',
           'incident_categories.categoryCode as problemCode',
           'incident_sub_categories.descriptionEng',
           'incident_sub_categories.descriptionThai',
           'incident_categories.descriptionEng as Category',
           'incident_sub_categories.isActive as Status',
           'incident_sub_categories.createdAt as DateCreated',
-
+          'incident_sub_categories.remark',
+          "incident_sub_categories.incidentCategoryId",
+          "incident_sub_categories.incidentTypeId"
         ]).where('incident_sub_categories.id',problemId)
       ]) 
      pagination.problems = rows;
@@ -390,7 +394,8 @@ const problemController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-  }
+  },
+  
 }
 
 module.exports = problemController

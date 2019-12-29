@@ -181,7 +181,8 @@ const floorZoneController = {
           "companies.id as companyId",
           "projects.projectName",
           "property_types.propertyTypeCode",
-          "buildings_and_phases.buildingPhaseCode"
+          "buildings_and_phases.buildingPhaseCode",
+          "companies.companyId as companyCode"
         )
         .where({
           "floor_and_zones.id": payload.id,

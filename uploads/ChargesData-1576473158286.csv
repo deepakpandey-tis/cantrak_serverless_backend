@@ -1,5 +1,0 @@
-﻿id,chargeCode,descriptionThai,descriptionEng,calculationUnit,rate,vatRate,vatId,whtRate,whtId,glAccountCode,createdAt,updatedAt,isActive,createdBy,orgId
-1,Service-111,asdfsad,afasdf,By Rate,10,10,4,50,2,dsf,1576151988845,1576151988845,TRUE,,
-3,ABC-001,adsfdsf,asfasdf,By Rate,5,10,4,33,3,dsaf,1576153895016,1576153895016,TRUE,59,2
-2,GST,LDA-CHARGES,LDA-CHARGES,By Rate,5,10,4,50,1,dgs,1576153728879,1576217254640,TRUE,59,2
-4,GH89798HNJ,vgdfg,Description Charge,By Hour,543,10,8,50,5,7657JH,1576472631564,1576472631564,TRUE,242,15
