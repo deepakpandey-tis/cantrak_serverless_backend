@@ -527,16 +527,20 @@ const floorZoneController = {
       let orgId = req.orgId;
       let buildingPhaseId = req.query.buildingPhaseId;
       let pagination = {};
-
       let [rows] = await Promise.all([
         knex
           .from("floor_and_zones")
           .leftJoin(
-            "buildings_and_phases",
-            "floor_and_zones.buildingPhaseId",
-            "buildings_and_phases.id"
-          )
-          .select("floor_and_zones.floorZoneCode", "floor_and_zones.id as id")
+             "buildings_and_phases",
+             "floor_and_zones.buildingPhaseId",
+             "buildings_and_phases.id"
+           )
+          .select([
+            "floor_and_zones.floorZoneCode", 
+             "floor_and_zones.id"
+          ])
+          //.where({'floor_and_zones.orgId': orgId })
+          //.where([{'floor_and_zones.orgId':orgId}])
           .where({
             "floor_and_zones.buildingPhaseId": buildingPhaseId,
             "floor_and_zones.orgId": orgId

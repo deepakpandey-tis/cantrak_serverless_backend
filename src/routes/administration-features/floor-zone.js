@@ -12,7 +12,7 @@ router.post('/get-floor-zone-list-by-building-id', authMiddleware.isAuthenticate
 router.get('/get-floor-zone-list', authMiddleware.isAuthenticated, floorZoneController.getFloorZoneList)
 // Export Floor Zone Data
 router.get('/export-floor-zone', authMiddleware.isAuthenticated, floorZoneController.exportFloorZone)
-router.get('/get-floor-zone-all-list', floorZoneController.getFloorZoneAllList)
+router.get('/get-floor-zone-all-list', authMiddleware.isAuthenticated,floorZoneController.getFloorZoneAllList)
 /**IMPORT FLOOR/ZONE DATA */
 const path       = require('path');
 let tempraryDirectory = null;
