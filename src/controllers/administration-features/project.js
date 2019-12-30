@@ -57,6 +57,19 @@ const ProjectController = {
           });
         }
 
+
+        /*CHECK DUPLICATE VALUES OPEN */
+        let existValue = await knex('projects')
+          .where({projectName: payload.projectName,project: payload.project});
+        if (existValue && existValue.length) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: "Project Name & Project Id duplicate value not allow!!" }
+            ]
+          });
+        }
+        /*CHECK DUPLICATE VALUES CLOSE */
+
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
@@ -417,14 +430,14 @@ const ProjectController = {
         ws = XLSX.utils.json_to_sheet(rows);
       } else {
         ws = XLSX.utils.json_to_sheet([
-          { 
-              PROJECT:"",
-              PROJECT_NAME:"",
-              COMPANY:"",
-              COMPANY_NAME:"",
-              PROJECT_LOCATION:"",
-              PROJECT_LOCATION_ALTERNATE_LANGUAGE:"",
-              CURRENCY:""
+          {
+            PROJECT: "",
+            PROJECT_NAME: "",
+            COMPANY: "",
+            COMPANY_NAME: "",
+            PROJECT_LOCATION: "",
+            PROJECT_LOCATION_ALTERNATE_LANGUAGE: "",
+            CURRENCY: ""
           }
         ]);
       }
@@ -479,7 +492,7 @@ const ProjectController = {
         req.userProjectResources.map(v => v.projects)
       ).map(v => Number(v));
 
-      console.log("==========",projects,"==========")
+      console.log("==========", projects, "==========")
 
       let pagination = {}
       console.log("companyId", companyId);
@@ -584,7 +597,7 @@ const ProjectController = {
 
               let companyData = await knex("companies")
                 .select("id")
-                .where({ companyId: projectData.C,orgId:req.orgId });
+                .where({ companyId: projectData.C, orgId: req.orgId });
               let companyId = null;
               if (!companyData && !companyData.length) {
                 continue;
@@ -608,7 +621,7 @@ const ProjectController = {
                     projectLocationThai: projectData.F,
                     currency: projectData.G,
                     isActive: true,
-                   // createdBy: req.me.id,
+                    // createdBy: req.me.id,
                     createdAt: currentTime,
                     updatedAt: currentTime
                   };
