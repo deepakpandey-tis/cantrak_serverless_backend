@@ -15,7 +15,7 @@ module.exports = require('knex')({
             // await conn.query('SET timezone="UTC";');
             const oldConnections = await conn.query(`WITH inactive_connections AS (
                 SELECT
-                    pid, usename, client_addr, client_hostname, application_name, usename,
+                    pid,
                     rank() over (partition by client_addr order by backend_start ASC) as rank
                 FROM 
                     pg_stat_activity
