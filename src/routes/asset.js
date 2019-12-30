@@ -92,12 +92,18 @@ router.post(
   roleMiddleware.parseUserPermission,
   assetController.getAssetCategories
 );
+
+// TODO: Remove
+// Deprecated
 router.post(
   "/get-asset-list-by-location",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   assetController.getAssetListByLocation
 );
+
+router.post('/get-asset-list-by-houseId',authMiddleware.isAuthenticated,roleMiddleware.parseUserPermission,assetController.getAssetListByHouseId);
+
 
 router.get(
   "/export-asset-data",
