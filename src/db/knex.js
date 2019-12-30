@@ -28,7 +28,7 @@ module.exports = require('knex')({
                 AND
                     state in ('idle', 'idle in transaction', 'idle in transaction (aborted)', 'disabled') 
                 AND
-                    current_timestamp - state_change > interval '10 seconds' 
+                    current_timestamp - state_change > interval '5 seconds' 
             )
             select pg_terminate_backend(pid) from inactive_connections where rank > 1;`);
             if (process.env.NODE_ENV === 'local') {
