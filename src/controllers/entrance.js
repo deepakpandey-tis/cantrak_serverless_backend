@@ -41,7 +41,7 @@ const entranceController = {
                 this.where('userName', loginPayload.userName)
             }).orWhere({ mobileNo: loginPayload.userName }).orWhere({ email: loginPayload.userName }).first();
 
-            // console.log('[controllers][entrance][login]: ValidateUsername', loginResult);
+            console.log('[controllers][entrance][login]: Validate Username', loginResult);
             if (!loginResult) {
                 return res.status(400).json({
                     errors: [
