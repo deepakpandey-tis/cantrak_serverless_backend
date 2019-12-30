@@ -3,7 +3,6 @@ const Joi = require('@hapi/joi');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const moment = require('moment');
-// const trx = knex.transaction();
 var jwt = require('jsonwebtoken');
 const _ = require('lodash');
 
