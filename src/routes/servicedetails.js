@@ -77,5 +77,6 @@ router.post('/import-location-tag',upload1.single("file"),authMiddleware.isAuthe
 
 
 router.get('/get-location-tag-all-list',authMiddleware.isAuthenticated,serviceDetailsController.getLocatioTagAllList);
+router.post('/get-service-problems',authMiddleware.isAuthenticated,serviceDetailsController.getServiceProblem);
 
 module.exports = router;

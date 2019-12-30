@@ -177,4 +177,11 @@ roleMiddleware.parseUserPermission,
 resourceAccessMiddleware.isPartAccessible,
 partsController.getServiceOrderAssignedParts)
 
+
+router.post("/get-quotation-assigned-parts",
+authMiddleware.isAuthenticated,
+roleMiddleware.parseUserPermission,
+resourceAccessMiddleware.isPartAccessible,
+partsController.getQuotationAssignedParts)
+
 module.exports = router;
