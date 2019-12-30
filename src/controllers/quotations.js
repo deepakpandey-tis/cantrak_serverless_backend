@@ -130,7 +130,7 @@ const quotationsController = {
             updatedAt: currentTime,
             isActive: true,
             moderationStatus: 1,
-            createdBy:userId
+            createdBy: userId
           })
           .where({ id: quotationPayload.quotationId })
           .returning(["*"])
@@ -425,6 +425,7 @@ const quotationsController = {
             "quotations.dueDate",
             "quotations.createdAt",
             "quotations.onTime",
+            "quotations.quotationStatus",
             "quotation_service_charges.*",
             "teams.teamName as assignTeam",
             "astUser.name as assignedMainUsers",
@@ -1100,7 +1101,7 @@ const quotationsController = {
               .into("images");
           }
         }
-        
+
         trx.commit;
 
         res.status(200).json({
@@ -1154,9 +1155,9 @@ const quotationsController = {
       //   });
       // surveyOrderNoteList = surveyOrderNoteResult;
       let quotationNoteResult = await knex.raw(`select "quotation_post_update".*,"users"."name" as "createdBy" from "quotation_post_update"  left join "users" on "quotation_post_update"."createdBy" = "users"."id" where "quotation_post_update"."orgId" = ${req.orgId} and "quotation_post_update"."quotationId" = ${quotationId} and "quotation_post_update"."isActive" = 'true'`)
-      
+
       quotationNoteList = quotationNoteResult.rows;
-      
+
       return res.status(200).json({
         data: quotationNoteList,
         message: "Quotation Order Details"
@@ -1249,7 +1250,7 @@ const quotationsController = {
             "asset_master.assetCategoryId",
             "asset_category_master.id"
           )
-        
+
           .leftJoin("companies", "asset_master.companyId", "companies.id")
           .select([
             "asset_master.id as id",
@@ -1275,9 +1276,9 @@ const quotationsController = {
             "asset_master.assetCategoryId",
             "asset_category_master.id"
           )
-         
+
           .leftJoin("companies", "asset_master.companyId", "companies.id")
-        
+
           .select([
             "asset_master.id as id",
 
@@ -1315,8 +1316,87 @@ const quotationsController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-  }
+  },
+  approveQuotation: async (req, res) => {
+    try {
+      let quotation = null;
+      let message;
+      let approveQuotation;
+      await knex.transaction(async trx => {
+        let currentTime = new Date().getTime();
+        const quotationPayload = req.body;
+        let userId = req.me.id;
 
+        const schema = Joi.object().keys({
+          quotationId: Joi.number().required(),
+          status: Joi.string().required()
+        });
+
+        let result = Joi.validate(quotationPayload, schema);
+        console.log("[controllers][quotation]: JOi Result", result);
+
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message }
+            ]
+          });
+        }
+        if (quotationPayload.status == 'Approved') {
+          // Now approved quotation
+           approveQuotation = await knex
+            .update({
+              quotationStatus: quotationPayload.status,
+              updatedAt: currentTime,
+              updatedBy: userId,
+              approvedBy: userId,
+              orgId: req.orgId
+            })
+            .where({
+              id: quotationPayload.quotationId
+            })
+            .returning(["*"])
+            .transacting(trx)
+            .into("quotations");
+
+            message = "Quotation approved successfully !";
+        } else if (quotationPayload.status == 'Canceled') {
+          // Now canceled quotation
+          approveQuotation = await knex
+            .update({
+              quotationStatus: quotationPayload.status,
+              updatedAt: currentTime,
+              updatedBy: userId,
+              cancelledBy: userId,
+              orgId: req.orgId
+            })
+            .where({
+              id: quotationPayload.quotationId
+            })
+            .returning(["*"])
+            .transacting(trx)
+            .into("quotations");
+
+            message = "Quotation has been canceled !";
+        }
+
+        trx.commit;
+
+        return res.status(200).json({
+          data: {
+            quotation: approveQuotation
+          },
+          message: message
+        });
+      });
+    } catch (err) {
+      console.log("[controllers][quotation][remaks] :  Error", err);
+      //trx.rollback
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  }
 };
 
 module.exports = quotationsController;

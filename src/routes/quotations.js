@@ -27,5 +27,6 @@ router.post('/update-quotation-notes', authMiddleware.isAuthenticated, quotation
 router.post('/get-quotation-notes-list', authMiddleware.isAuthenticated, quotationController.getQuotationNoteList)
 router.post('/delete-quotation-remark', authMiddleware.isAuthenticated, quotationController.deleteQuotationRemark);
 router.post('/get-quotation-assigned-assets', authMiddleware.isAuthenticated, quotationController.getQuotationAssignedAssets);
+router.post('/approve-quotations', authMiddleware.isAuthenticated, quotationController.approveQuotation);
 
 module.exports = router;
