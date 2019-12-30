@@ -88,7 +88,7 @@ const entranceController = {
                 login.user =  _.omit(loginResult, ['password']);
 
                 // An user can have atmost one application role
-                let userApplicationRole = await knex('application_user_roles').where({ userId: loginResult.id }).first();
+                let userApplicationRole = await knex('application_user_roles').where({ userId: Number(loginResult.id) }).select('roleId', 'orgId').first();
                 switch (Number(userApplicationRole.roleId)) {
                     case 1:
                         login.user.isSuperAdmin = true;

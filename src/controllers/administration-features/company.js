@@ -13,7 +13,6 @@ const serviceRequest = require("../servicerequest");
 const fs = require("fs");
 const request = require("request");
 const path = require("path");
-//const trx = knex.transaction();
 
 const companyController = {
   addCompany: async (req, res) => {

@@ -12,7 +12,6 @@ const saltRounds = 10;
 const fs = require("fs");
 const path = require("path");
 const request = require("request");
-//const trx = knex.transaction();
 
 const buildingPhaseController = {
   addBuildingPhase: async (req, res) => {
