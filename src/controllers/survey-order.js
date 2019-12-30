@@ -760,8 +760,8 @@ const surveyOrderController = {
         });
       }
 
-      let results = await knex.raw(`select "survey_orders"."id" as "SId","service_requests"."description" as "description","survey_orders"."appointedDate" as "appointedDate","users"."name" as "assignedTo","service_requests"."id" as "SRId","service_requests"."priority" as "priority","survey_orders"."createdBy" as "createdBy", "survey_orders"."surveyOrderStatus" as "status","survey_orders"."createdAt" as "dateCreated" from "survey_orders" inner join "service_requests" on "survey_orders"."serviceRequestId" = "service_requests"."id" left join "assigned_service_team" on "survey_orders"."id" = "assigned_service_team"."entityId" left join "users" on "assigned_service_team"."userId" = "users"."id" where "survey_orders"."orgId" = ${req.orgId} and "survey_orders"."id" = ${surveyOrderid} and "assigned_service_team"."entityType"='survey_orders'` )
-      
+      let results = await knex.raw(`select "survey_orders"."id" as "SId","service_requests"."description" as "description","survey_orders"."appointedDate" as "appointedDate","users"."name" as "assignedTo","service_requests"."id" as "SRId","service_requests"."priority" as "priority","survey_orders"."createdBy" as "createdBy", "survey_orders"."surveyOrderStatus" as "status","survey_orders"."createdAt" as "dateCreated" from "survey_orders" inner join "service_requests" on "survey_orders"."serviceRequestId" = "service_requests"."id" left join "assigned_service_team" on "survey_orders"."id" = "assigned_service_team"."entityId" left join "users" on "assigned_service_team"."userId" = "users"."id" where "survey_orders"."orgId" = ${req.orgId} and "survey_orders"."id" = ${surveyOrderid} and "assigned_service_team"."entityType"='survey_orders'`)
+
       console.log("results", results.rows);
 
       // surveyOrderResult = await knex
@@ -775,10 +775,10 @@ const surveyOrderController = {
       //   .where({ id: surveyOrder.serviceRequestId, orgId: req.orgId });
       // serviceRequest = serviceRequestResult[0];
 
-     let resultData = results.rows;
+      let resultData = results.rows;
 
       return res.status(200).json({
-        data:  { resultData } ,
+        data: { resultData },
         message: "Survey Order Details"
       });
 
@@ -823,6 +823,8 @@ const surveyOrderController = {
       let surveyNotesResponse = null;
       let problemImagesData = [];
       let noteImagesData = [];
+      let userId = req.me.id;
+
       await knex.transaction(async trx => {
         let upNotesPayload = _.omit(req.body, ["images"]);
         console.log(
@@ -855,6 +857,7 @@ const surveyOrderController = {
           surveyOrderId: upNotesPayload.surveyOrderId,
           description: upNotesPayload.description,
           orgId: req.orgId,
+          createdBy: userId,
           createdAt: currentTime,
           updatedAt: currentTime
         };
@@ -871,10 +874,19 @@ const surveyOrderController = {
         notesData = resultSurveyNotes;
         surveyNoteId = notesData[0];
 
+        // const Parallel = require('async-parallel');
+        //  let notesResData = await Parallel.map(notesData, async item => {
+        //       let username = await knex('users').where({ id: item.createdBy }).select('name');
+        //       username = username[0].name;
+        //       return notesData;
+        //   });
+        let usernameRes = await knex('users').where({ id: notesData[0].createdBy }).select('name')
+        let username = usernameRes[0].name;
+        notesData = { ...notesData[0], createdBy: username }
 
-         /*INSERT IMAGE TABLE DATA OPEN */
+        /*INSERT IMAGE TABLE DATA OPEN */
 
-         if (req.body.images && req.body.images.length) {
+        if (req.body.images && req.body.images.length) {
           let imagesData = req.body.images;
           for (image of imagesData) {
             let d = await knex
@@ -938,7 +950,7 @@ const surveyOrderController = {
         res.status(200).json({
           data: {
             surveyNotesResponse: {
-              notesData
+              notesData: [notesData]
             }
           },
           message: "Survey Note updated successfully !"
@@ -974,16 +986,21 @@ const surveyOrderController = {
         });
       }
 
-      surveyOrderNoteResult = await knex
-        .from("survey_order_post_update")
-        .select()
-        .where({
-          surveyOrderId: surveyOrder.surveyOrderId,
-          isActive: "true",
-          orgId: req.orgId
-        });
-      surveyOrderNoteList = surveyOrderNoteResult;
+      let surveyOrderId = surveyOrder.surveyOrderId;
 
+      // surveyOrderNoteResult = await knex
+      //   .from("survey_order_post_update")
+      //   .select()
+      //   .where({
+      //     surveyOrderId: surveyOrder.surveyOrderId,
+      //     isActive: "true",
+      //     orgId: req.orgId
+      //   });
+      // surveyOrderNoteList = surveyOrderNoteResult;
+      let surveyOrderNoteResult = await knex.raw(`select "survey_order_post_update".*,"users"."name" as "createdBy" from "survey_order_post_update"  left join "users" on "survey_order_post_update"."createdBy" = "users"."id" where "survey_order_post_update"."orgId" = ${req.orgId} and "survey_order_post_update"."surveyOrderId" = ${surveyOrderId} and "survey_order_post_update"."isActive" = 'true'`)
+      
+      surveyOrderNoteList = surveyOrderNoteResult.rows;
+      
       return res.status(200).json({
         data: surveyOrderNoteList,
         message: "Survey Order Details"

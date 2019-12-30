@@ -23,7 +23,7 @@ const quotationsController = {
         const currentTime = new Date().getTime();
         //console.log('[controllers][entrance][signup]: Expiry Time', tokenExpiryTime);
         let orgId = req.orgId;
-       
+
         const insertData = {
           moderationStatus: 0,
           isActive: "true",
@@ -68,7 +68,8 @@ const quotationsController = {
       let assignedServiceTeam = null;
       let additionalUsersList = [];
       let orgId = req.orgId;
-       
+      let userId = req.me.id;
+
       await knex.transaction(async trx => {
         let images = [];
 
@@ -76,7 +77,7 @@ const quotationsController = {
         images = req.body.images;
 
         console.log(
-          "[controllers][quotations][updateQuotation] : Quotation Body",quotationPayload
+          "[controllers][quotations][updateQuotation] : Quotation Body", quotationPayload
         );
 
         // validate keys
@@ -112,7 +113,7 @@ const quotationsController = {
             ]
           });
         }
-        
+
         // Insert in quotation table,
         const currentTime = new Date().getTime();
 
@@ -128,7 +129,8 @@ const quotationsController = {
             dueDate: quotationPayload.dueDate,
             updatedAt: currentTime,
             isActive: true,
-            moderationStatus: 1
+            moderationStatus: 1,
+            createdBy:userId
           })
           .where({ id: quotationPayload.quotationId })
           .returning(["*"])
@@ -163,7 +165,7 @@ const quotationsController = {
         // Start quotation service charges table,
 
         let quotationCharges = await knex("quotation_service_charges")
-          .where({ quotationId: quotationPayload.quotationId,orgId: orgId })
+          .where({ quotationId: quotationPayload.quotationId, orgId: orgId })
           .select("id");
 
         if (quotationCharges.length > 0) {
@@ -370,78 +372,97 @@ const quotationsController = {
 
   getQuotationDetails: async (req, res) => {
     try {
-      let quotationRequestId = req.query.id;
+      //let quotationRequestId = req.query.id;
       // Get Quotations Details
-      quotationView = await knex("quotations")
-        .innerJoin(
-          "assigned_service_team as astm","astm.entityId","=","quotations.id",
-          "astm.entityType","=","quotations"
-        )
-        .innerJoin("teams", "teams.teamId", "=", "astm.teamId")
-        .innerJoin("users as astUser", "astUser.id", "=", "astm.userId")
-        .innerJoin(
-          "quotation_service_charges","quotation_service_charges.quotationId","=",
-          "quotation_service_charges.quotationId"
-        )
-        .innerJoin("user_roles", "astm.userId", "=", "user_roles.userId")
-        .innerJoin("roles", "user_roles.roleId", "=", "roles.id")
-        .select(
-          "quotations.id as quotationId",
-          "quotations.checkedBy",
-          "quotations.inspectedBy",
-          "quotations.acknowledgeBy",
-          "quotations.startDate",
-          "quotations.finishDate",
-          "quotations.dueDate",
-          "quotations.onTime",
-          "quotation_service_charges.*",
-          "teams.teamName as assignTeam",
-          "astUser.name as assignedMainUsers",
-          "roles.name as userRole"
-        )
-        .where({ "quotations.id": quotationRequestId });
-      console.log(
-        "[controllers][teams][getTeamList] : Team List",
-        quotationView
-      );
-      quotationsDetails = _.omit(
-        quotationView[0],
-        ["id"],
-        ["isActive"],
-        ["createdAt"],
-        ["updatedAt"]
-      );
 
-      // Get addtional User list For Quotations
-      addtionalUser = await knex("assigned_service_additional_users")
-        .leftJoin(
-          "users",
-          "assigned_service_additional_users.userId",
-          "=",
-          "users.id"
-        )
-        .leftJoin(
-          "user_roles",
-          "assigned_service_additional_users.userId",
-          "=",
-          "user_roles.userId"
-        )
-        .leftJoin("roles", "user_roles.roleId", "=", "roles.id")
-        .select("users.name as addtionalUsers", "roles.name as userRole")
-        .where({
-          "assigned_service_additional_users.entityId": quotationRequestId,
-          "assigned_service_additional_users.entityType": "quotations"
+      await knex.transaction(async trx => {
+        let payload = req.body;
+        const schema = Joi.object().keys({
+          quotationId: Joi.number().required()
         });
-      console.log(
-        "[controllers][teams][getTeamList] : Addtional Users List",
-        addtionalUser
-      );
-      quotationsDetails.addtinalUserList = addtionalUser;
-      quotationsDetails.parts = [];
-      quotationsDetails.assets = [];
-      quotationsDetails.charges = [];
 
-      teamResult = { quotation: quotationsDetails };
+        let result = Joi.validate(payload, schema);
+        console.log(
+          "[controllers][quotation][Quotation Details]: JOi Result",
+          result
+        );
+
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message }
+            ]
+          });
+        }
+
+        let quotationRequestId = payload.quotationId;
+
+        quotationView = await knex("quotations")
+          .leftJoin(
+            "assigned_service_team as astm", "astm.entityId", "=", "quotations.id",
+            "astm.entityType", "=", "quotations"
+          )
+          .leftJoin("teams", "teams.teamId", "=", "astm.teamId")
+          .leftJoin("users as astUser", "astUser.id", "=", "astm.userId")
+
+          .leftJoin("users as authUser", "authUser.id", "=", "quotations.createdBy")
+          .leftJoin("users as checkUser", "checkUser.id", "=", "quotations.checkedBy")
+          .leftJoin("users as inspectedUser", "inspectedUser.id", "=", "quotations.inspectedBy")
+          .leftJoin("users as acknowledgeUser", "acknowledgeUser.id", "=", "quotations.acknowledgeBy")
+          .leftJoin(
+            "quotation_service_charges", "quotation_service_charges.quotationId", "=",
+            "quotation_service_charges.quotationId"
+          )
+          .leftJoin("organisation_user_roles", "astm.userId", "=", "organisation_user_roles.userId")
+          .leftJoin("organisation_roles", "organisation_user_roles.roleId", "=", "organisation_roles.id")
+          .select(
+            "quotations.id as quotationId",
+            "checkUser.name as checkedBy",
+            "inspectedUser.name as inspectedBy",
+            "acknowledgeUser.name as acknowledgeBy",
+            "quotations.startDate",
+            "quotations.finishDate",
+            "quotations.dueDate",
+            "quotations.createdAt",
+            "quotations.onTime",
+            "quotation_service_charges.*",
+            "teams.teamName as assignTeam",
+            "astUser.name as assignedMainUsers",
+            "authUser.name as createdBy",
+            "organisation_roles.name as userRole"
+          )
+          .where({ "quotations.id": quotationRequestId });
+        console.log(
+          "[controllers][teams][getTeamList] : Team List",
+          quotationView
+        );
+        quotationsDetails = _.omit(
+          quotationView[0],
+          ["id"],
+          ["isActive"],
+          ["updatedAt"]
+        );
+
+        // Get addtional User list For Quotations
+        addtionalUser = await knex("assigned_service_additional_users")
+          .leftJoin("users", "assigned_service_additional_users.userId", "=", "users.id")
+          .leftJoin("organisation_user_roles", "assigned_service_additional_users.userId", "=", "organisation_user_roles.userId")
+          .leftJoin("organisation_roles", "organisation_user_roles.roleId", "=", "organisation_roles.id")
+          .select("users.name as addtionalUsers", "organisation_roles.name as userRole")
+          .where({
+            "assigned_service_additional_users.entityId": quotationRequestId,
+            "assigned_service_additional_users.entityType": "quotations"
+          });
+        console.log(
+          "[controllers][teams][getTeamList] : Addtional Users List", addtionalUser
+        );
+        quotationsDetails.addtinalUserList = addtionalUser;
+        quotationsDetails.parts = [];
+        quotationsDetails.assets = [];
+        quotationsDetails.charges = [];
+
+        teamResult = { quotation: quotationsDetails };
+      });
 
       res.status(200).json({
         data: teamResult,
@@ -676,7 +697,7 @@ const quotationsController = {
             .where("quotations.orgId", req.orgId)
             .select([
               "quotations.id as QId",
-              "quotations.serviceRequestId as serviceRequestId",              
+              "quotations.serviceRequestId as serviceRequestId",
               "service_requests.description as Description",
               "service_requests.serviceType as Type",
               "service_requests.priority as Priority",
