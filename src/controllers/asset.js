@@ -624,7 +624,8 @@ const assetController = {
                 "property_units.id as unitId",
                 "asset_location.createdAt as startDate",
                 "asset_location.updatedAt as endDate",
-                "asset_location.id as assetLocationId"
+                "asset_location.id as assetLocationId",
+                "asset_location.houseId as houseId"
               ])
               .where({ assetId: id, 'asset_location.orgId': req.orgId });
             //   .where({ orgId: req.orgId });
@@ -1486,6 +1487,7 @@ const assetController = {
     //             });
     //         }
     // },
+    // DEPRECATED API
     getAssetListByLocation: async (req,res) => {
         try {  
 
@@ -1912,6 +1914,67 @@ const assetController = {
       });
     }
   },
+  getAssetListByHouseId:async(req,res) => {
+    try{
+      let houseId = req.body.houseId;
+      let reqData = req.query
+      let total, rows;
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+
+      [total, rows] = await Promise.all([
+        knex("asset_location")
+          .leftJoin("asset_master", "asset_location.assetId", "asset_master.id")
+          .select([
+            "asset_master.assetName as assetName",
+            "asset_master.id as id"
+          ])
+          .where({
+            "asset_location.houseId": houseId,
+            "asset_master.orgId": req.orgId
+          }),
+        knex("asset_location")
+          .leftJoin("asset_master", "asset_location.assetId", "asset_master.id")
+          .select([
+            "asset_master.assetName as assetName",
+            "asset_master.id as id"
+          ])
+          .where({
+            "asset_location.houseId": houseId,
+            "asset_master.orgId": req.orgId
+          }).offset(offset).limit(per_page)
+      ]);
+
+
+      let count = total.length;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+
+      return res.status(200).json({
+        data: {
+          asset:pagination
+        },
+        message:'Asset locations'
+      })
+    } catch(err) {
+      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  }
 }
 
 module.exports = assetController;
