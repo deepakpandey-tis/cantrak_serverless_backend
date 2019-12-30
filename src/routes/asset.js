@@ -138,5 +138,6 @@ var storage = multer.diskStorage({
 var upload = multer( { storage: storage } );
 router.post('/import-asset-data',upload.single('file'), authMiddleware.isAuthenticated, assetController.importAssetData)
 
+router.post('/get-service-request-relocated-assets',authMiddleware.isAuthenticated,assetController.getServiceRequestRelocatedAssets)
 
 module.exports = router

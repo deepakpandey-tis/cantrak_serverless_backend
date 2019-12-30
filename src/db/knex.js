@@ -10,12 +10,12 @@ module.exports = require('knex')({
     debug: process.env.NODE_ENV === 'local' ? true : false,
     pool: {
         min: 1,
-        max: 4,
+        max: 5,
         afterCreate: async (conn, done) => {
             // await conn.query('SET timezone="UTC";');
             const oldConnections = await conn.query(`WITH inactive_connections AS (
                 SELECT
-                    pid, usename, client_addr, client_hostname, application_name, usename,
+                    pid,
                     rank() over (partition by client_addr order by backend_start ASC) as rank
                 FROM 
                     pg_stat_activity

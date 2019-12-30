@@ -6,12 +6,12 @@ const _ = require("lodash");
 const knex = require("../db/knex");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
-//const trx = knex.transaction();
+
 const XLSX = require("xlsx");
 const fs = require("fs");
 const path = require("path");
 const request = require("request");
-//const trx = knex.transaction();
+
 
 const serviceDetailsController = {
   addPriorities: async (req, res) => {
@@ -357,6 +357,7 @@ const serviceDetailsController = {
         const incidentRequestPayload = req.body;
 
         // Get HouseId By Service Request Id
+        
         const requestResult = await knex("service_requests").where({
           isActive: "true",
           id:incidentRequestPayload.id,
@@ -947,25 +948,7 @@ const serviceDetailsController = {
       });
     }
   },
-  // getLocationTags: async (req, res) => {
-  //   try {
-  //     const tags = await knex("location_tags_master")
-  //       .select("id", "title")
-  //       .where({ orgId: req.orgId });
-  //     return res.status(200).json({
-  //       data: {
-  //         locationTags: tags
-  //       }
-  //     });
-  //   } catch (err) {
-  //     console.log("[controllers][servicedetails][signup] :  Error", err);
-  //     //trx.rollback
-  //     res.status(500).json({
-  //       errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-  //     });
-  //   }
-  // },
-
+ 
   /**Export Priorities Data  */
 
   exportPriorityData: async (req, res) => {
@@ -1265,6 +1248,57 @@ const serviceDetailsController = {
     });
   }
 
+  },
+
+  /** Get Service Request Problem Details */
+
+  getServiceProblem: async (req, res) =>{
+    try {
+      let problemDetails = null;
+      let DataResult = null;
+      let userId = req.me.id;
+      let orgId = req.orgId;
+
+      await knex.transaction(async trx => {
+        // Insert in users table,
+        const serviceRequestPayload = req.body;
+
+        // Get HouseId By Service Request Id    
+
+        DataResult = await knex("service_problems")
+          .leftJoin("incident_categories", "service_problems.categoryId", "=", "incident_categories.id")
+          .leftJoin("incident_sub_categories", "service_problems.problemId", "=", "incident_sub_categories.id")         
+          .select(
+            "incident_categories.categoryCode",
+            "incident_sub_categories.descriptionEng",
+            "service_problems.description"
+           )
+          .where({
+            "service_problems.serviceRequestId": serviceRequestPayload.id,
+            "service_problems.orgId": orgId
+          });
+
+        console.log(
+          "[controllers][servicedetails][problemdetails]: View Data", DataResult
+        );
+
+        problemDetails = DataResult;
+        trx.commit;        
+      });
+
+      res.status(200).json({
+        data: {
+          problemDetails: problemDetails
+        },
+        message: "Problem category & subcategory details !"
+      });
+    } catch (err) {
+      console.log("[controllers][entrance][signup] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 

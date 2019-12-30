@@ -8,9 +8,10 @@ const knex = require("../../db/knex");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
-//const trx = knex.transaction();
 const uuid = require('uuid/v4')
 const emailHelper = require('../../helpers/email')
+
+
 const customerController = {
   getCustomers: async (req, res) => {
     try {

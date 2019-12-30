@@ -13,7 +13,6 @@ const serviceRequest = require("../servicerequest");
 const fs = require("fs");
 const request = require("request");
 const path = require("path");
-//const trx = knex.transaction();
 
 const companyController = {
   addCompany: async (req, res) => {
@@ -76,6 +75,21 @@ const companyController = {
             ]
           });
         }
+
+/*CHECK DUPLICATE VALUES OPEN */
+let existValue = await knex('companies')
+                 .where({companyName:payload.companyName,companyId:payload.companyId});
+if(existValue && existValue.length){
+  return res.status(400).json({
+    errors: [
+      { code: "VALIDATION_ERROR", message: "Company Name & Company Id duplicate value not allow!!" }
+    ]
+  });
+}
+/*CHECK DUPLICATE VALUES CLOSE */
+
+
+
         console.log("ORG ID: ", orgId);
        let logo = "";
         if(req.body.logoFile){
@@ -99,7 +113,6 @@ const companyController = {
           .into("companies");
         company = insertResult[0];
 
- 
 
         
         trx.commit;

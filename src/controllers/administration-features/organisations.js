@@ -7,7 +7,7 @@ const XLSX = require("xlsx");
 const saltRounds = 10;
 const bcrypt = require('bcrypt');
 const knex = require("../../db/knex");
-//const trx = knex.transaction();
+
 
 const organisationsController = {
   addOrganisation: async (req, res) => {

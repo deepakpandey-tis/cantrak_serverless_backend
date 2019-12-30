@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const knex = require('../db/knex');
 const XLSX = require("xlsx");
-//const trx = knex.transaction();
+
 const fs = require('fs');
 const path = require('path');
 const peopleController = {

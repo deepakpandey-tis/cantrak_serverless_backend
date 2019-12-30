@@ -10,7 +10,7 @@ const knex = require("../db/knex");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
-//const trx = knex.transaction();
+
 const AWS = require("aws-sdk");
 const XLSX = require("xlsx");
 const fs = require("fs");

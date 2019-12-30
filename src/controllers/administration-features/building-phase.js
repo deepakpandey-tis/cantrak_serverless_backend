@@ -12,7 +12,6 @@ const saltRounds = 10;
 const fs = require("fs");
 const path = require("path");
 const request = require("request");
-//const trx = knex.transaction();
 
 const buildingPhaseController = {
   addBuildingPhase: async (req, res) => {
@@ -29,9 +28,9 @@ const buildingPhaseController = {
           projectId: Joi.string().required(),
           propertyTypeId: Joi.string().required(),
           buildingPhaseCode: Joi.string().required(),
-          description: Joi.string().required(),
+          description: Joi.string().allow("").optional(),
           buildingAddressEng: Joi.string().required(),
-          buildingAddressThai: Joi.string().required()
+          buildingAddressThai: Joi.string().allow("").optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -98,9 +97,9 @@ const buildingPhaseController = {
           projectId: Joi.string().required(),
           propertyTypeId: Joi.string().required(),
           buildingPhaseCode: Joi.string().required(),
-          description: Joi.string().required(),
+          description: Joi.string().allow("").optional(),
           buildingAddressEng: Joi.string().required(),
-          buildingAddressThai: Joi.string().required()
+          buildingAddressThai: Joi.string().allow("").optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -295,6 +294,11 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
+            .leftJoin(
+              "users",
+              "buildings_and_phases.createdBy",
+              "users.id"
+            )
             .where({
               "buildings_and_phases.orgId": orgId,
               "buildings_and_phases.isActive": true
@@ -312,6 +316,11 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
+            .leftJoin(
+              "users",
+              "buildings_and_phases.createdBy",
+              "users.id"
+            )
             .where({
               "buildings_and_phases.isActive": true,
               "buildings_and_phases.orgId": orgId
@@ -322,7 +331,7 @@ const buildingPhaseController = {
               "projects.projectName as Project Name",
               "companies.companyName as Company Name",
               "buildings_and_phases.isActive as Status",
-              "buildings_and_phases.createdBy as Created By",
+              "users.name as Created By",
               "buildings_and_phases.createdAt as Date Created"
             ])
             .offset(offset)
@@ -360,6 +369,11 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
+            .leftJoin(
+              "users",
+              "buildings_and_phases.createdBy",
+              "users.id"
+            )
             .where({
               "buildings_and_phases.companyId": companyId,
               "buildings_and_phases.isActive": true,
@@ -377,6 +391,11 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
+            .leftJoin(
+              "users",
+              "buildings_and_phases.createdBy",
+              "users.id"
+            )
             .where({
               "buildings_and_phases.companyId": companyId,
               "buildings_and_phases.isActive": true,
@@ -388,7 +407,7 @@ const buildingPhaseController = {
               "projects.projectName as Project Name",
               "companies.companyName as Company Name",
               "buildings_and_phases.isActive as Status",
-              "buildings_and_phases.createdBy as Created By",
+              "users.name as Created By",
               "buildings_and_phases.createdAt as Date Created"
             ])
             .offset(offset)

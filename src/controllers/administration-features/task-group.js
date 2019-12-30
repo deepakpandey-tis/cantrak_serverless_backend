@@ -4,7 +4,6 @@ const uuidv4 = require('uuid/v4');
 var jwt      = require('jsonwebtoken');
 const _      = require('lodash');
 const knex   = require('../../db/knex');
-const trx    = knex.transaction();
 const { RRule, RRuleSet, rrulestr } = require("rrule");
 const XLSX = require("xlsx");
 const fs   = require('fs');

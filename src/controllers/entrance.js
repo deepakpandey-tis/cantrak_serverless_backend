@@ -3,7 +3,6 @@ const Joi    = require('@hapi/joi');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const moment = require('moment');
-//const trx  = knex.transaction();
 const uuidv4 = require('uuid/v4');
 var jwt      = require('jsonwebtoken');
 const _      = require('lodash');
@@ -89,7 +88,7 @@ const entranceController = {
                 login.user =  _.omit(loginResult, ['password']);
 
                 // An user can have atmost one application role
-                let userApplicationRole = await knex('application_user_roles').where({ userId: loginResult.id }).first();
+                let userApplicationRole = await knex('application_user_roles').where({ userId: Number(loginResult.id) }).select('roleId', 'orgId').first();
                 switch (Number(userApplicationRole.roleId)) {
                     case 1:
                         login.user.isSuperAdmin = true;
