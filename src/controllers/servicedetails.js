@@ -6,12 +6,12 @@ const _ = require("lodash");
 const knex = require("../db/knex");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
-//const trx = knex.transaction();
+
 const XLSX = require("xlsx");
 const fs = require("fs");
 const path = require("path");
 const request = require("request");
-//const trx = knex.transaction();
+
 
 const serviceDetailsController = {
   addPriorities: async (req, res) => {
@@ -357,6 +357,7 @@ const serviceDetailsController = {
         const incidentRequestPayload = req.body;
 
         // Get HouseId By Service Request Id
+        
         const requestResult = await knex("service_requests").where({
           isActive: "true",
           id:incidentRequestPayload.id,

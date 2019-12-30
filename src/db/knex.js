@@ -15,7 +15,7 @@ module.exports = require('knex')({
             // await conn.query('SET timezone="UTC";');
             const oldConnections = await conn.query(`WITH inactive_connections AS (
                 SELECT
-                    pid, usename, client_addr, client_hostname, application_name, usename,
+                    pid,
                     rank() over (partition by client_addr order by backend_start ASC) as rank
                 FROM 
                     pg_stat_activity
@@ -28,11 +28,13 @@ module.exports = require('knex')({
                 AND
                     state in ('idle', 'idle in transaction', 'idle in transaction (aborted)', 'disabled') 
                 AND
-                    current_timestamp - state_change > interval '20 seconds' 
+                    current_timestamp - state_change > interval '5 seconds' 
             )
             select pg_terminate_backend(pid) from inactive_connections where rank > 1;`);
+            if (process.env.NODE_ENV === 'local') {
+                console.log('[Knex][Init][Pool] After Create, Closed Old Connections', oldConnections.rows);
+            }
             done(null, conn);
-            console.log('[Knex][Init][Pool] After Create, Closed Old Connections', oldConnections);
         }
     },
     migrations: {

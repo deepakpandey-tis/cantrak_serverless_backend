@@ -11,7 +11,7 @@ const knex = require("../db/knex");
 const bcrypt = require("bcrypt");
 const XLSX = require("xlsx");
 const saltRounds = 10;
-//const trx = knex.transaction();
+
 
 const quotationsController = {
   generateQuotationId: async (req, res) => {

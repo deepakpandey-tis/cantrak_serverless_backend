@@ -12,7 +12,7 @@ const saltRounds = 10;
 const fs = require('fs')
 const path = require('path')
 
-//const trx = knex.transaction();
+
 
 /* Define Controller */
 const teamsController = {
@@ -35,8 +35,8 @@ const teamsController = {
 
                 // validate keys
                 const schema = Joi.object().keys({
-                    teamCode : Joi.string().required(), 
-                    teamName : Joi.string().required(),
+                    teamCode: Joi.string().required(),
+                    teamName: Joi.string().required(),
                     description: Joi.string().required(),
                 });
 
@@ -51,6 +51,18 @@ const teamsController = {
                         ]
                     });
                 }
+
+                /*CHECK DUPLICATE VALUES OPEN */
+                let existValue = await knex('teams')
+                    .where({ teamCode: payload.teamCode, teamName: payload.teamName });
+                if (existValue && existValue.length) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "VALIDATION_ERROR", message: "Team Name & Team Id duplicate value not allow!!" }
+                        ]
+                    });
+                }
+                /*CHECK DUPLICATE VALUES CLOSE */
 
                 const currentTime = new Date().getTime();
                 // Insert into teams table
@@ -157,7 +169,7 @@ const teamsController = {
 
                 const currentTime = new Date().getTime();
                 // Update teams table
-                updateTeams = await knex.update({ teamCode:upTeamsPayload.teamCode,teamName: upTeamsPayload.teamName, description: upTeamsPayload.description, updatedAt: currentTime }).where({ teamId: upTeamsPayload.teamId, orgId: req.orgId }).returning(['*']).transacting(trx).into('teams');
+                updateTeams = await knex.update({ teamCode: upTeamsPayload.teamCode, teamName: upTeamsPayload.teamName, description: upTeamsPayload.description, updatedAt: currentTime }).where({ teamId: upTeamsPayload.teamId, orgId: req.orgId }).returning(['*']).transacting(trx).into('teams');
                 teamsResponse = updateTeams;
 
 
@@ -268,12 +280,12 @@ const teamsController = {
             let offset = (page - 1) * per_page;
 
             if (teamName) {
-      
+
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from("teams")
                         .where({ 'teams.teamName': teamName, 'teams.orgId': req.orgId })
                         .first(),
-                    knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams"."orgId" = ' + req.orgId + ' and "teams"."teamName" = "'+teamName+'" group by "teams"."teamId" limit ' + per_page + ' OFFSET ' + offset + '')
+                    knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams"."orgId" = ' + req.orgId + ' and "teams"."teamName" = "' + teamName + '" group by "teams"."teamId" limit ' + per_page + ' OFFSET ' + offset + '')
                 ])
 
             } else {
@@ -508,8 +520,8 @@ const teamsController = {
     getMainAndAdditionalUsersByTeamId: async (req, res) => {
         try {
             let teamId = req.body.teamId;
-            let mainUsers = await knex('team_users').innerJoin('users', 'team_users.userId', 'users.id').select(['users.id as id', 'users.name as name']).where({ 'team_users.teamId': teamId,'users.orgId':req.orgId })
-            let additionalUsers = await knex('users').select(['id', 'name']).where({orgId:req.orgId})
+            let mainUsers = await knex('team_users').innerJoin('users', 'team_users.userId', 'users.id').select(['users.id as id', 'users.name as name']).where({ 'team_users.teamId': teamId, 'users.orgId': req.orgId })
+            let additionalUsers = await knex('users').select(['id', 'name']).where({ orgId: req.orgId })
             //additionalUsers = additionalUsers.map(user => _.omit(user, ['password','username']))
 
             const Parallel = require('async-parallel')
@@ -667,7 +679,7 @@ const teamsController = {
                     data[0].D == "COMPANY" &&
                     data[0].E == "COMPANY_NAME" &&
                     data[0].F == "PROJECT" &&
-                    data[0].G == "PROJECT_NAME" 
+                    data[0].G == "PROJECT_NAME"
                     // &&
                     // data[0].H == "STATUS"
                 ) {
@@ -693,7 +705,7 @@ const teamsController = {
                             /**GET PROJECT ID OPEN */
                             let projectId = null;
                             if (teamData.G) {
-                                let projectData = await knex('projects').select('id').where({ project: teamData.F,orgId:req.orgId });
+                                let projectData = await knex('projects').select('id').where({ project: teamData.F, orgId: req.orgId });
 
                                 //   if(!projectData && !projectData.length){
                                 //     continue;
@@ -708,7 +720,7 @@ const teamsController = {
                             if (i > 1) {
 
                                 let checkExist = await knex('teams').select("teamId")
-                                    .where({ teamName: teamData.B, teamCode: teamData.A,orgId:req.orgId })
+                                    .where({ teamName: teamData.B, teamCode: teamData.A, orgId: req.orgId })
                                 if (checkExist.length < 1) {
                                     let insertData = {
                                         orgId: req.orgId,
@@ -728,7 +740,7 @@ const teamsController = {
 
                                     if (projectId) {
                                         let checkRoleMaster = await knex('team_roles_project_master').select("id")
-                                            .where({ teamId: teamId, projectId: projectId,orgId:req.orgId })
+                                            .where({ teamId: teamId, projectId: projectId, orgId: req.orgId })
 
                                         if (checkRoleMaster.length < 1) {
 
@@ -754,7 +766,7 @@ const teamsController = {
 
                                     if (projectId) {
                                         let checkRoleMaster = await knex('team_roles_project_master').select("id")
-                                            .where({ teamId: checkExist[0].teamId, projectId: projectId,orgId:req.orgId })
+                                            .where({ teamId: checkExist[0].teamId, projectId: projectId, orgId: req.orgId })
                                         if (checkRoleMaster.length < 1) {
                                             let insertProjectData = {
                                                 orgId: req.orgId,
@@ -781,7 +793,7 @@ const teamsController = {
                         if (totalData == success) {
                             message = "System has processed ( " + totalData + " ) entries and added them successfully!";
                         } else {
-                            message = "System has processed ( " + totalData + " ) entries out of which only ( " +success+" ) are added and others are failed ( " + fail + " ) due to validation!";
+                            message = "System has processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
                         }
 
                         let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })

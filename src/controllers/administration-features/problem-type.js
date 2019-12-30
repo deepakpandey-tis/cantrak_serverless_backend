@@ -8,7 +8,7 @@ const knex = require("../../db/knex");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const fs = require('fs');
-//const trx = knex.transaction();
+
 
 const problemTypeController = {
   // Add New Problem Type //

@@ -8,7 +8,7 @@ const knex = require("../../db/knex");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
-//const trx = knex.transaction();
+
 
 const propertysubCategoryController = {
   addSubCategory: async (req, res) => {

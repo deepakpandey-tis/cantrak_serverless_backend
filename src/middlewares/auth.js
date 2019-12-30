@@ -34,7 +34,7 @@ const authMiddleware = {
                 if (currentUser.isActive) {
 
                     // An user can have atmost one application role
-                    let userApplicationRole = await knex('application_user_roles').where({ userId: currentUser.id }).first();
+                    let userApplicationRole = await knex('application_user_roles').where({ userId: Number(currentUser.id) }).select('roleId', 'orgId').first();
                     currentUser.roles = userApplicationRole;
 
                     switch (Number(userApplicationRole.roleId)) {
