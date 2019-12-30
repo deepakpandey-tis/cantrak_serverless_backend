@@ -12,7 +12,7 @@ const saltRounds = 10;
 const fs = require('fs')
 const path = require('path')
 
-//const trx = knex.transaction();
+
 
 /* Define Controller */
 const teamsController = {

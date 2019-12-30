@@ -11,7 +11,7 @@ const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const fs = require('fs');
 const path = require('path');
-//const trx = knex.transaction();
+
 
 const propertyTypeController = {
   addPropertyType: async (req, res) => {

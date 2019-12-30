@@ -6,7 +6,7 @@ require("moment-recur");
 const { RRule, RRuleSet, rrulestr } = require("rrule");
 const knex = require("../db/knex");
 
-//const trx = knex.transaction();
+
 function getYears(mils) {
   let years = Math.ceil(mils / (1000 * 60 * 60 * 24 * 365));
   return years;

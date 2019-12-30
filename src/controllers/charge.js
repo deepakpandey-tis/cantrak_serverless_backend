@@ -6,7 +6,7 @@ const fs     = require('fs');
 const path    = require('path')
 const request = require("request");
 
-//const trx = knex.transaction();
+
 
 const chargeController = {
   addCharge: async (req, res) => {
