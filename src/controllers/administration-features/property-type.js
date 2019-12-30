@@ -45,6 +45,20 @@ const propertyTypeController = {
           });
         }
 
+
+        /*CHECK DUPLICATE VALUES OPEN */
+        let existValue = await knex('property_types')
+          .where({ propertyTypeCode: payload.propertyTypeCode, propertyType: payload.propertyType });
+        if (existValue && existValue.length) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: "Property type & Property type code duplicate value not allow!!" }
+            ]
+          });
+        }
+        /*CHECK DUPLICATE VALUES CLOSE */
+
+
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
@@ -293,10 +307,10 @@ const propertyTypeController = {
         ws = XLSX.utils.json_to_sheet(rows);
       } else {
         ws = XLSX.utils.json_to_sheet([
-          { 
-            PROPERTY_TYPE_CODE:"",
-            PROPERTY_TYPE:"",
-            DESCRIPTION:"",
+          {
+            PROPERTY_TYPE_CODE: "",
+            PROPERTY_TYPE: "",
+            DESCRIPTION: "",
           }
         ]);
       }
@@ -412,8 +426,8 @@ const propertyTypeController = {
       });
     }
   },
-   /**IMPORT PROPERTY TYPE DATA */
-   importPropertyTypeData: async (req, res) => {
+  /**IMPORT PROPERTY TYPE DATA */
+  importPropertyTypeData: async (req, res) => {
     try {
       if (req.file) {
         console.log(req.file)
@@ -436,7 +450,7 @@ const propertyTypeController = {
 
         if (data[0].A == "Ã¯Â»Â¿PROPERTY_TYPE_CODE" || data[0].A == "PROPERTY_TYPE_CODE" &&
           data[0].B == "PROPERTY_TYPE" &&
-          data[0].C == "DESCRIPTION" 
+          data[0].C == "DESCRIPTION"
           //&&
           //data[0].D == "STATUS"
         ) {
@@ -450,7 +464,7 @@ const propertyTypeController = {
               if (i > 1) {
 
                 let checkExist = await knex('property_types').select('id')
-                  .where({ propertyType: propertyData.B, propertyTypeCode: propertyData.A,orgId:req.orgId })
+                  .where({ propertyType: propertyData.B, propertyTypeCode: propertyData.A, orgId: req.orgId })
                 if (checkExist.length < 1) {
 
                   let currentTime = new Date().getTime();
