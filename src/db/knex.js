@@ -32,7 +32,7 @@ module.exports = require('knex')({
             )
             select pg_terminate_backend(pid) from inactive_connections where rank > 1;`);
             if (process.env.NODE_ENV === 'local') {
-                console.log('[Knex][Init][Pool] After Create, Closed Old Connections', oldConnections);
+                console.log('[Knex][Init][Pool] After Create, Closed Old Connections', oldConnections.rows);
             }
             done(null, conn);
         }
