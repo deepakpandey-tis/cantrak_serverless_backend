@@ -65,7 +65,7 @@ const entranceController = {
             // Get organization ID
             let orgId = loginResult.orgId;
             //const organization = await knex('users')
-            console.log('Login Result: ',loginResult)
+            console.log('[controllers][entrance][login] : Login Query Result: ',loginResult)
 
 
             //match input password with DB
@@ -182,6 +182,12 @@ const entranceController = {
 
                 console.log("[controllers][entrance][login] : LoginResponse::", login);
                 res.status(200).json(login)
+            } else {
+                res.status(400).json({
+                    errors: [
+                        { code: 'INVALID_CREDENTIALS', message: 'Invalid Credentials' }
+                    ],
+                });
             }
 
         } catch (err) {
