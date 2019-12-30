@@ -357,6 +357,7 @@ const serviceDetailsController = {
         const incidentRequestPayload = req.body;
 
         // Get HouseId By Service Request Id
+        
         const requestResult = await knex("service_requests").where({
           isActive: "true",
           id:incidentRequestPayload.id,
