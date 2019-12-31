@@ -744,21 +744,21 @@ const serviceRequestController = {
           knex
             .count("* as count")
             .from("service_requests")
-            .leftJoin(
-              "service_problems",
-              "service_requests.id",
-              "service_problems.serviceRequestId"
-            )
-            .leftJoin(
-              "incident_categories",
-              "service_problems.categoryId",
-              "incident_categories.id"
-            )
-            .leftJoin(
-              "incident_sub_categories",
-              "incident_categories.id",
-              "incident_sub_categories.incidentCategoryId"
-            )
+            // .leftJoin(
+            //   "service_problems",
+            //   "service_requests.id",
+            //   "service_problems.serviceRequestId"
+            // )
+            // .leftJoin(
+            //   "incident_categories",
+            //   "service_problems.categoryId",
+            //   "incident_categories.id"
+            // )
+            // .leftJoin(
+            //   "incident_sub_categories",
+            //   "incident_categories.id",
+            //   "incident_sub_categories.incidentCategoryId"
+            // )
             .leftJoin(
               "property_units",
               "service_requests.houseId",
@@ -768,8 +768,8 @@ const serviceRequestController = {
               "service_requests.id as S Id",
               "service_requests.houseId as houseId",
               "service_requests.description as Description",
-              "incident_categories.descriptionEng as Category",
-              "incident_sub_categories.descriptionEng as Problem",
+              // "incident_categories.descriptionEng as Category",
+              // "incident_sub_categories.descriptionEng as Problem",
               "service_requests.priority as Priority",
               "service_requests.serviceStatusCode as Status",
               "property_units.unitNumber as Unit No",
@@ -778,29 +778,29 @@ const serviceRequestController = {
             ])
             .groupBy([
               "service_requests.id",
-              "service_problems.id",
-              "incident_categories.id",
-              "incident_sub_categories.id",
+              // "service_problems.id",
+              // "incident_categories.id",
+              // "incident_sub_categories.id",
               "property_units.id"
             ])
             .where({ "service_requests.orgId": req.orgId }),
           knex
             .from("service_requests")
-            .leftJoin(
-              "service_problems",
-              "service_requests.id",
-              "service_problems.serviceRequestId"
-            )
-            .leftJoin(
-              "incident_categories",
-              "service_problems.categoryId",
-              "incident_categories.id"
-            )
-            .leftJoin(
-              "incident_sub_categories",
-              "incident_categories.id",
-              "incident_sub_categories.incidentCategoryId"
-            )
+            // .leftJoin(
+            //   "service_problems",
+            //   "service_requests.id",
+            //   "service_problems.serviceRequestId"
+            // )
+            // .leftJoin(
+            //   "incident_categories",
+            //   "service_problems.categoryId",
+            //   "incident_categories.id"
+            // )
+            // .leftJoin(
+            //   "incident_sub_categories",
+            //   "incident_categories.id",
+            //   "incident_sub_categories.incidentCategoryId"
+            // )
             .leftJoin(
               "property_units",
               "service_requests.houseId",
@@ -810,8 +810,8 @@ const serviceRequestController = {
               "service_requests.id as S Id",
               "service_requests.houseId as houseId",
               "service_requests.description as Description",
-              "incident_categories.descriptionEng as Category",
-              "incident_sub_categories.descriptionEng as Problem",
+              // "incident_categories.descriptionEng as Category",
+              // "incident_sub_categories.descriptionEng as Problem",
               "service_requests.priority as Priority",
               "service_requests.serviceStatusCode as Status",
               "property_units.unitNumber as Unit No",
@@ -833,21 +833,21 @@ const serviceRequestController = {
           knex
             .count("* as count")
             .from("service_requests")
-            .leftJoin(
-              "service_problems",
-              "service_requests.id",
-              "service_problems.serviceRequestId"
-            )
-            .leftJoin(
-              "incident_categories",
-              "service_problems.categoryId",
-              "incident_categories.id"
-            )
-            .leftJoin(
-              "incident_sub_categories",
-              "incident_categories.id",
-              "incident_sub_categories.incidentCategoryId"
-            )
+            // .leftJoin(
+            //   "service_problems",
+            //   "service_requests.id",
+            //   "service_problems.serviceRequestId"
+            // )
+            // .leftJoin(
+            //   "incident_categories",
+            //   "service_problems.categoryId",
+            //   "incident_categories.id"
+            // )
+            // .leftJoin(
+            //   "incident_sub_categories",
+            //   "incident_categories.id",
+            //   "incident_sub_categories.incidentCategoryId"
+            // )
             .leftJoin(
               "property_units",
               "service_requests.houseId",
@@ -863,8 +863,8 @@ const serviceRequestController = {
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
-              "incident_categories.descriptionEng as Category",
-              "incident_sub_categories.descriptionEng as Problem",
+              // "incident_categories.descriptionEng as Category",
+              // "incident_sub_categories.descriptionEng as Problem",
               "service_requests.priority as Priority",
               "service_requests.serviceStatusCode as Status",
               "property_units.unitNumber as Unit No",
@@ -900,28 +900,28 @@ const serviceRequestController = {
             })
             .groupBy([
               "service_requests.id",
-              "service_problems.id",
-              "incident_categories.id",
+              // "service_problems.id",
+              // "incident_categories.id",
               "incident_sub_categories.id",
               "property_units.id"
             ]),
           knex
             .from("service_requests")
-            .leftJoin(
-              "service_problems",
-              "service_requests.id",
-              "service_problems.serviceRequestId"
-            )
-            .leftJoin(
-              "incident_categories",
-              "service_problems.categoryId",
-              "incident_categories.id"
-            )
-            .leftJoin(
-              "incident_sub_categories",
-              "incident_categories.id",
-              "incident_sub_categories.incidentCategoryId"
-            )
+            // .leftJoin(
+            //   "service_problems",
+            //   "service_requests.id",
+            //   "service_problems.serviceRequestId"
+            // )
+            // .leftJoin(
+            //   "incident_categories",
+            //   "service_problems.categoryId",
+            //   "incident_categories.id"
+            // )
+            // .leftJoin(
+            //   "incident_sub_categories",
+            //   "incident_categories.id",
+            //   "incident_sub_categories.incidentCategoryId"
+            // )
             .leftJoin(
               "property_units",
               "service_requests.houseId",
@@ -935,8 +935,8 @@ const serviceRequestController = {
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
-              "incident_categories.descriptionEng as Category",
-              "incident_sub_categories.descriptionEng as Problem",
+              // "incident_categories.descriptionEng as Category",
+              // "incident_sub_categories.descriptionEng as Problem",
               "service_requests.priority as Priority",
               "service_requests.serviceStatusCode as Status",
               "property_units.unitNumber as Unit No",
