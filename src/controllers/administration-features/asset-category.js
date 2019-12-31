@@ -51,12 +51,10 @@ const AssetCategoryController = {
         // Return error when username exist
 
         if (existAssetCategory && existAssetCategory.length) {
+          
           return res.status(400).json({
             errors: [
-              {
-                code: "TYPE_CODE_EXIST_ERROR",
-                message: "Asset Category Code already exist !"
-              }
+              { code: "VALIDATION_ERROR", message: "Asset Category already exist!!" }
             ]
           });
         }

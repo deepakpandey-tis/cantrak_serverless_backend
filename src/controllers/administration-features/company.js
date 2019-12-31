@@ -23,7 +23,7 @@ const companyController = {
         const orgId = req.orgId;
         const userId = req.me.id;
 
-        if(payload.taxId){
+        if (payload.taxId) {
 
           // if(payload.taxId.length==13 && Number.isInteger(payload.taxId)){
 
@@ -76,32 +76,32 @@ const companyController = {
           });
         }
 
-/*CHECK DUPLICATE VALUES OPEN */
-let existValue = await knex('companies')
-                 .where({companyName:payload.companyName,companyId:payload.companyId});
-if(existValue && existValue.length){
-  return res.status(400).json({
-    errors: [
-      { code: "VALIDATION_ERROR", message: "Company Name & Company Id duplicate value not allow!!" }
-    ]
-  });
-}
-/*CHECK DUPLICATE VALUES CLOSE */
+        /*CHECK DUPLICATE VALUES OPEN */
+        let existValue = await knex('companies')
+          .where({ companyId: payload.companyId, orgId: orgId });
+        if (existValue && existValue.length) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: "Company Id already exist!!" }
+            ]
+          });
+        }
+        /*CHECK DUPLICATE VALUES CLOSE */
 
 
 
         console.log("ORG ID: ", orgId);
-       let logo = "";
-        if(req.body.logoFile){
+        let logo = "";
+        if (req.body.logoFile) {
           for (image of req.body.logoFile) {
-          logo = image.s3Url;
+            logo = image.s3Url;
           }
         }
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
           createdBy: userId,
-          logoFile:logo,
+          logoFile: logo,
           createdAt: currentTime,
           updatedAt: currentTime,
           orgId: orgId
@@ -114,7 +114,7 @@ if(existValue && existValue.length){
         company = insertResult[0];
 
 
-        
+
         trx.commit;
       });
 
@@ -204,18 +204,18 @@ if(existValue && existValue.length){
 
         let currentTime = new Date().getTime();
         let logo;
-        if(req.body.logoFile){
+        if (req.body.logoFile) {
           for (image of req.body.logoFile) {
-          logo = image.s3Url;
+            logo = image.s3Url;
           }
         }
-        console.log("==============",req.body.logoFile)
+        console.log("==============", req.body.logoFile)
         let insertData;
-       if(req.body.logoFile.length){
-        insertData = { ...payload,logoFile:logo, updatedAt: currentTime };
-       } else{
-        insertData = { ...payload, updatedAt: currentTime };
-       }
+        if (req.body.logoFile.length) {
+          insertData = { ...payload, logoFile: logo, updatedAt: currentTime };
+        } else {
+          insertData = { ...payload, updatedAt: currentTime };
+        }
         let insertResult = await knex
           .update(insertData)
           .where({ id: payload.id, orgId: req.orgId })
@@ -224,7 +224,7 @@ if(existValue && existValue.length){
           .into("companies");
         company = insertResult[0];
 
-     
+
 
         trx.commit;
       });
@@ -445,7 +445,7 @@ if(existValue && existValue.length){
       let check = XLSX.writeFile(wb, filepath);
       const AWS = require("aws-sdk");
 
-      fs.readFile(filepath, function(err, file_buffer) {
+      fs.readFile(filepath, function (err, file_buffer) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
@@ -453,7 +453,7 @@ if(existValue && existValue.length){
           Body: file_buffer,
           ACL: "public-read"
         };
-        s3.putObject(params, function(err, data) {
+        s3.putObject(params, function (err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             res.status(500).json({

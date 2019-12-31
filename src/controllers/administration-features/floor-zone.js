@@ -44,6 +44,20 @@ const floorZoneController = {
             ]
           });
         }
+
+
+         /*CHECK DUPLICATE VALUES OPEN */
+         let existValue = await knex('floor_and_zones')
+         .where({ floorZoneCode: payload.floorZoneCode, orgId: orgId });
+       if (existValue && existValue.length) {
+         return res.status(400).json({
+           errors: [
+             { code: "VALIDATION_ERROR", message: "Floor Zone Code already exist!!" }
+           ]
+         });
+       }
+       /*CHECK DUPLICATE VALUES CLOSE */
+        
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,

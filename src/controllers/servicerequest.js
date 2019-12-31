@@ -487,7 +487,7 @@ const serviceRequestController = {
         assignedAsset = assetResult[0];
         trx.commit;
       });
-      res.status(200).json({
+      return res.status(200).json({
         data: {
           assignedAsset: assignedAsset
         },
@@ -496,7 +496,7 @@ const serviceRequestController = {
     } catch (err) {
       console.log("[controllers][service][request] :  Error", err);
       //trx.rollback
-      res.status(500).json({
+      return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
@@ -1663,6 +1663,7 @@ const serviceRequestController = {
             .allow("")
             .optional(),
           company: Joi.string().required(),
+          serviceStatusCode:Joi.string().required(),
           description: Joi.string().required(),
           floor: Joi.string().required(),
           house: Joi.string().required(),

@@ -60,11 +60,11 @@ const ProjectController = {
 
         /*CHECK DUPLICATE VALUES OPEN */
         let existValue = await knex('projects')
-          .where({projectName: payload.projectName,project: payload.project});
+          .where({project: payload.project,orgId:req.orgId});
         if (existValue && existValue.length) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: "Project Name & Project Id duplicate value not allow!!" }
+              { code: "VALIDATION_ERROR", message: "Project Id already exist!!" }
             ]
           });
         }

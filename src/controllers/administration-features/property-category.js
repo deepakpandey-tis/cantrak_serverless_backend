@@ -28,8 +28,8 @@ const propertyCategoryController = {
         // validate keys
         const schema = Joi.object().keys({
           categoryCode: Joi.string().required(),
-          descriptionEng: Joi.string().required(),
-          descriptionThai: Joi.string().required(),
+          descriptionEng: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string().allow("").optional(),
           remark: Joi.string().required()
         });
 
@@ -99,7 +99,7 @@ const propertyCategoryController = {
         data: {
           category: incident
         },
-        message: "Category added successfully !"
+        message: "Problem Category added successfully !"
       });
     } catch (err) {
       console.log("[controllers][category][categoryAdd] :  Error", err);
@@ -128,8 +128,8 @@ const propertyCategoryController = {
         const schema = Joi.object().keys({
           id: Joi.number().required(),
           categoryCode: Joi.string().required(),
-          descriptionEng: Joi.string().required(),
-          descriptionThai: Joi.string().required(),
+          descriptionEng: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string().allow("").optional(),
           remark: Joi.string().required()
         });
 
@@ -205,7 +205,7 @@ const propertyCategoryController = {
         data: {
           category: incident
         },
-        message: "Category updated successfully !"
+        message: "Problem Category updated successfully !"
       });
     } catch (err) {
       console.log("[controllers][category][categoryUpdate] :  Error", err);
