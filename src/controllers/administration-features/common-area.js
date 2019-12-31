@@ -31,7 +31,7 @@ const commonAreaController = {
           buildingPhaseId: Joi.number().required(),
           floorZoneId: Joi.number().required(),
           commonAreaCode: Joi.string().required(),
-          description: Joi.string().required()
+          description: Joi.string().allow("").optional()
         });
 
         const result = Joi.validate(commonPayload, schema);
@@ -58,10 +58,7 @@ const commonAreaController = {
         if (existCommonAreaCode && existCommonAreaCode.length) {
           return res.status(400).json({
             errors: [
-              {
-                code: "COMMON_AREA_CODE_EXIST_ERROR",
-                message: "Common Area Code already exist !"
-              }
+              { code: "VALIDATION_ERROR", message: "Common Area code already exist!!" }
             ]
           });
         }

@@ -322,6 +322,11 @@ const assetController = {
                           "asset_master.assetCategoryId",
                           "asset_category_master.id"
                         )
+                        .leftJoin(
+                          "companies",
+                          "asset_master.companyId",
+                          "companies.id"
+                        )
                         .where(qb => {
                           if (assetName) {
                             qb.where(
@@ -363,6 +368,11 @@ const assetController = {
                           "asset_master.assetCategoryId",
                           "asset_category_master.id"
                         )
+                        .leftJoin(
+                          "companies",
+                          "asset_master.companyId",
+                          "companies.id"
+                        )
                         .select([
                           "asset_master.assetName as Name",
                           "asset_master.id as ID",
@@ -373,7 +383,8 @@ const assetController = {
                           "asset_category_master.categoryName as Category",
                           "asset_master.createdAt as Date Created",
                           "asset_master.unitOfMeasure as Unit Of Measure",
-                          "asset_master.price as Price"
+                          "asset_master.price as Price",
+                          "companies.companyName"
                         ])
                         .where({ 'asset_master.orgId': req.orgId })
                         .where(qb => {

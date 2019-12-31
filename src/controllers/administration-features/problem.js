@@ -70,7 +70,7 @@ const problemController = {
         }
       }
 
-      let count = total.count;
+      let count = total[0].count;
       pagination.total = count;
       pagination.per_page = per_page;
       pagination.offset = offset;

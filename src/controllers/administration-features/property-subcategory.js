@@ -25,8 +25,8 @@ const propertysubCategoryController = {
         // validate keys
         const schema = Joi.object().keys({
           incidentCategoryId: Joi.number().required(),
-          descriptionEng: Joi.string().required(),
-          descriptionThai: Joi.string().required(),
+          descriptionEng: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string().allow("").optional(),
           remark: Joi.string().required(),
           incidentTypeId: Joi.number().required()
         });
@@ -115,8 +115,8 @@ const propertysubCategoryController = {
         const schema = Joi.object().keys({
           id: Joi.number().required(),
           incidentCategoryId: Joi.number().required(),
-          descriptionEng: Joi.string().required(),
-          descriptionThai: Joi.string().required(),
+          descriptionEng: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string().allow("").optional(),
           remark: Joi.string().required(),
           incidentTypeId: Joi.number().required()
         });
@@ -162,7 +162,7 @@ const propertysubCategoryController = {
             ...subCategoryPayload,
             updatedAt: currentTime
           })
-          .where({ id: subCategoryPayload.id})
+          .where({ id: subCategoryPayload.id })
           .returning(["*"])
           .transacting(trx)
           .into("incident_sub_categories");
@@ -236,7 +236,7 @@ const propertysubCategoryController = {
         // Check subcategory Id is exists or not
         const notexistSubCategory = await knex(
           "incident_sub_categories"
-        ).where({ id: subCategoryPayload.id,orgId:orgId });
+        ).where({ id: subCategoryPayload.id, orgId: orgId });
 
         console.log(
           "[controllers][Subcategory][subcategoryDelete]: SubCategoryId",
@@ -306,7 +306,7 @@ const propertysubCategoryController = {
         // Get Listing of all active records,
 
         const DataResult = await knex("incident_sub_categories").where({
-          isActive: "true","orgId":orgId
+          isActive: "true", "orgId": orgId
         });
 
         console.log(
@@ -322,13 +322,13 @@ const propertysubCategoryController = {
       const Parallel = require("async-parallel");
       listSubCategories = await Parallel.map(listSubCategories, async item => {
         let incidentCategory = await knex("incident_categories")
-          .where({ id: item.incidentCategoryId,orgId:orgId })
+          .where({ id: item.incidentCategoryId, orgId: orgId })
           .select("*");
         item.incidentCategoryDetail = incidentCategory[0];
         delete item.incidentCategoryId;
 
         let incidentType = await knex("incident_type")
-          .where({ id: item.incidentTypeId,orgId:orgId })
+          .where({ id: item.incidentTypeId, orgId: orgId })
           .select("*");
         item.incidentTypeDetail = incidentType[0];
         delete item.incidentTypeId;
@@ -358,7 +358,7 @@ const propertysubCategoryController = {
 
       const subCategories = await knex("incident_sub_categories")
         .select("*")
-        .where({ incidentCategoryId, "orgId":orgId });
+        .where({ incidentCategoryId, "orgId": orgId });
       return res.status(200).json({
         data: {
           subCategories
@@ -374,10 +374,10 @@ const propertysubCategoryController = {
     }
   },
   /*GET PROBLEM TYPE ALL LIST FOR DROPDOWN */
-  getProblemTypeAllList:async (req,res)=>{
-    try{
+  getProblemTypeAllList: async (req, res) => {
+    try {
       let orgId = req.orgId;
-      let result = await knex.from('incident_type').where({orgId})
+      let result = await knex.from('incident_type').where({ orgId })
       return res.status(200).json({
         data: result,
         message: "List of Problem type"

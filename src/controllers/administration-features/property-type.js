@@ -48,11 +48,11 @@ const propertyTypeController = {
 
         /*CHECK DUPLICATE VALUES OPEN */
         let existValue = await knex('property_types')
-          .where({ propertyTypeCode: payload.propertyTypeCode, propertyType: payload.propertyType });
+          .where({ propertyTypeCode: payload.propertyTypeCode, orgId: orgId });
         if (existValue && existValue.length) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: "Property type & Property type code duplicate value not allow!!" }
+              { code: "VALIDATION_ERROR", message: "Property type code duplicate value not allow!!" }
             ]
           });
         }

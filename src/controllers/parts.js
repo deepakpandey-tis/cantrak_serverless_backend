@@ -47,11 +47,11 @@ const partsController = {
             if (_.isEmpty(filters)) {
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from("part_master")
-                    .innerJoin('part_category_master','part_master.partCategory','part_category_master.id').first(),
+                    .leftJoin('part_category_master','part_master.partCategory','part_category_master.id').first(),
                     //.innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
                     knex.from('part_master')
-                    .innerJoin('part_category_master','part_master.partCategory','part_category_master.id')
-                    .innerJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
+                    .leftJoin('part_category_master','part_master.partCategory','part_category_master.id')
+                    .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
                     .select([
                         'part_master.id as partId',
                         'part_master.partName as Name',
@@ -75,7 +75,7 @@ const partsController = {
                 try {
                     [total, rows] = await Promise.all([
                         knex.count('* as count').from("part_master")
-                        .innerJoin('part_category_master','part_master.partCategory','part_category_master.id')
+                        .leftJoin('part_category_master','part_master.partCategory','part_category_master.id')
                         .where(qb => {
                             qb.where({ 'part_master.orgId': req.orgId });
                             if (partName) {
@@ -94,8 +94,8 @@ const partsController = {
                         //.innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first()
                         //.where(filters),
                         knex.from('part_master')
-                        .innerJoin('part_category_master','part_master.partCategory','part_category_master.id')
-                        .innerJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
+                        .leftJoin('part_category_master','part_master.partCategory','part_category_master.id')
+                        .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
                         .select([
                         'part_master.id as partId',
                         'part_master.partName as Name',

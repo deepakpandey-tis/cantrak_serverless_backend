@@ -24,8 +24,8 @@ const problemTypeController = {
 
         const schema = Joi.object().keys({
           typeCode: Joi.string().required(),
-          descriptionEng: Joi.string().required(),
-          descriptionThai: Joi.string().required()
+          descriptionEng: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string().allow("").optional()
         });
 
         const result = Joi.validate(problemTypePayload, schema);
@@ -54,7 +54,7 @@ const problemTypeController = {
             errors: [
               {
                 code: "TYPE_CODE_EXIST_ERROR",
-                message: "Type Code already exist !"
+                message: "Problem Type Code already exist !"
               }
             ]
           });
@@ -115,8 +115,8 @@ const problemTypeController = {
         const schema = Joi.object().keys({
           id: Joi.number().required(),
           typeCode: Joi.string().required(),
-          descriptionEng: Joi.string().required(),
-          descriptionThai: Joi.string().required(),
+          descriptionEng: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string().allow("").optional()
          });
 
         const result = Joi.validate(statusPaylaod, schema);
@@ -139,16 +139,16 @@ const problemTypeController = {
 
         // Return error when username exist
 
-        if (existStatusCode && existStatusCode.length) {
-          return res.status(400).json({
-            errors: [
-              {
-                code: "COMMON_AREA_CODE_EXIST_ERROR",
-                message: "Type Code already exist !"
-              }
-            ]
-          });
-        }
+        // if (existStatusCode && existStatusCode.length) {
+        //   return res.status(400).json({
+        //     errors: [
+        //       {
+        //         code: "COMMON_AREA_CODE_EXIST_ERROR",
+        //         message: "Problem Type Code already exist !"
+        //       }
+        //     ]
+        //   });
+        // }
 
         // Insert in users table,
         const currentTime = new Date().getTime();

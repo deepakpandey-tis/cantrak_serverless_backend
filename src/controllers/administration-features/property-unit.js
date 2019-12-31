@@ -33,7 +33,7 @@ const propertyUnitController = {
           floorZoneId: Joi.string().required(),
           unitNumber: Joi.string().required(),
           houseId: Joi.string().required(),
-          description: Joi.string().required(),
+          description: Joi.string().allow("").optional(),
           productCode: Joi.string().required(),
           area: Joi.string().required()
         });
@@ -51,6 +51,18 @@ const propertyUnitController = {
             ]
           });
         }
+
+ /*CHECK DUPLICATE VALUES OPEN */
+ let existValue = await knex('property_units')
+ .where({ unitNumber: payload.unitNumber, orgId: orgId });
+if (existValue && existValue.length) {
+ return res.status(400).json({
+   errors: [
+     { code: "VALIDATION_ERROR", message: "Unit Number  already exist!!" }
+   ]
+ });
+}
+/*CHECK DUPLICATE VALUES CLOSE */
 
         let currentTime = new Date().getTime();
         let insertData = {
@@ -102,9 +114,10 @@ const propertyUnitController = {
           floorZoneId: Joi.string().required(),
           unitNumber: Joi.string().required(),
           houseId: Joi.string().required(),
-          description: Joi.string().required(),
+          description: Joi.string().allow("").optional(),
           productCode: Joi.string().required(),
-          area: Joi.string().required()
+          area: Joi.string().required(),
+          createdBy:Joi.string().allow("").optional(),
         });
 
         const result = Joi.validate(payload, schema);
