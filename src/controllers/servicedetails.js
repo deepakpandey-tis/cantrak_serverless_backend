@@ -321,7 +321,7 @@ const serviceDetailsController = {
         let current = new Date().getTime();
         let LocationTagResult = await knex("location_tags_master")
           .select("location_tags_master.*")
-          .where({ id: payload.id, orgId: orgId});
+          .where({ id: payload.id, orgId: orgId });
 
         LocationTag = _.omit(LocationTagResult[0], [
           "createdAt",
@@ -357,34 +357,23 @@ const serviceDetailsController = {
         const incidentRequestPayload = req.body;
 
         // Get HouseId By Service Request Id
-        
+
         const requestResult = await knex("service_requests").where({
           isActive: "true",
-          id:incidentRequestPayload.id,
+          id: incidentRequestPayload.id,
           orgId: orgId
         });
-        
+
         let houseId = requestResult[0].houseId;
 
         DataResult = await knex("property_units")
           .leftJoin("companies", "property_units.companyId", "=", "companies.id")
           .leftJoin("projects", "property_units.projectId", "=", "projects.id")
-          .leftJoin("property_types","property_units.propertyTypeId","=","property_types.id")
-          .leftJoin("buildings_and_phases","property_units.buildingPhaseId","=","buildings_and_phases.id")
-          .leftJoin("floor_and_zones","property_units.floorZoneId","=","floor_and_zones.id")
-          .leftJoin("service_requests","property_units.houseId", "=", "service_requests.houseId")
-        // DataResult = await knex("service_requests")
-        //   .leftJoin(
-        //     "property_units",
-        //     "service_requests.houseId",
-        //     "=",
-        //     "property_units.houseId"
-        //   )
-          // .leftJoin("floor_and_zones","property_units.floorZoneId","=","floor_and_zones.id")
-          // .leftJoin("buildings_and_phases","property_units.buildingPhaseId","=","buildings_and_phases.id")
-          // .leftJoin("property_types","property_units.propertyTypeId","=","property_types.id")
-          // .leftJoin("projects", "property_units.projectId", "=", "projects.id")
-          // .leftJoin("companies", "property_units.companyId", "=", "companies.id")
+          .leftJoin("property_types", "property_units.propertyTypeId", "=", "property_types.id")
+          .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "=", "buildings_and_phases.id")
+          .leftJoin("floor_and_zones", "property_units.floorZoneId", "=", "floor_and_zones.id")
+          .leftJoin("service_requests", "property_units.houseId", "=", "service_requests.houseId")
+
           .select(
             "companies.companyName",
             "projects.projectName",
@@ -908,7 +897,7 @@ const serviceDetailsController = {
       let check = XLSX.writeFile(wb, filepath);
       const AWS = require("aws-sdk");
 
-      fs.readFile(filepath, function(err, file_buffer) {
+      fs.readFile(filepath, function (err, file_buffer) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
@@ -916,7 +905,7 @@ const serviceDetailsController = {
           Body: file_buffer,
           ACL: "public-read"
         };
-        s3.putObject(params, function(err, data) {
+        s3.putObject(params, function (err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             res.status(500).json({
@@ -948,7 +937,7 @@ const serviceDetailsController = {
       });
     }
   },
- 
+
   /**Export Priorities Data  */
 
   exportPriorityData: async (req, res) => {
@@ -988,7 +977,7 @@ const serviceDetailsController = {
       let check = XLSX.writeFile(wb, filepath);
       const AWS = require("aws-sdk");
 
-      fs.readFile(filepath, function(err, file_buffer) {
+      fs.readFile(filepath, function (err, file_buffer) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
@@ -996,7 +985,7 @@ const serviceDetailsController = {
           Body: file_buffer,
           ACL: "public-read"
         };
-        s3.putObject(params, function(err, data) {
+        s3.putObject(params, function (err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             res.status(500).json({
@@ -1093,7 +1082,7 @@ const serviceDetailsController = {
               }
             }
 
-            
+
 
             let deleteFile = await fs.unlink(file_path, err => {
               console.log("File Deleting Error " + err);
@@ -1131,7 +1120,7 @@ const serviceDetailsController = {
   },
 
   // End
- 
+
 
   /**Import Priorities Data  */
 
@@ -1230,29 +1219,29 @@ const serviceDetailsController = {
     }
   },
   /***GET LOCATION TAG ALL LIST */
-  getLocatioTagAllList:async (req,res)=>{
+  getLocatioTagAllList: async (req, res) => {
 
-    try{
-      
-      let orgId  = req.orgId;
-      let result = await knex('location_tags_master').where({'orgId':orgId})
+    try {
+
+      let orgId = req.orgId;
+      let result = await knex('location_tags_master').where({ 'orgId': orgId })
       return res.status(200).json({
-        data:result,
+        data: result,
         message: "Location list!"
       });
 
-  } catch (err) {
-   
-    res.status(500).json({
-      errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-    });
-  }
+    } catch (err) {
+
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
 
   },
 
   /** Get Service Request Problem Details */
 
-  getServiceProblem: async (req, res) =>{
+  getServiceProblem: async (req, res) => {
     try {
       let problemDetails = null;
       let DataResult = null;
@@ -1267,12 +1256,12 @@ const serviceDetailsController = {
 
         DataResult = await knex("service_problems")
           .leftJoin("incident_categories", "service_problems.categoryId", "=", "incident_categories.id")
-          .leftJoin("incident_sub_categories", "service_problems.problemId", "=", "incident_sub_categories.id")         
+          .leftJoin("incident_sub_categories", "service_problems.problemId", "=", "incident_sub_categories.id")
           .select(
             "incident_categories.categoryCode",
             "incident_sub_categories.descriptionEng",
             "service_problems.description"
-           )
+          )
           .where({
             "service_problems.serviceRequestId": serviceRequestPayload.id,
             "service_problems.orgId": orgId
@@ -1283,7 +1272,7 @@ const serviceDetailsController = {
         );
 
         problemDetails = DataResult;
-        trx.commit;        
+        trx.commit;
       });
 
       res.status(200).json({
@@ -1291,6 +1280,56 @@ const serviceDetailsController = {
           problemDetails: problemDetails
         },
         message: "Problem category & subcategory details !"
+      });
+    } catch (err) {
+      console.log("[controllers][entrance][signup] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+
+  /** Get Service Request Current Status */
+
+  getServiceRequestStatus: async (req, res) => {
+    try {
+      let statusDetails;
+      let DataResult = null;
+      let userId = req.me.id;
+      let orgId = req.orgId;
+
+      await knex.transaction(async trx => {
+        // Insert in users table,
+        const incidentRequestPayload = req.body;
+
+        // Get Service Request Status      
+
+        DataResult = await knex("service_requests").where({
+            isActive: "true",
+            id: incidentRequestPayload.id,
+            orgId: orgId
+          })
+          .select(
+            "service_requests.id",
+            "service_requests.description",
+            "service_requests.createdAt",
+            "service_requests.priority",
+            "service_requests.serviceStatusCode"
+          )
+
+        console.log(
+          "[controllers][servicedetails][status]: View Data", DataResult
+        );
+        statusDetails = DataResult;
+        trx.commit;
+      });
+
+      res.status(200).json({
+        data: {
+          serviceStatus: statusDetails
+        },
+        message: "Service request current status!"
       });
     } catch (err) {
       console.log("[controllers][entrance][signup] :  Error", err);
