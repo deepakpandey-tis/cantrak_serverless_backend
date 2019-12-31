@@ -130,7 +130,7 @@ const quotationsController = {
             updatedAt: currentTime,
             isActive: true,
             moderationStatus: 1,
-            createdBy:userId
+            createdBy: userId
           })
           .where({ id: quotationPayload.quotationId })
           .returning(["*"])
@@ -425,6 +425,7 @@ const quotationsController = {
             "quotations.dueDate",
             "quotations.createdAt",
             "quotations.onTime",
+            "quotations.quotationStatus",
             "quotation_service_charges.*",
             "teams.teamName as assignTeam",
             "astUser.name as assignedMainUsers",
@@ -1012,6 +1013,385 @@ const quotationsController = {
         message: "Quotation Data Export Successfully!"
       });
     } catch (err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  updateQuotationNotes: async (req, res) => {
+    // Define try/catch block
+    try {
+      let userId = req.me.id;
+
+      await knex.transaction(async trx => {
+        let upNotesPayload = _.omit(req.body, ["images"]);
+        console.log(
+          "[controllers][quotation][updateNotes] : Request Body",
+          upNotesPayload
+        );
+
+        // validate keys
+        const schema = Joi.object().keys({
+          quotationId: Joi.number().required(),
+          description: Joi.string().required()
+        });
+
+        // let problemImages = upNotesPayload.problemsImages;
+        // let noteImages = upNotesPayload.notesImages;
+        // // validate params
+        const result = Joi.validate(upNotesPayload, schema);
+
+        if (result && result.hasOwnProperty("error") && result.error) {
+          res.status(400).json({
+            errors: [
+              { code: "VALIDATON ERRORS", message: result.message.error }
+            ]
+          });
+        }
+
+        const currentTime = new Date().getTime();
+        // Insert into survey order post update table
+        const insertData = {
+          quotationId: upNotesPayload.quotationId,
+          description: upNotesPayload.description,
+          orgId: req.orgId,
+          createdBy: userId,
+          createdAt: currentTime,
+          updatedAt: currentTime
+        };
+        console.log(
+          "[controllers][quotation][quotationPostNotes] : Insert Data ",
+          insertData
+        );
+
+        const resultSurveyNotes = await knex
+          .insert(insertData)
+          .returning(["*"])
+          .transacting(trx)
+          .into("quotation_post_update");
+        notesData = resultSurveyNotes;
+        quotationNoteId = notesData[0];
+
+        // const Parallel = require('async-parallel');
+        //  let notesResData = await Parallel.map(notesData, async item => {
+        //       let username = await knex('users').where({ id: item.createdBy }).select('name');
+        //       username = username[0].name;
+        //       return notesData;
+        //   });
+        let usernameRes = await knex('users').where({ id: notesData[0].createdBy }).select('name')
+        let username = usernameRes[0].name;
+        notesData = { ...notesData[0], createdBy: username }
+
+        /*INSERT IMAGE TABLE DATA OPEN */
+
+        if (req.body.images && req.body.images.length) {
+          let imagesData = req.body.images;
+          for (image of imagesData) {
+            let d = await knex
+              .insert({
+                entityId: quotationNoteId.id,
+                ...image,
+                entityType: "quotation_notes",
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                orgId: req.orgId
+              })
+              .returning(["*"])
+              .transacting(trx)
+              .into("images");
+          }
+        }
+
+        trx.commit;
+
+        res.status(200).json({
+          data: {
+            quotationNotesResponse: {
+              notesData: [notesData]
+            }
+          },
+          message: "Quotation Note updated successfully !"
+        });
+      });
+    } catch (err) {
+      console.log("[controllers][quotation][quotationPostNotes] : Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getQuotationNoteList: async (req, res) => {
+    try {
+      let quotationNoteList = null;
+
+      //await knex.transaction(async (trx) => {
+      let quotation = req.body;
+
+      const schema = Joi.object().keys({
+        quotationId: Joi.number().required()
+      });
+      let result = Joi.validate(quotation, schema);
+      console.log(
+        "[controllers][quotation][getquotationPostNotes]: JOi Result",
+        result
+      );
+
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+
+      let quotationId = quotation.quotationId;
+
+      // surveyOrderNoteResult = await knex
+      //   .from("survey_order_post_update")
+      //   .select()
+      //   .where({
+      //     surveyOrderId: surveyOrder.surveyOrderId,
+      //     isActive: "true",
+      //     orgId: req.orgId
+      //   });
+      // surveyOrderNoteList = surveyOrderNoteResult;
+      let quotationNoteResult = await knex.raw(`select "quotation_post_update".*,"users"."name" as "createdBy" from "quotation_post_update"  left join "users" on "quotation_post_update"."createdBy" = "users"."id" where "quotation_post_update"."orgId" = ${req.orgId} and "quotation_post_update"."quotationId" = ${quotationId} and "quotation_post_update"."isActive" = 'true'`)
+
+      quotationNoteList = quotationNoteResult.rows;
+
+      return res.status(200).json({
+        data: quotationNoteList,
+        message: "Quotation Order Details"
+      });
+
+      //});
+    } catch (err) {
+      console.log(
+        "[controllers][quotation][getQuotationDetails] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  deleteQuotationRemark: async (req, res) => {
+    try {
+      let quotation = null;
+      await knex.transaction(async trx => {
+        let currentTime = new Date().getTime();
+        const remarkPayload = req.body;
+        const schema = Joi.object().keys({
+          remarkId: Joi.number().required()
+        });
+
+        let result = Joi.validate(remarkPayload, schema);
+        console.log("[controllers][quotation]: JOi Result", result);
+
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message }
+            ]
+          });
+        }
+
+        // Now soft delete and return
+        let updatedRemark = await knex
+          .update({
+            isActive: "false",
+            updatedAt: currentTime,
+            orgId: req.orgId
+          })
+          .where({
+            id: remarkPayload.remarkId
+          })
+          .returning(["*"])
+          .transacting(trx)
+          .into("quotation_post_update");
+
+        trx.commit;
+
+        return res.status(200).json({
+          data: {
+            deletedRemark: updatedRemark
+          },
+          message: "Quotation remarks deleted successfully !"
+        });
+      });
+    } catch (err) {
+      console.log("[controllers][quotation][remaks] :  Error", err);
+      //trx.rollback
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getQuotationAssignedAssets: async (req, res) => {
+    try {
+      let { quotationId } = req.body;
+      let reqData = req.query;
+      let total, rows;
+
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+      [total, rows] = await Promise.all([
+        knex("assigned_assets")
+          .leftJoin(
+            "asset_master",
+            "assigned_assets.assetId",
+            "asset_master.id"
+          )
+          .leftJoin(
+            "asset_category_master",
+            "asset_master.assetCategoryId",
+            "asset_category_master.id"
+          )
+
+          .leftJoin("companies", "asset_master.companyId", "companies.id")
+          .select([
+            "asset_master.id as id",
+            "asset_master.assetName as assetName",
+            "asset_master.model as model",
+            "asset_category_master.categoryName as categoryName",
+            "companies.companyName as companyName"
+          ])
+          .where({
+            entityType: "quotations",
+            entityId: quotationId,
+            "asset_master.orgId": req.orgId
+          }),
+
+        knex("assigned_assets")
+          .leftJoin(
+            "asset_master",
+            "assigned_assets.assetId",
+            "asset_master.id"
+          )
+          .leftJoin(
+            "asset_category_master",
+            "asset_master.assetCategoryId",
+            "asset_category_master.id"
+          )
+
+          .leftJoin("companies", "asset_master.companyId", "companies.id")
+
+          .select([
+            "asset_master.id as id",
+
+            "asset_master.assetName as assetName",
+            "asset_master.model as model",
+            "asset_category_master.categoryName as categoryName",
+            "companies.companyName as companyName"
+          ])
+          .where({
+            entityType: "quotations",
+            entityId: quotationId,
+            "asset_master.orgId": req.orgId
+          })
+          .limit(per_page)
+          .offset(offset)
+      ]);
+
+      let count = total.length;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+      return res.status(200).json({
+        data: {
+          assets: pagination
+        }
+      });
+    } catch (err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  approveQuotation: async (req, res) => {
+    try {
+      let quotation = null;
+      let message;
+      let approveQuotation;
+      await knex.transaction(async trx => {
+        let currentTime = new Date().getTime();
+        const quotationPayload = req.body;
+        let userId = req.me.id;
+
+        const schema = Joi.object().keys({
+          quotationId: Joi.number().required(),
+          status: Joi.string().required()
+        });
+
+        let result = Joi.validate(quotationPayload, schema);
+        console.log("[controllers][quotation]: JOi Result", result);
+
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message }
+            ]
+          });
+        }
+        if (quotationPayload.status == 'Approved') {
+          // Now approved quotation
+           approveQuotation = await knex
+            .update({
+              quotationStatus: quotationPayload.status,
+              updatedAt: currentTime,
+              updatedBy: userId,
+              approvedBy: userId,
+              orgId: req.orgId
+            })
+            .where({
+              id: quotationPayload.quotationId
+            })
+            .returning(["*"])
+            .transacting(trx)
+            .into("quotations");
+
+            message = "Quotation approved successfully !";
+        } else if (quotationPayload.status == 'Canceled') {
+          // Now canceled quotation
+          approveQuotation = await knex
+            .update({
+              quotationStatus: quotationPayload.status,
+              updatedAt: currentTime,
+              updatedBy: userId,
+              cancelledBy: userId,
+              orgId: req.orgId
+            })
+            .where({
+              id: quotationPayload.quotationId
+            })
+            .returning(["*"])
+            .transacting(trx)
+            .into("quotations");
+
+            message = "Quotation has been canceled !";
+        }
+
+        trx.commit;
+
+        return res.status(200).json({
+          data: {
+            quotation: approveQuotation
+          },
+          message: message
+        });
+      });
+    } catch (err) {
+      console.log("[controllers][quotation][remaks] :  Error", err);
+      //trx.rollback
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });

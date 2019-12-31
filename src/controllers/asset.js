@@ -1988,7 +1988,28 @@ const assetController = {
   },
   getServiceRequestRelocatedAssets:async(req,res) => {
     try {
-      return res.status(200).json({ok:true})
+      const {serviceRequestId} = req.body;
+
+      let assets = await knex("asset_location")
+        .innerJoin("asset_master", "asset_location.assetId", "asset_master.id")
+        .innerJoin("companies", "asset_location.companyId", "companies.id")
+        .innerJoin("projects", "asset_location.projectId", "projects.id")
+        .innerJoin("buildings_and_phases", "asset_location.buildingId","buildings_and_phases.id")
+        .innerJoin('property_units', 'asset_location.unitId','property_units.id')
+        .select([
+          "asset_master.id as id",
+          "asset_master.assetName as assetName",
+          "companies.companyName as companyName",
+          "projects.projectName as projectName",
+          "buildings_and_phases.buildingPhaseCode as buildingPhaseCode",
+          "property_units.unitNumber as unitNumber",
+          "asset_location.createdAt as createdAt",
+          "asset_location.updatedAt as updatedAt"
+        ])
+        .where({ serviceRequestId })
+        .orderBy("asset_location.createdAt", "desc");
+
+      return res.status(200).json({data: {assets}})
     } catch(err) {
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]

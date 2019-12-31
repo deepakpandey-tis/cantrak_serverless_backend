@@ -1046,7 +1046,8 @@ const serviceOrderController = {
                 ],
             });
         }
-    }, exportServiceOrder:async (req,res)=>{
+    }, 
+    exportServiceOrder:async (req,res)=>{
         
         try{ 
           
@@ -1403,7 +1404,6 @@ const serviceOrderController = {
              })
          }   
     },
-
     getServiceOrderAssignedAssets: async (req, res) => {
     try {
       let { serviceOrderId } = req.body;
@@ -1507,8 +1507,8 @@ const serviceOrderController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-  },
-  getNewServiceOrderId:async (req,res) => {
+    },
+    getNewServiceOrderId:async (req,res) => {
       try {
         const serviceOrder = await knex('service_orders').insert({}).returning(['*'])
         return res.status(200).json({
