@@ -54,11 +54,11 @@ const teamsController = {
 
                 /*CHECK DUPLICATE VALUES OPEN */
                 let existValue = await knex('teams')
-                    .where({ teamCode: payload.teamCode, teamName: payload.teamName });
+                    .where({ teamCode: payload.teamCode,orgId:orgId});
                 if (existValue && existValue.length) {
                     return res.status(400).json({
                         errors: [
-                            { code: "VALIDATION_ERROR", message: "Team Name & Team Id duplicate value not allow!!" }
+                            { code: "VALIDATION_ERROR", message: "Team Id duplicate value not allow!!" }
                         ]
                     });
                 }

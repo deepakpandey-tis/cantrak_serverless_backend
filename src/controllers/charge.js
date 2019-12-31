@@ -18,8 +18,8 @@ const chargeController = {
         let chargePayload = req.body;
         const schema = Joi.object().keys({
           chargeCode: Joi.string().required(),
-          descriptionThai: Joi.string().required(),
-          descriptionEng: Joi.string().required(),
+          descriptionThai: Joi.string().allow("").optional(),
+          descriptionEng: Joi.string().allow("").optional(),
           calculationUnit: Joi.string().required(),
           rate: Joi.string().required(),
           vatRate: Joi.string().required(),
@@ -45,6 +45,20 @@ const chargeController = {
             ]
           });
         }
+
+ 
+         /*CHECK DUPLICATE VALUES OPEN */
+         let existValue = await knex('charge_master')
+         .where({ chargeCode: chargePayload.chargeCode, orgId: req.orgId });
+       if (existValue && existValue.length) {
+         return res.status(400).json({
+           errors: [
+             { code: "VALIDATION_ERROR", message: "Charge code already exist!!" }
+           ]
+         });
+       }
+       /*CHECK DUPLICATE VALUES CLOSE */
+
 
         let currentTime = new Date().getTime();
         // Insert into charge codes
@@ -89,8 +103,8 @@ const chargeController = {
         const schema = Joi.object().keys({
           id: Joi.number().required(),
           chargeCode: Joi.string().required(),
-          descriptionThai: Joi.string().required(),
-          descriptionEng: Joi.string().required(),
+          descriptionThai: Joi.string().allow("").optional(),
+          descriptionEng: Joi.string().allow("").optional(),
           calculationUnit: Joi.string().required(),
           rate: Joi.string().required(),
           vatRate: Joi.string().required(),
