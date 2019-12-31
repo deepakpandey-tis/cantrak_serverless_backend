@@ -13,6 +13,7 @@ module.exports = require('knex')({
         max: 5,
         afterCreate: async (conn, done) => {
             // await conn.query('SET timezone="UTC";');
+            if (process.env.NODE_ENV === 'local') {
             const oldConnections = await conn.query(`WITH inactive_connections AS (
                 SELECT
                     pid,
@@ -31,7 +32,6 @@ module.exports = require('knex')({
                     current_timestamp - state_change > interval '5 seconds' 
             )
             select pg_terminate_backend(pid) from inactive_connections where rank > 1;`);
-            if (process.env.NODE_ENV === 'local') {
                 console.log('[Knex][Init][Pool] After Create, Closed Old Connections', oldConnections.rows);
             }
             done(null, conn);
