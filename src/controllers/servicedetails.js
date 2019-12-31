@@ -399,7 +399,8 @@ const serviceDetailsController = {
           )
           .where({
             "property_units.houseId": houseId,
-            "service_requests.orgId": orgId
+            "service_requests.orgId": orgId,
+            "service_requests.id": incidentRequestPayload.id
           });
 
         console.log(
