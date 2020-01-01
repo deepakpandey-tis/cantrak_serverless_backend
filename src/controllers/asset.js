@@ -1679,6 +1679,12 @@ const assetController = {
         try {
             const payload = _.omit(req.body,['previousLocationId']);
             let currentTime = new Date().getTime()
+
+            await knex('asset_location')
+            .update({ endDate: currentTime })
+            .where({ assetId: payload.assetId })
+
+            // Deprecated
             let updatedLastLocationEndDate
             if (req.body.previousLocationId){
 
@@ -1687,15 +1693,24 @@ const assetController = {
                   .where({ id: req.body.previousLocationId })
                   .where({ orgId: req.orgId });
             }
+
+            // Deprecation end
+
             const updatedAsset = await knex("asset_location")
               .insert({
                 ...payload,
                 createdAt: currentTime,
                 updatedAt: currentTime,
+                startDate:currentTime,
                 orgId: req.orgId
               })
               .returning(["*"])
             //   .where({ orgId: req.orgId });
+
+            // UPDATE ASSET LOCATION  
+            
+
+
             return res.status(200).json({
                 data: {
                     updatedAsset,
@@ -1940,23 +1955,57 @@ const assetController = {
       [total, rows] = await Promise.all([
         knex("asset_location")
           .leftJoin("asset_master", "asset_location.assetId", "asset_master.id")
+          .leftJoin('companies', 'asset_location.companyId', 'companies.id')
+          .leftJoin('projects', 'asset_location.projectId', 'projects.id')
+          .leftJoin('buildings_and_phases', 'asset_location.buildingId', 'buildings_and_phases.id')
+          .leftJoin('floor_and_zones', 'asset_location.floorId', 'floor_and_zones.id')
+          .leftJoin('property_units', 'asset_location.unitId', 'property_units.id')
           .select([
             "asset_master.assetName as assetName",
-            "asset_master.id as id"
+            "asset_master.id as id",
+            'companies.companyName',
+            'companies.id as companyId',
+            'projects.projectName as projectName',
+            'projects.id as projectId',
+            'buildings_and_phases.buildingPhaseCode as buildingPhaseCode',
+            'buildings_and_phases.id as buildingId',
+            'floor_and_zones.floorZoneCode as floorZoneCode',
+            'floor_and_zones.id as floorId',
+            'property_units.unitNumber as unitNumber',
+            'property_units.id as unitId',
+            'property_units.houseId as houseId'
           ])
           .where({
             "asset_location.houseId": houseId,
-            "asset_master.orgId": req.orgId
+            "asset_master.orgId": req.orgId,
+            "asset_location.endDate":null,
           }),
         knex("asset_location")
           .leftJoin("asset_master", "asset_location.assetId", "asset_master.id")
+          .leftJoin('companies', 'asset_location.companyId', 'companies.id')
+          .leftJoin('projects', 'asset_location.projectId', 'projects.id')
+          .leftJoin('buildings_and_phases', 'asset_location.buildingId', 'buildings_and_phases.id')
+          .leftJoin('floor_and_zones', 'asset_location.floorId', 'floor_and_zones.id')
+          .leftJoin('property_units', 'asset_location.unitId', 'property_units.id')
           .select([
             "asset_master.assetName as assetName",
-            "asset_master.id as id"
+            "asset_master.id as id",
+            'companies.companyName',
+            'companies.id as companyId',
+            'projects.projectName as projectName',
+            'projects.id as projectId',
+            'buildings_and_phases.buildingPhaseCode as buildingPhaseCode',
+            'buildings_and_phases.id as buildingId',
+            'floor_and_zones.floorZoneCode as floorZoneCode',
+            'floor_and_zones.id as floorId',
+            'property_units.unitNumber as unitNumber',
+            'property_units.id as unitId',
+            'property_units.houseId as houseId'
           ])
           .where({
             "asset_location.houseId": houseId,
-            "asset_master.orgId": req.orgId
+            "asset_master.orgId": req.orgId,
+            "asset_location.endDate": null,
           }).offset(offset).limit(per_page)
       ]);
 
@@ -2003,6 +2052,7 @@ const assetController = {
           "projects.projectName as projectName",
           "buildings_and_phases.buildingPhaseCode as buildingPhaseCode",
           "property_units.unitNumber as unitNumber",
+          "property_units.houseId as houseId",
           "asset_location.createdAt as createdAt",
           "asset_location.updatedAt as updatedAt"
         ])
@@ -2010,6 +2060,165 @@ const assetController = {
         .orderBy("asset_location.createdAt", "desc");
 
       return res.status(200).json({data: {assets}})
+    } catch(err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  replaceAsset:async(req,res) => {
+    try {
+      let replaced
+      let location_update
+      let {oldAssetId,newAssetId,serviceRequestId,newAssetLocation} = req.body;
+      let currentTime = new Date().getTime()
+      await Promise.all([
+        knex('asset_location')
+          .update({ endDate: currentTime,serviceRequestId })
+          .where({ assetId: oldAssetId, orgId: req.orgId }),
+        knex('asset_location')
+          .insert({ assetId: oldAssetId, startDate: currentTime, orgId: req.orgId })
+      ])
+
+      replaced = await knex('replaced_assets')
+        .insert({
+          oldAssetId,
+          newAssetId,
+          startDate: currentTime,
+          // endDate: currentTime,
+          entityId: serviceRequestId,
+          entityType: 'service_requests',
+          orgId: req.orgId,
+          createdAt: currentTime,
+          updatedAt: currentTime
+        })
+      location_update = await knex('asset_location')
+      .insert({...newAssetLocation,assetId:newAssetId,createdAt:currentTime,updatedAt:currentTime,serviceRequestId,startDate:currentTime,orgId:req.orgId,serviceRequestId})
+      // Change the old asset location to null
+      
+
+      return res.status(200).json({
+        data: {
+          replaced,
+          location_update
+        }
+      })
+    } catch(err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getReplacedAssetList:async(req,res) => {
+    try {
+      let {serviceRequestId} = req.body;
+      let replacedAssetList
+
+      replacedAssetList = await knex('replaced_assets')
+      .select([
+        'oldAssetId',
+        'newAssetId',
+        'startDate',
+        'endDate'
+      ])
+      .where({
+        'replaced_assets.entityId': serviceRequestId,
+        'replaced_assets.entityType':'service_requests'
+      })
+
+      const Parallel = require("async-parallel")
+      const assetNames = await Parallel.map(replacedAssetList, async item => {
+        let {oldAssetId,newAssetId} = item;
+        let old = await knex('asset_master').select('assetName').where({id:oldAssetId}).first()
+        let newa = await knex('asset_master').select('assetName').where({id:newAssetId}).first()
+        return ({oldAssetName:old.assetName,newAssetName,...item})
+      })
+
+
+      return res.status(200).json({
+        data: {
+          replacedAssetList: assetNames
+        }
+      })
+
+    } catch(err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getAssetListForReplace:async(req,res) => {
+    try {
+      let reqData = req.query
+      let total, rows;
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+      [total,rows] = await Promise.all([
+      knex('asset_master')
+      .leftJoin('asset_location','asset_location.assetId','asset_master.id')
+      .leftJoin('companies','asset_location.companyId','companies.id')
+      .leftJoin('projects', 'asset_location.projectId','projects.id')
+      .leftJoin('buildings_and_phases', 'asset_location.buildingId','buildings_and_phases.id')
+      .leftJoin('floor_and_zones','asset_location.floorId','floor_and_zones.id')
+      .leftJoin('property_units','asset_location.unitId','property_units.id')
+      .select([
+        'asset_master.id as id',
+        'asset_master.assetName',
+        'companies.companyName',
+        'companies.id as companyId',
+        'projects.projectName as projectName',
+        'projects.id as projectId',
+        'buildings_and_phases.buildingPhaseCode as buildingPhaseCode',
+        'buildings_and_phases.id as buildingId',
+        'floor_and_zones.floorZoneCode as floorZoneCode',
+        'floor_and_zones.id as floorId',
+        'property_units.unitNumber as unitNumber',
+        'property_units.id as unitId',
+        'property_units.houseId as houseId'
+      ]).distinct(['asset_location.assetId'])
+      .where({'asset_master.orgId':req.orgId}),
+        knex('asset_master')
+          .leftJoin('asset_location', 'asset_location.assetId', 'asset_master.id')
+          .leftJoin('companies', 'asset_location.companyId', 'companies.id')
+          .leftJoin('projects', 'asset_location.projectId', 'projects.id')
+          .leftJoin('buildings_and_phases', 'asset_location.buildingId', 'buildings_and_phases.id')
+          .leftJoin('floor_and_zones', 'asset_location.floorId', 'floor_and_zones.id')
+          .leftJoin('property_units', 'asset_location.unitId', 'property_units.id')
+          .select([
+            'asset_master.id as id',
+            'asset_master.assetName',
+            'companies.companyName',
+            'projects.projectName as projectName',
+            'buildings_and_phases.buildingPhaseCode as buildingPhaseCode',
+            'floor_and_zones.floorZoneCode as floorZoneCode',
+            'property_units.unitNumber as unitNumber',
+            'property_units.houseId as houseId'
+          ])
+          .distinct(['asset_location.assetId'])
+          .where({ 'asset_master.orgId': req.orgId })
+          .offset(offset)
+          .limit(per_page)
+        ])
+
+      let count = total.length;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+      return res.status(200).json({
+        data: {
+          assets:pagination
+        }
+      })
     } catch(err) {
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]

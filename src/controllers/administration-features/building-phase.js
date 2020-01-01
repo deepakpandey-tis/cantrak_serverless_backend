@@ -29,7 +29,7 @@ const buildingPhaseController = {
           propertyTypeId: Joi.string().required(),
           buildingPhaseCode: Joi.string().required(),
           description: Joi.string().allow("").optional(),
-          buildingAddressEng: Joi.string().required(),
+          buildingAddressEng: Joi.string().allow("").optional(),
           buildingAddressThai: Joi.string().allow("").optional(),
         });
 
@@ -111,7 +111,7 @@ const buildingPhaseController = {
           propertyTypeId: Joi.string().required(),
           buildingPhaseCode: Joi.string().required(),
           description: Joi.string().allow("").optional(),
-          buildingAddressEng: Joi.string().required(),
+          buildingAddressEng: Joi.string().allow("").optional(),
           buildingAddressThai: Joi.string().allow("").optional(),
         });
 

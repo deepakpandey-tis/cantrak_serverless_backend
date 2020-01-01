@@ -60,7 +60,7 @@ const ProjectController = {
 
         /*CHECK DUPLICATE VALUES OPEN */
         let existValue = await knex('projects')
-          .where({project: payload.project,orgId:req.orgId});
+          .where({ project: payload.project, orgId: req.orgId });
         if (existValue && existValue.length) {
           return res.status(400).json({
             errors: [
@@ -264,25 +264,96 @@ const ProjectController = {
       let companyId = req.query.companyId;
       let reqData = req.query;
       let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+      let total,rows
+      let {organisation,company,project} = req.body;
+      let role = req.me.roles[0];
+      let name = req.me.name;
 
-      if (!companyId) {
-        let per_page = reqData.per_page || 10;
-        let page = reqData.current_page || 1;
-        if (page < 1) page = 1;
-        let offset = (page - 1) * per_page;
+      if (role === "superAdmin" && name === "superAdmin") {
+        [total, rows] = await Promise.all([
+          knex
+            .count("* as count")
+            .from("projects")
+            .leftJoin("companies", "projects.companyId", "companies.id")
+            .leftJoin("users", "users.id", "projects.createdBy")
+            .where(qb => {
+              if (organisation) {
+                qb.where('projects.orgId', organisation)
+              }
+              if (company) {
+                qb.where('projects.companyId',company)
+              }
+              if (project) {
+                qb.where('projects.projectName', 'iLIKE', `%${project}%`)
+              }
+            })
+            .first(),
+          knex("projects")
+            .leftJoin("companies", "projects.companyId", "companies.id")
+            .leftJoin("users", "users.id", "projects.createdBy")
+            .where(qb => {
+              if (organisation) {
+                qb.where('projects.orgId', organisation)
+              }
+              if (company) {
+                qb.where('projects.companyId',company)
+              }
+              if (project) {
+                qb.where('projects.projectName', 'iLIKE', `%${project}%`)
+              }
+            })
+            .select([
+              "projects.id as id",
+              "projects.projectName as Project Name",
+              "companies.companyName as Company Name",
+              "projects.isActive as Status",
+              "users.name as Created By",
+              "projects.createdAt as Date Created"
+            ])
+            .offset(offset)
+            .limit(per_page)
+        ]);
 
-        let [total, rows] = await Promise.all([
+      } else {
+
+        [total, rows] = await Promise.all([
           knex
             .count("* as count")
             .from("projects")
             .leftJoin("companies", "projects.companyId", "companies.id")
             .leftJoin("users", "users.id", "projects.createdBy")
             .where({ "projects.orgId": req.orgId })
+            .where(qb => {
+              if (organisation) {
+                qb.where('projects.orgId', organisation)
+              }
+              if (company) {
+                qb.where('projects.companyId',company)
+              }
+              if (project) {
+                qb.where('projects.projectName', 'iLIKE', `%${project}%`)
+              }
+            })
             .first(),
           knex("projects")
             .leftJoin("companies", "projects.companyId", "companies.id")
             .leftJoin("users", "users.id", "projects.createdBy")
             .where({ "projects.orgId": req.orgId })
+            .where(qb => {
+              if (organisation) {
+                qb.where('projects.orgId', organisation)
+              }
+              if (company) {
+                qb.where('projects.companyId',company)
+              }
+              if (project) {
+                qb.where('projects.projectName', 'iLIKE', `%${project}%`)
+              }
+            })
             .select([
               "projects.id as id",
               "projects.projectName as Project Name",
@@ -294,59 +365,18 @@ const ProjectController = {
             .offset(offset)
             .limit(per_page)
         ]);
-
-        let count = total.count;
-        pagination.total = count;
-        pagination.per_page = per_page;
-        pagination.offset = offset;
-        pagination.to = offset + rows.length;
-        pagination.last_page = Math.ceil(count / per_page);
-        pagination.current_page = page;
-        pagination.from = offset;
-        pagination.data = rows;
-      } else {
-        let per_page = reqData.per_page || 10;
-        let page = reqData.current_page || 1;
-        if (page < 1) page = 1;
-        let offset = (page - 1) * per_page;
-
-        let [total, rows] = await Promise.all([
-          knex
-            .count("* as count")
-            .from("projects")
-            .leftJoin("companies", "projects.companyId", "companies.id")
-            .leftJoin("users", "users.id", "projects.createdBy")
-            .where({ "projects.companyId": companyId })
-            .offset(offset)
-            .limit(per_page)
-            .first(),
-          knex
-            .from("projects")
-            .leftJoin("companies", "projects.companyId", "companies.id")
-            .leftJoin("users", "users.id", "projects.createdBy")
-            .where({ "projects.companyId": companyId })
-            .select([
-              "projects.id as id",
-              "projects.projectName as Project Name",
-              "companies.companyName as Company Name",
-              "projects.isActive as Status",
-              "users.name as Created By",
-              "projects.createdAt as Date Created"
-            ])
-            .offset(offset)
-            .limit(per_page)
-        ]);
-
-        let count = total.count;
-        pagination.total = count;
-        pagination.per_page = per_page;
-        pagination.offset = offset;
-        pagination.to = offset + rows.length;
-        pagination.last_page = Math.ceil(count / per_page);
-        pagination.current_page = page;
-        pagination.from = offset;
-        pagination.data = rows;
       }
+
+        let count = total.count;
+        pagination.total = count;
+        pagination.per_page = per_page;
+        pagination.offset = offset;
+        pagination.to = offset + rows.length;
+        pagination.last_page = Math.ceil(count / per_page);
+        pagination.current_page = page;
+        pagination.from = offset;
+        pagination.data = rows;
+      
       return res.status(200).json({
         data: {
           projects: pagination

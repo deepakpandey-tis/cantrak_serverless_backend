@@ -10,7 +10,7 @@ router.post('/add-project', authMiddleware.isAuthenticated, projectController.ad
 router.post('/update-project', authMiddleware.isAuthenticated, projectController.updateProject)
 router.post('/view-project', authMiddleware.isAuthenticated, projectController.viewProject)
 router.post('/delete-project', authMiddleware.isAuthenticated, projectController.deleteProject)
-router.get('/get-project-list', 
+router.post('/get-project-list', 
 authMiddleware.isAuthenticated,
 projectController.getProjectList)
 /// Export Project Data 

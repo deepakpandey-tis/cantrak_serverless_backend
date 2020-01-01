@@ -407,7 +407,8 @@ const chargeController = {
         const payload = req.body;
         const schema = Joi.object().keys({
           quotationId: Joi.string().required(),
-          chargeId: Joi.string().required()
+          chargeId: Joi.string().required(),
+          status: Joi.string().required()
         });
 
         let result = Joi.validate(payload, schema);
@@ -427,9 +428,11 @@ const chargeController = {
         let insertData = {
           chargeId: payload.chargeId,
           entityId: payload.quotationId,
+          status: payload.status,
           entityType: "quotations",
           updatedAt: currentTime,
-          createdAt: currentTime
+          createdAt: currentTime,
+          orgId: req.orgId
         };
         let chargeResult = await knex
           .insert(insertData)

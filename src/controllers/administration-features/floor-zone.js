@@ -25,10 +25,10 @@ const floorZoneController = {
         const schema = Joi.object().keys({
           companyId: Joi.string().required(),
           projectId: Joi.string().required(),
-          propertyTypeId: Joi.string().required(),
+          propertyTypeId: Joi.string().allow("").optional(),
           buildingPhaseId: Joi.string().required(),
           floorZoneCode: Joi.string().required(),
-          description: Joi.string().required(),
+          description: Joi.string().allow("").optional(),
           totalFloorArea: Joi.string().required()
         });
 
@@ -103,10 +103,10 @@ const floorZoneController = {
           id: Joi.string().required(),
           companyId: Joi.string().required(),
           projectId: Joi.string().required(),
-          propertyTypeId: Joi.string().required(),
+          propertyTypeId: Joi.string().allow("").optional(),
           buildingPhaseId: Joi.string().required(),
           floorZoneCode: Joi.string().required(),
-          description: Joi.string().required(),
+          description: Joi.string().allow("").optional(),
           totalFloorArea: Joi.string().required()
         });
 
@@ -176,14 +176,14 @@ const floorZoneController = {
       //   .where({ id: payload.id });
 
       let floorZoneResult = await knex("floor_and_zones")
-        .innerJoin("companies", "floor_and_zones.companyId", "companies.id")
-        .innerJoin("projects", "floor_and_zones.projectId", "projects.id")
-        .innerJoin(
+        .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
+        .leftJoin("projects", "floor_and_zones.projectId", "projects.id")
+        .leftJoin(
           "property_types",
           "floor_and_zones.propertyTypeId",
           "property_types.id"
         )
-        .innerJoin(
+        .leftJoin(
           "buildings_and_phases",
           "floor_and_zones.buildingPhaseId",
           "buildings_and_phases.id"
@@ -266,7 +266,7 @@ const floorZoneController = {
       let orgId = req.orgId;
 
       let reqData = req.query;
-      let companyId = req.query.companyId;
+      let companyId = req.body.companyId;
       let projectId = req.query.projectId;
       let buildingPhaseId = req.query.buildingPhaseId;
       let pagination = {};

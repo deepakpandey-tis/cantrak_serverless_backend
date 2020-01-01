@@ -354,7 +354,8 @@ const serviceOrderController = {
                             'service_requests.createdBy as Created By',
                              'orderDueDate as Due Date',
                              'serviceStatusCode as Status',
-                            'service_orders.createdAt as Date Created'
+                            'service_orders.createdAt as Date Created',
+                            'service_requests.houseId as houseId'
                         ]).where((qb) => {
                             qb.where({ 'service_orders.orgId': req.orgId });
 
@@ -388,7 +389,9 @@ const serviceOrderController = {
                             'service_requests.createdBy as Created By',
                              'orderDueDate as Due Date',
                              'serviceStatusCode as Status',
-                            'service_orders.createdAt as Date Created'
+                            'service_orders.createdAt as Date Created',
+                            'service_requests.houseId as houseId'
+
                             
                         ]).where((qb) => {
                             qb.where({'service_orders.orgId':req.orgId})
@@ -441,7 +444,9 @@ const serviceOrderController = {
                       //   "service_orders.createdBy as Created By",
                       "orderDueDate as Due Date",
                       "serviceStatusCode as Status",
-                      "service_orders.createdAt as Date Created"
+                      "service_orders.createdAt as Date Created",
+                        'service_requests.houseId as houseId'
+                      
                     ])
                     .groupBy([
                       "service_requests.id",
@@ -478,7 +483,9 @@ const serviceOrderController = {
                     //   "service_orders.createdBy as Created By",
                       "orderDueDate as Due Date",
                       "serviceStatusCode as Status",
-                      "service_orders.createdAt as Date Created"
+                      "service_orders.createdAt as Date Created",
+                        'service_requests.houseId as houseId'
+
                     ])
                     .offset(offset)
                     .limit(per_page)
@@ -524,7 +531,9 @@ const serviceOrderController = {
                       "service_requests.createdBy as Created By",
                       "orderDueDate as Due Date",
                       "serviceStatusCode as Status",
-                      "service_orders.createdAt as Date Created"
+                      "service_orders.createdAt as Date Created",
+                        'service_requests.houseId as houseId'
+
                     ])
                     .where(qb => {
                       qb.where({ "service_orders.orgId": req.orgId });
@@ -594,6 +603,7 @@ const serviceOrderController = {
                       "incident_categories.descriptionEng as Problem",
                       "priority as Priority",
                       "service_requests.createdBy as Created By",
+                        'service_requests.houseId as houseId',
 
                       "orderDueDate as Due Date",
                       "serviceStatusCode as Status",
