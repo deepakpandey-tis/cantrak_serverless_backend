@@ -213,6 +213,22 @@ const surveyOrderController = {
           .into("survey_orders");
         surveyOrder = surveyOrderResult[0];
 
+         // Update status service_requests table     
+        let resultRequest =  await knex("survey_orders").where({
+          isActive: "true",
+          id: incidentRequestPayload.id,
+          orgId: orgId
+        })
+
+        serviceRequestId = resultRequest[0].serviceRequestId;
+
+        let updateSRStatus = await knex
+          .update({serviceStatusCode: "US", updatedAt: currentTime })
+          .where({ id: serviceRequestId, orgId: req.orgId })
+          .returning(["*"])
+          .transacting(trx)
+          .into("service_request");
+
         // Update into assigned_service_team table
 
         let assignedServiceTeamPayload = {
