@@ -366,6 +366,7 @@ const serviceDetailsController = {
 
         let houseId = requestResult[0].houseId;
 
+        
         DataResult = await knex("property_units")
           .leftJoin("companies", "property_units.companyId", "=", "companies.id")
           .leftJoin("projects", "property_units.projectId", "=", "projects.id")

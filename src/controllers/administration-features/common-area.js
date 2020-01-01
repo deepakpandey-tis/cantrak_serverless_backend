@@ -223,7 +223,7 @@ const commonAreaController = {
       let reqData = req.query;
       let total = null;
       let rows = null;
-      let companyId = reqData.companyId;
+      let companyId = req.body.companyId;
       let pagination = {};
       let per_page = reqData.per_page || 10;
       let page = reqData.current_page || 1;
@@ -249,8 +249,7 @@ const commonAreaController = {
               "buildings_and_phases.id"
             )
             .leftJoin("projects", "common_area.projectId", "projects.id")
-            .offset(offset)
-            .limit(per_page)
+            .leftJoin("users", "common_area.createdBy", "users.id")
             .where({ "common_area.companyId": companyId, "common_area.orgId": orgId }),
           knex("common_area")
             .leftJoin(
@@ -264,6 +263,7 @@ const commonAreaController = {
               "buildings_and_phases.id"
             )
             .leftJoin("projects", "common_area.projectId", "projects.id")
+            .leftJoin("users", "common_area.createdBy", "users.id")
             .select([
               "common_area.id as id",
               "common_area.commonAreaCode as Common Area",
@@ -271,7 +271,7 @@ const commonAreaController = {
               "buildings_and_phases.buildingPhaseCode as Building",
               "projects.projectName as Project",
               "common_area.isActive as Status",
-              "common_area.createdBy as Created By",
+              "users.name as Created By",
               "common_area.createdAt as Date Created"
             ])
             .offset(offset)
@@ -294,6 +294,7 @@ const commonAreaController = {
               "buildings_and_phases.id"
             )
             .leftJoin("projects", "common_area.projectId", "projects.id")
+            .leftJoin("users", "common_area.createdBy", "users.id")
             .where({ "common_area.orgId": orgId }),
           knex("common_area")
             .leftJoin(
@@ -307,6 +308,7 @@ const commonAreaController = {
               "buildings_and_phases.id"
             )
             .leftJoin("projects", "common_area.projectId", "projects.id")
+            .leftJoin("users", "common_area.createdBy", "users.id")
             .where({ "common_area.orgId": orgId })
             .select([
               "common_area.id as id",
@@ -315,7 +317,7 @@ const commonAreaController = {
               "buildings_and_phases.buildingPhaseCode as Building",
               "projects.projectName as Project",
               "common_area.isActive as Status",
-              "common_area.createdBy as Created By",
+              "users.name as Created By",
               "common_area.createdAt as Date Created"
             ])
             .offset(offset)

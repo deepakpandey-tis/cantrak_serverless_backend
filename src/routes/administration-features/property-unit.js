@@ -11,7 +11,7 @@ router.post('/update-property-unit', authMiddleware.isAuthenticated, propertyUni
 router.post('/view-property-unit', authMiddleware.isAuthenticated, propertyUnitController.viewPropertyUnit)
 router.post('/delete-property-unit', authMiddleware.isAuthenticated, propertyUnitController.deletePropertyUnit)
 router.post('/get-unit-by-floor', authMiddleware.isAuthenticated, propertyUnitController.getPropertyUnitListByFloor)
-router.get('/get-property-unit-list', authMiddleware.isAuthenticated, propertyUnitController.getPropertyUnitList)
+router.post('/get-property-unit-list', authMiddleware.isAuthenticated, propertyUnitController.getPropertyUnitList)
 //PROPERTY UNIT LIST DROPDOWN
 router.get('/get-propert-unit-all-list',propertyUnitController.getPropertyUnitAllList)
  //  Export Property Unit Data

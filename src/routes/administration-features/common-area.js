@@ -20,7 +20,7 @@ router.post(
   roleMiddleware.parseUserPermission,
   commonAreaController.updateCommonArea
 );
-router.get(
+router.post(
   "/get-common-area-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

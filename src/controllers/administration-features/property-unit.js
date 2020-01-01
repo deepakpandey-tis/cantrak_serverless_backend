@@ -265,7 +265,7 @@ if (existValue && existValue.length) {
   },
   getPropertyUnitList: async (req, res) => {
     try {
-      let companyId = req.query.companyId;
+      let companyId = req.body.companyId;
       let orgId = req.orgId;
 
       let reqData = req.query;
@@ -317,7 +317,8 @@ if (existValue && existValue.length) {
           knex
             .count("* as count")
             .from("property_units")
-            .where({ "property_units.orgId": orgId })
+            .where({ "property_units.orgId": orgId ,
+            "property_units.companyId": companyId})
             .first(),
           knex
             .from("property_units")
