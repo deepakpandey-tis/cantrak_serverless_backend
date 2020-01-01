@@ -144,4 +144,8 @@ router.post(
   assetController.getServiceRequestRelocatedAssets
 );
 
+router.post('/add-serivce-order-replace-asset', authMiddleware.isAuthenticated,assetController.replaceAsset)
+router.post('/get-service-order-replaced-asset', authMiddleware.isAuthenticated, assetController.getReplacedAssetList)
+router.post('/get-asset-list-for-replace',authMiddleware.isAuthenticated,assetController.getAssetListForReplace)
+
 module.exports = router
