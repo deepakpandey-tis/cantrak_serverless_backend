@@ -508,6 +508,33 @@ const organisationsController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  /*GET ALL ORGANISATION LIST FOR DROP DOWN */
+  getOrganisationAllList:async(req,res)=>{
+
+    try{
+     let role  = req.me.roles[0];
+     let name  = req.me.name;
+     let orgId = req.orgId;
+     let result;
+     if(role==="superAdmin" && name==="superAdmin")
+     {
+      result =  await knex("organisations").select(['id','organisationName']).returning(['*']);
+     } else{
+      result =  await knex("organisations").select(['id','organisationName']).returning(['*'])
+                .where({id:orgId}); 
+     }
+     return res.status(200).json({
+      data: result,
+      message: "Organisation All List!."
+    });
+      
+  } catch (err) {
+    res.status(500).json({
+      errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+    });
+  }
+
   }
 };
 

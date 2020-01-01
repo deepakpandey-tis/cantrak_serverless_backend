@@ -335,29 +335,90 @@ const companyController = {
       let page = reqData.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
+      let total, rows;
+      let { companyName, organisation } = req.body;
+      let role = req.me.roles[0];
+      let name = req.me.name;
+      if (role === "superAdmin" && name === "superAdmin") {
 
-      let [total, rows] = await Promise.all([
-        knex
-          .count("* as count")
-          .from("companies")
-          .leftJoin("users", "users.id", "companies.createdBy")
-          .where({ "companies.orgId": req.orgId })
-          .first(),
-        knex("companies")
-          .leftJoin("users", "users.id", "companies.createdBy")
-          .where({ "companies.orgId": req.orgId })
-          .select([
-            "companies.id as id",
-            "companies.companyName as Company Name",
-            "companies.contactPerson as Contact Person",
-            "companies.telephone as Contact Number",
-            "companies.isActive as Status",
-            "users.name as Created By",
-            "companies.createdAt as Date Created"
-          ])
-          .offset(offset)
-          .limit(per_page)
-      ]);
+        [total, rows] = await Promise.all([
+          knex
+            .count("* as count")
+            .from("companies")
+            .leftJoin("users", "users.id", "companies.createdBy")
+            .where(qb => {
+              if (organisation) {
+                qb.where('companies.orgId', organisation)
+              }
+              if (companyName) {
+                qb.where('companies.companyName', 'iLIKE', `%${companyName}%`)
+              }
+            })
+            .first(),
+          knex("companies")
+            .leftJoin("users", "users.id", "companies.createdBy")
+            .where(qb => {
+              if (organisation) {
+                qb.where('companies.orgId', organisation)
+              }
+              if (companyName) {
+                qb.where('companies.companyName', 'iLIKE', `%${companyName}%`)
+              }
+            })
+            .select([
+              "companies.id as id",
+              "companies.companyName as Company Name",
+              "companies.contactPerson as Contact Person",
+              "companies.telephone as Contact Number",
+              "companies.isActive as Status",
+              "users.name as Created By",
+              "companies.createdAt as Date Created"
+            ])
+            .offset(offset)
+            .limit(per_page)
+        ]);
+
+      } else {
+
+        [total, rows] = await Promise.all([
+          knex
+            .count("* as count")
+            .from("companies")
+            .leftJoin("users", "users.id", "companies.createdBy")
+            .where({ "companies.orgId": req.orgId })
+            .where(qb => {
+              if (organisation) {
+                qb.where('companies.orgId', organisation)
+              }
+              if (companyName) {
+                qb.where('companies.companyName', 'iLIKE', `%${companyName}%`)
+              }
+            })
+            .first(),
+          knex("companies")
+            .leftJoin("users", "users.id", "companies.createdBy")
+            .where({ "companies.orgId": req.orgId })
+            .where(qb => {
+              if (organisation) {
+                qb.where('companies.orgId', organisation)
+              }
+              if (companyName) {
+                qb.where('companies.companyName', 'iLIKE', `%${companyName}%`)
+              }
+            })
+            .select([
+              "companies.id as id",
+              "companies.companyName as Company Name",
+              "companies.contactPerson as Contact Person",
+              "companies.telephone as Contact Number",
+              "companies.isActive as Status",
+              "users.name as Created By",
+              "companies.createdAt as Date Created"
+            ])
+            .offset(offset)
+            .limit(per_page)
+        ]);
+      }
 
       let count = total.count;
       pagination.total = count;
@@ -490,11 +551,24 @@ const companyController = {
   getCompanyListForProject: async (req, res) => {
     try {
       let pagination = {};
-      let [result] = await Promise.all([
-        knex("companies")
-          .select("id", "companyId", "companyName as CompanyName")
-          .where({ isActive: "true", orgId: req.orgId })
-      ]);
+      let role = req.me.roles[0];
+      let name = req.me.name;
+      let result;
+      if (role === "superAdmin" && name === "superAdmin") {
+        [result] = await Promise.all([
+          knex("companies")
+            .select("id", "companyId", "companyName as CompanyName")
+            .where({ isActive: "true" })
+        ]);
+      } else {
+
+        [result] = await Promise.all([
+          knex("companies")
+            .select("id", "companyId", "companyName as CompanyName")
+            .where({ isActive: "true", orgId: req.orgId })
+        ]);
+      }
+
       pagination.data = result;
       return res.status(200).json({
         data: {
