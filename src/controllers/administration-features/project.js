@@ -116,7 +116,7 @@ const ProjectController = {
           companyId: Joi.string().required(),
           project: Joi.string().required(),
           projectName: Joi.string().required(),
-          projectLocationThai: Joi.string().required(),
+          projectLocationThai: Joi.string().allow('').optional(),
           projectLocationEng: Joi.string().allow('').optional(),
           currency: Joi.string().allow('').optional()
           // projectStartDate: Joi.string().allow('').optional(),
