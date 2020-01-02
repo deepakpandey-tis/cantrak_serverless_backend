@@ -198,19 +198,21 @@ const sourceofRequestController = {
         knex
           .count("* as count")
           .from("source_of_request")
-          .where({ orgId: orgId })
+          .leftJoin('users','source_of_request.createdBy','users.id')
+          .where({ 'source_of_request.orgId': orgId })
           .first(),
         knex("source_of_request")
+        .leftJoin('users','source_of_request.createdBy','users.id')
           .select([
-            "id",
-            "requestCode as Source Code",
-            "descriptionEng as Description English",
-            "descriptionThai as Description Thai",
-            "isActive as Status",
-            "createdBy as Created By",
-            "createdAt as Date Created"
+            "source_of_request.id",
+            "source_of_request.requestCode as Source Code",
+            "source_of_request.descriptionEng as Description English",
+            "source_of_request.descriptionThai as Description Thai",
+            "source_of_request.isActive as Status",
+            "users.name as Created By",
+            "source_of_request.createdAt as Date Created"
           ])
-          .where({ orgId: orgId })
+          .where({ 'source_of_request.orgId': orgId })
           .offset(offset)
           .limit(per_page)
       ]);
