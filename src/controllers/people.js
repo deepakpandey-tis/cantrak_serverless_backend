@@ -7,6 +7,7 @@ const XLSX = require("xlsx");
 
 const fs = require('fs');
 const path = require('path');
+const emailHelper = require('../helpers/email')
 const peopleController = {
   addPeople: async (req, res) => {
     try {
@@ -31,8 +32,13 @@ const peopleController = {
           });
         }
 
+        let pass = '123456'
+        if(payload.password){
+          pass = payload.password
+        }
+
         const hash = await bcrypt.hash(
-          payload.password,
+          pass,
           saltRounds
         );
         payload.password = hash;
@@ -50,6 +56,7 @@ const peopleController = {
           updatedAt: currentTime,
           orgId: req.orgId
         });
+
 
         // Insert Organisation Role
         //let organisationUserRole = await knex('organisation_user_roles').insert({roleId:payload.roleId, userId:people[0].id,createdAt:currentTime,updatedAt:currentTime,orgId:req.orgId})
@@ -73,6 +80,8 @@ const peopleController = {
 
         // let roleResult = await knex.insert(insertRoleData).returning(['*']).transacting(trx).into('organisation_user_roles');
         // role = roleResult[0];
+
+        await emailHelper.sendTemplateEmail({ to: payload.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, layout: 'welcome-org-admin.ejs' } })
 
         trx.commit;
         res.status(200).json({

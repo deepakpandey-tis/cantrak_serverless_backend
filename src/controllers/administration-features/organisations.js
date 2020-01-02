@@ -7,6 +7,7 @@ const XLSX = require("xlsx");
 const saltRounds = 10;
 const bcrypt = require('bcrypt');
 const knex = require("../../db/knex");
+const emailHelper = require('../../helpers/email')
 
 
 const organisationsController = {
@@ -24,6 +25,7 @@ const organisationsController = {
           name: Joi.string().required(),
           userName: Joi.string().required(),
           email: Joi.string().required(),
+          password:Joi.string().required(),
           resources: Joi.array().required()
         });
 
@@ -89,7 +91,12 @@ const organisationsController = {
           mobile = payloadData.mobileNo;
         }
 
-        let hash = await bcrypt.hash("123456", saltRounds);
+        let pass = '123456'
+        if(req.body.password){
+          pass = req.body.password
+        } 
+
+        let hash = await bcrypt.hash(pass, saltRounds);
 
         payloadData.password = hash;
 
@@ -145,6 +152,7 @@ const organisationsController = {
           "organisation_resources_master"
         ).insert(insertPayload).returning(['*'])
 
+        await emailHelper.sendTemplateEmail({to:payloadData.email,subject:'Welcome to Service Mind',template:'welcome-org-admin-email.ejs',templateData:{fullName:payloadData.name,username:payloadData.userName,password:pass,layout:'welcome-org-admin.ejs'}})
 
         trx.commit;
       });

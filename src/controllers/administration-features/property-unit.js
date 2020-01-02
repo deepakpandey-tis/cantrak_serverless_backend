@@ -520,20 +520,21 @@ if (existValue && existValue.length) {
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
+            let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/PropertyUnit/" + filename;
+
+            return res.status(200).json({
+              data: rows,
+              message: "Property Units Data Export Successfully!",
+              url: url
+            });
           }
         });
+        
       });
       let deleteFile = await fs.unlink(filepath, err => {
         console.log("File Deleting Error " + err);
       });
-      let url =
-        "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/PropertyUnit/" +
-        filename;
-      return res.status(200).json({
-        data: rows,
-        message: "Property Units Data Export Successfully!",
-        url: url
-      });
+      
     } catch (err) {
       console.log(
         "[controllers][generalsetup][viewpropertyUnit] :  Error",
