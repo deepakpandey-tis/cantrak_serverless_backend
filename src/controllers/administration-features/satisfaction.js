@@ -26,8 +26,8 @@ const satisfactionController = {
 
         const schema = Joi.object().keys({
           satisfactionCode: Joi.string().required(),
-          descriptionEng: Joi.string().required(),
-          descriptionThai: Joi.string().required(),
+          descriptionEng: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string().allow("").optional(),
           remark: Joi.string()
             .allow("")
             .optional(),
@@ -125,8 +125,8 @@ const satisfactionController = {
         const schema = Joi.object().keys({
           id: Joi.number().required(),
           satisfactionCode: Joi.string().required(),
-          descriptionEng: Joi.string().required(),
-          descriptionThai: Joi.string().required(),
+          descriptionEng: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string().allow("").optional(),
           remark: Joi.string()
             .allow("")
             .optional(),

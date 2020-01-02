@@ -2,8 +2,8 @@ const Joi = require("@hapi/joi");
 const _ = require("lodash");
 const XLSX = require("xlsx");
 const knex = require("../db/knex");
-const fs     = require('fs');
-const path    = require('path')
+const fs = require('fs');
+const path = require('path')
 const request = require("request");
 
 
@@ -46,18 +46,18 @@ const chargeController = {
           });
         }
 
- 
-         /*CHECK DUPLICATE VALUES OPEN */
-         let existValue = await knex('charge_master')
-         .where({ chargeCode: chargePayload.chargeCode, orgId: req.orgId });
-       if (existValue && existValue.length) {
-         return res.status(400).json({
-           errors: [
-             { code: "VALIDATION_ERROR", message: "Charge code already exist!!" }
-           ]
-         });
-       }
-       /*CHECK DUPLICATE VALUES CLOSE */
+
+        /*CHECK DUPLICATE VALUES OPEN */
+        let existValue = await knex('charge_master')
+          .where({ chargeCode: chargePayload.chargeCode, orgId: req.orgId });
+        if (existValue && existValue.length) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: "Charge code already exist!!" }
+            ]
+          });
+        }
+        /*CHECK DUPLICATE VALUES CLOSE */
 
 
         let currentTime = new Date().getTime();
@@ -113,7 +113,7 @@ const chargeController = {
           whtRate: Joi.string().allow("").optional(),
           glAccountCode: Joi.allow("").optional()
         });
-         
+
 
         let result = Joi.validate(chargePayload, schema);
         console.log("[controllers][charge][updateCharge]: JOi Result", result);
@@ -564,9 +564,10 @@ const chargeController = {
     try {
       let rows = null;
       let pagination = {};
+      let orgId = req.orgId;
 
       [rows] = await Promise.all([
-        knex("taxes").select(["id as vatId", "taxCode", "taxPercentage"])
+        knex("taxes").select(["id as vatId", "taxCode", "taxPercentage"]).where({orgId:orgId})
       ]);
 
       pagination.data = rows;
@@ -589,9 +590,10 @@ const chargeController = {
     try {
       let rows = null;
       let pagination = {};
+      let orgId = req.orgId;
 
       [rows] = await Promise.all([
-        knex("wht_master").select(["id as whtId", "whtCode", "taxPercentage"])
+        knex("wht_master").select(["id as whtId", "whtCode", "taxPercentage"]).where({orgId:orgId})
       ]);
 
       pagination.data = rows;
@@ -696,44 +698,66 @@ const chargeController = {
       }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(rows);
+
+
+      var ws;
+
+      if (rows && rows.length) {
+        ws = XLSX.utils.json_to_sheet(rows);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          {
+            CHARGE_CODE: "",
+            DESCRIPTION: "",
+            DESCRIPTIONTH: "",
+            VAT: "",
+            VAT_CODE: "",
+            WHT_RATE: "",
+            WHT_CODE: "",
+          }
+        ]);
+      }
+
+      //var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "ChargeData-" + Date.now() + ".csv";
       let filepath = tempraryDirectory + filename;
       let check = XLSX.writeFile(wb, filepath);
       const AWS = require("aws-sdk");
-      fs.readFile(filepath, function(err, file_buffer) {
+      fs.readFile(filepath, function (err, file_buffer) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
           Key: "Export/Charge/" + filename,
-          Body: file_buffer
+          Body: file_buffer,
+          ACL: "public-read"
         };
-        s3.putObject(params, function(err, data) {
+        s3.putObject(params, function (err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             //next(err);
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
+            let url =
+              "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Charge/" +
+              filename;
+
+            return res.status(200).json({
+              data: {
+                buildingPhases: rows
+              },
+              message: "Charge Data Export Successfully!",
+              url: url
+            });
           }
         });
       });
       let deleteFile = await fs.unlink(filepath, err => {
         console.log("File Deleting Error " + err);
       });
-      let url =
-        "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Charge/" +
-        filename;
 
-      return res.status(200).json({
-        data: {
-          buildingPhases: rows
-        },
-        message: "Charge Data Export Successfully!",
-        url: url
-      });
     } catch (err) {
       console.log(
         "[controllers][generalsetup][viewbuildingPhase] : Error",
@@ -765,6 +789,7 @@ const chargeController = {
           raw: false
         });
         //data         = JSON.stringify(data);
+        console.log("============", data, "=============")
         let result = null;
         let currentTime = new Date().getTime();
         //console.log('DATA: ',data)
@@ -789,7 +814,7 @@ const chargeController = {
 
               let taxesIdResult = await knex("taxes")
                 .select("id")
-                .where({ taxCode: chargesData.E,orgId:req.orgId });
+                .where({ taxCode: chargesData.E, orgId: req.orgId });
               console.log("TaxIdResult", taxesIdResult);
               if (!chargesData.F && !chargesData.G) {
                 whtId = null;
@@ -798,7 +823,7 @@ const chargeController = {
               } else {
                 let whtIdResult = await knex("wht_master")
                   .select("id")
-                  .where({ whtCode: chargesData.G,orgId:req.orgId });
+                  .where({ whtCode: chargesData.G, orgId: req.orgId });
                 if (whtIdResult && whtIdResult.length) {
                   whtId = whtIdResult[0].id;
                   whtRate = chargesData.F;

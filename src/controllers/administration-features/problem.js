@@ -28,9 +28,11 @@ const problemController = {
       if (_.isEmpty(filters)) {
         [total, rows] = await Promise.all([
           knex.count('* as count').from("incident_sub_categories")
-          .leftJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id'),
+          .leftJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
+          .leftJoin('users','incident_categories.createdBy','users.id'),
           knex("incident_sub_categories")
           .leftJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
+          .leftJoin('users','incident_categories.createdBy','users.id')
           .select([
             'incident_sub_categories.id as ID',
             'incident_categories.categoryCode as Problem Code',
@@ -38,6 +40,7 @@ const problemController = {
             'incident_sub_categories.descriptionThai as Description(Thai)',
             'incident_categories.descriptionEng as Category',
             'incident_sub_categories.isActive as Status',
+            'users.name as Created By',
             'incident_sub_categories.createdAt as Date Created',
 
           ])
@@ -50,9 +53,11 @@ const problemController = {
           [total, rows] = await Promise.all([
             knex.count('* as count').from("incident_sub_categories")
             .innerJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
+            .leftJoin('users','incident_categories.createdBy','users.id')
             .where(filters).offset(offset).limit(per_page),
             knex("incident_sub_categories")
             .innerJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
+            .leftJoin('users','incident_categories.createdBy','users.id')
             .select([
               'incident_sub_categories.id as ID',
               'incident_categories.categoryCode as Problem Code',
@@ -60,6 +65,7 @@ const problemController = {
               'incident_sub_categories.descriptionThai as Description(Thai)',
               'incident_categories.descriptionEng as Category',
               'incident_sub_categories.isActive as Status',
+              'users.name as Created By',
               'incident_sub_categories.createdAt as Date Created',
             ])
             .where(filters).offset(offset).limit(per_page)

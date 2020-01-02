@@ -27,8 +27,8 @@ const statusController = {
 
         const schema = Joi.object().keys({
           statusCode: Joi.string().required(),
-          descriptionEng: Joi.string().required(),
-          descriptionThai: Joi.string().required(),
+          descriptionEng: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string().allow("").optional(),
           remark: Joi.string().required(),
           defaultFlag: Joi.string().required()
         });
@@ -122,8 +122,8 @@ const statusController = {
         const schema = Joi.object().keys({
           id: Joi.number().required(),
           statusCode: Joi.string().required(),
-          descriptionEng: Joi.string().required(),
-          descriptionThai: Joi.string().required(),
+          descriptionEng: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string().allow("").optional(),
           remark: Joi.string().required(),
           defaultFlag: Joi.string().required()
         });

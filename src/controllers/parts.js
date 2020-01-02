@@ -1507,6 +1507,91 @@ const partsController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
+    },
+    getPendingApprovalRequestsForParts:async(req,res) => {
+        try {
+
+            let reqData = req.query;
+            let total, rows;
+
+            let pagination = {};
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
+
+            [total,rows] = await Promise.all([
+                knex('assigned_parts')
+                .leftJoin('part_master', 'assigned_parts.partId','part_master.id')
+                .select(['assigned_parts.id as approvalId','part_master.id','part_master.partName', 'part_master.minimumQuantity', 'assigned_parts.unitCost as requestedPartsUnitCost','assigned_parts.quantity as requestedParts','assigned_parts.status as approvalStatus'])
+                .where({'part_master.orgId':req.orgId,'assigned_parts.entityType':'service_orders'}),
+                knex('assigned_parts')
+                .leftJoin('part_master', 'assigned_parts.partId', 'part_master.id')
+                .select(['assigned_parts.id as approvalId', 'part_master.id', 'part_master.partName', 'part_master.minimumQuantity', 'assigned_parts.unitCost as requestedPartsUnitCost', 'assigned_parts.quantity as requestedParts','assigned_parts.status as approvalStatus'])
+                    .where({ 'part_master.orgId': req.orgId, 'assigned_parts.entityType': 'service_orders' })
+                .offset(offset)
+                .limit(per_page)
+            ])
+                // .distinct(['part_master.id'])
+            const Parallel = require('async-parallel')
+            const partsWithTotalQuantity = await Parallel.map(rows, async (part) => {
+                let {id} = part;
+                let quantity = await knex('part_ledger').where({partId:id,orgId:req.orgId}).select('quantity')
+                let totalParts = 0
+                for (let i = 0; i < quantity.length; i++) {
+                    const element = quantity[i];
+                    totalParts += Number(element.quantity);
+                }
+                return {...part,totalParts}
+            })
+
+
+            let count = total.length;
+            pagination.total = count;
+            pagination.per_page = per_page;
+            pagination.offset = offset;
+            pagination.to = offset + rows.length;
+            pagination.last_page = Math.ceil(count / per_page);
+            pagination.current_page = page;
+            pagination.from = offset;
+            pagination.data = partsWithTotalQuantity;
+
+            return res.status(200).json({data: {
+                pagination
+            }})
+        } catch(err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    approvePartRequisitionRequest:async(req,res) => {
+        try {
+            let approvalId = req.body.approvalId;
+            const update = await knex('assigned_parts').update({status:'approved'}).where({orgId:req.orgId,id:approvalId})
+            return res.status(200).json({data: {
+                updatedStatus:update
+            }})
+        } catch(err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    editPartRequisitionRequest:async(req,res) => {
+        try {
+            const payload = req.body;
+            const updated = await knex('assigned_parts').update({ unitCost: payload.requestedPartsUnitCost, quantity: payload.requestedParts}).where({id:payload.approvalId})
+            return res.status(200).json({
+                data: {
+                    updatedApproval:updated
+                }
+            })
+        } catch(err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
     }
 }
 
