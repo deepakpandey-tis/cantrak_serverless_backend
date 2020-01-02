@@ -226,7 +226,9 @@ const chargeController = {
           .select([
             "charge_master.id",
             "charge_master.chargeCode as Charges Code",
+            "charge_master.chargeCode as ChargesCode",
             "charge_master.calculationUnit as Calculation Unit",
+            "charge_master.calculationUnit as CalculationUnit",
             "charge_master.rate as Cost",
             "charge_master.isActive as Status",
             "users.name as Created By",

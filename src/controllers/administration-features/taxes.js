@@ -97,7 +97,7 @@ const taxesfactionController = {
         data: {
           tax: taxes
         },
-        message:"Tax added successfully!!"
+        message: "Tax added successfully!!"
       });
     } catch (err) {
       console.log("[controllers][tax][addtax] :  Error", err);
@@ -449,7 +449,7 @@ const taxesfactionController = {
       let check = XLSX.writeFile(wb, filepath);
       const AWS = require("aws-sdk");
 
-      fs.readFile(filepath, function(err, file_buffer) {
+      fs.readFile(filepath, function (err, file_buffer) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
@@ -457,7 +457,7 @@ const taxesfactionController = {
           Body: file_buffer,
           ACL: "public-read"
         };
-        s3.putObject(params, function(err, data) {
+        s3.putObject(params, function (err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             //next(err);
@@ -572,6 +572,33 @@ const taxesfactionController = {
         "[controllers][propertysetup][importCompanyData] :  Error",
         err
       );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+
+  // Get List of Taxes
+  getTaxesListDetails: async (req, res) => {
+    try {
+      let taxesResult;
+      await knex.transaction(async trx => {      
+
+        taxesResult = await knex("taxes")
+          .select("taxes.id as vatId","taxes.taxCode","taxes.taxPercentage as vatRate")
+          .where({ isActive: 'true', orgId: req.orgId });
+        trx.commit;
+      });
+
+      return res.status(200).json({
+        data: {
+          vatList: taxesResult
+        },
+        message: "Vat Tax details"
+      });
+    } catch (err) {
+      console.log("[controllers][generalsetup][viewtax] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
