@@ -96,7 +96,8 @@ const taxesfactionController = {
       res.status(200).json({
         data: {
           tax: taxes
-        }
+        },
+        message:"Tax added successfully!!"
       });
     } catch (err) {
       console.log("[controllers][tax][addtax] :  Error", err);
@@ -211,8 +212,8 @@ const taxesfactionController = {
   getTaxesList: async (req, res) => {
     try {
       let reqData = req.query;
-      let total = null;
-      let rows = null;
+      let total;
+      let rows;
       let pagination = {};
       let per_page = reqData.per_page || 10;
       let page = reqData.current_page || 1;
@@ -225,8 +226,8 @@ const taxesfactionController = {
           .from("taxes")
           .leftJoin("users", "users.id", "taxes.createdBy")
           .where({ "taxes.orgId": req.orgId })
-          .offset(offset)
-          .limit(per_page)
+          //.offset(offset)
+          //.limit(per_page)
           .first(),
         knex
           .from("taxes")
