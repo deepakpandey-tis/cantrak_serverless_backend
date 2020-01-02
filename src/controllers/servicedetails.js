@@ -25,8 +25,8 @@ const serviceDetailsController = {
 
         const schema = Joi.object().keys({
           incidentPriorityCode: Joi.string().required(),
-          descriptionThai: Joi.string().required(),
-          descriptionEng: Joi.string().required()
+          descriptionThai: Joi.string().allow("").optional(),
+          descriptionEng: Joi.string().allow("").optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -87,8 +87,8 @@ const serviceDetailsController = {
         const schema = Joi.object().keys({
           id: Joi.string().required(),
           incidentPriorityCode: Joi.string().required(),
-          descriptionThai: Joi.string().required(),
-          descriptionEng: Joi.string().required()
+          descriptionThai: Joi.string().allow("").optional(),
+          descriptionEng: Joi.string().allow("").optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -192,8 +192,8 @@ const serviceDetailsController = {
 
         const schema = Joi.object().keys({
           title: Joi.string().required(),
-          descriptionThai: Joi.string().required(),
-          descriptionEng: Joi.string().required()
+          descriptionThai: Joi.string().allow("").optional(),
+          descriptionEng: Joi.string().allow("").optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -254,8 +254,8 @@ const serviceDetailsController = {
         const schema = Joi.object().keys({
           id: Joi.number().required(),
           title: Joi.string().required(),
-          descriptionThai: Joi.string().required(),
-          descriptionEng: Joi.string().required()
+          descriptionThai: Joi.string().allow("").optional(),
+          descriptionEng: Joi.string().allow("").optional(),
         });
 
         const result = Joi.validate(payload, schema);

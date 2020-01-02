@@ -562,9 +562,10 @@ const chargeController = {
     try {
       let rows = null;
       let pagination = {};
+      let orgId = req.orgId;
 
       [rows] = await Promise.all([
-        knex("taxes").select(["id as vatId", "taxCode", "taxPercentage"])
+        knex("taxes").select(["id as vatId", "taxCode", "taxPercentage"]).where({orgId:orgId})
       ]);
 
       pagination.data = rows;
@@ -587,9 +588,10 @@ const chargeController = {
     try {
       let rows = null;
       let pagination = {};
+      let orgId = req.orgId;
 
       [rows] = await Promise.all([
-        knex("wht_master").select(["id as whtId", "whtCode", "taxPercentage"])
+        knex("wht_master").select(["id as whtId", "whtCode", "taxPercentage"]).where({orgId:orgId})
       ]);
 
       pagination.data = rows;
@@ -726,7 +728,8 @@ const chargeController = {
         var params = {
           Bucket: bucketName,
           Key: "Export/Charge/" + filename,
-          Body: file_buffer
+          Body: file_buffer,
+          ACL: "public-read"
         };
         s3.putObject(params, function (err, data) {
           if (err) {
