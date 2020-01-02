@@ -380,18 +380,21 @@ const propertyCategoryController = {
       //await knex.transaction(async (trx) => {
 
       [total, rows] = await Promise.all([
-        knex.count("* as count").from("incident_categories"),
+        knex.count("* as count").from("incident_categories")
+        .leftJoin("users","incident_categories.createdBy","users.id")
+        .where({"incident_categories.orgId": orgId }),
         knex("incident_categories")
+          .leftJoin("users","incident_categories.createdBy","users.id")
           .select([
-            "id as id",
-            "categoryCode as Category",
-            "descriptionEng as Decription Eng",
-            "descriptionThai as Description Thai",
-            "isActive as Status",
-            "createdBy as Created By",
-            "createdAt as Date Created"
+            "incident_categories.id as id",
+            "incident_categories.categoryCode as Category",
+            "incident_categories.descriptionEng as Decription Eng",
+            "incident_categories.descriptionThai as Description Thai",
+            "incident_categories.isActive as Status",
+            "users.name as Created By",
+            "incident_categories.createdAt as Date Created"
           ])
-          .where({ orgId: orgId })
+          .where({"incident_categories.orgId": orgId })
           .offset(offset)
           .limit(per_page)
       ]);
