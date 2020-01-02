@@ -1507,7 +1507,14 @@ const partsController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
-    }
+    },
+    // approvePartRequisition:async(req,res) => {
+    //     try {
+
+    //     } catch(err) {
+
+    //     }
+    // }
 }
 
 module.exports = partsController;
