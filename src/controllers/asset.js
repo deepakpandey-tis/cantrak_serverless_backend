@@ -2131,7 +2131,7 @@ const assetController = {
         let {oldAssetId,newAssetId} = item;
         let old = await knex('asset_master').select('assetName').where({id:oldAssetId}).first()
         let newa = await knex('asset_master').select('assetName').where({id:newAssetId}).first()
-        return ({oldAssetName:old.assetName,newAssetName,...item})
+        return ({ oldAssetName: old.assetName, newAssetName: newa.assetName,...item})
       })
 
 
