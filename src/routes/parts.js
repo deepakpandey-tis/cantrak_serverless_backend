@@ -184,4 +184,24 @@ roleMiddleware.parseUserPermission,
 resourceAccessMiddleware.isPartAccessible,
 partsController.getQuotationAssignedParts)
 
+router.post('/get-pending-approval-requests-for-parts', 
+authMiddleware.isAuthenticated, 
+roleMiddleware.parseUserPermission, 
+resourceAccessMiddleware.isPartAccessible, 
+partsController.getPendingApprovalRequestsForParts)
+
+router.post('/approve-part-requisition-request',
+authMiddleware.isAuthenticated,
+roleMiddleware.parseUserPermission,
+resourceAccessMiddleware.isPartAccessible,
+  partsController.approvePartRequisitionRequest
+)
+
+router.post('/edit-part-requisition-request', 
+authMiddleware.isAuthenticated,
+roleMiddleware.parseUserPermission,
+resourceAccessMiddleware.isPartAccessible,
+  partsController.editPartRequisitionRequest
+)
+
 module.exports = router;
