@@ -449,7 +449,7 @@ const whtController = {
       let check = XLSX.writeFile(wb, filepath);
       const AWS = require("aws-sdk");
 
-      fs.readFile(filepath, function(err, file_buffer) {
+      fs.readFile(filepath, function (err, file_buffer) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
@@ -457,28 +457,29 @@ const whtController = {
           Body: file_buffer,
           ACL: "public-read"
         };
-        s3.putObject(params, function(err, data) {
+        s3.putObject(params, function (err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             //next(err);
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
+            let url =
+              "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Wht/" +
+              filename;
+
+            res.status(200).json({
+              data: {
+                taxes: rows
+              },
+              message: "Wht list successfully !",
+              url: url
+            });
           }
         });
       });
       //let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
-      let url =
-        "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Wht/" +
-        filename;
 
-      res.status(200).json({
-        data: {
-          taxes: rows
-        },
-        message: "Wht list successfully !",
-        url: url
-      });
     } catch (err) {
       console.log("[controllers][tax][gettax] :  Error", err);
       //trx.rollback
