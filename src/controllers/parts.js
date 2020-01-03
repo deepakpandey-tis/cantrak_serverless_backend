@@ -532,7 +532,7 @@ const partsController = {
                 // Insert in part_ledger table,
                 let currentTime = new Date().getTime();
 
-                let insertData = { ...partStockPayload, createdAt: currentTime, updatedAt: currentTime };
+                let insertData = { ...partStockPayload, createdAt: currentTime, updatedAt: currentTime,orgId:req.orgId };
 
                 console.log('[controllers][part][addPartStock]: Insert Data', insertData);
 
@@ -1459,7 +1459,9 @@ const partsController = {
                     .select([
                         "part_master.partName as partName",
                         "part_master.id as id",
-                        "part_master.partCode as partCode"
+                        "part_master.partCode as partCode",
+                        "assigned_parts.quantity as quantity",
+                        "assigned_parts.unitCost as unitCost"
                     ])
                     .where({
                         entityId: quotationId,
@@ -1474,7 +1476,9 @@ const partsController = {
                     .select([
                         "part_master.partName as partName",
                         "part_master.id as id",
-                        "part_master.partCode as partCode"
+                        "part_master.partCode as partCode",
+                        "assigned_parts.quantity as quantity",
+                        "assigned_parts.unitCost as unitCost"
                     ])
                     .where({
                         entityId: quotationId,
@@ -1527,7 +1531,9 @@ const partsController = {
                 .where({'part_master.orgId':req.orgId,'assigned_parts.entityType':'service_orders'}),
                 knex('assigned_parts')
                 .leftJoin('part_master', 'assigned_parts.partId', 'part_master.id')
-                .select(['assigned_parts.id as approvalId', 'part_master.id', 'part_master.partName', 'part_master.minimumQuantity', 'assigned_parts.unitCost as requestedPartsUnitCost', 'assigned_parts.quantity as requestedParts','assigned_parts.status as approvalStatus'])
+                .select(['assigned_parts.id as approvalId', 
+                'part_master.partCategory',
+                'part_master.id', 'part_master.partName', 'part_master.minimumQuantity', 'assigned_parts.unitCost as requestedPartsUnitCost', 'assigned_parts.quantity as requestedParts','assigned_parts.status as approvalStatus'])
                     .where({ 'part_master.orgId': req.orgId, 'assigned_parts.entityType': 'service_orders' })
                 .offset(offset)
                 .limit(per_page)
@@ -1568,7 +1574,7 @@ const partsController = {
     approvePartRequisitionRequest:async(req,res) => {
         try {
             let approvalId = req.body.approvalId;
-            const update = await knex('assigned_parts').update({status:'approved'}).where({orgId:req.orgId,id:approvalId})
+            const update = await knex('assigned_parts').update({status:'approved'}).where({orgId:req.orgId,id:approvalId}).returning(['*'])
             return res.status(200).json({data: {
                 updatedStatus:update
             }})
@@ -1580,11 +1586,72 @@ const partsController = {
     },
     editPartRequisitionRequest:async(req,res) => {
         try {
-            const payload = req.body;
-            const updated = await knex('assigned_parts').update({ unitCost: payload.requestedPartsUnitCost, quantity: payload.requestedParts}).where({id:payload.approvalId})
+            const payload = _.omit(req.body,['approvalId','partCategory']);
+            console.log('Payload:*********************************************** ',payload)
+
+            const updated = await knex('assigned_parts')
+            .update({ 
+                ...payload
+                /*partId:payload.partId,
+                unitCost: payload.requestedPartsUnitCost, 
+                quantity: payload.requestedParts*/
+            })
+            .where({id:req.body.approvalId})
+
             return res.status(200).json({
                 data: {
                     updatedApproval:updated
+                }
+            })
+        } catch(err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    declinePartRequisitionRequest:async(req,res) => {
+        try {
+            let {approvalId} = req.body;
+            const declined = await knex('assigned_parts').update({status:'declined'}).where({id:approvalId,orgId:req.orgId}).returning(['*'])
+            return res.status(200).json({
+                data: {
+                    declined:declined
+                }
+            })
+        } catch(err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    getAllPartCategories:async(req,res) => {
+        try {
+            const allCategories = await knex('part_category_master')
+            .where({orgId:req.orgId}).select('*')
+
+            return res.status(200).json({
+                data: {
+                    allPartCategories:allCategories
+                }
+            })
+        } catch(err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    getAvailableParts:async(req,res) => {
+        try {
+            const allStock = await knex('part_ledger').where({partId:req.body.partId,orgId:req.orgId}).select('quantity')
+            let total = 0
+            for (let i = 0; i < allStock.length; i++) {
+                const element = allStock[i];
+                total += Number(element.quantity)
+                
+            }
+            return res.status(200).json({
+                data: {
+                    total:total
                 }
             })
         } catch(err) {
