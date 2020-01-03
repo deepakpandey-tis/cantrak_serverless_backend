@@ -283,7 +283,12 @@ const teamsController = {
 
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from("teams")
-                        .where({ 'teams.teamName': teamName, 'teams.orgId': req.orgId })
+                    .where({ "teams.orgId": req.orgId, })
+                        .where(qb=>{
+                            if(teamName){
+                                qb.where('teams.teamName', 'iLIKE', `%${teamName}%`)
+                            }
+                        })
                         .first(),
                     knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams"."orgId" = ' + req.orgId + ' and "teams"."teamName" = "' + teamName + '" group by "teams"."teamId" limit ' + per_page + ' OFFSET ' + offset + '')
                 ])

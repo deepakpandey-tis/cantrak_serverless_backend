@@ -578,6 +578,33 @@ const taxesfactionController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+
+  // Get List of Taxes
+  getTaxesListDetails: async (req, res) => {
+    try {
+      let taxesResult;
+      await knex.transaction(async trx => {      
+
+        taxesResult = await knex("taxes")
+          .select("taxes.id as vatId","taxes.taxCode","taxes.taxPercentage as vatRate")
+          .where({ isActive: 'true', orgId: req.orgId });
+        trx.commit;
+      });
+
+      return res.status(200).json({
+        data: {
+          vatList: taxesResult
+        },
+        message: "Vat Tax details"
+      });
+    } catch (err) {
+      console.log("[controllers][generalsetup][viewtax] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 

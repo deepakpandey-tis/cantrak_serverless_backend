@@ -16,6 +16,8 @@ router.get('/get-taxes-list', authMiddleware.isAuthenticated,  taxesController.g
 router.post('/delete-taxes', authMiddleware.isAuthenticated,  taxesController.deleteTaxes);
 router.post('/get-taxes-details', authMiddleware.isAuthenticated,taxesController.viewTaxDetails);
 router.get('/export-tax-data',authMiddleware.isAuthenticated,taxesController.exportTaxeData);
+router.get('/get-tax-list-details',authMiddleware.isAuthenticated,taxesController.getTaxesListDetails);
+
 
 
 
