@@ -89,7 +89,9 @@ const quotationsController = {
           acknowledgeBy: Joi.string().required(),
           quotationData: Joi.array().required(),
           vatId: Joi.number().required(),
-          vatRate: Joi.string().required()
+          vatRate: Joi.string().required(),
+          subTotal: Joi.number().required(),
+          grandTotal: Joi.number().required()
         });
 
         const result = Joi.validate(quotationPayload, schema);

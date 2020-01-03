@@ -25,7 +25,7 @@ const organisationsController = {
           name: Joi.string().required(),
           userName: Joi.string().required(),
           email: Joi.string().required(),
-          password:Joi.string().required(),
+          password: Joi.string().required(),
           resources: Joi.array().required()
         });
 
@@ -92,9 +92,9 @@ const organisationsController = {
         }
 
         let pass = '123456'
-        if(req.body.password){
+        if (req.body.password) {
           pass = req.body.password
-        } 
+        }
 
         let hash = await bcrypt.hash(pass, saltRounds);
 
@@ -152,7 +152,7 @@ const organisationsController = {
           "organisation_resources_master"
         ).insert(insertPayload).returning(['*'])
 
-        await emailHelper.sendTemplateEmail({to:payloadData.email,subject:'Welcome to Service Mind',template:'welcome-org-admin-email.ejs',templateData:{fullName:payloadData.name,username:payloadData.userName,password:pass,layout:'welcome-org-admin.ejs'}})
+        await emailHelper.sendTemplateEmail({ to: payloadData.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payloadData.name, username: payloadData.userName, password: pass, layout: 'welcome-org-admin.ejs' } })
 
         trx.commit;
       });
@@ -183,7 +183,8 @@ const organisationsController = {
           name: Joi.string().required(),
           userName: Joi.string().required(),
           email: Joi.string().required(),
-          resources: Joi.array().required()
+          resources: Joi.array().required(),
+          password: Joi.string().allow("").optional(),
         });
 
         const result = Joi.validate(_.omit(payload, "mobileNo", "id"), schema);
@@ -218,15 +219,29 @@ const organisationsController = {
         let userId = organisation.organisationAdminId;
 
 
+        let insertUserData;
+        if (req.body.password) {
+          pass = req.body.password
+          let hash = await bcrypt.hash(pass, saltRounds);
 
-        let insertUserData = {
-          name: payloadData.name,
-          userName: payloadData.userName,
-          email: payloadData.email,
-          mobileNo: payloadData.mobileNo,
-          updatedAt: currentTime
+          insertUserData = {
+            name: payloadData.name,
+            userName: payloadData.userName,
+            email: payloadData.email,
+            mobileNo: payloadData.mobileNo,
+            password: hash,
+            updatedAt: currentTime
+          }
+        } else {
+
+          insertUserData = {
+            name: payloadData.name,
+            userName: payloadData.userName,
+            email: payloadData.email,
+            mobileNo: payloadData.mobileNo,
+            updatedAt: currentTime
+          }
         }
-
 
         let insertUser = await knex
           .update(insertUserData)
@@ -294,7 +309,7 @@ const organisationsController = {
           });
         }
 
-        
+
         let checkStatus = await knex.from('organisations').where({ id: payload.id }).returning(['*'])
         if (checkStatus && checkStatus.length) {
 
@@ -317,7 +332,7 @@ const organisationsController = {
               user = userResult[0]
             }
             message = "Organisation Inactive Successfully!"
-          } else{
+          } else {
             organisationResult = await knex
               .update({ isActive: true })
               .where({ id: payload.id })
@@ -344,7 +359,7 @@ const organisationsController = {
         data: {
           organisation: { ...organisation, ...user }
         },
-        message:message
+        message: message
       });
     } catch (err) {
       console.log("[controllers][organisation][deleteOrganisation] :  Error", err);
@@ -485,6 +500,8 @@ const organisationsController = {
       let id = req.query.id;
       let result = await knex("organisations")
         .leftJoin('users', 'organisations.id', 'users.orgId')
+        .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+        .where({ 'application_user_roles.roleId': 2 })
         .select([
           'organisations.*',
           'users.name',
@@ -518,30 +535,29 @@ const organisationsController = {
     }
   },
   /*GET ALL ORGANISATION LIST FOR DROP DOWN */
-  getOrganisationAllList:async(req,res)=>{
+  getOrganisationAllList: async (req, res) => {
 
-    try{
-     let role  = req.me.roles[0];
-     let name  = req.me.name;
-     let orgId = req.orgId;
-     let result;
-     if(role==="superAdmin" && name==="superAdmin")
-     {
-      result =  await knex("organisations").select(['id','organisationName']).returning(['*']);
-     } else{
-      result =  await knex("organisations").select(['id','organisationName']).returning(['*'])
-                .where({id:orgId}); 
-     }
-     return res.status(200).json({
-      data: result,
-      message: "Organisation All List!."
-    });
-      
-  } catch (err) {
-    res.status(500).json({
-      errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-    });
-  }
+    try {
+      let role = req.me.roles[0];
+      let name = req.me.name;
+      let orgId = req.orgId;
+      let result;
+      if (role === "superAdmin" && name === "superAdmin") {
+        result = await knex("organisations").select(['id', 'organisationName']).returning(['*']);
+      } else {
+        result = await knex("organisations").select(['id', 'organisationName']).returning(['*'])
+          .where({ id: orgId });
+      }
+      return res.status(200).json({
+        data: result,
+        message: "Organisation All List!."
+      });
+
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
 
   }
 };
