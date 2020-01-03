@@ -1592,6 +1592,37 @@ const partsController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
+    },
+    declinePartRequisitionRequest:async(req,res) => {
+        try {
+            let {approvalId} = req.body;
+            const declined = await knex('assigned_parts').update({status:'declined'}).where({id:approvalId,orgId:req.orgId}).returning(['*'])
+            return res.status(200).json({
+                data: {
+                    declined:declined
+                }
+            })
+        } catch(err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    getAllPartCategories:async(req,res) => {
+        try {
+            const allCategories = await knex('part_category_master')
+            .where({orgId:req.orgId}).select('*')
+
+            return res.status(200).json({
+                data: {
+                    allPartCategories:allCategories
+                }
+            })
+        } catch(err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
     }
 }
 
