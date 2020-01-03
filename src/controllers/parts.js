@@ -1635,6 +1635,26 @@ const partsController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
+    },
+    getAvailableParts:async(req,res) => {
+        try {
+            const allStock = await knex('part_ledger').where({partId:req.body.partId,orgId:req.orgId}).select('quantity')
+            let total = 0
+            for (let i = 0; i < allStock.length; i++) {
+                const element = allStock[i];
+                total += Number(element.quantity)
+                
+            }
+            return res.status(200).json({
+                data: {
+                    total:total
+                }
+            })
+        } catch(err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
     }
 }
 

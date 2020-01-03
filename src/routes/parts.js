@@ -218,4 +218,9 @@ resourceAccessMiddleware.isPartAccessible,
 partsController.getAllPartCategories
 )
 
+router.post('/get-available-parts', authMiddleware.isAuthenticated,
+roleMiddleware.parseUserPermission,
+resourceAccessMiddleware.isPartAccessible,
+partsController.getAvailableParts)
+
 module.exports = router;
