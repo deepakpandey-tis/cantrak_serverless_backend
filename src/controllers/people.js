@@ -441,13 +441,14 @@ const peopleController = {
           "teams.teamId",
           "teams.teamName",
           "teams.teamCode",
+          'users.isActive'
         ])
         .where({ "users.id": id })
         .orderBy("users.createdAt", "desc");
       //.whereNotIn('roles.name',['superAdmin','admin'])
 
       let peopleDataResult = peopleData[0];
-      let omitedPeopleDataResult = _.omit(peopleDataResult, ['createdAt'], ['updatedAt'], ['isActive', 'password', 'verifyToken'])
+      let omitedPeopleDataResult = _.omit(peopleDataResult, ['createdAt'], ['updatedAt'], ['password', 'verifyToken'])
 
       console.log('[controllers][people][getPeopleDetails]: People Details', peopleDataResult);
 
@@ -469,6 +470,7 @@ const peopleController = {
   removePeople: async (req, res) => {
     try {
       let people = null;
+      let message;
       await knex.transaction(async trx => {
         let peoplePayload = req.body;
         let id = req.body.id
@@ -487,16 +489,26 @@ const peopleController = {
         }
 
         let currentTime = new Date().getTime();
-        let peopleData = await knex.update({ isActive: false, updatedAt: currentTime }).where({ id: id }).returning(['*']).transacting(trx).into('users');
-        people = peopleData[0];
+        let peopleData;
+        let checkStatus = await knex.from('users').where({ id:id }).returning(['*'])
+        if (checkStatus && checkStatus.length) {
 
+          if (checkStatus[0].isActive == true) {
+             peopleData = await knex.update({ isActive: false, updatedAt: currentTime }).where({ id: id }).returning(['*']).transacting(trx).into('users');
+             message ="People Inactive Successfully";
+          } else{
+            peopleData = await knex.update({ isActive: true, updatedAt: currentTime }).where({ id: id }).returning(['*']).transacting(trx).into('users');
+            message ="People Active Successfully";
+          }
+        }
+        people = peopleData[0];
         trx.commit
       })
       res.status(200).json({
         data: {
           people: people
         },
-        message: "People removed successfully !"
+        message: message
       });
     } catch (err) {
 

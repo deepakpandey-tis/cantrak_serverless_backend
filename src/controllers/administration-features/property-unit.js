@@ -22,12 +22,12 @@ const propertyUnitController = {
 
       let propertyUnit = null;
       await knex.transaction(async trx => {
-        const payload = req.body;
+        const payload = _.omit(req.body,'propertyTypeId');
 
         const schema = Joi.object().keys({
           companyId: Joi.string().required(),
           projectId: Joi.string().required(),
-          propertyTypeId: Joi.string().required(),
+          propertyTypeId: Joi.number().allow("").optional(),
           buildingPhaseId: Joi.string().required(),
           createdBy: Joi.string().required(),
           floorZoneId: Joi.string().required(),
@@ -103,13 +103,13 @@ if (existValue && existValue.length) {
       let userId = req.me.id;
 
       await knex.transaction(async trx => {
-        const payload = req.body;
+        const payload = _.omit(req.body,'propertyTypeId');
 
         const schema = Joi.object().keys({
           id: Joi.string().required(),
           companyId: Joi.string().required(),
           projectId: Joi.string().required(),
-          propertyTypeId: Joi.string().required(),
+          propertyTypeId: Joi.number().allow("").optional(),
           buildingPhaseId: Joi.string().required(),
           floorZoneId: Joi.string().required(),
           unitNumber: Joi.string().required(),

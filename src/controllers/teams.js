@@ -290,7 +290,7 @@ const teamsController = {
                             }
                         })
                         .first(),
-                    knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams"."orgId" = ' + req.orgId + ' and "teams"."teamName" = "' + teamName + '" group by "teams"."teamId" limit ' + per_page + ' OFFSET ' + offset + '')
+                    knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams"."orgId" = ' + req.orgId + ' and "teams"."teamName" = "' + String(teamName) + '" group by "teams"."teamId" limit ' + per_page + ' OFFSET ' + offset + '')
                 ])
 
             } else {
