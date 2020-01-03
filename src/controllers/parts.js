@@ -1459,7 +1459,9 @@ const partsController = {
                     .select([
                         "part_master.partName as partName",
                         "part_master.id as id",
-                        "part_master.partCode as partCode"
+                        "part_master.partCode as partCode",
+                        "assigned_parts.quantity as quantity",
+                        "assigned_parts.unitCost as unitCost"
                     ])
                     .where({
                         entityId: quotationId,
@@ -1474,7 +1476,9 @@ const partsController = {
                     .select([
                         "part_master.partName as partName",
                         "part_master.id as id",
-                        "part_master.partCode as partCode"
+                        "part_master.partCode as partCode",
+                        "assigned_parts.quantity as quantity",
+                        "assigned_parts.unitCost as unitCost"
                     ])
                     .where({
                         entityId: quotationId,
