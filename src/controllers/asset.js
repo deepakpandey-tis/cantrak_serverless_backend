@@ -649,6 +649,15 @@ const assetController = {
               .where({ assetId: id, 'asset_location.orgId': req.orgId });
             //   .where({ orgId: req.orgId });
 
+
+
+            // // Get all service orders
+            // const service_orders = await knex('assigned_assets')
+            // .leftJoin('service_orders')
+            // .select(['entityId','status'])
+            // .where({entityType:'service_orders',orgId:req.orgId})
+
+
             res.status(200).json({
                 data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, images,assetLocation,qrcode } },
                 message: "Asset Details"
