@@ -54,24 +54,24 @@ const partsController = {
                     //.innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
                     knex.from('part_master')
                     .leftJoin('part_category_master','part_master.partCategory','part_category_master.id')
-                    // .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
+                    .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
                     .select([
                         'part_master.id as partId',
                         'part_master.partName as Name',
                         'part_master.partCode as ID',
-                        // 'part_ledger.quantity as Quantity',
-                        // 'part_ledger.unitCost as Price',
+                        'part_ledger.quantity as Quantity',
+                        'part_ledger.unitCost as Price',
                         'part_master.unitOfMeasure',
                         'part_category_master.categoryName as Category',
                         'part_master.barcode as Barcode',
                         'part_master.createdAt as Date Added',
-                        //  knex.raw('SUM(quantity)')
+                         knex.raw('SUM(quantity)')
 
                     ])
                     .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
                     .orderBy('part_master.createdAt','desc')
                     .groupBy(['part_master.id',
-                    // 'part_ledger.id',
+                    'part_ledger.id',
                     'part_category_master.id'])
                     .distinct('part_master.id')
                     .offset(offset).limit(per_page)
@@ -104,25 +104,25 @@ const partsController = {
                         //.where(filters),
                         knex.from('part_master')
                         .leftJoin('part_category_master','part_master.partCategory','part_category_master.id')
-                        // .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
+                        .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
                         .select([
                         'part_master.id as partId',
                         'part_master.partName as Name',
                         'part_master.partCode as ID',
-                        // 'part_ledger.quantity as Quantity',
-                        // 'part_ledger.unitCost as Price',
+                        'part_ledger.quantity as Quantity',
+                        'part_ledger.unitCost as Price',
                         'part_master.unitOfMeasure',
                         'part_category_master.categoryName as Category',
                         'part_master.barcode as Barcode',
                         'part_master.createdAt as Date Added',
-                        //  knex.raw('SUM(quantity)')
+                         knex.raw('SUM(quantity)')
 
                     ])
                             .distinct('part_master.id')
 
                     .orderBy('part_master.createdAt','desc')
                     .groupBy(['part_master.id',
-                    // 'part_ledger.id',
+                    'part_ledger.id',
                     'part_category_master.id'])
                   
                     //.groupBy(['part_master.id','part_ledger.id'])
