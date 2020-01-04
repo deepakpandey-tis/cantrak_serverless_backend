@@ -411,7 +411,8 @@ const chargeController = {
         const schema = Joi.object().keys({
           quotationId: Joi.string().required(),
           chargeId: Joi.string().required(),
-          status: Joi.string().required()
+          status: Joi.string().required(),
+          totalHours: Joi.number().required()
         });
         console.log("payload", payload);
         let result = Joi.validate(payload, schema);
@@ -432,6 +433,7 @@ const chargeController = {
           chargeId: payload.chargeId,
           entityId: payload.quotationId,
           status: payload.status,
+          totalHours: payload.totalHours,
           entityType: "quotations",
           updatedAt: currentTime,
           createdAt: currentTime,
@@ -469,7 +471,9 @@ const chargeController = {
         const payload = req.body;
         const schema = Joi.object().keys({
           serviceRequestId: Joi.string().required(),
-          chargeId: Joi.string().required()
+          chargeId: Joi.string().required(),
+          status: Joi.string().required(),
+          totalHours: Joi.number().required()
         });
 
         let result = Joi.validate(payload, schema);
@@ -490,9 +494,12 @@ const chargeController = {
           chargeId: payload.chargeId,
           entityId: payload.serviceRequestId,
           entityType: "service_requests",
+          status: payload.status,
+          totalHours: payload.totalHours,
           updatedAt: currentTime,
           createdAt: currentTime
         };
+        
         let chargeResult = await knex
           .insert(insertData)
           .returning(["*"])
@@ -937,7 +944,8 @@ const chargeController = {
             "charge_master.chargeCode as chargeCode",
             "charge_master.id as id",
             "charge_master.calculationUnit as calculationUnit",
-            "charge_master.rate as rate"
+            "charge_master.rate as rate",
+            "assigned_service_charges.totalHours as totalHours"
           ])
           .where({
             entityId: quotationId,
@@ -953,7 +961,8 @@ const chargeController = {
             "charge_master.chargeCode as chargeCode",
             "charge_master.id as id",
             "charge_master.calculationUnit as calculationUnit",
-            "charge_master.rate as rate"
+            "charge_master.rate as rate",
+            "assigned_service_charges.totalHours as totalHours"
           ])
           .where({
             entityId: quotationId,
