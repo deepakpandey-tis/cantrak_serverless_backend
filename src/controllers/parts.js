@@ -906,6 +906,7 @@ const partsController = {
                         .innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
                         .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
                         .where(qb => {
+                            qb.where({'part_ledger.orgId':req.orgId})
                             if (partId) {
                                 qb.where('part_master.id', partId)
                             }
@@ -945,6 +946,8 @@ const partsController = {
                             'part_ledger.createdAt as Created Date',
                         ])
                         .where(qb => {
+                            qb.where({ 'part_ledger.orgId': req.orgId })
+
                             if (partId) {
                                 qb.where('part_master.id', partId)
                             }
@@ -973,10 +976,14 @@ const partsController = {
                     knex.count('* as count').from("part_ledger")
                         .innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
                         .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
+                        .where({ 'part_ledger.orgId': req.orgId })
+
                         .first(),
                     knex.from('part_ledger')
                         .innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
                         .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
+                        .where({ 'part_ledger.orgId': req.orgId })
+
                         .select([
                             'part_ledger.id as Log Id',
                             'part_master.id as Part Id',
