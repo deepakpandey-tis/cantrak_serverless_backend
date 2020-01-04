@@ -651,15 +651,22 @@ const assetController = {
 
 
 
-            // // Get all service orders
-            // const service_orders = await knex('assigned_assets')
-            // .leftJoin('service_orders')
-            // .select(['entityId','status'])
-            // .where({entityType:'service_orders',orgId:req.orgId})
+            // Get all service orders
+            const service_orders = await knex('assigned_assets')
+            .leftJoin('service_requests','assigned_assets.entityId','service_requests.id')
+            .select(['entityId','status'])
+            // .distinct('assigned_assets.assetId')
+              .where({
+                entityType: 'service_requests', 'assigned_assets.orgId': req.orgId,'assigned_assets.assetId':id})
 
+            // if(service_orders && service_orders.length){
+            //   for(let serviceOrder of service_orders){
+                
+            //   }
+            // }
 
             res.status(200).json({
-                data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, images,assetLocation,qrcode } },
+                data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, images,assetLocation,qrcode,serviceOrders:service_orders } },
                 message: "Asset Details"
             });
 
