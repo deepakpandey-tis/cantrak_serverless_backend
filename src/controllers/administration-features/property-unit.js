@@ -29,13 +29,13 @@ const propertyUnitController = {
           projectId: Joi.string().required(),
           propertyTypeId: Joi.number().allow("").optional(),
           buildingPhaseId: Joi.string().required(),
-          createdBy: Joi.string().required(),
+          //createdBy: Joi.string().required(),
           floorZoneId: Joi.string().required(),
           unitNumber: Joi.string().required(),
           houseId: Joi.string().required(),
           description: Joi.string().allow("").optional(),
           productCode: Joi.string().required(),
-          area: Joi.string().required()
+          area: Joi.string().allow("").optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -116,8 +116,8 @@ if (existValue && existValue.length) {
           houseId: Joi.string().required(),
           description: Joi.string().allow("").optional(),
           productCode: Joi.string().required(),
-          area: Joi.string().required(),
-          createdBy:Joi.string().allow("").optional(),
+          area: Joi.string().allow("").optional(),
+          //createdBy:Joi.string().allow("").optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -281,16 +281,18 @@ if (existValue && existValue.length) {
           knex
             .count("* as count")
             .from("property_units")
+            .leftJoin('users','property_units.createdBy','users.id')
             .where({ "property_units.orgId": orgId })
             .first(),
           knex("property_units")
+          .leftJoin('users','property_units.createdBy','users.id')
             .select([
               "property_units.id as id",
               "property_units.unitNumber as Unit No",
               "property_units.description as Description",
               "property_units.area as Area",
               "property_units.isActive as Status",
-              "property_units.createdBy as Created By",
+              "users.name as Created By",
               "property_units.createdAt as Date Created"
             ])
             .where({ "property_units.orgId": orgId })
@@ -317,19 +319,21 @@ if (existValue && existValue.length) {
           knex
             .count("* as count")
             .from("property_units")
+            .leftJoin('users','property_units.createdBy','users.id')
             .where({ "property_units.orgId": orgId ,
             "property_units.companyId": companyId})
             .first(),
           knex
             .from("property_units")
             .leftJoin("companies", "property_units.companyId", "companies.id")
+            .leftJoin('users','property_units.createdBy','users.id')
             .select([
               "property_units.id as id",
               "property_units.unitNumber as Unit No",
               "property_units.description as Description",
               "property_units.area as Area",
               "property_units.isActive as Status",
-              "property_units.createdBy as Created By",
+              "users.name as Created By",
               "property_units.createdAt as Date Created"
             ])
             .where({

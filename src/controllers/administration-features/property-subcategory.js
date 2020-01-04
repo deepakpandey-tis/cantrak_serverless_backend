@@ -25,9 +25,9 @@ const propertysubCategoryController = {
         // validate keys
         const schema = Joi.object().keys({
           incidentCategoryId: Joi.number().required(),
-          descriptionEng: Joi.string().allow("").optional(),
+          descriptionEng: Joi.string().required(),
           descriptionThai: Joi.string().allow("").optional(),
-          remark: Joi.string().required(),
+          remark: Joi.string().allow("").optional(),
           incidentTypeId: Joi.number().required()
         });
 
@@ -115,9 +115,9 @@ const propertysubCategoryController = {
         const schema = Joi.object().keys({
           id: Joi.number().required(),
           incidentCategoryId: Joi.number().required(),
-          descriptionEng: Joi.string().allow("").optional(),
+          descriptionEng: Joi.string().required(),
           descriptionThai: Joi.string().allow("").optional(),
-          remark: Joi.string().required(),
+          remark: Joi.string().allow("").optional(),
           incidentTypeId: Joi.number().required()
         });
 
@@ -377,7 +377,7 @@ const propertysubCategoryController = {
   getProblemTypeAllList: async (req, res) => {
     try {
       let orgId = req.orgId;
-      let result = await knex.from('incident_type').where({ orgId })
+      let result = await knex.from('incident_type').where({orgId:orgId})
       return res.status(200).json({
         data: result,
         message: "List of Problem type"
