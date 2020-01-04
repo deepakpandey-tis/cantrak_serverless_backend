@@ -6,6 +6,8 @@ const XLSX = require('xlsx');
 const fs = require('fs')
 const request = require("request");
 const path = require("path");
+const QRCode =require('qrcode')
+const uuid = require('uuid/v4')
 
 const assetController = {
     getAssetCategories: async (req,res) => {
@@ -87,7 +89,7 @@ const assetController = {
                 if(category && category.length){
                     assetCategoryId = category[0].id;
                 }else {
-                    category = await knex.insert({categoryName:assetCategory,createdAt:currentTime,updatedAt:currentTime,orgId:req.orgId}).returning(['*']).transacting(trx).into('asset_category_master')//.where({orgId:})
+                    category = await knex.insert({categoryName:assetCategory,createdAt:currentTime,updatedAt:currentTime,orgId:req.orgId,createdBy:req.me.id}).returning(['*']).transacting(trx).into('asset_category_master')//.where({orgId:})
                     assetCategoryId = category[0].id;
                 }
 
@@ -98,7 +100,8 @@ const assetController = {
                   assetCategoryId,
                   createdAt: currentTime,
                   updatedAt: currentTime,
-                  orgId: req.orgId
+                  orgId: req.orgId,
+                  uuid:uuid()
                 };
 
                 console.log('[controllers][asset][addAsset]: Insert Data', insertData);
@@ -566,6 +569,9 @@ const assetController = {
             let files = null;
             let images = null
             let id = req.body.id;
+            let qrcode = ''
+
+          qrcode = await QRCode.toDataURL('org-'+req.orgId+'-asset-'+id)
 
             assetData = await knex('asset_master').where({'asset_master.id':id })
                               .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
@@ -644,7 +650,7 @@ const assetController = {
             //   .where({ orgId: req.orgId });
 
             res.status(200).json({
-                data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, images,assetLocation } },
+                data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, images,assetLocation,qrcode } },
                 message: "Asset Details"
             });
 

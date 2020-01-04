@@ -4,7 +4,8 @@ const _ = require('lodash');
 const knex = require('../db/knex');
 const XLSX = require('xlsx');
 const fs = require("fs")
-
+const QRCode = require('qrcode')
+const uuid = require('uuid/v4')
 
 
 const partsController = {
@@ -239,7 +240,7 @@ const partsController = {
                 // Insert in part_master table,
                 let currentTime = new Date().getTime();
 
-                let insertData = { ...insertDataObj, createdAt: currentTime, updatedAt: currentTime,orgId:req.orgId };
+                let insertData = { ...insertDataObj, createdAt: currentTime, updatedAt: currentTime,orgId:req.orgId,uuid:uuid() };
 
                 console.log('[controllers][part][addParts]: Insert Data', insertData);
 
@@ -442,6 +443,10 @@ const partsController = {
             let files = null;
             let images = null;
             let id = req.body.id;
+            let qrcode = ''
+
+            qrcode = await QRCode.toDataURL('org-' + req.orgId + '-part-' + id)
+
 
             partData = await knex('part_master')
                 .leftJoin('vendor_master', 'part_master.assignedVendors', 'vendor_master.id')
@@ -472,7 +477,7 @@ const partsController = {
             console.log('[controllers][parts][getPartDetails]: Part Details', partData);
 
             res.status(200).json({
-                data: { part: { quantity: totalQuantity, unitCost: totalUnitCost, ...omitedPartDataResult, additionalAttributes, images, files } },
+                data: { part: { quantity: totalQuantity, unitCost: totalUnitCost, ...omitedPartDataResult, additionalAttributes, images, files,qrcode } },
                 message: "Part Details"
             });
 
