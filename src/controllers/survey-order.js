@@ -180,15 +180,14 @@ const surveyOrderController = {
           "mainUserId",
           "id"
         ]);
+        
         const schema = Joi.object().keys({
           appointedDate: Joi.string().required(),
           appointedTime: Joi.string().required()
         });
+
         let result = Joi.validate(initialSurveyOrderPayload, schema);
-        console.log(
-          "[controllers][surveyOrder][addSurveyOrder]: JOi Result",
-          result
-        );
+        console.log("[controllers][surveyOrder][addSurveyOrder]: JOi Result",result);
 
         if (result && result.hasOwnProperty("error") && result.error) {
           return res.status(400).json({
@@ -213,8 +212,8 @@ const surveyOrderController = {
           .into("survey_orders");
         surveyOrder = surveyOrderResult[0];
 
-         // Update status service_requests table     
-        let resultRequest =  await knex("survey_orders").where({
+        // Update status service_requests table     
+        let resultRequest = await knex("survey_orders").where({
           isActive: "true",
           id: incidentRequestPayload.id,
           orgId: orgId
@@ -223,7 +222,7 @@ const surveyOrderController = {
         serviceRequestId = resultRequest[0].serviceRequestId;
 
         let updateSRStatus = await knex
-          .update({serviceStatusCode: "US", updatedAt: currentTime })
+          .update({ serviceStatusCode: "US", updatedAt: currentTime })
           .where({ id: serviceRequestId, orgId: req.orgId })
           .returning(["*"])
           .transacting(trx)
@@ -1014,9 +1013,9 @@ const surveyOrderController = {
       //   });
       // surveyOrderNoteList = surveyOrderNoteResult;
       let surveyOrderNoteResult = await knex.raw(`select "survey_order_post_update".*,"users"."name" as "createdBy" from "survey_order_post_update"  left join "users" on "survey_order_post_update"."createdBy" = "users"."id" where "survey_order_post_update"."orgId" = ${req.orgId} and "survey_order_post_update"."surveyOrderId" = ${surveyOrderId} and "survey_order_post_update"."isActive" = 'true'`)
-      
+
       surveyOrderNoteList = surveyOrderNoteResult.rows;
-      
+
       return res.status(200).json({
         data: surveyOrderNoteList,
         message: "Survey Order Details"
