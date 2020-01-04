@@ -250,7 +250,7 @@ const usersController = {
                                .select('users.id','users.name','users.email')
                             //    .whereNotIn('organisation_user_roles.roleId', [1, 4])
                                //.where({'organisation_user_roles.orgId':req.orgId})
-                               .where({'users.orgId':req.orgId})
+                               .where({'users.orgId':req.orgId,isActive:true})
                                .groupBy('users.id')
 
             return res.status(200).json({

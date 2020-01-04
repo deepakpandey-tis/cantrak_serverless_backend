@@ -836,7 +836,7 @@ const serviceOrderController = {
                 let schema = Joi.object().keys({
                     partId: Joi.string().required(),
                     unitCost: Joi.string().required(),
-                    quantity: Joi.string().required(),
+                    quantity: Joi.number().required(),
                     status: Joi.string().required(),
                     serviceOrderId: Joi.string().required()
                 })
@@ -858,7 +858,7 @@ const serviceOrderController = {
 
                 let assignedPartInsertPayload = _.omit(assignedPartPayload, ['serviceOrderId'])
 
-                let insertData = { ...assignedPartInsertPayload, entityId: assignedPartPayload.serviceOrderId, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime }
+                let insertData = { ...assignedPartInsertPayload, entityId: assignedPartPayload.serviceOrderId, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime,orgId:req.orgId }
                 let partResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('assigned_parts')
                 assignedPart = partResult[0]
                 trx.commit

@@ -204,4 +204,23 @@ resourceAccessMiddleware.isPartAccessible,
   partsController.editPartRequisitionRequest
 )
 
+router.post('/decline-part-requisition-request',
+authMiddleware.isAuthenticated,
+roleMiddleware.parseUserPermission,
+resourceAccessMiddleware.isPartAccessible,
+partsController.declinePartRequisitionRequest
+)
+
+router.post('/get-all-part-categories',
+authMiddleware.isAuthenticated,
+roleMiddleware.parseUserPermission,
+resourceAccessMiddleware.isPartAccessible,
+partsController.getAllPartCategories
+)
+
+router.post('/get-available-parts', authMiddleware.isAuthenticated,
+roleMiddleware.parseUserPermission,
+resourceAccessMiddleware.isPartAccessible,
+partsController.getAvailableParts)
+
 module.exports = router;

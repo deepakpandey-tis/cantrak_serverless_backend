@@ -47,27 +47,33 @@ const partsController = {
             if (_.isEmpty(filters)) {
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from("part_master")
-                    .leftJoin('part_category_master','part_master.partCategory','part_category_master.id').first(),
+                    .leftJoin('part_category_master','part_master.partCategory','part_category_master.id').where({'part_master.orgId':req.orgId,'part_category_master.orgId':req.orgId})
+                    .groupBy(['part_master.id'])
+                    .distinct('part_master.id')
+                    .first(),
                     //.innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
                     knex.from('part_master')
                     .leftJoin('part_category_master','part_master.partCategory','part_category_master.id')
-                    .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
+                    // .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
                     .select([
                         'part_master.id as partId',
                         'part_master.partName as Name',
                         'part_master.partCode as ID',
-                        'part_ledger.quantity as Quantity',
-                        'part_ledger.unitCost as Price',
+                        // 'part_ledger.quantity as Quantity',
+                        // 'part_ledger.unitCost as Price',
                         'part_master.unitOfMeasure',
                         'part_category_master.categoryName as Category',
                         'part_master.barcode as Barcode',
                         'part_master.createdAt as Date Added',
-                         knex.raw('SUM(quantity)')
+                        //  knex.raw('SUM(quantity)')
 
                     ])
-                    .where({'part_master.orgId':req.orgId})
+                    .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
                     .orderBy('part_master.createdAt','desc')
-                    .groupBy(['part_master.id','part_ledger.id','part_category_master.id'])
+                    .groupBy(['part_master.id',
+                    // 'part_ledger.id',
+                    'part_category_master.id'])
+                    .distinct('part_master.id')
                     .offset(offset).limit(per_page)
                 ])
             } else {
@@ -77,7 +83,7 @@ const partsController = {
                         knex.count('* as count').from("part_master")
                         .leftJoin('part_category_master','part_master.partCategory','part_category_master.id')
                         .where(qb => {
-                            qb.where({ 'part_master.orgId': req.orgId });
+                            qb.where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
                             if (partName) {
                                 qb.where('part_master.partName', 'like', `%${partName}%`)
                             }
@@ -90,32 +96,39 @@ const partsController = {
 
                             }
                         })
+                            .groupBy(['part_master.id'])
+
+                            .distinct('part_master.id')
                         .first(),
                         //.innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first()
                         //.where(filters),
                         knex.from('part_master')
                         .leftJoin('part_category_master','part_master.partCategory','part_category_master.id')
-                        .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
+                        // .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
                         .select([
                         'part_master.id as partId',
                         'part_master.partName as Name',
                         'part_master.partCode as ID',
-                        'part_ledger.quantity as Quantity',
-                        'part_ledger.unitCost as Price',
+                        // 'part_ledger.quantity as Quantity',
+                        // 'part_ledger.unitCost as Price',
                         'part_master.unitOfMeasure',
                         'part_category_master.categoryName as Category',
                         'part_master.barcode as Barcode',
                         'part_master.createdAt as Date Added',
-                         knex.raw('SUM(quantity)')
+                        //  knex.raw('SUM(quantity)')
 
                     ])
+                            .distinct('part_master.id')
+
                     .orderBy('part_master.createdAt','desc')
-                    .groupBy(['part_master.id','part_ledger.id','part_category_master.id'])
+                    .groupBy(['part_master.id',
+                    // 'part_ledger.id',
+                    'part_category_master.id'])
                   
                     //.groupBy(['part_master.id','part_ledger.id'])
                         //.where(filters)
                         .where(qb => {
-                            qb.where({'part_master.orgId':req.orgId})
+                            qb.where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
                             if (partName) {
                                 qb.where('part_master.partName', 'like', `%${partName}%`)
                             }
@@ -226,7 +239,7 @@ const partsController = {
                 // Insert in part_master table,
                 let currentTime = new Date().getTime();
 
-                let insertData = { ...insertDataObj, createdAt: currentTime, updatedAt: currentTime };
+                let insertData = { ...insertDataObj, createdAt: currentTime, updatedAt: currentTime,orgId:req.orgId };
 
                 console.log('[controllers][part][addParts]: Insert Data', insertData);
 
@@ -262,7 +275,7 @@ const partsController = {
                         quantity: quantity
                     }
 
-                    let quantityData = { partId: part.id, unitCost, quantity, createdAt: currentTime, updatedAt: currentTime };
+                    let quantityData = { partId: part.id, unitCost, quantity, createdAt: currentTime, updatedAt: currentTime,orgId:req.orgId };
                     let partQuantityResult = await knex.insert(quantityData).returning(['*']).transacting(trx).into('part_ledger');
 
                     quantityObject = _.omit(partQuantityResult[0], ['id'], ['partId']);
@@ -277,7 +290,7 @@ const partsController = {
 
                     for (attribute of additionalAttributes) {
 
-                        let d = await knex.insert({ partId: part.id, ...attribute, createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('part_attributes');
+                        let d = await knex.insert({ partId: part.id, ...attribute, createdAt: currentTime, updatedAt: currentTime,orgId:req.orgId }).returning(['*']).transacting(trx).into('part_attributes');
                         attribs.push(d[0])
 
                     }
@@ -288,7 +301,7 @@ const partsController = {
                 if (imagesData && imagesData.length > 0) {
 
                     for (image of imagesData) {
-                        let d = await knex.insert({ entityId: part.id, ...image, entityType: 'part_master', createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('images');
+                        let d = await knex.insert({ entityId: part.id, ...image, entityType: 'part_master', createdAt: currentTime, updatedAt: currentTime,orgId:req.orgId }).returning(['*']).transacting(trx).into('images');
                         images.push(d[0])
                     }
 
@@ -299,7 +312,7 @@ const partsController = {
                 if (filesData && filesData.length > 0) {
 
                     for (file of filesData) {
-                        let d = await knex.insert({ entityId: part.id, ...file, entityType: 'part_master', createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('files');
+                        let d = await knex.insert({ entityId: part.id, ...file, entityType: 'part_master', createdAt: currentTime, updatedAt: currentTime,orgId:req.orgId }).returning(['*']).transacting(trx).into('files');
                         files.push(d[0])
                     }
 
@@ -361,7 +374,7 @@ const partsController = {
                 const updatePartDetails = await knex.update({
                     unitOfMeasure: partDetailsPayload.unitOfMeasure, partName: partDetailsPayload.partName, partCode: partDetailsPayload.partCode, partDescription: partDetailsPayload.partDescription, partCategory: partDetailsPayload.partCategory, minimumQuantity: partDetailsPayload.minimumQuantity, barcode: partDetailsPayload.barcode, assignedVendors: partDetailsPayload.assignedVendors, additionalPartDetails: partDetailsPayload.additionalPartDetails, updatedAt: currentTime, isActive: true,
                     companyId: partDetailsPayload.companyId
-                }).where({ id: partDetailsPayload.id }).returning(['*']).transacting(trx).into('part_master');
+                }).where({ id: partDetailsPayload.id,orgId:req.orgId }).returning(['*']).transacting(trx).into('part_master');
 
                 console.log('[controllers][part][updatePartDetails]: Update Part Details', updatePartDetails);
 
@@ -532,7 +545,7 @@ const partsController = {
                 // Insert in part_ledger table,
                 let currentTime = new Date().getTime();
 
-                let insertData = { ...partStockPayload, createdAt: currentTime, updatedAt: currentTime };
+                let insertData = { ...partStockPayload, createdAt: currentTime, updatedAt: currentTime,orgId:req.orgId };
 
                 console.log('[controllers][part][addPartStock]: Insert Data', insertData);
 
@@ -893,6 +906,7 @@ const partsController = {
                         .innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
                         .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
                         .where(qb => {
+                            qb.where({'part_ledger.orgId':req.orgId})
                             if (partId) {
                                 qb.where('part_master.id', partId)
                             }
@@ -932,6 +946,8 @@ const partsController = {
                             'part_ledger.createdAt as Created Date',
                         ])
                         .where(qb => {
+                            qb.where({ 'part_ledger.orgId': req.orgId })
+
                             if (partId) {
                                 qb.where('part_master.id', partId)
                             }
@@ -960,10 +976,14 @@ const partsController = {
                     knex.count('* as count').from("part_ledger")
                         .innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
                         .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
+                        .where({ 'part_ledger.orgId': req.orgId })
+
                         .first(),
                     knex.from('part_ledger')
                         .innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
                         .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
+                        .where({ 'part_ledger.orgId': req.orgId })
+
                         .select([
                             'part_ledger.id as Log Id',
                             'part_master.id as Part Id',
@@ -1531,7 +1551,9 @@ const partsController = {
                 .where({'part_master.orgId':req.orgId,'assigned_parts.entityType':'service_orders'}),
                 knex('assigned_parts')
                 .leftJoin('part_master', 'assigned_parts.partId', 'part_master.id')
-                .select(['assigned_parts.id as approvalId', 'part_master.id', 'part_master.partName', 'part_master.minimumQuantity', 'assigned_parts.unitCost as requestedPartsUnitCost', 'assigned_parts.quantity as requestedParts','assigned_parts.status as approvalStatus'])
+                .select(['assigned_parts.id as approvalId', 
+                'part_master.partCategory',
+                'part_master.id', 'part_master.partName', 'part_master.minimumQuantity', 'assigned_parts.unitCost as requestedPartsUnitCost', 'assigned_parts.quantity as requestedParts','assigned_parts.status as approvalStatus'])
                     .where({ 'part_master.orgId': req.orgId, 'assigned_parts.entityType': 'service_orders' })
                 .offset(offset)
                 .limit(per_page)
@@ -1572,7 +1594,7 @@ const partsController = {
     approvePartRequisitionRequest:async(req,res) => {
         try {
             let approvalId = req.body.approvalId;
-            const update = await knex('assigned_parts').update({status:'approved'}).where({orgId:req.orgId,id:approvalId})
+            const update = await knex('assigned_parts').update({status:'approved'}).where({orgId:req.orgId,id:approvalId}).returning(['*'])
             return res.status(200).json({data: {
                 updatedStatus:update
             }})
@@ -1584,11 +1606,72 @@ const partsController = {
     },
     editPartRequisitionRequest:async(req,res) => {
         try {
-            const payload = req.body;
-            const updated = await knex('assigned_parts').update({ unitCost: payload.requestedPartsUnitCost, quantity: payload.requestedParts}).where({id:payload.approvalId})
+            const payload = _.omit(req.body,['approvalId','partCategory']);
+            console.log('Payload:*********************************************** ',payload)
+
+            const updated = await knex('assigned_parts')
+            .update({ 
+                ...payload
+                /*partId:payload.partId,
+                unitCost: payload.requestedPartsUnitCost, 
+                quantity: payload.requestedParts*/
+            })
+            .where({id:req.body.approvalId})
+
             return res.status(200).json({
                 data: {
                     updatedApproval:updated
+                }
+            })
+        } catch(err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    declinePartRequisitionRequest:async(req,res) => {
+        try {
+            let {approvalId} = req.body;
+            const declined = await knex('assigned_parts').update({status:'declined'}).where({id:approvalId,orgId:req.orgId}).returning(['*'])
+            return res.status(200).json({
+                data: {
+                    declined:declined
+                }
+            })
+        } catch(err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    getAllPartCategories:async(req,res) => {
+        try {
+            const allCategories = await knex('part_category_master')
+            .where({orgId:req.orgId}).select('*')
+
+            return res.status(200).json({
+                data: {
+                    allPartCategories:allCategories
+                }
+            })
+        } catch(err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    getAvailableParts:async(req,res) => {
+        try {
+            const allStock = await knex('part_ledger').where({partId:req.body.partId,orgId:req.orgId}).select('quantity')
+            let total = 0
+            for (let i = 0; i < allStock.length; i++) {
+                const element = allStock[i];
+                total += Number(element.quantity)
+                
+            }
+            return res.status(200).json({
+                data: {
+                    total:total
                 }
             })
         } catch(err) {
