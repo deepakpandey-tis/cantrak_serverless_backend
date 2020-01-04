@@ -132,6 +132,7 @@ const assetController = {
                 if (additionalAttributes && additionalAttributes.length > 0) {
                     for (asset of assetResult) {
                         for (attribute of additionalAttributes) {
+                          if(attribute.attributeName && attribute.attributeDescription){
                             let finalAttribute = {
                               ...attribute,
                               assetId: asset.id,
@@ -146,6 +147,7 @@ const assetController = {
                               .into("asset_attributes")
                               //.where({ orgId: req.orgId });
                             attribs.push(d[0])
+                          }
                         }
                     }
                 }
@@ -633,8 +635,8 @@ const assetController = {
                 "buildings_and_phases.id as buildingId",
                 "floor_and_zones.id as floorId",
                 "property_units.id as unitId",
-                "asset_location.createdAt as startDate",
-                "asset_location.updatedAt as endDate",
+                "asset_location.startDate as startDate",
+                "asset_location.endDate as endDate",
                 "asset_location.id as assetLocationId",
                 "asset_location.houseId as houseId"
               ])
@@ -1679,11 +1681,19 @@ const assetController = {
         try {
             const payload = _.omit(req.body,['previousLocationId']);
             let currentTime = new Date().getTime()
-
+/*
+{ assetId: '1655',
+  companyId: '112',
+  buildingId: '156',
+  projectId: '48',
+  unitId: '11',
+  houseId: '9922',
+  floorId: '165' }
+*/
             await knex('asset_location')
             .update({ endDate: currentTime })
             .where({ assetId: payload.assetId })
-
+          console.log('***********************ASSET LOCATION:***********************', req.body)
             // Deprecated
             let updatedLastLocationEndDate
             if (req.body.previousLocationId){
