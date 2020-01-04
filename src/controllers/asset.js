@@ -6,6 +6,8 @@ const XLSX = require('xlsx');
 const fs = require('fs')
 const request = require("request");
 const path = require("path");
+const QRCode =require('qrcode')
+const uuid = require('uuid/v4')
 
 const assetController = {
     getAssetCategories: async (req,res) => {
@@ -87,7 +89,7 @@ const assetController = {
                 if(category && category.length){
                     assetCategoryId = category[0].id;
                 }else {
-                    category = await knex.insert({categoryName:assetCategory,createdAt:currentTime,updatedAt:currentTime,orgId:req.orgId}).returning(['*']).transacting(trx).into('asset_category_master')//.where({orgId:})
+                    category = await knex.insert({categoryName:assetCategory,createdAt:currentTime,updatedAt:currentTime,orgId:req.orgId,createdBy:req.me.id}).returning(['*']).transacting(trx).into('asset_category_master')//.where({orgId:})
                     assetCategoryId = category[0].id;
                 }
 
@@ -98,7 +100,8 @@ const assetController = {
                   assetCategoryId,
                   createdAt: currentTime,
                   updatedAt: currentTime,
-                  orgId: req.orgId
+                  orgId: req.orgId,
+                  uuid:uuid()
                 };
 
                 console.log('[controllers][asset][addAsset]: Insert Data', insertData);
@@ -132,6 +135,7 @@ const assetController = {
                 if (additionalAttributes && additionalAttributes.length > 0) {
                     for (asset of assetResult) {
                         for (attribute of additionalAttributes) {
+                          if(attribute.attributeName && attribute.attributeDescription){
                             let finalAttribute = {
                               ...attribute,
                               assetId: asset.id,
@@ -146,6 +150,7 @@ const assetController = {
                               .into("asset_attributes")
                               //.where({ orgId: req.orgId });
                             attribs.push(d[0])
+                          }
                         }
                     }
                 }
@@ -564,6 +569,9 @@ const assetController = {
             let files = null;
             let images = null
             let id = req.body.id;
+            let qrcode = ''
+
+          qrcode = await QRCode.toDataURL('org-'+req.orgId+'-asset-'+id)
 
             assetData = await knex('asset_master').where({'asset_master.id':id })
                               .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
@@ -633,16 +641,32 @@ const assetController = {
                 "buildings_and_phases.id as buildingId",
                 "floor_and_zones.id as floorId",
                 "property_units.id as unitId",
-                "asset_location.createdAt as startDate",
-                "asset_location.updatedAt as endDate",
+                "asset_location.startDate as startDate",
+                "asset_location.endDate as endDate",
                 "asset_location.id as assetLocationId",
                 "asset_location.houseId as houseId"
               ])
               .where({ assetId: id, 'asset_location.orgId': req.orgId });
             //   .where({ orgId: req.orgId });
 
+
+
+            // Get all service orders
+            const service_orders = await knex('assigned_assets')
+            .leftJoin('service_requests','assigned_assets.entityId','service_requests.id')
+            .select(['entityId','status'])
+            // .distinct('assigned_assets.assetId')
+              .where({
+                entityType: 'service_requests', 'assigned_assets.orgId': req.orgId,'assigned_assets.assetId':id})
+
+            // if(service_orders && service_orders.length){
+            //   for(let serviceOrder of service_orders){
+                
+            //   }
+            // }
+
             res.status(200).json({
-                data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, images,assetLocation } },
+                data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, images,assetLocation,qrcode,serviceOrders:service_orders } },
                 message: "Asset Details"
             });
 
@@ -1679,11 +1703,19 @@ const assetController = {
         try {
             const payload = _.omit(req.body,['previousLocationId']);
             let currentTime = new Date().getTime()
-
+/*
+{ assetId: '1655',
+  companyId: '112',
+  buildingId: '156',
+  projectId: '48',
+  unitId: '11',
+  houseId: '9922',
+  floorId: '165' }
+*/
             await knex('asset_location')
             .update({ endDate: currentTime })
             .where({ assetId: payload.assetId })
-
+          console.log('***********************ASSET LOCATION:***********************', req.body)
             // Deprecated
             let updatedLastLocationEndDate
             if (req.body.previousLocationId){
