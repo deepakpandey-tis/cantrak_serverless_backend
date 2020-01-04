@@ -22,12 +22,12 @@ const commonAreaController = {
       let userId = req.me.id;
 
       await knex.transaction(async trx => {
-        let commonPayload = req.body;
+        let commonPayload = _.omit(req.body,'propertyTypeId');
 
         const schema = Joi.object().keys({
           companyId: Joi.number().required(),
           projectId: Joi.number().required(),
-          propertyTypeId: Joi.number().required(),
+          propertyTypeId: Joi.number().allow("").optional(),
           buildingPhaseId: Joi.number().required(),
           floorZoneId: Joi.number().required(),
           commonAreaCode: Joi.string().required(),
@@ -116,17 +116,17 @@ const commonAreaController = {
 
 
       await knex.transaction(async trx => {
-        let commonUpdatePaylaod = req.body;
+        let commonUpdatePaylaod = _.omit(req.body,'propertyTypeId');
 
         const schema = Joi.object().keys({
           id: Joi.number().required(),
           companyId: Joi.number().required(),
           projectId: Joi.number().required(),
-          propertyTypeId: Joi.number().required(),
+          propertyTypeId: Joi.number().allow("").optional(),
           buildingPhaseId: Joi.number().required(),
           floorZoneId: Joi.number().required(),
           commonAreaCode: Joi.string().required(),
-          description: Joi.string().required()
+          description: Joi.string().allow("").optional()
         });
 
         const result = Joi.validate(commonUpdatePaylaod, schema);
@@ -151,16 +151,16 @@ const commonAreaController = {
 
         // Return error when username exist
 
-        if (existCommonAreaCode && existCommonAreaCode.length) {
-          return res.status(400).json({
-            errors: [
-              {
-                code: "COMMON_AREA_CODE_EXIST_ERROR",
-                message: "Common Area Code already exist !"
-              }
-            ]
-          });
-        }
+        // if (existCommonAreaCode && existCommonAreaCode.length) {
+        //   return res.status(400).json({
+        //     errors: [
+        //       {
+        //         code: "COMMON_AREA_CODE_EXIST_ERROR",
+        //         message: "Common Area Code already exist !"
+        //       }
+        //     ]
+        //   });
+        // }
 
         // Insert in users table,
         const currentTime = new Date().getTime();
@@ -180,8 +180,8 @@ const commonAreaController = {
           })
           .where({
             id: commonUpdatePaylaod.id,
-            createdBy: userId,
-            orgId: orgId
+            //createdBy: userId,
+            //orgId: orgId
           })
           .returning(["*"])
           .transacting(trx)
@@ -859,16 +859,16 @@ const commonAreaController = {
     }
   },
   /**GET ALL LIST COMMON AREA BY FLOOR ID */
-  getCommonAreaAllList:async (req,res)=>{
-   
-    try{
-      let orgId   = req.orgId;
+  getCommonAreaAllList: async (req, res) => {
+
+    try {
+      let orgId = req.orgId;
       let floorId = req.query.floorId;
-      let result  = await knex('common_area').where({isActive:true,'floorZoneId':floorId,orgId:orgId});
+      let result = await knex('common_area').where({ isActive: true, 'floorZoneId': floorId, orgId: orgId });
 
       return res.status(200).json({
-        data:result,
-        message:"Common Area List",
+        data: result,
+        message: "Common Area List",
       });
 
     } catch (err) {

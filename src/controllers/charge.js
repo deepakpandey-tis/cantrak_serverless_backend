@@ -226,10 +226,11 @@ const chargeController = {
           .select([
             "charge_master.id",
             "charge_master.chargeCode as Charges Code",
-            "charge_master.chargeCode as ChargesCode",
+            "charge_master.chargeCode as chargeCode",
             "charge_master.calculationUnit as Calculation Unit",
-            "charge_master.calculationUnit as CalculationUnit",
+            "charge_master.calculationUnit as calculationUnit",
             "charge_master.rate as Cost",
+            "charge_master.rate as rate",
             "charge_master.isActive as Status",
             "users.name as Created By",
             "charge_master.createdAt as Date Created"
@@ -412,7 +413,7 @@ const chargeController = {
           chargeId: Joi.string().required(),
           status: Joi.string().required()
         });
-
+        console.log("payload", payload);
         let result = Joi.validate(payload, schema);
         console.log(
           "[controllers][charge][addQuotationFixCharge]: JOi Result",
@@ -436,6 +437,7 @@ const chargeController = {
           createdAt: currentTime,
           orgId: req.orgId
         };
+
         let chargeResult = await knex
           .insert(insertData)
           .returning(["*"])
@@ -567,7 +569,7 @@ const chargeController = {
       let orgId = req.orgId;
 
       [rows] = await Promise.all([
-        knex("taxes").select(["id as vatId", "taxCode", "taxPercentage"]).where({orgId:orgId})
+        knex("taxes").select(["id as vatId", "taxCode", "taxPercentage"]).where({ orgId: orgId })
       ]);
 
       pagination.data = rows;
@@ -593,7 +595,7 @@ const chargeController = {
       let orgId = req.orgId;
 
       [rows] = await Promise.all([
-        knex("wht_master").select(["id as whtId", "whtCode", "taxPercentage"]).where({orgId:orgId})
+        knex("wht_master").select(["id as whtId", "whtCode", "taxPercentage"]).where({ orgId: orgId })
       ]);
 
       pagination.data = rows;
@@ -906,6 +908,81 @@ const chargeController = {
       );
       //trx.rollback
       res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getQuotationAssignedCharges: async (req, res) => {
+    try {
+      let reqData = req.query;
+      let total, rows;
+
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+      let { quotationId } = req.body;
+
+
+      [total, rows] = await Promise.all([
+        knex("charge_master")
+          .innerJoin(
+            "assigned_service_charges",
+            "charge_master.id",
+            "assigned_service_charges.chargeId"
+          )
+          .select([
+            "charge_master.chargeCode as chargeCode",
+            "charge_master.id as id",
+            "charge_master.calculationUnit as calculationUnit",
+            "charge_master.rate as rate"
+          ])
+          .where({
+            entityId: quotationId,
+            entityType: "quotations"
+          }),
+        knex("charge_master")
+          .innerJoin(
+            "assigned_service_charges",
+            "charge_master.id",
+            "assigned_service_charges.chargeId"
+          )
+          .select([
+            "charge_master.chargeCode as chargeCode",
+            "charge_master.id as id",
+            "charge_master.calculationUnit as calculationUnit",
+            "charge_master.rate as rate"
+          ])
+          .where({
+            entityId: quotationId,
+            entityType: "quotations"
+          })
+          .offset(offset)
+          .limit(per_page)
+      ]);
+
+
+      let count = total.length;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+      return res.status(200).json({
+        data: {
+          assignedCharges: pagination
+        }
+      })
+
+
+    } catch (err) {
+      return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }

@@ -174,6 +174,7 @@ const organisationsController = {
     try {
       let organisation = null;
       let user = null;
+      let resource;
       await knex.transaction(async trx => {
         const payloadData = req.body;
         const payload = req.body;
@@ -253,10 +254,10 @@ const organisationsController = {
 
 
         let resources = req.body.resources;
-
+        let delData = await knex('organisation_resources_master').where({ orgId: payload.id }).del();
         if (resources.length > 0) {
 
-          let delData = await knex('organisation_resources_master').where({ orgId: payload.id }).del();
+          
 
           for (let resourceId of resources) {
             let insertData = {
