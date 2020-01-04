@@ -181,6 +181,8 @@ const singupController = {
         "orgId",
         "signUpUrl"
       ]);
+
+      console.log("===============",payload,"======================")
       const signUpDetails = { ...payload };
       let expiryDate = moment().add(Number(req.body.expireAfter), "days");
       let currentTime = new Date().getTime();

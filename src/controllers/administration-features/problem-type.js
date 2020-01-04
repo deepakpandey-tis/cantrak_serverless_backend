@@ -24,7 +24,7 @@ const problemTypeController = {
 
         const schema = Joi.object().keys({
           typeCode: Joi.string().required(),
-          descriptionEng: Joi.string().allow("").optional(),
+          descriptionEng: Joi.string().required(),
           descriptionThai: Joi.string().allow("").optional()
         });
 
@@ -115,7 +115,7 @@ const problemTypeController = {
         const schema = Joi.object().keys({
           id: Joi.number().required(),
           typeCode: Joi.string().required(),
-          descriptionEng: Joi.string().allow("").optional(),
+          descriptionEng: Joi.string().required(),
           descriptionThai: Joi.string().allow("").optional()
          });
 
@@ -335,7 +335,20 @@ const problemTypeController = {
         bucketName = process.env.S3_BUCKET_NAME;
       }
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(rows);
+      var ws;
+
+      if (rows && rows.length) {
+        ws = XLSX.utils.json_to_sheet(rows);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          {
+            PROBLEM_TYPE_CODE: "",
+            DESCRIPTION: "",
+            ALTERNATE_DESCRIPTION: "",
+          }
+        ]);
+      }
+      //var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "ProblemTypeData-" + Date.now() + ".csv";
@@ -386,6 +399,7 @@ const problemTypeController = {
     try {
 
       if (req.file) {
+        const userId = req.me.id;
         let tempraryDirectory = null;
         if (process.env.IS_OFFLINE) {
           tempraryDirectory = 'tmp/';
@@ -427,7 +441,8 @@ const problemTypeController = {
                     descriptionEng: problemData.B,
                     descriptionThai: problemData.C,
                     createdAt: currentTime,
-                    updatedAt: currentTime
+                    updatedAt: currentTime,
+                    createdBy:  userId
                   };
                   resultData = await knex
                     .insert(insertData)

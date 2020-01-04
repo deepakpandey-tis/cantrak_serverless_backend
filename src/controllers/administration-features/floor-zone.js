@@ -179,14 +179,14 @@ const floorZoneController = {
         .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
         .leftJoin("projects", "floor_and_zones.projectId", "projects.id")
         .leftJoin(
-          "property_types",
-          "floor_and_zones.propertyTypeId",
-          "property_types.id"
-        )
-        .leftJoin(
           "buildings_and_phases",
           "floor_and_zones.buildingPhaseId",
           "buildings_and_phases.id"
+        )
+        .leftJoin(
+          "property_types",
+          "buildings_and_phases.propertyTypeId",
+          "property_types.id"
         )
         .select(
           "floor_and_zones.*",

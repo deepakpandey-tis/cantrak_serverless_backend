@@ -28,9 +28,9 @@ const propertyCategoryController = {
         // validate keys
         const schema = Joi.object().keys({
           categoryCode: Joi.string().required(),
-          descriptionEng: Joi.string().allow("").optional(),
+          descriptionEng: Joi.string().required(),
           descriptionThai: Joi.string().allow("").optional(),
-          remark: Joi.string().required()
+          remark: Joi.string().allow("").optional(),
         });
 
         const result = Joi.validate(categoryPayload, schema);
@@ -128,9 +128,9 @@ const propertyCategoryController = {
         const schema = Joi.object().keys({
           id: Joi.number().required(),
           categoryCode: Joi.string().required(),
-          descriptionEng: Joi.string().allow("").optional(),
+          descriptionEng: Joi.string().required(),
           descriptionThai: Joi.string().allow("").optional(),
-          remark: Joi.string().required()
+          remark: Joi.string().allow("").optional(),
         });
 
         const result = Joi.validate(categoryTypePayload, schema);
@@ -160,16 +160,16 @@ const propertyCategoryController = {
 
         // Return error when username exist
 
-        if (existCateoryTypeCode && existCateoryTypeCode.length) {
-          return res.status(400).json({
-            errors: [
-              {
-                code: "TYPE_CODE_EXIST_ERROR",
-                message: "Category Code already exist !"
-              }
-            ]
-          });
-        }
+        // if (existCateoryTypeCode && existCateoryTypeCode.length) {
+        //   return res.status(400).json({
+        //     errors: [
+        //       {
+        //         code: "TYPE_CODE_EXIST_ERROR",
+        //         message: "Category Code already exist !"
+        //       }
+        //     ]
+        //   });
+        // }
 
         // Insert in users table,
         const currentTime = new Date().getTime();

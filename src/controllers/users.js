@@ -8,7 +8,7 @@ const _ = require('lodash');
 
 const usersController = {
     list: async (req, res) => {
-      //  const users = await knex.select().from('users');
+        //  const users = await knex.select().from('users');
 
 
 
@@ -26,25 +26,25 @@ const usersController = {
 
         let [total, rows] = await Promise.all([
             knex.count('* as count').from("users")
-            .innerJoin('property_units','users.houseId','property_units.houseId')
-            .innerJoin('companies','property_units.companyId','companies.id')
-            .innerJoin('user_roles','users.id','user_roles.userId')
-            .innerJoin('roles','user_roles.roleId','roles.id')
-            .first(),
+                .innerJoin('property_units', 'users.houseId', 'property_units.houseId')
+                .innerJoin('companies', 'property_units.companyId', 'companies.id')
+                .innerJoin('user_roles', 'users.id', 'user_roles.userId')
+                .innerJoin('roles', 'user_roles.roleId', 'roles.id')
+                .first(),
             knex("users")
-            .innerJoin('property_units','users.houseId','property_units.houseId')
-            .innerJoin('companies','property_units.companyId','companies.id')
-            .innerJoin('user_roles','users.id','user_roles.userId')
-            .innerJoin('roles','user_roles.roleId','roles.id')
+                .innerJoin('property_units', 'users.houseId', 'property_units.houseId')
+                .innerJoin('companies', 'property_units.companyId', 'companies.id')
+                .innerJoin('user_roles', 'users.id', 'user_roles.userId')
+                .innerJoin('roles', 'user_roles.roleId', 'roles.id')
 
-            .select([
-                'users.name as Name',
-                'users.email as Email',
-                'users.mobileNo as Phone',
-                'companies.companyName as company',
-                'roles.name as Account Type'
-            ])
-            .offset(offset).limit(per_page)
+                .select([
+                    'users.name as Name',
+                    'users.email as Email',
+                    'users.mobileNo as Phone',
+                    'companies.companyName as company',
+                    'roles.name as Account Type'
+                ])
+                .offset(offset).limit(per_page)
         ])
 
         let count = total.count;
@@ -243,23 +243,25 @@ const usersController = {
             });
         }
     },
-    getAllUsers: async (req,res) => {
+    getAllUsers: async (req, res) => {
         try {
-            const users= await knex('users')
-                               //.leftJoin('organisation_user_roles','users.id','organisation_user_roles.userId')
-                               .select('users.id','users.name','users.email')
-                            //    .whereNotIn('organisation_user_roles.roleId', [1, 4])
-                               //.where({'organisation_user_roles.orgId':req.orgId})
-                               .where({'users.orgId':req.orgId,isActive:true})
-                               .groupBy('users.id')
+            const users = await knex('users')
+                .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+                .whereNotIn('application_user_roles.roleId', [2])
+                //.leftJoin('organisation_user_roles','users.id','organisation_user_roles.userId')
+                .select('users.id', 'users.name', 'users.email')
+                //    .whereNotIn('organisation_user_roles.roleId', [1, 4])
+                //.where({'organisation_user_roles.orgId':req.orgId})
+                .where({ 'users.orgId': req.orgId, isActive: true })
+                .groupBy('users.id')
 
             return res.status(200).json({
                 data: {
                     users
                 },
-                messsage:'Users list'
+                messsage: 'Users list'
             })
-        } catch(err){
+        } catch (err) {
             console.log('[controllers][serviceOrder][GetServiceOrderList] :  Error', err);
             //trx.rollback
             res.status(500).json({
