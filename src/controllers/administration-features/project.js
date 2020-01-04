@@ -536,7 +536,8 @@ const ProjectController = {
           "projects.projectName",
           "companies.companyName",
           "companies.id as cid",
-          "companies.companyId"
+          "companies.companyId",
+          "projects.project as projectId"
         ])
 
       console.log("rows", rows);
@@ -565,7 +566,8 @@ const ProjectController = {
       let rows = await knex("projects")
         .select([
           "projects.id as id",
-          "projects.projectName"
+          "projects.projectName",
+          "projects.project as projectId",
         ]).where({ orgId: req.orgId })
 
       return res.status(200).json({

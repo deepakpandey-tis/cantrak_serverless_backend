@@ -196,28 +196,15 @@ const peopleController = {
               "user_house_allocation.houseId",
               "property_units.houseId"
             )
-            .leftJoin(
-              "companies",
-              "property_units.companyId",
-              "companies.id"
-            )
-            // .leftJoin(
-            //   "organisation_user_roles",
-            //   "users.id",
-            //   "organisation_user_roles.userId"
-            // )
-            // .leftJoin(
-            //   "organisation_roles",
-            //   "organisation_user_roles.roleId",
-            //   "organisation_roles.id"
-            // )
+            .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+            .whereNotIn('application_user_roles.roleId', [2])
             .where(qb => {
               qb.where({ "users.orgId": req.orgId });
               if (name) {
-                qb.where("users.name", "like", `%${name}%`);
+                qb.where("users.name", "iLIKE", `%${name}%`);
               }
               if (email) {
-                qb.where("users.email", "like", `%${email}%`);
+                qb.where("users.email", "iLIKE", `%${email}%`);
               }
               //   if (accountType) {
               //     qb.where("organisation_user_roles.roleId", accountType);
@@ -240,28 +227,16 @@ const peopleController = {
               "user_house_allocation.houseId",
               "property_units.houseId"
             )
-            .leftJoin(
-              "companies",
-              "property_units.companyId",
-              "companies.id"
-            )
-            // .leftJoin(
-            //   "organisation_user_roles",
-            //   "users.id",
-            //   "organisation_user_roles.userId"
-            // )
-            // .leftJoin(
-            //   "organisation_roles",
-            //   "organisation_user_roles.roleId",
-            //   "organisation_roles.id"
-            // )
+  
+            .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+            .whereNotIn('application_user_roles.roleId', [2])
             .where(qb => {
               qb.where({ "users.orgId": req.orgId });
               if (name) {
-                qb.where("users.name", "like", `%${name}%`);
+                qb.where("users.name", "iLIKE", `%${name}%`);
               }
               if (email) {
-                qb.where("users.email", "like", `%${email}%`);
+                qb.where("users.email", "iLIKE", `%${email}%`);
               }
               //   if (accountType) {
               //     qb.where("organisation_user_roles.roleId", accountType);
@@ -279,8 +254,8 @@ const peopleController = {
               "users.mobileNo",
               "property_units.houseId",
               "users.lastLogin as lastVisit",
-              "companies.id as companyId",
-              "companies.companyName",
+              //"companies.id as companyId",
+              //"companies.companyName",
               //   "organisation_roles.name as roleName"
             ])
             .offset(offset)
@@ -303,11 +278,11 @@ const peopleController = {
               "user_house_allocation.houseId",
               "property_units.houseId"
             )
-            .leftJoin(
-              "companies",
-              "property_units.companyId",
-              "companies.id"
-            )
+            // .leftJoin(
+            //   "companies",
+            //   "property_units.companyId",
+            //   "companies.id"
+            // )
             // .leftJoin(
             //   "organisation_user_roles",
             //   "users.id",
@@ -322,6 +297,8 @@ const peopleController = {
             //   "superAdmin",
             //   "admin"
             // ])
+            .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+            .whereNotIn('application_user_roles.roleId', [2])
             .where({ "users.orgId": req.orgId })
             .first(),
           knex
@@ -355,16 +332,18 @@ const peopleController = {
             //   "superAdmin",
             //   "admin"
             // ])
+            .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+            .whereNotIn('application_user_roles.roleId', [2])
             .select([
               "users.id as userId",
               "users.name as name",
               "users.email as email",
               "users.userName",
               "users.mobileNo",
-              "property_units.houseId",
+              "user_house_allocation.houseId",
               "users.lastLogin as lastVisit",
-              "companies.id as companyId",
-              "companies.companyName",
+              //"companies.id as companyId",
+              //"companies.companyName",
               //   "organisation_roles.name as roleName"
             ])
             .offset(offset)

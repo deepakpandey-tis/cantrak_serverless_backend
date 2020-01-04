@@ -478,7 +478,7 @@ const taxesfactionController = {
           }
         });
       });
-      //let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
+      let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
 
     } catch (err) {
       console.log("[controllers][tax][gettax] :  Error", err);
@@ -510,7 +510,9 @@ const taxesfactionController = {
         //data         = JSON.stringify(data);
         let result = null;
         let currentTime = new Date().getTime();
-
+        let totalData = data.length - 1;
+        let fail = 0;
+        let success = 0;
         //console.log('DATA: ',data)
 
         if (
@@ -543,6 +545,12 @@ const taxesfactionController = {
                     .insert(insertData)
                     .returning(["*"])
                     .into("taxes");
+
+                  if (resultData && resultData.length) {
+                    success++;
+                  }
+                } else {
+                  fail++;
                 }
               }
             }
@@ -550,8 +558,25 @@ const taxesfactionController = {
             let deleteFile = await fs.unlink(file_path, err => {
               console.log("File Deleting Error " + err);
             });
+
+            let message = null;
+            if (totalData == success) {
+              message =
+                "System has processed processed ( " +
+                totalData +
+                " ) entries and added them successfully!";
+            } else {
+              message =
+                "System has processed processed ( " +
+                totalData +
+                " ) entries out of which only ( " +
+                success +
+                " ) are added and others are failed ( " +
+                fail +
+                " ) due to validation!";
+            }
             return res.status(200).json({
-              message: "Tax Data Import Successfully!"
+              message: message
             });
           }
         } else {
@@ -584,10 +609,10 @@ const taxesfactionController = {
   getTaxesListDetails: async (req, res) => {
     try {
       let taxesResult;
-      await knex.transaction(async trx => {      
+      await knex.transaction(async trx => {
 
         taxesResult = await knex("taxes")
-          .select("taxes.id as vatId","taxes.taxCode","taxes.taxPercentage as vatRate")
+          .select("taxes.id as vatId", "taxes.taxCode", "taxes.taxPercentage as vatRate")
           .where({ isActive: 'true', orgId: req.orgId });
         trx.commit;
       });

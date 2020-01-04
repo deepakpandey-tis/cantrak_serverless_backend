@@ -87,11 +87,7 @@ const quotationsController = {
           checkedBy: Joi.string().required(),
           inspectedBy: Joi.string().required(),
           acknowledgeBy: Joi.string().required(),
-          quotationData: Joi.array().required(),
-          vatId: Joi.number().required(),
-          vatRate: Joi.string().required(),
-          subTotal: Joi.number().required(),
-          grandTotal: Joi.number().required()
+          quotationData: Joi.array().required()         
         });
 
         const result = Joi.validate(quotationPayload, schema);
@@ -117,7 +113,7 @@ const quotationsController = {
             checkedBy: quotationPayload.checkedBy,
             inspectedBy: quotationPayload.inspectedBy,
             acknowledgeBy: quotationPayload.acknowledgeBy,
-            invoiceData: quotationPayload.quotationData, 
+            invoiceData: JSON.stringify(quotationPayload.quotationData),
             updatedAt: currentTime,
             isActive: true,
             moderationStatus: 1,
@@ -132,218 +128,9 @@ const quotationsController = {
           "[controllers][quotations][updateQuotation]: Update Data",
           updateQuotationReq
         );
-
         quotationsResponse = updateQuotationReq[0];
-
-        // if (images && images.length) {
-        //   images = req.body.images.map(image => ({
-        //     ...image,
-        //     createdAt: currentTime,
-        //     updatedAt: currentTime,
-        //     entityId: quotationsData.id,
-        //     entityType: "quotations"
-        //   }));
-        //   let addedImages = await knex
-        //     .insert(images)
-        //     .returning(["*"])
-        //     .transacting(trx)
-        //     .into("images");
-        //   images = addedImages;
-        // }
-
-        //console.log(images)
-
-        // Start quotation service charges table,
-
-        // let quotationCharges = await knex("quotation_service_charges")
-        //   .where({ quotationId: quotationPayload.quotationId, orgId: orgId })
-        //   .select("id");
-
-        // if (quotationCharges.length > 0) {
-        //   // Update quotation service charges table,
-
-        //   const updateChargesData = await knex
-        //     .update({
-        //       salesTax: quotationPayload.salesTax,
-        //       shippingCost: quotationPayload.shippingCost,
-        //       serviceCharge: quotationPayload.serviceCharge,
-        //       additionalCost: quotationPayload.additionalCost,
-        //       updatedAt: currentTime
-        //     })
-        //     .where({ quotationId: quotationPayload.quotationId })
-        //     .returning(["*"])
-        //     .transacting(trx)
-        //     .into("quotation_service_charges");
-
-        //   console.log(
-        //     "[controllers][quotations][updateTeams]: Update Data",
-        //     updateChargesData
-        //   );
-
-        //   quotationsData.charges = updateChargesData[0];
-        // } else {
-        //   // Insert into quotation service charges table,
-
-        //   const insertChargesData = {
-        //     salesTax: quotationPayload.salesTax,
-        //     shippingCost: quotationPayload.shippingCost,
-        //     serviceCharge: quotationPayload.serviceCharge,
-        //     additionalCost: quotationPayload.additionalCost,
-        //     quotationId: quotationPayload.quotationId,
-        //     createdAt: currentTime,
-        //     updatedAt: currentTime,
-        //     orgId: orgId
-        //   };
-
-        //   console.log(
-        //     "[controllers][quotation][addQuotationCharges]: Insert Data",
-        //     insertChargesData
-        //   );
-
-        //   const serviceResult = await knex
-        //     .insert(insertChargesData)
-        //     .returning(["*"])
-        //     .transacting(trx)
-        //     .into("quotation_service_charges");
-
-        //   quotationsData.charges = serviceResult;
-        // }
-
-        // Insert into assigned teams table
-
-        // let assignedTeam = await knex("assigned_service_team")
-        //   .where({
-        //     entityId: quotationPayload.quotationId,
-        //     entityType: "quotations"
-        //   })
-        //   .select("*");
-
-        // if (assignedTeam.length > 0) {
-        //   // Update table "assigned_service_team from quotation section"
-
-        //   const updateQuotationTeam = await knex
-        //     .update({
-        //       teamId: quotationPayload.teamId,
-        //       userId: quotationPayload.mainUserId,
-        //       updatedAt: currentTime
-        //     })
-        //     .where({
-        //       entityId: quotationPayload.quotationId,
-        //       entityType: "quotations"
-        //     })
-        //     .returning(["*"])
-        //     .transacting(trx)
-        //     .into("assigned_service_team");
-
-        //   console.log(
-        //     "[controllers][quotations][updateTeams]: Update Data",
-        //     updateQuotationTeam
-        //   );
-
-        //   assignedServiceTeam = updateQuotationTeam[0];
-        // } else {
-        //   // Insert first entry into table "assigned_service_team from quotation section"
-
-        //   const insertAssignedTeam = {
-        //     teamId: quotationPayload.teamId,
-        //     userId: quotationPayload.mainUserId,
-        //     entityId: quotationPayload.quotationId,
-        //     entityType: "quotations",
-        //     createdAt: currentTime,
-        //     updatedAt: currentTime,
-        //     orgId: orgId
-        //   };
-
-        //   //console.log('[controllers][quotation][addQuotationTeam]: Insert Data', insertChargesData);
-
-        //   const serviceResult = await knex
-        //     .insert(insertAssignedTeam)
-        //     .returning(["*"])
-        //     .transacting(trx)
-        //     .into("assigned_service_team");
-
-        //   assignedServiceTeam = serviceResult[0];
-        // }
-
-        // Insert into assigned additional users table
-
-        // Here 3 operations will take place
-        /*
-          1. Select users based on entity id and entity type
-          2. Remove Those users 
-          3. Add new users                    
-        */
-
-       // let assignedQuotationAddUsers = quotationPayload.additionalUsers;
-
-        // let selectedUsers = await knex
-        //   .select()
-        //   .where({
-        //     entityId: quotationPayload.quotationId,
-        //     entityType: "quotations"
-        //   })
-        //   .returning(["*"])
-        //   .transacting(trx)
-        //   .into("assigned_service_additional_users")
-        //   .map(user => user.userId);
-
-        // if (_.isEqual(selectedUsers, assignedQuotationAddUsers)) {
-          // trx.commit
-          // for (user of assignedQuotationAddUsers) {
-          //   let userResult = await knex("assigned_service_additional_users")
-          //     .where({
-          //       entityId: quotationPayload.quotationId,
-          //       entityType: "quotations"
-          //     })
-          //     .select("*");
-          //   additionalUsersList.push(userResult[0]);
-          // }
-          // trx.commit;
-          // return res.status(200).json({
-          //   data: {
-          //     quotationsData,
-          //     assignedServiceTeam,
-          //     assignedAdditionalUsers: additionalUsersList,
-          //     images: images
-          //   },
-          //   message: "Quotations updated successfully !"
-          // });
-          // } else {
-          // Remove old users
-
-          // for (user of selectedUsers) {
-          //   await knex
-          //     .del()
-          //     .where({
-          //       entityId: quotationPayload.quotationId,
-          //       entityType: "quotations"
-          //     })
-          //     .returning(["*"])
-          //     .transacting(trx)
-          //     .into("assigned_service_additional_users");
-          // }
-
-          // Insert New Users
-
-          // for (user of assignedQuotationAddUsers) {
-          //   let userResult = await knex
-          //     .insert({
-          //       userId: user,
-          //       entityId: quotationPayload.quotationId,
-          //       entityType: "quotations",
-          //       createdAt: currentTime,
-          //       updatedAt: currentTime,
-          //       orgId: orgId
-          //     })
-          //     .returning(["*"])
-          //     .transacting(trx)
-          //     .into("assigned_service_additional_users");
-          //   additionalUsersList.push(userResult[0]);
-          // }
-         
-         // }
-
         trx.commit;
+
         return res.status(200).json({
           data: {
             quotationsResponse
@@ -415,7 +202,8 @@ const quotationsController = {
             "teams.teamName as assignTeam",
             "astUser.name as assignedMainUsers",
             "authUser.name as createdBy",
-            "organisation_roles.name as userRole"
+            "organisation_roles.name as userRole",
+            "quotations.invoiceData as invoiceData"
           )
           .where({ "quotations.id": quotationRequestId });
         console.log(
@@ -1331,7 +1119,7 @@ const quotationsController = {
         }
         if (quotationPayload.status == 'Approved') {
           // Now approved quotation
-           approveQuotation = await knex
+          approveQuotation = await knex
             .update({
               quotationStatus: quotationPayload.status,
               updatedAt: currentTime,
@@ -1346,7 +1134,7 @@ const quotationsController = {
             .transacting(trx)
             .into("quotations");
 
-            message = "Quotation approved successfully !";
+          message = "Quotation approved successfully !";
         } else if (quotationPayload.status == 'Canceled') {
           // Now canceled quotation
           approveQuotation = await knex
@@ -1364,7 +1152,7 @@ const quotationsController = {
             .transacting(trx)
             .into("quotations");
 
-            message = "Quotation has been canceled !";
+          message = "Quotation has been canceled !";
         }
 
         trx.commit;
@@ -1379,6 +1167,108 @@ const quotationsController = {
     } catch (err) {
       console.log("[controllers][quotation][remaks] :  Error", err);
       //trx.rollback
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getQuotationInvoice: async (req, res) => {
+    try {
+      let { quotationId } = req.body;
+      let rows;
+      let companyInfo;
+      let userInfo;
+      let requesterInfo;
+      let orgId = req.orgId;
+
+      let pagination = {};
+      [rows] = await Promise.all([
+        knex("quotations")
+          .leftJoin(
+            "taxes",
+            "quotations.vatId",
+            "taxes.id"
+          )
+          .select([
+            "taxes.taxCode as taxCode",
+            "quotations.*"
+          ])
+          .where({
+            "quotations.id": quotationId,
+            "quotations.orgId": req.orgId
+          })
+      ]);
+
+
+      let serviceMaster = await knex("quotations")
+        .select("serviceRequestId")
+        .where({ id: quotationId, orgId: orgId });
+
+      let serviceRequestId = serviceMaster[0].serviceRequestId;
+      console.log("serviceReqeuestId",serviceRequestId);
+
+      const DataResult = await knex("service_requests").where({
+        id: serviceRequestId,
+        isActive: "true"
+      });
+
+      requesterInfo = await knex("service_requests")
+        .join("users", "service_requests.requestedBy", "=", "users.id")
+        .join("application_user_roles", "service_requests.requestedBy", "=", "application_user_roles.userId")
+        .select(
+          "users.name",
+          "users.email",
+          "users.mobileNo"
+        )
+        .where({
+          "service_requests.id": serviceRequestId,
+          "service_requests.orgId": orgId,
+          "application_user_roles.roleId":4
+        });
+        
+      if(requesterInfo.length > 0){
+        userInfo = requesterInfo[0];
+      }else{
+        requesterInfo = await knex("user_house_allocation")
+        .join("users", "user_house_allocation.userId", "=", "users.id")        
+        .select(
+          "users.name",
+          "users.email",
+          "users.mobileNo"
+        )
+        .where({
+          "user_house_allocation.houseId": DataResult[0].houseId,
+          "user_house_allocation.orgId": orgId 
+        });
+        console.log("requestInfo",requesterInfo);
+
+        userInfo = requesterInfo[0];
+      }
+
+      console.log("requestId",userInfo);
+
+      companyInfo = await knex("property_units")
+        .join("companies", "property_units.companyId", "=", "companies.id")
+        .select(
+          "companies.companyName",
+          "companies.contactPerson",
+          "companies.companyAddressEng"
+        )
+        .where({
+          "property_units.houseId": DataResult[0].houseId,
+          "property_units.orgId": orgId
+        });
+
+      pagination.data = rows;
+      pagination.company = companyInfo;
+      pagination.customer = userInfo;
+
+      return res.status(200).json({
+        data: {
+          quotation: pagination
+        }
+      });
+    } catch (err) {
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });

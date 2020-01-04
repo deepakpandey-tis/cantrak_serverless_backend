@@ -312,6 +312,11 @@ const buildingPhaseController = {
               "buildings_and_phases.createdBy",
               "users.id"
             )
+            .leftJoin(
+              "property_types",
+              "buildings_and_phases.propertyTypeId",
+              "property_types.id"
+            )
             .where({
               "buildings_and_phases.orgId": orgId,
               "buildings_and_phases.isActive": true
@@ -334,6 +339,11 @@ const buildingPhaseController = {
               "buildings_and_phases.createdBy",
               "users.id"
             )
+            .leftJoin(
+              "property_types",
+              "buildings_and_phases.propertyTypeId",
+              "property_types.id"
+            )
             .where({
               "buildings_and_phases.isActive": true,
               "buildings_and_phases.orgId": orgId
@@ -345,7 +355,8 @@ const buildingPhaseController = {
               "companies.companyName as Company Name",
               "buildings_and_phases.isActive as Status",
               "users.name as Created By",
-              "buildings_and_phases.createdAt as Date Created"
+              "buildings_and_phases.createdAt as Date Created",
+              "property_types.propertyType"
             ])
             .offset(offset)
             .limit(per_page)
@@ -387,6 +398,11 @@ const buildingPhaseController = {
               "buildings_and_phases.createdBy",
               "users.id"
             )
+            .leftJoin(
+              "property_types",
+              "buildings_and_phases.propertyTypeId",
+              "property_types.id"
+            )
             .where({
               "buildings_and_phases.companyId": companyId,
               "buildings_and_phases.isActive": true,
@@ -409,6 +425,11 @@ const buildingPhaseController = {
               "buildings_and_phases.createdBy",
               "users.id"
             )
+            .leftJoin(
+              "property_types",
+              "buildings_and_phases.propertyTypeId",
+              "property_types.id"
+            )
             .where({
               "buildings_and_phases.companyId": companyId,
               "buildings_and_phases.isActive": true,
@@ -421,7 +442,8 @@ const buildingPhaseController = {
               "companies.companyName as Company Name",
               "buildings_and_phases.isActive as Status",
               "users.name as Created By",
-              "buildings_and_phases.createdAt as Date Created"
+              "buildings_and_phases.createdAt as Date Created",
+              "property_types.propertyType"
             ])
             .offset(offset)
             .limit(per_page)

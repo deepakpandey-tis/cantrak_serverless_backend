@@ -477,7 +477,8 @@ const serviceRequestController = {
           entityId: assignedAssetPayload.serviceRequestId,
           entityType: "service_requests",
           createdAt: currentTime,
-          updatedAt: currentTime
+          updatedAt: currentTime,
+          orgId:req.orgId
         };
         let assetResult = await knex
           .insert(insertData)

@@ -54,11 +54,11 @@ const teamsController = {
 
                 /*CHECK DUPLICATE VALUES OPEN */
                 let existValue = await knex('teams')
-                    .where({ teamCode: payload.teamCode,orgId:orgId});
+                    .where({ teamCode: payload.teamCode, orgId: orgId });
                 if (existValue && existValue.length) {
                     return res.status(400).json({
                         errors: [
-                            { code: "VALIDATION_ERROR", message: "Team Id duplicate value not allow!!" }
+                            { code: "VALIDATION_ERROR", message: "Team Id already exist!!" }
                         ]
                     });
                 }
@@ -79,20 +79,29 @@ const teamsController = {
                     for (let i = 0; i < roleProjectData.length; i++) {
 
 
-                        for (let role of roleProjectData[i].roleId) {
+                        if (roleProjectData[i].projectId) {
 
-                            let insertObject = {
-                                teamId: teamsData.teamId,
-                                roleId: role,
-                                projectId: roleProjectData[i].projectId,
-                                orgId: orgId,
-                                createdAt: currentTime,
-                                updatedAt: currentTime
+                            for (let role of roleProjectData[i].roleId) {
+
+                                let insertObject = {
+                                    teamId: teamsData.teamId,
+                                    roleId: role,
+                                    projectId: roleProjectData[i].projectId,
+                                    orgId: orgId,
+                                    createdAt: currentTime,
+                                    updatedAt: currentTime
+                                }
+
+                                let insertProjectResult = await knex.insert(insertObject).returning(['*']).into('team_roles_project_master')
+                                teamRoleProject = insertProjectResult
+
                             }
-
-                            let insertProjectResult = await knex.insert(insertObject).returning(['*']).into('team_roles_project_master')
-                            teamRoleProject = insertProjectResult
-
+                        } else {
+                            return res.status(400).json({
+                                errors: [
+                                    { code: "VALIDATION_ERROR", message: "Select Project!! " }
+                                ]
+                            });
                         }
 
                     }
@@ -175,26 +184,35 @@ const teamsController = {
 
 
                 /**TEAM ROLES PROJECT MASTER OPEN */
-                let deletedProject = await knex('team_roles_project_master').where({ teamId: upTeamsPayload.teamId }).del();
+
                 let deletedUsers = await knex('team_users').where({ teamId: upTeamsPayload.teamId }).del();
 
 
                 if (roleProjectData) {
+                    let deletedProject = await knex('team_roles_project_master').where({ teamId: upTeamsPayload.teamId }).del();
                     for (let i = 0; i < roleProjectData.length; i++) {
 
-                        for (let role of roleProjectData[i].roleId) {
+                        if (roleProjectData[i].projectId) {
+                            for (let role of roleProjectData[i].roleId) {
 
-                            let insertObject = {
-                                teamId: upTeamsPayload.teamId,
-                                roleId: role,
-                                projectId: roleProjectData[i].projectId,
-                                orgId: orgId,
-                                createdAt: currentTime,
-                                updatedAt: currentTime
+                                let insertObject = {
+                                    teamId: upTeamsPayload.teamId,
+                                    roleId: role,
+                                    projectId: roleProjectData[i].projectId,
+                                    orgId: orgId,
+                                    createdAt: currentTime,
+                                    updatedAt: currentTime
+                                }
+
+                                let insertProjectResult = await knex.insert(insertObject).returning(['*']).into('team_roles_project_master')
+                                teamRoleProject = insertProjectResult
                             }
-
-                            let insertProjectResult = await knex.insert(insertObject).returning(['*']).into('team_roles_project_master')
-                            teamRoleProject = insertProjectResult
+                        } else {
+                            return res.status(400).json({
+                                errors: [
+                                    { code: "VALIDATION_ERROR", message: "Select Project!! " }
+                                ]
+                            });
                         }
                     }
                 }
@@ -283,14 +301,15 @@ const teamsController = {
 
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from("teams")
-                    .where({ "teams.orgId": req.orgId, })
-                        .where(qb=>{
-                            if(teamName){
+                        .where({ "teams.orgId": req.orgId, })
+                        .where(qb => {
+                            if (teamName) {
                                 qb.where('teams.teamName', 'iLIKE', `%${teamName}%`)
                             }
                         })
                         .first(),
-                    knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams"."orgId" = ' + req.orgId + ' and "teams"."teamName" = "' + String(teamName) + '" group by "teams"."teamId" limit ' + per_page + ' OFFSET ' + offset + '')
+                    // knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams"."orgId" = ' + req.orgId + ' and "teams"."teamName" = "' + String(teamName) + '" group by "teams"."teamId" limit ' + per_page + ' OFFSET ' + offset + '')
+                    knex.raw(`select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams"."orgId" = '${req.orgId}' and "teams"."teamName" ilike '%${teamName}%' group by "teams"."teamId" limit '${per_page}' OFFSET '${offset}'`)
                 ])
 
             } else {

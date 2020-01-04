@@ -117,7 +117,7 @@ const customerController = {
           .select([
             "users.name as name",
             "users.email as email",
-            "users.houseId as houseId",
+            "user_house_allocation.houseId as houseId",
             "users.id as userId"
           ])
           
@@ -163,7 +163,7 @@ const customerController = {
           .select([
             "users.name as name",
             "users.email as email",
-            "users.houseId as houseId",
+            "user_house_allocation.houseId as houseId",
             "users.id as userId"
           ])
           .where({

@@ -4,7 +4,8 @@ const _ = require('lodash');
 const knex = require('../db/knex');
 const XLSX = require('xlsx');
 const fs = require("fs")
-
+const QRCode = require('qrcode')
+const uuid = require('uuid/v4')
 
 
 const partsController = {
@@ -54,24 +55,24 @@ const partsController = {
                     //.innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
                     knex.from('part_master')
                     .leftJoin('part_category_master','part_master.partCategory','part_category_master.id')
-                    // .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
+                    .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
                     .select([
                         'part_master.id as partId',
                         'part_master.partName as Name',
                         'part_master.partCode as ID',
-                        // 'part_ledger.quantity as Quantity',
-                        // 'part_ledger.unitCost as Price',
+                        'part_ledger.quantity as Quantity',
+                        'part_ledger.unitCost as Price',
                         'part_master.unitOfMeasure',
                         'part_category_master.categoryName as Category',
                         'part_master.barcode as Barcode',
                         'part_master.createdAt as Date Added',
-                        //  knex.raw('SUM(quantity)')
+                         knex.raw('SUM(quantity)')
 
                     ])
                     .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
                     .orderBy('part_master.createdAt','desc')
                     .groupBy(['part_master.id',
-                    // 'part_ledger.id',
+                    'part_ledger.id',
                     'part_category_master.id'])
                     .distinct('part_master.id')
                     .offset(offset).limit(per_page)
@@ -104,25 +105,25 @@ const partsController = {
                         //.where(filters),
                         knex.from('part_master')
                         .leftJoin('part_category_master','part_master.partCategory','part_category_master.id')
-                        // .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
+                        .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
                         .select([
                         'part_master.id as partId',
                         'part_master.partName as Name',
                         'part_master.partCode as ID',
-                        // 'part_ledger.quantity as Quantity',
-                        // 'part_ledger.unitCost as Price',
+                        'part_ledger.quantity as Quantity',
+                        'part_ledger.unitCost as Price',
                         'part_master.unitOfMeasure',
                         'part_category_master.categoryName as Category',
                         'part_master.barcode as Barcode',
                         'part_master.createdAt as Date Added',
-                        //  knex.raw('SUM(quantity)')
+                         knex.raw('SUM(quantity)')
 
                     ])
                             .distinct('part_master.id')
 
                     .orderBy('part_master.createdAt','desc')
                     .groupBy(['part_master.id',
-                    // 'part_ledger.id',
+                    'part_ledger.id',
                     'part_category_master.id'])
                   
                     //.groupBy(['part_master.id','part_ledger.id'])
@@ -239,7 +240,7 @@ const partsController = {
                 // Insert in part_master table,
                 let currentTime = new Date().getTime();
 
-                let insertData = { ...insertDataObj, createdAt: currentTime, updatedAt: currentTime,orgId:req.orgId };
+                let insertData = { ...insertDataObj, createdAt: currentTime, updatedAt: currentTime,orgId:req.orgId,uuid:uuid() };
 
                 console.log('[controllers][part][addParts]: Insert Data', insertData);
 
@@ -442,6 +443,10 @@ const partsController = {
             let files = null;
             let images = null;
             let id = req.body.id;
+            let qrcode = ''
+
+            qrcode = await QRCode.toDataURL('org-' + req.orgId + '-part-' + id)
+
 
             partData = await knex('part_master')
                 .leftJoin('vendor_master', 'part_master.assignedVendors', 'vendor_master.id')
@@ -472,7 +477,7 @@ const partsController = {
             console.log('[controllers][parts][getPartDetails]: Part Details', partData);
 
             res.status(200).json({
-                data: { part: { quantity: totalQuantity, unitCost: totalUnitCost, ...omitedPartDataResult, additionalAttributes, images, files } },
+                data: { part: { quantity: totalQuantity, unitCost: totalUnitCost, ...omitedPartDataResult, additionalAttributes, images, files,qrcode } },
                 message: "Part Details"
             });
 
