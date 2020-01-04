@@ -87,11 +87,7 @@ const quotationsController = {
           checkedBy: Joi.string().required(),
           inspectedBy: Joi.string().required(),
           acknowledgeBy: Joi.string().required(),
-          quotationData: Joi.array().required(),
-          vatId: Joi.number().required(),
-          vatRate: Joi.string().required(),
-          subTotal: Joi.number().required(),
-          grandTotal: Joi.number().required()
+          quotationData: Joi.array().required()         
         });
 
         const result = Joi.validate(quotationPayload, schema);
@@ -206,7 +202,8 @@ const quotationsController = {
             "teams.teamName as assignTeam",
             "astUser.name as assignedMainUsers",
             "authUser.name as createdBy",
-            "organisation_roles.name as userRole"
+            "organisation_roles.name as userRole",
+            "quotations.invoiceData as invoiceData"
           )
           .where({ "quotations.id": quotationRequestId });
         console.log(
