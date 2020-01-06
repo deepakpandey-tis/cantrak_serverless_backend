@@ -72,7 +72,8 @@ const serviceRequestController = {
           moderationStatus: 0,
           isActive: "true",
           createdAt: currentTime,
-          updatedAt: currentTime
+          updatedAt: currentTime,
+          serviceStatusCode:'O'
         };
 
         console.log(
@@ -2192,7 +2193,7 @@ const serviceRequestController = {
     try {
       const serviceRequestId = req.body.serviceRequestId;
       const status = await knex("service_requests")
-        .update({ serviceStatusCode: "APPROVED" })
+        .update({ serviceStatusCode: "A" })
         .where({ id: serviceRequestId });
       return res.status(200).json({
         data: {
