@@ -970,7 +970,7 @@ const chargeController = {
             "charge_master.chargeCode as chargeCode",
             "charge_master.id as id",
             "charge_master.calculationUnit as calculationUnit",
-            "charge_master.rate as rate",
+            "assigned_service_charges.rate as rate",
             "assigned_service_charges.totalHours as totalHours"
           ])
           .where({
@@ -987,7 +987,7 @@ const chargeController = {
             "charge_master.chargeCode as chargeCode",
             "charge_master.id as id",
             "charge_master.calculationUnit as calculationUnit",
-            "charge_master.rate as rate",
+            "assigned_service_charges.rate as rate",
             "assigned_service_charges.totalHours as totalHours"
           ])
           .where({
