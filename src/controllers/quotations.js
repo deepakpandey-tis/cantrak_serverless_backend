@@ -87,7 +87,7 @@ const quotationsController = {
           checkedBy: Joi.string().required(),
           inspectedBy: Joi.string().required(),
           acknowledgeBy: Joi.string().required(),
-          quotationData: Joi.array().required()         
+          quotationData: Joi.array().required()
         });
 
         const result = Joi.validate(quotationPayload, schema);
@@ -1205,7 +1205,7 @@ const quotationsController = {
         .where({ id: quotationId, orgId: orgId });
 
       let serviceRequestId = serviceMaster[0].serviceRequestId;
-      console.log("serviceReqeuestId",serviceRequestId);
+      console.log("serviceReqeuestId", serviceRequestId);
 
       const DataResult = await knex("service_requests").where({
         id: serviceRequestId,
@@ -1223,29 +1223,29 @@ const quotationsController = {
         .where({
           "service_requests.id": serviceRequestId,
           "service_requests.orgId": orgId,
-          "application_user_roles.roleId":4
+          "application_user_roles.roleId": 4
         });
-        
-      if(requesterInfo.length > 0){
+
+      if (requesterInfo.length > 0) {
         userInfo = requesterInfo[0];
-      }else{
+      } else {
         requesterInfo = await knex("user_house_allocation")
-        .join("users", "user_house_allocation.userId", "=", "users.id")        
-        .select(
-          "users.name",
-          "users.email",
-          "users.mobileNo"
-        )
-        .where({
-          "user_house_allocation.houseId": DataResult[0].houseId,
-          "user_house_allocation.orgId": orgId 
-        });
-        console.log("requestInfo",requesterInfo);
+          .join("users", "user_house_allocation.userId", "=", "users.id")
+          .select(
+            "users.name",
+            "users.email",
+            "users.mobileNo"
+          )
+          .where({
+            "user_house_allocation.houseId": DataResult[0].houseId,
+            "user_house_allocation.orgId": orgId
+          });
+        console.log("requestInfo", requesterInfo);
 
         userInfo = requesterInfo[0];
       }
 
-      console.log("requestId",userInfo);
+      console.log("requestId", userInfo);
 
       companyInfo = await knex("property_units")
         .join("companies", "property_units.companyId", "=", "companies.id")
@@ -1270,6 +1270,148 @@ const quotationsController = {
       });
     } catch (err) {
       return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  updateQuotationsInvoice: async (req, res) => {
+    try {
+      let orgId = req.orgId;
+      let userId = req.me.id;
+      let quotationPayload = req.body;
+      let updateAssignedParts;
+      let updateAssignedCharges;
+      await knex.transaction(async trx => {
+        // validate keys
+        const quotationSinglePart = Joi.object().keys({
+          partName: Joi.string().required(),
+          id: Joi.string().required(),
+          partCode: Joi.string().required(),
+          quantity: Joi.string().required(),
+          unitCost: Joi.number().required(),
+        })
+        const quotationSingleCharge = Joi.object().keys({
+          chargeCode: Joi.string().required(),
+          id: Joi.string().required(),
+          calculationUnit: Joi.string().required(),
+          rate: Joi.number().required(),
+          totalHours: Joi.string().required(),
+        })
+
+        const quotationSingle = Joi.object().keys({
+          parts: Joi.array().items(quotationSinglePart),
+          charges: Joi.array().items(quotationSingleCharge),
+          subTotal: Joi.number().required(),
+          grandTotal: Joi.number().required(),
+          vatId: Joi.number().required(),
+          vatRate: Joi.number().required(),
+        })
+        const schema = Joi.object().keys({
+          serviceRequestId: Joi.number().required(),
+          quotationId: Joi.number().required(),
+          quotationData: Joi.array().items(quotationSingle)
+        });
+
+        // const result = Joi.validate(JSON.parse(quotationPayload), schema);
+        const result = schema.validate(quotationPayload)
+
+        console.log(
+          "[controllers][quotations][updateQuotationInvoice]: JOi Result",
+          result
+        );
+
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message }
+            ]
+          });
+        }
+
+        // Update in quotation update table,
+        const currentTime = new Date().getTime();
+
+        const updateQuotationReq = await knex
+          .update({
+            serviceRequestId: quotationPayload.serviceRequestId,
+            invoiceData: JSON.stringify(quotationPayload.quotationData),
+            updatedAt: currentTime
+          })
+          .where({ id: quotationPayload.quotationId })
+          .returning(["*"])
+          .transacting(trx)
+          .into("quotations");
+
+        // Start Update Assigned Parts In Quotations
+
+        let partsLength = quotationPayload.quotationData[0].parts.length;
+        console.log("parts length", partsLength);
+
+        let partsData;
+        for (let i = 0; i < partsLength; i++) {
+          console.log("partsArray", quotationPayload.quotationData[0].parts[i]);
+          partsData = quotationPayload.quotationData[0].parts[i];
+          updateAssignedParts = await knex
+            .update({
+              unitCost: partsData.unitCost,
+              quantity: partsData.quantity,
+              updatedAt: currentTime
+            })
+            .where({
+              entityId: quotationPayload.quotationId,
+              entityType: "quotations",
+              partId: partsData.id
+            })
+            .returning(["*"])
+            .transacting(trx)
+            .into("assigned_parts");
+        }
+
+
+        // Start Update Assigned Charges In Quotations
+
+        let chargesLength = quotationPayload.quotationData[0].charges.length;
+        console.log("charges length", chargesLength);
+
+        let chargesData;
+        for (let j = 0; j < chargesLength; j++) {
+          console.log("chargesArray", quotationPayload.quotationData[0].charges[j]);
+          chargesData = quotationPayload.quotationData[0].charges[j];
+          updateAssignedCharges = await knex
+            .update({
+              chargeId: chargesData.id,
+              totalHours: chargesData.totalHours,
+              rate: chargesData.rate,
+              updatedAt: currentTime
+            })
+            .where({
+              entityId: quotationPayload.quotationId,
+              entityType: "quotations",
+              chargeId: chargesData.id
+            })
+            .returning(["*"])
+            .transacting(trx)
+            .into("assigned_service_charges");
+        }
+
+        console.log(
+          "[controllers][quotations][updateQuotationInvoice]: Update Data",
+          updateQuotationReq
+        );
+        quotationsResponse = updateQuotationReq[0];
+        trx.commit;
+
+        return res.status(200).json({
+          data: {
+            quotationsResponse
+          },
+          message: "Quotations invoice updated successfully !"
+        });
+      });
+    } catch (err) {
+      console.log("[controllers][quotation][updateQuotation] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
