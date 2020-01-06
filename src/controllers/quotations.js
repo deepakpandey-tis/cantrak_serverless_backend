@@ -117,6 +117,7 @@ const quotationsController = {
             updatedAt: currentTime,
             isActive: true,
             moderationStatus: 1,
+            quotationStatus: 'Pending',
             createdBy: userId
           })
           .where({ id: quotationPayload.quotationId })
@@ -461,8 +462,14 @@ const quotationsController = {
               "quotations.serviceRequestId",
               "service_requests.id"
             )
+            .leftJoin(
+              "assigned_service_team",
+              "service_requests.id",
+              "assigned_service_team.entityId"
+            )
+            .leftJoin("users", "quotations.createdBy", "users.id")
             .where("quotations.orgId", req.orgId)
-            .groupBy(["quotations.id", "service_requests.id"]),
+            .groupBy(["quotations.id", "service_requests.id","assigned_service_team.id","users.id"]),
           knex
             .from("quotations")
             .innerJoin(
@@ -470,6 +477,13 @@ const quotationsController = {
               "quotations.serviceRequestId",
               "service_requests.id"
             )
+            .leftJoin(
+              "assigned_service_team",
+              "service_requests.id",
+              "assigned_service_team.entityId"
+            )
+            .leftJoin("users", "quotations.createdBy", "users.id")
+
             .where("quotations.orgId", req.orgId)
             .select([
               "quotations.id as QId",
@@ -477,10 +491,11 @@ const quotationsController = {
               "service_requests.description as Description",
               "service_requests.serviceType as Type",
               "service_requests.priority as Priority",
-              "quotations.createdBy as CreatedBy",
+              "users.name as Created By",
               "quotations.quotationStatus as Status",
-              "quotations.createdAt as DateCreated"
+              "quotations.createdAt as Date Created"
             ])
+            .groupBy(["quotations.id", "service_requests.id","assigned_service_team.id","users.id"])
             .offset(offset)
             .limit(per_page)
         ]);
@@ -535,14 +550,14 @@ const quotationsController = {
                 "service_requests.id",
                 "assigned_service_team.entityId"
               )
-              .leftJoin("users", "assigned_service_team.userId", "users.id")
+              .leftJoin("users", "quotations.createdBy", "users.id")
               .select([
                 "quotations.id as QId",
                 "quotations.serviceRequestId as serviceRequestId",
                 "service_requests.description as Description",
                 "service_requests.serviceType as Type",
                 "service_requests.priority as Priority",
-                "quotations.createdBy as Created By",
+                "users.name as Created By",
                 "quotations.quotationStatus as Status",
                 "quotations.createdAt as Date Created"
               ])

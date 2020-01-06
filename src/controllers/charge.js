@@ -412,7 +412,8 @@ const chargeController = {
           quotationId: Joi.string().required(),
           chargeId: Joi.string().required(),
           status: Joi.string().required(),
-          totalHours: Joi.number().required()
+          totalHours: Joi.number().required(),
+          cost: Joi.number().required()
         });
         console.log("payload", payload);
         let result = Joi.validate(payload, schema);
@@ -434,6 +435,7 @@ const chargeController = {
           entityId: payload.quotationId,
           status: payload.status,
           totalHours: payload.totalHours,
+          rate: payload.cost,
           entityType: "quotations",
           updatedAt: currentTime,
           createdAt: currentTime,
@@ -446,7 +448,6 @@ const chargeController = {
           .transacting(trx)
           .into("assigned_service_charges");
         charge = chargeResult[0];
-
         trx.commit;
       });
 
