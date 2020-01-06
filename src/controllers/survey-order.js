@@ -147,6 +147,14 @@ const surveyOrderController = {
           additionalUsers.push(userResult[0]);
         }
 
+
+        await knex('service_requests')
+        .update({serviceStatusCode:'US'})
+        .where({ id: surveyOrderPayload.serviceRequestId})
+        .returning(['*'])
+
+        
+
         trx.commit;
         res.status(200).json({
           data: {
