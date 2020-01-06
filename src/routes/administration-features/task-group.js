@@ -164,7 +164,7 @@ router.post(
   resourceAccessMiddleware.isPMAccessible,
   taskGroupController.getTaskGroupDetails
 );
-router.get(
+router.post(
   "/get-task-group-template-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

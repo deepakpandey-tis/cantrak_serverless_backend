@@ -1059,7 +1059,7 @@ const taskGroupController = {
               startDate    : payload.startDateTime,
               endDate      : payload.endDateTime,
               repeatPeriod : payload.repeatPeriod,
-              repeatOn     : payload.repeatOn,
+                  repeatOn: payload.repeatOn?payload.repeatOn.join(','):'',
               repeatFrequency : payload.repeatFrequency,
               createdAt    : currentTime,
               updatedAt    : currentTime,
@@ -1703,6 +1703,7 @@ const taskGroupController = {
   getTaskGroupTemplateList: async (req,res) => {
     try {
       let reqData = req.query;
+      let filters = req.body;
       let pagination = {};
       let per_page = reqData.per_page || 10;
       let page = reqData.current_page || 1;
@@ -1712,9 +1713,19 @@ const taskGroupController = {
 
       let [total, rows] = await Promise.all([
         knex('task_group_templates').select('*')
-        .where({"task_group_templates.orgId":orgId}),
+        .where({"task_group_templates.orgId":orgId})
+        .where(qb => {
+          if(filters.taskGroupName){
+            qb.where('task_group_templates.taskGroupName', 'iLIKE', `%${filters.taskGroupName}%`)
+          }
+        }),
         knex('task_group_templates').select('*').offset(offset).limit(per_page).orderBy('task_group_templates.createdAt', 'desc')
         .where({"task_group_templates.orgId":orgId})
+          .where(qb => {
+            if(filters.taskGroupName){
+              qb.where('task_group_templates.taskGroupName', 'iLIKE', `%${filters.taskGroupName}%`)
+            }
+          })
       ])
 
       let count = total.length;
