@@ -440,7 +440,31 @@ const singupController = {
       let user = insertedUser[0]
       console.log('User: ',insertedUser)
       if(insertedUser && insertedUser.length){
-        await emailHelper.sendTemplateEmail({to:user.email,subject:'Verify Account',template:'test-email.ejs',templateData:{fullName:user.name,OTP:'http://localhost:4200/signup/verify-account/'+user.verifyToken}})
+        await emailHelper.sendTemplateEmail({
+          to:user.email,
+          subject:'Verify Account',
+          template:'test-email.ejs',
+          templateData:{
+            fullName:user.name,
+            OTP:'http://localhost:4200/signup/verify-account/'+user.verifyToken
+          }})
+          let orgAdmins = await knex('application_user_roles')
+            .select('userId')
+            .where({'application_user_roles.orgId':orgId,roleId:2})
+          let Parallel = require('async-parallel')
+          let admins = await Parallel.map(orgAdmins, async admin => {
+            let admin = await knex('users').where({id:admin}).select(['name','email']).first()
+            return admin;
+          })
+          for(let admin of admins){
+            await emailHelper.sendTemplateEmail({
+              to:admin.email,
+              subject:'New user added to your organization',
+              template:'message',
+              templateData: { fullName: admin.name, message: 'New user ' + insertedUser[0].name + ' added to your organization. username is ' + insertedUser[0].userName+'.'},
+            })
+          }
+
       }
       trx.commit;
     })
