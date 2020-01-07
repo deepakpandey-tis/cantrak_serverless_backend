@@ -38,12 +38,23 @@ function nestedTrimmer(val){
         for(let o of val){
             x.push(_.mapValues(o, nestedTrimmer(o)))
         }
-        return x;
-    }
-
-    if(typeof val === "object"){
-       return _.mapValues(val, l => nestedTrimmer(l))
-    }
+        req.body = x;
+        next()
+    } else if(typeof body === "object") {
+        console.log(body)
+        req.body = _.mapValues(body, o => {
+            let x = []
+            if(Array.isArray(o)){
+                for (let b of o) {
+                    x.push(_.mapValues(b, o => o.trim()))
+                }
+            } else if(typeof o === "object"){
+                req.body = _.mapValues(o, o => o.trim())
+            }
+            return x;
+        })
+        next()
+    }    
 }
 
 
