@@ -453,7 +453,7 @@ const singupController = {
             .where({'application_user_roles.orgId':orgId,roleId:2})
           let Parallel = require('async-parallel')
           let admins = await Parallel.map(orgAdmins, async admin => {
-            let adminres = await knex('users').where({id:admin}).select(['name','email']).first()
+            let adminres = await knex('users').where({id:admin.userId}).select(['name','email']).first()
             return adminres;
           })
           for(let admin of admins){
