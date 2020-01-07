@@ -460,7 +460,7 @@ const singupController = {
             await emailHelper.sendTemplateEmail({
               to:admin.email,
               subject:'New user added to your organization',
-              template:'message',
+              template:'message.ejs',
               templateData: { fullName: admin.name, message: 'New user ' + insertedUser[0].name + ' added to your organization. username is ' + insertedUser[0].userName+'.'},
             })
           }
