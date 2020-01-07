@@ -2,6 +2,7 @@ const {Router} = require("express")
 
 const router = Router()
 const emailHelper = require('../helpers/email');
+const trimmer = require('../middlewares/trimmer')
 
 
 router.get('/', async(req,res) => {
@@ -21,6 +22,10 @@ router.get('/', async(req,res) => {
     } catch(err){
         res.status(200).json({failed:true})
     }
+})
+
+router.post('/',trimmer, (req,res) => {
+    return res.status(200).json(req.body)
 })
 
 module.exports = router;

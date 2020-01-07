@@ -421,7 +421,7 @@ const singupController = {
       let uuidv4 = uuid()
       let currentTime = new Date().getTime()
        insertedUser = await knex("users")
-        .insert({...payload,verifyToken:uuidv4})
+        .insert({...payload,verifyToken:uuidv4,emailVerified:true})
         .returning(["*"])
         .transacting(trx);
       console.log(payload);
