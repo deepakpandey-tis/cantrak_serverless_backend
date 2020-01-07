@@ -21,4 +21,7 @@ router.post(
 router.post('/export-service-order', authMiddleware.isAuthenticated, serviceOrderController.exportServiceOrder)
 
 router.get('/get-new-service-order-id',authMiddleware.isAuthenticated,serviceOrderController.getNewServiceOrderId)
+router.post('/add-service-appointment', authMiddleware.isAuthenticated, serviceOrderController.addServiceAppointment)
+router.post('/get-service-appointments', authMiddleware.isAuthenticated, serviceOrderController.getServiceAppointmentList)
+
 module.exports = router;
