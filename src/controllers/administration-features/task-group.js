@@ -538,21 +538,23 @@ const taskGroupController = {
           }
         }
     // Send email to the team about pm plan
-        let mainUserId = assignedServiceTeam.mainUserId;
-        let mainUser = await knex('users').where({id:mainUserId}).select(['name','email'])
+        let mainUserId = payload.mainUserId;
+        let mainUser = await knex('users').where({id:mainUserId}).select(['name','email']).first()
         let Parallel = require('async-parallel')
-        let additionalUserNameIds = await Parallel.map(assignedAdditionalUser, async additionalUser => {
-          let u = await knex('users').where({ id: additionalUser.userId}).select(['name','email'])
-          return u;
-        })
-        let finalUsers = [...additionalUserNameIds,mainUser]
-        for (let u of finalUsers){
-          await emailHelper.sendTemplateEmail({
-            to:u.email,
-            subject:'[PM] Upcoming PM Plan & Schedule',
-            template:'pm-plan.ejs',
-            templateData: { pmSchedules: assetResults }
+        if (payload.additionalUsers.length){
+          let additionalUserNameIds = await Parallel.map(payload.additionalUsers, async additionalUser => {
+            let u = await knex('users').where({ id: additionalUser.userId}).select(['name','email'])
+            return u;
           })
+          let finalUsers = [...additionalUserNameIds,mainUser]
+          for (let u of finalUsers){
+            await emailHelper.sendTemplateEmail({
+              to:u.email,
+              subject:'[PM] Upcoming PM Plan & Schedule',
+              template:'pm-plan.ejs',
+              templateData: { pmSchedules: assetResults }
+            })
+          }
         }
     
     })
