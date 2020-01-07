@@ -333,6 +333,12 @@ const organisationsController = {
               user = userResult[0]
             }
             message = "Organisation Inactive Successfully!"
+            await emailHelper.sendTemplateEmail({
+              to: user.email,
+              subject: `[Deactivation] ${organisation.organisationName} Deactivated`,
+              template: 'message.ejs',
+              templateData: { fullName: user.name, message: `Your organization ${organisation.organisationName} has been deactivated.` }
+            })
           } else {
             organisationResult = await knex
               .update({ isActive: true })
@@ -352,8 +358,19 @@ const organisationsController = {
               user = userResult[0]
             }
             message = "Organisation Active Successfully!"
+            await emailHelper.sendTemplateEmail({
+              to: user.email,
+              subject: `[Activation] ${organisation.organisationName} Activated Successfully.`,
+              template: 'message.ejs',
+              templateData: { fullName: user.name, message: `Your organization ${organisation.organisationName} has been activated.` }
+            })
           }
         }
+
+        // Send email to org admin about org deactivation
+        
+        
+
         trx.commit;
       });
       return res.status(200).json({
