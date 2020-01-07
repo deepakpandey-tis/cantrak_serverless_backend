@@ -1672,7 +1672,7 @@ const serviceRequestController = {
           location: Joi.string()
             .allow("")
             .optional(),
-          locationTags: Joi.array().items(Joi.number().optional()),
+          locationTags: Joi.array().items(Joi.string().optional()),
           project: Joi.string().required(),
           serviceType: Joi.string().required(),
           unit: Joi.string().required(),
@@ -1758,7 +1758,12 @@ const serviceRequestController = {
         /*UPDATE SERVICE REQUEST DATA CLOSE */
 
         /*INSERT LOCATION TAGS DATA OPEN */
-        for (let locationId of payload.locationTags) {
+        let locationTagIds = []
+        for(let locationTag of payload.locationTags){
+          const result = await knex('location_tags_master').select('id').where({title:locationTag}).first()
+          locationTagIds.push(result.id)
+        }
+        for (let locationId of locationTagIds) {
           const insertLocation = {
             entityId: payload.serviceRequestId,
             entityType: "service_requests",
