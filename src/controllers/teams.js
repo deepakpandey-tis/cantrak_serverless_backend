@@ -11,6 +11,7 @@ const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const fs = require('fs')
 const path = require('path')
+const emailHelper = require('../helpers/email')
 
 
 
@@ -115,8 +116,30 @@ const teamsController = {
                     let userAddTeamResult = await knex('team_users').insert({ userId: user, teamId: teamsData.teamId, createdAt: currentTime, updatedAt: currentTime, orgId: orgId }).returning(['*']);
                     userAddTeam = userAddTeamResult
 
+                    
+
                 }
                 /**ADD TEAM USERS CLOSE*/
+
+
+                /* Send email to users open */
+                let Parallel = require('async-parallel')
+                let users = await Parallel.map(teamsPayload.userIds, async userId => {
+                    let user = await knex('users').select(['name','email']).where({id:userId}).first()
+                    return user
+                })
+
+                for(let user of users){
+                    // Send email now
+                    await emailHelper.sendTemplateEmail({
+                        to:user.email,
+                        subject:'Added to team '+payload.teamName+' at service mind',
+                        template:'message.ejs',
+                        templateData:{fullName:user.name,message:'You have been succesfully added to team '+payload.teamName+' at service mind.'},
+                    })   
+                }
+
+                /* send email to users close */
 
                 trx.commit;
             });

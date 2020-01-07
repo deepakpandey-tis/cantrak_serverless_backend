@@ -49,11 +49,11 @@ const buildingPhaseController = {
 
          /*CHECK DUPLICATE VALUES OPEN */
          let existValue = await knex('buildings_and_phases')
-         .where({ buildingPhaseCode: payload.buildingPhaseCode, orgId: orgId });
+         .where({ buildingPhaseCode: payload.buildingPhaseCode,propertyTypeId:payload.propertyTypeId, orgId: orgId });
        if (existValue && existValue.length) {
          return res.status(400).json({
            errors: [
-             { code: "VALIDATION_ERROR", message: "Building Phase code already exist!!" }
+             { code: "VALIDATION_ERROR", message: "Building Phase code & Property type already exist!!" }
            ]
          });
        }
@@ -128,6 +128,24 @@ const buildingPhaseController = {
             ]
           });
         }
+
+         /*CHECK DUPLICATE VALUES OPEN */
+         let existValue = await knex('buildings_and_phases')
+         .where({ buildingPhaseCode: payload.buildingPhaseCode,propertyTypeId:payload.propertyTypeId, orgId: orgId });
+
+       if (existValue && existValue.length) {
+
+        if(existValue[0].id===payload.id){
+
+        } else{
+         return res.status(400).json({
+           errors: [
+             { code: "VALIDATION_ERROR", message: "Building Phase code & Property type already exist!!" }
+           ]
+         });
+        }
+       }
+       /*CHECK DUPLICATE VALUES CLOSE */
 
         let currentTime = new Date().getTime();
         let insertData = { ...payload, updatedAt: currentTime };

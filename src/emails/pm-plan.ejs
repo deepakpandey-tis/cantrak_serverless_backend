@@ -1,0 +1,22 @@
+<% /* Note: This is injected into `emails/layouts/default-layout.ejs` */ %>
+<p style="margin-bottom: 25px;">Dear <%= fullName %>,</p>
+<p style="margin-bottom: 25px;">Below is the complete pm plan created for you.</p>
+
+
+<table>
+    <tr>
+        <th>Work Order Id</th>
+        <th>Asset Id</th>
+        <th>Pm date</th>
+    </tr>
+    <% pmSchedules.forEach(function(s){ %>
+        <tr>
+            <td><%= s.id =%></td>
+            <td><%= s.assetId =%></td>
+            <td><%= s.pmDate =%></td>
+        </tr>
+    <% }); %>
+</table>
+
+<p style="margin-bottom: 5px;">Sincerely,</p>
+<p style="margin-top: 0px;">The ServiceMind Team</p>
