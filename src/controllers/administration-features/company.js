@@ -19,6 +19,10 @@ const companyController = {
     try {
       let company = null;
       await knex.transaction(async trx => {
+        
+        console.log("===============",req.body,"Payload========")
+
+
         const payload = _.omit(req.body, ["logoFile"]);
         const orgId = req.orgId;
         const userId = req.me.id;
