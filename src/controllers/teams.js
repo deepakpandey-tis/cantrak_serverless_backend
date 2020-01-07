@@ -124,7 +124,7 @@ const teamsController = {
 
                 /* Send email to users open */
                 let Parallel = require('async-parallel')
-                let users = await Parallel(teamsPayload.userIds, async userId => {
+                let users = await Parallel.map(teamsPayload.userIds, async userId => {
                     let user = await knex('users').select(['name','email']).where({id:userId}).first()
                     return user
                 })
