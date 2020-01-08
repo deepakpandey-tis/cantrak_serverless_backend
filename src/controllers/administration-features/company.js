@@ -455,7 +455,7 @@ const companyController = {
 
       let [rows] = await Promise.all([
         knex("companies")
-          .innerJoin("users", "users.id", "companies.createdBy")
+          .leftJoin("users", "users.id", "companies.createdBy")
           .where({ "companies.orgId": req.orgId })
           .select([
             //"companies.orgId as ORGANIZATION_ID",
@@ -465,7 +465,8 @@ const companyController = {
             "companies.companyAddressEng as ADDRESS",
             "companies.companyAddressThai as ALTERNATE_ADDRESS",
             "companies.taxId as TAX_ID",
-            "companies.contactPerson as CONTACT_PERSON"
+            "companies.contactPerson as CONTACT_PERSON",
+            "companies.descriptionEng as DESCRIPTION"
             // "companies.isActive as STATUS",
             //"companies.telephone as CONTACT_NUMBER",
             //"users.name as CREATED BY",
@@ -623,7 +624,9 @@ const companyController = {
             data[0].D == "ADDRESS" &&
             data[0].E == "ALTERNATE_ADDRESS" &&
             data[0].F == "TAX_ID" &&
-            data[0].G == "CONTACT_PERSON")
+            data[0].G == "CONTACT_PERSON" &&
+            data[0].H == "DESCRIPTION"
+            )
           //&&
           // data[0].H == "STATUS"
         ) {
@@ -648,6 +651,8 @@ const companyController = {
                     companyAddressThai: companyData.E,
                     taxId: companyData.F,
                     contactPerson: companyData.G,
+                    descriptionEng:companyData.H,
+                    createdBy:req.me.id,
                     isActive: true,
                     createdAt: currentTime,
                     updatedAt: currentTime
