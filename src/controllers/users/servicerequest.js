@@ -262,7 +262,6 @@ const serviceRequestController = {
             priority: serviceRequestPayload.priority,
             location: serviceRequestPayload.location,
             updatedAt: currentTime,
-            createdBy: req.me.id,
             isActive: true,
             moderationStatus: true,
             serviceStatusCode: "O"
@@ -767,12 +766,6 @@ const serviceRequestController = {
               "service_requests.houseId",
               "property_units.houseId"
             )
-            .leftJoin(
-              "service_status AS status",
-              "service_requests.serviceStatusCode",
-              "status.statusCode"
-            )
-            .leftJoin("users as u", "service_requests.requestedBy", "u.id")
             .select([
               "service_requests.id as S Id",
               "service_requests.houseId as houseId",
@@ -780,9 +773,9 @@ const serviceRequestController = {
               // "incident_categories.descriptionEng as Category",
               // "incident_sub_categories.descriptionEng as Problem",
               "service_requests.priority as Priority",
-              "status.descriptionEng as Status",
+              "service_requests.serviceStatusCode as Status",
               "property_units.unitNumber as Unit No",
-              "u.name as Requested By",
+              "service_requests.requestedBy as Requested By",
               "service_requests.createdAt as Date Created"
             ])
             .groupBy([
@@ -790,8 +783,6 @@ const serviceRequestController = {
               // "service_problems.id",
               // "incident_categories.id",
               // "incident_sub_categories.id",
-              "status.id",
-              "u.id",
               "property_units.id"
             ])
             .where({ "service_requests.orgId": req.orgId }),
@@ -817,13 +808,6 @@ const serviceRequestController = {
               "service_requests.houseId",
               "property_units.houseId"
             )
-            .leftJoin(
-              "service_status AS status",
-              "service_requests.serviceStatusCode",
-              "status.statusCode"
-            )
-            .leftJoin("users as u", "service_requests.requestedBy", "u.id")
-            
             .select([
               "service_requests.id as S Id",
               "service_requests.houseId as houseId",
@@ -831,9 +815,9 @@ const serviceRequestController = {
               // "incident_categories.descriptionEng as Category",
               // "incident_sub_categories.descriptionEng as Problem",
               "service_requests.priority as Priority",
-              "status.descriptionEng as Status",
+              "service_requests.serviceStatusCode as Status",
               "property_units.unitNumber as Unit No",
-              "u.name as Requested By",
+              "service_requests.requestedBy as Requested By",
               "service_requests.createdAt as Date Created"
             ])
             .offset(offset)
@@ -877,22 +861,16 @@ const serviceRequestController = {
               "service_requests.id",
               "assigned_service_team.entityId"
             )
-            .leftJoin(
-              "service_status AS status",
-              "service_requests.serviceStatusCode",
-              "status.statusCode"
-            )
-            .leftJoin("users as u", "service_requests.requestedBy", "u.id")
-          
+
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
               // "incident_categories.descriptionEng as Category",
               // "incident_sub_categories.descriptionEng as Problem",
               "service_requests.priority as Priority",
-              "status.descriptionEng as Status",
+              "service_requests.serviceStatusCode as Status",
               "property_units.unitNumber as Unit No",
-              "u.name as Requested By",
+              "service_requests.requestedBy as Requested By",
               "service_requests.createdAt as Date Created"
             ])
             .where({ "service_requests.orgId": req.orgId })
@@ -927,9 +905,7 @@ const serviceRequestController = {
               // "service_problems.id",
               // "incident_categories.id",
               "incident_sub_categories.id",
-              "property_units.id",
-              "service_status.id",
-              "u.id"
+              "property_units.id"
             ]),
           knex
             .from("service_requests")
@@ -958,21 +934,15 @@ const serviceRequestController = {
               "service_requests.id",
               "assigned_service_team.entityId"
             )
-            .leftJoin(
-              "service_status AS status",
-              "service_requests.serviceStatusCode",
-              "status.statusCode"
-            )
-            .leftJoin("users as u", "service_requests.requestedBy", "u.id")          
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
               // "incident_categories.descriptionEng as Category",
               // "incident_sub_categories.descriptionEng as Problem",
               "service_requests.priority as Priority",
-              "status.descriptionEng as Status",
+              "service_requests.serviceStatusCode as Status",
               "property_units.unitNumber as Unit No",
-              "u.name as Requested By",
+              "service_requests.requestedBy as Requested By",
               "service_requests.createdAt as Date Created"
             ])
             .where({ "service_requests.orgId": req.orgId })

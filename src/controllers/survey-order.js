@@ -528,14 +528,14 @@ const surveyOrderController = {
           .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
           .leftJoin(
             "service_status AS status",
-            "o.surveyOrderStatus",
+            "s.serviceStatusCode",
             "status.statusCode"
           )
           .leftJoin("users AS u", "o.createdBy", "u.id")
           .select(
             "o.id AS surveyId",
             "o.serviceRequestId",
-            "status.descriptionEng AS surveyStatus",
+            "status.descriptionEng AS Status",
             "status.statusCode AS surveyStatusCode",
             "u.id As createdUserId",
             "u.name AS appointedBy",
@@ -558,11 +558,11 @@ const surveyOrderController = {
             "o.id as S Id",
             "s.description as Description",
             "o.appointedDate as Appointment Date",
-            "users.name as Assigned To",
+            "u.name as Assigned To",
             "s.id as SR Id",
             "s.priority as Priority",
-            "o.createdBy as Created by",
-            "o.surveyOrderStatus as Status",
+            "u.name as Created By",
+            "status.descriptionEng AS Status",
             "o.createdAt as Date Created"
           )
           .from("survey_orders As o")
@@ -586,9 +586,10 @@ const surveyOrderController = {
             qb.where("o.orgId", req.orgId);
           })
           .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
+          .leftJoin("users AS u", "o.createdBy", "u.id")         
           .leftJoin(
             "service_status AS status",
-            "o.surveyOrderStatus",
+            "s.serviceStatusCode",
             "status.statusCode"
           )
           .leftJoin(
@@ -597,7 +598,6 @@ const surveyOrderController = {
             "assigned_service_team.entityId"
           )
           .leftJoin("users", "assigned_service_team.userId", "users.id")
-          .leftJoin("users AS u", "o.createdBy", "u.id")
           .offset(offset)
           .limit(per_page);
       } else if (
@@ -622,6 +622,8 @@ const surveyOrderController = {
             "assigned_service_team.entityId"
           )
           .leftJoin("users", "assigned_service_team.userId", "users.id")
+          .leftJoin("users as u", "survey_orders.createdBy", "u.id")
+
           .groupBy([
             "service_requests.id",
             "survey_orders.id",
@@ -635,14 +637,13 @@ const surveyOrderController = {
             "users.name as Assigned To",
             "service_requests.id as SR Id",
             "service_requests.priority as Priority",
-            "survey_orders.createdBy as Created by",
-            "survey_orders.surveyOrderStatus as Status",
+            "u.name as Created By",
+            "service_requests.serviceStatusCode as Status",
             "survey_orders.createdAt as Date Created"
           ]);
 
         // For get the rows With pagination
         rows = await knex
-          .select()
           .from("survey_orders")
           .where({ "survey_orders.serviceRequestId": serviceRequestId, "survey_orders.orgId": req.orgId })
           .innerJoin(
@@ -656,6 +657,12 @@ const surveyOrderController = {
             "assigned_service_team.entityId"
           )
           .leftJoin("users", "assigned_service_team.userId", "users.id")
+          .leftJoin("users as u", "survey_orders.createdBy", "u.id")
+          .leftJoin(
+            "service_status AS status",
+            "service_requests.serviceStatusCode",
+            "status.statusCode"
+          )
           .select([
             "survey_orders.id as S Id",
             "service_requests.description as Description",
@@ -663,8 +670,8 @@ const surveyOrderController = {
             "users.name as Assigned To",
             "service_requests.id as SR Id",
             "service_requests.priority as Priority",
-            "survey_orders.createdBy as Created by",
-            "survey_orders.surveyOrderStatus as Status",
+            "u.name as Created By",
+            "status.descriptionEng AS Status",
             "survey_orders.createdAt as Date Created"
           ])
           .offset(offset)
@@ -687,6 +694,12 @@ const surveyOrderController = {
             "assigned_service_team.entityId"
           )
           .leftJoin("users", "assigned_service_team.userId", "users.id")
+          .leftJoin("users as u", "survey_orders.createdBy", "u.id")
+          .leftJoin(
+            "service_status AS status",
+            "service_requests.serviceStatusCode",
+            "status.statusCode"
+          )
           .groupBy([
             "service_requests.id",
             "survey_orders.id",
@@ -701,8 +714,8 @@ const surveyOrderController = {
             "users.name as Assigned To",
             "service_requests.id as SR Id",
             "service_requests.priority as Priority",
-            "survey_orders.createdBy as Created by",
-            "survey_orders.surveyOrderStatus as Status",
+            "u.name as Created By",
+            "status.descriptionEng AS Status",
             "survey_orders.createdAt as Date Created"
           ]);
 
@@ -720,6 +733,12 @@ const surveyOrderController = {
             "assigned_service_team.entityId"
           )
           .leftJoin("users", "assigned_service_team.userId", "users.id")
+          .leftJoin("users as u", "survey_orders.createdBy", "u.id")
+          .leftJoin(
+            "service_status AS status",
+            "service_requests.serviceStatusCode",
+            "status.statusCode"
+          )
           .select([
             "survey_orders.id as S Id",
             "service_requests.description as Description",
@@ -727,8 +746,8 @@ const surveyOrderController = {
             "users.name as Assigned To",
             "service_requests.id as SR Id",
             "service_requests.priority as Priority",
-            "survey_orders.createdBy as Created by",
-            "survey_orders.surveyOrderStatus as Status",
+            "u.name as Created By",
+            "status.descriptionEng AS Status",
             "survey_orders.createdAt as Date Created"
           ])
           .where({ "survey_orders.orgId": req.orgId })
