@@ -54,7 +54,12 @@ const propertyUnitController = {
 
  /*CHECK DUPLICATE VALUES OPEN */
  let existValue = await knex('property_units')
- .where({ unitNumber: payload.unitNumber, orgId: orgId });
+ .where({ unitNumber: payload.unitNumber,
+  companyId:payload.companyId,
+  projectId:payload.projectId,
+  buildingPhaseId:payload.buildingPhaseId,
+  floorZoneId:payload.floorZoneId,
+  orgId: orgId });
 if (existValue && existValue.length) {
  return res.status(400).json({
    errors: [
@@ -64,13 +69,21 @@ if (existValue && existValue.length) {
 }
 /*CHECK DUPLICATE VALUES CLOSE */
 
+        /*GET PROPERTY TYPE ID OPEN */
+        let buildingData =    await knex('buildings_and_phases')
+        .select('propertyTypeId')
+        .where({ id: payload.buildingPhaseId}).first(); 
+        let propertyType = buildingData.propertyTypeId;
+        /*GET PROPERTY TYPE ID OPEN */
+
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
           createdBy: userId,
           orgId: orgId,
           createdAt: currentTime,
-          updatedAt: currentTime
+          updatedAt: currentTime,
+          propertyTypeId:propertyType
         };
         let insertResult = await knex
           .insert(insertData)
@@ -114,7 +127,7 @@ if (existValue && existValue.length) {
           floorZoneId: Joi.string().required(),
           unitNumber: Joi.string().required(),
           houseId: Joi.string().required(),
-          description: Joi.string().allow("").optional(),
+          description: Joi.string().allow("").allow(null).optional(),
           productCode: Joi.string().required(),
           area: Joi.string().allow("").optional(),
           //createdBy:Joi.string().allow("").optional(),
@@ -134,11 +147,20 @@ if (existValue && existValue.length) {
           });
         }
 
+
+        /*GET PROPERTY TYPE ID OPEN */
+        let buildingData =    await knex('buildings_and_phases')
+        .select('propertyTypeId')
+        .where({ id: payload.buildingPhaseId}).first(); 
+        let propertyType = buildingData.propertyTypeId;
+        /*GET PROPERTY TYPE ID OPEN */
+
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
           createdBy: userId,
-          updatedAt: currentTime
+          updatedAt: currentTime,
+          propertyTypeId:propertyType
         };
         let insertResult = await knex
           .update(insertData)

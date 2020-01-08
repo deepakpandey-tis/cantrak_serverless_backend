@@ -63,6 +63,13 @@ const commonAreaController = {
           });
         }
 
+        /*GET PROPERTY TYPE ID OPEN */
+        let buildingData =    await knex('buildings_and_phases')
+        .select('propertyTypeId')
+        .where({ id: commonPayload.buildingPhaseId}).first(); 
+        let propertyType = buildingData.propertyTypeId;
+        /*GET PROPERTY TYPE ID OPEN */
+
         // Insert in common area table,
         const currentTime = new Date().getTime();
 
@@ -73,7 +80,8 @@ const commonAreaController = {
           createdAt: currentTime,
           updatedAt: currentTime,
           createdBy: userId,
-          orgId: orgId
+          orgId: orgId,
+          propertyTypeId:propertyType
         };
 
         console.log(
@@ -167,12 +175,18 @@ const commonAreaController = {
         //console.log('[controllers][entrance][signup]: Expiry Time', tokenExpiryTime);
 
         //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
+        /*GET PROPERTY TYPE ID OPEN */
+        let buildingData =    await knex('buildings_and_phases')
+        .select('propertyTypeId')
+        .where({ id: commonUpdatePaylaod.buildingPhaseId}).first(); 
+        let propertyType = buildingData.propertyTypeId;
+        /*GET PROPERTY TYPE ID OPEN */
         const updateDataResult = await knex
           .update({
             commonAreaCode: commonUpdatePaylaod.commonAreaCode.toUpperCase(),
             companyId: commonUpdatePaylaod.companyId,
             projectId: commonUpdatePaylaod.projectId,
-            propertyTypeId: commonUpdatePaylaod.propertyTypeId,
+            propertyTypeId: propertyType,
             buildingPhaseId: commonUpdatePaylaod.buildingPhaseId,
             floorZoneId: commonUpdatePaylaod.floorZoneId,
             description: commonUpdatePaylaod.description,
