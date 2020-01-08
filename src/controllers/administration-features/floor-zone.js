@@ -57,10 +57,12 @@ const floorZoneController = {
          });
        }
        /*CHECK DUPLICATE VALUES CLOSE */
-        
+        console.log('PAYLOAD:UNIT: **************************: ',payload)
+        let propertyType = await knex('buildings_and_phases').where({id:payload.buildingPhaseId}).select('propertyTypeId').first()
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
+          propertyTypeId: propertyType.propertyTypeId,
           orgId: orgId,
           createdBy: userId,
           createdAt: currentTime,
@@ -318,6 +320,7 @@ const floorZoneController = {
             .where({ "floor_and_zones.orgId": orgId })
             .offset(offset)
             .limit(per_page)
+            .orderBy('floor_and_zones.createdAt','desc')
         ]);
 
         let count = total.count;
@@ -370,6 +373,8 @@ const floorZoneController = {
             .where(filters, { "floor_and_zones.orgId": orgId })
             .offset(offset)
             .limit(per_page)
+            .orderBy('floor_and_zones.createdAt', 'desc')
+
         ]);
 
         let count = total.count;
@@ -661,10 +666,9 @@ const floorZoneController = {
             data[0].D == "PROJECT_NAME" &&
             data[0].E == "PROPERTY_TYPE_CODE" &&
             data[0].F == "BUILDING_PHASE_CODE" &&
-            data[0].G == "FLOOR_ZONE_CODE")
-          //&&
-          //data[0].H == "DESCRIPTION" &&
-          //data[0].I == "TOTAL_FLOOR_AREA"
+            data[0].G == "FLOOR_ZONE_CODE" &&
+            data[0].H == "DESCRIPTION" &&
+            data[0].I == "TOTAL_FLOOR_AREA")
           //&&
           // data[0].K == "STATUS" &&
           // data[0].L == "CREATED_BY" &&
@@ -724,10 +728,13 @@ const floorZoneController = {
               /**GET BUILDING PHASE ID CLOSE */
 
               if (i > 1) {
-                // let checkExist = await knex("floor_and_zones")
-                //   .select("floorZoneCode")
-                //   .where({ floorZoneCode: floorData.G, orgId: req.orgId });
-                //if (checkExist.length < 1) {
+                let checkExist = await knex("floor_and_zones")
+                  .select("floorZoneCode")
+                  .where({
+                    floorZoneCode: floorData.G, companyId: companyId,
+                  propertyTypeId: propertyTypeId,
+                    projectId: projectId, buildingPhaseId: buildingId, orgId: req.orgId });
+                if (checkExist.length < 1) {
                 let currentTime = new Date().getTime();
                 let insertData = {
                   orgId: req.orgId,
@@ -736,9 +743,10 @@ const floorZoneController = {
                   propertyTypeId: propertyTypeId,
                   buildingPhaseId: buildingId,
                   floorZoneCode: floorData.G,
-                  //description: floorData.H,
-                  //totalFloorArea: floorData.I,
-                  // isActive: floorData.K,
+                  description: floorData.H,
+                  totalFloorArea: floorData.I,
+                  isActive: true,
+                  createdBy:req.me.id,
                   // createdBy: floorData.M,
                   createdAt: currentTime,
                   updatedAt: currentTime
@@ -751,9 +759,9 @@ const floorZoneController = {
                 if (resultData && resultData.length) {
                   success++;
                 }
-                // } else {
-                //   fail++;
-                // }
+                } else {
+                  fail++;
+                }
               }
             }
 

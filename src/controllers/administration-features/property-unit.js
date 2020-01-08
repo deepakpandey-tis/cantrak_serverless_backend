@@ -54,7 +54,12 @@ const propertyUnitController = {
 
  /*CHECK DUPLICATE VALUES OPEN */
  let existValue = await knex('property_units')
- .where({ unitNumber: payload.unitNumber, orgId: orgId });
+ .where({ unitNumber: payload.unitNumber,
+  companyId:payload.companyId,
+  projectId:payload.projectId,
+  buildingPhaseId:payload.buildingPhaseId,
+  floorZoneId:payload.floorZoneId,
+  orgId: orgId });
 if (existValue && existValue.length) {
  return res.status(400).json({
    errors: [
