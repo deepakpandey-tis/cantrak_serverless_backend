@@ -147,15 +147,15 @@ const companyController = {
           id: Joi.string().required(),
           companyName: Joi.string().required(),
           companyId: Joi.string().required(),
-          descriptionEng: Joi.string().allow("")
+          descriptionEng: Joi.string().allow("").allow(null)
             .optional(),
-          description1: Joi.string().allow("")
+          description1: Joi.string().allow("").allow(null)
             .optional(),
-          contactPerson: Joi.string().allow("")
+          contactPerson: Joi.string().allow("").allow(null)
             .optional(),
-          companyAddressEng: Joi.string().allow("")
+          companyAddressEng: Joi.string().allow("").allow(null)
             .optional(),
-          companyAddressThai: Joi.string().allow("")
+          companyAddressThai: Joi.string().allow("").allow(null)
             .optional(),
           country: Joi.string().allow("")
             .optional(),
@@ -188,7 +188,7 @@ const companyController = {
             .allow("")
             .optional(),
           taxId: Joi.number()
-            .allow("")
+            .allow("").allow(null)
             .optional()
         });
 
@@ -205,6 +205,24 @@ const companyController = {
             ]
           });
         }
+
+
+        /*CHECK DUPLICATE VALUES OPEN */
+        let existValue = await knex('companies')
+          .where({ companyId: payload.companyId, orgId: orgId });
+        if (existValue && existValue.length) {
+
+          if(existValue[0].id===payload.id){
+
+          } else{
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: "Company Id already exist!!" }
+            ]
+          });
+        }
+        }
+        /*CHECK DUPLICATE VALUES CLOSE */
 
         let currentTime = new Date().getTime();
         let logo;
@@ -455,17 +473,17 @@ const companyController = {
 
       let [rows] = await Promise.all([
         knex("companies")
-          .innerJoin("users", "users.id", "companies.createdBy")
+          .leftJoin("users", "users.id", "companies.createdBy")
           .where({ "companies.orgId": req.orgId })
           .select([
-            //"companies.orgId as ORGANIZATION_ID",
             "companies.companyId as COMPANY",
             "companies.companyName as COMPANY_NAME",
             "companies.description1 as COMPANY_ALTERNATE_NAME",
             "companies.companyAddressEng as ADDRESS",
             "companies.companyAddressThai as ALTERNATE_ADDRESS",
             "companies.taxId as TAX_ID",
-            "companies.contactPerson as CONTACT_PERSON"
+            "companies.contactPerson as CONTACT_PERSON",
+            "companies.descriptionEng as DESCRIPTION"
             // "companies.isActive as STATUS",
             //"companies.telephone as CONTACT_NUMBER",
             //"users.name as CREATED BY",
@@ -614,7 +632,7 @@ const companyController = {
         let fail = 0;
         let success = 0;
         let result = null;
-
+        let userId = req.me.id;
         if (
           data[0].A == "COMPANY" ||
           (data[0].A == "Ã¯Â»Â¿COMPANY" &&
@@ -623,7 +641,9 @@ const companyController = {
             data[0].D == "ADDRESS" &&
             data[0].E == "ALTERNATE_ADDRESS" &&
             data[0].F == "TAX_ID" &&
-            data[0].G == "CONTACT_PERSON")
+            data[0].G == "CONTACT_PERSON" &&
+            data[0].H == "DESCRIPTION"
+            )
           //&&
           // data[0].H == "STATUS"
         ) {
@@ -635,9 +655,14 @@ const companyController = {
               if (i > 1) {
                 let checkExist = await knex("companies")
                   .select("companyName")
-                  .where({ companyName: companyData.B, orgId: req.orgId });
+                  .where({ companyId: companyData.A, orgId: req.orgId });
                 console.log("Check list company: ", checkExist);
                 if (checkExist.length < 1) {
+
+                  let taxId =  companyData.F;
+                  if(taxId){
+                  taxId    =  taxId.toString();
+                  }
                   let currentTime = new Date().getTime();
                   let insertData = {
                     orgId: req.orgId,
@@ -646,11 +671,14 @@ const companyController = {
                     description1: companyData.C,
                     companyAddressEng: companyData.D,
                     companyAddressThai: companyData.E,
-                    taxId: companyData.F,
+                    taxId: taxId,
                     contactPerson: companyData.G,
+                    descriptionEng:companyData.H,
+                    createdBy:req.me.id,
                     isActive: true,
                     createdAt: currentTime,
-                    updatedAt: currentTime
+                    updatedAt: currentTime,
+                    createdBy: userId
                   };
 
                   resultData = await knex

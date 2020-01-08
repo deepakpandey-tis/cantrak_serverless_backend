@@ -57,10 +57,12 @@ const floorZoneController = {
          });
        }
        /*CHECK DUPLICATE VALUES CLOSE */
-        
+        console.log('PAYLOAD:UNIT: **************************: ',payload)
+        let propertyType = await knex('buildings_and_phases').where({id:payload.buildingPhaseId}).select('propertyTypeId').first()
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
+          propertyTypeId: propertyType.propertyTypeId,
           orgId: orgId,
           createdBy: userId,
           createdAt: currentTime,
@@ -301,11 +303,17 @@ const floorZoneController = {
             .from("floor_and_zones")
             .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
             .leftJoin("users", "floor_and_zones.createdBy", "users.id")
+            .leftJoin("buildings_and_phases", "floor_and_zones.buildingPhaseId", "buildings_and_phases.id")
+            .leftJoin("projects", "floor_and_zones.projectId", "projects.id")
+            .leftJoin("property_types", "floor_and_zones.propertyTypeId", "property_types.id")
             .where({ "floor_and_zones.orgId": orgId })
             .first(),
           knex("floor_and_zones")
             .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
             .leftJoin("users", "floor_and_zones.createdBy", "users.id")
+            .leftJoin("buildings_and_phases", "floor_and_zones.buildingPhaseId", "buildings_and_phases.id")
+            .leftJoin("projects", "floor_and_zones.projectId", "projects.id")
+            .leftJoin("property_types", "floor_and_zones.propertyTypeId", "property_types.id")
             .select([
               "floor_and_zones.floorZoneCode as Floor/Zone",
               "floor_and_zones.id as id",
@@ -313,11 +321,15 @@ const floorZoneController = {
               "floor_and_zones.totalFloorArea as Total Area",
               "floor_and_zones.isActive as Status",
               "users.name as Created By",
-              "floor_and_zones.createdAt as Date Created"
+              "floor_and_zones.createdAt as Date Created",
+              "buildings_and_phases.buildingPhaseCode",
+              "projects.projectName",
+              "projects.project as projectId"
             ])
             .where({ "floor_and_zones.orgId": orgId })
             .offset(offset)
             .limit(per_page)
+            .orderBy('floor_and_zones.createdAt','desc')
         ]);
 
         let count = total.count;
@@ -349,6 +361,9 @@ const floorZoneController = {
             .from("floor_and_zones")
             .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
             .leftJoin("users", "floor_and_zones.createdBy", "users.id")
+            .leftJoin("buildings_and_phases", "floor_and_zones.buildingPhaseId", "buildings_and_phases.id")
+            .leftJoin("projects", "floor_and_zones.projectId", "projects.id")
+            .leftJoin("property_types", "floor_and_zones.propertyTypeId", "property_types.id")
             .where(filters, { "floor_and_zones.orgId": orgId })
 
             .offset(offset)
@@ -358,6 +373,9 @@ const floorZoneController = {
             .from("floor_and_zones")
             .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
             .leftJoin("users", "floor_and_zones.createdBy", "users.id")
+            .leftJoin("buildings_and_phases", "floor_and_zones.buildingPhaseId", "buildings_and_phases.id")
+            .leftJoin("projects", "floor_and_zones.projectId", "projects.id")
+            .leftJoin("property_types", "floor_and_zones.propertyTypeId", "property_types.id")
             .select([
               "floor_and_zones.floorZoneCode as Floor/Zone",
               "floor_and_zones.description as Description",
@@ -365,11 +383,16 @@ const floorZoneController = {
               "floor_and_zones.totalFloorArea as Total Area",
               "floor_and_zones.isActive as Status",
               "users.name as Created By",
-              "floor_and_zones.createdAt as Date Created"
+              "floor_and_zones.createdAt as Date Created",
+              "buildings_and_phases.buildingPhaseCode",
+              "projects.projectName",
+              "projects.project as projectId"
             ])
             .where(filters, { "floor_and_zones.orgId": orgId })
             .offset(offset)
             .limit(per_page)
+            .orderBy('floor_and_zones.createdAt', 'desc')
+
         ]);
 
         let count = total.count;
@@ -661,10 +684,9 @@ const floorZoneController = {
             data[0].D == "PROJECT_NAME" &&
             data[0].E == "PROPERTY_TYPE_CODE" &&
             data[0].F == "BUILDING_PHASE_CODE" &&
-            data[0].G == "FLOOR_ZONE_CODE")
-          //&&
-          //data[0].H == "DESCRIPTION" &&
-          //data[0].I == "TOTAL_FLOOR_AREA"
+            data[0].G == "FLOOR_ZONE_CODE" &&
+            data[0].H == "DESCRIPTION" &&
+            data[0].I == "TOTAL_FLOOR_AREA")
           //&&
           // data[0].K == "STATUS" &&
           // data[0].L == "CREATED_BY" &&
@@ -724,10 +746,13 @@ const floorZoneController = {
               /**GET BUILDING PHASE ID CLOSE */
 
               if (i > 1) {
-                // let checkExist = await knex("floor_and_zones")
-                //   .select("floorZoneCode")
-                //   .where({ floorZoneCode: floorData.G, orgId: req.orgId });
-                //if (checkExist.length < 1) {
+                let checkExist = await knex("floor_and_zones")
+                  .select("floorZoneCode")
+                  .where({
+                    floorZoneCode: floorData.G, companyId: companyId,
+                  propertyTypeId: propertyTypeId,
+                    projectId: projectId, buildingPhaseId: buildingId, orgId: req.orgId });
+                if (checkExist.length < 1) {
                 let currentTime = new Date().getTime();
                 let insertData = {
                   orgId: req.orgId,
@@ -736,9 +761,10 @@ const floorZoneController = {
                   propertyTypeId: propertyTypeId,
                   buildingPhaseId: buildingId,
                   floorZoneCode: floorData.G,
-                  //description: floorData.H,
-                  //totalFloorArea: floorData.I,
-                  // isActive: floorData.K,
+                  description: floorData.H,
+                  totalFloorArea: floorData.I,
+                  isActive: true,
+                  createdBy:req.me.id,
                   // createdBy: floorData.M,
                   createdAt: currentTime,
                   updatedAt: currentTime
@@ -751,9 +777,9 @@ const floorZoneController = {
                 if (resultData && resultData.length) {
                   success++;
                 }
-                // } else {
-                //   fail++;
-                // }
+                } else {
+                  fail++;
+                }
               }
             }
 
