@@ -334,8 +334,8 @@ const AssetCategoryController = {
             )
             .select([
               "asset_category_master.categoryName as CATEGORY_NAME",
-              "companies.companyId as COMPANY",
-              "companies.companyName as COMPANY_NAME",
+              //"companies.companyId as COMPANY",
+              //"companies.companyName as COMPANY_NAME",
               // "asset_category_master.isActive as STATUS"
             ])
             .where({ "asset_category_master.orgId": orgId })
@@ -350,8 +350,8 @@ const AssetCategoryController = {
             )
             .select([
               "asset_category_master.categoryName as CATEGORY_NAME",
-              "companies.companyId as COMPANY",
-              "companies.companyName as COMPANY_NAME",
+              //"companies.companyId as COMPANY",
+              //"companies.companyName as COMPANY_NAME",
               // "asset_category_master.isActive as STATUS"
             ])
             .where({
@@ -454,9 +454,7 @@ const AssetCategoryController = {
 
         if (
           data[0].A == "Ã¯Â»Â¿CATEGORY_NAME" ||
-          (data[0].A == "CATEGORY_NAME" &&
-            data[0].B == "COMPANY" &&
-            data[0].C == "COMPANY_NAME")
+          (data[0].A == "CATEGORY_NAME")
         ) {
           if (data.length > 0) {
             let i = 0;
@@ -472,19 +470,18 @@ const AssetCategoryController = {
                     categoryName: assetCategoryData.A,
                     orgId: req.orgId
                   });
-                if (checkExist.length < 1 && assetCategoryData.B) {
-                  let categoryIdResult = await knex("companies")
-                    .select("id")
-                    .where({
-                      orgId: req.orgId,
-                      companyId: assetCategoryData.B
-                    });
-                  if (categoryIdResult && categoryIdResult.length) {
+                if (checkExist.length < 1 && assetCategoryData.A) {
+                  // let categoryIdResult = await knex("companies")
+                  //   .select("id")
+                  //   .where({
+                  //     orgId: req.orgId,
+                  //     companyId: assetCategoryData.B
+                  //   });
+                  //if (categoryIdResult && categoryIdResult.length) {
                     success++;
                     let insertData = {
                       orgId: req.orgId,
                       categoryName: assetCategoryData.A,
-                      companyId: categoryIdResult[0].id,
                       isActive: true,
                       createdBy: req.me.id,
                       createdAt: currentTime
@@ -494,9 +491,9 @@ const AssetCategoryController = {
                       .insert(insertData)
                       .returning(["*"])
                       .into("asset_category_master");
-                  } else {
-                    fail++
-                  }
+                  // } else {
+                  //   fail++
+                  // }
                 }else {
                     fail++;
                 }

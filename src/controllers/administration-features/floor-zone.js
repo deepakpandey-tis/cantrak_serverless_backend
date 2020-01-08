@@ -301,11 +301,17 @@ const floorZoneController = {
             .from("floor_and_zones")
             .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
             .leftJoin("users", "floor_and_zones.createdBy", "users.id")
+            .leftJoin("buildings_and_phases", "floor_and_zones.buildingPhaseId", "buildings_and_phases.id")
+            .leftJoin("projects", "floor_and_zones.projectId", "projects.id")
+            .leftJoin("property_types", "floor_and_zones.propertyTypeId", "property_types.id")
             .where({ "floor_and_zones.orgId": orgId })
             .first(),
           knex("floor_and_zones")
             .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
             .leftJoin("users", "floor_and_zones.createdBy", "users.id")
+            .leftJoin("buildings_and_phases", "floor_and_zones.buildingPhaseId", "buildings_and_phases.id")
+            .leftJoin("projects", "floor_and_zones.projectId", "projects.id")
+            .leftJoin("property_types", "floor_and_zones.propertyTypeId", "property_types.id")
             .select([
               "floor_and_zones.floorZoneCode as Floor/Zone",
               "floor_and_zones.id as id",
@@ -313,7 +319,10 @@ const floorZoneController = {
               "floor_and_zones.totalFloorArea as Total Area",
               "floor_and_zones.isActive as Status",
               "users.name as Created By",
-              "floor_and_zones.createdAt as Date Created"
+              "floor_and_zones.createdAt as Date Created",
+              "buildings_and_phases.buildingPhaseCode",
+              "projects.projectName",
+              "projects.project as projectId"
             ])
             .where({ "floor_and_zones.orgId": orgId })
             .offset(offset)
@@ -349,6 +358,9 @@ const floorZoneController = {
             .from("floor_and_zones")
             .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
             .leftJoin("users", "floor_and_zones.createdBy", "users.id")
+            .leftJoin("buildings_and_phases", "floor_and_zones.buildingPhaseId", "buildings_and_phases.id")
+            .leftJoin("projects", "floor_and_zones.projectId", "projects.id")
+            .leftJoin("property_types", "floor_and_zones.propertyTypeId", "property_types.id")
             .where(filters, { "floor_and_zones.orgId": orgId })
 
             .offset(offset)
@@ -358,6 +370,9 @@ const floorZoneController = {
             .from("floor_and_zones")
             .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
             .leftJoin("users", "floor_and_zones.createdBy", "users.id")
+            .leftJoin("buildings_and_phases", "floor_and_zones.buildingPhaseId", "buildings_and_phases.id")
+            .leftJoin("projects", "floor_and_zones.projectId", "projects.id")
+            .leftJoin("property_types", "floor_and_zones.propertyTypeId", "property_types.id")
             .select([
               "floor_and_zones.floorZoneCode as Floor/Zone",
               "floor_and_zones.description as Description",
@@ -365,7 +380,10 @@ const floorZoneController = {
               "floor_and_zones.totalFloorArea as Total Area",
               "floor_and_zones.isActive as Status",
               "users.name as Created By",
-              "floor_and_zones.createdAt as Date Created"
+              "floor_and_zones.createdAt as Date Created",
+              "buildings_and_phases.buildingPhaseCode",
+              "projects.projectName",
+              "projects.project as projectId"
             ])
             .where(filters, { "floor_and_zones.orgId": orgId })
             .offset(offset)

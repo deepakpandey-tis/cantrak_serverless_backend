@@ -52,7 +52,7 @@ const propertyTypeController = {
         if (existValue && existValue.length) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: "Property type code duplicate value not allow!!" }
+              { code: "VALIDATION_ERROR", message: "Property type code already exist!!" }
             ]
           });
         }
@@ -110,7 +110,7 @@ const propertyTypeController = {
           propertyTypeCode: Joi.string().required(),
           descriptionEng: Joi.string()
             .optional()
-            .allow("")
+            .allow("").allow(null)
         });
 
         const result = Joi.validate(payload, schema);
@@ -126,6 +126,23 @@ const propertyTypeController = {
             ]
           });
         }
+
+         /*CHECK DUPLICATE VALUES OPEN */
+         let existValue = await knex('property_types')
+         .where({ propertyTypeCode: payload.propertyTypeCode, orgId: orgId });
+       if (existValue && existValue.length) {
+
+        if(existValue[0].id===payload.id){
+
+        } else{
+         return res.status(400).json({
+           errors: [
+             { code: "VALIDATION_ERROR", message: "Property type code Already exist!!" }
+           ]
+         });
+        }
+       }
+       /*CHECK DUPLICATE VALUES CLOSE */
 
         let currentTime = new Date().getTime();
         let insertData = { ...payload, createdBy: userId, updatedAt: currentTime };
@@ -161,7 +178,7 @@ const propertyTypeController = {
     try {
       let propertyType = null;
       let orgId = req.orgId;
-
+      let message;
       await knex.transaction(async trx => {
         let payload = req.body;
         const schema = Joi.object().keys({
@@ -175,12 +192,35 @@ const propertyTypeController = {
             ]
           });
         }
-        let propertyTypeResult = await knex
+        
+        let propertyTypeResult;
+        let checkStatus = await knex.from('property_types').where({ id: payload.id }).returning(['*'])
+       // res.json({message:checkStatus[0]})
+        if (checkStatus && checkStatus.length) {
+
+          if (checkStatus[0].isActive===true) {
+
+            propertyTypeResult = await knex
           .update({ isActive: false })
-          .where({ id: payload.id, orgId: orgId })
+          .where({ id: payload.id})
           .returning(["*"])
           .transacting(trx)
           .into("property_types");
+
+          message = "Property Type Inactive Successfully!"
+
+          }else{
+            propertyTypeResult = await knex
+          .update({ isActive: true })
+          .where({ id: payload.id})
+          .returning(["*"])
+          .transacting(trx)
+          .into("property_types");
+          message = "Property Type Active Successfully!"
+          }
+        
+        }
+        
         propertyType = propertyTypeResult[0];
         trx.commit;
       });
@@ -188,7 +228,7 @@ const propertyTypeController = {
         data: {
           PropertyType: propertyType
         },
-        message: "Property Type deleted!"
+        message: message
       });
     } catch (err) {
       console.log(
@@ -218,7 +258,7 @@ const propertyTypeController = {
           .count("* as count")
           .from("property_types")
           .leftJoin("users", "property_types.createdBy", "users.id")
-          .where({ "property_types.isActive": true, "property_types.orgId": orgId })
+          .where({"property_types.orgId": orgId })
           .first(),
         knex("property_types")
           .leftJoin("users", "property_types.createdBy", "users.id")
@@ -230,7 +270,7 @@ const propertyTypeController = {
             "users.name as Created By",
             "property_types.createdAt as Date Created"
           ])
-          .where({ "property_types.isActive": true, "property_types.orgId": orgId })
+          .where({"property_types.orgId": orgId })
           .offset(offset)
           .limit(per_page)
       ]);
@@ -384,8 +424,7 @@ const propertyTypeController = {
 
         property = _.omit(propertyResult[0], [
           "createdAt",
-          "updatedAt",
-          "isActive"
+          "updatedAt"
         ]);
         trx.commit;
       });
@@ -464,7 +503,7 @@ const propertyTypeController = {
               if (i > 1) {
 
                 let checkExist = await knex('property_types').select('id')
-                  .where({ propertyType: propertyData.B, propertyTypeCode: propertyData.A, orgId: req.orgId })
+                  .where({propertyTypeCode: propertyData.A, orgId: req.orgId })
                 if (checkExist.length < 1) {
 
                   let currentTime = new Date().getTime();
@@ -475,7 +514,8 @@ const propertyTypeController = {
                     descriptionEng: propertyData.C,
                     isActive: true,
                     createdAt: currentTime,
-                    updatedAt: currentTime
+                    updatedAt: currentTime,
+                    createdBy:req.me.id
                   }
 
                   resultData = await knex.insert(insertData).returning(['*']).into('property_types');
