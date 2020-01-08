@@ -238,12 +238,29 @@ const PartCategoryController = {
             ]
           });
         }
-        let ProjectResult = await knex
-          .update({ isActive: false })
-          .where({ id: payload.id, orgId: req.orgId })
-          .returning(["*"])
-          .transacting(trx)
-          .into("projects");
+        let check = await knex('part_category_master').select('isActive').where({id:payload.id,orgId:req.orgId}).first()
+        let ProjectResult
+        if(check.isActive){
+          ProjectResult = await knex
+            .update({ isActive: false })
+            .where({ id: payload.id, orgId: req.orgId })
+            .returning(["*"])
+            .transacting(trx)
+            .into("part_category_master");
+        } else {
+          ProjectResult = await knex
+            .update({ isActive: true })
+            .where({ id: payload.id, orgId: req.orgId })
+            .returning(["*"])
+            .transacting(trx)
+            .into("part_category_master");
+        }
+        // ProjectResult = await knex
+        //   .update({ isActive: false })
+        //   .where({ id: payload.id, orgId: req.orgId })
+        //   .returning(["*"])
+        //   .transacting(trx)
+        //   .into("part_category_master");
         Project = ProjectResult[0];
         trx.commit;
       });
@@ -428,7 +445,7 @@ const PartCategoryController = {
         //data         = JSON.stringify(data);
         let result = null;
         let currentTime = new Date().getTime();
-
+        console.log('DATA:***************** ',data)
         //console.log('DATA: ',data)
 
         if (

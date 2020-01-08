@@ -233,12 +233,29 @@ const AssetCategoryController = {
             ]
           });
         }
-        let ProjectResult = await knex
-          .update({ isActive: false })
-          .where({ id: payload.id, orgId: req.orgId })
-          .returning(["*"])
-          .transacting(trx)
-          .into("projects");
+        let check = await knex('asset_category_master').select('isActive').where({ id: payload.id, orgId: req.orgId }).first()
+        let ProjectResult
+        if(check.isActive){
+          ProjectResult = await knex
+            .update({ isActive: false })
+            .where({ id: payload.id, orgId: req.orgId })
+            .returning(["*"])
+            .transacting(trx)
+            .into("asset_category_master");
+        } else {
+          ProjectResult = await knex
+            .update({ isActive: true })
+            .where({ id: payload.id, orgId: req.orgId })
+            .returning(["*"])
+            .transacting(trx)
+            .into("asset_category_master");
+        }
+        // ProjectResult = await knex
+        //   .update({ isActive: false })
+        //   .where({ id: payload.id, orgId: req.orgId })
+        //   .returning(["*"])
+        //   .transacting(trx)
+        //   .into("asset_category_master");
         Project = ProjectResult[0];
         trx.commit;
       });
@@ -246,7 +263,7 @@ const AssetCategoryController = {
         data: {
           Project: Project
         },
-        message: "Project deleted!"
+        message: "asset category status changed"
       });
     } catch (err) {
       console.log("[controllers][generalsetup][viewProject] :  Error", err);
