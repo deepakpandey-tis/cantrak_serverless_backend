@@ -659,7 +659,7 @@ const ProjectController = {
               if (i > 1) {
                 let checkExist = await knex("projects")
                   .select("projectName")
-                  .where({ projectName: projectData.B, orgId: req.orgId });
+                  .where({ project: projectData.A,companyId:companyId, orgId: req.orgId });
                 if (checkExist.length < 1) {
                   let currentTime = new Date().getTime();
                   let insertData = {
