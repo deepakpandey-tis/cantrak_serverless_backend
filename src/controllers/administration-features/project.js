@@ -671,7 +671,7 @@ const ProjectController = {
                     projectLocationThai: projectData.F,
                     currency: projectData.G,
                     isActive: true,
-                    // createdBy: req.me.id,
+                    createdBy: req.me.id,
                     createdAt: currentTime,
                     updatedAt: currentTime
                   };

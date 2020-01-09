@@ -358,14 +358,14 @@ const serviceDetailsController = {
 
         // Get HouseId By Service Request Id
 
-        const requestResult = await knex("service_requests").where({
-          isActive: "true",
-          id: incidentRequestPayload.id,
-          orgId: orgId
-        });
-
+        const requestResult = await knex("service_requests")
+        .where({
+          "service_requests.isActive": "true",
+          "service_requests.id": incidentRequestPayload.id,
+          "service_requests.orgId": orgId
+        })
+        console.log("serviceRequest", requestResult);
         let houseId = requestResult[0].houseId;
-
         
         DataResult = await knex("property_units")
           .leftJoin("companies", "property_units.companyId", "=", "companies.id")
@@ -374,7 +374,9 @@ const serviceDetailsController = {
           .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "=", "buildings_and_phases.id")
           .leftJoin("floor_and_zones", "property_units.floorZoneId", "=", "floor_and_zones.id")
           .leftJoin("service_requests", "property_units.houseId", "=", "service_requests.houseId")
-
+          .leftJoin('users', 'service_requests.createdBy', 'users.id')
+          .leftJoin("users AS u", "service_requests.requestedBy", "u.id")
+          .leftJoin("source_of_request", "service_requests.serviceType","source_of_request.id")
           .select(
             "companies.companyName",
             "projects.projectName",
@@ -383,8 +385,12 @@ const serviceDetailsController = {
             "floor_and_zones.floorZoneCode",
             "service_requests.description as descriptions",
             "service_requests.location",
-            "service_requests.serviceType",
             "service_requests.serviceStatusCode as serviceStatusCode",
+            "service_requests.updatedAt as updatedAt",
+            "service_requests.createdAt as createdAt",
+            "u.name as requestedBy",
+            "users.name as createdUser",
+            "source_of_request.descriptionEng as serviceType",
             "property_units.*"
           )
           .where({
@@ -405,8 +411,20 @@ const serviceDetailsController = {
           ["projectId"],
           ["propertyTypeId"],
           ["buildingPhaseId"],
-          ["floorZoneId"]
+          ["floorZoneId"],
+          ["property_units.createdBy"]
         );
+        let locationResult = await knex("location_tags")
+        .leftJoin("location_tags_master","location_tags.locationTagId","location_tags_master.id")
+        .where({
+          "location_tags.entityType": "service_requests",
+          "location_tags.entityId": incidentRequestPayload.id
+        })
+        .select("location_tags_master.title")
+        let tags = locationResult.map(v => v.title)//[userHouseId.houseId];
+
+        DataResult.locationTags = tags;
+        console.log("locationResult",tags);
 
         generalDetails = DataResult;
         trx.commit;
