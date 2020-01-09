@@ -49,11 +49,11 @@ const buildingPhaseController = {
 
          /*CHECK DUPLICATE VALUES OPEN */
          let existValue = await knex('buildings_and_phases')
-         .where({ buildingPhaseCode: payload.buildingPhaseCode,propertyTypeId:payload.propertyTypeId, orgId: orgId });
+         .where({ buildingPhaseCode: payload.buildingPhaseCode,companyId:payload.companyId,projectId:payload.projectId, orgId: orgId });
        if (existValue && existValue.length) {
          return res.status(400).json({
            errors: [
-             { code: "VALIDATION_ERROR", message: "Building Phase code & Property type already exist!!" }
+             { code: "VALIDATION_ERROR", message: "Building Phase code already exist!!" }
            ]
          });
        }
@@ -110,9 +110,9 @@ const buildingPhaseController = {
           projectId: Joi.string().required(),
           propertyTypeId: Joi.string().required(),
           buildingPhaseCode: Joi.string().required(),
-          description: Joi.string().allow("").optional(),
-          buildingAddressEng: Joi.string().allow("").optional(),
-          buildingAddressThai: Joi.string().allow("").optional(),
+          description: Joi.string().allow("").allow(null).optional(),
+          buildingAddressEng: Joi.string().allow("").allow(null).optional(),
+          buildingAddressThai: Joi.string().allow("").allow(null).optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -131,7 +131,7 @@ const buildingPhaseController = {
 
          /*CHECK DUPLICATE VALUES OPEN */
          let existValue = await knex('buildings_and_phases')
-         .where({ buildingPhaseCode: payload.buildingPhaseCode,propertyTypeId:payload.propertyTypeId, orgId: orgId });
+         .where({ buildingPhaseCode: payload.buildingPhaseCode,companyId:payload.companyId,projectId:payload.projectId, orgId: orgId });  
 
        if (existValue && existValue.length) {
 
@@ -140,7 +140,7 @@ const buildingPhaseController = {
         } else{
          return res.status(400).json({
            errors: [
-             { code: "VALIDATION_ERROR", message: "Building Phase code & Property type already exist!!" }
+             { code: "VALIDATION_ERROR", message: "Building Phase code already exist!!" }
            ]
          });
         }

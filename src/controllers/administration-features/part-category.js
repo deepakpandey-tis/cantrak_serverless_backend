@@ -295,8 +295,6 @@ const PartCategoryController = {
           .from("part_category_master")
           .leftJoin("users", "users.id", "part_category_master.createdBy")
           .where({ "part_category_master.orgId": orgId })
-          .offset(offset)
-          .limit(per_page)
           .first(),
         knex
           .from("part_category_master")
