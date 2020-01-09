@@ -63,6 +63,7 @@ const authMiddleware = {
                     // currentUser.roles = [roleName];
 
                     req.me = currentUser;
+                    
                     console.log('[middleware][auth]: Current User:', currentUser);
                     return next();
                 }
