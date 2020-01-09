@@ -344,6 +344,8 @@ const serviceOrderController = {
                         .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
                         .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
                         .leftJoin('users', 'assigned_service_team.userId', 'users.id')
+                        .leftJoin("service_status AS status","service_requests.serviceStatusCode","status.statusCode")
+                        .leftJoin("users AS u", "service_requests.createdBy", "u.id")
                         .select([
                             'service_orders.id as So Id',
                             'service_requests.description as Description',
@@ -351,9 +353,9 @@ const serviceOrderController = {
                             'service_requests.id as Sr Id',
                             'incident_categories.descriptionEng as Problem',
                             'priority as Priority',
-                            'service_requests.createdBy as Created By',
                             'orderDueDate as Due Date',
-                            'serviceStatusCode as Status',
+                            'u.name as Created By',
+                            'status.descriptionEng as Status',
                             'service_orders.createdAt as Date Created',
                             'service_requests.houseId as houseId'
                         ]).where((qb) => {
@@ -372,13 +374,16 @@ const serviceOrderController = {
                                 qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
                             }
 
-                        }).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id', 'assigned_service_team.id', 'users.id']),
+                        }).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id', 'assigned_service_team.id', 'users.id','u.id','status.id']),
+                    
                     knex.from('service_orders')
                         .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
                         .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
                         .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
                         .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
                         .leftJoin('users', 'assigned_service_team.userId', 'users.id')
+                        .leftJoin("service_status AS status","service_requests.serviceStatusCode","status.statusCode")
+                        .leftJoin("users AS u", "service_requests.createdBy", "u.id")
                         .select([
                             'service_orders.id as So Id',
                             'service_requests.description as Description',
@@ -388,7 +393,8 @@ const serviceOrderController = {
                             'priority as Priority',
                             'service_requests.createdBy as Created By',
                             'orderDueDate as Due Date',
-                            'serviceStatusCode as Status',
+                            'u.name as Created By',
+                            'status.descriptionEng as Status',
                             'service_orders.createdAt as Date Created',
                             'service_requests.houseId as houseId'
 
@@ -432,27 +438,31 @@ const serviceOrderController = {
                                 "service_problems.categoryId",
                                 "incident_categories.id"
                             )
+                            .leftJoin("service_status AS status","service_requests.serviceStatusCode","status.statusCode")
+                            .leftJoin("users AS u", "service_requests.createdBy", "u.id")
+                        
                             .select([
                                 "service_orders.id as So Id",
                                 "service_requests.description as Description",
-                                "location as Location",
+                                "service_requests.location as Location",
                                 "service_requests.id as Sr Id",
                                 "incident_categories.descriptionEng as Problem",
                                 "priority as Priority",
-                                "service_requests.createdBy as Created By",
-
+                               
                                 //   "service_orders.createdBy as Created By",
                                 "orderDueDate as Due Date",
-                                "serviceStatusCode as Status",
-                                "service_orders.createdAt as Date Created",
+                                'u.name as Created By',
+                                'status.descriptionEng as Status',
+                                'service_orders.createdAt as Date Created',
                                 'service_requests.houseId as houseId'
-
                             ])
                             .groupBy([
                                 "service_requests.id",
                                 "service_orders.id",
                                 "service_problems.id",
-                                "incident_categories.id"
+                                "incident_categories.id",
+                                "u.id",
+                                "status.id"
                             ])
                             .where({ "service_orders.orgId": req.orgId }),
                         knex
@@ -472,17 +482,19 @@ const serviceOrderController = {
                                 "service_problems.categoryId",
                                 "incident_categories.id"
                             )
+                            .leftJoin("service_status AS status","service_requests.serviceStatusCode","status.statusCode")
+                            .leftJoin("users AS u", "service_requests.createdBy", "u.id")
                             .select([
                                 "service_orders.id as So Id",
                                 "service_requests.description as Description",
-                                "location as Location",
+                                "service_requests.location as Location",
                                 "service_requests.id as Sr Id",
                                 "incident_categories.descriptionEng as Problem",
-                                "priority as Priority",
-                                "service_requests.createdBy as Created By",
+                                "service_requests.priority as Priority",
+                                "u.name as Created By",
                                 //   "service_orders.createdBy as Created By",
                                 "orderDueDate as Due Date",
-                                "serviceStatusCode as Status",
+                                "status.descriptionEng as Status",
                                 "service_orders.createdAt as Date Created",
                                 'service_requests.houseId as houseId'
 
@@ -521,6 +533,9 @@ const serviceOrderController = {
                                 "assigned_service_team.userId",
                                 "users.id"
                             )
+                            .leftJoin("service_status AS status","service_requests.serviceStatusCode","status.statusCode")
+                            .leftJoin("users AS u", "service_requests.createdBy", "u.id")
+                           
                             .select([
                                 "service_orders.id as So Id",
                                 "service_requests.description as Description",
@@ -528,9 +543,9 @@ const serviceOrderController = {
                                 "service_requests.id as Sr Id",
                                 "incident_categories.descriptionEng as Problem",
                                 "priority as Priority",
-                                "service_requests.createdBy as Created By",
                                 "orderDueDate as Due Date",
-                                "serviceStatusCode as Status",
+                                "status.descriptionEng as Status",
+                                "u.name as Created By",
                                 "service_orders.createdAt as Date Created",
                                 'service_requests.houseId as houseId'
 
@@ -566,7 +581,9 @@ const serviceOrderController = {
                                 "service_problems.id",
                                 "incident_categories.id",
                                 "assigned_service_team.id",
-                                "users.id"
+                                "users.id",
+                                "u.id",
+                                "status.id"
                             ]),
                         knex
                             .from("service_orders")
@@ -595,6 +612,9 @@ const serviceOrderController = {
                                 "assigned_service_team.userId",
                                 "users.id"
                             )
+                            .leftJoin("service_status AS status","service_requests.serviceStatusCode","status.statusCode")
+                            .leftJoin("users AS u", "service_requests.createdBy", "u.id")
+                           
                             .select([
                                 "service_orders.id as So Id",
                                 "service_requests.description as Description",
@@ -602,11 +622,10 @@ const serviceOrderController = {
                                 "service_requests.id as Sr Id",
                                 "incident_categories.descriptionEng as Problem",
                                 "priority as Priority",
-                                "service_requests.createdBy as Created By",
+                                "u.name as Created By",
                                 'service_requests.houseId as houseId',
-
                                 "orderDueDate as Due Date",
-                                "serviceStatusCode as Status",
+                                "status.descriptionEng as Status",
                                 "service_orders.createdAt as Date Created"
                             ])
                             .where(qb => {
@@ -1718,7 +1737,7 @@ const serviceOrderController = {
             await knex.transaction(async trx => {
                 let serviceAppointmentId = req.body.serviceAppointmentId;
                 let serviceRequestId = req.body.serviceRequestId;
-                console.log("serviceAppointmentId",serviceAppointmentId);
+                console.log("serviceAppointmentId", serviceAppointmentId);
                 // Get Service Appointment Details
                 let serviceAppointmentResult = await knex.select().where({ id: serviceAppointmentId }).returning(['*']).transacting(trx).into('service_appointments')
 
@@ -1731,19 +1750,19 @@ const serviceOrderController = {
                 let assignedServiceTeam = null
                 if (serviceAppointmentId) {
                     assignedServiceTeam = await knex.select().where({ entityId: serviceAppointmentId, entityType: 'service_appointments' }).returning(['*']).transacting(trx).into('assigned_service_team')
-                } 
+                }
 
                 let assignedServiceTeamUser = null
                 if (assignedServiceTeam) {
-                    assignedServiceTeamUser = await knex.select('name').where({ id: assignedServiceTeam[0]['userId']}).returning(['*']).transacting(trx).into('users')
-                } 
+                    assignedServiceTeamUser = await knex.select('name').where({ id: assignedServiceTeam[0]['userId'] }).returning(['*']).transacting(trx).into('users')
+                }
 
 
                 // Get additional users
                 let additionalUsers = []
                 if (serviceAppointmentId) {
                     additionalUsers = await knex.select().where({ entityId: serviceAppointmentId, entityType: 'service_appointments' }).returning(['*']).transacting(trx).into('assigned_service_additional_users')
-                } 
+                }
 
                 res.status(200).json({
                     data: { serviceAppointment: serviceAppointmentResult[0], assignedServiceTeamUser, additionalUsers, serviceRequest: serviceRequestResult[0] },
