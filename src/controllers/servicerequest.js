@@ -2104,6 +2104,7 @@ const serviceRequestController = {
             location: payload.location,
             priority: priority,
             serviceStatusCode: "O",
+            createdBy:req.me.id,
             orgId: orgId,
             createdAt: currentTime,
             updatedAt: currentTime
@@ -2116,6 +2117,7 @@ const serviceRequestController = {
             requestedBy: payload.userId,
             serviceType: payload.serviceType,
             location: payload.location,
+            createdBy: req.me.id,
             priority: priority,
             serviceStatusCode: "O",
             orgId: orgId,
@@ -2210,11 +2212,11 @@ const serviceRequestController = {
     try {
       const serviceRequestId = req.body.serviceRequestId;
       const status = await knex("service_requests")
-        .update({ serviceStatusCode: "DECLINE" })
+        .update({ serviceStatusCode: "C" })
         .where({ id: serviceRequestId });
       return res.status(200).json({
         data: {
-          status: "DECLINE"
+          status: "C"
         },
         message: "Service Declined Successfully!"
       });
