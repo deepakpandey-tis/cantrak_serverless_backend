@@ -728,6 +728,9 @@ if (existValue && existValue.length) {
         let result = null;
 
         //console.log('DATA: ',data)
+        let totalData = data.length - 1;
+        let fail = 0;
+        let success = 0;
 
         if (
           data[0].A == "Ã¯Â»Â¿COMPANY" ||
@@ -814,31 +817,41 @@ if (existValue && existValue.length) {
               );
 
               if (!propertyTypeId) {
+                fail++;
                 continue;
               }
               if (!buildingPhaseId) {
+                fail++;
                 continue;
               }
               if (!floorZoneId) {
+                fail++;
                 continue;
               }
 
               if (!companyId) {
+                fail++;
                 continue;
               }
               if (!projectId) {
+                fail++;
                 continue;
               }
 
-              //i++;
-              //if (i > 1) {
-              // let checkExist = await knex("property_units")
-              //   .select("whtCode")
-              //   .where({
-              //     whtCode: propertyUnitData.B,
-              //     orgId: propertyUnitData.A
-              //   });
-              // if (checkExist.length < 1) {
+              i++;
+              if (i > 1) {
+              let checkExist = await knex("property_units")
+                .select("id")
+                .where({
+                 companyId:companyId,
+                  projectId:projectId,
+                  buildingPhaseId:buildingPhaseId,
+                  floorZoneId:floorZoneId,
+                  propertyTypeId:propertyTypeId,
+                  orgId:req.orgId,
+                  unitNumber:propertyUnitData.H
+                });
+              if (checkExist.length < 1) {
               let insertData = {
                 orgId: req.orgId,
                 companyId,
@@ -859,15 +872,35 @@ if (existValue && existValue.length) {
                 .insert(insertData)
                 .returning(["*"])
                 .into("property_units");
-              // }
-              // }
+                success++;
+              } else{
+                fail++;
+              }
+              }
+            }
+
+            let message = null;
+            if (totalData == success) {
+              message =
+                "System have processed ( " +
+                totalData +
+                " ) entries and added them successfully!";
+            } else {
+              message =
+                "System have processed ( " +
+                totalData +
+                " ) entries out of which only ( " +
+                success +
+                " ) are added and others are failed ( " +
+                fail +
+                " ) due to validation!";
             }
 
             let deleteFile = await fs.unlink(file_path, err => {
               console.log("File Deleting Error " + err);
             });
             return res.status(200).json({
-              message: "Property Unit Data Import Successfully!"
+              message: message
             });
           }
         } else {
