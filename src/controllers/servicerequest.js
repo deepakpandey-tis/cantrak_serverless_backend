@@ -2228,7 +2228,7 @@ const serviceRequestController = {
     try {
       const serviceRequestId = req.body.serviceRequestId;
       const status = await knex("service_requests")
-        .update({ serviceStatusCode: "A" })
+        .update({ serviceStatusCode: "A",createdBy:req.me.id })
         .where({ id: serviceRequestId });
       return res.status(200).json({
         data: {

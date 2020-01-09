@@ -289,8 +289,6 @@ const AssetCategoryController = {
           .from("asset_category_master")
           .leftJoin("users", "users.id", "asset_category_master.createdBy")
           .where({ "asset_category_master.orgId": req.orgId })
-          .offset(offset)
-          .limit(per_page)
           .first(),
         knex
           .from("asset_category_master")
