@@ -49,11 +49,11 @@ const buildingPhaseController = {
 
          /*CHECK DUPLICATE VALUES OPEN */
          let existValue = await knex('buildings_and_phases')
-         .where({ buildingPhaseCode: payload.buildingPhaseCode,propertyTypeId:payload.propertyTypeId, orgId: orgId });
+         .where({ buildingPhaseCode: payload.buildingPhaseCode,companyId:payload.companyId,projectId:payload.projectId, orgId: orgId });
        if (existValue && existValue.length) {
          return res.status(400).json({
            errors: [
-             { code: "VALIDATION_ERROR", message: "Building Phase code & Property type already exist!!" }
+             { code: "VALIDATION_ERROR", message: "Building Phase code already exist!!" }
            ]
          });
        }
@@ -110,9 +110,9 @@ const buildingPhaseController = {
           projectId: Joi.string().required(),
           propertyTypeId: Joi.string().required(),
           buildingPhaseCode: Joi.string().required(),
-          description: Joi.string().allow("").optional(),
-          buildingAddressEng: Joi.string().allow("").optional(),
-          buildingAddressThai: Joi.string().allow("").optional(),
+          description: Joi.string().allow("").allow(null).optional(),
+          buildingAddressEng: Joi.string().allow("").allow(null).optional(),
+          buildingAddressThai: Joi.string().allow("").allow(null).optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -131,7 +131,7 @@ const buildingPhaseController = {
 
          /*CHECK DUPLICATE VALUES OPEN */
          let existValue = await knex('buildings_and_phases')
-         .where({ buildingPhaseCode: payload.buildingPhaseCode,propertyTypeId:payload.propertyTypeId, orgId: orgId });
+         .where({ buildingPhaseCode: payload.buildingPhaseCode,companyId:payload.companyId,projectId:payload.projectId, orgId: orgId });  
 
        if (existValue && existValue.length) {
 
@@ -140,7 +140,7 @@ const buildingPhaseController = {
         } else{
          return res.status(400).json({
            errors: [
-             { code: "VALIDATION_ERROR", message: "Building Phase code & Property type already exist!!" }
+             { code: "VALIDATION_ERROR", message: "Building Phase code already exist!!" }
            ]
          });
         }
@@ -775,6 +775,8 @@ const buildingPhaseController = {
             let i = 0;
             console.log("Data[0]", data[0]);
             let success = 0;
+            let totalData = data.length - 1;
+            let fail = 0;
 
             for (let buildingData of data) {
               // Find Company primary key
@@ -811,13 +813,16 @@ const buildingPhaseController = {
               }
               if (!companyId) {
                 console.log("breaking due to: null companyId");
+                fail++;
                 continue;
               }
               if (!projectId) {
+                fail++;
                 console.log("breaking due to: null projectId");
                 continue;
               }
               if (!propertyTypeId) {
+                fail++;
                 console.log("breaking due to: null propertyTypeId");
                 continue;
               }
@@ -830,12 +835,12 @@ const buildingPhaseController = {
               );
 
               i++;
-
               const checkExistance = await knex("buildings_and_phases").where({
                 orgId: req.orgId,
-                buildingPhaseCode: buildingData.F
+                buildingPhaseCode: buildingData.F,companyId:companyId,projectId:projectId
               });
               if (checkExistance.length) {
+                fail++;
                 continue;
               }
 
@@ -873,8 +878,26 @@ const buildingPhaseController = {
             let deleteFile = await fs.unlink(file_path, err => {
               console.log("File Deleting Error " + err);
             });
+
+            let message = null;
+            fail = fail-1;
+            if (totalData == success) {
+              message =
+                "System have processed ( " +
+                totalData +
+                " ) entries and added them successfully!";
+            } else {
+              message =
+                "System have processed ( " +
+                totalData +
+                " ) entries out of which only ( " +
+                success +
+                " ) are added and others are failed ( " +
+                fail +
+                " ) due to validation!";
+            }
             return res.status(200).json({
-              message: success + " rows imported successfully!"
+              message: message
             });
           }
         } else {

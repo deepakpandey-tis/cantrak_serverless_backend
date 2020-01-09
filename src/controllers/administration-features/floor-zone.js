@@ -703,7 +703,9 @@ const floorZoneController = {
                 .where({ companyId: floorData.A, orgId: req.orgId });
               let companyId = null;
               if (!companyData && !companyData.length) {
+                fail++;
                 continue;
+                
               }
               if (companyData && companyData.length) {
                 companyId = companyData[0].id;
@@ -714,6 +716,7 @@ const floorZoneController = {
                 .where({ project: floorData.C, orgId: req.orgId });
               let projectId = null;
               if (!projectData && !projectData.length) {
+                fail++;
                 continue;
               }
               if (projectData && projectData.length) {
@@ -725,6 +728,7 @@ const floorZoneController = {
                 .where({ propertyTypeCode: floorData.E, orgId: req.orgId });
               let propertyTypeId = null;
               if (!propertTypeData && !propertTypeData.length) {
+                fail++;
                 continue;
               }
               if (propertTypeData && propertTypeData.length) {
@@ -738,6 +742,7 @@ const floorZoneController = {
                 .where({ buildingPhaseCode: floorData.F, orgId: req.orgId });
               let buildingId = null;
               if (!buildingData && !buildingData.length) {
+                fail++;
                 continue;
               }
               if (buildingData && buildingData.length) {

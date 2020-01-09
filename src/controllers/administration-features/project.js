@@ -60,7 +60,7 @@ const ProjectController = {
 
         /*CHECK DUPLICATE VALUES OPEN */
         let existValue = await knex('projects')
-          .where({ project: payload.project, orgId: req.orgId });
+          .where({ project: payload.project, companyId: payload.companyId, orgId: req.orgId });
         if (existValue && existValue.length) {
           return res.status(400).json({
             errors: [
@@ -116,9 +116,9 @@ const ProjectController = {
           companyId: Joi.string().required(),
           project: Joi.string().required(),
           projectName: Joi.string().required(),
-          projectLocationThai: Joi.string().allow('').optional(),
-          projectLocationEng: Joi.string().allow('').optional(),
-          currency: Joi.string().allow('').optional()
+          projectLocationThai: Joi.string().allow('').allow(null).optional(),
+          projectLocationEng: Joi.string().allow('').allow(null).optional(),
+          currency: Joi.string().allow('').allow(null).optional()
           // projectStartDate: Joi.string().allow('').optional(),
           // projectEndDate: Joi.string().allow('').optional(),
           // branchId: Joi.string().allow('').optional(),
@@ -147,6 +147,24 @@ const ProjectController = {
             ]
           });
         }
+
+        /*CHECK DUPLICATE VALUES OPEN */
+        let existValue = await knex('projects')
+          .where({ project: payload.project, companyId: payload.companyId, orgId: req.orgId });
+        if (existValue && existValue.length) {
+
+          if (existValue[0].id === payload.id) {
+
+          } else {
+            return res.status(400).json({
+              errors: [
+                { code: "VALIDATION_ERROR", message: "Project Id already exist!!" }
+              ]
+            });
+          }
+        }
+        /*CHECK DUPLICATE VALUES CLOSE */
+
 
         let currentTime = new Date().getTime();
         let insertData = { ...payload, updatedAt: currentTime };
@@ -268,8 +286,8 @@ const ProjectController = {
       let page = reqData.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
-      let total,rows
-      let {organisation,company,project} = req.body;
+      let total, rows
+      let { organisation, company, project } = req.body;
       let role = req.me.roles[0];
       let name = req.me.name;
 
@@ -285,7 +303,7 @@ const ProjectController = {
                 qb.where('projects.orgId', organisation)
               }
               if (company) {
-                qb.where('projects.companyId',company)
+                qb.where('projects.companyId', company)
               }
               if (project) {
                 qb.where('projects.projectName', 'iLIKE', `%${project}%`)
@@ -300,7 +318,7 @@ const ProjectController = {
                 qb.where('projects.orgId', organisation)
               }
               if (company) {
-                qb.where('projects.companyId',company)
+                qb.where('projects.companyId', company)
               }
               if (project) {
                 qb.where('projects.projectName', 'iLIKE', `%${project}%`)
@@ -332,7 +350,7 @@ const ProjectController = {
                 qb.where('projects.orgId', organisation)
               }
               if (company) {
-                qb.where('projects.companyId',company)
+                qb.where('projects.companyId', company)
               }
               if (project) {
                 qb.where('projects.projectName', 'iLIKE', `%${project}%`)
@@ -348,7 +366,7 @@ const ProjectController = {
                 qb.where('projects.orgId', organisation)
               }
               if (company) {
-                qb.where('projects.companyId',company)
+                qb.where('projects.companyId', company)
               }
               if (project) {
                 qb.where('projects.projectName', 'iLIKE', `%${project}%`)
@@ -367,16 +385,16 @@ const ProjectController = {
         ]);
       }
 
-        let count = total.count;
-        pagination.total = count;
-        pagination.per_page = per_page;
-        pagination.offset = offset;
-        pagination.to = offset + rows.length;
-        pagination.last_page = Math.ceil(count / per_page);
-        pagination.current_page = page;
-        pagination.from = offset;
-        pagination.data = rows;
-      
+      let count = total.count;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
       return res.status(200).json({
         data: {
           projects: pagination
@@ -641,7 +659,7 @@ const ProjectController = {
               if (i > 1) {
                 let checkExist = await knex("projects")
                   .select("projectName")
-                  .where({ projectName: projectData.B, orgId: req.orgId });
+                  .where({ project: projectData.A,companyId:companyId, orgId: req.orgId });
                 if (checkExist.length < 1) {
                   let currentTime = new Date().getTime();
                   let insertData = {
