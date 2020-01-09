@@ -22,7 +22,7 @@ const propertyUnitController = {
 
       let propertyUnit = null;
       await knex.transaction(async trx => {
-        const payload = _.omit(req.body,'propertyTypeId');
+        const payload = _.omit(req.body, 'propertyTypeId');
 
         const schema = Joi.object().keys({
           companyId: Joi.string().required(),
@@ -52,27 +52,24 @@ const propertyUnitController = {
           });
         }
 
- /*CHECK DUPLICATE VALUES OPEN */
- let existValue = await knex('property_units')
- .where({ unitNumber: payload.unitNumber,
-  companyId:payload.companyId,
-  projectId:payload.projectId,
-  buildingPhaseId:payload.buildingPhaseId,
-  floorZoneId:payload.floorZoneId,
-  orgId: orgId });
-if (existValue && existValue.length) {
- return res.status(400).json({
-   errors: [
-     { code: "VALIDATION_ERROR", message: "Unit Number  already exist!!" }
-   ]
- });
-}
-/*CHECK DUPLICATE VALUES CLOSE */
+        /*CHECK DUPLICATE VALUES OPEN */
+        let existValue = await knex('property_units')
+          .where({
+            houseId:payload.houseId
+          });
+        if (existValue && existValue.length) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: "House Id  already exist!!" }
+            ]
+          });
+        }
+        /*CHECK DUPLICATE VALUES CLOSE */
 
         /*GET PROPERTY TYPE ID OPEN */
-        let buildingData =    await knex('buildings_and_phases')
-        .select('propertyTypeId')
-        .where({ id: payload.buildingPhaseId}).first(); 
+        let buildingData = await knex('buildings_and_phases')
+          .select('propertyTypeId')
+          .where({ id: payload.buildingPhaseId }).first();
         let propertyType = buildingData.propertyTypeId;
         /*GET PROPERTY TYPE ID OPEN */
 
@@ -83,7 +80,7 @@ if (existValue && existValue.length) {
           orgId: orgId,
           createdAt: currentTime,
           updatedAt: currentTime,
-          propertyTypeId:propertyType
+          propertyTypeId: propertyType
         };
         let insertResult = await knex
           .insert(insertData)
@@ -116,7 +113,7 @@ if (existValue && existValue.length) {
       let userId = req.me.id;
 
       await knex.transaction(async trx => {
-        const payload = _.omit(req.body,'propertyTypeId');
+        const payload = _.omit(req.body, 'propertyTypeId');
 
         const schema = Joi.object().keys({
           id: Joi.string().required(),
@@ -129,7 +126,7 @@ if (existValue && existValue.length) {
           houseId: Joi.string().required(),
           description: Joi.string().allow("").allow(null).optional(),
           productCode: Joi.string().required(),
-          area: Joi.string().allow("").optional(),
+          area: Joi.string().allow("").allow(null).optional(),
           //createdBy:Joi.string().allow("").optional(),
         });
 
@@ -148,10 +145,30 @@ if (existValue && existValue.length) {
         }
 
 
+         /*CHECK DUPLICATE VALUES OPEN */
+         let existValue = await knex('property_units')
+         .where({
+           houseId:payload.houseId
+         });
+       if (existValue && existValue.length) {
+
+        if (existValue[0].id === payload.id) {
+
+        } else {
+         return res.status(400).json({
+           errors: [
+             { code: "VALIDATION_ERROR", message: "House Id  already exist!!" }
+           ]
+         });
+        }
+       }
+       /*CHECK DUPLICATE VALUES CLOSE */
+
+
         /*GET PROPERTY TYPE ID OPEN */
-        let buildingData =    await knex('buildings_and_phases')
-        .select('propertyTypeId')
-        .where({ id: payload.buildingPhaseId}).first(); 
+        let buildingData = await knex('buildings_and_phases')
+          .select('propertyTypeId')
+          .where({ id: payload.buildingPhaseId }).first();
         let propertyType = buildingData.propertyTypeId;
         /*GET PROPERTY TYPE ID OPEN */
 
@@ -160,7 +177,7 @@ if (existValue && existValue.length) {
           ...payload,
           createdBy: userId,
           updatedAt: currentTime,
-          propertyTypeId:propertyType
+          propertyTypeId: propertyType
         };
         let insertResult = await knex
           .update(insertData)
@@ -303,11 +320,11 @@ if (existValue && existValue.length) {
           knex
             .count("* as count")
             .from("property_units")
-            .leftJoin('users','property_units.createdBy','users.id')
+            .leftJoin('users', 'property_units.createdBy', 'users.id')
             .where({ "property_units.orgId": orgId })
             .first(),
           knex("property_units")
-          .leftJoin('users','property_units.createdBy','users.id')
+            .leftJoin('users', 'property_units.createdBy', 'users.id')
             .select([
               "property_units.id as id",
               "property_units.unitNumber as Unit No",
@@ -341,14 +358,16 @@ if (existValue && existValue.length) {
           knex
             .count("* as count")
             .from("property_units")
-            .leftJoin('users','property_units.createdBy','users.id')
-            .where({ "property_units.orgId": orgId ,
-            "property_units.companyId": companyId})
+            .leftJoin('users', 'property_units.createdBy', 'users.id')
+            .where({
+              "property_units.orgId": orgId,
+              "property_units.companyId": companyId
+            })
             .first(),
           knex
             .from("property_units")
             .leftJoin("companies", "property_units.companyId", "companies.id")
-            .leftJoin('users','property_units.createdBy','users.id')
+            .leftJoin('users', 'property_units.createdBy', 'users.id')
             .select([
               "property_units.id as id",
               "property_units.unitNumber as Unit No",
@@ -504,7 +523,7 @@ if (existValue && existValue.length) {
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
       var ws
-      
+
       if (rows && rows.length) {
         ws = XLSX.utils.json_to_sheet(rows);
       } else {
@@ -531,7 +550,7 @@ if (existValue && existValue.length) {
       let filepath = tempraryDirectory + filename;
       let check = XLSX.writeFile(wb, filepath);
       const AWS = require("aws-sdk");
-      fs.readFile(filepath, function(err, file_buffer) {
+      fs.readFile(filepath, function (err, file_buffer) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
@@ -539,7 +558,7 @@ if (existValue && existValue.length) {
           Body: file_buffer,
           ACL: "public-read"
         };
-        s3.putObject(params, function(err, data) {
+        s3.putObject(params, function (err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             //next(err);
@@ -555,12 +574,12 @@ if (existValue && existValue.length) {
             });
           }
         });
-        
+
       });
       let deleteFile = await fs.unlink(filepath, err => {
         console.log("File Deleting Error " + err);
       });
-      
+
     } catch (err) {
       console.log(
         "[controllers][generalsetup][viewpropertyUnit] :  Error",
@@ -840,42 +859,42 @@ if (existValue && existValue.length) {
 
               i++;
               if (i > 1) {
-              let checkExist = await knex("property_units")
-                .select("id")
-                .where({
-                 companyId:companyId,
-                  projectId:projectId,
-                  buildingPhaseId:buildingPhaseId,
-                  floorZoneId:floorZoneId,
-                  propertyTypeId:propertyTypeId,
-                  orgId:req.orgId,
-                  unitNumber:propertyUnitData.H
-                });
-              if (checkExist.length < 1) {
-              let insertData = {
-                orgId: req.orgId,
-                companyId,
-                projectId,
-                propertyTypeId,
-                buildingPhaseId,
-                floorZoneId,
-                area: propertyUnitData.J,
-                unitNumber: propertyUnitData.H,
-                description: propertyUnitData.I,
-                isActive: true,
-                createdBy: req.me.id,
-                createdAt: new Date().getTime(),
-                updatedAt: new Date().getTime()
-              };
+                let checkExist = await knex("property_units")
+                  .select("id")
+                  .where({
+                    companyId: companyId,
+                    projectId: projectId,
+                    buildingPhaseId: buildingPhaseId,
+                    floorZoneId: floorZoneId,
+                    propertyTypeId: propertyTypeId,
+                    orgId: req.orgId,
+                    unitNumber: propertyUnitData.H
+                  });
+                if (checkExist.length < 1) {
+                  let insertData = {
+                    orgId: req.orgId,
+                    companyId,
+                    projectId,
+                    propertyTypeId,
+                    buildingPhaseId,
+                    floorZoneId,
+                    area: propertyUnitData.J,
+                    unitNumber: propertyUnitData.H,
+                    description: propertyUnitData.I,
+                    isActive: true,
+                    createdBy: req.me.id,
+                    createdAt: new Date().getTime(),
+                    updatedAt: new Date().getTime()
+                  };
 
-              resultData = await knex
-                .insert(insertData)
-                .returning(["*"])
-                .into("property_units");
-                success++;
-              } else{
-                fail++;
-              }
+                  resultData = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .into("property_units");
+                  success++;
+                } else {
+                  fail++;
+                }
               }
             }
 
@@ -929,19 +948,19 @@ if (existValue && existValue.length) {
     }
   },
   /*GET ALL PROPERTY UNIT LIST FOR DROP DOWN */
-  getAllPropertyUnit:async (req,res)=>{
-    try{
+  getAllPropertyUnit: async (req, res) => {
+    try {
 
-      let orgId  = req.orgId;
+      let orgId = req.orgId;
       let result = await knex.from('property_units')
-                   .select('id',"unitNumber",'description')
-                   .where({orgId})
+        .select('id', "unitNumber", 'description')
+        .where({ orgId })
       return res.status(200).json({
-        data:result,
-        message:"All property unit list"
+        data: result,
+        message: "All property unit list"
       });
 
-    }catch(err){
+    } catch (err) {
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
