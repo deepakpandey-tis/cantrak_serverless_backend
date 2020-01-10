@@ -861,8 +861,7 @@ const buildingPhaseController = {
                 buildingPhaseCode: buildingData.F,
                 propertyTypeId: propertyTypeId,
                 description: buildingData.G,
-                // isActive: buildingData.H,
-                // createdBy: buildingData.I,
+                createdBy: req.me.id,
                 createdAt: currentTime,
                 updatedAt: currentTime
               };

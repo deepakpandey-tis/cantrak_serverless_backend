@@ -29,7 +29,9 @@ const problemController = {
         [total, rows] = await Promise.all([
           knex.count('* as count').from("incident_sub_categories")
           .leftJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
-          .leftJoin('users','incident_categories.createdBy','users.id'),
+          .leftJoin('users','incident_categories.createdBy','users.id')
+          .where({'incident_sub_categories.orgId':req.orgId})
+          ,
           knex("incident_sub_categories")
           .leftJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
           .leftJoin('users','incident_categories.createdBy','users.id')
@@ -54,6 +56,7 @@ const problemController = {
             knex.count('* as count').from("incident_sub_categories")
             .innerJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
             .leftJoin('users','incident_categories.createdBy','users.id')
+            .where({'incident_sub_categories.orgId':req.orgId})
             .where(filters).offset(offset).limit(per_page),
             knex("incident_sub_categories")
             .innerJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
@@ -68,6 +71,7 @@ const problemController = {
               'users.name as Created By',
               'incident_sub_categories.createdAt as Date Created',
             ])
+            .where({'incident_sub_categories.orgId':req.orgId})
             .where(filters).offset(offset).limit(per_page)
           ])
         } catch (e) {

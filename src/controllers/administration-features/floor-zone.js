@@ -632,7 +632,10 @@ const floorZoneController = {
         .where({ buildingPhaseId, orgId: orgId });
       } else {
         floor = await knex("floor_and_zones")
-        .select("*")
+        .select([
+          'floor_and_zones.floorZoneCode as Floor/Zone',
+          'floor_and_zones.id as id'
+        ])
         .where({orgId: orgId });
       }
       return res.status(200).json({
@@ -702,7 +705,8 @@ const floorZoneController = {
                 .select("id")
                 .where({ companyId: floorData.A, orgId: req.orgId });
               let companyId = null;
-              if (!companyData && !companyData.length) {
+              if (!companyData.length) {
+                console.log('*********************&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',companyData)
                 fail++;
                 continue;
                 
@@ -715,7 +719,7 @@ const floorZoneController = {
                 .select("id")
                 .where({ project: floorData.C, orgId: req.orgId });
               let projectId = null;
-              if (!projectData && !projectData.length) {
+              if (!projectData.length) {
                 fail++;
                 continue;
               }
@@ -727,7 +731,7 @@ const floorZoneController = {
                 .select("id")
                 .where({ propertyTypeCode: floorData.E, orgId: req.orgId });
               let propertyTypeId = null;
-              if (!propertTypeData && !propertTypeData.length) {
+              if (!propertTypeData.length) {
                 fail++;
                 continue;
               }
@@ -741,7 +745,7 @@ const floorZoneController = {
                 .select("id")
                 .where({ buildingPhaseCode: floorData.F, orgId: req.orgId });
               let buildingId = null;
-              if (!buildingData && !buildingData.length) {
+              if (!buildingData.length) {
                 fail++;
                 continue;
               }
@@ -755,7 +759,6 @@ const floorZoneController = {
                   .select("floorZoneCode")
                   .where({
                     floorZoneCode: floorData.G, companyId: companyId,
-                  propertyTypeId: propertyTypeId,
                     projectId: projectId, buildingPhaseId: buildingId, orgId: req.orgId });
                 if (checkExist.length < 1) {
                 let currentTime = new Date().getTime();
@@ -788,6 +791,7 @@ const floorZoneController = {
               }
             }
 
+            fail = fail-1;
             let message = null;
             if (totalData == success) {
               message =
