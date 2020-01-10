@@ -2230,8 +2230,8 @@ const serviceRequestController = {
   },
   approveServiceRequest: async (req, res) => {
     try {
-      let serviceRequestId = req.body.serviceRequestId;
-      let updateStatus = req.body.status;
+      let serviceRequestId = req.body.data.serviceRequestId;
+      let updateStatus = req.body.data.status;
       const currentTime = new Date().getTime();
 
 
