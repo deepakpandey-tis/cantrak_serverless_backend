@@ -2107,7 +2107,8 @@ const serviceRequestController = {
             createdBy:req.me.id,
             orgId: orgId,
             createdAt: currentTime,
-            updatedAt: currentTime
+            updatedAt: currentTime,
+            createdBy: req.me.id
           };
         } else {
           insertData = {
@@ -2122,7 +2123,8 @@ const serviceRequestController = {
             serviceStatusCode: "O",
             orgId: orgId,
             createdAt: currentTime,
-            updatedAt: currentTime
+            updatedAt: currentTime,
+            createdBy: req.me.id
           };
         }
         let serviceResult = await knex
@@ -2228,22 +2230,26 @@ const serviceRequestController = {
   },
   approveServiceRequest: async (req, res) => {
     try {
-      const serviceRequestId = req.body.serviceRequestId;
+      let serviceRequestId = req.body.data.serviceRequestId;
+      let updateStatus = req.body.data.status;
+      const currentTime = new Date().getTime();
+      console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7',req.body)
+
       const status = await knex("service_requests")
-        .update({ serviceStatusCode: "A",createdBy:req.me.id })
+        .update({ serviceStatusCode: updateStatus,updatedAt:currentTime })
         .where({ id: serviceRequestId });
       return res.status(200).json({
         data: {
-          status: "APPROVED"
+          status: updateStatus
         },
-        message: "Service Approved Successfully!"
+        message: "Service status updated successfully!"
       });
     } catch (err) {
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-  }
+  },  
 };
 
 // Y, M, D
@@ -2254,5 +2260,6 @@ function getStartAndEndDate(startDate, perWhat) {
     .valueOf();
   return [selectedDate, plusOneMOnth].map(v => Number(v));
 }
+
 
 module.exports = serviceRequestController;

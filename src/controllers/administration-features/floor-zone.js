@@ -366,8 +366,8 @@ const floorZoneController = {
             .leftJoin("property_types", "floor_and_zones.propertyTypeId", "property_types.id")
             .where(filters, { "floor_and_zones.orgId": orgId })
 
-            .offset(offset)
-            .limit(per_page)
+            // .offset(offset)
+            // .limit(per_page)
             .first(),
           knex
             .from("floor_and_zones")
@@ -632,7 +632,10 @@ const floorZoneController = {
         .where({ buildingPhaseId, orgId: orgId });
       } else {
         floor = await knex("floor_and_zones")
-        .select("*")
+        .select([
+          'floor_and_zones.floorZoneCode as Floor/Zone',
+          'floor_and_zones.id as id'
+        ])
         .where({orgId: orgId });
       }
       return res.status(200).json({
