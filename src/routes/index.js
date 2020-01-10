@@ -50,7 +50,9 @@ const assetCategoryRouter = require('./administration-features/asset-category');
 const partCategoryRouter = require('./administration-features/part-category');
 const whtRouter = require("./administration-features/wht");
 const customerRouter = require("./administration-features/customers");
-const servicerequestsRouter = require("./users/servicerequest"); 
+const serviceUserRequestsRouter = require("./users/servicerequest"); 
+const surveyUserOrderRouter = require("./users/surveyorder");
+const serviceAppointmentRouter = require("./users/service-appointment");
 
 
 /* GET home page. */
@@ -111,7 +113,8 @@ router.use('/administration-features/part-category',partCategoryRouter);
 router.use('/administration-features/wht',whtRouter);
 router.use("/signup", signupRouter);
 router.use('/administration-features/customers',customerRouter);
-router.use('/users/servicerequest', servicerequestsRouter);
-
+router.use('/users/servicerequest', serviceUserRequestsRouter);
+router.use('/users/surveyorder', surveyUserOrderRouter);
+router.use('/users/service-appointment', serviceAppointmentRouter);
 
 module.exports = router;
