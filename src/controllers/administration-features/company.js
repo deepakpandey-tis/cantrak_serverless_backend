@@ -19,8 +19,8 @@ const companyController = {
     try {
       let company = null;
       await knex.transaction(async trx => {
-        
-        console.log("===============",req.body,"Payload========")
+
+        console.log("===============", req.body, "Payload========")
 
 
         const payload = _.omit(req.body, ["logoFile"]);
@@ -212,15 +212,15 @@ const companyController = {
           .where({ companyId: payload.companyId, orgId: orgId });
         if (existValue && existValue.length) {
 
-          if(existValue[0].id===payload.id){
+          if (existValue[0].id === payload.id) {
 
-          } else{
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Company Id already exist!!" }
-            ]
-          });
-        }
+          } else {
+            return res.status(400).json({
+              errors: [
+                { code: "VALIDATION_ERROR", message: "Company Id already exist!!" }
+              ]
+            });
+          }
         }
         /*CHECK DUPLICATE VALUES CLOSE */
 
@@ -291,8 +291,7 @@ const companyController = {
 
         company = _.omit(companyResult[0], [
           "createdAt",
-          "updatedAt",
-          "isActive"
+          "updatedAt"
         ]);
         trx.commit;
       });
@@ -313,6 +312,7 @@ const companyController = {
   deleteCompany: async (req, res) => {
     try {
       let company = null;
+      let message;
       await knex.transaction(async trx => {
         let payload = req.body;
         const schema = Joi.object().keys({
@@ -326,20 +326,39 @@ const companyController = {
             ]
           });
         }
-        let companyResult = await knex
-          .update({ isActive: false })
-          .where({ id: payload.id, orgId: req.orgId })
-          .returning(["*"])
-          .transacting(trx)
-          .into("companies");
-        company = companyResult[0];
+        let companyResult;
+        let checkStatus = await knex.from('companies').where({ id: payload.id }).returning(['*']);
+
+        if (checkStatus.length) {
+
+          if (checkStatus[0].isActive == true) {
+
+            companyResult = await knex
+              .update({ isActive: false })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("companies");
+            company = companyResult[0];
+            message = "Company Inactive Successfully!"
+          } else {
+            companyResult = await knex
+              .update({ isActive: true })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("companies");
+            company = companyResult[0];
+            message = "Company Active Successfully!"
+          }
+        }
         trx.commit;
       });
       return res.status(200).json({
         data: {
           company: company
         },
-        message: "Company deleted!"
+        message: message
       });
     } catch (err) {
       console.log("[controllers][generalsetup][viewCompany] :  Error", err);
@@ -643,7 +662,7 @@ const companyController = {
             data[0].F == "TAX_ID" &&
             data[0].G == "CONTACT_PERSON" &&
             data[0].H == "DESCRIPTION"
-            )
+          )
           //&&
           // data[0].H == "STATUS"
         ) {
@@ -659,9 +678,9 @@ const companyController = {
                 console.log("Check list company: ", checkExist);
                 if (checkExist.length < 1) {
 
-                  let taxId =  companyData.F;
-                  if(taxId){
-                  taxId    =  taxId.toString();
+                  let taxId = companyData.F;
+                  if (taxId) {
+                    taxId = taxId.toString();
                   }
                   let currentTime = new Date().getTime();
                   let insertData = {
@@ -673,8 +692,8 @@ const companyController = {
                     companyAddressThai: companyData.E,
                     taxId: taxId,
                     contactPerson: companyData.G,
-                    descriptionEng:companyData.H,
-                    createdBy:req.me.id,
+                    descriptionEng: companyData.H,
+                    createdBy: req.me.id,
                     isActive: true,
                     createdAt: currentTime,
                     updatedAt: currentTime,

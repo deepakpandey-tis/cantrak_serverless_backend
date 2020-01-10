@@ -211,14 +211,13 @@ const ProjectController = {
         }
         let current = new Date().getTime();
         let ProjectResult = await knex("projects")
-          .innerJoin("companies", "projects.companyId", "companies.id")
+          .leftJoin("companies", "projects.companyId", "companies.id")
           .select("projects.*", "companies.companyId as compId", "companies.companyName")
           .where({ "projects.id": payload.id, 'projects.orgId': req.orgId })
 
         Project = _.omit(ProjectResult[0], [
           "createdAt",
-          "updatedAt",
-          "isActive"
+          "updatedAt"
         ]);
         trx.commit;
       });
@@ -241,6 +240,7 @@ const ProjectController = {
   deleteProject: async (req, res) => {
     try {
       let Project = null;
+      let message;
       await knex.transaction(async trx => {
         let payload = req.body;
         const schema = Joi.object().keys({
@@ -254,20 +254,40 @@ const ProjectController = {
             ]
           });
         }
-        let ProjectResult = await knex
-          .update({ isActive: false })
-          .where({ id: payload.id, orgId: req.orgId })
-          .returning(["*"])
-          .transacting(trx)
-          .into("projects");
-        Project = ProjectResult[0];
+        let ProjectResult;
+        let checkStatus = await knex.from('projects').where({ id: payload.id }).returning(['*']);
+
+        if (checkStatus.length) {
+
+          if (checkStatus[0].isActive == true) {
+
+            ProjectResult = await knex
+              .update({ isActive: false })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("projects");
+            Project = ProjectResult[0];
+            message = "Project Inactive Successfully!"
+
+          } else {
+            ProjectResult = await knex
+              .update({ isActive: true })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("projects");
+            Project = ProjectResult[0];
+            message = "Project Active Successfully!"
+          }
+        }
         trx.commit;
       });
       return res.status(200).json({
         data: {
           Project: Project
         },
-        message: "Project deleted!"
+        message: message
       });
     } catch (err) {
       console.log("[controllers][generalsetup][viewProject] :  Error", err);
@@ -659,7 +679,7 @@ const ProjectController = {
               if (i > 1) {
                 let checkExist = await knex("projects")
                   .select("projectName")
-                  .where({ project: projectData.A,companyId:companyId, orgId: req.orgId });
+                  .where({ project: projectData.A, companyId: companyId, orgId: req.orgId });
                 if (checkExist.length < 1) {
                   let currentTime = new Date().getTime();
                   let insertData = {

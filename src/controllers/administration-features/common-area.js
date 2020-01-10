@@ -22,7 +22,7 @@ const commonAreaController = {
       let userId = req.me.id;
 
       await knex.transaction(async trx => {
-        let commonPayload = _.omit(req.body,'propertyTypeId');
+        let commonPayload = _.omit(req.body, 'propertyTypeId');
 
         const schema = Joi.object().keys({
           companyId: Joi.number().required(),
@@ -64,9 +64,9 @@ const commonAreaController = {
         }
 
         /*GET PROPERTY TYPE ID OPEN */
-        let buildingData =    await knex('buildings_and_phases')
-        .select('propertyTypeId')
-        .where({ id: commonPayload.buildingPhaseId}).first(); 
+        let buildingData = await knex('buildings_and_phases')
+          .select('propertyTypeId')
+          .where({ id: commonPayload.buildingPhaseId }).first();
         let propertyType = buildingData.propertyTypeId;
         /*GET PROPERTY TYPE ID OPEN */
 
@@ -81,7 +81,7 @@ const commonAreaController = {
           updatedAt: currentTime,
           createdBy: userId,
           orgId: orgId,
-          propertyTypeId:propertyType
+          propertyTypeId: propertyType
         };
 
         console.log(
@@ -124,7 +124,7 @@ const commonAreaController = {
 
 
       await knex.transaction(async trx => {
-        let commonUpdatePaylaod = _.omit(req.body,'propertyTypeId');
+        let commonUpdatePaylaod = _.omit(req.body, 'propertyTypeId');
 
         const schema = Joi.object().keys({
           id: Joi.number().required(),
@@ -176,9 +176,9 @@ const commonAreaController = {
 
         //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
         /*GET PROPERTY TYPE ID OPEN */
-        let buildingData =    await knex('buildings_and_phases')
-        .select('propertyTypeId')
-        .where({ id: commonUpdatePaylaod.buildingPhaseId}).first(); 
+        let buildingData = await knex('buildings_and_phases')
+          .select('propertyTypeId')
+          .where({ id: commonUpdatePaylaod.buildingPhaseId }).first();
         let propertyType = buildingData.propertyTypeId;
         /*GET PROPERTY TYPE ID OPEN */
         const updateDataResult = await knex
@@ -664,17 +664,18 @@ const commonAreaController = {
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
+            let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/CommonArea/" + filename;
+            res.status(200).json({
+              data: rows,
+              message: "Common Area Data Export Successfully !",
+              url: url
+            });
           }
         });
       })
       //let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
 
-      let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/CommonArea/" + filename;
-      res.status(200).json({
-        data: rows,
-        message: "Common Area Data Export Successfully !",
-        url: url
-      });
+
     } catch (err) {
       console.log("[controllers][commonArea][getcommonArea] :  Error", err);
       //trx.rollback
