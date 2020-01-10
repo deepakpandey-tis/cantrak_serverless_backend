@@ -366,8 +366,8 @@ const floorZoneController = {
             .leftJoin("property_types", "floor_and_zones.propertyTypeId", "property_types.id")
             .where(filters, { "floor_and_zones.orgId": orgId })
 
-            .offset(offset)
-            .limit(per_page)
+            // .offset(offset)
+            // .limit(per_page)
             .first(),
           knex
             .from("floor_and_zones")

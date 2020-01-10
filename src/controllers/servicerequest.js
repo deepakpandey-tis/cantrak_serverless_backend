@@ -2233,7 +2233,7 @@ const serviceRequestController = {
       let serviceRequestId = req.body.data.serviceRequestId;
       let updateStatus = req.body.data.status;
       const currentTime = new Date().getTime();
-
+      console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7',req.body)
 
       const status = await knex("service_requests")
         .update({ serviceStatusCode: updateStatus,updatedAt:currentTime })

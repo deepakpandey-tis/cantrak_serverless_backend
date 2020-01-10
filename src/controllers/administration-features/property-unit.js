@@ -32,7 +32,7 @@ const propertyUnitController = {
           //createdBy: Joi.string().required(),
           floorZoneId: Joi.string().required(),
           unitNumber: Joi.string().required(),
-          houseId: Joi.string().required(),
+          houseId: Joi.number().required(),
           description: Joi.string().allow("").optional(),
           productCode: Joi.string().required(),
           area: Joi.string().allow("").optional(),
@@ -337,6 +337,7 @@ const propertyUnitController = {
             .where({ "property_units.orgId": orgId })
             .offset(offset)
             .limit(per_page)
+            .orderBy('desc','property_units.unitNumber')
         ]);
 
         let count = total.count;
@@ -383,6 +384,8 @@ const propertyUnitController = {
             })
             .offset(offset)
             .limit(per_page)
+            .orderBy('desc', 'property_units.unitNumber')
+
         ]);
 
         let count = total.count;

@@ -63,7 +63,7 @@ const roleController = {
 
         /*CHECK DUPLICATE VALUES OPEN */
         let existValue = await knex('organisation_roles')
-          .where({ name:roleName,orgId:orgId });
+          .where({ name: roleName, orgId: orgId });
         if (existValue && existValue.length) {
           return res.status(400).json({
             errors: [
@@ -146,7 +146,8 @@ const roleController = {
           'organisation_roles.id',
           'organisation_roles.name as roleName',
           'organisations.organisationName',
-          'organisation_roles.createdAt'
+          'organisation_roles.createdAt',
+          'organisation_roles.isActive',
         ])
       role = roleresult[0]
 
@@ -364,18 +365,37 @@ const roleController = {
 
       let id = req.body.id
       let role = null;
+      let delData;
+      let message;
+      let checkStatus = await knex.from('organisation_roles').where({ id: id }).returning(['*']);
 
-      let delData = await knex.update({ isActive: false })
-        .into('organisation_roles')
-        .returning(['*'])
-        .where({ id: id })
-      role = delData[0];
+      if (checkStatus.length) {
 
+        if (checkStatus[0].isActive == true) {
+
+          delData = await knex.update({ isActive: false })
+            .into('organisation_roles')
+            .returning(['*'])
+            .where({ id: id })
+          role = delData[0];
+          message = "Role Inactive Successfully!"
+
+        } else {
+
+          delData = await knex.update({ isActive: true })
+            .into('organisation_roles')
+            .returning(['*'])
+            .where({ id: id })
+          role = delData[0];
+          message = "Role Active Successfully!"
+
+        }
+      }
       return res.status(200).json({
         data: {
           roleResultData: { role }
         },
-        message: "Role Delete successfully!."
+        message: message
       });
     } catch (err) {
       res.status(500).json({
