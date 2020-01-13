@@ -1953,15 +1953,17 @@ exportTaskGroupTemplateData: async (req,res) => {
             //next(null, filePath);
         }
       });
+        let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Task_Group_Template/" + filename;
+
+        return res.status(200).json({
+          data: rows,
+          message: 'Task group template data export successfully!',
+          url: url
+        })
+
     })
     let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })  
-    let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Task_Group_Template/"+filename;
-
-      return res.status(200).json({
-        data: rows,
-        message: 'Task group template data export successfully!',
-        url:url
-      })
+    
     } catch(err) {
       console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
       res.status(500).json({
@@ -1973,6 +1975,29 @@ exportTaskGroupTemplateData: async (req,res) => {
   },
   importTaskGroup:async(req,res) => {
     
+  },
+  togglePmTemplateStatus:async(req,res) => {
+    try {
+      const id = req.body.id;
+      let pmTemplate = await knex('task_group_templates').select('isActive').where({id:id,orgId:req.orgId}).first()
+      let status = Boolean(pmTemplate.isActive);
+      if(status){
+        await knex('task_group_templates').update({isActive:false,orgId:req.orgId}).where({id:id})
+      } else {
+        await knex('task_group_templates').update({ isActive: true,orgId:req.orgId }).where({id:id})
+      }
+      return res.status(200).json({
+        data: {
+          message: 'Successfully updated status!'
+        }
+      })
+    } catch(err) {
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
   }
 }
 

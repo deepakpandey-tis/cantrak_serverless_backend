@@ -426,24 +426,24 @@ const propertyUnitController = {
       if (!companyId) {
         [rows] = await Promise.all([
           knex("property_units")
-            .leftJoin("companies", "property_units.companyId", "companies.id")
-            .leftJoin("projects", "property_units.projectId", "projects.id")
-            .leftJoin(
+            .innerJoin("companies", "property_units.companyId", "companies.id")
+            .innerJoin("projects", "property_units.projectId", "projects.id")
+            .innerJoin(
               "property_types",
               "property_units.propertyTypeId",
               "property_types.id"
             )
-            .leftJoin(
+            .innerJoin(
               "buildings_and_phases",
               "property_units.buildingPhaseId",
               "buildings_and_phases.id"
             )
-            .leftJoin(
+            .innerJoin(
               "floor_and_zones",
               "property_units.floorZoneId",
               "floor_and_zones.id"
             )
-            .leftJoin("users", "property_units.createdBy", "users.id")
+            .innerJoin("users", "property_units.createdBy", "users.id")
             .select([
               // "property_units.orgId as ORGANIZATION_ID",
               "companies.companyId as COMPANY",
@@ -469,24 +469,24 @@ const propertyUnitController = {
         [rows] = await Promise.all([
           knex
             .from("property_units")
-            .leftJoin("companies", "property_units.companyId", "companies.id")
-            .leftJoin("projects", "property_units.projectId", "projects.id")
-            .leftJoin(
+            .innerJoin("companies", "property_units.companyId", "companies.id")
+            .innerJoin("projects", "property_units.projectId", "projects.id")
+            .innerJoin(
               "property_types",
               "property_units.propertyTypeId",
               "property_types.id"
             )
-            .leftJoin(
+            .innerJoin(
               "buildings_and_phases",
               "property_units.buildingPhaseId",
               "buildings_and_phases.id"
             )
-            .leftJoin(
+            .innerJoin(
               "floor_and_zones",
               "property_units.floorZoneId",
               "floor_and_zones.id"
             )
-            .leftJoin("users", "property_units.createdBy", "users.id")
+            .innerJoin("users", "property_units.createdBy", "users.id")
             .select([
               // "property_units.orgId as ORGANIZATION_ID",
               "companies.companyId as COMPANY",
@@ -808,6 +808,8 @@ const propertyUnitController = {
                   propertyTypeCode: propertyUnitData.E,
                   orgId: req.orgId
                 });
+
+            
 
               console.log({ buildingPhaseIdResult, floorZoneIdResult });
               if (buildingPhaseIdResult && buildingPhaseIdResult.length) {

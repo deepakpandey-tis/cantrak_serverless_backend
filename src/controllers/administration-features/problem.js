@@ -120,7 +120,7 @@ const problemController = {
           knex("incident_sub_categories")
           .leftJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
           .select([
-            'incident_categories.categoryCode as PROBLEM_CODE',
+            'incident_categories.categoryCode as PROBLEM_CATEGORY_CODE',
             'incident_sub_categories.descriptionEng as DESCRIPTION',
             'incident_sub_categories.descriptionThai as ALTERNATE_DESCRIPTION',
             'incident_sub_categories.remark as REMARK',
@@ -134,7 +134,7 @@ const problemController = {
             knex("incident_sub_categories")
           .leftJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
           .select([
-            'incident_categories.categoryCode as PROBLEM_CODE',
+            'incident_categories.categoryCode as PROBLEM_CATEGORY_CODE',
             'incident_sub_categories.descriptionEng as DESCRIPTION',
             'incident_sub_categories.descriptionThai as ALTERNATE_DESCRIPTION',
             'incident_sub_categories.remark as REMARK',
@@ -183,7 +183,7 @@ const problemController = {
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
-            let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
+           // let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
             let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Problem_Subcategory/" + filename;
             res.status(200).json({
               data: rows,
@@ -304,8 +304,8 @@ const problemController = {
         let result = null;
 
         if (
-            data[0].A == "Ã¯Â»Â¿PROBLEM_CODE" ||
-           (data[0].A == "PROBLEM_CODE" &&
+            data[0].A == "Ã¯Â»Â¿PROBLEM_CATEGORY_CODE" ||
+           (data[0].A == "PROBLEM_CATEGORY_CODE" &&
             data[0].B == "DESCRIPTION" &&
             data[0].C == "ALTERNATE_DESCRIPTION" &&
             data[0].D == "REMARK")
@@ -319,7 +319,7 @@ const problemController = {
                 .select("id")
                 .where({categoryCode: problemData.A,orgId:req.orgId });
               let categoryId = null;
-              if (!categoryData && !categoryData.length) {
+              if (!categoryData.length) {
                 fail++;
                 continue;
               }
