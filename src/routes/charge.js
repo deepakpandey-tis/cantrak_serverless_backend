@@ -49,6 +49,7 @@ var upload = multer({ storage: storage });
 router.post("/import-charge-data", upload.single("file"), authMiddleware.isAuthenticated, chargeController.importChargeData);
 
 router.post("/get-quotation-assigned-charges",authMiddleware.isAuthenticated,chargeController.getQuotationAssignedCharges)
+router.post("/get-service-order-assigned-charges",authMiddleware.isAuthenticated,chargeController.getServiceOrderAssignedCharges)
 
 
 

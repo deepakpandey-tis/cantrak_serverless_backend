@@ -355,7 +355,10 @@ const chargeController = {
         const payload = req.body;
         const schema = Joi.object().keys({
           serviceOrderId: Joi.string().required(),
-          chargeId: Joi.string().required()
+          chargeId: Joi.string().required(),
+          status: Joi.string().required(),
+          totalHours: Joi.number().required(),
+          cost: Joi.number().required()
         });
 
         let result = Joi.validate(payload, schema);
@@ -376,8 +379,12 @@ const chargeController = {
           chargeId: payload.chargeId,
           entityId: payload.serviceOrderId,
           entityType: "service_orders",
+          status: payload.status,
+          totalHours: payload.totalHours,
+          rate: payload.cost,         
           updatedAt: currentTime,
-          createdAt: currentTime
+          createdAt: currentTime,
+          orgId: req.orgId
         };
         let chargeResult = await knex
           .insert(insertData)
@@ -500,7 +507,7 @@ const chargeController = {
           updatedAt: currentTime,
           createdAt: currentTime
         };
-        
+
         let chargeResult = await knex
           .insert(insertData)
           .returning(["*"])
@@ -889,10 +896,10 @@ const chargeController = {
                     .insert(insertData)
                     .returning(["*"])
                     .into("charge_master");
-                    if (resultData && resultData.length) {
-                      success++;
-                    }
-                }else{
+                  if (resultData && resultData.length) {
+                    success++;
+                  }
+                } else {
                   fail++;
                 }
               }
@@ -994,6 +1001,83 @@ const chargeController = {
           .where({
             entityId: quotationId,
             entityType: "quotations"
+          })
+          .offset(offset)
+          .limit(per_page)
+      ]);
+
+
+      let count = total.length;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+      return res.status(200).json({
+        data: {
+          assignedCharges: pagination
+        }
+      })
+
+
+    } catch (err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getServiceOrderAssignedCharges: async (req, res) => {
+    try {
+      let reqData = req.query;
+      let total, rows;
+
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+      let { serviceOrderId } = req.body;
+
+
+      [total, rows] = await Promise.all([
+        knex("charge_master")
+          .innerJoin(
+            "assigned_service_charges",
+            "charge_master.id",
+            "assigned_service_charges.chargeId"
+          )
+          .select([
+            "charge_master.chargeCode as chargeCode",
+            "charge_master.id as id",
+            "charge_master.calculationUnit as calculationUnit",
+            "assigned_service_charges.rate as rate",
+            "assigned_service_charges.totalHours as totalHours"
+          ])
+          .where({
+            entityId: serviceOrderId,
+            entityType: "service_orders"
+          }),
+        knex("charge_master")
+          .innerJoin(
+            "assigned_service_charges",
+            "charge_master.id",
+            "assigned_service_charges.chargeId"
+          )
+          .select([
+            "charge_master.chargeCode as chargeCode",
+            "charge_master.id as id",
+            "charge_master.calculationUnit as calculationUnit",
+            "assigned_service_charges.rate as rate",
+            "assigned_service_charges.totalHours as totalHours"
+          ])
+          .where({
+            entityId: serviceOrderId,
+            entityType: "service_orders"
           })
           .offset(offset)
           .limit(per_page)

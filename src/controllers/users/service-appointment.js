@@ -85,9 +85,7 @@ const serviceAppointmentController = {
             pagination.data = rows;
 
             return res.status(200).json({
-                data: {
-                    service_appointment: pagination
-                },
+                data: pagination,
                 message: 'Service Appointment List!'
             })
         } catch (err) {
