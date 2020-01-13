@@ -201,6 +201,14 @@ router.post(
   taskGroupController.updateOldTaskGroupScheduleWithWorkOrders
 );
 
+router.post(
+  '/toggle-pm-template-status',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  taskGroupController.togglePmTemplateStatus
+)
+
 
 router.get(
   "/export-task-group-template-data",
