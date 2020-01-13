@@ -120,7 +120,7 @@ const problemController = {
           knex("incident_sub_categories")
           .leftJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
           .select([
-            'incident_categories.categoryCode as PROBLEM_CODE',
+            'incident_categories.categoryCode as PROBLEM_CATEGORY_CODE',
             'incident_sub_categories.descriptionEng as DESCRIPTION',
             'incident_sub_categories.descriptionThai as ALTERNATE_DESCRIPTION',
             'incident_sub_categories.remark as REMARK',
@@ -134,7 +134,7 @@ const problemController = {
             knex("incident_sub_categories")
           .leftJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
           .select([
-            'incident_categories.categoryCode as PROBLEM_CODE',
+            'incident_categories.categoryCode as PROBLEM_CATEGORY_CODE',
             'incident_sub_categories.descriptionEng as DESCRIPTION',
             'incident_sub_categories.descriptionThai as ALTERNATE_DESCRIPTION',
             'incident_sub_categories.remark as REMARK',
@@ -304,8 +304,8 @@ const problemController = {
         let result = null;
 
         if (
-            data[0].A == "Ã¯Â»Â¿PROBLEM_CODE" ||
-           (data[0].A == "PROBLEM_CODE" &&
+            data[0].A == "Ã¯Â»Â¿PROBLEM_CATEGORY_CODE" ||
+           (data[0].A == "PROBLEM_CATEGORY_CODE" &&
             data[0].B == "DESCRIPTION" &&
             data[0].C == "ALTERNATE_DESCRIPTION" &&
             data[0].D == "REMARK")
