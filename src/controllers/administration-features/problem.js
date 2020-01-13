@@ -319,7 +319,7 @@ const problemController = {
                 .select("id")
                 .where({categoryCode: problemData.A,orgId:req.orgId });
               let categoryId = null;
-              if (!categoryData && !categoryData.length) {
+              if (!categoryData.length) {
                 fail++;
                 continue;
               }
