@@ -183,7 +183,7 @@ const problemController = {
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
-            let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
+           // let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
             let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Problem_Subcategory/" + filename;
             res.status(200).json({
               data: rows,
