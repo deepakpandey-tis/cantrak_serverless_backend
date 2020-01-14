@@ -194,7 +194,7 @@ const peopleController = {
             .leftJoin(
               "property_units",
               "user_house_allocation.houseId",
-              "property_units.houseId"
+              "property_units.id"
             )
             .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
             .whereNotIn('application_user_roles.roleId', [2])
@@ -225,7 +225,7 @@ const peopleController = {
             .leftJoin(
               "property_units",
               "user_house_allocation.houseId",
-              "property_units.houseId"
+              "property_units.id"
             )
   
             .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
@@ -252,7 +252,7 @@ const peopleController = {
               "users.email as email",
               "users.userName",
               "users.mobileNo",
-              "property_units.houseId",
+              "property_units.id",
               "users.lastLogin as lastVisit",
               //"companies.id as companyId",
               //"companies.companyName",
@@ -276,7 +276,7 @@ const peopleController = {
             .leftJoin(
               "property_units",
               "user_house_allocation.houseId",
-              "property_units.houseId"
+              "property_units.id"
             )
             // .leftJoin(
             //   "companies",
@@ -311,7 +311,7 @@ const peopleController = {
             .leftJoin(
               "property_units",
               "user_house_allocation.houseId",
-              "property_units.houseId"
+              "property_units.id"
             )
             .leftJoin(
               "companies",
@@ -340,7 +340,7 @@ const peopleController = {
               "users.email as email",
               "users.userName",
               "users.mobileNo",
-              "user_house_allocation.houseId",
+             // "user_house_allocation.houseId",
               "users.lastLogin as lastVisit",
               //"companies.id as companyId",
               //"companies.companyName",
@@ -397,7 +397,7 @@ const peopleController = {
         .leftJoin(
           "property_units",
           "user_house_allocation.houseId",
-          "property_units.houseId"
+          "property_units.id"
         )
         .leftJoin("companies", "property_units.companyId", "companies.id")
         .leftJoin("organisations", "users.orgId", "organisations.id")

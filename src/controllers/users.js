@@ -26,13 +26,13 @@ const usersController = {
 
         let [total, rows] = await Promise.all([
             knex.count('* as count').from("users")
-                .innerJoin('property_units', 'users.houseId', 'property_units.houseId')
+                .innerJoin('property_units', 'users.houseId', 'property_units.id')
                 .innerJoin('companies', 'property_units.companyId', 'companies.id')
                 .innerJoin('user_roles', 'users.id', 'user_roles.userId')
                 .innerJoin('roles', 'user_roles.roleId', 'roles.id')
                 .first(),
             knex("users")
-                .innerJoin('property_units', 'users.houseId', 'property_units.houseId')
+                .innerJoin('property_units', 'users.houseId', 'property_units.id')
                 .innerJoin('companies', 'property_units.companyId', 'companies.id')
                 .innerJoin('user_roles', 'users.id', 'user_roles.userId')
                 .innerJoin('roles', 'user_roles.roleId', 'roles.id')

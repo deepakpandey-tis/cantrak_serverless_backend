@@ -179,7 +179,8 @@ const singupController = {
         "expireAfter",
         "uuid",
         "orgId",
-        "signUpUrl"
+        "signUpUrl",
+        "houseNo"
       ]);
 
       console.log("===============",payload,"======================")
@@ -204,6 +205,7 @@ const singupController = {
         .insert({
           signUpDetails: {
             ...signUpDetails,
+            houseNo:req.body.houseNo,
             orgId: req.body.orgId,
             expireAfter: req.body.expireAfter
           },
@@ -415,6 +417,7 @@ const singupController = {
         "projectId",
         "unitId",
         "houseId",
+        "houseNo"
       ]);
       let hash = await bcrypt.hash(payload.password, saltRounds);
       payload.password = hash;

@@ -32,7 +32,7 @@ const propertyUnitController = {
           //createdBy: Joi.string().required(),
           floorZoneId: Joi.string().required(),
           unitNumber: Joi.string().required(),
-          houseId: Joi.number().required(),
+          houseId: Joi.string().optional().allow(''),
           description: Joi.string().allow("").optional(),
           productCode: Joi.string().required(),
           area: Joi.string().allow("").optional(),
@@ -572,10 +572,9 @@ const propertyUnitController = {
         s3.putObject(params, function (err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
-            //next(err);
+            
           } else {
             console.log("File uploaded Successfully");
-            //next(null, filePath);
             let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/PropertyUnit/" + filename;
 
             return res.status(200).json({
@@ -585,11 +584,16 @@ const propertyUnitController = {
             });
           }
         });
+        // return res.status(200).json({
+        //   data: rows,
+        //   message: "Property Units Data Export Successfully!",
+        //   // url: url
+        // });
 
       });
-      let deleteFile = await fs.unlink(filepath, err => {
-        console.log("File Deleting Error " + err);
-      });
+      // let deleteFile = await fs.unlink(filepath, err => {
+      //   console.log("File Deleting Error " + err);
+      // });
 
     } catch (err) {
       console.log(
@@ -632,7 +636,7 @@ const propertyUnitController = {
           "property_units.id as id",
           "property_units.description as description",
           "property_units.productCode as productCode",
-          "property_units.houseId as houseId",
+          "property_units.id as houseId",
           "property_units.area as area",
           "property_units.unitNumber as unitNumber",
           "companies.companyName as companyName",
@@ -806,7 +810,7 @@ const propertyUnitController = {
 
               let companyIdResult = await knex("companies")
                 .select("id")
-                .where({ companyId: propertyUnitData.A });
+                .where({ companyId: propertyUnitData.A, orgId: req.orgId });
               let projectIdResult = await knex("projects")
                 .select("id")
                 .where({ project: propertyUnitData.C, orgId: req.orgId });
@@ -875,11 +879,11 @@ const propertyUnitController = {
                 let checkExist = await knex("property_units")
                   .select("id")
                   .where({
-                    companyId: companyId,
-                    projectId: projectId,
+                    // companyId: companyId,
+                    // projectId: projectId,
                     buildingPhaseId: buildingPhaseId,
-                    floorZoneId: floorZoneId,
-                    propertyTypeId: propertyTypeId,
+                    // floorZoneId: floorZoneId,
+                    // propertyTypeId: propertyTypeId,
                     orgId: req.orgId,
                     unitNumber: propertyUnitData.H
                   });
