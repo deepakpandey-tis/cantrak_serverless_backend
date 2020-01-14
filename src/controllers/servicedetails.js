@@ -373,7 +373,7 @@ const serviceDetailsController = {
           .leftJoin("property_types", "property_units.propertyTypeId", "=", "property_types.id")
           .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "=", "buildings_and_phases.id")
           .leftJoin("floor_and_zones", "property_units.floorZoneId", "=", "floor_and_zones.id")
-          .leftJoin("service_requests", "property_units.houseId", "=", "service_requests.houseId")
+          .leftJoin("service_requests", "property_units.id", "=", "service_requests.houseId")
           .leftJoin('users', 'service_requests.createdBy', 'users.id')
           .leftJoin("users AS u", "service_requests.requestedBy", "u.id")
           .leftJoin("source_of_request", "service_requests.serviceType","source_of_request.id")
@@ -394,7 +394,7 @@ const serviceDetailsController = {
             "property_units.*"
           )
           .where({
-            "property_units.houseId": houseId,
+            "property_units.id": houseId,
             "service_requests.orgId": orgId,
             "service_requests.id": incidentRequestPayload.id
           });
@@ -763,7 +763,7 @@ const serviceDetailsController = {
             "property_units.*"
           )
           .where({
-            "property_units.houseId": DataResult[0].houseId,
+            "property_units.id": DataResult[0].houseId,
             "property_units.orgId": orgId
           });
 

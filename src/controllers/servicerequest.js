@@ -765,7 +765,7 @@ const serviceRequestController = {
             .leftJoin(
               "property_units",
               "service_requests.houseId",
-              "property_units.houseId"
+              "property_units.id"
             )
             .leftJoin(
               "service_status AS status",
@@ -815,7 +815,7 @@ const serviceRequestController = {
             .leftJoin(
               "property_units",
               "service_requests.houseId",
-              "property_units.houseId"
+              "property_units.id"
             )
             .leftJoin(
               "service_status AS status",
@@ -869,7 +869,7 @@ const serviceRequestController = {
             .leftJoin(
               "property_units",
               "service_requests.houseId",
-              "property_units.houseId"
+              "property_units.id"
             )
 
             .leftJoin(
@@ -951,7 +951,7 @@ const serviceRequestController = {
             .leftJoin(
               "property_units",
               "service_requests.houseId",
-              "property_units.houseId"
+              "property_units.id"
             )
             .leftJoin(
               "assigned_service_team",
@@ -1141,7 +1141,7 @@ const serviceRequestController = {
             .innerJoin(
               "property_units",
               "service_requests.houseId",
-              "property_units.houseId"
+              "property_units.id"
             )
 
             .select([
@@ -1182,7 +1182,7 @@ const serviceRequestController = {
             .innerJoin(
               "property_units",
               "service_requests.houseId",
-              "property_units.houseId"
+              "property_units.id"
             )
             .select([
               "service_requests.id as S Id",
@@ -1223,7 +1223,7 @@ const serviceRequestController = {
             .innerJoin(
               "property_units",
               "service_requests.houseId",
-              "property_units.houseId"
+              "property_units.id"
             )
             .select([
               "service_requests.id as S Id",
@@ -1272,7 +1272,7 @@ const serviceRequestController = {
             .innerJoin(
               "property_units",
               "service_requests.houseId",
-              "property_units.houseId"
+              "property_units.id"
             )
             .select([
               "service_requests.id as S Id",
@@ -1409,7 +1409,7 @@ const serviceRequestController = {
   //          const serviceRequestId = req.body.serviceRequestId;
   //          const data = await knex
   //                             .from('service_requests')
-  //                             .innerJoin('property_units', 'service_requests.houseId', 'property_units.houseId')
+  //                             .innerJoin('property_units', 'service_requests.houseId', 'property_units.id')
   //                             .innerJoin('companies', 'property_units.companyId', 'companies.id')
   //                             .innerJoin('projects', 'property_units.projectId', 'projects.id')
   //                             .innerJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
@@ -1447,7 +1447,7 @@ const serviceRequestController = {
         filters["property_units.unitNumber"] = ids.unitNumber;
       }
       if (ids.houseId) {
-        filters["property_units.houseId"] = ids.houseId;
+        filters["property_units.id"] = ids.houseId;
       }
       const units = await knex
         .from("property_units")
@@ -1474,7 +1474,7 @@ const serviceRequestController = {
           "property_units.floorZoneId as floorZoneId",
           "floor_and_zones.floorZoneCode as floorZoneCode",
           "property_units.unitNumber as unitNumber",
-          "property_units.houseId as houseId"
+          "property_units.id as houseId"
         ]);
       return res.status(200).json({
         data: {
@@ -1871,7 +1871,7 @@ const serviceRequestController = {
         let result = await knex
           .from("property_units")
           .select("*")
-          .where({ "property_units.houseId": houseId, orgId: orgId });
+          .where({ "property_units.id": houseId, orgId: orgId });
 
         unitResult = result[0];
         let houseResult = await knex
@@ -1957,7 +1957,7 @@ const serviceRequestController = {
           .leftJoin(
             "property_units",
             "service_requests.houseId",
-            "property_units.houseId"
+            "property_units.id"
           )
           .select(
             "service_requests.houseId as house",
