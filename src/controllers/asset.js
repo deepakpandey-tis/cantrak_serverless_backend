@@ -1701,7 +1701,7 @@ const assetController = {
     },
     updateAssetLocation:async(req,res) => {
         try {
-            const payload = _.omit(req.body,['previousLocationId']);
+            const payload = _.omit(req.body,['previousLocationId','houseNo']);
             let currentTime = new Date().getTime()
 /*
 { assetId: '1655',

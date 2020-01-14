@@ -1760,7 +1760,8 @@ const serviceRequestController = {
             createdAt: currentTime,
             updatedAt: currentTime,
             isCreatedFromSo: req.body.isSo ? true : false,
-            state: req.body.isSo ? 2 : 1
+            state: req.body.isSo ? 2 : 1,
+            createdBy:req.me.id
           };
         } else {
           insertData = {
@@ -1776,7 +1777,8 @@ const serviceRequestController = {
             createdAt: currentTime,
             updatedAt: currentTime,
             isCreatedFromSo: req.body.isSo ? true : false,
-            state: req.body.isSo ? 2 : 1
+            state: req.body.isSo ? 2 : 1,
+            createdBy:req.me.id
           };
         }
         let serviceResult = await knex

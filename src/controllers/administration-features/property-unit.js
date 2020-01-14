@@ -32,7 +32,7 @@ const propertyUnitController = {
           //createdBy: Joi.string().required(),
           floorZoneId: Joi.string().required(),
           unitNumber: Joi.string().required(),
-          houseId: Joi.number().required(),
+          houseId: Joi.string().optional().allow(''),
           description: Joi.string().allow("").optional(),
           productCode: Joi.string().required(),
           area: Joi.string().allow("").optional(),
