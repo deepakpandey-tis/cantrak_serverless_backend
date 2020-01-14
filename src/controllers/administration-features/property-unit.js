@@ -337,7 +337,7 @@ const propertyUnitController = {
             .where({ "property_units.orgId": orgId })
             .offset(offset)
             .limit(per_page)
-            .orderBy('desc','property_units.unitNumber')
+            .orderBy('property_units.unitNumber','desc')
         ]);
 
         let count = total.count;
@@ -577,11 +577,10 @@ const propertyUnitController = {
             });
           }
         });
-
       });
-      let deleteFile = await fs.unlink(filepath, err => {
-        console.log("File Deleting Error " + err);
-      });
+      // let deleteFile = await fs.unlink(filepath, err => {
+      //   console.log("File Deleting Error " + err);
+      // });
 
     } catch (err) {
       console.log(

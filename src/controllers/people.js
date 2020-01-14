@@ -268,16 +268,16 @@ const peopleController = {
           knex
             .count("* as count")
             .from("users")
-            .leftJoin(
-              "user_house_allocation",
-              "users.id",
-              "user_house_allocation.userId"
-            )
-            .leftJoin(
-              "property_units",
-              "user_house_allocation.houseId",
-              "property_units.houseId"
-            )
+            // .leftJoin(
+            //   "user_house_allocation",
+            //   "users.id",
+            //   "user_house_allocation.userId"
+            // )
+            // .leftJoin(
+            //   "property_units",
+            //   "user_house_allocation.houseId",
+            //   "property_units.houseId"
+            // )
             // .leftJoin(
             //   "companies",
             //   "property_units.companyId",
@@ -303,16 +303,16 @@ const peopleController = {
             .first(),
           knex
             .from("users")
-            .leftJoin(
-              "user_house_allocation",
-              "users.id",
-              "user_house_allocation.userId"
-            )
-            .leftJoin(
-              "property_units",
-              "user_house_allocation.houseId",
-              "property_units.houseId"
-            )
+            // .leftJoin(
+            //   "user_house_allocation",
+            //   "users.id",
+            //   "user_house_allocation.userId"
+            // )
+            // .leftJoin(
+            //   "property_units",
+            //   "user_house_allocation.houseId",
+            //   "property_units.houseId"
+            // )
             .leftJoin(
               "companies",
               "property_units.companyId",
@@ -340,7 +340,7 @@ const peopleController = {
               "users.email as email",
               "users.userName",
               "users.mobileNo",
-              "user_house_allocation.houseId",
+             // "user_house_allocation.houseId",
               "users.lastLogin as lastVisit",
               //"companies.id as companyId",
               //"companies.companyName",
