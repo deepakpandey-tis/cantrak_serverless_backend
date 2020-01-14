@@ -321,10 +321,14 @@ const propertyUnitController = {
             .count("* as count")
             .from("property_units")
             .leftJoin('users', 'property_units.createdBy', 'users.id')
+            .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
+            .where({ "floor_and_zones.isActive": true })
             .where({ "property_units.orgId": orgId })
             .first(),
           knex("property_units")
             .leftJoin('users', 'property_units.createdBy', 'users.id')
+            .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
+            .where({ "floor_and_zones.isActive": true })
             .select([
               "property_units.id as id",
               "property_units.unitNumber as Unit No",
@@ -337,7 +341,7 @@ const propertyUnitController = {
             .where({ "property_units.orgId": orgId })
             .offset(offset)
             .limit(per_page)
-            .orderBy('desc','property_units.unitNumber')
+           // .orderBy('desc','property_units.unitNumber')
         ]);
 
         let count = total.count;
@@ -360,6 +364,8 @@ const propertyUnitController = {
             .count("* as count")
             .from("property_units")
             .leftJoin('users', 'property_units.createdBy', 'users.id')
+            .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
+            .where({ "floor_and_zones.isActive": true })
             .where({
               "property_units.orgId": orgId,
               "property_units.companyId": companyId
@@ -369,6 +375,8 @@ const propertyUnitController = {
             .from("property_units")
             .leftJoin("companies", "property_units.companyId", "companies.id")
             .leftJoin('users', 'property_units.createdBy', 'users.id')
+            .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
+            .where({ "floor_and_zones.isActive": true })
             .select([
               "property_units.id as id",
               "property_units.unitNumber as Unit No",
@@ -384,7 +392,7 @@ const propertyUnitController = {
             })
             .offset(offset)
             .limit(per_page)
-            .orderBy('desc', 'property_units.unitNumber')
+            //.orderBy('desc', 'property_units.unitNumber')
 
         ]);
 

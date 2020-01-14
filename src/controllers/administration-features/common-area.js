@@ -264,6 +264,7 @@ const commonAreaController = {
             )
             .leftJoin("projects", "common_area.projectId", "projects.id")
             .leftJoin("users", "common_area.createdBy", "users.id")
+            .where({ "floor_and_zones.isActive": true })
             .where({ "common_area.companyId": companyId, "common_area.orgId": orgId }),
           knex("common_area")
             .leftJoin(
@@ -278,6 +279,7 @@ const commonAreaController = {
             )
             .leftJoin("projects", "common_area.projectId", "projects.id")
             .leftJoin("users", "common_area.createdBy", "users.id")
+            .where({ "floor_and_zones.isActive": true })
             .select([
               "common_area.id as id",
               "common_area.commonAreaCode as Common Area",
@@ -309,6 +311,7 @@ const commonAreaController = {
             )
             .leftJoin("projects", "common_area.projectId", "projects.id")
             .leftJoin("users", "common_area.createdBy", "users.id")
+            .where({ "floor_and_zones.isActive": true })
             .where({ "common_area.orgId": orgId }),
           knex("common_area")
             .leftJoin(
@@ -323,6 +326,7 @@ const commonAreaController = {
             )
             .leftJoin("projects", "common_area.projectId", "projects.id")
             .leftJoin("users", "common_area.createdBy", "users.id")
+            .where({ "floor_and_zones.isActive": true })
             .where({ "common_area.orgId": orgId })
             .select([
               "common_area.id as id",

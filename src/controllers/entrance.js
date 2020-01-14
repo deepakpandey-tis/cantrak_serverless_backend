@@ -1,11 +1,11 @@
-const knex   = require('../db/knex');
-const Joi    = require('@hapi/joi');
+const knex = require('../db/knex');
+const Joi = require('@hapi/joi');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const moment = require('moment');
 const uuidv4 = require('uuid/v4');
-var jwt      = require('jsonwebtoken');
-const _      = require('lodash');
+var jwt = require('jsonwebtoken');
+const _ = require('lodash');
 
 
 const entranceController = {
@@ -49,6 +49,21 @@ const entranceController = {
                 });
             }
 
+
+            /*CHECK ORGANISATION ACTIVE/INACTIVE OPEN */
+            let checkResult = await knex.from('organisations').where({ id: loginResult.orgId }).first();
+
+            if (checkResult) {
+                if (!checkResult.isActive) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: 'ACCOUNT_NOT_FOUND_ERROR', message: 'Your Organisation has been Deactivated, Please contact to administration !' }
+                        ],
+                    });
+                }
+            }
+            /*CHECK ORGANISATION ACTIVE/INACTIVE CLOSE */
+
             // // check email is verified
             // const verifyEmail = await knex('users').where({ email: loginResult.email, emailVerified: 'true' });
             // console.log('[controllers][entrance][login]: Email verify', verifyEmail);
@@ -64,14 +79,14 @@ const entranceController = {
             // Get organization ID
             let orgId = loginResult.orgId;
             //const organization = await knex('users')
-            console.log('[controllers][entrance][login] : Login Query Result: ',loginResult)
+            console.log('[controllers][entrance][login] : Login Query Result: ', loginResult)
 
 
             //match input password with DB
             const match = await bcrypt.compare(loginPayload.password, loginResult.password);
             if (match) {
-                const loginToken = await jwt.sign({ id: loginResult.id,orgId }, process.env.JWT_PRIVATE_KEY, { expiresIn: '7h' });
-                login = { accessToken: loginToken,refreshToken:'' };
+                const loginToken = await jwt.sign({ id: loginResult.id, orgId }, process.env.JWT_PRIVATE_KEY, { expiresIn: '7h' });
+                login = { accessToken: loginToken, refreshToken: '' };
 
                 // check account status is active
                 // const verifyStatus = await knex('users').where({ isActive: 'false', id: loginResult.id });
@@ -85,7 +100,7 @@ const entranceController = {
                     });
                 }
 
-                login.user =  _.omit(loginResult, ['password']);
+                login.user = _.omit(loginResult, ['password']);
 
                 // An user can have atmost one application role
                 let userApplicationRole = await knex('application_user_roles').where({ userId: Number(loginResult.id) }).select('roleId', 'orgId').first();
@@ -110,72 +125,72 @@ const entranceController = {
 
 
                 if (login.user.isOrgAdmin) {
-                  console.log("this is orgAdmin");
-                  // get all the projects of this admin
-                  const projects = await knex("projects")
-                    .select("id")
-                    .where({ orgId});
-                  const companies = await knex("companies")
-                    .select("id")
-                    .where({ orgId});
-                  const resources = await knex(
-                    "organisation_resources_master"
-                  )
-                    .select("resourceId as id")
-                    .where({ orgId});
-                  const userProjectResources = _.uniqBy(
-                    resources,
-                    "id"
-                  ).map(v => ({
-                    id: v.id,
-                    projects: projects.map(v => v.id)
-                  }));
-                  const userCompanyResources = _.uniqBy(
-                    resources,
-                    "id"
-                  ).map(v => ({
-                    id: v.id,
-                    companies: companies.map(v => v.id)
-                  }));
-                  //console.log(mappedProjects)
-                  login.user.userCompanyResources = userCompanyResources;
-                  login.user.userProjectResources = userProjectResources;
-                  console.log(userCompanyResources, userProjectResources);
+                    console.log("this is orgAdmin");
+                    // get all the projects of this admin
+                    const projects = await knex("projects")
+                        .select("id")
+                        .where({ orgId });
+                    const companies = await knex("companies")
+                        .select("id")
+                        .where({ orgId });
+                    const resources = await knex(
+                        "organisation_resources_master"
+                    )
+                        .select("resourceId as id")
+                        .where({ orgId });
+                    const userProjectResources = _.uniqBy(
+                        resources,
+                        "id"
+                    ).map(v => ({
+                        id: v.id,
+                        projects: projects.map(v => v.id)
+                    }));
+                    const userCompanyResources = _.uniqBy(
+                        resources,
+                        "id"
+                    ).map(v => ({
+                        id: v.id,
+                        companies: companies.map(v => v.id)
+                    }));
+                    //console.log(mappedProjects)
+                    login.user.userCompanyResources = userCompanyResources;
+                    login.user.userProjectResources = userProjectResources;
+                    console.log(userCompanyResources, userProjectResources);
                 }
 
                 if (login.user.isOrgUser) {
-                  const result = await knex("team_users")
-                    .innerJoin(
-                      "team_roles_project_master",
-                      "team_users.teamId",
-                      "team_roles_project_master.teamId"
-                    )
-                    .innerJoin(
-                      "role_resource_master",
-                      "team_roles_project_master.roleId",
-                      "role_resource_master.roleId"
-                    )
-                    .select([
-                      "team_roles_project_master.projectId as projectId",
-                      "role_resource_master.resourceId as resourceId"
-                    ])
-                    .where({
-                      "team_users.userId": loginResult.id,
-                      "team_users.orgId": orgId,
-                      "team_roles_project_master.orgId":orgId
-                    });
+                    const result = await knex("team_users")
+                        .innerJoin(
+                            "team_roles_project_master",
+                            "team_users.teamId",
+                            "team_roles_project_master.teamId"
+                        )
+                        .innerJoin(
+                            "role_resource_master",
+                            "team_roles_project_master.roleId",
+                            "role_resource_master.roleId"
+                        )
+                        .select([
+                            "team_roles_project_master.projectId as projectId",
+                            "role_resource_master.resourceId as resourceId"
+                        ])
+                        .where({
+                            "team_users.userId": loginResult.id,
+                            "team_users.orgId": orgId,
+                            "team_roles_project_master.orgId": orgId
+                        });
 
-                  // let userProjectResources = result;
-                  console.log('Result: ',result);
+                    // let userProjectResources = result;
+                    console.log('Result: ', result);
 
-                  let userProjectResources = _.chain(result)
-                    .groupBy("resourceId")
-                    .map((value, key) => ({
-                      id: key,
-                      projects: value.map(a => a.projectId)
-                    }))
-                    .value();
-                  login.user.userProjectResources = userProjectResources;
+                    let userProjectResources = _.chain(result)
+                        .groupBy("resourceId")
+                        .map((value, key) => ({
+                            id: key,
+                            projects: value.map(a => a.projectId)
+                        }))
+                        .value();
+                    login.user.userProjectResources = userProjectResources;
 
                 }
 
@@ -205,7 +220,7 @@ const entranceController = {
             let user = null;
             await knex.transaction(async (trx) => {
 
-                const signupPayload = _.omit(req.body,'company','project','building','floor','unitNumber');
+                const signupPayload = _.omit(req.body, 'company', 'project', 'building', 'floor', 'unitNumber');
 
                 console.log('[controllers][entrance][signup]', signupPayload);
 
@@ -326,8 +341,8 @@ const entranceController = {
 
 
                 // Insert into user_house_allocation
-                const userHouseAllocationInsertData = {userId:user.id,houseId:signupPayload.houseId,createdAt:currentTime,updatedAt:currentTime,orgId:req.orgId}
-                const insertedResult  = await knex('user_house_allocation').insert(userHouseAllocationInsertData).returning(['*'])
+                const userHouseAllocationInsertData = { userId: user.id, houseId: signupPayload.houseId, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }
+                const insertedResult = await knex('user_house_allocation').insert(userHouseAllocationInsertData).returning(['*'])
                 user.userHouseAllocation = insertedResult[0]
 
 

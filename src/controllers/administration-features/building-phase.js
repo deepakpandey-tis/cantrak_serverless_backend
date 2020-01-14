@@ -337,7 +337,7 @@ const buildingPhaseController = {
             )
             .where({
               "buildings_and_phases.orgId": orgId,
-              "buildings_and_phases.isActive": true
+              "projects.isActive": true
             })
             .first(),
 
@@ -363,7 +363,7 @@ const buildingPhaseController = {
               "property_types.id"
             )
             .where({
-              "buildings_and_phases.isActive": true,
+              "projects.isActive": true,
               "buildings_and_phases.orgId": orgId
             })
             .select([
@@ -423,7 +423,7 @@ const buildingPhaseController = {
             )
             .where({
               "buildings_and_phases.companyId": companyId,
-              "buildings_and_phases.isActive": true,
+              "projects.isActive": true,
               "buildings_and_phases.orgId": orgId
             })
             .first(),
@@ -450,7 +450,7 @@ const buildingPhaseController = {
             )
             .where({
               "buildings_and_phases.companyId": companyId,
-              "buildings_and_phases.isActive": true,
+              "projects.isActive": true,
               "buildings_and_phases.orgId": orgId
             })
             .select([

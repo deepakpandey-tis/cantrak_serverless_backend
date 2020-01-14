@@ -318,6 +318,7 @@ const ProjectController = {
             .from("projects")
             .leftJoin("companies", "projects.companyId", "companies.id")
             .leftJoin("users", "users.id", "projects.createdBy")
+            .where('companies.isActive',true)
             .where(qb => {
               if (organisation) {
                 qb.where('projects.orgId', organisation)
@@ -333,6 +334,7 @@ const ProjectController = {
           knex("projects")
             .leftJoin("companies", "projects.companyId", "companies.id")
             .leftJoin("users", "users.id", "projects.createdBy")
+            .where('companies.isActive',true)
             .where(qb => {
               if (organisation) {
                 qb.where('projects.orgId', organisation)
@@ -365,6 +367,7 @@ const ProjectController = {
             .leftJoin("companies", "projects.companyId", "companies.id")
             .leftJoin("users", "users.id", "projects.createdBy")
             .where({ "projects.orgId": req.orgId })
+            .where('companies.isActive',true)
             .where(qb => {
               if (organisation) {
                 qb.where('projects.orgId', organisation)
@@ -380,6 +383,7 @@ const ProjectController = {
           knex("projects")
             .leftJoin("companies", "projects.companyId", "companies.id")
             .leftJoin("users", "users.id", "projects.createdBy")
+            .where('companies.isActive',true)
             .where({ "projects.orgId": req.orgId })
             .where(qb => {
               if (organisation) {

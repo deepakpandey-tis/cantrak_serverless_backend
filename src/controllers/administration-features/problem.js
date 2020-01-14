@@ -3,7 +3,7 @@ const moment = require('moment');
 const uuidv4 = require('uuid/v4');
 var jwt = require('jsonwebtoken');
 const _ = require('lodash');
-const XLSX  = require('xlsx');
+const XLSX = require('xlsx');
 const knex = require('../../db/knex');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
@@ -28,39 +28,13 @@ const problemController = {
       if (_.isEmpty(filters)) {
         [total, rows] = await Promise.all([
           knex.count('* as count').from("incident_sub_categories")
-          .leftJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
-          .leftJoin('users','incident_categories.createdBy','users.id')
-          .where({'incident_sub_categories.orgId':req.orgId})
+            .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
+            .leftJoin('users', 'incident_categories.createdBy', 'users.id')
+            .where({ 'incident_sub_categories.orgId': req.orgId })
           ,
           knex("incident_sub_categories")
-          .leftJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
-          .leftJoin('users','incident_categories.createdBy','users.id')
-          .select([
-            'incident_sub_categories.id as ID',
-            'incident_categories.categoryCode as Problem Code',
-            'incident_sub_categories.descriptionEng as Description(Eng)',
-            'incident_sub_categories.descriptionThai as Description(Thai)',
-            'incident_categories.descriptionEng as Category',
-            'incident_sub_categories.isActive as Status',
-            'users.name as Created By',
-            'incident_sub_categories.createdAt as Date Created',
-
-          ])
-          .where({'incident_sub_categories.orgId':req.orgId})
-          .offset(offset).limit(per_page)
-        ])
-      } else {
-        filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
-        try {
-          [total, rows] = await Promise.all([
-            knex.count('* as count').from("incident_sub_categories")
-            .innerJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
-            .leftJoin('users','incident_categories.createdBy','users.id')
-            .where({'incident_sub_categories.orgId':req.orgId})
-            .where(filters).offset(offset).limit(per_page),
-            knex("incident_sub_categories")
-            .innerJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
-            .leftJoin('users','incident_categories.createdBy','users.id')
+            .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
+            .leftJoin('users', 'incident_categories.createdBy', 'users.id')
             .select([
               'incident_sub_categories.id as ID',
               'incident_categories.categoryCode as Problem Code',
@@ -70,9 +44,35 @@ const problemController = {
               'incident_sub_categories.isActive as Status',
               'users.name as Created By',
               'incident_sub_categories.createdAt as Date Created',
+
             ])
-            .where({'incident_sub_categories.orgId':req.orgId})
-            .where(filters).offset(offset).limit(per_page)
+            .where({ 'incident_sub_categories.orgId': req.orgId })
+            .offset(offset).limit(per_page)
+        ])
+      } else {
+        filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
+        try {
+          [total, rows] = await Promise.all([
+            knex.count('* as count').from("incident_sub_categories")
+              .innerJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
+              .leftJoin('users', 'incident_categories.createdBy', 'users.id')
+              .where({ 'incident_sub_categories.orgId': req.orgId })
+              .where(filters).offset(offset).limit(per_page),
+            knex("incident_sub_categories")
+              .innerJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
+              .leftJoin('users', 'incident_categories.createdBy', 'users.id')
+              .select([
+                'incident_sub_categories.id as ID',
+                'incident_categories.categoryCode as Problem Code',
+                'incident_sub_categories.descriptionEng as Description(Eng)',
+                'incident_sub_categories.descriptionThai as Description(Thai)',
+                'incident_categories.descriptionEng as Category',
+                'incident_sub_categories.isActive as Status',
+                'users.name as Created By',
+                'incident_sub_categories.createdAt as Date Created',
+              ])
+              .where({ 'incident_sub_categories.orgId': req.orgId })
+              .where(filters).offset(offset).limit(per_page)
           ])
         } catch (e) {
           // Error
@@ -106,42 +106,42 @@ const problemController = {
     }
   },
   /**EXPORT PROBLEM SUB CATEGORY DATA */
-  exportProblem:async (req,res)=>{
+  exportProblem: async (req, res) => {
     try {
 
       let reqData = req.query;
       let filters = req.body;
-      let rows    = null;
-      let orgId   = req.orgId;
+      let rows = null;
+      let orgId = req.orgId;
 
       if (_.isEmpty(filters)) {
 
         [rows] = await Promise.all([
           knex("incident_sub_categories")
-          .leftJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
-          .select([
-            'incident_categories.categoryCode as PROBLEM_CATEGORY_CODE',
-            'incident_sub_categories.descriptionEng as DESCRIPTION',
-            'incident_sub_categories.descriptionThai as ALTERNATE_DESCRIPTION',
-            'incident_sub_categories.remark as REMARK',
-          ])
-          .where({'incident_sub_categories.orgId':orgId})
+            .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
+            .select([
+              'incident_categories.categoryCode as PROBLEM_CATEGORY_CODE',
+              'incident_sub_categories.descriptionEng as DESCRIPTION',
+              'incident_sub_categories.descriptionThai as ALTERNATE_DESCRIPTION',
+              'incident_sub_categories.remark as REMARK',
+            ])
+            .where({ 'incident_sub_categories.orgId': orgId })
         ])
       } else {
         filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
 
-          [rows] = await Promise.all([
-            knex("incident_sub_categories")
-          .leftJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
-          .select([
-            'incident_categories.categoryCode as PROBLEM_CATEGORY_CODE',
-            'incident_sub_categories.descriptionEng as DESCRIPTION',
-            'incident_sub_categories.descriptionThai as ALTERNATE_DESCRIPTION',
-            'incident_sub_categories.remark as REMARK',
-          ])
-          .where({'incident_sub_categories.orgId':orgId})
-          .where(filters)
-          ])
+        [rows] = await Promise.all([
+          knex("incident_sub_categories")
+            .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
+            .select([
+              'incident_categories.categoryCode as PROBLEM_CATEGORY_CODE',
+              'incident_sub_categories.descriptionEng as DESCRIPTION',
+              'incident_sub_categories.descriptionThai as ALTERNATE_DESCRIPTION',
+              'incident_sub_categories.remark as REMARK',
+            ])
+            .where({ 'incident_sub_categories.orgId': orgId })
+            .where(filters)
+        ])
       }
 
       let tempraryDirectory = null;
@@ -183,7 +183,7 @@ const problemController = {
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
-           // let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
+            // let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
             let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Problem_Subcategory/" + filename;
             res.status(200).json({
               data: rows,
@@ -201,20 +201,20 @@ const problemController = {
         ],
       });
     }
-    
+
   },
-  getIncidentCategories:async(req,res) => {
+  getIncidentCategories: async (req, res) => {
     try {
       let orgId = req.orgId
       //const incidentCategoryId = req.body.incidentCategoryId;
-      const categories = await knex.from('incident_categories').where({orgId:orgId})
+      const categories = await knex.from('incident_categories').where({ orgId: orgId })
       return res.status(200).json({
         data: {
           categories
         },
         message: 'Categories list'
       })
-    } catch(err) {
+    } catch (err) {
       console.log('[controllers][quotation][list] :  Error', err);
       return res.status(500).json({
         errors: [
@@ -223,7 +223,7 @@ const problemController = {
       });
     }
   },
-  getSubcategories:async(req,res) => {
+  getSubcategories: async (req, res) => {
     try {
       let incidentCategoryId = req.body.incidentCategoryId;
       const subCategories = await knex('incident_sub_categories').select('*').where({ incidentCategoryId })
@@ -243,29 +243,29 @@ const problemController = {
       });
     }
   },
-  getProblemDetails: async(req, res) => {
+  getProblemDetails: async (req, res) => {
     try {
       let reqData = req.query;
       let pagination = {};
       let problemId = reqData.problemId;
-      
-     let [rows] = await Promise.all([
+
+      let [rows] = await Promise.all([
         knex("incident_sub_categories")
-        .innerJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
-        .select([
-          'incident_sub_categories.id',
-          'incident_categories.categoryCode as problemCode',
-          'incident_sub_categories.descriptionEng',
-          'incident_sub_categories.descriptionThai',
-          'incident_categories.descriptionEng as Category',
-          'incident_sub_categories.isActive as Status',
-          'incident_sub_categories.createdAt as DateCreated',
-          'incident_sub_categories.remark',
-          "incident_sub_categories.incidentCategoryId",
-          "incident_sub_categories.incidentTypeId"
-        ]).where('incident_sub_categories.id',problemId)
-      ]) 
-     pagination.problems = rows;
+          .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
+          .select([
+            'incident_sub_categories.id',
+            'incident_categories.categoryCode as problemCode',
+            'incident_sub_categories.descriptionEng',
+            'incident_sub_categories.descriptionThai',
+            'incident_categories.descriptionEng as Category',
+            'incident_sub_categories.isActive as Status',
+            'incident_sub_categories.createdAt as DateCreated',
+            'incident_sub_categories.remark',
+            "incident_sub_categories.incidentCategoryId",
+            "incident_sub_categories.incidentTypeId"
+          ]).where('incident_sub_categories.id', problemId)
+      ])
+      pagination.problems = rows;
       return res.status(200).json({
         data: pagination,
         message: 'Problem Data Details!'
@@ -278,10 +278,10 @@ const problemController = {
         ],
       });
     }
-  }, 
+  },
 
-   /**IMPORT PROBLEM SUBCATEGORY DATA */
-   importProblemSubCategoryData: async (req, res) => {
+  /**IMPORT PROBLEM SUBCATEGORY DATA */
+  importProblemSubCategoryData: async (req, res) => {
     try {
 
       if (req.file) {
@@ -304,8 +304,8 @@ const problemController = {
         let result = null;
 
         if (
-            data[0].A == "Ã¯Â»Â¿PROBLEM_CATEGORY_CODE" ||
-           (data[0].A == "PROBLEM_CATEGORY_CODE" &&
+          data[0].A == "Ã¯Â»Â¿PROBLEM_CATEGORY_CODE" ||
+          (data[0].A == "PROBLEM_CATEGORY_CODE" &&
             data[0].B == "DESCRIPTION" &&
             data[0].C == "ALTERNATE_DESCRIPTION" &&
             data[0].D == "REMARK")
@@ -317,7 +317,7 @@ const problemController = {
 
               let categoryData = await knex("incident_categories")
                 .select("id")
-                .where({categoryCode: problemData.A,orgId:req.orgId });
+                .where({ categoryCode: problemData.A, orgId: req.orgId });
               let categoryId = null;
               if (!categoryData.length) {
                 fail++;
@@ -330,7 +330,7 @@ const problemController = {
               if (i > 1) {
                 let checkExist = await knex("incident_sub_categories")
                   .select("id")
-                  .where({ incidentCategoryId: categoryId,descriptionEng:problemData.B, orgId: req.orgId });
+                  .where({ incidentCategoryId: categoryId, descriptionEng: problemData.B, orgId: req.orgId });
                 if (checkExist.length < 1) {
                   let currentTime = new Date().getTime();
                   let insertData = {
@@ -405,7 +405,68 @@ const problemController = {
       });
     }
   },
-  
+  /*INACTIVE & ACTIVE PROBLEM */
+  deleteProblem: async (req, res) => {
+    try {
+      let problem = null;
+      let message;
+      await knex.transaction(async trx => {
+        let payload = req.body;
+        const schema = Joi.object().keys({
+          id: Joi.string().required()
+        });
+        const result = Joi.validate(payload, schema);
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message }
+            ]
+          });
+        }
+        let problemResult;
+        let checkStatus = await knex.from('incident_sub_categories').where({ id: payload.id }).returning(['*']);
+
+        if (checkStatus.length) {
+
+          if (checkStatus[0].isActive == true) {
+
+            problemResult = await knex
+              .update({ isActive: false })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("incident_sub_categories");
+            problem = problemResult[0];
+            message = "Problem Inactive Successfully!"
+
+          } else {
+            problemResult = await knex
+              .update({ isActive: true })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("incident_sub_categories");
+            problem = problemResult[0];
+            message = "Problem Active Successfully!"
+          }
+        }
+        trx.commit;
+      });
+      return res.status(200).json({
+        data: {
+          problem: problem
+        },
+        message: message
+      });
+    } catch (err) {
+      console.log("[controllers][serviceCode][deleteProblem] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+
 }
 
 module.exports = problemController
