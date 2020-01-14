@@ -364,6 +364,7 @@ const serviceDetailsController = {
           "service_requests.id": incidentRequestPayload.id,
           "service_requests.orgId": orgId
         })
+        
         console.log("serviceRequest", requestResult);
         let houseId = requestResult[0].houseId;
         
@@ -414,6 +415,7 @@ const serviceDetailsController = {
           ["floorZoneId"],
           ["property_units.createdBy"]
         );
+
         let locationResult = await knex("location_tags")
         .leftJoin("location_tags_master","location_tags.locationTagId","location_tags_master.id")
         .where({

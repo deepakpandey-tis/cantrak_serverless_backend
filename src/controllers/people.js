@@ -340,7 +340,7 @@ const peopleController = {
               "users.email as email",
               "users.userName",
               "users.mobileNo",
-              "user_house_allocation.houseId",
+             // "user_house_allocation.houseId",
               "users.lastLogin as lastVisit",
               //"companies.id as companyId",
               //"companies.companyName",

@@ -230,7 +230,6 @@ const statusController = {
         knex
           .count("* as count")
           .from("service_status")
-          .where({ orgId: orgId })
           .first(),
         knex("service_status")
           .select([
@@ -242,7 +241,6 @@ const statusController = {
             //  "createdby as Created By",
             "createdAt as Date Created"
           ])
-          .where({ orgId: orgId })
           .offset(offset)
           .limit(per_page)
       ]);
