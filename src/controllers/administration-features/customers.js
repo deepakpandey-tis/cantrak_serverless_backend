@@ -20,7 +20,7 @@ const customerController = {
       if (customerId) {
         userDetails = await knex("users")
           .leftJoin('user_house_allocation', 'users.id', 'user_house_allocation.userId')
-          .leftJoin('property_units', 'user_house_allocation.houseId', 'property_units.houseId')
+          .leftJoin('property_units', 'user_house_allocation.houseId', 'property_units.id')
           .leftJoin(
             "buildings_and_phases",
             "property_units.buildingPhaseId",
@@ -48,7 +48,7 @@ const customerController = {
             "companies.companyName",
             "floor_and_zones.floorZoneCode",
             "property_units.unitNumber",
-            "property_units.houseId as house",
+            "property_units.id as house",
             "user_house_allocation.status"
           ])
           .where({ 'users.id': customerId });
@@ -120,7 +120,7 @@ const customerController = {
             .leftJoin(
               "property_units",
               "user_house_allocation.houseId",
-              "property_units.houseId"
+              "property_units.id"
             )
             .select([
               "users.name as name",
@@ -160,7 +160,7 @@ const customerController = {
             .leftJoin(
               "property_units",
               "user_house_allocation.houseId",
-              "property_units.houseId"
+              "property_units.id"
             )
             .select([
               "users.name as name",
@@ -206,7 +206,7 @@ const customerController = {
             .leftJoin(
               "property_units",
               "user_house_allocation.houseId",
-              "property_units.houseId"
+              "property_units.id"
             )
             .select([
               "users.name as name",
@@ -247,7 +247,7 @@ const customerController = {
             .leftJoin(
               "property_units",
               "user_house_allocation.houseId",
-              "property_units.houseId"
+              "property_units.id"
             )
             .select([
               "users.name as name",

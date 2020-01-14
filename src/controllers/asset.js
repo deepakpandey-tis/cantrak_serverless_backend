@@ -2005,7 +2005,7 @@ const assetController = {
             'floor_and_zones.id as floorId',
             'property_units.unitNumber as unitNumber',
             'property_units.id as unitId',
-            'property_units.houseId as houseId'
+            'property_units.id as houseId'
           ])
           .where({
             "asset_location.houseId": houseId,
@@ -2032,7 +2032,7 @@ const assetController = {
             'floor_and_zones.id as floorId',
             'property_units.unitNumber as unitNumber',
             'property_units.id as unitId',
-            'property_units.houseId as houseId'
+            'property_units.id as houseId'
           ])
           .where({
             "asset_location.houseId": houseId,
@@ -2084,7 +2084,7 @@ const assetController = {
           "projects.projectName as projectName",
           "buildings_and_phases.buildingPhaseCode as buildingPhaseCode",
           "property_units.unitNumber as unitNumber",
-          "property_units.houseId as houseId",
+          "property_units.id as houseId",
           "asset_location.createdAt as createdAt",
           "asset_location.updatedAt as updatedAt"
         ])
@@ -2210,7 +2210,7 @@ const assetController = {
         'floor_and_zones.id as floorId',
         'property_units.unitNumber as unitNumber',
         'property_units.id as unitId',
-        'property_units.houseId as houseId'
+        'property_units.id as houseId'
       ]).distinct(['asset_location.assetId'])
       .where({'asset_master.orgId':req.orgId}),
         knex('asset_master')
@@ -2228,7 +2228,7 @@ const assetController = {
             'buildings_and_phases.buildingPhaseCode as buildingPhaseCode',
             'floor_and_zones.floorZoneCode as floorZoneCode',
             'property_units.unitNumber as unitNumber',
-            'property_units.houseId as houseId'
+            'property_units.id as houseId'
           ])
           .distinct(['asset_location.assetId'])
           .where({ 'asset_master.orgId': req.orgId })
