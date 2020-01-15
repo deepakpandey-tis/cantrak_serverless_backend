@@ -55,8 +55,8 @@ const propertyUnitController = {
         /*CHECK DUPLICATE VALUES OPEN */
         let existValue = await knex('property_units')
           .where({
-            companyId:payload.companyId,
-            projectId:payload.projectId,
+            //companyId:payload.companyId,
+            //projectId:payload.projectId,
             buildingPhaseId:payload.buildingPhaseId,
             unitNumber:payload.unitNumber,
             orgId:orgId
@@ -152,8 +152,8 @@ const propertyUnitController = {
          /*CHECK DUPLICATE VALUES OPEN */
          let existValue = await knex('property_units')
          .where({
-          companyId:payload.companyId,
-          projectId:payload.projectId,
+          //companyId:payload.companyId,
+          //projectId:payload.projectId,
           buildingPhaseId:payload.buildingPhaseId,
           unitNumber:payload.unitNumber,
           orgId:orgId
@@ -891,8 +891,8 @@ const propertyUnitController = {
                 let checkExist = await knex("property_units")
                   .select("id")
                   .where({
-                    companyId: companyId,
-                    projectId: projectId,
+                    //companyId: companyId,
+                   // projectId: projectId,
                     buildingPhaseId: buildingPhaseId,
                     // floorZoneId: floorZoneId,
                     // propertyTypeId: propertyTypeId,
