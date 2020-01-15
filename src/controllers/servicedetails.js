@@ -1359,7 +1359,26 @@ const serviceDetailsController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  
+  /***GET PRIORITY ALL LIST */
+  getPriorityAllList: async (req, res) => {
+    try {      
+      let result = await knex('incident_priority').where({ 'orgId': req.orgId, 'isActive': true })
+      return res.status(200).json({
+        data: result,
+        message: "Priority list!"
+      });
+    } catch (err) {
+      console.log("[controllers][servicedetails][signup] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
+   
+
 };
 
 module.exports = serviceDetailsController;

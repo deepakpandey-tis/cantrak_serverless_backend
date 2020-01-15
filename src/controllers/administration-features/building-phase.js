@@ -372,6 +372,7 @@ const buildingPhaseController = {
               "projects.projectName as Project Name",
               "companies.companyName as Company Name",
               "buildings_and_phases.isActive as Status",
+              "buildings_and_phases.description as Description",
               "users.name as Created By",
               "buildings_and_phases.createdAt as Date Created",
               "property_types.propertyType"
@@ -459,6 +460,7 @@ const buildingPhaseController = {
               "projects.projectName as Project Name",
               "companies.companyName as Company Name",
               "buildings_and_phases.isActive as Status",
+              "buildings_and_phases.description as Description",
               "users.name as Created By",
               "buildings_and_phases.createdAt as Date Created",
               "property_types.propertyType"

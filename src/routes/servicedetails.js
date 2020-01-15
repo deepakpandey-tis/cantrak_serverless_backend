@@ -79,6 +79,7 @@ router.post('/import-location-tag', upload1.single("file"), authMiddleware.isAut
 router.get('/get-location-tag-all-list', authMiddleware.isAuthenticated, serviceDetailsController.getLocatioTagAllList);
 router.post('/get-service-problems', authMiddleware.isAuthenticated, serviceDetailsController.getServiceProblem);
 router.post('/get-service-request-status', authMiddleware.isAuthenticated, serviceDetailsController.getServiceRequestStatus);
+router.get('/get-priority-all-list', authMiddleware.isAuthenticated, serviceDetailsController.getPriorityAllList);
 
 
 
