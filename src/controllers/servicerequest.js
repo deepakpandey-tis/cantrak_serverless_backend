@@ -1792,8 +1792,13 @@ const serviceRequestController = {
         /*INSERT LOCATION TAGS DATA OPEN */
         let locationTagIds = []
         for (let locationTag of payload.locationTags) {
-          const result = await knex('location_tags_master').select('id').where({ title: locationTag }).first()
-          locationTagIds.push(result.id)
+          let result = await knex('location_tags_master').select('id').where({ title: locationTag })
+          if(result && result.length){
+            locationTagIds.push(result[0].id)
+          } else {
+            result = await knex('location_tags_master').insert({title:locationTag}).returning(['*'])
+            locationTagIds.push(result[0].id)
+          }
         }
         for (let locationId of locationTagIds) {
           const insertLocation = {
