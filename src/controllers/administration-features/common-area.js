@@ -45,7 +45,9 @@ const commonAreaController = {
         }
 
         const existCommonAreaCode = await knex("common_area").where({
-          commonAreaCode: commonPayload.commonAreaCode
+          commonAreaCode: commonPayload.commonAreaCode,
+          orgId:orgId,
+          floorZoneId:commonPayload.floorZoneId
         });
 
         console.log(
@@ -148,7 +150,9 @@ const commonAreaController = {
 
         const existCommonAreaCode = await knex("common_area")
           .where({
-            commonAreaCode: commonUpdatePaylaod.commonAreaCode.toUpperCase()
+            commonAreaCode: commonUpdatePaylaod.commonAreaCode,
+            orgId:orgId,
+            floorZoneId:commonUpdatePaylaod.floorZoneId
           })
           .whereNot({ id: commonUpdatePaylaod.id });
 
@@ -157,18 +161,18 @@ const commonAreaController = {
           existCommonAreaCode
         );
 
-        // Return error when username exist
+        //Return error when username exist
 
-        // if (existCommonAreaCode && existCommonAreaCode.length) {
-        //   return res.status(400).json({
-        //     errors: [
-        //       {
-        //         code: "COMMON_AREA_CODE_EXIST_ERROR",
-        //         message: "Common Area Code already exist !"
-        //       }
-        //     ]
-        //   });
-        // }
+        if (existCommonAreaCode && existCommonAreaCode.length) {
+          return res.status(400).json({
+            errors: [
+              {
+                code: "COMMON_AREA_CODE_EXIST_ERROR",
+                message: "Common Area Code already exist !"
+              }
+            ]
+          });
+        }
 
         // Insert in users table,
         const currentTime = new Date().getTime();
@@ -807,10 +811,10 @@ const commonAreaController = {
                 let checkExist = await knex("common_area")
                   .select("commonAreaCode")
                   .where({
-                    companyId: companyId,
-                    projectId: projectId,
-                    propertyTypeId: propertyTypeId,
-                    buildingPhaseId: buildingPhaseId,
+                    //companyId: companyId,
+                   // projectId: projectId,
+                   // propertyTypeId: propertyTypeId,
+                   // buildingPhaseId: buildingPhaseId,
                     floorZoneId: floorZoneId,
                     commonAreaCode: commonData.F,
                     orgId: req.orgId

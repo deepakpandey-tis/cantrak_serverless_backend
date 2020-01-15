@@ -402,7 +402,8 @@ const ProjectController = {
               "companies.companyName as Company Name",
               "projects.isActive as Status",
               "users.name as Created By",
-              "projects.createdAt as Date Created"
+              "projects.createdAt as Date Created",
+              "projects.project as projectId",
             ])
             .offset(offset)
             .limit(per_page)

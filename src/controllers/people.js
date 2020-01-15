@@ -33,7 +33,7 @@ const peopleController = {
         }
 
         let pass = '123456'
-        if(payload.password){
+        if (payload.password) {
           pass = payload.password
         }
 
@@ -227,7 +227,7 @@ const peopleController = {
               "user_house_allocation.houseId",
               "property_units.id"
             )
-  
+
             .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
             .whereNotIn('application_user_roles.roleId', [2])
             .where(qb => {
@@ -340,7 +340,7 @@ const peopleController = {
               "users.email as email",
               "users.userName",
               "users.mobileNo",
-             // "user_house_allocation.houseId",
+              // "user_house_allocation.houseId",
               "users.lastLogin as lastVisit",
               //"companies.id as companyId",
               //"companies.companyName",
@@ -389,11 +389,11 @@ const peopleController = {
       let userResult;
       let projectResult;
       peopleData = await knex("users")
-      .leftJoin(
-        "user_house_allocation",
-        "users.id",
-        "user_house_allocation.userId"
-      )
+        .leftJoin(
+          "user_house_allocation",
+          "users.id",
+          "user_house_allocation.userId"
+        )
         .leftJoin(
           "property_units",
           "user_house_allocation.houseId",
@@ -432,7 +432,7 @@ const peopleController = {
       console.log('[controllers][people][getPeopleDetails]: People Details', peopleDataResult);
 
       res.status(200).json({
-        data: { people: omitedPeopleDataResult ,projectData:peopleData},
+        data: { people: omitedPeopleDataResult, projectData: peopleData },
         message: "People Details"
       });
 
@@ -469,15 +469,15 @@ const peopleController = {
 
         let currentTime = new Date().getTime();
         let peopleData;
-        let checkStatus = await knex.from('users').where({ id:id }).returning(['*'])
+        let checkStatus = await knex.from('users').where({ id: id }).returning(['*'])
         if (checkStatus && checkStatus.length) {
 
           if (checkStatus[0].isActive == true) {
-             peopleData = await knex.update({ isActive: false, updatedAt: currentTime }).where({ id: id }).returning(['*']).transacting(trx).into('users');
-             message ="People Inactive Successfully";
-          } else{
+            peopleData = await knex.update({ isActive: false, updatedAt: currentTime }).where({ id: id }).returning(['*']).transacting(trx).into('users');
+            message = "People Inactive Successfully";
+          } else {
             peopleData = await knex.update({ isActive: true, updatedAt: currentTime }).where({ id: id }).returning(['*']).transacting(trx).into('users');
-            message ="People Active Successfully";
+            message = "People Active Successfully";
           }
         }
         people = peopleData[0];
@@ -496,76 +496,45 @@ const peopleController = {
   /**EXPORT PEOPLE DATA */
   exportPeopleData: async (req, res) => {
     try {
-
-      let { name, email, accountType } = req.body;
       let peopleData = null;
       let reqData = req.query;
       let rows
-      if (name || email || accountType) {
-        [rows] = await Promise.all([
-          knex
-            .from("team_users")
-            .leftJoin(
-              "users",
-              "team_users.userId",
-              "users.id",
-            )
-            .leftJoin(
-              "teams",
-              "team_users.teamId",
-              "teams.teamId"
-            )
-            .select([
-              //"users.orgId as ORGANIZATION_ID",
-              "users.userCode as HUMAN_CODE",
-              "users.nameThai as NAME_1",
-              "users.name as NAME_2",
-              "users.email as EMAIL",
-              // "users.isActive as STATUS",
-              //"users.updatedAt as END_EFFECTIVE_DATE",
-              //"users.createdAt as START_EFFECTIVE_DATE",
-              "teams.teamCode as DEPARTMENT_CODE"
-            ])
-            .where(qb => {
-              qb.where({ "users.orgId": req.orgId });
-              if (name) {
-                qb.where("users.name", "like", `%${name}%`);
-              }
-              if (email) {
-                qb.where("users.email", "like", `%${email}%`);
-              }
-            })
-        ]);
+      [rows] = await Promise.all([
 
-      } else {
 
-        [rows] = await Promise.all([
-          knex
-            .from("team_users")
-            .leftJoin(
-              "users",
-              "team_users.userId",
-              "users.id",
-            )
-            .leftJoin(
-              "teams",
-              "team_users.teamId",
-              "teams.teamId"
-            )
-            .select([
-              //"users.orgId as ORGANIZATION_ID",
-              "users.userCode as HUMAN_CODE",
-              "users.nameThai as NAME_1",
-              "users.name as NAME_2",
-              "users.email as EMAIL",
-              // "users.isActive as STATUS",
-              //"users.updatedAt as END_EFFECTIVE_DATE",
-              //"users.createdAt as START_EFFECTIVE_DATE",
-              "teams.teamCode as DEPARTMENT_CODE"
-            ])
-            .where({ "users.orgId": req.orgId })
-        ]);
-      }
+        knex
+          .from("users")
+          .leftJoin(
+            "user_house_allocation",
+            "users.id",
+            "user_house_allocation.userId"
+          )
+          .leftJoin(
+            "property_units",
+            "user_house_allocation.houseId",
+            "property_units.id"
+          )
+          .leftJoin(
+            "companies",
+            "property_units.companyId",
+            "companies.id"
+          )
+          .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+          .leftJoin('team_users', 'users.id', 'team_users.userId')
+          .leftJoin(
+            "teams",
+            "team_users.teamId",
+            "teams.teamId"
+          )
+          .whereNotIn('application_user_roles.roleId', [2])
+          .select([
+            "users.name as NAME",
+            "users.email as EMAIL",
+            "teams.teamCode as TEAM_CODE"
+          ])
+          .where({ "users.orgId": req.orgId })
+      ]);
+
       let tempraryDirectory = null;
       let bucketName = null;
       if (process.env.IS_OFFLINE) {
@@ -577,7 +546,18 @@ const peopleController = {
       }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(rows);
+      var ws;
+      if (rows && rows.length) {
+        ws = XLSX.utils.json_to_sheet(rows);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          {
+            NAME: "",
+            EMAIL: "",
+            TEAM_CODE: ""
+          }
+        ]);
+      }
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "PeopleData-" + Date.now() + ".csv";
@@ -630,7 +610,7 @@ const peopleController = {
     try {
       let orgId = req.orgId;
 
-      console.log("====================",orgId,"==========================")
+      console.log("====================", orgId, "==========================")
       if (req.file) {
         let tempraryDirectory = null;
         if (process.env.IS_OFFLINE) {
@@ -650,12 +630,9 @@ const peopleController = {
         console.log("=======", data[0], "+++++++++++++++")
         let result = null;
 
-        if (data[0].A == "Ã¯Â»Â¿HUMAN_CODE" || data[0].A == "HUMAN_CODE" &&
-          data[0].B == "NAME_1" &&
-          data[0].C == "NAME_2" &&
-          data[0].D == "EMAIL" &&
-          // data[0]. == "STATUS" &&
-          data[0].E == "DEPARTMENT_CODE"
+        if (data[0].A == "Ã¯Â»Â¿NAME" || data[0].A == "NAME" &&
+          data[0].B == "EMAIL" &&
+          data[0].C == "TEAM_CODE"
         ) {
 
           if (data.length > 0) {
@@ -664,20 +641,24 @@ const peopleController = {
             for (let peopleData of data) {
               i++;
 
-              let teamData = await knex('teams').select('teamId').where({ teamCode: peopleData.E,orgId:req.orgId });
               let teamId = null;
-              if (!teamData && !teamData.length) {
-                continue;
-              }
-              if (teamData && teamData.length) {
-                teamId = teamData[0].teamId
-              }
+              if (peopleData.C) {
+                let teamData = await knex('teams').select('teamId').where({ teamCode: peopleData.C, orgId: req.orgId });
 
+                // if (!teamData.length) {
+                //   fail++;
+                //   continue;
+                // }
+                if (teamData && teamData.length) {
+                  teamId = teamData[0].teamId
+                }
+
+              }
 
               if (i > 1) {
 
                 let checkExist = await knex('users').select("id")
-                  .where({name: peopleData.C, userCode: peopleData.A, orgId: req.orgId })
+                  .where({ email: peopleData.B })
                 if (checkExist.length < 1) {
 
 
@@ -686,41 +667,44 @@ const peopleController = {
 
                   let currentTime = new Date().getTime();
                   let insertData = {
-                    orgId    : req.orgId,
-                    name     : peopleData.C,
-                    nameThai : peopleData.B,
-                    email    : peopleData.D,
-                    userCode : peopleData.A,
-                    isActive : true,
+                    orgId: req.orgId,
+                    name: peopleData.A,
+                    email: peopleData.B,
                     createdAt: currentTime,
                     updatedAt: currentTime,
-                    emailVerified:true
+                    emailVerified: true
                   }
 
                   resultData = await knex.insert(insertData).returning(['*']).into('users');
 
                   if (resultData[0].id) {
                     let insertRole = {
-                      orgId  : req.orgId,
-                      userId : resultData[0].id,
-                      roleId : 3,
+                      orgId: req.orgId,
+                      userId: resultData[0].id,
+                      roleId: 3,
                       createdAt: currentTime,
                       updatedAt: currentTime
                     }
                     let roleResult = await knex.insert(insertRole).returning(['*']).into('application_user_roles');
 
-                    let insertTeam = {
-                      orgId: req.orgId,
-                      teamId: teamId,
-                      userId: resultData[0].id,
-                      createdAt: currentTime,
-                      updatedAt: currentTime
+                    if (teamId) {
+
+                      let checkTeam = await knex.from('team_users').where({ userId: resultData[0].id })
+                      if (!checkTeam.length) {
+
+                        let insertTeam = {
+                          orgId: req.orgId,
+                          teamId: teamId,
+                          userId: resultData[0].id,
+                          createdAt: currentTime,
+                          updatedAt: currentTime
+                        }
+
+                        let teamResult = await knex.insert(insertTeam).returning(['*']).into('team_users');
+                      }
                     }
 
-                    let teamResult = await knex.insert(insertTeam).returning(['*']).into('team_users');
-
                   }
-
 
                   if (resultData && resultData.length) {
                     success++;
@@ -731,7 +715,7 @@ const peopleController = {
               }
 
             }
-
+            // fail = fail-1;
             let message = null;
             if (totalData == success) {
               message = "We have processed ( " + totalData + " ) entries and added them successfully!";
