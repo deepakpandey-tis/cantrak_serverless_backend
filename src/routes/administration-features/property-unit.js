@@ -53,5 +53,7 @@ router.post(
 /*GET ALL PROPERTY UNIT LIST FOR DROP DOWN */
 router.get("/get-all-property-unit",authMiddleware.isAuthenticated,propertyUnitController.getAllPropertyUnit);
 
+router.post('/toggle-status', authMiddleware.isAuthenticated,propertyUnitController.toggleStatus);
+
 module.exports = router
 

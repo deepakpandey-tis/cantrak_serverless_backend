@@ -2256,7 +2256,7 @@ const serviceRequestController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-  },  
+  },
 };
 
 // Y, M, D

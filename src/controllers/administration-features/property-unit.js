@@ -994,7 +994,27 @@ const propertyUnitController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-  }
+  },
+  toggleStatus: async (req, res) => {
+    try {
+      let id = req.body.id;
+      let check = await knex('property_units').select('isActive').where({orgId:req.orgId,id:id})
+      if(check && check.length && Boolean(check[0].isActive)){
+        await knex('property_units').update({isActive:false}).where({id,orgId:req.orgId})
+      } else {
+        await knex('property_units').update({ isActive: true }).where({ id, orgId: req.orgId })
+      }
+      return res.status(200).json({
+        data: {
+          message: 'Done!'
+        }
+      })
+    } catch (err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  }  
 };
 
 module.exports = propertyUnitController;
