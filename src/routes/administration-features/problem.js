@@ -35,6 +35,6 @@ var storage = multer.diskStorage({
 });
 var upload = multer( { storage: storage } );
 router.post('/import-problem-subcategory-data',upload.single('file'), authMiddleware.isAuthenticated, problemController.importProblemSubCategoryData)
-
+router.post('/toggle-problem-status',authMiddleware.isAuthenticated,problemController.deleteProblem)
 
 module.exports = router;
