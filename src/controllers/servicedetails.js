@@ -378,6 +378,7 @@ const serviceDetailsController = {
           .leftJoin('users', 'service_requests.createdBy', 'users.id')
           .leftJoin("users AS u", "service_requests.requestedBy", "u.id")
           .leftJoin("source_of_request", "service_requests.serviceType","source_of_request.id")
+          .leftJoin("images", "service_requests.id","images.entityId")
           .select(
             "companies.companyName",
             "projects.projectName",
@@ -392,6 +393,9 @@ const serviceDetailsController = {
             "u.name as requestedBy",
             "users.name as createdUser",
             "source_of_request.descriptionEng as serviceType",
+            "images.s3Url",
+            "images.title",
+            "images.name",
             "property_units.*"
           )
           .where({

@@ -558,6 +558,7 @@ const surveyOrderController = {
             "o.id as S Id",
             "s.description as Description",
             "o.appointedDate as Appointment Date",
+            "o.appointedTime as Appointment Time",
             "u.name as Assigned To",
             "s.id as SR Id",
             "s.priority as Priority",
@@ -628,12 +629,14 @@ const surveyOrderController = {
             "service_requests.id",
             "survey_orders.id",
             "assigned_service_team.id",
-            "users.id"
+            "users.id",
+            "u.id"
           ])
           .select([
             "survey_orders.id as S Id",
             "service_requests.description as Description",
             "survey_orders.appointedDate as Appointment Date",
+            "survey_orders.appointedDate as Appointment Time",
             "users.name as Assigned To",
             "service_requests.id as SR Id",
             "service_requests.priority as Priority",
@@ -667,6 +670,7 @@ const surveyOrderController = {
             "survey_orders.id as S Id",
             "service_requests.description as Description",
             "survey_orders.appointedDate as Appointment Date",
+            "survey_orders.appointedTime as Appointment Time",
             "users.name as Assigned To",
             "service_requests.id as SR Id",
             "service_requests.priority as Priority",
@@ -704,13 +708,16 @@ const surveyOrderController = {
             "service_requests.id",
             "survey_orders.id",
             "assigned_service_team.id",
-            "users.id"
+            "users.id",
+            "u.id",
+            "status.id"
           ])
           .where({ "survey_orders.orgId": req.orgId })
           .select([
             "survey_orders.id as S Id",
             "service_requests.description as Description",
             "survey_orders.appointedDate as Appointment Date",
+            "survey_orders.appointedTime as Appointment Time",
             "users.name as Assigned To",
             "service_requests.id as SR Id",
             "service_requests.priority as Priority",
@@ -743,6 +750,7 @@ const surveyOrderController = {
             "survey_orders.id as S Id",
             "service_requests.description as Description",
             "survey_orders.appointedDate as Appointment Date",
+            "survey_orders.appointedTime as Appointment Time",
             "users.name as Assigned To",
             "service_requests.id as SR Id",
             "service_requests.priority as Priority",
@@ -802,7 +810,7 @@ const surveyOrderController = {
         });
       }
 
-      let results = await knex.raw(`select "survey_orders"."id" as "SId","service_requests"."description" as "description","survey_orders"."appointedDate" as "appointedDate","users"."name" as "assignedTo","service_requests"."id" as "SRId","service_requests"."priority" as "priority","survey_orders"."createdBy" as "createdBy", "survey_orders"."surveyOrderStatus" as "status","survey_orders"."createdAt" as "dateCreated" from "survey_orders" inner join "service_requests" on "survey_orders"."serviceRequestId" = "service_requests"."id" left join "assigned_service_team" on "survey_orders"."id" = "assigned_service_team"."entityId" left join "users" on "assigned_service_team"."userId" = "users"."id" where "survey_orders"."orgId" = ${req.orgId} and "survey_orders"."id" = ${surveyOrderid} and "assigned_service_team"."entityType"='survey_orders'`)
+      let results = await knex.raw(`select "survey_orders"."id" as "SId","service_requests"."description" as "description","survey_orders"."appointedDate" as "appointedDate","survey_orders"."appointedTime" as "appointedTime","users"."name" as "assignedTo","service_requests"."id" as "SRId","service_requests"."priority" as "priority","survey_orders"."createdBy" as "createdBy", "survey_orders"."surveyOrderStatus" as "status","survey_orders"."createdAt" as "dateCreated" from "survey_orders" inner join "service_requests" on "survey_orders"."serviceRequestId" = "service_requests"."id" left join "assigned_service_team" on "survey_orders"."id" = "assigned_service_team"."entityId" left join "users" on "assigned_service_team"."userId" = "users"."id" where "survey_orders"."orgId" = ${req.orgId} and "survey_orders"."id" = ${surveyOrderid} and "assigned_service_team"."entityType"='survey_orders'`)
 
       console.log("results", results.rows);
 
