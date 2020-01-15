@@ -1698,7 +1698,7 @@ const serviceRequestController = {
           serviceStatusCode: Joi.string().required(),
           description: Joi.string().required(),
           floor: Joi.string().required(),
-          house: Joi.string().required(),
+          house: Joi.string().allow('').optional(),
           location: Joi.string()
             .allow("")
             .optional(),
@@ -1792,8 +1792,13 @@ const serviceRequestController = {
         /*INSERT LOCATION TAGS DATA OPEN */
         let locationTagIds = []
         for (let locationTag of payload.locationTags) {
-          const result = await knex('location_tags_master').select('id').where({ title: locationTag }).first()
-          locationTagIds.push(result.id)
+          let result = await knex('location_tags_master').select('id').where({ title: locationTag })
+          if(result && result.length){
+            locationTagIds.push(result[0].id)
+          } else {
+            result = await knex('location_tags_master').insert({title:locationTag}).returning(['*'])
+            locationTagIds.push(result[0].id)
+          }
         }
         for (let locationId of locationTagIds) {
           const insertLocation = {
@@ -1910,17 +1915,17 @@ const serviceRequestController = {
       await knex.transaction(async trx => {
         let orgId = req.orgId;
         let unitId = req.query.unitId;
-        let result = await knex
-          .from("property_units")
-          .select("*")
-          .where({ "property_units.id": unitId, orgId: orgId });
+        // let result = await knex
+        //   .from("property_units")
+        //   .select("*")
+        //   .where({ "property_units.id": unitId, orgId: orgId });
 
-        unitResult = result[0];
+        // unitResult = result[0];
         let houseResult = await knex
           .from("user_house_allocation")
           .select("userId")
           .where({
-            "user_house_allocation.houseId": result[0].houseId,
+            "user_house_allocation.houseId": unitId,
             orgId: orgId
           });
 

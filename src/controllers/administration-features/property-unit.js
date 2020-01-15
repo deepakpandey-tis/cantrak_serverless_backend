@@ -55,12 +55,16 @@ const propertyUnitController = {
         /*CHECK DUPLICATE VALUES OPEN */
         let existValue = await knex('property_units')
           .where({
-            houseId:payload.houseId
+            //companyId:payload.companyId,
+            //projectId:payload.projectId,
+            buildingPhaseId:payload.buildingPhaseId,
+            unitNumber:payload.unitNumber,
+            orgId:orgId
           });
         if (existValue && existValue.length) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: "House Id  already exist!!" }
+              { code: "VALIDATION_ERROR", message: "Unit Number already exist!!" }
             ]
           });
         }
@@ -123,7 +127,7 @@ const propertyUnitController = {
           buildingPhaseId: Joi.string().required(),
           floorZoneId: Joi.string().required(),
           unitNumber: Joi.string().required(),
-          houseId: Joi.string().required(),
+          houseId: Joi.string().allow('').optional(),
           description: Joi.string().allow("").allow(null).optional(),
           productCode: Joi.string().required(),
           area: Joi.string().allow("").allow(null).optional(),
@@ -148,7 +152,11 @@ const propertyUnitController = {
          /*CHECK DUPLICATE VALUES OPEN */
          let existValue = await knex('property_units')
          .where({
-           houseId:payload.houseId
+          //companyId:payload.companyId,
+          //projectId:payload.projectId,
+          buildingPhaseId:payload.buildingPhaseId,
+          unitNumber:payload.unitNumber,
+          orgId:orgId
          });
        if (existValue && existValue.length) {
 
@@ -157,7 +165,7 @@ const propertyUnitController = {
         } else {
          return res.status(400).json({
            errors: [
-             { code: "VALIDATION_ERROR", message: "House Id  already exist!!" }
+             { code: "VALIDATION_ERROR", message: "Unit Number  already exist!!" }
            ]
          });
         }
@@ -472,6 +480,7 @@ const propertyUnitController = {
               // "property_units.createdAt as DATE CREATED"
             ])
             .where({ "property_units.orgId": orgId })
+            .where({ "floor_and_zones.isActive": true })
         ]);
       } else {
         [rows] = await Promise.all([
@@ -520,6 +529,7 @@ const propertyUnitController = {
               "property_units.companyId": companyId,
               "property_units.orgId": orgId
             })
+            .where({ "floor_and_zones.isActive": true })
         ]);
       }
       let tempraryDirectory = null;
@@ -636,7 +646,7 @@ const propertyUnitController = {
           "property_units.id as id",
           "property_units.description as description",
           "property_units.productCode as productCode",
-          "property_units.id as houseId",
+          "property_units.houseId as houseId",
           "property_units.area as area",
           "property_units.unitNumber as unitNumber",
           "companies.companyName as companyName",
@@ -788,7 +798,7 @@ const propertyUnitController = {
           // data[0].O == "DATE CREATED"
         ) {
           if (data.length > 0) {
-            let i = 0;
+            let i = 1;
             console.log("Data[0]", data[0]);
             for (let propertyUnitData of data) {
               // Query from different tables and get data
@@ -876,11 +886,13 @@ const propertyUnitController = {
 
               i++;
               if (i > 1) {
+
+                console.log()
                 let checkExist = await knex("property_units")
                   .select("id")
                   .where({
-                    // companyId: companyId,
-                    // projectId: projectId,
+                    //companyId: companyId,
+                   // projectId: projectId,
                     buildingPhaseId: buildingPhaseId,
                     // floorZoneId: floorZoneId,
                     // propertyTypeId: propertyTypeId,
@@ -914,7 +926,7 @@ const propertyUnitController = {
                 }
               }
             }
-
+                 fail = fail-1;
             let message = null;
             if (totalData == success) {
               message =

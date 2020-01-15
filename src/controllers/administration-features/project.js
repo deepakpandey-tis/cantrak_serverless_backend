@@ -447,6 +447,7 @@ const ProjectController = {
           knex("projects")
             .leftJoin("companies", "projects.companyId", "companies.id")
             .leftJoin("users", "users.id", "projects.createdBy")
+            .where('companies.isActive',true)
             .where({ "projects.orgId": orgId })
             .select([
               // "projects.orgId as ORGANIZATION_ID",
@@ -470,6 +471,7 @@ const ProjectController = {
             .from("projects")
             .leftJoin("companies", "projects.companyId", "companies.id")
             .leftJoin("users", "users.id", "projects.createdBy")
+            .where('companies.isActive',true)
             .where({ "projects.companyId": companyId, "projects.orgId": orgId })
             .select([
               // "projects.orgId as ORGANIZATION_ID",

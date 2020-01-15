@@ -523,6 +523,8 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
+            
+            .where({"projects.isActive": true})
             .where({ "buildings_and_phases.orgId": orgId })
             .select([
               // "buildings_and_phases.orgId as ORGANIZATION_ID",
@@ -551,6 +553,7 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
+            .where({"projects.isActive": true})
             .where({
               "buildings_and_phases.companyId": companyId,
               "buildings_and_phases.orgId": orgId
