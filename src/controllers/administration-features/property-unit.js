@@ -636,7 +636,7 @@ const propertyUnitController = {
           "property_units.id as id",
           "property_units.description as description",
           "property_units.productCode as productCode",
-          "property_units.id as houseId",
+          "property_units.houseId as houseId",
           "property_units.area as area",
           "property_units.unitNumber as unitNumber",
           "companies.companyName as companyName",
