@@ -600,6 +600,7 @@ const commonAreaController = {
               "common_area.description as DESCRIPTION",
             ])
             .where({ "common_area.companyId": companyId, "common_area.orgId": orgId })
+            .where({ "floor_and_zones.isActive": true })
         ]);
       } else {
         [rows] = await Promise.all([
@@ -631,6 +632,7 @@ const commonAreaController = {
               "common_area.description as DESCRIPTION",
             ])
             .where({ "common_area.orgId": orgId })
+            .where({ "floor_and_zones.isActive": true })
         ]);
       }
 
@@ -824,7 +826,8 @@ const commonAreaController = {
                     commonAreaCode: commonData.F,
                     description: commonData.G,
                     createdAt: currentTime,
-                    updatedAt: currentTime
+                    updatedAt: currentTime,
+                    createdBy :req.me.id
                   };
 
                   resultData = await knex

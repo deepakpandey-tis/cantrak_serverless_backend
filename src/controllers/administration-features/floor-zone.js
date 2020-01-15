@@ -464,6 +464,7 @@ const floorZoneController = {
               //"floor_and_zones.createdAt as DATE_CREATED"
             ])
             .where({ "floor_and_zones.orgId": orgId })
+            .where({ "buildings_and_phases.isActive": true })
         ]);
       } else {
         [rows] = await Promise.all([
@@ -502,6 +503,7 @@ const floorZoneController = {
               "floor_and_zones.companyId": companyId,
               "floor_and_zones.orgId": orgId
             })
+            .where({ "buildings_and_phases.isActive": true })
         ]);
       }
 

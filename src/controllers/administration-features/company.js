@@ -388,7 +388,7 @@ const companyController = {
             .from("companies")
             .leftJoin("users", "users.id", "companies.createdBy")
             .leftJoin("organisations", "companies.orgId", "organisations.id")
-            .where('organisations.isActive',true)
+            .where('organisations.isActive', true)
             .where(qb => {
               if (organisation) {
                 qb.where('companies.orgId', organisation)
@@ -401,7 +401,7 @@ const companyController = {
           knex("companies")
             .leftJoin("users", "users.id", "companies.createdBy")
             .leftJoin("organisations", "companies.orgId", "organisations.id")
-            .where('organisations.isActive',true)
+            .where('organisations.isActive', true)
             .where(qb => {
               if (organisation) {
                 qb.where('companies.orgId', organisation)
@@ -432,7 +432,7 @@ const companyController = {
             .from("companies")
             .leftJoin("users", "users.id", "companies.createdBy")
             .leftJoin("organisations", "companies.orgId", "organisations.id")
-            .where('organisations.isActive',true)
+            .where('organisations.isActive', true)
             .where({ "companies.orgId": req.orgId })
 
             .where(qb => {
@@ -447,7 +447,7 @@ const companyController = {
           knex("companies")
             .leftJoin("users", "users.id", "companies.createdBy")
             .leftJoin("organisations", "companies.orgId", "organisations.id")
-            .where('organisations.isActive',true)
+            .where('organisations.isActive', true)
             .where({ "companies.orgId": req.orgId })
             .where(qb => {
               if (organisation) {
@@ -504,6 +504,8 @@ const companyController = {
       let [rows] = await Promise.all([
         knex("companies")
           .leftJoin("users", "users.id", "companies.createdBy")
+          .leftJoin("organisations", "companies.orgId", "organisations.id")
+          .where('organisations.isActive', true)
           .where({ "companies.orgId": req.orgId })
           .select([
             "companies.companyId as COMPANY",
