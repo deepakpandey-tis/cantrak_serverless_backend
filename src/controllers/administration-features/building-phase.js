@@ -337,7 +337,7 @@ const buildingPhaseController = {
             )
             .where({
               "buildings_and_phases.orgId": orgId,
-              "buildings_and_phases.isActive": true
+              "projects.isActive": true
             })
             .first(),
 
@@ -363,7 +363,7 @@ const buildingPhaseController = {
               "property_types.id"
             )
             .where({
-              "buildings_and_phases.isActive": true,
+              "projects.isActive": true,
               "buildings_and_phases.orgId": orgId
             })
             .select([
@@ -372,6 +372,7 @@ const buildingPhaseController = {
               "projects.projectName as Project Name",
               "companies.companyName as Company Name",
               "buildings_and_phases.isActive as Status",
+              "buildings_and_phases.description as Description",
               "users.name as Created By",
               "buildings_and_phases.createdAt as Date Created",
               "property_types.propertyType"
@@ -423,7 +424,7 @@ const buildingPhaseController = {
             )
             .where({
               "buildings_and_phases.companyId": companyId,
-              "buildings_and_phases.isActive": true,
+              "projects.isActive": true,
               "buildings_and_phases.orgId": orgId
             })
             .first(),
@@ -450,7 +451,7 @@ const buildingPhaseController = {
             )
             .where({
               "buildings_and_phases.companyId": companyId,
-              "buildings_and_phases.isActive": true,
+              "projects.isActive": true,
               "buildings_and_phases.orgId": orgId
             })
             .select([
@@ -459,6 +460,7 @@ const buildingPhaseController = {
               "projects.projectName as Project Name",
               "companies.companyName as Company Name",
               "buildings_and_phases.isActive as Status",
+              "buildings_and_phases.description as Description",
               "users.name as Created By",
               "buildings_and_phases.createdAt as Date Created",
               "property_types.propertyType"

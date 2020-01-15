@@ -387,6 +387,8 @@ const companyController = {
             .count("* as count")
             .from("companies")
             .leftJoin("users", "users.id", "companies.createdBy")
+            .leftJoin("organisations", "companies.orgId", "organisations.id")
+            .where('organisations.isActive',true)
             .where(qb => {
               if (organisation) {
                 qb.where('companies.orgId', organisation)
@@ -398,6 +400,8 @@ const companyController = {
             .first(),
           knex("companies")
             .leftJoin("users", "users.id", "companies.createdBy")
+            .leftJoin("organisations", "companies.orgId", "organisations.id")
+            .where('organisations.isActive',true)
             .where(qb => {
               if (organisation) {
                 qb.where('companies.orgId', organisation)
@@ -413,7 +417,8 @@ const companyController = {
               "companies.telephone as Contact Number",
               "companies.isActive as Status",
               "users.name as Created By",
-              "companies.createdAt as Date Created"
+              "companies.createdAt as Date Created",
+              "companies.companyId",
             ])
             .offset(offset)
             .limit(per_page)
@@ -426,7 +431,10 @@ const companyController = {
             .count("* as count")
             .from("companies")
             .leftJoin("users", "users.id", "companies.createdBy")
+            .leftJoin("organisations", "companies.orgId", "organisations.id")
+            .where('organisations.isActive',true)
             .where({ "companies.orgId": req.orgId })
+
             .where(qb => {
               if (organisation) {
                 qb.where('companies.orgId', organisation)
@@ -438,6 +446,8 @@ const companyController = {
             .first(),
           knex("companies")
             .leftJoin("users", "users.id", "companies.createdBy")
+            .leftJoin("organisations", "companies.orgId", "organisations.id")
+            .where('organisations.isActive',true)
             .where({ "companies.orgId": req.orgId })
             .where(qb => {
               if (organisation) {
@@ -454,7 +464,8 @@ const companyController = {
               "companies.telephone as Contact Number",
               "companies.isActive as Status",
               "users.name as Created By",
-              "companies.createdAt as Date Created"
+              "companies.createdAt as Date Created",
+              "companies.companyId",
             ])
             .offset(offset)
             .limit(per_page)

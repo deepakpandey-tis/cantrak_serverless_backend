@@ -1270,7 +1270,7 @@ const quotationsController = {
           "companies.companyAddressEng"
         )
         .where({
-          "property_units.houseId": DataResult[0].houseId,
+          "property_units.id": DataResult[0].houseId,
           "property_units.orgId": orgId
         });
 

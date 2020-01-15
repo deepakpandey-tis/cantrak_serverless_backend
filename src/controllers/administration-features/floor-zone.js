@@ -307,6 +307,7 @@ const floorZoneController = {
             .leftJoin("projects", "floor_and_zones.projectId", "projects.id")
             .leftJoin("property_types", "floor_and_zones.propertyTypeId", "property_types.id")
             .where({ "floor_and_zones.orgId": orgId })
+            .where({ "buildings_and_phases.isActive": true })
             .first(),
           knex("floor_and_zones")
             .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
@@ -327,6 +328,7 @@ const floorZoneController = {
               "projects.project as projectId"
             ])
             .where({ "floor_and_zones.orgId": orgId })
+            .where({ "buildings_and_phases.isActive": true })
             .offset(offset)
             .limit(per_page)
             .orderBy('floor_and_zones.createdAt','desc')
@@ -364,6 +366,7 @@ const floorZoneController = {
             .leftJoin("buildings_and_phases", "floor_and_zones.buildingPhaseId", "buildings_and_phases.id")
             .leftJoin("projects", "floor_and_zones.projectId", "projects.id")
             .leftJoin("property_types", "floor_and_zones.propertyTypeId", "property_types.id")
+            .where({ "buildings_and_phases.isActive": true })
             .where(filters, { "floor_and_zones.orgId": orgId })
 
             // .offset(offset)
@@ -388,6 +391,7 @@ const floorZoneController = {
               "projects.projectName",
               "projects.project as projectId"
             ])
+            .where({ "buildings_and_phases.isActive": true })
             .where(filters, { "floor_and_zones.orgId": orgId })
             .offset(offset)
             .limit(per_page)
