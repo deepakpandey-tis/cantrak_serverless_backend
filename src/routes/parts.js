@@ -223,4 +223,12 @@ roleMiddleware.parseUserPermission,
 resourceAccessMiddleware.isPartAccessible,
 partsController.getAvailableParts)
 
+router.get(
+  "/check-service-order-id/",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPartAccessible,
+  partsController.checkServiceOrderId
+);
+
 module.exports = router;
