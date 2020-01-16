@@ -312,13 +312,121 @@ const propertyUnitController = {
   },
   getPropertyUnitList: async (req, res) => {
     try {
-      let companyId = req.body.companyId;
+      let { companyId,
+        buildingPhaseId,
+        floorZoneId,
+        houseId,
+        projectId,
+        unitNumber
+      } = req.body;
       let orgId = req.orgId;
 
       let reqData = req.query;
       let pagination = {};
 
-      if (!companyId) {
+      if (companyId || projectId || buildingPhaseId || floorZoneId || unitNumber || houseId) {
+
+
+        let per_page = reqData.per_page || 10;
+        let page = reqData.current_page || 1;
+        if (page < 1) page = 1;
+        let offset = (page - 1) * per_page;
+
+        let [total, rows] = await Promise.all([
+          knex
+            .count("* as count")
+            .from("property_units")
+            .leftJoin('users', 'property_units.createdBy', 'users.id')
+            .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
+            .where({ "floor_and_zones.isActive": true })
+            .where({ "property_units.orgId": orgId })
+            .where(qb => {
+              if (companyId) {
+                qb.where('property_units.companyId', companyId)
+              }
+
+              if (projectId) {
+                qb.where('property_units.projectId', projectId)
+              }
+
+              if (buildingPhaseId) {
+                qb.where('property_units.buildingPhaseId', buildingPhaseId)
+              }
+
+              if (floorZoneId) {
+                qb.where('property_units.floorZoneId', floorZoneId)
+              }
+
+              if (unitNumber) {
+                qb.where('property_units.unitNumber', 'iLIKE', `%${unitNumber}%`)
+              }
+
+              if (houseId) {
+                qb.where('property_units.houseId', 'iLIKE', `%${houseId}%`)
+              }
+
+            })
+            .first(),
+          knex
+            .from("property_units")
+            .leftJoin("companies", "property_units.companyId", "companies.id")
+            .leftJoin('users', 'property_units.createdBy', 'users.id')
+            .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
+            .where({ "floor_and_zones.isActive": true })
+            .select([
+              "property_units.id as id",
+              "property_units.unitNumber as Unit No",
+              "property_units.description as Description",
+              "property_units.area as Area",
+              "property_units.isActive as Status",
+              "users.name as Created By",
+              "property_units.createdAt as Date Created"
+            ])
+            .where({ "property_units.orgId": orgId })
+            .where(qb => {
+              if (companyId) {
+                qb.where('property_units.companyId', companyId)
+              }
+
+              if (projectId) {
+                qb.where('property_units.projectId', projectId)
+              }
+
+              if (buildingPhaseId) {
+                qb.where('property_units.buildingPhaseId', buildingPhaseId)
+              }
+
+              if (floorZoneId) {
+                qb.where('property_units.floorZoneId', floorZoneId)
+              }
+
+              if (unitNumber) {
+                qb.where('property_units.unitNumber', 'iLIKE', `%${unitNumber}%`)
+              }
+
+              if (houseId) {
+                qb.where('property_units.houseId', 'iLIKE', `%${houseId}%`)
+              }
+            })
+            .orderBy('property_units.id','desc')
+            .offset(offset)
+            .limit(per_page)
+          //.orderBy('desc', 'property_units.unitNumber')
+
+        ]);
+
+        let count = total.count;
+        pagination.total = count;
+        pagination.per_page = per_page;
+        pagination.offset = offset;
+        pagination.to = offset + rows.length;
+        pagination.last_page = Math.ceil(count / per_page);
+        pagination.current_page = page;
+        pagination.from = offset;
+        pagination.data = rows;
+
+      } else {
+
         let per_page = reqData.per_page || 10;
         let page = reqData.current_page || 1;
         if (page < 1) page = 1;
@@ -347,6 +455,7 @@ const propertyUnitController = {
               "property_units.createdAt as Date Created"
             ])
             .where({ "property_units.orgId": orgId })
+            .orderBy('property_units.id','desc')
             .offset(offset)
             .limit(per_page)
           // .orderBy('desc','property_units.unitNumber')
@@ -361,58 +470,7 @@ const propertyUnitController = {
         pagination.current_page = page;
         pagination.from = offset;
         pagination.data = rows;
-      } else {
-        let per_page = reqData.per_page || 10;
-        let page = reqData.current_page || 1;
-        if (page < 1) page = 1;
-        let offset = (page - 1) * per_page;
 
-        let [total, rows] = await Promise.all([
-          knex
-            .count("* as count")
-            .from("property_units")
-            .leftJoin('users', 'property_units.createdBy', 'users.id')
-            .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
-            .where({ "floor_and_zones.isActive": true })
-            .where({
-              "property_units.orgId": orgId,
-              "property_units.companyId": companyId
-            })
-            .first(),
-          knex
-            .from("property_units")
-            .leftJoin("companies", "property_units.companyId", "companies.id")
-            .leftJoin('users', 'property_units.createdBy', 'users.id')
-            .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
-            .where({ "floor_and_zones.isActive": true })
-            .select([
-              "property_units.id as id",
-              "property_units.unitNumber as Unit No",
-              "property_units.description as Description",
-              "property_units.area as Area",
-              "property_units.isActive as Status",
-              "users.name as Created By",
-              "property_units.createdAt as Date Created"
-            ])
-            .where({
-              "property_units.companyId": companyId,
-              "property_units.orgId": orgId
-            })
-            .offset(offset)
-            .limit(per_page)
-          //.orderBy('desc', 'property_units.unitNumber')
-
-        ]);
-
-        let count = total.count;
-        pagination.total = count;
-        pagination.per_page = per_page;
-        pagination.offset = offset;
-        pagination.to = offset + rows.length;
-        pagination.last_page = Math.ceil(count / per_page);
-        pagination.current_page = page;
-        pagination.from = offset;
-        pagination.data = rows;
       }
       return res.status(200).json({
         data: {

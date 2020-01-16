@@ -127,22 +127,22 @@ const propertyTypeController = {
           });
         }
 
-         /*CHECK DUPLICATE VALUES OPEN */
-         let existValue = await knex('property_types')
-         .where({ propertyTypeCode: payload.propertyTypeCode, orgId: orgId });
-       if (existValue && existValue.length) {
+        /*CHECK DUPLICATE VALUES OPEN */
+        let existValue = await knex('property_types')
+          .where({ propertyTypeCode: payload.propertyTypeCode, orgId: orgId });
+        if (existValue && existValue.length) {
 
-        if(existValue[0].id===payload.id){
+          if (existValue[0].id === payload.id) {
 
-        } else{
-         return res.status(400).json({
-           errors: [
-             { code: "VALIDATION_ERROR", message: "Property type code Already exist!!" }
-           ]
-         });
+          } else {
+            return res.status(400).json({
+              errors: [
+                { code: "VALIDATION_ERROR", message: "Property type code Already exist!!" }
+              ]
+            });
+          }
         }
-       }
-       /*CHECK DUPLICATE VALUES CLOSE */
+        /*CHECK DUPLICATE VALUES CLOSE */
 
         let currentTime = new Date().getTime();
         let insertData = { ...payload, createdBy: userId, updatedAt: currentTime };
@@ -192,35 +192,35 @@ const propertyTypeController = {
             ]
           });
         }
-        
+
         let propertyTypeResult;
         let checkStatus = await knex.from('property_types').where({ id: payload.id }).returning(['*'])
-       // res.json({message:checkStatus[0]})
+        // res.json({message:checkStatus[0]})
         if (checkStatus && checkStatus.length) {
 
-          if (checkStatus[0].isActive===true) {
+          if (checkStatus[0].isActive === true) {
 
             propertyTypeResult = await knex
-          .update({ isActive: false })
-          .where({ id: payload.id})
-          .returning(["*"])
-          .transacting(trx)
-          .into("property_types");
+              .update({ isActive: false })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("property_types");
 
-          message = "Property Type Inactive Successfully!"
+            message = "Property Type Inactive Successfully!"
 
-          }else{
+          } else {
             propertyTypeResult = await knex
-          .update({ isActive: true })
-          .where({ id: payload.id})
-          .returning(["*"])
-          .transacting(trx)
-          .into("property_types");
-          message = "Property Type Active Successfully!"
+              .update({ isActive: true })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("property_types");
+            message = "Property Type Active Successfully!"
           }
-        
+
         }
-        
+
         propertyType = propertyTypeResult[0];
         trx.commit;
       });
@@ -253,27 +253,82 @@ const propertyTypeController = {
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
 
-      let [total, rows] = await Promise.all([
-        knex
-          .count("* as count")
-          .from("property_types")
-          .leftJoin("users", "property_types.createdBy", "users.id")
-          .where({"property_types.orgId": orgId })
-          .first(),
-        knex("property_types")
-          .leftJoin("users", "property_types.createdBy", "users.id")
-          .select([
-            "property_types.id",
-            "property_types.propertyType as Property Type",
-            "property_types.propertyTypeCode as Property Type Code",
-            "property_types.isActive as Status",
-            "users.name as Created By",
-            "property_types.createdAt as Date Created"
-          ])
-          .where({"property_types.orgId": orgId })
-          .offset(offset)
-          .limit(per_page)
-      ]);
+      let { propertyName,
+        propertyTypeCode
+      } = req.body;
+
+      let total, rows;
+
+      if (propertyName || propertyTypeCode) {
+
+        [total, rows] = await Promise.all([
+          knex
+            .count("* as count")
+            .from("property_types")
+            .leftJoin("users", "property_types.createdBy", "users.id")
+            .where({ "property_types.orgId": orgId })
+            .where(qb => {
+              if (propertyName) {
+
+                qb.where('property_types.propertyType', 'iLIKE', `%${propertyName}%`)
+              }
+              if (propertyTypeCode) {
+                qb.where('property_types.propertyTypeCode', 'iLIKE', `%${propertyTypeCode}%`)
+              }
+            })
+            .first(),
+          knex("property_types")
+            .leftJoin("users", "property_types.createdBy", "users.id")
+            .select([
+              "property_types.id",
+              "property_types.propertyType as Property Type",
+              "property_types.propertyTypeCode as Property Type Code",
+              "property_types.isActive as Status",
+              "users.name as Created By",
+              "property_types.createdAt as Date Created"
+            ])
+            .where({ "property_types.orgId": orgId })
+            .where(qb => {
+              if (propertyName) {
+
+                qb.where('property_types.propertyType', 'iLIKE', `%${propertyName}%`)
+              }
+              if (propertyTypeCode) {
+                qb.where('property_types.propertyTypeCode', 'iLIKE', `%${propertyTypeCode}%`)
+              }
+            })
+            .orderBy('property_types.id', 'desc')
+            .offset(offset)
+            .limit(per_page)
+        ]);
+
+      } else {
+
+        [total, rows] = await Promise.all([
+          knex
+            .count("* as count")
+            .from("property_types")
+            .leftJoin("users", "property_types.createdBy", "users.id")
+            .where({ "property_types.orgId": orgId })
+            .first(),
+          knex("property_types")
+            .leftJoin("users", "property_types.createdBy", "users.id")
+            .select([
+              "property_types.id",
+              "property_types.propertyType as Property Type",
+              "property_types.propertyTypeCode as Property Type Code",
+              "property_types.isActive as Status",
+              "users.name as Created By",
+              "property_types.createdAt as Date Created"
+            ])
+            .where({ "property_types.orgId": orgId })
+            .orderBy('property_types.id', 'desc')
+            .offset(offset)
+            .limit(per_page)
+        ]);
+
+      }
+
 
       let count = total.count;
       pagination.total = count;
@@ -503,7 +558,7 @@ const propertyTypeController = {
               if (i > 1) {
 
                 let checkExist = await knex('property_types').select('id')
-                  .where({propertyTypeCode: propertyData.A, orgId: req.orgId })
+                  .where({ propertyTypeCode: propertyData.A, orgId: req.orgId })
                 if (checkExist.length < 1) {
 
                   let currentTime = new Date().getTime();
@@ -515,7 +570,7 @@ const propertyTypeController = {
                     isActive: true,
                     createdAt: currentTime,
                     updatedAt: currentTime,
-                    createdBy:req.me.id
+                    createdBy: req.me.id
                   }
 
                   resultData = await knex.insert(insertData).returning(['*']).into('property_types');

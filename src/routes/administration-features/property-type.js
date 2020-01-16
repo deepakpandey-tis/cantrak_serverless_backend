@@ -7,7 +7,7 @@ const propertyTypeController = require('../../controllers/administration-feature
 router.post('/add-property-type', authMiddleware.isAuthenticated, propertyTypeController.addPropertyType)
 router.post('/update-property-type', authMiddleware.isAuthenticated, propertyTypeController.updatePropertyType)
 router.post('/delete-property-type', authMiddleware.isAuthenticated, propertyTypeController.deletePropertyType)
-router.get('/get-property-type-list', authMiddleware.isAuthenticated, propertyTypeController.getPropertyTypeList)
+router.post('/get-property-type-list', authMiddleware.isAuthenticated, propertyTypeController.getPropertyTypeList)
 // Export Property Type
 router.get('/export-property-type', authMiddleware.isAuthenticated, propertyTypeController.exportPropertyType)
 router.post('/view-property-type-details', authMiddleware.isAuthenticated, propertyTypeController.getPropertyDetails)

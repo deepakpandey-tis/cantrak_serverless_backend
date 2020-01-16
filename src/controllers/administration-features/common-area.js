@@ -46,8 +46,8 @@ const commonAreaController = {
 
         const existCommonAreaCode = await knex("common_area").where({
           commonAreaCode: commonPayload.commonAreaCode,
-          orgId:orgId,
-          floorZoneId:commonPayload.floorZoneId
+          orgId: orgId,
+          floorZoneId: commonPayload.floorZoneId
         });
 
         console.log(
@@ -151,8 +151,8 @@ const commonAreaController = {
         const existCommonAreaCode = await knex("common_area")
           .where({
             commonAreaCode: commonUpdatePaylaod.commonAreaCode,
-            orgId:orgId,
-            floorZoneId:commonUpdatePaylaod.floorZoneId
+            orgId: orgId,
+            floorZoneId: commonUpdatePaylaod.floorZoneId
           })
           .whereNot({ id: commonUpdatePaylaod.id });
 
@@ -241,7 +241,12 @@ const commonAreaController = {
       let reqData = req.query;
       let total = null;
       let rows = null;
-      let companyId = req.body.companyId;
+      let { companyId,
+        projectId,
+        buildingPhaseId,
+        floorZoneId,
+        commonAreaCode
+      } = req.body;
       let pagination = {};
       let per_page = reqData.per_page || 10;
       let page = reqData.current_page || 1;
@@ -251,7 +256,7 @@ const commonAreaController = {
       let userId = req.me.id;
 
 
-      if (companyId) {
+      if (companyId || projectId || buildingPhaseId || floorZoneId || commonAreaCode) {
         [total, rows] = await Promise.all([
           knex
             .count("* as count")
@@ -269,7 +274,29 @@ const commonAreaController = {
             .leftJoin("projects", "common_area.projectId", "projects.id")
             .leftJoin("users", "common_area.createdBy", "users.id")
             .where({ "floor_and_zones.isActive": true })
-            .where({ "common_area.companyId": companyId, "common_area.orgId": orgId }),
+            .where({"common_area.orgId": orgId })
+            .where(qb=>{
+              if (companyId) {
+                qb.where('common_area.companyId', companyId)
+              }
+
+              if (projectId) {
+                qb.where('common_area.projectId', projectId)
+              }
+
+              if (buildingPhaseId) {
+                qb.where('common_area.buildingPhaseId', buildingPhaseId)
+              }
+
+              if (floorZoneId) {
+                qb.where('common_area.floorZoneId', floorZoneId)
+              }
+
+              if (commonAreaCode) {
+                qb.where('common_area.commonAreaCode', 'iLIKE', `%${commonAreaCode}%`)
+              }
+            })
+            ,
           knex("common_area")
             .leftJoin(
               "floor_and_zones",
@@ -296,7 +323,29 @@ const commonAreaController = {
             ])
             .offset(offset)
             .limit(per_page)
-            .where({ "common_area.companyId": companyId, "common_area.orgId": orgId })
+            .where({"common_area.orgId": orgId })
+            .where(qb=>{
+              if (companyId) {
+                qb.where('common_area.companyId', companyId)
+              }
+
+              if (projectId) {
+                qb.where('common_area.projectId', projectId)
+              }
+
+              if (buildingPhaseId) {
+                qb.where('common_area.buildingPhaseId', buildingPhaseId)
+              }
+
+              if (floorZoneId) {
+                qb.where('common_area.floorZoneId', floorZoneId)
+              }
+
+              if (commonAreaCode) {
+                qb.where('common_area.commonAreaCode', 'iLIKE', `%${commonAreaCode}%`)
+              }
+            })
+            .orderBy('common_area.id','desc')
         ]);
       } else {
         [total, rows] = await Promise.all([
@@ -332,6 +381,7 @@ const commonAreaController = {
             .leftJoin("users", "common_area.createdBy", "users.id")
             .where({ "floor_and_zones.isActive": true })
             .where({ "common_area.orgId": orgId })
+            .orderBy('common_area.id','desc')
             .select([
               "common_area.id as id",
               "common_area.commonAreaCode as Common Area",
@@ -812,9 +862,9 @@ const commonAreaController = {
                   .select("commonAreaCode")
                   .where({
                     //companyId: companyId,
-                   // projectId: projectId,
-                   // propertyTypeId: propertyTypeId,
-                   // buildingPhaseId: buildingPhaseId,
+                    // projectId: projectId,
+                    // propertyTypeId: propertyTypeId,
+                    // buildingPhaseId: buildingPhaseId,
                     floorZoneId: floorZoneId,
                     commonAreaCode: commonData.F,
                     orgId: req.orgId
@@ -831,7 +881,7 @@ const commonAreaController = {
                     description: commonData.G,
                     createdAt: currentTime,
                     updatedAt: currentTime,
-                    createdBy :req.me.id
+                    createdBy: req.me.id
                   };
 
                   resultData = await knex
