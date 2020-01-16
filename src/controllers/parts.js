@@ -60,20 +60,16 @@ const partsController = {
                             'part_master.id as partId',
                             'part_master.partName as Name',
                             'part_master.partCode as ID',
-                            'part_ledger.quantity as Quantity',
-                            'part_ledger.unitCost as Price',
+                            knex.raw('SUM("part_ledger"."quantity") as Quantity'),
+                            knex.raw('MAX("part_ledger"."unitCost") as Price'),
                             'part_master.unitOfMeasure',
                             'part_category_master.categoryName as Category',
                             'part_master.barcode as Barcode',
                             'part_master.createdAt as Date Added',
-                            knex.raw('SUM(quantity)')
-
                         ])
                         .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
                         .orderBy('part_master.createdAt', 'desc')
-                        .groupBy(['part_master.id',
-                            'part_ledger.id',
-                            'part_category_master.id'])
+                        .groupBy(['part_master.id', 'part_category_master.id'])
                         .distinct('part_master.id')
                         .offset(offset).limit(per_page)
                 ])

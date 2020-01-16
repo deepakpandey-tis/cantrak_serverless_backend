@@ -852,7 +852,10 @@ const propertyUnitController = {
             data[0].G == "FLOOR_ZONE_CODE" &&
             data[0].H == "UNIT_NUMBER" &&
             data[0].I == "DESCRIPTION" &&
-            data[0].J == "ACTUAL SALE AREA")
+            data[0].J == "ACTUAL SALE AREA" &&
+            data[0].K == "HOUSE_ID" && 
+            data[0].L == "PRODUCT_CODE"
+            )
           // &&
           // data[0].L == "STATUS" &&
           // data[0].M == "CREATED BY" &&
@@ -870,22 +873,43 @@ const propertyUnitController = {
               let buildingPhaseId = null;
               let floorZoneId = null;
               console.log({ propertyUnitData });
-              let buildingPhaseIdResult = await knex("buildings_and_phases")
-                .select("id")
-                .where({
-                  buildingPhaseCode: propertyUnitData.F,
-                  orgId: req.orgId
-                });
-              let floorZoneIdResult = await knex("floor_and_zones")
-                .select("id")
-                .where({ floorZoneCode: propertyUnitData.G, orgId: req.orgId });
-
               let companyIdResult = await knex("companies")
                 .select("id")
                 .where({ companyId: propertyUnitData.A, orgId: req.orgId });
-              let projectIdResult = await knex("projects")
-                .select("id")
-                .where({ project: propertyUnitData.C, orgId: req.orgId });
+
+              if (companyIdResult && companyIdResult.length) {
+                companyId = companyIdResult[0].id;
+
+                let projectIdResult = await knex("projects")
+                  .select("id")
+                  .where({ project: propertyUnitData.C, companyId: companyId, orgId: req.orgId });
+
+                if (projectIdResult && projectIdResult.length) {
+                  projectId = projectIdResult[0].id;
+
+                  let buildingPhaseIdResult = await knex("buildings_and_phases")
+                    .select("id")
+                    .where({
+                      buildingPhaseCode: propertyUnitData.F,
+                      projectId: projectId,
+                      orgId: req.orgId
+                    });
+
+                  if (buildingPhaseIdResult && buildingPhaseIdResult.length) {
+                    buildingPhaseId = buildingPhaseIdResult[0].id;
+
+                    let floorZoneIdResult = await knex("floor_and_zones")
+                      .select("id")
+                      .where({ floorZoneCode: propertyUnitData.G, buildingPhaseId: buildingPhaseId, orgId: req.orgId });
+
+                    if (floorZoneIdResult && floorZoneIdResult.length) {
+                      floorZoneId = floorZoneIdResult[0].id;
+
+                    }
+                  }
+                }
+              }
+
               let propertyTypeIdResult = await knex("property_types")
                 .select("id")
                 .where({
@@ -893,25 +917,14 @@ const propertyUnitController = {
                   orgId: req.orgId
                 });
 
+              // console.log({ buildingPhaseIdResult, floorZoneIdResult });
 
-
-              console.log({ buildingPhaseIdResult, floorZoneIdResult });
-              if (buildingPhaseIdResult && buildingPhaseIdResult.length) {
-                buildingPhaseId = buildingPhaseIdResult[0].id;
-              }
-              if (floorZoneIdResult && floorZoneIdResult.length) {
-                floorZoneId = floorZoneIdResult[0].id;
-              }
 
               if (propertyTypeIdResult && propertyTypeIdResult.length) {
                 propertyTypeId = propertyTypeIdResult[0].id;
               }
-              if (companyIdResult && companyIdResult.length) {
-                companyId = companyIdResult[0].id;
-              }
-              if (projectIdResult && projectIdResult.length) {
-                projectId = projectIdResult[0].id;
-              }
+
+
 
               console.log(
                 "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
@@ -972,6 +985,8 @@ const propertyUnitController = {
                     area: propertyUnitData.J,
                     unitNumber: propertyUnitData.H,
                     description: propertyUnitData.I,
+                    houseId: propertyUnitData.K,
+                    productCode: propertyUnitData.L,
                     isActive: true,
                     createdBy: req.me.id,
                     createdAt: new Date().getTime(),

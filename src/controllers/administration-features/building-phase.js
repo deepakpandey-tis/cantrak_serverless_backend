@@ -832,16 +832,32 @@ const buildingPhaseController = {
                 "ORGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGID: ",
                 req.orgId
               );
-
               let companyIdResult = await knex("companies")
                 .select("id")
                 .where({ companyId: buildingData.A, orgId: req.orgId });
+
+              if (companyIdResult && companyIdResult.length) {
+                companyId = companyIdResult[0].id;
+
               let projectIdResult = await knex("projects")
                 .select("id")
-                .where({ project: buildingData.C, orgId: req.orgId });
+                .where({ project: buildingData.C,companyId:companyId, orgId: req.orgId });
+              
+              if (projectIdResult && projectIdResult.length) {
+                projectId = projectIdResult[0].id;
+              }
+
+              }
+
+              
+
               let propertyTypeIdResult = await knex("property_types")
                 .select("id")
                 .where({ propertyTypeCode: buildingData.E, orgId: req.orgId });
+
+
+              
+
               console.log(
                 "propertyTypeIdResult*****************************************: ",
                 propertyTypeIdResult
@@ -850,12 +866,8 @@ const buildingPhaseController = {
                 propertyTypeId = propertyTypeIdResult[0].id;
               }
 
-              if (companyIdResult && companyIdResult.length) {
-                companyId = companyIdResult[0].id;
-              }
-              if (projectIdResult && projectIdResult.length) {
-                projectId = projectIdResult[0].id;
-              }
+              
+              
               if (!companyId) {
                 console.log("breaking due to: null companyId");
                 fail++;
@@ -882,7 +894,9 @@ const buildingPhaseController = {
               i++;
               const checkExistance = await knex("buildings_and_phases").where({
                 orgId: req.orgId,
-                buildingPhaseCode: buildingData.F, companyId: companyId, projectId: projectId
+                buildingPhaseCode: buildingData.F,
+                // companyId:companyId,
+                projectId:projectId
               });
               if (checkExistance.length) {
                 fail++;
