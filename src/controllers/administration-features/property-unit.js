@@ -57,9 +57,9 @@ const propertyUnitController = {
           .where({
             //companyId:payload.companyId,
             //projectId:payload.projectId,
-            buildingPhaseId:payload.buildingPhaseId,
-            unitNumber:payload.unitNumber,
-            orgId:orgId
+            buildingPhaseId: payload.buildingPhaseId,
+            unitNumber: payload.unitNumber,
+            orgId: orgId
           });
         if (existValue && existValue.length) {
           return res.status(400).json({
@@ -149,28 +149,28 @@ const propertyUnitController = {
         }
 
 
-         /*CHECK DUPLICATE VALUES OPEN */
-         let existValue = await knex('property_units')
-         .where({
-          //companyId:payload.companyId,
-          //projectId:payload.projectId,
-          buildingPhaseId:payload.buildingPhaseId,
-          unitNumber:payload.unitNumber,
-          orgId:orgId
-         });
-       if (existValue && existValue.length) {
+        /*CHECK DUPLICATE VALUES OPEN */
+        let existValue = await knex('property_units')
+          .where({
+            //companyId:payload.companyId,
+            //projectId:payload.projectId,
+            buildingPhaseId: payload.buildingPhaseId,
+            unitNumber: payload.unitNumber,
+            orgId: orgId
+          });
+        if (existValue && existValue.length) {
 
-        if (existValue[0].id === payload.id) {
+          if (existValue[0].id === payload.id) {
 
-        } else {
-         return res.status(400).json({
-           errors: [
-             { code: "VALIDATION_ERROR", message: "Unit Number  already exist!!" }
-           ]
-         });
+          } else {
+            return res.status(400).json({
+              errors: [
+                { code: "VALIDATION_ERROR", message: "Unit Number  already exist!!" }
+              ]
+            });
+          }
         }
-       }
-       /*CHECK DUPLICATE VALUES CLOSE */
+        /*CHECK DUPLICATE VALUES CLOSE */
 
 
         /*GET PROPERTY TYPE ID OPEN */
@@ -349,7 +349,7 @@ const propertyUnitController = {
             .where({ "property_units.orgId": orgId })
             .offset(offset)
             .limit(per_page)
-           // .orderBy('desc','property_units.unitNumber')
+          // .orderBy('desc','property_units.unitNumber')
         ]);
 
         let count = total.count;
@@ -400,7 +400,7 @@ const propertyUnitController = {
             })
             .offset(offset)
             .limit(per_page)
-            //.orderBy('desc', 'property_units.unitNumber')
+          //.orderBy('desc', 'property_units.unitNumber')
 
         ]);
 
@@ -473,7 +473,9 @@ const propertyUnitController = {
               "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
               "property_units.unitNumber as UNIT_NUMBER",
               "property_units.description as DESCRIPTION",
-              "property_units.area as ACTUAL SALE AREA"
+              "property_units.area as ACTUAL SALE AREA",
+              "property_units.houseId as HOUSE_ID",
+              "property_units.productCode as PRODUCT_CODE"
               // "property_units.isActive as STAUS",
               // "users.name as CREATED BY",
               // "property_units.createdBy as CREATED BY ID",
@@ -512,14 +514,15 @@ const propertyUnitController = {
               "projects.projectName as PROJECT NAME",
               // "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
               "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
-
               // "property_units.buildingPhaseId as BUILDING_PHASE_CODE ID",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
               // "property_units.floorZoneId as FLOOR_ZONE_CODE ID",
               "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
               "property_units.unitNumber as UNIT_NUMBER",
               "property_units.description as DESCRIPTION",
-              "property_units.area as ACTUAL SALE AREA"
+              "property_units.area as ACTUAL SALE AREA",
+              "property_units.houseId as HOUSE_ID",
+              "property_units.productCode as PRODUCT_CODE"
               // "property_units.isActive as STATUS",
               // "users.name as CREATED BY",
               // "property_units.createdBy as CREATED BY ID",
@@ -555,12 +558,13 @@ const propertyUnitController = {
             PROJECT: "",
             "PROJECT NAME": "",
             PROPERTY_TYPE_CODE: "",
-
             BUILDING_PHASE_CODE: "",
             FLOOR_ZONE_CODE: "",
             UNIT_NUMBER: "",
             DESCRIPTION: "",
-            "SALE AREA": ""
+            "SALE AREA": "",
+            "HOUSE_ID": "",
+            "PRODUCT_CODE": ""
           }
         ]);
       }
@@ -582,7 +586,7 @@ const propertyUnitController = {
         s3.putObject(params, function (err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
-            
+
           } else {
             console.log("File uploaded Successfully");
             let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/PropertyUnit/" + filename;
@@ -831,7 +835,7 @@ const propertyUnitController = {
                   orgId: req.orgId
                 });
 
-            
+
 
               console.log({ buildingPhaseIdResult, floorZoneIdResult });
               if (buildingPhaseIdResult && buildingPhaseIdResult.length) {
@@ -892,7 +896,7 @@ const propertyUnitController = {
                   .select("id")
                   .where({
                     //companyId: companyId,
-                   // projectId: projectId,
+                    // projectId: projectId,
                     buildingPhaseId: buildingPhaseId,
                     // floorZoneId: floorZoneId,
                     // propertyTypeId: propertyTypeId,
@@ -926,7 +930,7 @@ const propertyUnitController = {
                 }
               }
             }
-                 fail = fail-1;
+            fail = fail - 1;
             let message = null;
             if (totalData == success) {
               message =
@@ -998,9 +1002,9 @@ const propertyUnitController = {
   toggleStatus: async (req, res) => {
     try {
       let id = req.body.id;
-      let check = await knex('property_units').select('isActive').where({orgId:req.orgId,id:id})
-      if(check && check.length && Boolean(check[0].isActive)){
-        await knex('property_units').update({isActive:false}).where({id,orgId:req.orgId})
+      let check = await knex('property_units').select('isActive').where({ orgId: req.orgId, id: id })
+      if (check && check.length && Boolean(check[0].isActive)) {
+        await knex('property_units').update({ isActive: false }).where({ id, orgId: req.orgId })
       } else {
         await knex('property_units').update({ isActive: true }).where({ id, orgId: req.orgId })
       }
@@ -1014,7 +1018,7 @@ const propertyUnitController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-  }  
+  }
 };
 
 module.exports = propertyUnitController;
