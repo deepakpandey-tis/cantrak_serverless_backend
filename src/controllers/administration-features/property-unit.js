@@ -794,7 +794,10 @@ const propertyUnitController = {
             data[0].G == "FLOOR_ZONE_CODE" &&
             data[0].H == "UNIT_NUMBER" &&
             data[0].I == "DESCRIPTION" &&
-            data[0].J == "ACTUAL SALE AREA")
+            data[0].J == "ACTUAL SALE AREA" &&
+            data[0].K == "HOUSE_ID" && 
+            data[0].L == "PRODUCT_CODE"
+            )
           // &&
           // data[0].L == "STATUS" &&
           // data[0].M == "CREATED BY" &&
@@ -924,6 +927,8 @@ const propertyUnitController = {
                     area: propertyUnitData.J,
                     unitNumber: propertyUnitData.H,
                     description: propertyUnitData.I,
+                    houseId: propertyUnitData.K,
+                    productCode: propertyUnitData.L,
                     isActive: true,
                     createdBy: req.me.id,
                     createdAt: new Date().getTime(),
