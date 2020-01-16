@@ -812,22 +812,43 @@ const propertyUnitController = {
               let buildingPhaseId = null;
               let floorZoneId = null;
               console.log({ propertyUnitData });
-              let buildingPhaseIdResult = await knex("buildings_and_phases")
-                .select("id")
-                .where({
-                  buildingPhaseCode: propertyUnitData.F,
-                  orgId: req.orgId
-                });
-              let floorZoneIdResult = await knex("floor_and_zones")
-                .select("id")
-                .where({ floorZoneCode: propertyUnitData.G, orgId: req.orgId });
-
               let companyIdResult = await knex("companies")
                 .select("id")
                 .where({ companyId: propertyUnitData.A, orgId: req.orgId });
-              let projectIdResult = await knex("projects")
-                .select("id")
-                .where({ project: propertyUnitData.C, orgId: req.orgId });
+
+              if (companyIdResult && companyIdResult.length) {
+                companyId = companyIdResult[0].id;
+
+                let projectIdResult = await knex("projects")
+                  .select("id")
+                  .where({ project: propertyUnitData.C, companyId: companyId, orgId: req.orgId });
+
+                if (projectIdResult && projectIdResult.length) {
+                  projectId = projectIdResult[0].id;
+
+                  let buildingPhaseIdResult = await knex("buildings_and_phases")
+                    .select("id")
+                    .where({
+                      buildingPhaseCode: propertyUnitData.F,
+                      projectId: projectId,
+                      orgId: req.orgId
+                    });
+
+                  if (buildingPhaseIdResult && buildingPhaseIdResult.length) {
+                    buildingPhaseId = buildingPhaseIdResult[0].id;
+
+                    let floorZoneIdResult = await knex("floor_and_zones")
+                      .select("id")
+                      .where({ floorZoneCode: propertyUnitData.G, buildingPhaseId: buildingPhaseId, orgId: req.orgId });
+
+                    if (floorZoneIdResult && floorZoneIdResult.length) {
+                      floorZoneId = floorZoneIdResult[0].id;
+
+                    }
+                  }
+                }
+              }
+
               let propertyTypeIdResult = await knex("property_types")
                 .select("id")
                 .where({
@@ -835,25 +856,14 @@ const propertyUnitController = {
                   orgId: req.orgId
                 });
 
+              // console.log({ buildingPhaseIdResult, floorZoneIdResult });
 
-
-              console.log({ buildingPhaseIdResult, floorZoneIdResult });
-              if (buildingPhaseIdResult && buildingPhaseIdResult.length) {
-                buildingPhaseId = buildingPhaseIdResult[0].id;
-              }
-              if (floorZoneIdResult && floorZoneIdResult.length) {
-                floorZoneId = floorZoneIdResult[0].id;
-              }
 
               if (propertyTypeIdResult && propertyTypeIdResult.length) {
                 propertyTypeId = propertyTypeIdResult[0].id;
               }
-              if (companyIdResult && companyIdResult.length) {
-                companyId = companyIdResult[0].id;
-              }
-              if (projectIdResult && projectIdResult.length) {
-                projectId = projectIdResult[0].id;
-              }
+
+
 
               console.log(
                 "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
