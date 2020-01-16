@@ -1684,6 +1684,7 @@ const serviceOrderController = {
                         'service_requests.priority as Priority',
                         'users.name as createdBy',
                         'service_appointments.appointedDate as appointedDate',
+                        'service_appointments.appointedTime as appointedTime',
                         'service_appointments.createdAt as dateCreated',
                         'service_appointments.status as status'
                     ]).where({ 'service_appointments.orgId': req.orgId, 'service_appointments.serviceOrderId': serviceOrderId })
@@ -1699,6 +1700,7 @@ const serviceOrderController = {
                         'service_requests.priority as Priority',
                         'users.name as createdBy',
                         'service_appointments.appointedDate as appointedDate',
+                        'service_appointments.appointedTime as appointedTime',
                         'service_appointments.createdAt as dateCreated',
                         'service_appointments.status as status'
                     ]).where({ 'service_appointments.orgId': req.orgId, 'service_appointments.serviceOrderId': serviceOrderId })
