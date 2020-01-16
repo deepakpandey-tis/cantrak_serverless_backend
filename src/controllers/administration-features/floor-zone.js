@@ -711,6 +711,9 @@ const floorZoneController = {
                 .select("id")
                 .where({ companyId: floorData.A, orgId: req.orgId });
               let companyId = null;
+              let projectId = null;
+              let buildingId = null;
+
               if (!companyData.length) {
                 console.log('*********************&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',companyData)
                 fail++;
@@ -719,19 +722,25 @@ const floorZoneController = {
               }
               if (companyData && companyData.length) {
                 companyId = companyData[0].id;
+                let projectData = await knex("projects")
+                  .select("id")
+                  .where({ project: floorData.C,companyId:companyId, orgId: req.orgId });
+                if (projectData && projectData.length) {
+                  projectId = projectData[0].id;
+                  let buildingData = await knex("buildings_and_phases")
+                    .select("id")
+                    .where({ buildingPhaseCode: floorData.F, orgId: req.orgId });
+                  if (buildingData && buildingData.length) {
+                    buildingId = buildingData[0].id;
+                  }
+                }
               }
 
-              let projectData = await knex("projects")
-                .select("id")
-                .where({ project: floorData.C, orgId: req.orgId });
-              let projectId = null;
-              if (!projectData.length) {
+              if (!projectId) {
                 fail++;
                 continue;
               }
-              if (projectData && projectData.length) {
-                projectId = projectData[0].id;
-              }
+              
               /**GET PROPERTY TYPE ID OPEN */
               let propertTypeData = await knex("property_types")
                 .select("id")
@@ -747,25 +756,21 @@ const floorZoneController = {
               /**GET PROPERTY TYPE ID CLOSE */
 
               /**GET BUILDING PHASE ID OPEN */
-              let buildingData = await knex("buildings_and_phases")
-                .select("id")
-                .where({ buildingPhaseCode: floorData.F, orgId: req.orgId });
-              let buildingId = null;
-              if (!buildingData.length) {
+              
+              if (!buildingId) {
                 fail++;
                 continue;
               }
-              if (buildingData && buildingData.length) {
-                buildingId = buildingData[0].id;
-              }
+              
               /**GET BUILDING PHASE ID CLOSE */
 
               if (i > 1) {
                 let checkExist = await knex("floor_and_zones")
                   .select("floorZoneCode")
                   .where({
-                    floorZoneCode: floorData.G, companyId: companyId,
-                    projectId: projectId, buildingPhaseId: buildingId, orgId: req.orgId });
+                    floorZoneCode: floorData.G,
+                    buildingPhaseId: buildingId,
+                    orgId: req.orgId });
                 if (checkExist.length < 1) {
                 let currentTime = new Date().getTime();
                 let insertData = {
