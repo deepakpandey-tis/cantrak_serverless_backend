@@ -839,6 +839,7 @@ const serviceRequestController = {
             .offset(offset)
             .limit(per_page)
             .where({ "service_requests.orgId": req.orgId })
+            .orderBy('service_requests.id','desc')
         ]);
 
 
@@ -884,17 +885,17 @@ const serviceRequestController = {
             )
             .leftJoin("users as u", "service_requests.requestedBy", "u.id")
           
-            .select([
-              "service_requests.id as S Id",
-              "service_requests.description as Description",
-              // "incident_categories.descriptionEng as Category",
-              // "incident_sub_categories.descriptionEng as Problem",
-              "service_requests.priority as Priority",
-              "status.descriptionEng as Status",
-              "property_units.unitNumber as Unit No",
-              "u.name as Requested By",
-              "service_requests.createdAt as Date Created"
-            ])
+            // .select([
+            //   "service_requests.id as S Id",
+            //   "service_requests.description as Description",
+            //   // "incident_categories.descriptionEng as Category",
+            //   // "incident_sub_categories.descriptionEng as Problem",
+            //   "service_requests.priority as Priority",
+            //   "status.descriptionEng as Status",
+            //   "property_units.unitNumber as Unit No",
+            //   "u.name as Requested By",
+            //   "service_requests.createdAt as Date Created"
+            // ])
             .where({ "service_requests.orgId": req.orgId })
             .where(qb => {
               if (location) {
@@ -975,6 +976,7 @@ const serviceRequestController = {
               "u.name as Requested By",
               "service_requests.createdAt as Date Created"
             ])
+            .orderBy('service_requests.id','desc')
             .where({ "service_requests.orgId": req.orgId })
             .where(qb => {
               if (location) {
@@ -2256,7 +2258,7 @@ const serviceRequestController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-  },  
+  },
 };
 
 // Y, M, D
