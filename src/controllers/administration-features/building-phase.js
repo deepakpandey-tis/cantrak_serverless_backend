@@ -47,17 +47,17 @@ const buildingPhaseController = {
           });
         }
 
-         /*CHECK DUPLICATE VALUES OPEN */
-         let existValue = await knex('buildings_and_phases')
-         .where({ buildingPhaseCode: payload.buildingPhaseCode,companyId:payload.companyId,projectId:payload.projectId, orgId: orgId });
-       if (existValue && existValue.length) {
-         return res.status(400).json({
-           errors: [
-             { code: "VALIDATION_ERROR", message: "Building Phase code already exist!!" }
-           ]
-         });
-       }
-       /*CHECK DUPLICATE VALUES CLOSE */
+        /*CHECK DUPLICATE VALUES OPEN */
+        let existValue = await knex('buildings_and_phases')
+          .where({ buildingPhaseCode: payload.buildingPhaseCode, companyId: payload.companyId, projectId: payload.projectId, orgId: orgId });
+        if (existValue && existValue.length) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: "Building Phase code already exist!!" }
+            ]
+          });
+        }
+        /*CHECK DUPLICATE VALUES CLOSE */
 
 
         let currentTime = new Date().getTime();
@@ -129,23 +129,23 @@ const buildingPhaseController = {
           });
         }
 
-         /*CHECK DUPLICATE VALUES OPEN */
-         let existValue = await knex('buildings_and_phases')
-         .where({ buildingPhaseCode: payload.buildingPhaseCode,companyId:payload.companyId,projectId:payload.projectId, orgId: orgId });  
+        /*CHECK DUPLICATE VALUES OPEN */
+        let existValue = await knex('buildings_and_phases')
+          .where({ buildingPhaseCode: payload.buildingPhaseCode, companyId: payload.companyId, projectId: payload.projectId, orgId: orgId });
 
-       if (existValue && existValue.length) {
+        if (existValue && existValue.length) {
 
-        if(existValue[0].id===payload.id){
+          if (existValue[0].id === payload.id) {
 
-        } else{
-         return res.status(400).json({
-           errors: [
-             { code: "VALIDATION_ERROR", message: "Building Phase code already exist!!" }
-           ]
-         });
+          } else {
+            return res.status(400).json({
+              errors: [
+                { code: "VALIDATION_ERROR", message: "Building Phase code already exist!!" }
+              ]
+            });
+          }
         }
-       }
-       /*CHECK DUPLICATE VALUES CLOSE */
+        /*CHECK DUPLICATE VALUES CLOSE */
 
         let currentTime = new Date().getTime();
         let insertData = { ...payload, updatedAt: currentTime };
@@ -300,12 +300,138 @@ const buildingPhaseController = {
   getBuildingPhaseList: async (req, res) => {
     try {
       let orgId = req.orgId;
-      let companyId = req.body.companyId;
-      let projectId = req.query.projectId;
+      let { companyId,
+        projectId,
+        buildingPhaseCode,
+        propertyType } = req.body;
       let reqData = req.query;
       let pagination = {};
 
-      if (!companyId) {
+      if (companyId || projectId || buildingPhaseCode || propertyType) {
+
+
+        let per_page = reqData.per_page || 10;
+        let page = reqData.current_page || 1;
+        if (page < 1) page = 1;
+        let offset = (page - 1) * per_page;
+
+        let [total, rows] = await Promise.all([
+          knex
+            .count("* as count")
+            .from("buildings_and_phases")
+            .leftJoin(
+              "projects",
+              "buildings_and_phases.projectId",
+              "projects.id"
+            )
+            .leftJoin(
+              "companies",
+              "buildings_and_phases.companyId",
+              "companies.id"
+            )
+            .leftJoin(
+              "users",
+              "buildings_and_phases.createdBy",
+              "users.id"
+            )
+            .leftJoin(
+              "property_types",
+              "buildings_and_phases.propertyTypeId",
+              "property_types.id"
+            )
+            .where({
+              "projects.isActive": true,
+              "buildings_and_phases.orgId": orgId
+            })
+            .where(qb => {
+              if (companyId) {
+                qb.where('buildings_and_phases.companyId', companyId)
+              }
+
+              if (projectId) {
+                qb.where('buildings_and_phases.projectId', projectId)
+              }
+              if (propertyType) {
+                qb.where('buildings_and_phases.propertyTypeId', propertyType)
+              }
+
+              if (buildingPhaseCode) {
+                qb.where('buildings_and_phases.buildingPhaseCode', 'iLIKE', `%${buildingPhaseCode}%`)
+              }
+
+            })
+            .first(),
+          knex("buildings_and_phases")
+            .leftJoin(
+              "projects",
+              "buildings_and_phases.projectId",
+              "projects.id"
+            )
+            .leftJoin(
+              "companies",
+              "buildings_and_phases.companyId",
+              "companies.id"
+            )
+            .leftJoin(
+              "users",
+              "buildings_and_phases.createdBy",
+              "users.id"
+            )
+            .leftJoin(
+              "property_types",
+              "buildings_and_phases.propertyTypeId",
+              "property_types.id"
+            )
+            .where({
+              "projects.isActive": true,
+              "buildings_and_phases.orgId": orgId
+            })
+            .where(qb => {
+              if (companyId) {
+                qb.where('buildings_and_phases.companyId', companyId)
+              }
+
+              if (projectId) {
+                qb.where('buildings_and_phases.projectId', projectId)
+              }
+              if (propertyType) {
+                qb.where('buildings_and_phases.propertyTypeId', propertyType)
+              }
+
+              if (buildingPhaseCode) {
+                qb.where('buildings_and_phases.buildingPhaseCode', 'iLIKE', `%${buildingPhaseCode}%`)
+              }
+
+            })
+            .orderBy('buildings_and_phases.id','desc')
+            .select([
+              "buildings_and_phases.id as id",
+              "buildings_and_phases.buildingPhaseCode as Building/Phase",
+              "projects.projectName as Project Name",
+              "companies.companyName as Company Name",
+              "buildings_and_phases.isActive as Status",
+              "buildings_and_phases.description as Description",
+              "users.name as Created By",
+              "buildings_and_phases.createdAt as Date Created",
+              "property_types.propertyType"
+            ])
+            .orderBy('buildings_and_phases.id', 'desc')
+            .offset(offset)
+            .limit(per_page)
+        ]);
+
+        let count = total.count;
+        pagination.total = count;
+        pagination.per_page = per_page;
+        pagination.offset = offset;
+        pagination.to = offset + rows.length;
+        pagination.last_page = Math.ceil(count / per_page);
+        pagination.current_page = page;
+        pagination.from = offset;
+        pagination.data = rows;
+
+      } else {
+
         let per_page = reqData.per_page || 10;
         let page = reqData.current_page || 1;
         if (page < 1) page = 1;
@@ -377,6 +503,7 @@ const buildingPhaseController = {
               "buildings_and_phases.createdAt as Date Created",
               "property_types.propertyType"
             ])
+            .orderBy('buildings_and_phases.id', 'desc')
             .offset(offset)
             .limit(per_page)
         ]);
@@ -390,95 +517,8 @@ const buildingPhaseController = {
         pagination.current_page = page;
         pagination.from = offset;
         pagination.data = rows;
-      } else if (companyId) {
 
-        console.log("=======================",companyId)
-        let per_page = reqData.per_page || 10;
-        let page = reqData.current_page || 1;
-        if (page < 1) page = 1;
-        let offset = (page - 1) * per_page;
-
-        let [total, rows] = await Promise.all([
-          knex
-            .count("* as count")
-            .from("buildings_and_phases")
-            .leftJoin(
-              "projects",
-              "buildings_and_phases.projectId",
-              "projects.id"
-            )
-            .leftJoin(
-              "companies",
-              "buildings_and_phases.companyId",
-              "companies.id"
-            )
-            .leftJoin(
-              "users",
-              "buildings_and_phases.createdBy",
-              "users.id"
-            )
-            .leftJoin(
-              "property_types",
-              "buildings_and_phases.propertyTypeId",
-              "property_types.id"
-            )
-            .where({
-              "buildings_and_phases.companyId": companyId,
-              "projects.isActive": true,
-              "buildings_and_phases.orgId": orgId
-            })
-            .first(),
-          knex("buildings_and_phases")
-            .leftJoin(
-              "projects",
-              "buildings_and_phases.projectId",
-              "projects.id"
-            )
-            .leftJoin(
-              "companies",
-              "buildings_and_phases.companyId",
-              "companies.id"
-            )
-            .leftJoin(
-              "users",
-              "buildings_and_phases.createdBy",
-              "users.id"
-            )
-            .leftJoin(
-              "property_types",
-              "buildings_and_phases.propertyTypeId",
-              "property_types.id"
-            )
-            .where({
-              "buildings_and_phases.companyId": companyId,
-              "projects.isActive": true,
-              "buildings_and_phases.orgId": orgId
-            })
-            .select([
-              "buildings_and_phases.id as id",
-              "buildings_and_phases.buildingPhaseCode as Building/Phase",
-              "projects.projectName as Project Name",
-              "companies.companyName as Company Name",
-              "buildings_and_phases.isActive as Status",
-              "buildings_and_phases.description as Description",
-              "users.name as Created By",
-              "buildings_and_phases.createdAt as Date Created",
-              "property_types.propertyType"
-            ])
-            .offset(offset)
-            .limit(per_page)
-        ]);
-
-        let count = total.count;
-        pagination.total = count;
-        pagination.per_page = per_page;
-        pagination.offset = offset;
-        pagination.to = offset + rows.length;
-        pagination.last_page = Math.ceil(count / per_page);
-        pagination.current_page = page;
-        pagination.from = offset;
-        pagination.data = rows;
-      } 
+      }
 
       return res.status(200).json({
         data: {
@@ -523,8 +563,8 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
-            
-            .where({"projects.isActive": true})
+
+            .where({ "projects.isActive": true })
             .where({ "buildings_and_phases.orgId": orgId })
             .select([
               // "buildings_and_phases.orgId as ORGANIZATION_ID",
@@ -553,7 +593,7 @@ const buildingPhaseController = {
               "buildings_and_phases.companyId",
               "companies.id"
             )
-            .where({"projects.isActive": true})
+            .where({ "projects.isActive": true })
             .where({
               "buildings_and_phases.companyId": companyId,
               "buildings_and_phases.orgId": orgId
@@ -609,7 +649,7 @@ const buildingPhaseController = {
       let filepath = tempraryDirectory + filename;
       let check = XLSX.writeFile(wb, filepath);
       const AWS = require("aws-sdk");
-      fs.readFile(filepath, function(err, file_buffer) {
+      fs.readFile(filepath, function (err, file_buffer) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
@@ -617,7 +657,7 @@ const buildingPhaseController = {
           Body: file_buffer,
           ACL: "public-read"
         };
-        s3.putObject(params, function(err, data) {
+        s3.putObject(params, function (err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             //next(err);
@@ -714,14 +754,14 @@ const buildingPhaseController = {
       let orgId = req.orgId;
 
       let buildings;
-      if(projectId){
-      buildings = await knex("buildings_and_phases")
-        .select("*")
-        .where({ projectId, orgId: orgId });
-      } else{
+      if (projectId) {
         buildings = await knex("buildings_and_phases")
-        .select("*")
-        .where({orgId: orgId });
+          .select("*")
+          .where({ projectId, orgId: orgId });
+      } else {
+        buildings = await knex("buildings_and_phases")
+          .select("*")
+          .where({ orgId: orgId });
       }
       return res
         .status(200)
@@ -842,7 +882,7 @@ const buildingPhaseController = {
               i++;
               const checkExistance = await knex("buildings_and_phases").where({
                 orgId: req.orgId,
-                buildingPhaseCode: buildingData.F,companyId:companyId,projectId:projectId
+                buildingPhaseCode: buildingData.F, companyId: companyId, projectId: projectId
               });
               if (checkExistance.length) {
                 fail++;
@@ -884,7 +924,7 @@ const buildingPhaseController = {
             });
 
             let message = null;
-            fail = fail-1;
+            fail = fail - 1;
             if (totalData == success) {
               message =
                 "System have processed ( " +
