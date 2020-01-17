@@ -15,43 +15,96 @@ const partsController = {
             let partData = null;
             let reqData = req.query;
             let total, rows
-
             let pagination = {};
-            let per_page = reqData.per_page || 10;
-            let page = reqData.current_page || 1;
-            if (page < 1) page = 1;
-            let offset = (page - 1) * per_page;
 
 
             let { partName,
                 partCode,
                 partCategory } = req.body;
 
+            if (partName || partCode || partCategory) {
 
-            let filters = {}
-
-            if (partName) {
-                filters['part_master.partName'] = partName;
-            }
-
-            if (partCode) {
-                filters['part_master.partCode'] = partCode
-            }
-
-            if (partCategory) {
-                filters['part_master.partCategory'] = partCategory
-            }
-
-
-            //res.json(filters)
-
-            if (_.isEmpty(filters)) {
+                let per_page = reqData.per_page || 10;
+                let page = reqData.current_page || 1;
+                if (page < 1) page = 1;
+                let offset = (page - 1) * per_page;
                 [total, rows] = await Promise.all([
-                    knex.count('* as count').from("part_master")
+                    knex.from("part_master")
+                        .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
+                        .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
+                        .where(qb => {
+                            if (partName) {
+                                qb.where('part_master.partName', 'iLIKE', `%${partName}%`)
+                            }
+                            if (partCode) {
+                                qb.where('part_master.partCode', 'iLIKE', `%${partCode}%`)
+
+                            }
+                            if (partCategory) {
+                                qb.where('part_master.partCategory', partCategory)
+                            }
+                        })
+                        .groupBy(['part_master.id'])
+                        .distinct('part_master.id'),
+                        //.first(),
+                    //.innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
+                    knex.from('part_master')
+                        .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
+                        .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
+                        .select([
+                            'part_master.id as partId',
+                            'part_master.partName as Name',
+                            'part_master.partCode as ID',
+                            knex.raw('SUM("part_ledger"."quantity") as Quantity'),
+                            knex.raw('MAX("part_ledger"."unitCost") as Price'),
+                            'part_master.unitOfMeasure',
+                            'part_category_master.categoryName as Category',
+                            'part_master.barcode as Barcode',
+                            'part_master.createdAt as Date Added',
+                        ])
+                        .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
+                        .where(qb => {
+                            if (partName) {
+                                qb.where('part_master.partName', 'iLIKE', `%${partName}%`)
+                            }
+                            if (partCode) {
+                                qb.where('part_master.partCode', 'iLIKE', `%${partCode}%`)
+
+                            }
+                            if (partCategory) {
+                                qb.where('part_master.partCategory', partCategory)
+                            }
+                        })
+                        .orderBy('part_master.createdAt', 'desc')
+                        .groupBy(['part_master.id', 'part_category_master.id'])
+                        .distinct('part_master.id')
+                        .offset(offset).limit(per_page)
+                ])
+
+                let count = total.length;
+                pagination.total = count;
+                pagination.per_page = per_page;
+                pagination.offset = offset;
+                pagination.to = offset + rows.length;
+                pagination.last_page = Math.ceil(count / per_page);
+                pagination.current_page = page;
+                pagination.from = offset;
+                pagination.data = rows;
+    
+
+            } else {
+
+                let per_page = reqData.per_page || 10;
+                let page = reqData.current_page || 1;
+                if (page < 1) page = 1;
+                let offset = (page - 1) * per_page;
+
+                [total, rows] = await Promise.all([
+                    knex.from("part_master")
                         .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id').where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
                         .groupBy(['part_master.id'])
-                        .distinct('part_master.id')
-                        .first(),
+                        .distinct('part_master.id'),
+                        //.first(),
                     //.innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
                     knex.from('part_master')
                         .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
@@ -73,108 +126,25 @@ const partsController = {
                         .distinct('part_master.id')
                         .offset(offset).limit(per_page)
                 ])
-            } else {
-                //filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
-                try {
-                    [total, rows] = await Promise.all([
-                        knex.count('* as count').from("part_master")
-                            .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
-                            .where(qb => {
-                                qb.where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
-                                if (partName) {
-                                    qb.where('part_master.partName', 'like', `%${partName}%`)
-                                }
-                                if (partCode) {
-                                    qb.where('part_master.partCode', 'like', `%${partCode}%`)
 
-                                }
-                                if (partCategory) {
-                                    qb.where(filters)
-
-                                }
-                            })
-                            .groupBy(['part_master.id'])
-
-                            .distinct('part_master.id')
-                            .first(),
-                        //.innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first()
-                        //.where(filters),
-                        knex.from('part_master')
-                            .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
-                            .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
-                            .select([
-                                'part_master.id as partId',
-                                'part_master.partName as Name',
-                                'part_master.partCode as ID',
-                                'part_ledger.quantity as Quantity',
-                                'part_ledger.unitCost as Price',
-                                'part_master.unitOfMeasure',
-                                'part_category_master.categoryName as Category',
-                                'part_master.barcode as Barcode',
-                                'part_master.createdAt as Date Added',
-                                knex.raw('SUM(quantity)')
-
-                            ])
-                            .distinct('part_master.id')
-
-                            .orderBy('part_master.createdAt', 'desc')
-                            .groupBy(['part_master.id',
-                                'part_ledger.id',
-                                'part_category_master.id'])
-
-                            //.groupBy(['part_master.id','part_ledger.id'])
-                            //.where(filters)
-                            .where(qb => {
-                                qb.where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
-                                if (partName) {
-                                    qb.where('part_master.partName', 'like', `%${partName}%`)
-                                }
-                                if (partCode) {
-                                    qb.where('part_master.partCode', 'like', `%${partCode}%`)
-
-                                }
-                                if (partCategory) {
-                                    qb.where(filters)
-                                    //qb.where('part_master.partCategory', 'like', `%${partCategory}%`)
-
-                                }
-                            })
-                            .offset(offset).limit(per_page)
-                    ])
-                } catch (e) {
-                    // Error
-                }
+                let count = total.length;
+                pagination.total = count;
+                pagination.per_page = per_page;
+                pagination.offset = offset;
+                pagination.to = offset + rows.length;
+                pagination.last_page = Math.ceil(count / per_page);
+                pagination.current_page = page;
+                pagination.from = offset;
+                pagination.data = rows;
+    
             }
-
-
-            let count = total.count;
-            pagination.total = count;
-            pagination.per_page = per_page;
-            pagination.offset = offset;
-            pagination.to = offset + rows.length;
-            pagination.last_page = Math.ceil(count / per_page);
-            pagination.current_page = page;
-            pagination.from = offset;
-            pagination.data = rows;
-
+           
             return res.status(200).json({
                 data: {
                     parts: pagination
                 },
                 message: 'Parts List!'
             })
-
-            //partData = await knex.from('part_ledger').innerJoin('part_master', 'part_ledger.partId', 'part_master.id')
-
-            //console.log('[controllers][parts][getParts]: Parts List', partData);
-
-            //partData = partData.map(d => _.omit(d, ['partId'], ['createdAt'], ['updatedAt'], ['isActive']));
-
-            // res.status(200).json({
-            //     data: partData,
-            //     message: "Parts List"
-            // });
-
 
         } catch (err) {
             console.log('[controllers][parts][getParts] :  Error', err);
@@ -454,7 +424,7 @@ const partsController = {
                 .where({ partId: id }).select(
                     'unitCost',
                     'quantity'
-                )
+                ).orderBy('id','desc').first()
             let partQuantityDataResult = partQuantityData
 
             let totalQuantity = 0;
@@ -463,9 +433,9 @@ const partsController = {
             }
             let totalUnitCost = 0;
 
-            for (let i = 0; i < partQuantityDataResult.length; i++) {
-                totalUnitCost += parseInt(partQuantityDataResult[i].unitCost)
-            }
+            // for (let i = 0; i < partQuantityDataResult.length; i++) {
+            //     totalUnitCost += parseInt(partQuantityDataResult[i].unitCost)
+            // }
 
             files = await knex('files').where({ entityId: id, entityType: 'part_master' }).select()
             images = await knex('images').where({ entityId: id, entityType: 'part_master' }).select()
@@ -473,7 +443,7 @@ const partsController = {
             console.log('[controllers][parts][getPartDetails]: Part Details', partData);
 
             res.status(200).json({
-                data: { part: { quantity: totalQuantity, unitCost: totalUnitCost, ...omitedPartDataResult, additionalAttributes, images, files, qrcode } },
+                data: { part: { quantity: totalQuantity, unitCost: partQuantityDataResult.unitCost, ...omitedPartDataResult, additionalAttributes, images, files, qrcode } },
                 message: "Part Details"
             });
 
@@ -869,12 +839,12 @@ const partsController = {
     },
     //  CHECK WORK ORDER ID 
     checkOrderWorkId: async (req, res) => {
-
         try {
+            let orgId = req.orgId;
             let workOrderId = req.params.id;
             let result = "";
             result = await knex('task_group_schedule_assign_assets').returning('*')
-                .where({ id: workOrderId })
+                .where({ id: workOrderId ,orgId:orgId})
             return res.status(200).json({
                 data: result,
                 message: "Work Order Id Successfully!"
@@ -1688,7 +1658,47 @@ const partsController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
-    }
+    },
+     //  CHECK SERVICE ID 
+     checkServiceOrderId: async (req, res) => {
+        try {
+            let orgId = req.orgId;
+            let serviceId = req.query.serviceId;
+            let result = "";
+            result = await knex('service_orders').returning('*')
+                .where({ id: serviceId ,orgId:orgId})
+            return res.status(200).json({
+                data: result,
+                message: "Service order Id Successfully!"
+            });
+        } catch (err) {
+            return res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            })
+        }
+    },
+    //ALL ADJUST LIST FOR DROPDOWN
+     
+     allAdjustList: async (req, res) => {
+        try {
+            let orgId = req.orgId;
+            
+            let result = "";
+            result = await knex('adjust_type').returning('*')
+            return res.status(200).json({
+                data: result,
+                message: "Adjust list Successfully!"
+            });
+        } catch (err) {
+            return res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            })
+        }
+    },
 }
 
 module.exports = partsController;

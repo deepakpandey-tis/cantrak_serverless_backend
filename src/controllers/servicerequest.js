@@ -2001,6 +2001,7 @@ const serviceRequestController = {
           )
           .select(
             "service_problems.description",
+            "service_problems.id",
             "incident_sub_categories.descriptionEng as Problem",
             "incident_categories.descriptionEng as category"
           )
@@ -2259,6 +2260,22 @@ const serviceRequestController = {
       });
     }
   },
+  deleteServiceProblem:async(req,res) => {
+    try {
+      const id = req.body.id;
+      const deletedProblem = await knex('service_problems').where({id:id}).del().returning(['*'])
+      return res.status(200).json({
+        data: {
+          message: 'Deleted successfully!',
+          deletedProblem
+        }
+      })
+    } catch(err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  }
 };
 
 // Y, M, D
