@@ -587,9 +587,13 @@ const assetController = {
                                 ])
             let assetDataResult = assetData[0];
 
+            let team
+            let user
+            if(assetDataResult.assignedTeams && assetDataResult.assignedUsers){
 
-            const team = await knex('teams').select('teamName').where({teamId:assetDataResult.assignedTeams}).first()
-            const user = await knex('users').select('name').where({id:assetDataResult.assignedUsers}).first()
+              team = await knex('teams').select('teamName').where({teamId:assetDataResult.assignedTeams}).first()
+              user = await knex('users').select('name').where({id:assetDataResult.assignedUsers}).first()
+            }
 
             let omitedAssetDataResult = _.omit(assetDataResult, ['createdAt'], ['updatedAt'], ['isActive'])
             additionalAttributes = await knex("asset_attributes")
@@ -671,7 +675,7 @@ const assetController = {
             // }
 
             res.status(200).json({
-                data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, images,assetLocation,qrcode,serviceOrders:service_orders,teamName:team.teamName,UserName:user.name } },
+                data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, images,assetLocation,qrcode,serviceOrders:service_orders,teamName:team?team.teamName:'',UserName:user?user.name:'' } },
                 message: "Asset Details"
             });
 
