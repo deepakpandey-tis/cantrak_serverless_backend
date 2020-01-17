@@ -685,10 +685,17 @@ const companyController = {
               i++;
 
               if (i > 1) {
+                 let taxIdExists = await knex("companies")
+                  .select("taxId")
+                  .where({ taxId:companyData.F,orgId: req.orgId });
                 let checkExist = await knex("companies")
                   .select("companyName")
                   .where({ companyId: companyData.A, orgId: req.orgId });
                 console.log("Check list company: ", checkExist);
+
+                if(!taxIdExists.length){
+
+
                 if (checkExist.length < 1) {
 
                   let taxId = companyData.F;
@@ -724,6 +731,11 @@ const companyController = {
                 } else {
                   fail++;
                 }
+
+                } else {
+                  fail++;
+                }
+
               }
             }
             let message = null;
