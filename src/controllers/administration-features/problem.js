@@ -30,11 +30,13 @@ const problemController = {
           knex.count('* as count').from("incident_sub_categories")
             .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
             .leftJoin('users', 'incident_categories.createdBy', 'users.id')
+            .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
             .where({ 'incident_sub_categories.orgId': req.orgId })
           ,
           knex("incident_sub_categories")
             .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
             .leftJoin('users', 'incident_categories.createdBy', 'users.id')
+            .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
             .select([
               'incident_sub_categories.id as ID',
               'incident_categories.categoryCode as Problem Code',
@@ -44,7 +46,8 @@ const problemController = {
               'incident_sub_categories.isActive as Status',
               'users.name as Created By',
               'incident_sub_categories.createdAt as Date Created',
-
+              'incident_type.typeCode as problem_type_code',
+              'incident_type.descriptionEng as problem_type_description',
             ])
             .where({ 'incident_sub_categories.orgId': req.orgId })
             .offset(offset).limit(per_page)
@@ -54,13 +57,15 @@ const problemController = {
         try {
           [total, rows] = await Promise.all([
             knex.count('* as count').from("incident_sub_categories")
-              .innerJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
+              .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
               .leftJoin('users', 'incident_categories.createdBy', 'users.id')
+              .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
               .where({ 'incident_sub_categories.orgId': req.orgId })
               .where(filters).offset(offset).limit(per_page),
             knex("incident_sub_categories")
               .innerJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
               .leftJoin('users', 'incident_categories.createdBy', 'users.id')
+              .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
               .select([
                 'incident_sub_categories.id as ID',
                 'incident_categories.categoryCode as Problem Code',
@@ -70,6 +75,8 @@ const problemController = {
                 'incident_sub_categories.isActive as Status',
                 'users.name as Created By',
                 'incident_sub_categories.createdAt as Date Created',
+                'incident_type.typeCode as problem_type_code',
+                'incident_type.descriptionEng as problem_type_description',
               ])
               .where({ 'incident_sub_categories.orgId': req.orgId })
               .where(filters).offset(offset).limit(per_page)
@@ -119,11 +126,13 @@ const problemController = {
         [rows] = await Promise.all([
           knex("incident_sub_categories")
             .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
+            .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
             .select([
               'incident_categories.categoryCode as PROBLEM_CATEGORY_CODE',
               'incident_sub_categories.descriptionEng as DESCRIPTION',
               'incident_sub_categories.descriptionThai as ALTERNATE_DESCRIPTION',
               'incident_sub_categories.remark as REMARK',
+              'incident_type.typeCode as PROBLEM_TYPE_CODE',
             ])
             .where({ 'incident_sub_categories.orgId': orgId })
         ])
@@ -133,11 +142,13 @@ const problemController = {
         [rows] = await Promise.all([
           knex("incident_sub_categories")
             .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
+            .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
             .select([
               'incident_categories.categoryCode as PROBLEM_CATEGORY_CODE',
               'incident_sub_categories.descriptionEng as DESCRIPTION',
               'incident_sub_categories.descriptionThai as ALTERNATE_DESCRIPTION',
               'incident_sub_categories.remark as REMARK',
+              'incident_type.typeCode as PROBLEM_TYPE_CODE',
             ])
             .where({ 'incident_sub_categories.orgId': orgId })
             .where(filters)
@@ -308,7 +319,7 @@ const problemController = {
           (data[0].A == "PROBLEM_CATEGORY_CODE" &&
             data[0].B == "DESCRIPTION" &&
             data[0].C == "ALTERNATE_DESCRIPTION" &&
-            data[0].D == "REMARK")
+            data[0].D == "REMARK" && data[0].E == "PROBLEM_TYPE_CODE")
         ) {
           if (data.length > 0) {
             let i = 0;
@@ -327,6 +338,20 @@ const problemController = {
                 categoryId = categoryData[0].id;
               }
 
+              let problemTypeData = await knex("incident_type")
+                .select("id")
+                .where({typeCode: problemData.E, orgId: req.orgId });
+              let problemTypeId = null;
+              if(!problemTypeData.length){
+                fail++;
+                continue;
+              }
+
+              if(problemTypeData.length){
+                problemTypeId = problemTypeData[0].id;
+              }
+
+
               if (i > 1) {
                 let checkExist = await knex("incident_sub_categories")
                   .select("id")
@@ -340,7 +365,8 @@ const problemController = {
                     descriptionThai: problemData.C,
                     remark: problemData.D,
                     createdAt: currentTime,
-                    updatedAt: currentTime
+                    updatedAt: currentTime,
+                    incidentTypeId:problemTypeId
                   };
 
                   resultData = await knex

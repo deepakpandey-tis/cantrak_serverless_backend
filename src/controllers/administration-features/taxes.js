@@ -414,7 +414,10 @@ const taxesfactionController = {
           .where({ "taxes.orgId": req.orgId })
           .select([
             "taxes.taxCode as TAX CODE",
-            "taxes.taxPercentage as TAX PERCENTAGE"
+            "taxes.taxPercentage as TAX PERCENTAGE",
+            "taxes.descriptionEng as DESCRIPTION",
+            "taxes.descriptionThai as ALTERNATE_LANGUAGE_DESCRIPTION",
+            "taxes.glAccountCode as GL_ACCOUNT_CODE",
           ])
       ]);
 
@@ -437,7 +440,10 @@ const taxesfactionController = {
         ws = XLSX.utils.json_to_sheet([
           {
             "TAX CODE": "",
-            "TAX PERCENTAGE": ""
+            "TAX PERCENTAGE": "",
+            "DESCRIPTION":"",
+            "ALTERNATE_LANGUAGE_DESCRIPTION":"",
+            "GL_ACCOUNT_CODE":""
           }
         ]);
       }
@@ -478,7 +484,7 @@ const taxesfactionController = {
           }
         });
       });
-      let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
+      //let deleteFile   = await fs.unlink(filepath,(err)=>{ console.log("File Deleting Error "+err) })
 
     } catch (err) {
       console.log("[controllers][tax][gettax] :  Error", err);
@@ -517,7 +523,12 @@ const taxesfactionController = {
 
         if (
           data[0].A == "Ã¯Â»Â¿TAX CODE" ||
-          (data[0].A == "TAX CODE" && data[0].B == "TAX PERCENTAGE")
+          (data[0].A == "TAX CODE" && 
+          data[0].B == "TAX PERCENTAGE" && 
+          data[0].C=="DESCRIPTION" && 
+          data[0].D == "ALTERNATE_LANGUAGE_DESCRIPTION" &&
+          data[0].E == "GL_ACCOUNT_CODE"
+          )
         ) {
           if (data.length > 0) {
             let i = 0;
@@ -538,7 +549,10 @@ const taxesfactionController = {
                     taxPercentage: taxData.B,
                     isActive: true,
                     createdBy: req.me.id,
-                    createdAt: currentTime
+                    createdAt: currentTime,
+                    descriptionEng:taxData.C,
+                    descriptionThai:taxData.D,
+                    glAccountCode:taxData.E
                   };
 
                   resultData = await knex

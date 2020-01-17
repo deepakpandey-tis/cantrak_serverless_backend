@@ -15,13 +15,13 @@ const singupController = {
     try {
       let orgId = req.query.orgId;
       let companies;
-      if(orgId){
-       companies = await knex("companies")
-        .where({ orgId })
-        .returning(["*"]);
-      } else{
+      if (orgId) {
         companies = await knex("companies")
-        .returning(["*"]);
+          .where({ orgId })
+          .returning(["*"]);
+      } else {
+        companies = await knex("companies")
+          .returning(["*"]);
       }
 
       return res.status(200).json({
@@ -44,20 +44,20 @@ const singupController = {
       let orgId = req.query.orgId;
       let companyId = req.query.companyId;
       let projects;
-      if(orgId){
+      if (orgId) {
 
         projects = await knex("projects")
-        .where({
-          "projects.companyId": Number(companyId),
-          orgId: Number(orgId)
-        })
-        .returning(["*"]);
-      } else{
-       projects = await knex("projects")
-        .where({
-          "projects.companyId": Number(companyId)
-        })
-        .returning(["*"]);
+          .where({
+            "projects.companyId": Number(companyId),
+            orgId: Number(orgId)
+          })
+          .returning(["*"]);
+      } else {
+        projects = await knex("projects")
+          .where({
+            "projects.companyId": Number(companyId)
+          })
+          .returning(["*"]);
       }
       return res.status(200).json({
         data: {
@@ -79,21 +79,21 @@ const singupController = {
       let orgId = req.query.orgId;
       let projectId = req.query.projectId;
       let buildings;
-      if(orgId){
+      if (orgId) {
         buildings = await knex("buildings_and_phases")
-        .where({
-          "buildings_and_phases.projectId": Number(projectId),
-          orgId: Number(orgId)
-        })
-        .returning(["*"]);
-      } else{
+          .where({
+            "buildings_and_phases.projectId": Number(projectId),
+            orgId: Number(orgId)
+          })
+          .returning(["*"]);
+      } else {
         buildings = await knex("buildings_and_phases")
-        .where({
-          "buildings_and_phases.projectId": Number(projectId)
-        })
-        .returning(["*"]);
+          .where({
+            "buildings_and_phases.projectId": Number(projectId)
+          })
+          .returning(["*"]);
       }
-      
+
       return res.status(200).json({
         data: {
           buildings
@@ -114,21 +114,21 @@ const singupController = {
       let orgId = req.query.orgId;
       let buildingId = req.query.buildingPhaseId;
       let floors;
-      if(orgId){
+      if (orgId) {
         floors = await knex("floor_and_zones")
-        .where({
-          "floor_and_zones.buildingPhaseId": Number(buildingId),
-          orgId: Number(orgId)
-        })
-        .returning(["*"]);
-      }else{
+          .where({
+            "floor_and_zones.buildingPhaseId": Number(buildingId),
+            orgId: Number(orgId)
+          })
+          .returning(["*"]);
+      } else {
         floors = await knex("floor_and_zones")
-        .where({
-          "floor_and_zones.buildingPhaseId": Number(buildingId)
-        })
-        .returning(["*"]);
+          .where({
+            "floor_and_zones.buildingPhaseId": Number(buildingId)
+          })
+          .returning(["*"]);
       }
-       
+
       return res.status(200).json({
         data: {
           floors
@@ -149,14 +149,14 @@ const singupController = {
       let orgId = req.query.orgId;
       let floorZoneId = req.query.floorZoneId;
       let units;
-      if(orgId){
+      if (orgId) {
         units = await knex("property_units")
-        .where({ floorZoneId: Number(floorZoneId), orgId: Number(orgId) })
-        .returning(["*"]);
-      } else{
-       units = await knex("property_units")
-        .where({ floorZoneId: Number(floorZoneId)})
-        .returning(["*"]);
+          .where({ floorZoneId: Number(floorZoneId), orgId: Number(orgId) })
+          .returning(["*"]);
+      } else {
+        units = await knex("property_units")
+          .where({ floorZoneId: Number(floorZoneId) })
+          .returning(["*"]);
       }
       return res.status(200).json({
         data: {
@@ -183,7 +183,7 @@ const singupController = {
         "houseNo"
       ]);
 
-      console.log("===============",payload,"======================")
+      console.log("===============", payload, "======================")
       const signUpDetails = { ...payload };
       let expiryDate = moment().add(Number(req.body.expireAfter), "days");
       let currentTime = new Date().getTime();
@@ -205,7 +205,7 @@ const singupController = {
         .insert({
           signUpDetails: {
             ...signUpDetails,
-            houseNo:req.body.houseNo,
+            houseNo: req.body.houseNo,
             orgId: req.body.orgId,
             expireAfter: req.body.expireAfter
           },
@@ -295,7 +295,7 @@ const singupController = {
         knex("sign_up_urls")
           .select("*")
           .where(qb => {
-            qb.where({orgId:req.orgId})
+            qb.where({ orgId: req.orgId })
             if (filters && filters.uuid) {
               qb.where("uuid", "like", `%${filters.uuid.trim()}%`);
             }
@@ -399,78 +399,110 @@ const singupController = {
       await knex.transaction(async trx => {
         let orgId = req.body.orgId;
 
-        if(!orgId){
-          companyResult = await knex.from('companies').where({id:req.body.companyId}).returning(['*'])
-          orgId         = companyResult[0].orgId; 
+        if (!orgId) {
+          companyResult = await knex.from('companies').where({ id: req.body.companyId }).returning(['*'])
+          orgId = companyResult[0].orgId;
         }
 
-        console.log("======================",orgId)
-      let payload = _.omit(req.body, [
-        "company",
-        "project",
-        "building",
-        "floor",
-        "unitNumber",
-        "companyId",
-        "floorZoneId",
-        "buildingId",
-        "projectId",
-        "unitId",
-        "houseId",
-        "houseNo"
-      ]);
-      let hash = await bcrypt.hash(payload.password, saltRounds);
-      payload.password = hash;
-      let uuidv4 = uuid()
-      let currentTime = new Date().getTime()
-       insertedUser = await knex("users")
-        .insert({...payload,verifyToken:uuidv4,emailVerified:true})
-        .returning(["*"])
-        .transacting(trx);
-      console.log(payload);
+        console.log("======================", orgId)
+        let payload = _.omit(req.body, [
+          "company",
+          "project",
+          "building",
+          "floor",
+          "unitNumber",
+          "companyId",
+          "floorZoneId",
+          "buildingId",
+          "projectId",
+          "unitId",
+          "houseId",
+          "houseNo"
+        ]);
 
-      /*INSERT HOUSE ID OPEN */
-      let houseResult = await knex("user_house_allocation")
-        .insert({houseId:req.body.houseId,userId:insertedUser[0].id,status:1,orgId:req.orgId,createdAt:currentTime,updatedAt:currentTime})
-        .returning(["*"])
-        .transacting(trx);
-      /*INSERT HOUSE ID CLOSE */
-      
-      // Insert this users role as customer
-       roleInserted = await knex('application_user_roles').insert({userId:insertedUser[0].id,roleId:4,createdAt:currentTime,updatedAt:currentTime})
-                         .returning(['*']).transacting(trx)
+        /*CHECK DUPLICATION USERNAME , EMAIL & MOBILE NO. OPEN */
+        const existUser = await knex('users').where({ userName: payload.userName });
+        const existEmail = await knex('users').where({ email: payload.email });
+        const existMobile = await knex('users').where({ mobileNo: payload.mobileNo });
 
-      let user = insertedUser[0]
-      console.log('User: ',insertedUser)
-      if(insertedUser && insertedUser.length){
-        await emailHelper.sendTemplateEmail({
-          to:user.email,
-          subject:'Verify Account',
-          template:'test-email.ejs',
-          templateData:{
-            fullName:user.name,
-            OTP:'http://localhost:4200/signup/verify-account/'+user.verifyToken
-          }})
+        if (existUser && existUser.length) {
+          return res.status(400).json({
+            errors: [
+              { code: 'USER_EXIST_ERROR', message: 'Username already exist !' }
+            ],
+          });
+        }
+
+        if (existEmail && existEmail.length) {
+          return res.status(400).json({
+            errors: [
+              { code: 'EMAIL_EXIST_ERROR', message: 'Email already exist !' }
+            ],
+          });
+        }
+
+        if (existMobile && existMobile.length) {
+          return res.status(400).json({
+            errors: [
+              { code: 'MOBILE_EXIST_ERROR', message: 'MobileNo already exist !' }
+            ],
+          });
+        }
+        /*CHECK DUPLICATION USERNAME , EMAIL & MOBILE NO. CLOSE */
+
+        let hash = await bcrypt.hash(payload.password, saltRounds);
+        payload.password = hash;
+        let uuidv4 = uuid()
+        let currentTime = new Date().getTime()
+        insertedUser = await knex("users")
+          .insert({ ...payload, verifyToken: uuidv4, emailVerified: true })
+          .returning(["*"])
+          .transacting(trx);
+        console.log(payload);
+
+        /*INSERT HOUSE ID OPEN */
+        let houseResult = await knex("user_house_allocation")
+          .insert({ houseId: req.body.unitId, userId: insertedUser[0].id, status: 1, orgId: orgId, createdAt: currentTime, updatedAt: currentTime })
+          .returning(["*"])
+          .transacting(trx);
+        /*INSERT HOUSE ID CLOSE */
+
+        // Insert this users role as customer
+        roleInserted = await knex('application_user_roles').insert({ userId: insertedUser[0].id, roleId: 4, createdAt: currentTime, updatedAt: currentTime })
+          .returning(['*']).transacting(trx)
+
+        let user = insertedUser[0]
+        console.log('User: ', insertedUser)
+        if (insertedUser && insertedUser.length) {
+          await emailHelper.sendTemplateEmail({
+            to: user.email,
+            subject: 'Verify Account',
+            template: 'test-email.ejs',
+            templateData: {
+              fullName: user.name,
+              OTP: 'http://localhost:4200/signup/verify-account/' + user.verifyToken
+            }
+          })
           let orgAdmins = await knex('application_user_roles')
             .select('userId')
-            .where({'application_user_roles.orgId':orgId,roleId:2})
+            .where({ 'application_user_roles.orgId': orgId, roleId: 2 })
           let Parallel = require('async-parallel')
           let admins = await Parallel.map(orgAdmins, async admin => {
-            let adminres = await knex('users').where({id:admin.userId}).select(['name','email']).first()
+            let adminres = await knex('users').where({ id: admin.userId }).select(['name', 'email']).first()
             return adminres;
           })
-          for(let admin of admins){
+          for (let admin of admins) {
             await emailHelper.sendTemplateEmail({
-              to:admin.email,
-              subject:'New user added to your organization',
-              template:'message.ejs',
-              templateData: { fullName: admin.name, message: 'New user ' + insertedUser[0].name + ' added to your organization. username is ' + insertedUser[0].userName+'.'},
+              to: admin.email,
+              subject: 'New user added to your organization',
+              template: 'message.ejs',
+              templateData: { fullName: admin.name, message: 'New user ' + insertedUser[0].name + ' added to your organization. username is ' + insertedUser[0].userName + '.' },
             })
           }
 
-      }
-      trx.commit;
-    })
+        }
+        trx.commit;
+      })
       return res.status(200).json({ insertedUser, roleInserted });
     } catch (err) {
       console.log(
@@ -482,16 +514,16 @@ const singupController = {
       });
     }
   },
-  verifyAccount: async(req,res) => {
+  verifyAccount: async (req, res) => {
     try {
-      let user = await knex('users').select('*').where({verifyToken:req.params.token})
-      if(user && user.length){
-        await knex('users').update({emailVerified:true}).where({id:user[0].id})
-        return res.status(200).json({verified:true,message:'Successfully Verified!'})
+      let user = await knex('users').select('*').where({ verifyToken: req.params.token })
+      if (user && user.length) {
+        await knex('users').update({ emailVerified: true }).where({ id: user[0].id })
+        return res.status(200).json({ verified: true, message: 'Successfully Verified!' })
       } else {
         return res.status(200).json({ verified: false, message: "Failed! Token Invalid." });
       }
-    } catch(err) {
+    } catch (err) {
       console.log(
         "[controllers][survey Orders][getSurveyOrders] :  Error",
         err

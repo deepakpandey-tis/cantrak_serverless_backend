@@ -414,7 +414,10 @@ const whtController = {
           .where({ "wht_master.orgId": req.orgId })
           .select([
             "wht_master.whtCode as WHT_CODE",
-            "wht_master.taxPercentage as TAX_PERCENTAGE"
+            "wht_master.taxPercentage as TAX_PERCENTAGE",
+            "wht_master.descriptionEng as DESCRIPTION",
+            "wht_master.descriptionThai as ALTERNATE_LANGUAGE_DESCRIPTION",
+            "wht_master.glAccountCode as GL_ACCOUNT_CODE",
           ])
       ]);
 
@@ -437,7 +440,10 @@ const whtController = {
         ws = XLSX.utils.json_to_sheet([
           {
             WHT_CODE: "",
-            TAX_PERCENTAGE: ""
+            TAX_PERCENTAGE: "",
+            DESCRIPTION: "",
+            ALTERNATE_LANGUAGE_DESCRIPTION: "",
+            GL_ACCOUNT_CODE: ""
           }
         ]);
       }
@@ -472,7 +478,7 @@ const whtController = {
               data: {
                 taxes: rows
               },
-              message: "Wht list successfully !",
+              message: "Wht export successfully !",
               url: url
             });
           }
@@ -518,7 +524,12 @@ const whtController = {
 
         if (
           data[0].A == "Ã¯Â»Â¿WHT_CODE" ||
-          (data[0].A == "WHT_CODE" && data[0].B == "TAX_PERCENTAGE")
+          (data[0].A == "WHT_CODE" &&
+            data[0].B == "TAX_PERCENTAGE" &&
+            data[0].C == "DESCRIPTION" &&
+            data[0].D == "ALTERNATE_LANGUAGE_DESCRIPTION" &&
+            data[0].E == "GL_ACCOUNT_CODE"
+          )
         ) {
           if (data.length > 0) {
             let i = 0;
@@ -539,7 +550,11 @@ const whtController = {
                     taxPercentage: whtData.B,
                     isActive: true,
                     createdBy: req.me.id,
-                    createdAt: currentTime
+                    createdAt: currentTime,
+                    descriptionEng: whtData.C,
+                    descriptionThai: whtData.D,
+                    glAccountCode: whtData.E,
+
                   };
 
                   resultData = await knex
