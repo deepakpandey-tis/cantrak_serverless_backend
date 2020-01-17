@@ -24,5 +24,8 @@ router.get('/get-new-service-order-id',authMiddleware.isAuthenticated,serviceOrd
 router.post('/add-service-appointment', authMiddleware.isAuthenticated, serviceOrderController.addServiceAppointment)
 router.post('/get-service-appointments', authMiddleware.isAuthenticated, serviceOrderController.getServiceAppointmentList)
 router.post('/get-service-appointment-details', authMiddleware.isAuthenticated, serviceOrderController.getServiceAppointmentDetails)
+router.post('/update-service-order-notes', authMiddleware.isAuthenticated, serviceOrderController.updateServiceOrderNotes)
+router.post('/get-service-order-notes-list', authMiddleware.isAuthenticated, serviceOrderController.getServiceOrderNoteList)
+router.post('/delete-service-order-remark', authMiddleware.isAuthenticated, serviceOrderController.deleteServiceOrderRemark);
 
 module.exports = router;
