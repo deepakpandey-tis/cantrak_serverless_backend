@@ -432,7 +432,8 @@ const sourceofRequestController = {
                     descriptionThai: requestData.C,
                     isActive: true,
                     createdAt: currentTime,
-                    updatedAt: currentTime
+                    updatedAt: currentTime,
+                    createdBy:req.me.id
                   };
 
                   resultData = await knex

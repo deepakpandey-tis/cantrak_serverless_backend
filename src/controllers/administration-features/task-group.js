@@ -1782,7 +1782,7 @@ const taskGroupController = {
       .select([
         'task_group_schedule.*',
         'task_group_schedule_assign_assets.pmDate as pmDate'
-      ]).where({ 'task_group_schedule.id': scheduleId,orgId:req.orgId })
+      ]).where({ 'task_group_schedule.id': scheduleId,'task_group_schedule_assign_assets.orgId':req.orgId })
 
       const team = await knex('assigned_service_team').select(['teamId','userId']).where({entityType:'pm_task_groups',entityId:taskGroupId,orgId:req.orgId})
       const additionalUsers = await knex('assigned_service_additional_users').select('userId').where({entityType:'pm_task_groups',entityId:taskGroupId,orgId:req.orgId})

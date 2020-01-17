@@ -252,7 +252,7 @@ const satisfactionController = {
           .select([
             "satisfaction.id",
             "satisfaction.satisfactionCode as Satisfaction Code",
-            "satisfaction.descriptionThai as Description English",
+            "satisfaction.descriptionEng as Description English",
             "satisfaction.descriptionThai as Description Thai",
             "satisfaction.isActive as Status",
             "users.name as Created By",
@@ -390,7 +390,8 @@ const satisfactionController = {
           .select([
             "satisfaction.satisfactionCode as SATISFACTION_CODE",
             "satisfaction.descriptionEng as DESCRIPTION",
-            "satisfaction.descriptionThai as ALTERNATE_DESCRIPTION"
+            "satisfaction.descriptionThai as ALTERNATE_DESCRIPTION",
+            "satisfaction.defaultFlag as DEFAULT_FLAG"
           ])
       ]);
 
@@ -547,7 +548,7 @@ const satisfactionController = {
           data[0].A == "Ã¯Â»Â¿SATISFACTION_CODE" ||
           (data[0].A == "SATISFACTION_CODE" &&
             data[0].B == "DESCRIPTION" &&
-            data[0].C == "ALTERNATE_DESCRIPTION")
+            data[0].C == "ALTERNATE_DESCRIPTION" && data[0].D == "DEFAULT_FLAG")
         ) {
           if (data.length > 0) {
             let i = 0;
@@ -566,7 +567,9 @@ const satisfactionController = {
                     descriptionEng: statusData.B,
                     descriptionThai: statusData.C,
                     createdAt: currentTime,
-                    updatedAt: currentTime
+                    updatedAt: currentTime,
+                    defaultFlag:statusData.D,
+                    createdBy:req.me.id
                   };
 
                   resultData = await knex

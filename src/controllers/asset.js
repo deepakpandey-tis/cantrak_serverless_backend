@@ -586,6 +586,11 @@ const assetController = {
                                 //  'vendor_master.name as assignedVendor'
                                 ])
             let assetDataResult = assetData[0];
+
+
+            const team = await knex('teams').select('teamName').where({teamId:assetDataResult.assignedTeams}).first()
+            const user = await knex('users').select('name').where({id:assetDataResult.assignedUsers}).first()
+
             let omitedAssetDataResult = _.omit(assetDataResult, ['createdAt'], ['updatedAt'], ['isActive'])
             additionalAttributes = await knex("asset_attributes")
               .where({ assetId: id,orgId: req.orgId })
@@ -666,7 +671,7 @@ const assetController = {
             // }
 
             res.status(200).json({
-                data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, images,assetLocation,qrcode,serviceOrders:service_orders } },
+                data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, images,assetLocation,qrcode,serviceOrders:service_orders,teamName:team.teamName,UserName:user.name } },
                 message: "Asset Details"
             });
 

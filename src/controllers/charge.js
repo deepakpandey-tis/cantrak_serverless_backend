@@ -381,7 +381,7 @@ const chargeController = {
           entityType: "service_orders",
           status: payload.status,
           totalHours: payload.totalHours,
-          rate: payload.cost,         
+          rate: payload.cost,
           updatedAt: currentTime,
           createdAt: currentTime,
           orgId: req.orgId
@@ -696,11 +696,14 @@ const chargeController = {
           .select([
             "charge_master.chargeCode as CHARGE_CODE",
             "charge_master.descriptionEng as DESCRIPTION",
-            "charge_master.descriptionEng as DESCRIPTIONTH",
-            "taxes.taxPercentage as VAT",
+            "charge_master.descriptionThai as ALTERNATE_LANGUAGE_DESCRIPTION",
+            "charge_master.calculationUnit as CALCULATION_UNIT",
+            "charge_master.rate as RATE",
             "taxes.taxCode as VAT_CODE",
-            "wht_master.taxPercentage as WHT_RATE",
-            "wht_master.whtCode as WHT_CODE"
+            //"taxes.taxPercentage as VAT_PERCENTAGE",
+            "wht_master.whtCode as WHT_CODE",
+            //"wht_master.taxPercentage as WHT_PERCENTAGE",
+            "charge_master.glAccountCode as GL_ACCOUNT_CODE",
           ])
       ]);
 
@@ -726,11 +729,14 @@ const chargeController = {
           {
             CHARGE_CODE: "",
             DESCRIPTION: "",
-            DESCRIPTIONTH: "",
-            VAT: "",
+            ALTERNATE_LANGUAGE_DESCRIPTION: "",
+            CALCULATION_UNIT: "",
+            RATE: "",
             VAT_CODE: "",
-            WHT_RATE: "",
+            VAT_PERCENTAGE: "",
             WHT_CODE: "",
+            WHT_PERCENTAGE: "",
+            GL_ACCOUNT_CODE: "",
           }
         ]);
       }
@@ -771,9 +777,9 @@ const chargeController = {
           }
         });
       });
-      let deleteFile = await fs.unlink(filepath, err => {
-        console.log("File Deleting Error " + err);
-      });
+      // let deleteFile = await fs.unlink(filepath, err => {
+      //   console.log("File Deleting Error " + err);
+      // });
 
     } catch (err) {
       console.log(
@@ -818,11 +824,13 @@ const chargeController = {
           data[0].A == "Ã¯Â»Â¿CHARGE_CODE" ||
           (data[0].A == "CHARGE_CODE" &&
             data[0].B == "DESCRIPTION" &&
-            data[0].C == "DESCRIPTIONTH" &&
-            data[0].D == "VAT" &&
-            data[0].E == "VAT_CODE" &&
-            data[0].F == "WHT_RATE" &&
-            data[0].G == "WHT_CODE")
+            data[0].C == "ALTERNATE_LANGUAGE_DESCRIPTION" &&
+            data[0].D == "CALCULATION_UNIT" &&
+            data[0].E == "RATE" &&
+            data[0].F == "VAT_CODE" &&
+            data[0].G == "WHT_CODE" &&
+            data[0].H == "GL_ACCOUNT_CODE"
+          )
         ) {
           if (data.length > 0) {
             let i = 0;
@@ -831,42 +839,38 @@ const chargeController = {
               // Find Company primary key
               let vatId = null;
               let whtId = null;
+              let vatPercentage = null;
+              let whtPercentage = null;
 
               let taxesIdResult = await knex("taxes")
-                .select("id")
-                .where({ taxCode: chargesData.E, orgId: req.orgId });
+                .select("id", "taxPercentage")
+                .where({ taxCode: chargesData.F, orgId: req.orgId });
               console.log("TaxIdResult", taxesIdResult);
-              if (!chargesData.F && !chargesData.G) {
-                whtId = null;
-                whtRate = null;
-                console.log("wht id not found: ", whtId);
-              } else {
-                let whtIdResult = await knex("wht_master")
-                  .select("id")
-                  .where({ whtCode: chargesData.G, orgId: req.orgId });
-                if (whtIdResult && whtIdResult.length) {
-                  whtId = whtIdResult[0].id;
-                  whtRate = chargesData.F;
-                  console.log("wht id found: ", whtId);
-                }
-                console.log("WhtIdResult", whtIdResult);
+
+              if (!taxesIdResult.length) {
+                fail++;
+                continue;
               }
 
               if (taxesIdResult && taxesIdResult.length) {
                 vatId = taxesIdResult[0].id;
+                vatPercentage = taxesIdResult[0].taxPercentage
                 console.log("vat id found: ", vatId);
               }
-              if (!vatId) {
-                fail++;
-                console.log("breaking due to vat id: ", vatId);
-                continue;
 
+              let whtResult = await knex("wht_master")
+                .select("id", "taxPercentage")
+                .where({ whtCode: chargesData.G, orgId: req.orgId });
+
+              if (!whtResult.length) {
+                fail++;
+                continue;
+              }
+              if (whtResult.length) {
+                whtId = whtResult[0].id;
+                whtPercentage = whtResult[0].taxPercentage;
               }
 
-              // if (!whtId) {
-              //   console.log("breaking due to wht id: ", whtId);
-              //   continue;
-              // }
 
               i++;
 
@@ -881,15 +885,17 @@ const chargeController = {
                   let insertData = {
                     orgId: req.orgId,
                     chargeCode: chargesData.A,
-                    descriptionThai: chargesData.B,
-                    descriptionEng: chargesData.C,
-                    vatRate: chargesData.D,
+                    descriptionThai: chargesData.C,
+                    descriptionEng: chargesData.B,
+                    vatRate: vatPercentage,
                     vatId: vatId,
-                    whtRate: whtRate,
+                    whtRate: whtPercentage,
                     whtId: whtId,
-                    isActive: true,
                     createdBy: req.me.id,
-                    createdAt: currentTime
+                    createdAt: currentTime,
+                    glAccountCode:chargesData.H,
+                    calculationUnit:chargesData.D,
+                    rate:chargesData.E,
                   };
 
                   resultData = await knex
