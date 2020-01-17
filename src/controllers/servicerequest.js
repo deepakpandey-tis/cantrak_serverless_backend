@@ -745,7 +745,7 @@ const serviceRequestController = {
 
         [total, rows] = await Promise.all([
           knex
-            .count("* as count")
+            // .count("* as count")
             .from("service_requests")
             // .leftJoin(
             //   "service_problems",
@@ -850,7 +850,7 @@ const serviceRequestController = {
         //filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
         [total, rows] = await Promise.all([
           knex
-            .count("* as count")
+            // .count("* as count")
             .from("service_requests")
             // .leftJoin(
             //   "service_problems",
@@ -885,17 +885,17 @@ const serviceRequestController = {
             )
             .leftJoin("users as u", "service_requests.requestedBy", "u.id")
           
-            // .select([
-            //   "service_requests.id as S Id",
-            //   "service_requests.description as Description",
-            //   // "incident_categories.descriptionEng as Category",
-            //   // "incident_sub_categories.descriptionEng as Problem",
-            //   "service_requests.priority as Priority",
-            //   "status.descriptionEng as Status",
-            //   "property_units.unitNumber as Unit No",
-            //   "u.name as Requested By",
-            //   "service_requests.createdAt as Date Created"
-            // ])
+            .select([
+              "service_requests.id as S Id",
+              "service_requests.description as Description",
+              // "incident_categories.descriptionEng as Category",
+              // "incident_sub_categories.descriptionEng as Problem",
+              "service_requests.priority as Priority",
+              "status.descriptionEng as Status",
+              "property_units.unitNumber as Unit No",
+              "u.name as Requested By",
+              "service_requests.createdAt as Date Created"
+            ])
             .where({ "service_requests.orgId": req.orgId })
             .where(qb => {
               if (location) {
@@ -927,9 +927,9 @@ const serviceRequestController = {
               "service_requests.id",
               // "service_problems.id",
               // "incident_categories.id",
-              "incident_sub_categories.id",
+              // "incident_sub_categories.id",
               "property_units.id",
-              "service_status.id",
+              "status.id",
               "u.id"
             ]),
           knex

@@ -1379,7 +1379,8 @@ const partsController = {
                         "part_master.id as id",
                         "part_master.partCode as partCode",
                         "assigned_parts.quantity as quantity",
-                        "assigned_parts.unitCost as unitCost"
+                        "assigned_parts.unitCost as unitCost",
+                        "assigned_parts.status as status"
                     ])
                     .where({
                         entityId: serviceOrderId,
@@ -1396,7 +1397,9 @@ const partsController = {
                         "part_master.id as id",
                         "part_master.partCode as partCode",
                         "assigned_parts.quantity as quantity",
-                        "assigned_parts.unitCost as unitCost"
+                        "assigned_parts.unitCost as unitCost",
+                        "assigned_parts.status as status"
+
                     ])
                     .where({
                         entityId: serviceOrderId,
