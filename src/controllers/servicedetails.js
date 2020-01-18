@@ -1172,6 +1172,9 @@ const serviceDetailsController = {
         let result = null;
         let currentTime = new Date().getTime();
         //console.log('DATA: ',data)
+        let totalData = data.length - 1;
+        let fail = 0;
+        let success = 0;
 
         if (
           data[0].A == "Ã¯Â»Â¿TITLE" || data[0].A == "TITLE" &&
@@ -1207,6 +1210,9 @@ const serviceDetailsController = {
                     .insert(insertData)
                     .returning(["*"])
                     .into("location_tags_master");
+                    success++;
+                }else{
+                  fail++;
                 }
               }
             }
@@ -1214,8 +1220,25 @@ const serviceDetailsController = {
             let deleteFile = await fs.unlink(file_path, err => {
               console.log("File Deleting Error " + err);
             });
+
+            let message = null;
+            if (totalData == success) {
+              message =
+                "System has processed processed ( " +
+                totalData +
+                " ) entries and added them successfully!";
+            } else {
+              message =
+                "System has processed processed ( " +
+                totalData +
+                " ) entries out of which only ( " +
+                success +
+                " ) are added and others are failed ( " +
+                fail +
+                " ) due to validation!";
+            }
             return res.status(200).json({
-              message: "Location Tag Data Import Successfully!"
+              message: message
             });
           }
         } else {

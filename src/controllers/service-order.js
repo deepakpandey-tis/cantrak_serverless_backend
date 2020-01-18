@@ -344,7 +344,7 @@ const serviceOrderController = {
                         .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
                         .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
                         .leftJoin('users', 'assigned_service_team.userId', 'users.id')
-                        .leftJoin("service_status AS status","service_requests.serviceStatusCode","status.statusCode")
+                        .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
                         .leftJoin("users AS u", "service_requests.createdBy", "u.id")
                         .select([
                             'service_orders.id as So Id',
@@ -374,15 +374,15 @@ const serviceOrderController = {
                                 qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
                             }
 
-                        }).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id', 'assigned_service_team.id', 'users.id','u.id','status.id']),
-                    
+                        }).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id', 'assigned_service_team.id', 'users.id', 'u.id', 'status.id']),
+
                     knex.from('service_orders')
                         .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
                         .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
                         .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
                         .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
                         .leftJoin('users', 'assigned_service_team.userId', 'users.id')
-                        .leftJoin("service_status AS status","service_requests.serviceStatusCode","status.statusCode")
+                        .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
                         .leftJoin("users AS u", "service_requests.createdBy", "u.id")
                         .select([
                             'service_orders.id as So Id',
@@ -438,9 +438,9 @@ const serviceOrderController = {
                                 "service_problems.categoryId",
                                 "incident_categories.id"
                             )
-                            .leftJoin("service_status AS status","service_requests.serviceStatusCode","status.statusCode")
+                            .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
                             .leftJoin("users AS u", "service_requests.createdBy", "u.id")
-                        
+
                             .select([
                                 "service_orders.id as So Id",
                                 "service_requests.description as Description",
@@ -448,7 +448,7 @@ const serviceOrderController = {
                                 "service_requests.id as Sr Id",
                                 "incident_categories.descriptionEng as Problem",
                                 "priority as Priority",
-                               
+
                                 //   "service_orders.createdBy as Created By",
                                 "orderDueDate as Due Date",
                                 'u.name as Created By',
@@ -482,7 +482,7 @@ const serviceOrderController = {
                                 "service_problems.categoryId",
                                 "incident_categories.id"
                             )
-                            .leftJoin("service_status AS status","service_requests.serviceStatusCode","status.statusCode")
+                            .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
                             .leftJoin("users AS u", "service_requests.createdBy", "u.id")
                             .select([
                                 "service_orders.id as So Id",
@@ -533,9 +533,9 @@ const serviceOrderController = {
                                 "assigned_service_team.userId",
                                 "users.id"
                             )
-                            .leftJoin("service_status AS status","service_requests.serviceStatusCode","status.statusCode")
+                            .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
                             .leftJoin("users AS u", "service_requests.createdBy", "u.id")
-                           
+
                             .select([
                                 "service_orders.id as So Id",
                                 "service_requests.description as Description",
@@ -612,9 +612,9 @@ const serviceOrderController = {
                                 "assigned_service_team.userId",
                                 "users.id"
                             )
-                            .leftJoin("service_status AS status","service_requests.serviceStatusCode","status.statusCode")
+                            .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
                             .leftJoin("users AS u", "service_requests.createdBy", "u.id")
-                           
+
                             .select([
                                 "service_orders.id as So Id",
                                 "service_requests.description as Description",
@@ -1777,6 +1777,206 @@ const serviceOrderController = {
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
                 ],
+            });
+        }
+    },
+
+    updateServiceOrderNotes: async (req, res) => {
+        // Define try/catch block
+        try {
+            let userId = req.me.id;
+
+            await knex.transaction(async trx => {
+                let upNotesPayload = _.omit(req.body, ["images"]);
+                console.log(
+                    "[controllers][quotation][updateNotes] : Request Body",
+                    upNotesPayload
+                );
+
+                // validate keys
+                const schema = Joi.object().keys({
+                    serviceOrderId: Joi.number().required(),
+                    description: Joi.string().required()
+                });
+
+                // let problemImages = upNotesPayload.problemsImages;
+                // let noteImages = upNotesPayload.notesImages;
+                // // validate params
+                const result = Joi.validate(upNotesPayload, schema);
+
+                if (result && result.hasOwnProperty("error") && result.error) {
+                    res.status(400).json({
+                        errors: [
+                            { code: "VALIDATON ERRORS", message: result.message.error }
+                        ]
+                    });
+                }
+
+                const currentTime = new Date().getTime();
+                // Insert into survey order post update table
+                const insertData = {
+                    serviceOrderId: upNotesPayload.serviceOrderId,
+                    description: upNotesPayload.description,
+                    orgId: req.orgId,
+                    createdBy: userId,
+                    createdAt: currentTime,
+                    updatedAt: currentTime
+                };
+                console.log(
+                    "[controllers][quotation][quotationPostNotes] : Insert Data ",
+                    insertData
+                );
+
+                const resultSurveyNotes = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into("service_orders_post_update");
+                notesData = resultSurveyNotes;
+                serviceOrderNoteId = notesData[0];
+
+                // const Parallel = require('async-parallel');
+                //  let notesResData = await Parallel.map(notesData, async item => {
+                //       let username = await knex('users').where({ id: item.createdBy }).select('name');
+                //       username = username[0].name;
+                //       return notesData;
+                //   });
+                let usernameRes = await knex('users').where({ id: notesData[0].createdBy }).select('name')
+                let username = usernameRes[0].name;
+                notesData = { ...notesData[0], createdBy: username }
+
+                /*INSERT IMAGE TABLE DATA OPEN */
+
+                if (req.body.images && req.body.images.length) {
+                    let imagesData = req.body.images;
+                    for (image of imagesData) {
+                        let d = await knex
+                            .insert({
+                                entityId: serviceOrderNoteId.id,
+                                ...image,
+                                entityType: "service_order_notes",
+                                createdAt: currentTime,
+                                updatedAt: currentTime,
+                                orgId: req.orgId
+                            })
+                            .returning(["*"])
+                            .transacting(trx)
+                            .into("images");
+                    }
+                }
+
+                trx.commit;
+
+                res.status(200).json({
+                    data: {
+                        serviceOrderNotesResponse: {
+                            notesData: [notesData]
+                        }
+                    },
+                    message: "Service Order Note updated successfully !"
+                });
+            });
+        } catch (err) {
+            console.log("[controllers][quotation][quotationPostNotes] : Error", err);
+            //trx.rollback
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    getServiceOrderNoteList: async (req, res) => {
+        try {
+            let serviceOrderNoteList = null;
+
+            //await knex.transaction(async (trx) => {
+            let serviceorder = req.body;
+
+            const schema = Joi.object().keys({
+                serviceOrderId: Joi.number().required()
+            });
+            let result = Joi.validate(serviceorder, schema);
+            console.log(
+                "[controllers][quotation][getquotationPostNotes]: JOi Result",
+                result
+            );
+
+            if (result && result.hasOwnProperty("error") && result.error) {
+                return res.status(400).json({
+                    errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+                });
+            }
+
+            let serviceOrderId = serviceorder.serviceOrderId;
+            let serviceOrderNoteResult = await knex.raw(`select "service_orders_post_update".*,"users"."name" as "createdBy" from "service_orders_post_update"  left join "users" on "service_orders_post_update"."createdBy" = "users"."id" where "service_orders_post_update"."orgId" = ${req.orgId} and "service_orders_post_update"."serviceOrderId" = ${serviceOrderId} and "service_orders_post_update"."isActive" = 'true'`)
+
+            serviceOrderNoteList = serviceOrderNoteResult.rows;
+
+            return res.status(200).json({
+                data: serviceOrderNoteList,
+                message: "Service Order Details"
+            });
+
+            //});
+        } catch (err) {
+            console.log(
+                "[controllers][quotation][getQuotationDetails] :  Error",
+                err
+            );
+            //trx.rollback
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    deleteServiceOrderRemark: async (req, res) => {
+        try {
+            let quotation = null;
+            await knex.transaction(async trx => {
+                let currentTime = new Date().getTime();
+                const remarkPayload = req.body;
+                const schema = Joi.object().keys({
+                    remarkId: Joi.number().required()
+                });
+
+                let result = Joi.validate(remarkPayload, schema);
+                console.log("[controllers][quotation]: JOi Result", result);
+
+                if (result && result.hasOwnProperty("error") && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "VALIDATION_ERROR", message: result.error.message }
+                        ]
+                    });
+                }
+
+                // Now soft delete and return
+                let updatedRemark = await knex
+                    .update({
+                        isActive: "false",
+                        updatedAt: currentTime,
+                        orgId: req.orgId
+                    })
+                    .where({
+                        id: remarkPayload.remarkId
+                    })
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into("service_orders_post_update");
+
+                trx.commit;
+
+                return res.status(200).json({
+                    data: {
+                        deletedRemark: updatedRemark
+                    },
+                    message: "Service Order remarks deleted successfully !"
+                });
+            });
+        } catch (err) {
+            console.log("[controllers][quotation][remaks] :  Error", err);
+            //trx.rollback
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
     }
