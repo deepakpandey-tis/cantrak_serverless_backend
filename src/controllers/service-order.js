@@ -1501,7 +1501,6 @@ const serviceOrderController = {
                     // .leftJoin("companies", "asset_master.companyId", "companies.id")
                     .select([
                         "asset_master.id as id",
-
                         "asset_master.assetName as assetName",
                         "asset_master.model as model",
                         "asset_category_master.categoryName as categoryName",
