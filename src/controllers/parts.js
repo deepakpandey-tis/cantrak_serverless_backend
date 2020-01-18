@@ -1108,11 +1108,10 @@ const partsController = {
                 if (data[0].A == "Ã¯Â»Â¿PART_CODE" || data[0].A == "PART_CODE" &&
                     data[0].B == "PART_NAME" &&
                     data[0].C == "UNIT_OF_MEASURE" &&
-                    //   data[0].D == "MODEL_CODE" &&
                     data[0].D == "PART_CATEGORY_CODE" &&
-                    data[0].E == "PART_CATEGORY_NAME"
-                    // data[0].G == "CONTACT_PERSON" &&
-                    // data[0].H == "STATUS"
+                    data[0].E == "COMPANY_ID" &&
+                    data[0].F == "quantity" &&
+                    data[0].G == "unit_cost"
                 ) {
 
                     if (data.length > 0) {
@@ -1122,7 +1121,7 @@ const partsController = {
                             i++;
 
                             if (i > 1) {
-                                //let currentTime = new Date().getTime()
+                                let currentTime = new Date().getTime()
                                 // let checkExist = await knex('asset_master').select('companyName')
                                 //   .where({ companyName: partData.B, orgId: req.orgId })
                                 //   console.log("Check list company: ", checkExist);
@@ -1131,47 +1130,83 @@ const partsController = {
                                 // Check if this asset category exists
                                 // if not create new and put that id
                                 let partCategoryId = ''
-                                const cat = await knex('part_category_master').where({ categoryName: partData.E, orgId: req.orgId }).select('id')
+                                const cat = await knex('part_category_master').where({ categoryName: partData.D, orgId: req.orgId }).select('id')
                                 if (cat && cat.length) {
                                     partCategoryId = cat[0].id;
                                 } else {
                                     const catResult = await knex("part_category_master")
                                         .insert({
-                                            categoryName: partData.E,
-                                            partCategoryCode: partData.D,
-                                            orgId: req.orgId
+                                            categoryName: partData.D,
+                                            orgId: req.orgId,
+                                            createdAt: currentTime,
+                                            updatedAt: currentTime
                                         })
                                         .returning(["id"]);
                                     partCategoryId = catResult[0].id;
                                 }
 
-                                let currentTime = new Date().getTime();
-                                let insertData = {
-                                    orgId: req.orgId,
-                                    partCode: partData.A,
-                                    partName: partData.B,
-                                    unitOfMeasure: partData.C,
-                                    partCategory: partCategoryId,
-                                    isActive: true,
-                                    createdAt: currentTime,
-                                    updatedAt: currentTime
+
+                                let companyData = await knex("companies")
+                                    .select("id")
+                                    .where({ companyId: partData.E, orgId: req.orgId });
+                                let companyId = null;
+                                if (!companyData.length) {
+                                    fail++;
+                                    continue;
+                                }
+                                if (companyData && companyData.length) {
+                                    companyId = companyData[0].id;
                                 }
 
-                                resultData = await knex.insert(insertData).returning(['*']).into('part_master');
 
-                                if (resultData && resultData.length) {
-                                    success++;
+                                let checkExist = await knex("part_master")
+                                    .select("id")
+                                    .where({
+                                        partCode: partData.A,
+                                        partName: partData.B,
+                                        orgId: req.orgId
+                                    });
+                                if (checkExist.length < 1) {
+
+                                    let insertData = {
+                                        orgId: req.orgId,
+                                        partCode: partData.A,
+                                        partName: partData.B,
+                                        unitOfMeasure: partData.C,
+                                        partCategory: partCategoryId,
+                                        companyId:companyId,
+                                        createdAt: currentTime,
+                                        updatedAt: currentTime
+                                    }
+
+                                    resultData = await knex.insert(insertData).returning(['*']).into('part_master');
+                                    let quantityData = { partId: resultData[0].id, unitCost:partData.G, quantity:partData.F, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId };
+                                    let partQuantityResult = await knex.insert(quantityData).returning(['*']).into('part_ledger');
+
+                                    if (resultData && resultData.length) {
+                                        success++;
+                                    }
+                                } else {
+                                    fail++;
                                 }
-                                // } else {
-                                //   fail++;
-                                // }
+
                             }
                         }
                         let message = null;
                         if (totalData == success) {
-                            message = "system has processed ( " + totalData + " ) entries and added them successfully!";
+                          message =
+                            "System has processed processed ( " +
+                            totalData +
+                            " ) entries and added them successfully!";
                         } else {
-                            message = "system has processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added";
+                          message =
+                            "System has processed processed ( " +
+                            totalData +
+                            " ) entries out of which only ( " +
+                            success +
+                            " ) are added and others are failed ( " +
+                            fail +
+                            " ) due to validation!";
                         }
                         let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
                         return res.status(200).json({
@@ -1229,8 +1264,8 @@ const partsController = {
 
                     ])
                     .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
-                    .groupBy(['part_master.id', 'part_category_master.id','companies.id'])
-                    //.distinct('part_master.id as ""')
+                    .groupBy(['part_master.id', 'part_category_master.id', 'companies.id'])
+                //.distinct('part_master.id as ""')
             ])
 
             let tempraryDirectory = null;
