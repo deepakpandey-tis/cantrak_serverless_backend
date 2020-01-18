@@ -1777,13 +1777,20 @@ const assetController = {
             "asset_master.assetCategoryId",
             "asset_category_master.id"
           )
+          .leftJoin(
+            "companies",
+            "asset_master.companyId",
+            "companies.id"
+          )
           .select([
             "asset_master.assetCode as ASSET_CODE",
             "asset_master.assetName as ASSET_NAME",
             "asset_master.unitOfMeasure as UNIT_OF_MEASURE",
             "asset_master.model as MODEL_CODE",
             "asset_category_master.assetCategoryCode as ASSET_CATEGORY_CODE",
-            "asset_category_master.categoryName as ASSET_CATEGORY_NAME"
+            "asset_category_master.categoryName as ASSET_CATEGORY_NAME",
+            "companies.companyId as COMPANY",
+            "asset_master.price as PRICE"
           ])
           .where({ 'asset_master.orgId': req.orgId });
         let assets = assetResult
@@ -1891,7 +1898,9 @@ const assetController = {
           data[0].C == "UNIT_OF_MEASURE" &&
           data[0].D == "MODEL_CODE" &&
           data[0].E == "ASSET_CATEGORY_CODE" &&
-          data[0].F == "ASSET_CATEGORY_NAME"
+          data[0].F == "ASSET_CATEGORY_NAME" &&
+          data[0].G == "COMPANY" &&
+          data[0].H == "PRICE"
           // data[0].G == "CONTACT_PERSON" &&
           // data[0].H == "STATUS"
         ) {
@@ -1911,6 +1920,18 @@ const assetController = {
 
                   // Check if this asset category exists
                   // if not create new and put that id
+                  let companyId = ''
+                  if(assetData.G){
+                    let companyResult = await knex('companies').select('id').where({companyId:assetData.G,orgId:req.orgId}).first()
+                    if(companyResult && companyResult.id){
+                      companyId = companyResult.id
+                    } else {
+                      continue;
+                    }
+                  } else {
+                    continue;
+                  }
+
                   let assetCategoryId = ''
                   const cat = await knex('asset_category_master').where({categoryName:assetData.F,orgId:req.orgId}).select('id')
                   if(cat && cat.length) {
@@ -1919,7 +1940,10 @@ const assetController = {
                     const catResult = await knex('asset_category_master').insert({categoryName:assetData.F,assetCategoryCode:assetData.E,orgId:req.orgId}).returning(['id'])
                     assetCategoryId = catResult[0].id;
                   }
-
+                  let price = 0;
+                  if(assetData.H){
+                    price = assetData.H;
+                  }
                   let currentTime = new Date().getTime();
                   let insertData = {
                     orgId: req.orgId,
@@ -1927,6 +1951,8 @@ const assetController = {
                     assetName: assetData.B,
                     unitOfMeasure: assetData.C,
                     model: assetData.D,
+                    price: assetData.H,
+                    companyId:companyId,
                     assetCategoryId,
                     isActive: true,
                     createdAt: currentTime,
