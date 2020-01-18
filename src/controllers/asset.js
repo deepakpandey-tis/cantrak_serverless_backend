@@ -587,6 +587,9 @@ const assetController = {
                                 ])
             let assetDataResult = assetData[0];
 
+            // Get part data
+            let partData = await knex('part_master').select('*').where({id:assetDataResult.partId}).first()
+
             let team
             let user
             if(assetDataResult.assignedTeams && assetDataResult.assignedUsers){
@@ -675,7 +678,7 @@ const assetController = {
             // }
 
             res.status(200).json({
-                data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, images,assetLocation,qrcode,serviceOrders:service_orders,teamName:team?team.teamName:'',UserName:user?user.name:'' } },
+                data: { asset: { ...omitedAssetDataResult, additionalAttributes, files,partData, images,assetLocation,qrcode,serviceOrders:service_orders,teamName:team?team.teamName:'',UserName:user?user.name:'' } },
                 message: "Asset Details"
             });
 
