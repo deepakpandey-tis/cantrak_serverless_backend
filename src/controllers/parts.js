@@ -439,12 +439,16 @@ const partsController = {
                 .where({ partId: id }).select(
                     'unitCost',
                     'quantity'
-                ).orderBy('id', 'desc')
-            let partQuantityDataResult = partQuantityData
+                ).orderBy('id','desc')//.first()
+                let partQuantityDataResult = {unitCost:0}
+                
+                if(partQuantityData.length > 0) {
+                    partQuantityDataResult = partQuantityData[0]   
+            }
 
             let totalQuantity = 0;
-            for (let i = 0; i < partQuantityDataResult.length; i++) {
-                totalQuantity += parseInt(partQuantityDataResult[i].quantity)
+            for (let i = 0; i < partQuantityData.length; i++) {
+                totalQuantity += parseInt(partQuantityData[i].quantity)
             }
             let totalUnitCost = 0;
 
