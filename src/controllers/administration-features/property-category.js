@@ -705,7 +705,8 @@ const propertyCategoryController = {
                     descriptionThai: categoryData.C,
                     remark: categoryData.D,
                     createdAt: currentTime,
-                    updatedAt: currentTime
+                    updatedAt: currentTime,
+                    createdBy:req.me.id
                   };
 
                   resultData = await knex
