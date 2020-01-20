@@ -56,4 +56,6 @@ router.post('/decline-service-request',authMiddleware.isAuthenticated,serviceReq
 router.post("/approve-service-request",authMiddleware.isAuthenticated,serviceRequestController.approveServiceRequest);
 
 router.post('/delete-service-problem', authMiddleware.isAuthenticated, serviceRequestController.deleteServiceProblem)
+
+router.post('/check-service-request-id',authMiddleware.isAuthenticated,serviceRequestController.checkServiceRequestId)
 module.exports = router;

@@ -8,6 +8,7 @@ const XLSX = require("xlsx");
 const fs = require('fs');
 const path = require('path');
 const emailHelper = require('../helpers/email')
+const uuid = require('uuid/v4')
 const peopleController = {
   addPeople: async (req, res) => {
     try {
@@ -43,6 +44,8 @@ const peopleController = {
         );
         payload.password = hash;
 
+        let uid = uuid();
+        payload.verifyToken= uid;
         let currentTime = new Date().getTime();
         const people = await knex('users').insert({ ...payload, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime }).returning(['*'])
 
@@ -81,7 +84,7 @@ const peopleController = {
         // let roleResult = await knex.insert(insertRoleData).returning(['*']).transacting(trx).into('organisation_user_roles');
         // role = roleResult[0];
 
-        await emailHelper.sendTemplateEmail({ to: payload.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, layout: 'welcome-org-admin.ejs' } })
+        await emailHelper.sendTemplateEmail({ to: payload.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass,uuid:uid, layout: 'welcome-org-admin.ejs' } })
 
         trx.commit;
         res.status(200).json({
@@ -258,6 +261,7 @@ const peopleController = {
               //"companies.companyName",
               //   "organisation_roles.name as roleName"
             ])
+            .orderBy('users.id','desc')
             .offset(offset)
             .limit(per_page)
         ]);
@@ -346,6 +350,7 @@ const peopleController = {
               //"companies.companyName",
               //   "organisation_roles.name as roleName"
             ])
+            .orderBy('users.id','desc')
             .offset(offset)
             .limit(per_page)
             .where({ "users.orgId": req.orgId })

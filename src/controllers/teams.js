@@ -627,6 +627,7 @@ const teamsController = {
                     'teams.teamName',
                     'teams.description',
                     'teams.teamCode',
+                    'teams.isActive'
                 ])
                     .where({ 'teams.teamId': teamId }).returning('*'),
 
@@ -675,6 +676,7 @@ const teamsController = {
     removeTeam: async (req, res) => {
         try {
             let team = null;
+            let message;
             await knex.transaction(async trx => {
                 let peoplePayload = req.body;
                 let id = req.body.id
@@ -693,8 +695,23 @@ const teamsController = {
                 }
 
                 let currentTime = new Date().getTime();
-                let teamData = await knex.update({ isActive: false, updatedAt: currentTime }).where({ teamId: id }).returning(['*']).transacting(trx).into('teams');
-                team = teamData[0];
+                let checkStatus = await knex.from('teams').where({ teamId:id }).returning(['*']);
+
+                if (checkStatus.length) {
+
+                    if (checkStatus[0].isActive == true) {
+
+                        let teamData = await knex.update({ isActive: false, updatedAt: currentTime }).where({ teamId: id }).returning(['*']).transacting(trx).into('teams');
+                        team = teamData[0];
+                        message = "Team Deactivate Successfully!";
+
+                    } else {
+
+                        let teamData = await knex.update({ isActive: true, updatedAt: currentTime }).where({ teamId: id }).returning(['*']).transacting(trx).into('teams');
+                        team = teamData[0];
+                        message = "Team Activate Successfully!";
+                    }
+                }
 
                 trx.commit
             })
@@ -702,7 +719,7 @@ const teamsController = {
                 data: {
                     team: team
                 },
-                message: "Team removed successfully !"
+                message: message
             });
         } catch (err) {
 

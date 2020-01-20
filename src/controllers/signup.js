@@ -532,6 +532,71 @@ const singupController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  /*FORGOT PASSWORD */
+  forgotPassword: async (req, res) => {
+
+    try {
+      let payload = req.body;
+      let emailExistResult = await knex.from('users').where({ email: payload.email }).returning(['*']);
+      if (emailExistResult.length) {
+
+        let uid = uuid();
+        await emailHelper.sendTemplateEmail({
+          to: emailExistResult[0].email,
+          subject: 'Reset Password',
+          template: 'test-email.ejs',
+          templateData: {
+            fullName: emailExistResult[0].name,
+            OTP: 'https://dj47f2ckirq9d.cloudfront.net/reset-password/' + uid
+          }
+        })
+        let result = await knex.from('users').update({ verifyToken: uid }).where({ email: emailExistResult[0].email }).returning(['*']);
+        res.status(200).json({ message: "Password reset link sent. Please check your email!" })
+
+      } else {
+        res.status(500).json({
+          errors: [{ code: "UNKNOWN_SERVER_ERROR", message: "This email address does not exist!" }]
+        });
+      }
+    } catch (err) {
+      console.log(
+        "[controllers][signup][forgotPassword] :  Error",
+        err
+      );
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  /*RESET PASSWORD */
+  resetPassword: async (req, res) => {
+
+    try {
+
+      let payload = req.body;
+      let checkResult = await knex.from('users').where({ verifyToken: payload.uid }).returning(['*']);
+      if (checkResult.length) {
+
+        let hash = await bcrypt.hash(payload.newPassword, saltRounds);
+        let resetResult = await knex.from('users').update({ password: hash ,verifyToken:""}).where({ verifyToken: checkResult[0].verifyToken }).returning(['*']);
+        res.status(200).json({ message: "Password reset successfully!" })
+
+      } else {
+        res.status(500).json({
+          errors: [{ code: "UNKNOWN_SERVER_ERROR", message: "Please use valid reset password url!" }]
+        });
+      }
+
+    } catch (err) {
+      console.log(
+        "[controllers][signup][resetPassword] :  Error",
+        err
+      );
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 

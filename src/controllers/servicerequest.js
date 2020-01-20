@@ -2275,6 +2275,31 @@ const serviceRequestController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  checkServiceRequestId:async(req,res) => {
+    try {
+      const id = req.body.id;
+      const srId = await knex('service_requests').select('id').where({id:id,orgId:req.orgId}).first()
+
+      if(srId){
+        return res.status(200).json({
+          data: {
+            exists:true
+          }
+        })
+      } else {
+        return res.status(200).json({
+          data: {
+            exists: false
+          }
+        })
+      }
+
+    } catch(err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 
