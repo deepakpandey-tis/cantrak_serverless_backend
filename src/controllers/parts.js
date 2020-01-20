@@ -1347,7 +1347,10 @@ const partsController = {
             let offset = (page - 1) * per_page;
 
             let { serviceRequestId } = req.body;
+            let serviceRequestResult = await knex('service_orders').where({ orgId: req.orgId, serviceRequestId: serviceRequestId }).returning(['*'])
 
+            console.log("serviceRequestPArtsData",serviceRequestResult);
+            let serviceOrderId = serviceRequestResult[0].id;
 
             [total, rows] = await Promise.all([
                 knex("part_master")
@@ -1359,11 +1362,14 @@ const partsController = {
                     .select([
                         "part_master.partName as partName",
                         "part_master.id as id",
-                        "part_master.partCode as partCode"
+                        "part_master.partCode as partCode",
+                        "assigned_parts.quantity as quantity",
+                        "assigned_parts.unitCost as unitCost",
+                        "assigned_parts.status as status"
                     ])
                     .where({
-                        entityId: serviceRequestId,
-                        entityType: "service_requests"
+                        "assigned_parts.entityId": serviceOrderId,
+                        "assigned_parts.entityType": "service_orders"
                     }),
                 knex("part_master")
                     .innerJoin(
@@ -1374,11 +1380,14 @@ const partsController = {
                     .select([
                         "part_master.partName as partName",
                         "part_master.id as id",
-                        "part_master.partCode as partCode"
+                        "part_master.partCode as partCode",
+                        "assigned_parts.quantity as quantity",
+                        "assigned_parts.unitCost as unitCost",
+                        "assigned_parts.status as status"
                     ])
                     .where({
-                        entityId: serviceRequestId,
-                        entityType: "service_requests"
+                        "assigned_parts.entityId": serviceOrderId,
+                        "assigned_parts.entityType": "service_orders"
                     })
                     .offset(offset)
                     .limit(per_page)
