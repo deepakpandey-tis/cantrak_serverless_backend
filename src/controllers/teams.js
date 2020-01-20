@@ -523,9 +523,9 @@ const teamsController = {
                         TEAM_CODE: "",
                         TEAM_NAME: "",
                         TEAM_CODE: "",
-                        TEAM_ALTERNATE_NAME:"",
-                        PROJECT_CODE:"",
-                        ROLE_NAME:""
+                        TEAM_ALTERNATE_NAME: "",
+                        PROJECT_CODE: "",
+                        ROLE_NAME: ""
                     }
                 ]);
             }
@@ -775,7 +775,7 @@ const teamsController = {
                             /**GET ROLE ID OPEN */
                             let roleId = null;
                             if (teamData.E) {
-                                let roleData = await knex('organisation_roles').select('id').where({name: teamData.E, orgId: req.orgId });
+                                let roleData = await knex('organisation_roles').select('id').where({ name: teamData.E, orgId: req.orgId });
                                 if (roleData && roleData.length) {
                                     roleId = roleData[0].id
                                 }
@@ -786,7 +786,7 @@ const teamsController = {
                             if (i > 1) {
 
                                 let checkExist = await knex('teams').select("teamId")
-                                    .where({teamCode: teamData.A, orgId: req.orgId })
+                                    .where({ teamCode: teamData.A, orgId: req.orgId })
                                 if (checkExist.length < 1) {
                                     let insertData = {
                                         orgId: req.orgId,
@@ -805,7 +805,7 @@ const teamsController = {
 
                                     if (projectId && roleId) {
                                         let checkRoleMaster = await knex('team_roles_project_master').select("id")
-                                            .where({ teamId: teamId, projectId: projectId, orgId: req.orgId,roleId:roleId })
+                                            .where({ teamId: teamId, projectId: projectId, orgId: req.orgId, roleId: roleId })
 
                                         if (checkRoleMaster.length < 1) {
 
@@ -815,8 +815,8 @@ const teamsController = {
                                                 projectId: projectId,
                                                 createdAt: currentTime,
                                                 updatedAt: currentTime,
-                                                roleId:roleId,
-                                                createdBy:req.me.id
+                                                roleId: roleId,
+                                                createdBy: req.me.id
                                             }
                                             resultProjectData = await knex.insert(insertProjectData).returning(['*']).into('team_roles_project_master');
 
@@ -831,12 +831,12 @@ const teamsController = {
 
                                 } else {
 
-                                  
+
                                     if (projectId && roleId) {
 
-                                        
+
                                         let checkRoleMaster = await knex('team_roles_project_master').select("id")
-                                            .where({ teamId: checkExist[0].teamId, projectId: projectId, orgId: req.orgId ,roleId:roleId})
+                                            .where({ teamId: checkExist[0].teamId, projectId: projectId, orgId: req.orgId, roleId: roleId })
                                         if (checkRoleMaster.length < 1) {
                                             let insertProjectData = {
                                                 orgId: req.orgId,
@@ -844,8 +844,8 @@ const teamsController = {
                                                 projectId: projectId,
                                                 createdAt: currentTime,
                                                 updatedAt: currentTime,
-                                                roleId:roleId,
-                                                createdBy:req.me.id
+                                                roleId: roleId,
+                                                createdBy: req.me.id
                                             }
                                             resultProjectData = await knex.insert(insertProjectData).returning(['*']).into('team_roles_project_master');
                                             if (resultProjectData && resultProjectData.length) {
@@ -898,6 +898,54 @@ const teamsController = {
             //trx.rollback
             res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    /* Get Teams List By Project */
+    getTeamListByProject: async (req, res) => {
+
+        try {
+
+            let teamResult = null;
+            let teamPayload = req.body;
+
+            const schema = Joi.object().keys({
+                projectId: Joi.number().required()
+            })
+            const result = Joi.validate(teamPayload, schema);
+
+            console.log('[controllers][team][teamPeople]: JOi Result', result);
+
+            if (result && result.hasOwnProperty('error') && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: 'VALIDATION_ERROR', message: result.error.message }
+                    ],
+                });
+            }
+
+
+            teamResult = await knex('team_roles_project_master')
+            .leftJoin('teams', 'team_roles_project_master.teamId', 'teams.teamId')
+            .select([
+                'teams.teamName',
+                'teams.teamId'
+            ])
+            .where({ 'team_roles_project_master.projectId': teamPayload.projectId }).returning('*')
+           
+            res.status(200).json({
+                data: {
+                    teams: teamResult
+                },
+                message: "Team list successfully !"
+            })
+
+        } catch (err) {
+            console.log('[controllers][teams][getTeamList] : Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ]
             });
         }
     }

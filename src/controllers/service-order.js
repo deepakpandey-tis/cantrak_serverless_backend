@@ -1784,6 +1784,7 @@ const serviceOrderController = {
         // Define try/catch block
         try {
             let userId = req.me.id;
+            let problemImagesData = [];
 
             await knex.transaction(async trx => {
                 let upNotesPayload = _.omit(req.body, ["images"]);
@@ -1861,8 +1862,12 @@ const serviceOrderController = {
                             .returning(["*"])
                             .transacting(trx)
                             .into("images");
+                        problemImagesData.push(d[0]);
                     }
                 }
+
+                notesData = { ...notesData, s3Url: problemImagesData[0].s3Url }
+
 
                 trx.commit;
 
@@ -1906,7 +1911,7 @@ const serviceOrderController = {
             }
 
             let serviceOrderId = serviceorder.serviceOrderId;
-            let serviceOrderNoteResult = await knex.raw(`select "service_orders_post_update".*,"users"."name" as "createdBy" from "service_orders_post_update"  left join "users" on "service_orders_post_update"."createdBy" = "users"."id" where "service_orders_post_update"."orgId" = ${req.orgId} and "service_orders_post_update"."serviceOrderId" = ${serviceOrderId} and "service_orders_post_update"."isActive" = 'true'`)
+            let serviceOrderNoteResult = await knex.raw(`select "service_orders_post_update".*,"images"."s3Url","users"."name" as "createdBy" from "service_orders_post_update"  left join "users" on "service_orders_post_update"."createdBy" = "users"."id" left join "images" on "service_orders_post_update"."id" = "images"."entityId"  where "service_orders_post_update"."orgId" = ${req.orgId} and "service_orders_post_update"."serviceOrderId" = ${serviceOrderId} and "service_orders_post_update"."isActive" = 'true'`)
 
             serviceOrderNoteList = serviceOrderNoteResult.rows;
 

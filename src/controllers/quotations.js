@@ -469,7 +469,7 @@ const quotationsController = {
             )
             .leftJoin("users", "quotations.createdBy", "users.id")
             .where("quotations.orgId", req.orgId)
-            .groupBy(["quotations.id", "service_requests.id","assigned_service_team.id","users.id"]),
+            .groupBy(["quotations.id", "service_requests.id", "assigned_service_team.id", "users.id"]),
           knex
             .from("quotations")
             .innerJoin(
@@ -495,7 +495,7 @@ const quotationsController = {
               "quotations.quotationStatus as Status",
               "quotations.createdAt as Date Created"
             ])
-            .groupBy(["quotations.id", "service_requests.id","assigned_service_team.id","users.id"])
+            .groupBy(["quotations.id", "service_requests.id", "assigned_service_team.id", "users.id"])
             .offset(offset)
             .limit(per_page)
         ]);
@@ -812,6 +812,8 @@ const quotationsController = {
     // Define try/catch block
     try {
       let userId = req.me.id;
+      let problemImagesData = [];
+
 
       await knex.transaction(async trx => {
         let upNotesPayload = _.omit(req.body, ["images"]);
@@ -889,8 +891,13 @@ const quotationsController = {
               .returning(["*"])
               .transacting(trx)
               .into("images");
+            problemImagesData.push(d[0]);
           }
         }
+
+        /*INSERT IMAGE TABLE DATA CLOSE */
+
+        notesData = { ...notesData, s3Url: problemImagesData[0].s3Url }
 
         trx.commit;
 
@@ -944,7 +951,7 @@ const quotationsController = {
       //     orgId: req.orgId
       //   });
       // surveyOrderNoteList = surveyOrderNoteResult;
-      let quotationNoteResult = await knex.raw(`select "quotation_post_update".*,"users"."name" as "createdBy" from "quotation_post_update"  left join "users" on "quotation_post_update"."createdBy" = "users"."id" where "quotation_post_update"."orgId" = ${req.orgId} and "quotation_post_update"."quotationId" = ${quotationId} and "quotation_post_update"."isActive" = 'true'`)
+      let quotationNoteResult = await knex.raw(`select "quotation_post_update".*,"images"."s3Url","users"."name" as "createdBy" from "quotation_post_update"  left join "users" on "quotation_post_update"."createdBy" = "users"."id"  left join "images" on "quotation_post_update"."id" = "images"."entityId"  where "quotation_post_update"."orgId" = ${req.orgId} and "quotation_post_update"."quotationId" = ${quotationId} and "quotation_post_update"."isActive" = 'true'`)
 
       quotationNoteList = quotationNoteResult.rows;
 

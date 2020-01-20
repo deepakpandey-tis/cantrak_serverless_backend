@@ -584,16 +584,18 @@ const assetController = {
                                 //  'part_master.partCode',
                                   //'part_master.partName'
                                 //  'vendor_master.name as assignedVendor'
-                                ])
-            let assetDataResult = assetData[0];
+                                ]).first();
+            let assetDataResult = assetData;
 
             // Get part data
-            let partData = await knex('part_master').select('*').where({id:assetDataResult.partId}).first()
+            let partData = null;
+            if(assetDataResult && assetDataResult.partId){
+              partData = await knex('part_master').select('*').where({id:assetDataResult.partId}).first()
+            }
 
             let team
             let user
             if(assetDataResult.assignedTeams && assetDataResult.assignedUsers){
-
               team = await knex('teams').select('teamName').where({teamId:assetDataResult.assignedTeams}).first()
               user = await knex('users').select('name').where({id:assetDataResult.assignedUsers}).first()
             }
