@@ -523,9 +523,9 @@ const teamsController = {
                         TEAM_CODE: "",
                         TEAM_NAME: "",
                         TEAM_CODE: "",
-                        TEAM_ALTERNATE_NAME:"",
-                        PROJECT_CODE:"",
-                        ROLE_NAME:""
+                        TEAM_ALTERNATE_NAME: "",
+                        PROJECT_CODE: "",
+                        ROLE_NAME: ""
                     }
                 ]);
             }
@@ -627,6 +627,7 @@ const teamsController = {
                     'teams.teamName',
                     'teams.description',
                     'teams.teamCode',
+                    'teams.isActive'
                 ])
                     .where({ 'teams.teamId': teamId }).returning('*'),
 
@@ -675,6 +676,7 @@ const teamsController = {
     removeTeam: async (req, res) => {
         try {
             let team = null;
+            let message;
             await knex.transaction(async trx => {
                 let peoplePayload = req.body;
                 let id = req.body.id
@@ -693,8 +695,23 @@ const teamsController = {
                 }
 
                 let currentTime = new Date().getTime();
-                let teamData = await knex.update({ isActive: false, updatedAt: currentTime }).where({ teamId: id }).returning(['*']).transacting(trx).into('teams');
-                team = teamData[0];
+                let checkStatus = await knex.from('teams').where({ teamId:id }).returning(['*']);
+
+                if (checkStatus.length) {
+
+                    if (checkStatus[0].isActive == true) {
+
+                        let teamData = await knex.update({ isActive: false, updatedAt: currentTime }).where({ teamId: id }).returning(['*']).transacting(trx).into('teams');
+                        team = teamData[0];
+                        message = "Team Deactivate Successfully!";
+
+                    } else {
+
+                        let teamData = await knex.update({ isActive: true, updatedAt: currentTime }).where({ teamId: id }).returning(['*']).transacting(trx).into('teams');
+                        team = teamData[0];
+                        message = "Team Activate Successfully!";
+                    }
+                }
 
                 trx.commit
             })
@@ -702,7 +719,7 @@ const teamsController = {
                 data: {
                     team: team
                 },
-                message: "Team removed successfully !"
+                message: message
             });
         } catch (err) {
 
@@ -775,7 +792,7 @@ const teamsController = {
                             /**GET ROLE ID OPEN */
                             let roleId = null;
                             if (teamData.E) {
-                                let roleData = await knex('organisation_roles').select('id').where({name: teamData.E, orgId: req.orgId });
+                                let roleData = await knex('organisation_roles').select('id').where({ name: teamData.E, orgId: req.orgId });
                                 if (roleData && roleData.length) {
                                     roleId = roleData[0].id
                                 }
@@ -786,7 +803,7 @@ const teamsController = {
                             if (i > 1) {
 
                                 let checkExist = await knex('teams').select("teamId")
-                                    .where({teamCode: teamData.A, orgId: req.orgId })
+                                    .where({ teamCode: teamData.A, orgId: req.orgId })
                                 if (checkExist.length < 1) {
                                     let insertData = {
                                         orgId: req.orgId,
@@ -805,7 +822,7 @@ const teamsController = {
 
                                     if (projectId && roleId) {
                                         let checkRoleMaster = await knex('team_roles_project_master').select("id")
-                                            .where({ teamId: teamId, projectId: projectId, orgId: req.orgId,roleId:roleId })
+                                            .where({ teamId: teamId, projectId: projectId, orgId: req.orgId, roleId: roleId })
 
                                         if (checkRoleMaster.length < 1) {
 
@@ -815,8 +832,8 @@ const teamsController = {
                                                 projectId: projectId,
                                                 createdAt: currentTime,
                                                 updatedAt: currentTime,
-                                                roleId:roleId,
-                                                createdBy:req.me.id
+                                                roleId: roleId,
+                                                createdBy: req.me.id
                                             }
                                             resultProjectData = await knex.insert(insertProjectData).returning(['*']).into('team_roles_project_master');
 
@@ -831,12 +848,12 @@ const teamsController = {
 
                                 } else {
 
-                                  
+
                                     if (projectId && roleId) {
 
-                                        
+
                                         let checkRoleMaster = await knex('team_roles_project_master').select("id")
-                                            .where({ teamId: checkExist[0].teamId, projectId: projectId, orgId: req.orgId ,roleId:roleId})
+                                            .where({ teamId: checkExist[0].teamId, projectId: projectId, orgId: req.orgId, roleId: roleId })
                                         if (checkRoleMaster.length < 1) {
                                             let insertProjectData = {
                                                 orgId: req.orgId,
@@ -844,8 +861,8 @@ const teamsController = {
                                                 projectId: projectId,
                                                 createdAt: currentTime,
                                                 updatedAt: currentTime,
-                                                roleId:roleId,
-                                                createdBy:req.me.id
+                                                roleId: roleId,
+                                                createdBy: req.me.id
                                             }
                                             resultProjectData = await knex.insert(insertProjectData).returning(['*']).into('team_roles_project_master');
                                             if (resultProjectData && resultProjectData.length) {

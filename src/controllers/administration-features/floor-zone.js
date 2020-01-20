@@ -225,8 +225,7 @@ const floorZoneController = {
 
       floorZone = _.omit(floorZoneResult[0], [
         "createdAt",
-        "updatedAt",
-        "isActive"
+        "updatedAt"
       ]);
       return res.status(200).json({
         data: {
@@ -245,6 +244,7 @@ const floorZoneController = {
     try {
       let floorZone = null;
       let orgId = req.orgId;
+      let message;
       await knex.transaction(async trx => {
         let payload = req.body;
         const schema = Joi.object().keys({
@@ -258,20 +258,40 @@ const floorZoneController = {
             ]
           });
         }
-        let floorZoneResult = await knex
-          .update({ isActive: false })
-          .where({ id: payload.id, orgId: orgId })
-          .returning(["*"])
-          .transacting(trx)
-          .into("floor_and_zones");
-        floorZone = floorZoneResult[0];
+        let floorZoneResult;
+        let checkStatus = await knex.from('floor_and_zones').where({ id: payload.id }).returning(['*'])
+        if (checkStatus && checkStatus.length) {
+
+          if (checkStatus[0].isActive == true) {
+
+            let floorZoneResult = await knex
+              .update({ isActive: false })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("floor_and_zones");
+            floorZone = floorZoneResult[0];
+            message = "Floor deactivate successfully!"
+
+          } else {
+
+            let floorZoneResult = await knex
+              .update({ isActive: true })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("floor_and_zones");
+            floorZone = floorZoneResult[0];
+            message = "Floor activate successfully!"
+          }
+        }
         trx.commit;
       });
       return res.status(200).json({
         data: {
           floorZone: floorZone
         },
-        message: "Floor/Zone deleted!"
+        message: message
       });
     } catch (err) {
       console.log("[controllers][generalsetup][viewfloorZone] :  Error", err);
@@ -290,7 +310,7 @@ const floorZoneController = {
         projectId,
         buildingPhaseId,
         floorZoneCode,
-         } = req.body;
+      } = req.body;
       let pagination = {};
 
       if (companyId || projectId || buildingPhaseId || floorZoneCode) {
@@ -320,17 +340,17 @@ const floorZoneController = {
             .leftJoin("property_types", "floor_and_zones.propertyTypeId", "property_types.id")
             .where({ "buildings_and_phases.isActive": true })
             .where({ "floor_and_zones.orgId": orgId })
-            .where(qb=>{
+            .where(qb => {
               if (companyId) {
                 qb.where('floor_and_zones.companyId', companyId)
               }
 
               if (projectId) {
                 qb.where('floor_and_zones.projectId', projectId)
-              }      
+              }
 
               if (buildingPhaseId) {
-                qb.where('floor_and_zones.buildingPhaseId',buildingPhaseId)
+                qb.where('floor_and_zones.buildingPhaseId', buildingPhaseId)
               }
 
               if (floorZoneCode) {
@@ -359,17 +379,17 @@ const floorZoneController = {
             ])
             .where({ "buildings_and_phases.isActive": true })
             .where({ "floor_and_zones.orgId": orgId })
-            .where(qb=>{
+            .where(qb => {
               if (companyId) {
                 qb.where('floor_and_zones.companyId', companyId)
               }
 
               if (projectId) {
                 qb.where('floor_and_zones.projectId', projectId)
-              }      
+              }
 
               if (buildingPhaseId) {
-                qb.where('floor_and_zones.buildingPhaseId',buildingPhaseId)
+                qb.where('floor_and_zones.buildingPhaseId', buildingPhaseId)
               }
 
               if (floorZoneCode) {
@@ -391,7 +411,7 @@ const floorZoneController = {
         pagination.current_page = page;
         pagination.from = offset;
         pagination.data = rows;
-        
+
       } else {
 
         let per_page = reqData.per_page || 10;
@@ -445,7 +465,7 @@ const floorZoneController = {
         pagination.current_page = page;
         pagination.from = offset;
         pagination.data = rows;
-        
+
       }
 
       return res.status(200).json({
@@ -762,7 +782,7 @@ const floorZoneController = {
                 companyId = companyData[0].id;
                 let projectData = await knex("projects")
                   .select("id")
-                  .where({ project: floorData.C,companyId:companyId, orgId: req.orgId });
+                  .where({ project: floorData.C, companyId: companyId, orgId: req.orgId });
                 if (projectData && projectData.length) {
                   projectId = projectData[0].id;
                   let buildingData = await knex("buildings_and_phases")
@@ -778,7 +798,7 @@ const floorZoneController = {
                 fail++;
                 continue;
               }
-              
+
               /**GET PROPERTY TYPE ID OPEN */
               let propertTypeData = await knex("property_types")
                 .select("id")
@@ -794,12 +814,12 @@ const floorZoneController = {
               /**GET PROPERTY TYPE ID CLOSE */
 
               /**GET BUILDING PHASE ID OPEN */
-              
+
               if (!buildingId) {
                 fail++;
                 continue;
               }
-              
+
               /**GET BUILDING PHASE ID CLOSE */
 
               if (i > 1) {
@@ -808,7 +828,8 @@ const floorZoneController = {
                   .where({
                     floorZoneCode: floorData.G,
                     buildingPhaseId: buildingId,
-                    orgId: req.orgId });
+                    orgId: req.orgId
+                  });
                 if (checkExist.length < 1) {
                   let currentTime = new Date().getTime();
                   let insertData = {
