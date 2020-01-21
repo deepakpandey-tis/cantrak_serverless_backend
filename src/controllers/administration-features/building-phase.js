@@ -270,6 +270,7 @@ const buildingPhaseController = {
             ]
           });
         }
+        
 
         let buildingPhaseResult;
         let checkStatus = await knex.from('buildings_and_phases').where({ id:payload.id }).returning(['*'])

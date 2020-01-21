@@ -16,6 +16,7 @@ const path = require("path");
 const floorZoneController = {
   addFloorZone: async (req, res) => {
     try {
+      
       let floorZone = null;
       let userId = req.me.id;
       let orgId = req.orgId;
