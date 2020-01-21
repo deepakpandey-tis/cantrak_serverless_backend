@@ -82,7 +82,12 @@ const quotationsController = {
 
         // validate keys
         const schema = Joi.object().keys({
-          serviceRequestId: Joi.number().required(),
+          serviceRequestId: Joi.string().allow('').optional(),
+          company: Joi.number().required(),
+          project: Joi.number().required(),
+          building: Joi.number().required(),
+          floor: Joi.number().required(),
+          unit: Joi.number().required(),
           quotationId: Joi.number().required(),
           checkedBy: Joi.string().required(),
           inspectedBy: Joi.string().required(),
@@ -106,10 +111,20 @@ const quotationsController = {
 
         // Insert in quotation table,
         const currentTime = new Date().getTime();
+        let serId = 0
+
+        if(quotationPayload.serviceRequestId){
+           serId = quotationPayload.serviceRequestId
+        }
 
         const updateQuotationReq = await knex
           .update({
-            serviceRequestId: quotationPayload.serviceRequestId,
+            serviceRequestId: serId,
+            companyId: quotationPayload.company,
+            projectId: quotationPayload.project,
+            buildingId: quotationPayload.building,
+            floorId: quotationPayload.floor,
+            unitId: quotationPayload.unit,
             checkedBy: quotationPayload.checkedBy,
             inspectedBy: quotationPayload.inspectedBy,
             acknowledgeBy: quotationPayload.acknowledgeBy,
@@ -176,6 +191,11 @@ const quotationsController = {
         let quotationRequestId = payload.quotationId;
 
         quotationView = await knex("quotations")
+          .leftJoin('companies','quotations.companyId','companies.id')
+          .leftJoin('projects','quotations.projectId','projects.id')
+          .leftJoin('buildings_and_phases','quotations.buildingId','buildings_and_phases.id')
+          .leftJoin('floor_and_zones', 'quotations.floorId','floor_and_zones.id')
+          .leftJoin('property_units','quotations.unitId','property_units.id')
           .leftJoin(
             "assigned_service_team as astm", "astm.entityId", "=", "quotations.id",
             "astm.entityType", "=", "quotations"
@@ -197,9 +217,22 @@ const quotationsController = {
             "quotations.id as quotationId",
             "checkUser.name as checkedBy",
             "inspectedUser.name as inspectedBy",
+            "checkUser.id as checkedByUserId",
+            "inspectedUser.id as inspectedByUserId",
+            "acknowledgeUser.id as acknowledgeByUserId",
             "acknowledgeUser.name as acknowledgeBy",
             "quotations.createdAt",
             "quotations.quotationStatus",
+            "companies.companyName",
+            "projects.projectName",
+            "buildings_and_phases.buildingPhaseCode",
+            "floor_and_zones.floorZoneCode",
+            "property_units.unitNumber",
+            "companies.id as companyId",
+            "projects.id as projectId",
+            "buildings_and_phases.id as buildingId",
+            "floor_and_zones.id as floorId",
+            "property_units.id as unitId",
             "teams.teamName as assignTeam",
             "astUser.name as assignedMainUsers",
             "authUser.name as createdBy",
@@ -456,8 +489,13 @@ const quotationsController = {
         [total, rows] = await Promise.all([
           knex
             .count("* as count")
+            .leftJoin('companies', 'quotations.companyId', 'companies.id')
+            .leftJoin('projects', 'quotations.projectId', 'projects.id')
+            .leftJoin('buildings_and_phases', 'quotations.buildingId', 'buildings_and_phases.id')
+            .leftJoin('floor_and_zones', 'quotations.floorId', 'floor_and_zones.id')
+            .leftJoin('property_units', 'quotations.unitId', 'property_units.id')
             .from("quotations")
-            .innerJoin(
+            .leftJoin(
               "service_requests",
               "quotations.serviceRequestId",
               "service_requests.id"
@@ -469,10 +507,20 @@ const quotationsController = {
             )
             .leftJoin("users", "quotations.createdBy", "users.id")
             .where("quotations.orgId", req.orgId)
-            .groupBy(["quotations.id", "service_requests.id","assigned_service_team.id","users.id"]),
+            .havingNotNull('quotations.quotationStatus')
+            .groupBy(["quotations.id", "service_requests.id", "assigned_service_team.id", "users.id", "companies.companyName",
+              "projects.projectName",
+              "buildings_and_phases.buildingPhaseCode",
+              "floor_and_zones.floorZoneCode",
+              "property_units.unitNumber",]),
           knex
             .from("quotations")
-            .innerJoin(
+            .leftJoin('companies', 'quotations.companyId', 'companies.id')
+            .leftJoin('projects', 'quotations.projectId', 'projects.id')
+            .leftJoin('buildings_and_phases', 'quotations.buildingId', 'buildings_and_phases.id')
+            .leftJoin('floor_and_zones', 'quotations.floorId', 'floor_and_zones.id')
+            .leftJoin('property_units', 'quotations.unitId', 'property_units.id')
+            .leftJoin(
               "service_requests",
               "quotations.serviceRequestId",
               "service_requests.id"
@@ -492,10 +540,21 @@ const quotationsController = {
               "service_requests.id as SRID",
               "service_requests.priority as Priority",
               "users.name as Created By",
+              "companies.companyName",
+              "projects.projectName",
+              "buildings_and_phases.buildingPhaseCode",
+              "floor_and_zones.floorZoneCode",
+              "property_units.unitNumber",
+              
               "quotations.quotationStatus as Status",
               "quotations.createdAt as Date Created"
             ])
-            .groupBy(["quotations.id", "service_requests.id","assigned_service_team.id","users.id"])
+            .havingNotNull('quotations.quotationStatus')
+            .groupBy(["quotations.id", "service_requests.id", "assigned_service_team.id", "users.id", "companies.companyName",
+              "projects.projectName",
+              "buildings_and_phases.buildingPhaseCode",
+              "floor_and_zones.floorZoneCode",
+              "property_units.unitNumber",])
             .offset(offset)
             .limit(per_page)
         ]);
@@ -510,7 +569,12 @@ const quotationsController = {
             knex
               .count("* as count")
               .from("quotations")
-              .innerJoin(
+              .leftJoin('companies', 'quotations.companyId', 'companies.id')
+              .leftJoin('projects', 'quotations.projectId', 'projects.id')
+              .leftJoin('buildings_and_phases', 'quotations.buildingId', 'buildings_and_phases.id')
+              .leftJoin('floor_and_zones', 'quotations.floorId', 'floor_and_zones.id')
+              .leftJoin('property_units', 'quotations.unitId', 'property_units.id')
+              .leftJoin(
                 "service_requests",
                 "quotations.serviceRequestId",
                 "service_requests.id"
@@ -532,15 +596,25 @@ const quotationsController = {
                 }
                 qb.where("quotations.orgId", req.orgId)
               })
+              .havingNotNull('quotations.quotationStatus')
               .groupBy([
                 "quotations.id",
                 "service_requests.id",
                 "assigned_service_team.id",
-                "users.id"
+                "users.id", "companies.companyName",
+                "projects.projectName",
+                "buildings_and_phases.buildingPhaseCode",
+                "floor_and_zones.floorZoneCode",
+                "property_units.unitNumber",
               ]),
             knex
               .from("quotations")
-              .innerJoin(
+              .leftJoin('companies', 'quotations.companyId', 'companies.id')
+              .leftJoin('projects', 'quotations.projectId', 'projects.id')
+              .leftJoin('buildings_and_phases', 'quotations.buildingId', 'buildings_and_phases.id')
+              .leftJoin('floor_and_zones', 'quotations.floorId', 'floor_and_zones.id')
+              .leftJoin('property_units', 'quotations.unitId', 'property_units.id')
+              .leftJoin(
                 "service_requests",
                 "quotations.serviceRequestId",
                 "service_requests.id"
@@ -558,6 +632,12 @@ const quotationsController = {
                 "service_requests.id as SRID",
                 "service_requests.priority as Priority",
                 "users.name as Created By",
+                "companies.companyName",
+                "projects.projectName",
+                "buildings_and_phases.buildingPhaseCode",
+                "floor_and_zones.floorZoneCode",
+                "property_units.unitNumber",
+                
                 "quotations.quotationStatus as Status",
                 "quotations.createdAt as Date Created"
               ])
@@ -812,6 +892,8 @@ const quotationsController = {
     // Define try/catch block
     try {
       let userId = req.me.id;
+      let problemImagesData = [];
+
 
       await knex.transaction(async trx => {
         let upNotesPayload = _.omit(req.body, ["images"]);
@@ -889,7 +971,14 @@ const quotationsController = {
               .returning(["*"])
               .transacting(trx)
               .into("images");
+            problemImagesData.push(d[0]);
           }
+        }
+
+        /*INSERT IMAGE TABLE DATA CLOSE */
+
+        if (problemImagesData[0] && problemImagesData[0].s3Url){
+          notesData = { ...notesData, s3Url: problemImagesData[0].s3Url }
         }
 
         trx.commit;
@@ -944,7 +1033,7 @@ const quotationsController = {
       //     orgId: req.orgId
       //   });
       // surveyOrderNoteList = surveyOrderNoteResult;
-      let quotationNoteResult = await knex.raw(`select "quotation_post_update".*,"users"."name" as "createdBy" from "quotation_post_update"  left join "users" on "quotation_post_update"."createdBy" = "users"."id" where "quotation_post_update"."orgId" = ${req.orgId} and "quotation_post_update"."quotationId" = ${quotationId} and "quotation_post_update"."isActive" = 'true'`)
+      let quotationNoteResult = await knex.raw(`select "quotation_post_update".*,"images"."s3Url","users"."name" as "createdBy" from "quotation_post_update"  left join "users" on "quotation_post_update"."createdBy" = "users"."id"  left join "images" on "quotation_post_update"."id" = "images"."entityId"  where "quotation_post_update"."orgId" = ${req.orgId} and "quotation_post_update"."quotationId" = ${quotationId} and "quotation_post_update"."isActive" = 'true'`)
 
       quotationNoteList = quotationNoteResult.rows;
 
@@ -1322,7 +1411,7 @@ const quotationsController = {
           vatRate: Joi.number().required(),
         })
         const schema = Joi.object().keys({
-          serviceRequestId: Joi.number().required(),
+          serviceRequestId: Joi.string().allow('').optional(),
           quotationId: Joi.number().required(),
           quotationData: Joi.array().items(quotationSingle)
         });
@@ -1345,10 +1434,15 @@ const quotationsController = {
 
         // Update in quotation update table,
         const currentTime = new Date().getTime();
+        let srId = 0
+
+        if(quotationPayload.serviceRequestId){
+          srId = quotationPayload.serviceRequestId
+        }
 
         const updateQuotationReq = await knex
           .update({
-            serviceRequestId: quotationPayload.serviceRequestId,
+            serviceRequestId: srId,
             invoiceData: JSON.stringify(quotationPayload.quotationData),
             updatedAt: currentTime
           })
@@ -1427,6 +1521,23 @@ const quotationsController = {
       console.log("[controllers][quotation][updateQuotation] :  Error", err);
       //trx.rollback
       res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+
+  deleteQuotation:async (req,res) => {
+    try {
+      const id = req.body.id;
+      const deletedRow = await knex('quotations').where({id}).del().returning(['*'])
+      return res.status(200).json({
+        data: {
+          deletedRow,
+          message: 'Deleted row successfully!'
+        }
+      })
+    } catch(err) {
+      return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }

@@ -413,7 +413,7 @@ const serviceDetailsController = {
         DataResult = _.omit(
           DataResult[0],
           ["companyId"],
-          ["projectId"],
+          // ["projectId"],
           ["propertyTypeId"],
           ["buildingPhaseId"],
           ["floorZoneId"],

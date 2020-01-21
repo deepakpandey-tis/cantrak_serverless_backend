@@ -893,9 +893,9 @@ const chargeController = {
                     whtId: whtId,
                     createdBy: req.me.id,
                     createdAt: currentTime,
-                    glAccountCode:chargesData.H,
-                    calculationUnit:chargesData.D,
-                    rate:chargesData.E,
+                    glAccountCode: chargesData.H,
+                    calculationUnit: chargesData.D,
+                    rate: chargesData.E,
                   };
 
                   resultData = await knex
@@ -1084,6 +1084,86 @@ const chargeController = {
           .where({
             entityId: serviceOrderId,
             entityType: "service_orders"
+          })
+          .offset(offset)
+          .limit(per_page)
+      ]);
+
+
+      let count = total.length;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+      return res.status(200).json({
+        data: {
+          assignedCharges: pagination
+        }
+      })
+
+
+    } catch (err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getServiceRequestAssignedCharges: async (req, res) => {
+    try {
+      let reqData = req.query;
+      let total, rows;
+
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+      let { serviceRequestId } = req.body;
+      let serviceRequestResult = await knex('service_orders').where({ orgId: req.orgId, serviceRequestId: serviceRequestId }).returning(['*'])
+
+      console.log("serviceRequestPArtsData",serviceRequestResult);
+      let serviceOrderId = serviceRequestResult[0].id;
+      
+      [total, rows] = await Promise.all([
+        knex("charge_master")
+          .innerJoin(
+            "assigned_service_charges",
+            "charge_master.id",
+            "assigned_service_charges.chargeId"
+          )
+          .select([
+            "charge_master.chargeCode as chargeCode",
+            "charge_master.id as id",
+            "charge_master.calculationUnit as calculationUnit",
+            "assigned_service_charges.rate as rate",
+            "assigned_service_charges.totalHours as totalHours"
+          ])
+          .where({
+            "assigned_service_charges.entityId": serviceOrderId,
+            "assigned_service_charges.entityType": "service_orders"
+          }),
+        knex("charge_master")
+          .innerJoin(
+            "assigned_service_charges",
+            "charge_master.id",
+            "assigned_service_charges.chargeId"
+          )
+          .select([
+            "charge_master.chargeCode as chargeCode",
+            "charge_master.id as id",
+            "charge_master.calculationUnit as calculationUnit",
+            "assigned_service_charges.rate as rate",
+            "assigned_service_charges.totalHours as totalHours"
+          ])
+          .where({
+            "assigned_service_charges.entityId": serviceOrderId,
+            "assigned_service_charges.entityType": "service_orders"
           })
           .offset(offset)
           .limit(per_page)

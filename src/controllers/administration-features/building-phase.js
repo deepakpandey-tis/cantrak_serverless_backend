@@ -254,6 +254,7 @@ const buildingPhaseController = {
   deleteBuildingPhase: async (req, res) => {
     try {
       let buildingPhase = null;
+      let message;
       await knex.transaction(async trx => {
         let payload = req.body;
         let orgId = req.orgId;
@@ -269,14 +270,35 @@ const buildingPhaseController = {
             ]
           });
         }
+        
 
-        let buildingPhaseResult = await knex
-          .update({ isActive: false })
-          .where({ id: payload.id, orgId: orgId })
-          .returning(["*"])
-          .transacting(trx)
-          .into("buildings_and_phases");
-        buildingPhase = buildingPhaseResult[0];
+        let buildingPhaseResult;
+        let checkStatus = await knex.from('buildings_and_phases').where({ id:payload.id }).returning(['*'])
+        if (checkStatus && checkStatus.length) {
+
+          if (checkStatus[0].isActive == true) {
+
+            let buildingPhaseResult = await knex
+              .update({ isActive: false })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("buildings_and_phases");
+            buildingPhase = buildingPhaseResult[0];
+            message = "Building Phase deactivate successfully!"
+
+          } else {
+
+            let buildingPhaseResult = await knex
+              .update({ isActive: true })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("buildings_and_phases");
+            buildingPhase = buildingPhaseResult[0];
+            message = "Building Phase activate successfully!"
+          }
+        }
         trx.commit;
       });
 
@@ -284,7 +306,7 @@ const buildingPhaseController = {
         data: {
           buildingPhase: buildingPhase
         },
-        message: "Building Phase deleted!"
+        message: message
       });
     } catch (err) {
       console.log(
@@ -403,7 +425,7 @@ const buildingPhaseController = {
               }
 
             })
-            .orderBy('buildings_and_phases.id','desc')
+            .orderBy('buildings_and_phases.id', 'desc')
             .select([
               "buildings_and_phases.id as id",
               "buildings_and_phases.buildingPhaseCode as Building/Phase",
@@ -839,24 +861,24 @@ const buildingPhaseController = {
               if (companyIdResult && companyIdResult.length) {
                 companyId = companyIdResult[0].id;
 
-              let projectIdResult = await knex("projects")
-                .select("id")
-                .where({ project: buildingData.C,companyId:companyId, orgId: req.orgId });
-              
-              if (projectIdResult && projectIdResult.length) {
-                projectId = projectIdResult[0].id;
-              }
+                let projectIdResult = await knex("projects")
+                  .select("id")
+                  .where({ project: buildingData.C, companyId: companyId, orgId: req.orgId });
+
+                if (projectIdResult && projectIdResult.length) {
+                  projectId = projectIdResult[0].id;
+                }
 
               }
 
-              
+
 
               let propertyTypeIdResult = await knex("property_types")
                 .select("id")
                 .where({ propertyTypeCode: buildingData.E, orgId: req.orgId });
 
 
-              
+
 
               console.log(
                 "propertyTypeIdResult*****************************************: ",
@@ -866,8 +888,8 @@ const buildingPhaseController = {
                 propertyTypeId = propertyTypeIdResult[0].id;
               }
 
-              
-              
+
+
               if (!companyId) {
                 console.log("breaking due to: null companyId");
                 fail++;
@@ -896,7 +918,7 @@ const buildingPhaseController = {
                 orgId: req.orgId,
                 buildingPhaseCode: buildingData.F,
                 // companyId:companyId,
-                projectId:projectId
+                projectId: projectId
               });
               if (checkExistance.length) {
                 fail++;

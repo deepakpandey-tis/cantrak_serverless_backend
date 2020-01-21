@@ -50,6 +50,7 @@ router.post("/import-charge-data", upload.single("file"), authMiddleware.isAuthe
 
 router.post("/get-quotation-assigned-charges",authMiddleware.isAuthenticated,chargeController.getQuotationAssignedCharges)
 router.post("/get-service-order-assigned-charges",authMiddleware.isAuthenticated,chargeController.getServiceOrderAssignedCharges)
+router.post("/get-service-request-assigned-charges",authMiddleware.isAuthenticated,chargeController.getServiceRequestAssignedCharges)
 
 
 

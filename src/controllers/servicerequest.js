@@ -2022,7 +2022,7 @@ const serviceRequestController = {
             problemResult
           }
         },
-        message: "Serive Request Details Successfully!"
+        message: "Service Request Details Successful!"
       });
     } catch (err) {
       return res.status(500).json({
@@ -2270,6 +2270,58 @@ const serviceRequestController = {
           deletedProblem
         }
       })
+    } catch(err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  checkServiceRequestId:async(req,res) => {
+    try {
+      const id = req.body.id;
+
+      if(!id){
+        return res.status(200).json({
+          data: {
+            exists: false,
+            //propertyData:data
+          }
+        })
+      }
+
+      const srId = await knex('service_requests').select('*').where({id:id,orgId:req.orgId}).first()
+      //const houseId = srId.houseId;
+      //console.log('HOUSEID :**************************: ',houseId)
+      
+      //console.log('Data :**************************: ', data)
+
+      if(srId){
+        const data = await knex('property_units')
+          .select([
+            "property_units.companyId",
+            "property_units.projectId",
+            "property_units.buildingPhaseId",
+            "property_units.floorZoneId",
+            "property_units.unitNumber",
+            "property_units.id as unitId"
+          ])
+          .where({ id: srId.houseId, orgId: req.orgId }).first()
+        return res.status(200).json({
+          data: {
+            exists:true,
+            propertyData:data
+
+          }
+        })
+      } else {
+        return res.status(200).json({
+          data: {
+            exists: false,
+            //propertyData:data
+          }
+        })
+      }
+
     } catch(err) {
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
