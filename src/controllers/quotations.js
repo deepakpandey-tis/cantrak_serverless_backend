@@ -977,7 +977,9 @@ const quotationsController = {
 
         /*INSERT IMAGE TABLE DATA CLOSE */
 
-        notesData = { ...notesData, s3Url: problemImagesData[0].s3Url }
+        if (problemImagesData[0] && problemImagesData[0].s3Url){
+          notesData = { ...notesData, s3Url: problemImagesData[0].s3Url }
+        }
 
         trx.commit;
 
@@ -1519,6 +1521,23 @@ const quotationsController = {
       console.log("[controllers][quotation][updateQuotation] :  Error", err);
       //trx.rollback
       res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+
+  deleteQuotation:async (req,res) => {
+    try {
+      const id = req.body.id;
+      const deletedRow = await knex('quotations').where({id}).del().returning(['*'])
+      return res.status(200).json({
+        data: {
+          deletedRow,
+          message: 'Deleted row successfully!'
+        }
+      })
+    } catch(err) {
+      return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
