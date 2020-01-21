@@ -23,7 +23,7 @@ const serviceOrderController = {
 
                 const schema = Joi.object().keys({
                     serviceRequestId: Joi.number().required(),
-                    orderDueDate: Joi.date().required()
+                    orderDueDate: Joi.date().allow("").optional()
                 })
 
                 let result = Joi.validate(serviceOrderPayload, schema);
@@ -40,13 +40,18 @@ const serviceOrderController = {
 
 
                 let currentTime = new Date().getTime();
-
+                let newDueDate;
+                if(serviceOrderPayload.orderDueDate){
+                    newDueDate = new Date(serviceOrderPayload.orderDueDate).getTime();
+                }else{  
+                    newDueDate = new Date().getTime();
+                }
 
                 // Insert into service_orders
 
                 let inserServiceOrderPayload = {
                     ...serviceOrderPayload,
-                    orderDueDate: new Date(serviceOrderPayload.orderDueDate).getTime(),
+                    orderDueDate: newDueDate,
                     createdAt: currentTime,
                     updatedAt: currentTime,
                     orgId: req.orgId

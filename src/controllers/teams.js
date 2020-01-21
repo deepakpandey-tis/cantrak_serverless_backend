@@ -927,7 +927,8 @@ const teamsController = {
             let teamPayload = req.body;
 
             const schema = Joi.object().keys({
-                projectId: Joi.number().required()
+                projectId: Joi.number().required(),
+                resourceId: Joi.number().required()
             })
             const result = Joi.validate(teamPayload, schema);
 
@@ -942,13 +943,21 @@ const teamsController = {
             }
 
 
+            let resourceData= await knex.from("role_resource_master")
+            .select('roleId')
+            .where("role_resource_master.resourceId",teamPayload.resourceId)
+      
+            let roleIds = resourceData.map(v => v.roleId) //
+      
+
             teamResult = await knex('team_roles_project_master')
             .leftJoin('teams', 'team_roles_project_master.teamId', 'teams.teamId')
             .select([
                 'teams.teamName',
                 'teams.teamId'
             ])
-            .where({ 'team_roles_project_master.projectId': teamPayload.projectId }).returning('*')
+            .where({ 'team_roles_project_master.projectId': teamPayload.projectId })
+            .whereIn("team_roles_project_master.roleId", roleIds).returning('*')
            
             res.status(200).json({
                 data: {
