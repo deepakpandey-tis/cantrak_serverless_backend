@@ -31,4 +31,7 @@ router.post('/approve-quotations', authMiddleware.isAuthenticated, quotationCont
 router.post('/get-quotation-invoice', authMiddleware.isAuthenticated, quotationController.getQuotationInvoice);
 router.post('/update-quotations-invoice', authMiddleware.isAuthenticated, quotationController.updateQuotationsInvoice);
 
+
+
+router.post('/delete-quotation', authMiddleware.isAuthenticated,quotationController.deleteQuotation)
 module.exports = router;

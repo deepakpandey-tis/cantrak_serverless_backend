@@ -892,6 +892,8 @@ const quotationsController = {
     // Define try/catch block
     try {
       let userId = req.me.id;
+      let problemImagesData = [];
+
 
       await knex.transaction(async trx => {
         let upNotesPayload = _.omit(req.body, ["images"]);
@@ -969,7 +971,14 @@ const quotationsController = {
               .returning(["*"])
               .transacting(trx)
               .into("images");
+            problemImagesData.push(d[0]);
           }
+        }
+
+        /*INSERT IMAGE TABLE DATA CLOSE */
+
+        if (problemImagesData[0] && problemImagesData[0].s3Url){
+          notesData = { ...notesData, s3Url: problemImagesData[0].s3Url }
         }
 
         trx.commit;
@@ -1024,7 +1033,7 @@ const quotationsController = {
       //     orgId: req.orgId
       //   });
       // surveyOrderNoteList = surveyOrderNoteResult;
-      let quotationNoteResult = await knex.raw(`select "quotation_post_update".*,"users"."name" as "createdBy" from "quotation_post_update"  left join "users" on "quotation_post_update"."createdBy" = "users"."id" where "quotation_post_update"."orgId" = ${req.orgId} and "quotation_post_update"."quotationId" = ${quotationId} and "quotation_post_update"."isActive" = 'true'`)
+      let quotationNoteResult = await knex.raw(`select "quotation_post_update".*,"images"."s3Url","users"."name" as "createdBy" from "quotation_post_update"  left join "users" on "quotation_post_update"."createdBy" = "users"."id"  left join "images" on "quotation_post_update"."id" = "images"."entityId"  where "quotation_post_update"."orgId" = ${req.orgId} and "quotation_post_update"."quotationId" = ${quotationId} and "quotation_post_update"."isActive" = 'true'`)
 
       quotationNoteList = quotationNoteResult.rows;
 
@@ -1512,6 +1521,23 @@ const quotationsController = {
       console.log("[controllers][quotation][updateQuotation] :  Error", err);
       //trx.rollback
       res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+
+  deleteQuotation:async (req,res) => {
+    try {
+      const id = req.body.id;
+      const deletedRow = await knex('quotations').where({id}).del().returning(['*'])
+      return res.status(200).json({
+        data: {
+          deletedRow,
+          message: 'Deleted row successfully!'
+        }
+      })
+    } catch(err) {
+      return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }

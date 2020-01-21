@@ -538,6 +538,53 @@ const assetController = {
         message: 'Asset List!'
       })
 
+        } catch (err) {
+            console.log('[controllers][asset][getAssets] :  Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    },
+    getAssetDetails: async (req, res) => {
+        try {
+
+            let assetData = null;
+            let additionalAttributes = null;
+            let files = null;
+            let images = null
+            let id = req.body.id;
+            let qrcode = ''
+
+          qrcode = await QRCode.toDataURL('org-'+req.orgId+'-asset-'+id)
+
+            assetData = await knex('asset_master').where({'asset_master.id':id })
+                              .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
+                              //.leftJoin('part_master','asset_master.partId','part_master.id')
+                              //.leftJoin('vendor_master','asset_master.assignedVendors','vendor_master.id')
+                              //.leftJoin('companies','asset_master.companyId','companies.id')
+                              .select([
+                                  'asset_master.*',
+                                  'asset_category_master.categoryName',
+                                //  'part_master.partCode',
+                                  //'part_master.partName'
+                                //  'vendor_master.name as assignedVendor'
+                                ]).first();
+            let assetDataResult = assetData;
+
+            // Get part data
+            let partData = null;
+            if(assetDataResult && assetDataResult.partId){
+              partData = await knex('part_master').select('*').where({id:assetDataResult.partId}).first()
+            }
+
+            let team
+            let user
+            if(assetDataResult.assignedTeams && assetDataResult.assignedUsers){
+              team = await knex('teams').select('teamName').where({teamId:assetDataResult.assignedTeams}).first()
+              user = await knex('users').select('name').where({id:assetDataResult.assignedUsers}).first()
+            }
 
       // let assetData = null;
       // assetData = await knex.select().from('asset_master')

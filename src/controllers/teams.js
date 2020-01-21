@@ -917,6 +917,54 @@ const teamsController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
+    },
+    /* Get Teams List By Project */
+    getTeamListByProject: async (req, res) => {
+
+        try {
+
+            let teamResult = null;
+            let teamPayload = req.body;
+
+            const schema = Joi.object().keys({
+                projectId: Joi.number().required()
+            })
+            const result = Joi.validate(teamPayload, schema);
+
+            console.log('[controllers][team][teamPeople]: JOi Result', result);
+
+            if (result && result.hasOwnProperty('error') && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: 'VALIDATION_ERROR', message: result.error.message }
+                    ],
+                });
+            }
+
+
+            teamResult = await knex('team_roles_project_master')
+            .leftJoin('teams', 'team_roles_project_master.teamId', 'teams.teamId')
+            .select([
+                'teams.teamName',
+                'teams.teamId'
+            ])
+            .where({ 'team_roles_project_master.projectId': teamPayload.projectId }).returning('*')
+           
+            res.status(200).json({
+                data: {
+                    teams: teamResult
+                },
+                message: "Team list successfully !"
+            })
+
+        } catch (err) {
+            console.log('[controllers][teams][getTeamList] : Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ]
+            });
+        }
     }
 
 }
