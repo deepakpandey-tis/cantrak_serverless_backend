@@ -538,53 +538,54 @@ const assetController = {
         message: 'Asset List!'
       })
 
-        } catch (err) {
-            console.log('[controllers][asset][getAssets] :  Error', err);
-            res.status(500).json({
-                errors: [
-                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
-                ],
-            });
-        }
-    },
-    getAssetDetails: async (req, res) => {
-        try {
+    } catch (err) {
+      console.log('[controllers][asset][getAssets] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
+  getAssetDetails1111: async (req, res) => {
+    try {
 
-            let assetData = null;
-            let additionalAttributes = null;
-            let files = null;
-            let images = null
-            let id = req.body.id;
-            let qrcode = ''
+      let assetData = null;
+      let additionalAttributes = null;
+      let files = null;
+      let images = null
+      let id = req.body.id;
+      let qrcode = ''
 
-          qrcode = await QRCode.toDataURL('org-'+req.orgId+'-asset-'+id)
+      qrcode = await QRCode.toDataURL('org-' + req.orgId + '-asset-' + id)
 
-            assetData = await knex('asset_master').where({'asset_master.id':id })
-                              .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
-                              //.leftJoin('part_master','asset_master.partId','part_master.id')
-                              //.leftJoin('vendor_master','asset_master.assignedVendors','vendor_master.id')
-                              //.leftJoin('companies','asset_master.companyId','companies.id')
-                              .select([
-                                  'asset_master.*',
-                                  'asset_category_master.categoryName',
-                                //  'part_master.partCode',
-                                  //'part_master.partName'
-                                //  'vendor_master.name as assignedVendor'
-                                ]).first();
-            let assetDataResult = assetData;
+      assetData = await knex('asset_master').where({ 'asset_master.id': id })
+        .leftJoin('asset_category_master', 'asset_master.assetCategoryId', 'asset_category_master.id')
+        //.leftJoin('part_master','asset_master.partId','part_master.id')
+        //.leftJoin('vendor_master','asset_master.assignedVendors','vendor_master.id')
+        //.leftJoin('companies','asset_master.companyId','companies.id')
+        .select([
+          'asset_master.*',
+          'asset_category_master.categoryName',
+          //  'part_master.partCode',
+          //'part_master.partName'
+          //  'vendor_master.name as assignedVendor'
+        ]).first();
+      let assetDataResult = assetData;
 
-            // Get part data
-            let partData = null;
-            if(assetDataResult && assetDataResult.partId){
-              partData = await knex('part_master').select('*').where({id:assetDataResult.partId}).first()
-            }
+      // Get part data
+      let partData = null;
+      console.log('*(&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&', assetDataResult)
+      if (assetDataResult && assetDataResult.partId && assetDataResult.partId == '') {
+        partData = await knex('part_master').select('*').where({ id: assetDataResult.partId }).first()
+      }
 
-            let team
-            let user
-            if(assetDataResult.assignedTeams && assetDataResult.assignedUsers){
-              team = await knex('teams').select('teamName').where({teamId:assetDataResult.assignedTeams}).first()
-              user = await knex('users').select('name').where({id:assetDataResult.assignedUsers}).first()
-            }
+      let team
+      let user
+      if (assetDataResult.assignedTeams && assetDataResult.assignedUsers) {
+        team = await knex('teams').select('teamName').where({ teamId: assetDataResult.assignedTeams }).first()
+        user = await knex('users').select('name').where({ id: assetDataResult.assignedUsers }).first()
+      }
 
       // let assetData = null;
       // assetData = await knex.select().from('asset_master')
@@ -635,7 +636,10 @@ const assetController = {
       let assetDataResult = assetData[0];
 
       // Get part data
-      let partData = await knex('part_master').select('*').where({ id: assetDataResult.partId }).first()
+      let partData = null;
+      if (assetDataResult && assetDataResult.partId && assetDataResult.partId == '') {
+        partData = await knex('part_master').select('*').where({ id: assetDataResult.partId }).first()
+      }
 
       let team
       let user
@@ -1966,7 +1970,7 @@ const assetController = {
         }
         let resultData = null;
         let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: "base64" ,cellDates: true});
+        let wb = XLSX.readFile(file_path, { type: "base64", cellDates: true });
         let ws = wb.Sheets[wb.SheetNames[0]];
         let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
         //data         = JSON.stringify(data);
@@ -2003,7 +2007,7 @@ const assetController = {
               i++;
 
               if (i > 1) {
-                
+
                 let companyId = ''
                 if (assetData.F) {
                   let companyResult = await knex('companies').select('id').where({ companyId: assetData.F, orgId: req.orgId }).first()
@@ -2032,32 +2036,32 @@ const assetController = {
 
 
                 /*GET TEAM ID TO TEAM CODE OPEN */
-                let teamId='';
-                let teamResult = await knex('teams').where({teamCode:assetData.O,orgId:req.orgId}).select('teamId')
-                if(!teamResult.length){
+                let teamId = '';
+                let teamResult = await knex('teams').where({ teamCode: assetData.O, orgId: req.orgId }).select('teamId')
+                if (!teamResult.length) {
                   fail++;
                   continue;
                 }
 
-                if(teamResult.length){
+                if (teamResult.length) {
                   teamId = teamResult[0].teamId;
                 }
                 /*GET TEAM ID TO TEAM CODE CLOSE */
 
                 /*GET PARENT ID TO PARENT ASSET CODE OPEN */
 
-                let parentId='';
-                if(assetData.L) {
-                let parentResult = await knex('asset_master').where({assetCode:assetData.L,orgId:req.orgId}).select('id')
-                if(!parentResult.length){
-                  fail++;
-                  continue;
-                }
+                let parentId = '';
+                if (assetData.L) {
+                  let parentResult = await knex('asset_master').where({ assetCode: assetData.L, orgId: req.orgId }).select('id')
+                  if (!parentResult.length) {
+                    fail++;
+                    continue;
+                  }
 
-                if(parentResult.length){
-                  parentId = parentResult[0].id;
+                  if (parentResult.length) {
+                    parentId = parentResult[0].id;
+                  }
                 }
-              }
                 /*GET PARENT ID TO PARENT CODE CLOSE */
 
 
@@ -2069,12 +2073,12 @@ const assetController = {
 
                   let currentTime = new Date().getTime();
 
-                  let installDate='';
-                  let expireDate='';
-                  if(assetData.I){
-                    installDate =  moment(assetData.I).format()
+                  let installDate = '';
+                  let expireDate = '';
+                  if (assetData.I) {
+                    installDate = moment(assetData.I).format()
                   }
-                  if(assetData.J){
+                  if (assetData.J) {
                     expireDate = moment(assetData.J).format()
                   }
 
@@ -2089,16 +2093,16 @@ const assetController = {
                     assetCategoryId,
                     createdAt: currentTime,
                     updatedAt: currentTime,
-                    assignedTeams:teamId,
-                    parentAssetId:parentId,
-                    assetSerial:assetData.H,
-                    installationDate:installDate,
-                    warrentyExpiration:expireDate,
-                    barcode:assetData.K,
-                    locationId:assetData.M,
-                    assignedUsers:assetData.N,
-                    assignedVendors:assetData.P,
-                    additionalInformation:assetData.Q
+                    assignedTeams: teamId,
+                    parentAssetId: parentId,
+                    assetSerial: assetData.H,
+                    installationDate: installDate,
+                    warrentyExpiration: expireDate,
+                    barcode: assetData.K,
+                    locationId: assetData.M,
+                    assignedUsers: assetData.N,
+                    assignedVendors: assetData.P,
+                    additionalInformation: assetData.Q
                   }
 
                   resultData = await knex.insert(insertData).returning(['*']).into('asset_master');
