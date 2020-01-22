@@ -197,17 +197,17 @@ const buildingPhaseController = {
         }
 
         let buildingPhaseResult = await knex("buildings_and_phases")
-          .innerJoin(
+          .leftJoin(
             "companies",
             "buildings_and_phases.companyId",
             "companies.id"
           )
-          .innerJoin(
+          .leftJoin(
             "projects",
             "buildings_and_phases.projectId",
             "projects.id"
           )
-          .innerJoin(
+          .leftJoin(
             "property_types",
             "buildings_and_phases.propertyTypeId",
             "property_types.id"
@@ -227,8 +227,7 @@ const buildingPhaseController = {
 
         buildingPhase = _.omit(buildingPhaseResult[0], [
           "buildings_and_phases.createdAt",
-          "buildings_and_phases.updatedAt",
-          "buildings_and_phases.isActive"
+          "buildings_and_phases.updatedAt"
         ]);
 
         trx.commit;
