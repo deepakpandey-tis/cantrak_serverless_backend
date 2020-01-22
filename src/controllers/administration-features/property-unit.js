@@ -300,7 +300,7 @@ const propertyUnitController = {
             propertyUnit = propertyUnitResult[0];
             message = "Property Unit Deactivate successfully!"
 
-          }else{
+          } else {
 
             propertyUnitResult = await knex
               .update({ isActive: true })
@@ -916,6 +916,7 @@ const propertyUnitController = {
                     .where({
                       buildingPhaseCode: propertyUnitData.F,
                       projectId: projectId,
+                      companyId: companyId,
                       orgId: req.orgId
                     });
 
@@ -924,7 +925,13 @@ const propertyUnitController = {
 
                     let floorZoneIdResult = await knex("floor_and_zones")
                       .select("id")
-                      .where({ floorZoneCode: propertyUnitData.G, buildingPhaseId: buildingPhaseId, orgId: req.orgId });
+                      .where({
+                        floorZoneCode: propertyUnitData.G,
+                        buildingPhaseId: buildingPhaseId,
+                        orgId: req.orgId,
+                        projectId: projectId,
+                        companyId: companyId,
+                      });
 
                     if (floorZoneIdResult && floorZoneIdResult.length) {
                       floorZoneId = floorZoneIdResult[0].id;
