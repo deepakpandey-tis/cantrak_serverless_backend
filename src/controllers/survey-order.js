@@ -523,7 +523,7 @@ const surveyOrderController = {
             if (dueFromDate || dueToDate) {
               qb.whereBetween("o.appointedDate", [dueFromDate, dueToDate]);
             }
-            qb.where("o.orgId", req.orgId);
+            qb.where("o.orgId", req.orgId)
           })
           .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
           .leftJoin(
@@ -557,6 +557,7 @@ const surveyOrderController = {
             "o.createdAt AS createdAt",
             "teams.teamName as teamName"
           )
+          .where({"assigned_service_team.entityType":"survey_orders"})          
           .groupBy([
             "o.id",
             "s.id",
@@ -564,7 +565,8 @@ const surveyOrderController = {
             "status.statusCode",
             "u.id",
             "users.id",
-            "teams.teamId"
+            "teams.teamId",
+            "assigned_service_team.entityType"
           ]);
 
         // For Get Rows In Pagination With Offset and Limit
@@ -601,7 +603,7 @@ const surveyOrderController = {
               qb.whereBetween("o.appointedDate", [dueFromDate, dueToDate]);
             }
             qb.where("o.orgId", req.orgId);            
-          })
+          }).where({"assigned_service_team.entityType":"survey_orders"})
           .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
           .leftJoin("users AS u", "o.createdBy", "u.id")         
           .leftJoin(
@@ -632,7 +634,7 @@ const surveyOrderController = {
         total = await knex
           .count("* as count")
           .from("survey_orders")
-          .where({ "survey_orders.serviceRequestId": serviceRequestId, "survey_orders.orgId": req.orgId })
+          .where({ "survey_orders.serviceRequestId": serviceRequestId, "survey_orders.orgId": req.orgId,"assigned_service_team.entityType":"survey_orders" })
           .innerJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
@@ -650,14 +652,14 @@ const surveyOrderController = {
             "assigned_service_team.teamId",
             "teams.teamId"
           )
-
           .groupBy([
             "service_requests.id",
             "survey_orders.id",
             "assigned_service_team.id",
             "users.id",
             "u.id",
-            "teams.teamId"
+            "teams.teamId",
+            "assigned_service_team.entityType"
           ])
           .select([
             "survey_orders.id as S Id",
@@ -676,7 +678,7 @@ const surveyOrderController = {
         // For get the rows With pagination
         rows = await knex
           .from("survey_orders")
-          .where({ "survey_orders.serviceRequestId": serviceRequestId, "survey_orders.orgId": req.orgId })
+          .where({ "survey_orders.serviceRequestId": serviceRequestId, "survey_orders.orgId": req.orgId,"assigned_service_team.entityType":"survey_orders" })
           .innerJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
@@ -746,13 +748,13 @@ const surveyOrderController = {
           .groupBy([
             "service_requests.id",
             "survey_orders.id",
-            "assigned_service_team.id",
+            "assigned_service_team.entityType",
             "users.id",
             "u.id",
             "status.id",
             "teams.teamId"
           ])
-          .where({ "survey_orders.orgId": req.orgId })
+          .where({ "survey_orders.orgId": req.orgId,"assigned_service_team.entityType":"survey_orders" })
           .select([
             "survey_orders.id as S Id",
             "service_requests.description as Description",
@@ -805,7 +807,7 @@ const surveyOrderController = {
             "survey_orders.createdAt as Date Created",
             "teams.teamName as teamName"
           ])
-          .where({ "survey_orders.orgId": req.orgId })
+          .where({ "survey_orders.orgId": req.orgId,"assigned_service_team.entityType":"survey_orders" })
           .offset(offset)
           .limit(per_page);
       }
