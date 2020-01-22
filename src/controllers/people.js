@@ -535,7 +535,10 @@ const peopleController = {
           .select([
             "users.name as NAME",
             "users.email as EMAIL",
-            "teams.teamCode as TEAM_CODE"
+            "teams.teamCode as TEAM_CODE",
+            "users.nameThai as ALTERNATE_LANGUAGE_NAME",
+            "users.mobileNo as MOBILE_NO",
+            "users.phoneNo as PHONE_NO"
           ])
           .where({ "users.orgId": req.orgId })
       ]);
