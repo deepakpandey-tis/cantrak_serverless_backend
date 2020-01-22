@@ -45,7 +45,7 @@ const peopleController = {
         payload.password = hash;
 
         let uid = uuid();
-        payload.verifyToken= uid;
+        payload.verifyToken = uid;
         let currentTime = new Date().getTime();
         const people = await knex('users').insert({ ...payload, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime }).returning(['*'])
 
@@ -84,7 +84,7 @@ const peopleController = {
         // let roleResult = await knex.insert(insertRoleData).returning(['*']).transacting(trx).into('organisation_user_roles');
         // role = roleResult[0];
 
-        await emailHelper.sendTemplateEmail({ to: payload.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass,uuid:uid, layout: 'welcome-org-admin.ejs' } })
+        await emailHelper.sendTemplateEmail({ to: payload.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, uuid: uid, layout: 'welcome-org-admin.ejs' } })
 
         trx.commit;
         res.status(200).json({
@@ -261,7 +261,7 @@ const peopleController = {
               //"companies.companyName",
               //   "organisation_roles.name as roleName"
             ])
-            .orderBy('users.id','desc')
+            .orderBy('users.id', 'desc')
             .offset(offset)
             .limit(per_page)
         ]);
@@ -350,7 +350,7 @@ const peopleController = {
               //"companies.companyName",
               //   "organisation_roles.name as roleName"
             ])
-            .orderBy('users.id','desc')
+            .orderBy('users.id', 'desc')
             .offset(offset)
             .limit(per_page)
             .where({ "users.orgId": req.orgId })
@@ -536,7 +536,7 @@ const peopleController = {
             "users.name as NAME",
             "users.email as EMAIL",
             "teams.teamCode as TEAM_CODE",
-            "users.nameThai as ALTERNATE_LANGUAGE_NAME",
+            //"users.nameThai as ALTERNATE_LANGUAGE_NAME",
             "users.mobileNo as MOBILE_NO",
             "users.phoneNo as PHONE_NO"
           ])
@@ -562,7 +562,10 @@ const peopleController = {
           {
             NAME: "",
             EMAIL: "",
-            TEAM_CODE: ""
+            TEAM_CODE: "",
+            ALTERNATE_LANGUAGE_NAME: "",
+            MOBILE_NO: "",
+            PHONE_NO: ""
           }
         ]);
       }
@@ -640,7 +643,9 @@ const peopleController = {
 
         if (data[0].A == "Ã¯Â»Â¿NAME" || data[0].A == "NAME" &&
           data[0].B == "EMAIL" &&
-          data[0].C == "TEAM_CODE"
+          data[0].C == "TEAM_CODE" &&
+          data[0].D == "MOBILE_NO" &&
+          data[0].E == "PHONE_NO"
         ) {
 
           if (data.length > 0) {
@@ -663,6 +668,17 @@ const peopleController = {
 
               }
 
+              if (peopleData.D) {
+                let checkMobile = await knex('users').select("id")
+                  .where({ mobileNo: peopleData.D })
+
+                if (checkMobile.length) {
+                  fail++;
+                  continue;
+                }
+              }
+
+
               if (i > 1) {
 
                 let checkExist = await knex('users').select("id")
@@ -672,7 +688,11 @@ const peopleController = {
 
                   //let endDate   = Math.round(new Date().getTime()/1000);
                   //let startDate = Math.round(new Date().getTime()/1000);
-
+                  let pass = '123456';
+                  const hash = await bcrypt.hash(
+                    pass,
+                    saltRounds
+                  );
                   let currentTime = new Date().getTime();
                   let insertData = {
                     orgId: req.orgId,
@@ -680,7 +700,10 @@ const peopleController = {
                     email: peopleData.B,
                     createdAt: currentTime,
                     updatedAt: currentTime,
-                    emailVerified: true
+                    emailVerified: true,
+                    password: hash,
+                    mobileNo: peopleData.D,
+                    phoneNo: peopleData.E
                   }
 
                   resultData = await knex.insert(insertData).returning(['*']).into('users');

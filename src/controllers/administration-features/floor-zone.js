@@ -788,7 +788,12 @@ const floorZoneController = {
                   projectId = projectData[0].id;
                   let buildingData = await knex("buildings_and_phases")
                     .select("id")
-                    .where({ buildingPhaseCode: floorData.F, orgId: req.orgId });
+                    .where({ 
+                      buildingPhaseCode: floorData.F, 
+                      orgId: req.orgId,
+                      companyId:companyId,
+                      projectId:projectId
+                    });
                   if (buildingData && buildingData.length) {
                     buildingId = buildingData[0].id;
                   }

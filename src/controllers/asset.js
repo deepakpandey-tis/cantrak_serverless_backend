@@ -2041,7 +2041,7 @@ const assetController = {
 
 
                 /*GET TEAM ID TO TEAM CODE OPEN */
-                let teamId = 0;
+                let teamId = null;
                 if(assetData.O){
                 let teamResult = await knex('teams').where({ teamCode: assetData.O, orgId: req.orgId }).select('teamId')
                 if (!teamResult.length) {
@@ -2057,7 +2057,7 @@ const assetController = {
 
                 /*GET PARENT ID TO PARENT ASSET CODE OPEN */
 
-                let parentId= 0;
+                let parentId= null;
                 if (assetData.L) {
                   let parentResult = await knex('asset_master').where({ assetCode: assetData.L, orgId: req.orgId }).select('id')
                   if (!parentResult.length) {
@@ -2074,7 +2074,7 @@ const assetController = {
 
                  /*GET LOCATION ID BY LOCATION CODE OPEN */
 
-                 let locationId = 0;
+                 let locationId = null;
                  if (assetData.M) {
                    let locationResult = await knex('location_tags_master').where({ title: assetData.M, orgId: req.orgId }).select('id')
                    if (!locationResult.length) {
