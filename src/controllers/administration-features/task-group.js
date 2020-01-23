@@ -1351,7 +1351,11 @@ const taskGroupController = {
            'asset_master.barcode as barCode',
            'asset_master.areaName as areaName',
            'asset_master.model as modelNo',
-           
+           'companies.companyName',
+           'projects.projectName',
+           'buildings_and_phases.buildingPhaseCode',
+           'floor_and_zones.floorZoneCode',
+           'property_units.unitNumber',
            'task_group_schedule.startDate as startDate',
            'task_group_schedule.endDate as endDate',
            'task_group_schedule.repeatFrequency as repeatFrequency',
@@ -2085,6 +2089,38 @@ exportTaskGroupTemplateData: async (req,res) => {
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
         ],
       }); 
+    }
+  },
+  editWorkOrderDate:async(req,res) => {
+    try {
+      const payload = req.body
+      const updatedWorkOrder = await knex('task_group_schedule_assign_assets')
+      .update({pmDate:payload.newPmDate})
+      .where({id:payload.workOrderId})
+      return res.status(200).json({
+        data: {
+          updatedWorkOrder
+        },
+        message:'Work order date updated!'
+      })
+    } catch(err) {
+res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
+  deleteWorkOrder:async(req,res) => {
+    try {
+      const id = req.body.workOrderId;
+      const deletedWorkOrder = await knex('task_group_schedule_assign_assets').where({id:id}).del().returning(['*'])
+      return res.status(200).json({
+        data: deletedWorkOrder,
+        message: 'Deleted Work order successfully!'
+      })
+    } catch(err) {
+      
     }
   }
 }
