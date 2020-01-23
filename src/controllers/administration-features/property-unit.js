@@ -127,7 +127,7 @@ const propertyUnitController = {
           buildingPhaseId: Joi.string().required(),
           floorZoneId: Joi.string().required(),
           unitNumber: Joi.string().required(),
-          houseId: Joi.string().allow('').optional(),
+          houseId: Joi.string().allow('').allow(null).optional(),
           description: Joi.string().allow("").allow(null).optional(),
           productCode: Joi.string().required(),
           area: Joi.string().allow("").allow(null).optional(),
@@ -270,7 +270,7 @@ const propertyUnitController = {
     try {
       let propertyUnit = null;
       let orgId = req.orgId;
-
+      let message;
       await knex.transaction(async trx => {
         let payload = req.body;
         const schema = Joi.object().keys({
@@ -284,20 +284,43 @@ const propertyUnitController = {
             ]
           });
         }
-        let propertyUnitResult = await knex
-          .update({ isActive: false })
-          .where({ id: payload.id, orgId: orgId })
-          .returning(["*"])
-          .transacting(trx)
-          .into("property_units");
-        propertyUnit = propertyUnitResult[0];
+        let propertyUnitResult;
+
+        let checkStatus = await knex.from('property_units').where({ id: payload.id }).returning(['*'])
+        if (checkStatus && checkStatus.length) {
+
+          if (checkStatus[0].isActive == true) {
+
+            propertyUnitResult = await knex
+              .update({ isActive: false })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("property_units");
+            propertyUnit = propertyUnitResult[0];
+            message = "Property Unit Deactivate successfully!"
+
+          } else {
+
+            propertyUnitResult = await knex
+              .update({ isActive: true })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("property_units");
+            propertyUnit = propertyUnitResult[0];
+            message = "Property Unit Activate successfully!"
+
+          }
+        }
+
         trx.commit;
       });
       return res.status(200).json({
         data: {
           propertyUnit: propertyUnit
         },
-        message: "Property Unit deleted!"
+        message: message
       });
     } catch (err) {
       console.log(
@@ -408,7 +431,7 @@ const propertyUnitController = {
                 qb.where('property_units.houseId', 'iLIKE', `%${houseId}%`)
               }
             })
-            .orderBy('property_units.id','desc')
+            .orderBy('property_units.id', 'desc')
             .offset(offset)
             .limit(per_page)
           //.orderBy('desc', 'property_units.unitNumber')
@@ -455,7 +478,7 @@ const propertyUnitController = {
               "property_units.createdAt as Date Created"
             ])
             .where({ "property_units.orgId": orgId })
-            .orderBy('property_units.id','desc')
+            .orderBy('property_units.id', 'desc')
             .offset(offset)
             .limit(per_page)
           // .orderBy('desc','property_units.unitNumber')
@@ -719,7 +742,8 @@ const propertyUnitController = {
           "property_types.propertyTypeCode",
           "buildings_and_phases.buildingPhaseCode",
           "floor_and_zones.floorZoneCode",
-          "users.name as createdBy"
+          "users.name as createdBy",
+          "property_units.isActive",
         ])
         .where({ "property_units.id": id, "property_units.orgId": orgId });
 
@@ -853,9 +877,9 @@ const propertyUnitController = {
             data[0].H == "UNIT_NUMBER" &&
             data[0].I == "DESCRIPTION" &&
             data[0].J == "ACTUAL SALE AREA" &&
-            data[0].K == "HOUSE_ID" && 
+            data[0].K == "HOUSE_ID" &&
             data[0].L == "PRODUCT_CODE"
-            )
+          )
           // &&
           // data[0].L == "STATUS" &&
           // data[0].M == "CREATED BY" &&
@@ -892,6 +916,7 @@ const propertyUnitController = {
                     .where({
                       buildingPhaseCode: propertyUnitData.F,
                       projectId: projectId,
+                      companyId: companyId,
                       orgId: req.orgId
                     });
 
@@ -900,7 +925,13 @@ const propertyUnitController = {
 
                     let floorZoneIdResult = await knex("floor_and_zones")
                       .select("id")
-                      .where({ floorZoneCode: propertyUnitData.G, buildingPhaseId: buildingPhaseId, orgId: req.orgId });
+                      .where({
+                        floorZoneCode: propertyUnitData.G,
+                        buildingPhaseId: buildingPhaseId,
+                        orgId: req.orgId,
+                        projectId: projectId,
+                        companyId: companyId,
+                      });
 
                     if (floorZoneIdResult && floorZoneIdResult.length) {
                       floorZoneId = floorZoneIdResult[0].id;

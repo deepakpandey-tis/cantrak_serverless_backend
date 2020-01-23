@@ -1842,9 +1842,14 @@ const assetController = {
           "asset2.id"
         )
         .leftJoin(
-          "teams ",
+          "teams",
           "asset_master.assignedTeams",
           "teams.teamId"
+        )
+        .leftJoin(
+          "location_tags_master",
+          "asset_master.locationId",
+          "location_tags_master.id"
         )
         .select([
           "asset_master.assetCode as ASSET_CODE",
@@ -1859,7 +1864,7 @@ const assetController = {
           "asset_master.warrentyExpiration as WARRANTY_DATE",
           "asset_master.barcode AS BARCODE",
           "asset2.assetCode as PARENT_ASSET_CODE",
-          "asset_master.locationId as LOCATION",
+          "location_tags_master.title as LOCATION",
           "asset_master.assignedUsers as ASSIGN_USER",
           "teams.teamCode as ASSIGN_TEAM",
           "asset_master.assignedVendors as ASSIGN_VENDOR",
@@ -2036,7 +2041,8 @@ const assetController = {
 
 
                 /*GET TEAM ID TO TEAM CODE OPEN */
-                let teamId = '';
+                let teamId = null;
+                if(assetData.O){
                 let teamResult = await knex('teams').where({ teamCode: assetData.O, orgId: req.orgId }).select('teamId')
                 if (!teamResult.length) {
                   fail++;
@@ -2046,11 +2052,12 @@ const assetController = {
                 if (teamResult.length) {
                   teamId = teamResult[0].teamId;
                 }
+              }
                 /*GET TEAM ID TO TEAM CODE CLOSE */
 
                 /*GET PARENT ID TO PARENT ASSET CODE OPEN */
 
-                let parentId = '';
+                let parentId= null;
                 if (assetData.L) {
                   let parentResult = await knex('asset_master').where({ assetCode: assetData.L, orgId: req.orgId }).select('id')
                   if (!parentResult.length) {
@@ -2063,6 +2070,23 @@ const assetController = {
                   }
                 }
                 /*GET PARENT ID TO PARENT CODE CLOSE */
+
+
+                 /*GET LOCATION ID BY LOCATION CODE OPEN */
+
+                 let locationId = null;
+                 if (assetData.M) {
+                   let locationResult = await knex('location_tags_master').where({ title: assetData.M, orgId: req.orgId }).select('id')
+                   if (!locationResult.length) {
+                     fail++;
+                     continue;
+                   }
+ 
+                   if (locationResult.length) {
+                    locationId = locationResult[0].id;
+                   }
+                 }
+                 /*GET LOCATION ID BY LOCATION CODE CLOSE */
 
 
                 let checkExist = await knex("asset_master")
@@ -2099,7 +2123,7 @@ const assetController = {
                     installationDate: installDate,
                     warrentyExpiration: expireDate,
                     barcode: assetData.K,
-                    locationId: assetData.M,
+                    locationId: locationId,
                     assignedUsers: assetData.N,
                     assignedVendors: assetData.P,
                     additionalInformation: assetData.Q
