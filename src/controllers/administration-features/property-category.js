@@ -218,28 +218,16 @@ const propertyCategoryController = {
 
   deleteCategory: async (req, res) => {
     try {
-      let incident = null;
-      let orgId = req.orgId;
-
+      let problemCategory = null;
+      let message;
       await knex.transaction(async trx => {
-        const categoryDelPayload = req.body;
+        let payload = req.body;
+        let orgId = req.orgId;
 
-        console.log(
-          "[controllers][category][categoryDelete]",
-          categoryDelPayload
-        );
-
-        // validate keys
         const schema = Joi.object().keys({
           id: Joi.number().required()
         });
-
-        const result = Joi.validate(categoryDelPayload, schema);
-        console.log(
-          "[controllers][category][categoryDelete]: JOi Result",
-          result
-        );
-
+        const result = Joi.validate(payload, schema);
         if (result && result.hasOwnProperty("error") && result.error) {
           return res.status(400).json({
             errors: [
@@ -247,64 +235,47 @@ const propertyCategoryController = {
             ]
           });
         }
+        let problemCategoryResult;
+        let checkStatus = await knex.from('incident_categories').where({ id: payload.id }).returning(['*'])
+        if (checkStatus && checkStatus.length) {
 
-        // Check typeCode already exists
-        const notexistCategoryCode = await knex("incident_categories").where({
-          id: categoryDelPayload.id
-        });
+          if (checkStatus[0].isActive == true) {
 
-        console.log(
-          "[controllers][category][categoryDelete]: CategoryId",
-          notexistCategoryCode
-        );
+            problemCategoryResult = await knex
+              .update({ isActive: false })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("incident_categories");
+              problemCategory = problemCategoryResult[0];
+            message = "Problem Category deactivate successfully!"
 
-        // Return error when username exist
+          } else {
 
-        if (notexistCategoryCode == "") {
-          return res.status(400).json({
-            errors: [
-              {
-                code: "TYPE_CODE_EXIST_ERROR",
-                message: "Category does not exist !"
-              }
-            ]
-          });
+            problemCategoryResult = await knex
+              .update({ isActive: true })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("incident_categories");
+              problemCategory = problemCategoryResult[0];
+            message = "Problem Category activate successfully!"
+          }
         }
-
-        // Insert in users table,
-        const currentTime = new Date().getTime();
-        //console.log('[controllers][entrance][signup]: Expiry Time', tokenExpiryTime);
-
-        //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
-        const updateDataResult = await knex
-          .update({ isActive: "false", updatedAt: currentTime })
-          .where({ id: categoryDelPayload.id, orgId: orgId })
-          .returning(["*"])
-          .transacting(trx)
-          .into("incident_categories");
-
-        // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
-
-        console.log(
-          "[controllers][category][categoryDelete]: Update Data",
-          updateDataResult
-        );
-
-        //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
-
-        incident = updateDataResult[0];
-
         trx.commit;
       });
 
-      res.status(200).json({
+      return res.status(200).json({
         data: {
-          category: incident
+          problemCategory: problemCategory
         },
-        message: "Category deleted successfully !"
+        message: message
       });
     } catch (err) {
-      console.log("[controllers][category][categoryDelete] :  Error", err);
+      console.log(
+        "[controllers][property-category][toggleProblemCategory] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
@@ -395,6 +366,7 @@ const propertyCategoryController = {
             "incident_categories.createdAt as Date Created"
           ])
           .where({"incident_categories.orgId": orgId })
+          .orderBy('incident_categories.id','desc')
           .offset(offset)
           .limit(per_page)
       ]);
@@ -532,8 +504,7 @@ const propertyCategoryController = {
 
       categoryDetails = _.omit(categoryResults[0], [
         "createdAt",
-        "updatedAt",
-        "isActive"
+        "updatedAt"
       ]);
       return res.status(200).json({
         data: {
@@ -770,6 +741,7 @@ const propertyCategoryController = {
       });
     }
   }
+
 };
 
 module.exports = propertyCategoryController;

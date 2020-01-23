@@ -216,6 +216,9 @@ router.get(
   taskGroupController.exportTaskGroupTemplateData
 );
 
+router.post('/edit-work-order-date',authMiddleware.isAuthenticated,taskGroupController.editWorkOrderDate)
+router.post('/delete-work-order',authMiddleware.isAuthenticated,taskGroupController.deleteWorkOrder)
+
 router.post('/pm-location-detail', authMiddleware.isAuthenticated, taskGroupController.pmLocationDetail)
 
 module.exports = router

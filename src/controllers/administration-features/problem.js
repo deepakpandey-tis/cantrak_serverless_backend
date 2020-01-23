@@ -49,6 +49,7 @@ const problemController = {
               'incident_type.typeCode as problem_type_code',
               'incident_type.descriptionEng as problem_type_description',
             ])
+            .orderBy('incident_sub_categories.id','desc')
             .where({ 'incident_sub_categories.orgId': req.orgId })
             .offset(offset).limit(per_page)
         ])
@@ -78,6 +79,7 @@ const problemController = {
                 'incident_type.typeCode as problem_type_code',
                 'incident_type.descriptionEng as problem_type_description',
               ])
+              .orderBy('incident_sub_categories.id','desc')
               .where({ 'incident_sub_categories.orgId': req.orgId })
               .where(filters).offset(offset).limit(per_page)
           ])

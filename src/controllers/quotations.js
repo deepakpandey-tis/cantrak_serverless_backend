@@ -80,6 +80,26 @@ const quotationsController = {
           "[controllers][quotations][updateQuotation] : Quotation Body", quotationPayload
         );
 
+        
+         // validate keys for part
+         const quotationSinglePart = Joi.object().keys({
+          partName: Joi.string().required(),
+          id: Joi.string().required(),
+          partCode: Joi.string().required(),
+          quantity: Joi.string().required(),
+          unitCost: Joi.number().required(),
+        })
+         // validate keys for charges
+        const quotationSingleCharge = Joi.object().keys({
+          chargeCode: Joi.string().required(),
+          id: Joi.string().required(),
+          calculationUnit: Joi.string().required(),
+          rate: Joi.number().required(),
+          totalHours: Joi.string().required(),
+        })
+     
+      
+
         // validate keys
         const schema = Joi.object().keys({
           serviceRequestId: Joi.string().allow('').optional(),
@@ -139,6 +159,59 @@ const quotationsController = {
           .returning(["*"])
           .transacting(trx)
           .into("quotations");
+
+
+            // Start Update Assigned Parts In Quotations
+
+        let partsLength = quotationPayload.quotationData[0].parts.length;
+        console.log("parts length", partsLength);
+
+        let partsData;
+        for (let i = 0; i < partsLength; i++) {
+          console.log("partsArray", quotationPayload.quotationData[0].parts[i]);
+          partsData = quotationPayload.quotationData[0].parts[i];
+          updateAssignedParts = await knex
+            .update({
+              unitCost: partsData.unitCost,
+              quantity: partsData.quantity,
+              updatedAt: currentTime
+            })
+            .where({
+              entityId: quotationPayload.quotationId,
+              entityType: "quotations",
+              partId: partsData.id
+            })
+            .returning(["*"])
+            .transacting(trx)
+            .into("assigned_parts");
+        }
+
+
+        // Start Update Assigned Charges In Quotations
+
+        let chargesLength = quotationPayload.quotationData[0].charges.length;
+        console.log("charges length", chargesLength);
+
+        let chargesData;
+        for (let j = 0; j < chargesLength; j++) {
+          console.log("chargesArray", quotationPayload.quotationData[0].charges[j]);
+          chargesData = quotationPayload.quotationData[0].charges[j];
+          updateAssignedCharges = await knex
+            .update({
+              chargeId: chargesData.id,
+              totalHours: chargesData.totalHours,
+              rate: chargesData.rate,
+              updatedAt: currentTime
+            })
+            .where({
+              entityId: quotationPayload.quotationId,
+              entityType: "quotations",
+              chargeId: chargesData.id
+            })
+            .returning(["*"])
+            .transacting(trx)
+            .into("assigned_service_charges");
+        }
 
         console.log(
           "[controllers][quotations][updateQuotation]: Update Data",
@@ -215,6 +288,7 @@ const quotationsController = {
           .leftJoin("organisation_roles", "organisation_user_roles.roleId", "=", "organisation_roles.id")
           .select(
             "quotations.id as quotationId",
+            "quotations.serviceRequestId as serviceRequestId",
             "checkUser.name as checkedBy",
             "inspectedUser.name as inspectedBy",
             "checkUser.id as checkedByUserId",

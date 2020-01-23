@@ -1327,6 +1327,12 @@ const taskGroupController = {
          const pmResult = await knex("task_group_schedule")
          .innerJoin('task_group_schedule_assign_assets','task_group_schedule.id','task_group_schedule_assign_assets.scheduleId')
          .innerJoin('asset_master','task_group_schedule_assign_assets.assetId','asset_master.id')
+         .innerJoin('asset_location','asset_master.id','asset_location.assetId')
+         .innerJoin('companies','asset_location.companyId','companies.id')
+         .innerJoin('projects','asset_location.projectId','projects.id')
+         .innerJoin('buildings_and_phases', 'asset_location.buildingId','buildings_and_phases.id')
+         .innerJoin('floor_and_zones','asset_location.floorId','floor_and_zones.id')
+         .innerJoin('property_units','asset_location.unitId','property_units.id')
          .innerJoin('pm_master2','task_group_schedule.pmId','pm_master2.id')
          .innerJoin('asset_category_master','pm_master2.assetCategoryId','asset_category_master.id')
          .innerJoin('pm_task_groups','task_group_schedule.taskGroupId','pm_task_groups.id')
@@ -1345,6 +1351,11 @@ const taskGroupController = {
            'asset_master.barcode as barCode',
            'asset_master.areaName as areaName',
            'asset_master.model as modelNo',
+           'companies.companyName',
+           'projects.projectName',
+           'buildings_and_phases.buildingPhaseCode',
+           'floor_and_zones.floorZoneCode',
+           'property_units.unitNumber',
            'task_group_schedule.startDate as startDate',
            'task_group_schedule.endDate as endDate',
            'task_group_schedule.repeatFrequency as repeatFrequency',
@@ -2078,6 +2089,38 @@ exportTaskGroupTemplateData: async (req,res) => {
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
         ],
       }); 
+    }
+  },
+  editWorkOrderDate:async(req,res) => {
+    try {
+      const payload = req.body
+      const updatedWorkOrder = await knex('task_group_schedule_assign_assets')
+      .update({pmDate:payload.newPmDate})
+      .where({id:payload.workOrderId})
+      return res.status(200).json({
+        data: {
+          updatedWorkOrder
+        },
+        message:'Work order date updated!'
+      })
+    } catch(err) {
+res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
+  deleteWorkOrder:async(req,res) => {
+    try {
+      const id = req.body.workOrderId;
+      const deletedWorkOrder = await knex('task_group_schedule_assign_assets').where({id:id}).del().returning(['*'])
+      return res.status(200).json({
+        data: deletedWorkOrder,
+        message: 'Deleted Work order successfully!'
+      })
+    } catch(err) {
+      
     }
   }
 }
