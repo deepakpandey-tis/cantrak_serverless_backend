@@ -638,6 +638,9 @@ const taskGroupController = {
           .offset(offset)
           .limit(per_page)
       ]);
+
+      
+
       
 
       let count = total.length;
@@ -654,7 +657,7 @@ const taskGroupController = {
 
         res.status(200).json({
           data:{
-           taskGroupScheduleData:pagination
+           taskGroupScheduleData:pagination,
           },
           "message":"Task Group Schedule List Successfully!"
         })
@@ -812,6 +815,26 @@ const taskGroupController = {
               "task_group_schedule_assign_assets.assetId",
               "asset_master.id"
             )
+            .innerJoin(
+              "asset_location",
+              "asset_master.id",
+              "asset_location.assetId"
+            )
+            .innerJoin(
+              "buildings_and_phases",
+              "asset_location.buildingId",
+              "buildings_and_phases.id"
+            )
+            .innerJoin(
+              "floor_and_zones",
+              "asset_location.floorId",
+              "floor_and_zones.id"
+            )
+            .innerJoin(
+              "property_units",
+              "asset_location.unitId",
+              "property_units.id"
+            )
             .where({
               "task_group_schedule.taskGroupId": payload.taskGroupId,
               "task_group_schedule.orgId": req.orgId
@@ -828,6 +851,26 @@ const taskGroupController = {
               "task_group_schedule_assign_assets.assetId",
               "asset_master.id"
             )
+            .innerJoin(
+              "asset_location",
+              "asset_master.id",
+              "asset_location.assetId"
+            )
+            .innerJoin(
+              "buildings_and_phases",
+              "asset_location.buildingId",
+              "buildings_and_phases.id"
+            )
+            .innerJoin(
+              "floor_and_zones",
+              "asset_location.floorId",
+              "floor_and_zones.id"
+            )
+            .innerJoin(
+              "property_units",
+              "asset_location.unitId",
+              "property_units.id"
+            )
             .select([
               "task_group_schedule_assign_assets.id as workOrderId",
               "task_group_schedule_assign_assets.status as status",
@@ -838,6 +881,9 @@ const taskGroupController = {
               "asset_master.areaName as areaName",
               "asset_master.description as description",
               "asset_master.assetSerial as assetSerial",
+              "buildings_and_phases.buildingPhaseCode",
+              "floor_and_zones.floorZoneCode",
+              "property_units.unitNumber as unitNumber",
               "task_group_schedule_assign_assets.pmDate as pmDate",
               knex.raw(
                 `DATE("task_group_schedule_assign_assets"."pmDate") as "workOrderDate"`
@@ -1281,6 +1327,12 @@ const taskGroupController = {
          const pmResult = await knex("task_group_schedule")
          .innerJoin('task_group_schedule_assign_assets','task_group_schedule.id','task_group_schedule_assign_assets.scheduleId')
          .innerJoin('asset_master','task_group_schedule_assign_assets.assetId','asset_master.id')
+         .innerJoin('asset_location','asset_master.id','asset_location.assetId')
+         .innerJoin('companies','asset_location.companyId','companies.id')
+         .innerJoin('projects','asset_location.projectId','projects.id')
+         .innerJoin('buildings_and_phases', 'asset_location.buildingId','buildings_and_phases.id')
+         .innerJoin('floor_and_zones','asset_location.floorId','floor_and_zones.id')
+         .innerJoin('property_units','asset_location.unitId','property_units.id')
          .innerJoin('pm_master2','task_group_schedule.pmId','pm_master2.id')
          .innerJoin('asset_category_master','pm_master2.assetCategoryId','asset_category_master.id')
          .innerJoin('pm_task_groups','task_group_schedule.taskGroupId','pm_task_groups.id')
@@ -1299,6 +1351,7 @@ const taskGroupController = {
            'asset_master.barcode as barCode',
            'asset_master.areaName as areaName',
            'asset_master.model as modelNo',
+           
            'task_group_schedule.startDate as startDate',
            'task_group_schedule.endDate as endDate',
            'task_group_schedule.repeatFrequency as repeatFrequency',
@@ -1997,6 +2050,41 @@ exportTaskGroupTemplateData: async (req,res) => {
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
         ],
       });
+    }
+  },
+  pmLocationDetail:async (req,res) => {
+    try{
+      let payload = req.body;
+      let pmId;
+      let locationData
+      if(payload.taskGroupId){
+         pmId = await knex('pm_task_groups').select('pmId').where({id:payload.taskGroupId}).first()
+        locationData = await knex('pm_master2')
+          .innerJoin('companies', 'pm_master2.companyId', 'companies.id')
+          .innerJoin('projects', 'pm_master2.projectId', 'projects.id')
+          .select(["companies.companyName", "projects.projectName","pm_master2.name as pmName"])
+          .where({ 'pm_master2.orgId': req.orgId, 'pm_master2.id': pmId.pmId }).first()
+      }
+
+      if(payload.pmId){
+        locationData = await knex('pm_master2')
+         .innerJoin('companies', 'pm_master2.companyId', 'companies.id')
+         .innerJoin('projects', 'pm_master2.projectId', 'projects.id')
+         .select(["companies.companyName", "projects.projectName","pm_master2.name as pmName"])
+         .where({ 'pm_master2.orgId': req.orgId, 'pm_master2.id': payload.pmId }).first()
+      } 
+
+
+    return res.status(200).json({data: {
+      locationData:locationData
+    }})
+
+    } catch(err) {
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      }); 
     }
   }
 }

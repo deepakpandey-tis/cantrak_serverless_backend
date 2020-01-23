@@ -457,10 +457,17 @@ const partsController = {
 
             console.log('[controllers][parts][getPartDetails]: Part Details', partData);
 
-            res.status(200).json({
-                data: { part: { quantity: totalQuantity, unitCost: partQuantityDataResult[0].unitCost, ...omitedPartDataResult, additionalAttributes, images, files, qrcode } },
-                message: "Part Details"
-            });
+            if( partQuantityDataResult[0]){
+                return res.status(200).json({
+                    data: { part: { quantity: totalQuantity, unitCost: partQuantityDataResult[0].unitCost, ...omitedPartDataResult, additionalAttributes, images, files, qrcode } },
+                    message: "Part Details"
+                });
+            }
+
+            return res.status(200).json({
+                    data: { part: { quantity: totalQuantity, unitCost: '', ...omitedPartDataResult, additionalAttributes, images, files, qrcode } },
+                    message: "Part Details"
+                });
 
 
         } catch (err) {

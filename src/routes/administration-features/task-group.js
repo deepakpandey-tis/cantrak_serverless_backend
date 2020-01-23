@@ -216,4 +216,6 @@ router.get(
   taskGroupController.exportTaskGroupTemplateData
 );
 
+router.post('/pm-location-detail', authMiddleware.isAuthenticated, taskGroupController.pmLocationDetail)
+
 module.exports = router
