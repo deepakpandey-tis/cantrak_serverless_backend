@@ -354,6 +354,7 @@ const ProjectController = {
               "users.name as Created By",
               "projects.createdAt as Date Created"
             ])
+            .orderBy('projects.id','desc')
             .offset(offset)
             .limit(per_page)
         ]);
@@ -405,6 +406,7 @@ const ProjectController = {
               "projects.createdAt as Date Created",
               "projects.project as projectId",
             ])
+            .orderBy('projects.id','desc')
             .offset(offset)
             .limit(per_page)
         ]);

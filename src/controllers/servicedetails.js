@@ -161,8 +161,7 @@ const serviceDetailsController = {
 
         Priorities = _.omit(PrioritiesResult[0], [
           "createdAt",
-          "updatedAt",
-          "isActive"
+          "updatedAt"
         ]);
         trx.commit;
       });
@@ -325,8 +324,7 @@ const serviceDetailsController = {
 
         LocationTag = _.omit(LocationTagResult[0], [
           "createdAt",
-          "updatedAt",
-          "isActive"
+          "updatedAt"
         ]);
         trx.commit;
       });
@@ -491,6 +489,7 @@ const serviceDetailsController = {
             "location_tags_master.createdAt as Date Created",
             "users.name as Created By"
           ])
+          .orderBy('location_tags_master.id','desc')
           .offset(offset)
           .limit(per_page)
       ]);
@@ -616,6 +615,7 @@ const serviceDetailsController = {
             "users.name as Created By",
             "incident_priority.createdAt as Date Created"
           ])
+          .orderBy('incident_priority.id','desc')
           .offset(offset)
           .limit(per_page)
       ]);
@@ -1403,8 +1403,137 @@ const serviceDetailsController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-  }   
+  },
+  /*ACTIVE/INACTIVE PRIORITY STATUS */
+  togglePriorityStatus: async (req, res) => {
+    try {
+      let priority = null;
+      let orgId = req.orgId;
+      let message;
+      await knex.transaction(async trx => {
+        let payload = req.body;
+        const schema = Joi.object().keys({
+          id: Joi.string().required()
+        });
+        const result = Joi.validate(payload, schema);
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message }
+            ]
+          });
+        }
+        let priorityResult;
 
+        let checkStatus = await knex.from('incident_priority').where({ id: payload.id }).returning(['*'])
+        if (checkStatus && checkStatus.length) {
+
+          if (checkStatus[0].isActive == true) {
+
+            priorityResult = await knex
+              .update({ isActive: false })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("incident_priority");
+              priority = priorityResult[0];
+            message = "Priority Deactivate successfully!"
+
+          } else {
+
+            priorityResult = await knex
+              .update({ isActive: true })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("incident_priority");
+              priority = priorityResult[0];
+            message = "Priority Activate successfully!"
+
+          }
+        }
+        trx.commit;
+      });
+      return res.status(200).json({
+        data: {
+          priority: priority
+        },
+        message: message
+      });
+    } catch (err) {
+      console.log(
+        "[controllers][generalsetup][togglePriority] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  /*ACTIVE/INACTIVE LOCATION TAG */
+  toggleLocationTagStatus: async (req, res) => {
+    try {
+      let location = null;
+      let orgId = req.orgId;
+      let message;
+      await knex.transaction(async trx => {
+        let payload = req.body;
+        const schema = Joi.object().keys({
+          id: Joi.string().required()
+        });
+        const result = Joi.validate(payload, schema);
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message }
+            ]
+          });
+        }
+        let locationResult;
+        let checkStatus = await knex.from('location_tags_master').where({ id: payload.id }).returning(['*'])
+        if (checkStatus && checkStatus.length) {
+
+          if (checkStatus[0].isActive == true) {
+
+            locationResult = await knex
+              .update({ isActive: false })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("location_tags_master");
+              location = locationResult[0];
+            message = "Location tag Deactivate successfully!"
+          } else {
+            locationResult = await knex
+              .update({ isActive: true })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("location_tags_master");
+              location = locationResult[0];
+            message = "Location tag Activate successfully!"
+          }
+        }
+        trx.commit;
+      });
+      return res.status(200).json({
+        data: {
+          location: location
+        },
+        message: message
+      });
+    } catch (err) {
+      console.log(
+        "[controllers][generalsetup][togglePriority] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  }
 };
 
 module.exports = serviceDetailsController;
