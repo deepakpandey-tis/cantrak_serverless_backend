@@ -274,8 +274,8 @@ const commonAreaController = {
             .leftJoin("projects", "common_area.projectId", "projects.id")
             .leftJoin("users", "common_area.createdBy", "users.id")
             .where({ "floor_and_zones.isActive": true })
-            .where({"common_area.orgId": orgId })
-            .where(qb=>{
+            .where({ "common_area.orgId": orgId })
+            .where(qb => {
               if (companyId) {
                 qb.where('common_area.companyId', companyId)
               }
@@ -296,7 +296,7 @@ const commonAreaController = {
                 qb.where('common_area.commonAreaCode', 'iLIKE', `%${commonAreaCode}%`)
               }
             })
-            ,
+          ,
           knex("common_area")
             .leftJoin(
               "floor_and_zones",
@@ -323,8 +323,8 @@ const commonAreaController = {
             ])
             .offset(offset)
             .limit(per_page)
-            .where({"common_area.orgId": orgId })
-            .where(qb=>{
+            .where({ "common_area.orgId": orgId })
+            .where(qb => {
               if (companyId) {
                 qb.where('common_area.companyId', companyId)
               }
@@ -345,7 +345,7 @@ const commonAreaController = {
                 qb.where('common_area.commonAreaCode', 'iLIKE', `%${commonAreaCode}%`)
               }
             })
-            .orderBy('common_area.id','desc')
+            .orderBy('common_area.id', 'desc')
         ]);
       } else {
         [total, rows] = await Promise.all([
@@ -381,7 +381,7 @@ const commonAreaController = {
             .leftJoin("users", "common_area.createdBy", "users.id")
             .where({ "floor_and_zones.isActive": true })
             .where({ "common_area.orgId": orgId })
-            .orderBy('common_area.id','desc')
+            .orderBy('common_area.id', 'desc')
             .select([
               "common_area.id as id",
               "common_area.commonAreaCode as Common Area",
@@ -427,7 +427,7 @@ const commonAreaController = {
   deleteCommonArea: async (req, res) => {
     try {
       let delCommonPayload = null;
-
+      let message;
       await knex.transaction(async trx => {
         let delcommonAreaPaylaod = req.body;
 
@@ -453,34 +453,52 @@ const commonAreaController = {
           validCommonAreaId
         );
 
-        // Return error when username exist
-
+        let updateDataResult;
         if (validCommonAreaId && validCommonAreaId.length) {
-          // Insert in users table,
           const currentTime = new Date().getTime();
-          //console.log('[controllers][entrance][signup]: Expiry Time', tokenExpiryTime);
 
-          //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
-          const updateDataResult = await knex
-            .update({
-              isActive: "false",
-              updatedAt: currentTime
-            })
-            .where({
-              id: delcommonAreaPaylaod.id
-            })
-            .returning(["*"])
-            .transacting(trx)
-            .into("common_area");
+          if (validCommonAreaId[0].isActive == true) {
 
-          console.log(
-            "[controllers][commonArea][delcommonArea]: Delete Data",
-            updateDataResult
-          );
+            updateDataResult = await knex
+              .update({
+                isActive: false,
+                updatedAt: currentTime
+              })
+              .where({
+                id: delcommonAreaPaylaod.id
+              })
+              .returning(["*"])
+              .transacting(trx)
+              .into("common_area");
 
-          //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
+            console.log(
+              "[controllers][commonArea][delcommonArea]: Delete Data",
+              updateDataResult
+            );
+            updateComPayload = updateDataResult[0];
+            message = "Common area deactivate successfully!"
+          } else {
 
-          updateComPayload = updateDataResult[0];
+            updateDataResult = await knex
+              .update({
+                isActive: true,
+                updatedAt: currentTime
+              })
+              .where({
+                id: delcommonAreaPaylaod.id
+              })
+              .returning(["*"])
+              .transacting(trx)
+              .into("common_area");
+
+            console.log(
+              "[controllers][commonArea][delcommonArea]: Delete Data",
+              updateDataResult
+            );
+            updateComPayload = updateDataResult[0];
+            message = "Common area activate successfully!"
+          }
+
         } else {
           return res.status(400).json({
             errors: [
@@ -499,7 +517,7 @@ const commonAreaController = {
         data: {
           commonArea: updateComPayload
         },
-        message: "Common Area deleted successfully !"
+        message: message
       });
     } catch (err) {
       console.log("[controllers][commonArea][updatecommonArea] :  Error", err);

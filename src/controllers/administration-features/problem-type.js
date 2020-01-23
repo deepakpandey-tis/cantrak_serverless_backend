@@ -101,9 +101,9 @@ const problemTypeController = {
       });
     }
   },
-   // Update ProblemType //
+  // Update ProblemType //
 
-   updateProblemType: async (req, res) => {
+  updateProblemType: async (req, res) => {
     try {
       let updateStatusPayload = null;
       let userId = req.me.id;
@@ -117,7 +117,7 @@ const problemTypeController = {
           typeCode: Joi.string().required(),
           descriptionEng: Joi.string().required(),
           descriptionThai: Joi.string().allow("").optional()
-         });
+        });
 
         const result = Joi.validate(statusPaylaod, schema);
         if (result && result.hasOwnProperty("error") && result.error) {
@@ -285,8 +285,7 @@ const problemTypeController = {
 
         problemTypeDetail = _.omit(problemResult[0], [
           "createdAt",
-          "updatedAt",
-          "isActive"
+          "updatedAt"
         ]);
         trx.commit;
       });
@@ -309,7 +308,7 @@ const problemTypeController = {
     }
   },
   /**EXPORT PROBLEM TYPE DATA */
-  exportProblemTypeData:async (req,res)=>{
+  exportProblemTypeData: async (req, res) => {
 
     try {
       let reqData = req.query;
@@ -385,7 +384,7 @@ const problemTypeController = {
             });
           }
         });
-      })  
+      })
     } catch (err) {
       console.log("[controllers][generalsetup][viewProblemType] :  Error", err);
       //trx.rollback
@@ -394,8 +393,8 @@ const problemTypeController = {
       });
     }
   },
-   /**IMPORT PROBLEM TYPE DATA */
-   importProblemTypeData: async (req, res) => {
+  /**IMPORT PROBLEM TYPE DATA */
+  importProblemTypeData: async (req, res) => {
     try {
 
       if (req.file) {
@@ -419,8 +418,8 @@ const problemTypeController = {
         let result = null;
 
         if (
-            data[0].A == "Ã¯Â»Â¿PROBLEM_TYPE_CODE" ||
-           (data[0].A == "PROBLEM_TYPE_CODE" &&
+          data[0].A == "Ã¯Â»Â¿PROBLEM_TYPE_CODE" ||
+          (data[0].A == "PROBLEM_TYPE_CODE" &&
             data[0].B == "DESCRIPTION" &&
             data[0].C == "ALTERNATE_DESCRIPTION")
         ) {
@@ -432,7 +431,7 @@ const problemTypeController = {
               if (i > 1) {
                 let checkExist = await knex("incident_type")
                   .select("id")
-                  .where({typeCode: problemData.A, orgId: req.orgId });
+                  .where({ typeCode: problemData.A, orgId: req.orgId });
                 if (checkExist.length < 1) {
                   let currentTime = new Date().getTime();
                   let insertData = {
@@ -442,7 +441,7 @@ const problemTypeController = {
                     descriptionThai: problemData.C,
                     createdAt: currentTime,
                     updatedAt: currentTime,
-                    createdBy:  userId
+                    createdBy: userId
                   };
                   resultData = await knex
                     .insert(insertData)
@@ -497,6 +496,73 @@ const problemTypeController = {
       }
     } catch (err) {
       console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  /*TOGGLE PROBLEM TYPE */
+  toggleProblemType: async (req, res) => {
+    try {
+      let problemType = null;
+      let message;
+      await knex.transaction(async trx => {
+        let payload = req.body;
+        let orgId = req.orgId;
+
+        const schema = Joi.object().keys({
+          id: Joi.number().required()
+        });
+        const result = Joi.validate(payload, schema);
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message }
+            ]
+          });
+        }
+        let problemTypeResult;
+        let checkStatus = await knex.from('incident_type').where({ id: payload.id }).returning(['*'])
+        if (checkStatus && checkStatus.length) {
+
+          if (checkStatus[0].isActive == true) {
+
+            problemTypeResult = await knex
+              .update({ isActive: false })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("incident_type");
+            problemType = problemTypeResult[0];
+            message = "Problem Type deactivate successfully!"
+
+          } else {
+
+            problemTypeResult = await knex
+              .update({ isActive: true })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("incident_type");
+            problemType = problemTypeResult[0];
+            message = "Problem Type activate successfully!"
+          }
+        }
+        trx.commit;
+      });
+
+      return res.status(200).json({
+        data: {
+          problemType: problemType
+        },
+        message: message
+      });
+    } catch (err) {
+      console.log(
+        "[controllers][problem-type][toggleProblemType] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]

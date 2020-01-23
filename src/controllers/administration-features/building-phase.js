@@ -277,7 +277,7 @@ const buildingPhaseController = {
 
           if (checkStatus[0].isActive == true) {
 
-            let buildingPhaseResult = await knex
+             buildingPhaseResult = await knex
               .update({ isActive: false })
               .where({ id: payload.id })
               .returning(["*"])
@@ -288,7 +288,7 @@ const buildingPhaseController = {
 
           } else {
 
-            let buildingPhaseResult = await knex
+             buildingPhaseResult = await knex
               .update({ isActive: true })
               .where({ id: payload.id })
               .returning(["*"])
