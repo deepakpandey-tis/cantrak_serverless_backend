@@ -420,6 +420,7 @@ const companyController = {
               "companies.createdAt as Date Created",
               "companies.companyId",
             ])
+            .orderBy('companies.id','desc')
             .offset(offset)
             .limit(per_page)
         ]);
@@ -467,6 +468,7 @@ const companyController = {
               "companies.createdAt as Date Created",
               "companies.companyId",
             ])
+            .orderBy('companies.id','desc')
             .offset(offset)
             .limit(per_page)
         ]);

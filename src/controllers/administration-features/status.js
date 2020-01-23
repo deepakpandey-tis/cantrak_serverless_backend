@@ -467,12 +467,11 @@ const statusController = {
         let current = new Date().getTime();
         let StatusResult = await knex("service_status")
           .select("service_status.*")
-          .where({ id: payload.id, orgId: orgId });
+          .where({ id: payload.id});
 
         statusDetail = _.omit(StatusResult[0], [
           "createdAt",
-          "updatedAt",
-          "isActive"
+          "updatedAt"
         ]);
         trx.commit;
       });

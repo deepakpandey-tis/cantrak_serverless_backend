@@ -232,6 +232,7 @@ const problemTypeController = {
             "users.name as Created By",
             "incident_type.createdAt as Date Created"
           ])
+          .orderBy('incident_type.id','desc')
           .offset(offset)
           .limit(per_page)
       ]);
