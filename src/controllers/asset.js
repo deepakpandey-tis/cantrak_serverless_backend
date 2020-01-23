@@ -16,9 +16,9 @@ const assetController = {
       let categories
       let filters = req.body;
       if (filters) {
-        categories = await knex('asset_category_master').select().where({ ...filters, orgId: req.orgId })
+        categories = await knex('asset_category_master').select().where({ ...filters, orgId: req.orgId,isActive:true })
       } else {
-        categories = await knex('asset_category_master').select().where({ orgId: req.orgId });
+        categories = await knex('asset_category_master').select().where({ orgId: req.orgId,isActive:true });
       }
       res.status(200).json({
         data: {
@@ -514,7 +514,7 @@ const assetController = {
           .where({ orgId: req.orgId }),
 
         knex("asset_master")
-          .select(["id", "assetName", "model", "barcode", "areaName"])
+          .select(["id", "assetName", "model", "barcode", "areaName","assetSerial"])
           .where({ assetCategoryId, companyId })
           .offset(offset)
           .limit(per_page)

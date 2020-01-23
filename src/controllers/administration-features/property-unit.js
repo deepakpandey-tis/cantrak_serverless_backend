@@ -127,7 +127,7 @@ const propertyUnitController = {
           buildingPhaseId: Joi.string().required(),
           floorZoneId: Joi.string().required(),
           unitNumber: Joi.string().required(),
-          houseId: Joi.string().allow('').optional(),
+          houseId: Joi.string().allow('').allow(null).optional(),
           description: Joi.string().allow("").allow(null).optional(),
           productCode: Joi.string().required(),
           area: Joi.string().allow("").allow(null).optional(),
