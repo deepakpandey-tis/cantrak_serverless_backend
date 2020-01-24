@@ -803,6 +803,8 @@ const commonAreaController = {
             let i = 0;
             console.log('Data[0]', data[0])
             for (let commonData of data) {
+
+              i++;
               // Find Company primary key
               let companyId = null;
               let projectId = null;
@@ -872,7 +874,7 @@ const commonAreaController = {
                 continue;
               }
 
-              i++;
+             
 
               if (i > 1) {
                 let currentTime = new Date().getTime()
