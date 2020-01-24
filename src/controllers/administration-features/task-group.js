@@ -1319,20 +1319,20 @@ const taskGroupController = {
       }
    
          const pmResult = await knex("task_group_schedule")
-         .innerJoin('task_group_schedule_assign_assets','task_group_schedule.id','task_group_schedule_assign_assets.scheduleId')
-         .innerJoin('asset_master','task_group_schedule_assign_assets.assetId','asset_master.id')
-         .innerJoin('asset_location','asset_master.id','asset_location.assetId')
-         .innerJoin('companies','asset_location.companyId','companies.id')
-         .innerJoin('projects','asset_location.projectId','projects.id')
-         .innerJoin('buildings_and_phases', 'asset_location.buildingId','buildings_and_phases.id')
-         .innerJoin('floor_and_zones','asset_location.floorId','floor_and_zones.id')
-         .innerJoin('property_units','asset_location.unitId','property_units.id')
-         .innerJoin('pm_master2','task_group_schedule.pmId','pm_master2.id')
-         .innerJoin('asset_category_master','pm_master2.assetCategoryId','asset_category_master.id')
-         .innerJoin('pm_task_groups','task_group_schedule.taskGroupId','pm_task_groups.id')
-         .innerJoin('assigned_service_team','pm_task_groups.id','assigned_service_team.entityId')
-         .innerJoin('teams','assigned_service_team.teamId','teams.teamId')
-         .innerJoin('users','assigned_service_team.userId','users.id')
+         .leftJoin('task_group_schedule_assign_assets','task_group_schedule.id','task_group_schedule_assign_assets.scheduleId')
+         .leftJoin('asset_master','task_group_schedule_assign_assets.assetId','asset_master.id')
+         .leftJoin('asset_location','asset_master.id','asset_location.assetId')
+         .leftJoin('companies','asset_location.companyId','companies.id')
+         .leftJoin('projects','asset_location.projectId','projects.id')
+         .leftJoin('buildings_and_phases', 'asset_location.buildingId','buildings_and_phases.id')
+         .leftJoin('floor_and_zones','asset_location.floorId','floor_and_zones.id')
+         .leftJoin('property_units','asset_location.unitId','property_units.id')
+         .leftJoin('pm_master2','task_group_schedule.pmId','pm_master2.id')
+         .leftJoin('asset_category_master','pm_master2.assetCategoryId','asset_category_master.id')
+         .leftJoin('pm_task_groups','task_group_schedule.taskGroupId','pm_task_groups.id')
+         .leftJoin('assigned_service_team','pm_task_groups.id','assigned_service_team.entityId')
+         .leftJoin('teams','assigned_service_team.teamId','teams.teamId')
+         .leftJoin('users','assigned_service_team.userId','users.id')
          .select([
            'task_group_schedule.id as id',
            'task_group_schedule_assign_assets.id as taskGroupScheduleAssignAssetId',
@@ -1364,9 +1364,28 @@ const taskGroupController = {
            'task_group_schedule_assign_assets.id':payload.taskGroupScheduleAssignAssetId,
            //'task_group_schedule.taskGroupId':payload.taskGroupId,
            'assigned_service_team.entityType':'pm_task_groups',
-           'task_group_schedule.orgId':req.orgId
-          })
-        
+           'task_group_schedule.orgId':req.orgId,
+         }).where(knex.raw('"asset_location"."updatedAt" = (select max("updatedAt") from asset_location)'))
+         //Where()
+
+        // let assetLocation = await knex('asset_location')
+        // .innerJoin('companies','asset_location.companyId','companies.id')
+        //  .innerJoin('projects','asset_location.projectId','projects.id')
+        //  .innerJoin('buildings_and_phases', 'asset_location.buildingId','buildings_and_phases.id')
+        //  .innerJoin('floor_and_zones','asset_location.floorId','floor_and_zones.id')
+        //  .innerJoin('property_units','asset_location.unitId','property_units.id')
+        // .where(knex.raw('"asset_location"."updatedAt" = (select max("updatedAt") from asset_location)'))
+        // .select([
+        //    'companies.companyName',
+        //    'projects.projectName',
+        //    'buildings_and_phases.buildingPhaseCode',
+        //    'floor_and_zones.floorZoneCode',
+        //    'property_units.unitNumber',
+        // ]).first()
+
+        // if(!assetLocation){
+        //   assetLocation = {}
+        // }
           // ADDITIONAL USER OPEN
           let additionalUsers = [];
           let tasks           = [];
