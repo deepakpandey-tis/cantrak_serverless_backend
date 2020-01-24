@@ -301,6 +301,7 @@ const AssetCategoryController = {
             "users.name as Created By",
             "asset_category_master.createdAt as Date Created"
           ])
+          .orderBy('asset_category_master.id','desc')
           .offset(offset)
           .limit(per_page)
       ]);

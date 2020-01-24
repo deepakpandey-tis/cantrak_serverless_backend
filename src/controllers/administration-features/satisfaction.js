@@ -258,6 +258,7 @@ const satisfactionController = {
             "users.name as Created By",
             "satisfaction.createdAt as Date Created"
           ])
+          .orderBy('satisfaction.id','desc')
           .offset(offset)
           .limit(per_page)
       ]);
@@ -293,7 +294,7 @@ const satisfactionController = {
     try {
       let orgId = req.orgId;
       let satisfaction = null;
-
+      let message;
       await knex.transaction(async trx => {
         let satisfactionPaylaod = req.body;
 
@@ -318,36 +319,56 @@ const satisfactionController = {
           "[controllers][satisfaction][deletesatisfaction]: Satisfaction Code",
           validSatisfactionId
         );
-
-        // Return error when username exist
-
+        let updateDataResult;
         if (validSatisfactionId && validSatisfactionId.length) {
-          // Insert in users table,
           const currentTime = new Date().getTime();
-          //console.log('[controllers][entrance][signup]: Expiry Time', tokenExpiryTime);
 
-          //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
-          const updateDataResult = await knex
-            .update({
-              isActive: "false",
-              updatedAt: currentTime
-            })
-            .where({
-              id: satisfactionPaylaod.id,
-              orgId: orgId
-            })
-            .returning(["*"])
-            .transacting(trx)
-            .into("satisfaction");
+          if (validSatisfactionId[0].isActive == true) {
 
-          console.log(
-            "[controllers][satisfaction][deletesatisfaction]: Delete Data",
-            updateDataResult
-          );
+            updateDataResult = await knex
+              .update({
+                isActive: false,
+                updatedAt: currentTime
+              })
+              .where({
+                id: satisfactionPaylaod.id
+              })
+              .returning(["*"])
+              .transacting(trx)
+              .into("satisfaction");
 
-          //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
+            console.log(
+              "[controllers][satisfaction][deletesatisfaction]: Delete Data",
+              updateDataResult
+            );
+            updateStatusPayload = updateDataResult[0];
+            message = "Satisfaction deactivate successfully!"
 
-          updateStatusPayload = updateDataResult[0];
+          } else {
+
+
+            updateDataResult = await knex
+              .update({
+                isActive: true,
+                updatedAt: currentTime
+              })
+              .where({
+                id: satisfactionPaylaod.id
+              })
+              .returning(["*"])
+              .transacting(trx)
+              .into("satisfaction");
+
+            console.log(
+              "[controllers][satisfaction][deletesatisfaction]: Delete Data",
+              updateDataResult
+            );
+            updateStatusPayload = updateDataResult[0];
+            message = "Satisfaction activate successfully!"
+          }
+
+
+
         } else {
           return res.status(400).json({
             errors: [
@@ -366,7 +387,7 @@ const satisfactionController = {
         data: {
           satisfaction: updateStatusPayload
         },
-        message: "Satisfaction deleted successfully !"
+        message: message
       });
     } catch (err) {
       console.log("[controllers][satisfaction][deletefaction] :  Error", err);
@@ -426,7 +447,7 @@ const satisfactionController = {
       let check = XLSX.writeFile(wb, filepath);
       const AWS = require("aws-sdk");
 
-      fs.readFile(filepath, function(err, file_buffer) {
+      fs.readFile(filepath, function (err, file_buffer) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
@@ -434,7 +455,7 @@ const satisfactionController = {
           Body: file_buffer,
           ACL: "public-read"
         };
-        s3.putObject(params, function(err, data) {
+        s3.putObject(params, function (err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             res.status(500).json({
@@ -495,8 +516,7 @@ const satisfactionController = {
 
         satisfactionDetail = _.omit(satisfactionResult[0], [
           "createdAt",
-          "updatedAt",
-          "isActive"
+          "updatedAt"
         ]);
         trx.commit;
       });
@@ -568,8 +588,8 @@ const satisfactionController = {
                     descriptionThai: statusData.C,
                     createdAt: currentTime,
                     updatedAt: currentTime,
-                    defaultFlag:statusData.D,
-                    createdBy:req.me.id
+                    defaultFlag: statusData.D,
+                    createdBy: req.me.id
                   };
 
                   resultData = await knex
