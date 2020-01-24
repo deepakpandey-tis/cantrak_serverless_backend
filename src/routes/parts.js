@@ -231,4 +231,8 @@ router.get(
   partsController.checkServiceOrderId
 );
 
+router.post("/delete-quotations-assigned-parts/",authMiddleware.isAuthenticated,roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPartAccessible,partsController.deleteQuotationAssignedParts
+);
+
 module.exports = router;
