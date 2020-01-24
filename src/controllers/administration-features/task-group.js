@@ -815,26 +815,7 @@ const taskGroupController = {
               "task_group_schedule_assign_assets.assetId",
               "asset_master.id"
             )
-            .innerJoin(
-              "asset_location",
-              "asset_master.id",
-              "asset_location.assetId"
-            )
-            .innerJoin(
-              "buildings_and_phases",
-              "asset_location.buildingId",
-              "buildings_and_phases.id"
-            )
-            .innerJoin(
-              "floor_and_zones",
-              "asset_location.floorId",
-              "floor_and_zones.id"
-            )
-            .innerJoin(
-              "property_units",
-              "asset_location.unitId",
-              "property_units.id"
-            )
+            
             .where({
               "task_group_schedule.taskGroupId": payload.taskGroupId,
               "task_group_schedule.orgId": req.orgId
@@ -851,26 +832,7 @@ const taskGroupController = {
               "task_group_schedule_assign_assets.assetId",
               "asset_master.id"
             )
-            .innerJoin(
-              "asset_location",
-              "asset_master.id",
-              "asset_location.assetId"
-            )
-            .innerJoin(
-              "buildings_and_phases",
-              "asset_location.buildingId",
-              "buildings_and_phases.id"
-            )
-            .innerJoin(
-              "floor_and_zones",
-              "asset_location.floorId",
-              "floor_and_zones.id"
-            )
-            .innerJoin(
-              "property_units",
-              "asset_location.unitId",
-              "property_units.id"
-            )
+            
             .select([
               "task_group_schedule_assign_assets.id as workOrderId",
               "task_group_schedule_assign_assets.status as status",
@@ -881,9 +843,10 @@ const taskGroupController = {
               "asset_master.areaName as areaName",
               "asset_master.description as description",
               "asset_master.assetSerial as assetSerial",
-              "buildings_and_phases.buildingPhaseCode",
-              "floor_and_zones.floorZoneCode",
-              "property_units.unitNumber as unitNumber",
+              "asset_master.id as assetId",
+              // "buildings_and_phases.buildingPhaseCode",
+              // "floor_and_zones.floorZoneCode",
+              // "property_units.unitNumber as unitNumber",
               "task_group_schedule_assign_assets.pmDate as pmDate",
               knex.raw(
                 `DATE("task_group_schedule_assign_assets"."pmDate") as "workOrderDate"`
@@ -901,15 +864,46 @@ const taskGroupController = {
             .orderBy("workOrderDate", "asc")
         ]);
 
+        const Parallel = require('async-parallel')
+        const rowsWithLocations = await Parallel.map(rows, async row => {
+          const location = await knex('asset_location')
+            .innerJoin('companies','asset_location.companyId','companies.id')
+            .innerJoin('projects', 'asset_location.projectId','projects.id')
+            .innerJoin(
+              "buildings_and_phases",
+              "asset_location.buildingId",
+              "buildings_and_phases.id"
+            )
+            .innerJoin(
+              "floor_and_zones",
+              "asset_location.floorId",
+              "floor_and_zones.id"
+            )
+            .innerJoin(
+              "property_units",
+              "asset_location.unitId",
+              "property_units.id"
+            )
+          .select([
+            'companies.companyName',
+            'projects.projectName',
+            'buildings_and_phases.buildingPhaseCode',
+            'floor_and_zones.floorZoneCode',
+            'property_units.unitNumber'
+          ]).where(knex.raw('"asset_location"."updatedAt" = (select max("updatedAt") from asset_location)')).first()
+          // ]).max('asset_location.updatedAt').first()
+          return {...row,...location}
+        })
+
         let count = total[0].count;
         pagination.total = count;
         pagination.per_page = per_page;
         pagination.offset = offset;
-        pagination.to = offset + rows.length;
+        pagination.to = offset + rowsWithLocations.length;
         pagination.last_page = Math.ceil(count / per_page);
         pagination.current_page = page;
         pagination.from = offset;
-        pagination.data = rows;
+        pagination.data = rowsWithLocations;
 
         return res.status(200).json({
           data: {
