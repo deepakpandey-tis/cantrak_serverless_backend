@@ -116,8 +116,8 @@ const propertysubCategoryController = {
           id: Joi.number().required(),
           incidentCategoryId: Joi.number().required(),
           descriptionEng: Joi.string().required(),
-          descriptionThai: Joi.string().allow("").optional(),
-          remark: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string().allow("").allow(null).optional(),
+          remark: Joi.string().allow("").allow(null).optional(),
           incidentTypeId: Joi.number().required()
         });
 

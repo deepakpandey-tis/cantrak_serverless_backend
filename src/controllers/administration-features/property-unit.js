@@ -289,7 +289,7 @@ const propertyUnitController = {
         let checkStatus = await knex.from('property_units').where({ id: payload.id }).returning(['*'])
         if (checkStatus && checkStatus.length) {
 
-          if (checkStatus[0].isActive == true) {
+          if (checkStatus[0].isActive == "true") {
 
             propertyUnitResult = await knex
               .update({ isActive: false })

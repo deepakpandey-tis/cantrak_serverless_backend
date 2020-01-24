@@ -24,7 +24,13 @@ const companyController = {
 
 
         const payload = _.omit(req.body, ["logoFile"]);
-        const orgId = req.orgId;
+        let orgId;
+        if(payload.orgId){
+           orgId = payload.orgId;
+        } else{
+          orgId = req.orgId;
+        }
+        
         const userId = req.me.id;
 
         if (payload.taxId) {
@@ -62,6 +68,9 @@ const companyController = {
             .allow("")
             .optional(),
           taxId: Joi.number()
+            .allow("")
+            .optional(),
+            orgId: Joi.number()
             .allow("")
             .optional()
         });
@@ -117,8 +126,6 @@ const companyController = {
           .into("companies");
         company = insertResult[0];
 
-
-
         trx.commit;
       });
 
@@ -140,9 +147,15 @@ const companyController = {
     try {
       let company = null;
       await knex.transaction(async trx => {
-        let orgId = req.orgId;
+        
         const payload = _.omit(req.body, ["logoFile"]);
-
+        let orgId;
+        if(payload.orgId){
+         orgId = payload.orgId;
+        }else {
+          orgId = req.orgId;
+        }
+        
         const schema = Joi.object().keys({
           id: Joi.string().required(),
           companyName: Joi.string().required(),
@@ -189,7 +202,11 @@ const companyController = {
             .optional(),
           taxId: Joi.number()
             .allow("").allow(null)
+            .optional(),
+            orgId: Joi.number()
+            .allow("")
             .optional()
+
         });
 
         const result = Joi.validate(payload, schema);
@@ -234,18 +251,17 @@ const companyController = {
         console.log("==============", req.body.logoFile)
         let insertData;
         if (req.body.logoFile.length) {
-          insertData = { ...payload, logoFile: logo, updatedAt: currentTime };
+          insertData = { ...payload,orgId, logoFile: logo, updatedAt: currentTime };
         } else {
-          insertData = { ...payload, updatedAt: currentTime };
+          insertData = { ...payload, orgId,updatedAt: currentTime };
         }
         let insertResult = await knex
           .update(insertData)
-          .where({ id: payload.id, orgId: req.orgId })
+          .where({ id: payload.id})
           .returning(["*"])
           .transacting(trx)
           .into("companies");
         company = insertResult[0];
-
 
 
         trx.commit;
@@ -282,17 +298,39 @@ const companyController = {
           });
         }
         let current = new Date().getTime();
-        let companyResult = await knex
-          .select()
-          .where({ id: payload.id, orgId: req.orgId })
-          .returning(["*"])
-          .transacting(trx)
-          .into("companies");
 
-        company = _.omit(companyResult[0], [
-          "createdAt",
-          "updatedAt"
-        ]);
+        let role = req.me.roles[0];
+        let name = req.me.name;
+        let companyResult
+        if (role === "superAdmin" && name === "superAdmin") {
+
+          companyResult = await knex
+            .select()
+            .where({ id: payload.id })
+            .returning(["*"])
+            .transacting(trx)
+            .into("companies");
+
+          company = _.omit(companyResult[0], [
+            "createdAt",
+            "updatedAt"
+          ]);
+        } else {
+
+          companyResult = await knex
+            .select()
+            .where({ id: payload.id, orgId: req.orgId })
+            .returning(["*"])
+            .transacting(trx)
+            .into("companies");
+
+          company = _.omit(companyResult[0], [
+            "createdAt",
+            "updatedAt"
+          ]);
+
+        }
+
         trx.commit;
       });
       return res.status(200).json({
@@ -420,7 +458,7 @@ const companyController = {
               "companies.createdAt as Date Created",
               "companies.companyId",
             ])
-            .orderBy('companies.id','desc')
+            .orderBy('companies.id', 'desc')
             .offset(offset)
             .limit(per_page)
         ]);
@@ -468,7 +506,7 @@ const companyController = {
               "companies.createdAt as Date Created",
               "companies.companyId",
             ])
-            .orderBy('companies.id','desc')
+            .orderBy('companies.id', 'desc')
             .offset(offset)
             .limit(per_page)
         ]);
@@ -687,52 +725,52 @@ const companyController = {
               i++;
 
               if (i > 1) {
-                 let taxIdExists = await knex("companies")
+                let taxIdExists = await knex("companies")
                   .select("taxId")
-                  .where({ taxId:companyData.F,orgId: req.orgId });
+                  .where({ taxId: companyData.F, orgId: req.orgId });
                 let checkExist = await knex("companies")
                   .select("companyName")
                   .where({ companyId: companyData.A, orgId: req.orgId });
                 console.log("Check list company: ", checkExist);
 
-                if(!taxIdExists.length){
+                if (!taxIdExists.length) {
 
 
-                if (checkExist.length < 1) {
+                  if (checkExist.length < 1) {
 
-                  let taxId = companyData.F;
-                  if (taxId) {
-                    taxId = taxId.toString();
+                    let taxId = companyData.F;
+                    if (taxId) {
+                      taxId = taxId.toString();
+                    }
+                    let currentTime = new Date().getTime();
+                    let insertData = {
+                      orgId: req.orgId,
+                      companyId: companyData.A,
+                      companyName: companyData.B,
+                      description1: companyData.C,
+                      companyAddressEng: companyData.D,
+                      companyAddressThai: companyData.E,
+                      taxId: taxId,
+                      contactPerson: companyData.G,
+                      descriptionEng: companyData.H,
+                      createdBy: req.me.id,
+                      isActive: true,
+                      createdAt: currentTime,
+                      updatedAt: currentTime,
+                      createdBy: userId
+                    };
+
+                    resultData = await knex
+                      .insert(insertData)
+                      .returning(["*"])
+                      .into("companies");
+
+                    if (resultData && resultData.length) {
+                      success++;
+                    }
+                  } else {
+                    fail++;
                   }
-                  let currentTime = new Date().getTime();
-                  let insertData = {
-                    orgId: req.orgId,
-                    companyId: companyData.A,
-                    companyName: companyData.B,
-                    description1: companyData.C,
-                    companyAddressEng: companyData.D,
-                    companyAddressThai: companyData.E,
-                    taxId: taxId,
-                    contactPerson: companyData.G,
-                    descriptionEng: companyData.H,
-                    createdBy: req.me.id,
-                    isActive: true,
-                    createdAt: currentTime,
-                    updatedAt: currentTime,
-                    createdBy: userId
-                  };
-
-                  resultData = await knex
-                    .insert(insertData)
-                    .returning(["*"])
-                    .into("companies");
-
-                  if (resultData && resultData.length) {
-                    success++;
-                  }
-                } else {
-                  fail++;
-                }
 
                 } else {
                   fail++;
