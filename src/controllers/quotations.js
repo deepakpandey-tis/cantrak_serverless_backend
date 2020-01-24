@@ -288,6 +288,7 @@ const quotationsController = {
           .leftJoin("organisation_roles", "organisation_user_roles.roleId", "=", "organisation_roles.id")
           .select(
             "quotations.id as quotationId",
+            "quotations.serviceRequestId as serviceRequestId",
             "checkUser.name as checkedBy",
             "inspectedUser.name as inspectedBy",
             "checkUser.id as checkedByUserId",
