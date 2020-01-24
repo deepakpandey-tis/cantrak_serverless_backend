@@ -210,7 +210,26 @@ const ProjectController = {
           });
         }
         let current = new Date().getTime();
-        let ProjectResult = await knex("projects")
+
+
+        let role = req.me.roles[0];
+        let name = req.me.name;
+        let ProjectResult
+        if (role === "superAdmin" && name === "superAdmin") {
+
+          ProjectResult = await knex("projects")
+          .leftJoin("companies", "projects.companyId", "companies.id")
+          .select("projects.*", "companies.companyId as compId", "companies.companyName")
+          .where({ "projects.id": payload.id})
+
+        Project = _.omit(ProjectResult[0], [
+          "createdAt",
+          "updatedAt"
+        ]);
+
+        } else {
+
+          ProjectResult = await knex("projects")
           .leftJoin("companies", "projects.companyId", "companies.id")
           .select("projects.*", "companies.companyId as compId", "companies.companyName")
           .where({ "projects.id": payload.id, 'projects.orgId': req.orgId })
@@ -219,6 +238,10 @@ const ProjectController = {
           "createdAt",
           "updatedAt"
         ]);
+
+        }
+
+        
         trx.commit;
       });
 

@@ -156,18 +156,36 @@ const sourceofRequestController = {
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
         });
       }
-      let sourceofRequestResult = await knex("source_of_request")
-        .update({ isActive: false })
-        .where({ id: payload.id, orgId: orgId })
-        .returning(["*"]);
-      sourceofRequest = sourceofRequestResult[0];
+      let message;
+      let sourceofRequestResult;
+      let checkStatus = await knex.from('source_of_request').where({ id: payload.id }).returning(['*'])
+      if (checkStatus && checkStatus.length) {
+
+        if (checkStatus[0].isActive == true) {
+
+          sourceofRequestResult = await knex("source_of_request")
+            .update({ isActive: false })
+            .where({ id: payload.id })
+            .returning(["*"]);
+          sourceofRequest = sourceofRequestResult[0];
+          message = "Service Type deactivate successfully!"
+        } else{
+
+          sourceofRequestResult = await knex("source_of_request")
+            .update({ isActive: true })
+            .where({ id: payload.id })
+            .returning(["*"]);
+          sourceofRequest = sourceofRequestResult[0];
+          message = "Service Type activate successfully!"
+        }
+      }
       // trx.commit;
       // })
       return res.status(200).json({
         data: {
           sourceofRequest: sourceofRequest
         },
-        message: "Source of Request deleted!"
+        message: message
       });
     } catch (err) {
       console.log(
@@ -198,11 +216,11 @@ const sourceofRequestController = {
         knex
           .count("* as count")
           .from("source_of_request")
-          .leftJoin('users','source_of_request.createdBy','users.id')
+          .leftJoin('users', 'source_of_request.createdBy', 'users.id')
           .where({ 'source_of_request.orgId': orgId })
           .first(),
         knex("source_of_request")
-        .leftJoin('users','source_of_request.createdBy','users.id')
+          .leftJoin('users', 'source_of_request.createdBy', 'users.id')
           .select([
             "source_of_request.id",
             "source_of_request.requestCode as Source Code",
@@ -213,6 +231,7 @@ const sourceofRequestController = {
             "source_of_request.createdAt as Date Created"
           ])
           .where({ 'source_of_request.orgId': orgId })
+          .orderBy('source_of_request.id','desc')
           .offset(offset)
           .limit(per_page)
       ]);
@@ -292,7 +311,7 @@ const sourceofRequestController = {
       let check = XLSX.writeFile(wb, filepath);
       const AWS = require("aws-sdk");
 
-      fs.readFile(filepath, function(err, file_buffer) {
+      fs.readFile(filepath, function (err, file_buffer) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
@@ -300,7 +319,7 @@ const sourceofRequestController = {
           Body: file_buffer,
           ACL: "public-read"
         };
-        s3.putObject(params, function(err, data) {
+        s3.putObject(params, function (err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             res.status(500).json({
@@ -361,8 +380,7 @@ const sourceofRequestController = {
 
         requestDetails = _.omit(sourceOfReqeustResult[0], [
           "createdAt",
-          "updatedAt",
-          "isActive"
+          "updatedAt"
         ]);
         trx.commit;
       });
@@ -433,7 +451,7 @@ const sourceofRequestController = {
                     isActive: true,
                     createdAt: currentTime,
                     updatedAt: currentTime,
-                    createdBy:req.me.id
+                    createdBy: req.me.id
                   };
 
                   resultData = await knex

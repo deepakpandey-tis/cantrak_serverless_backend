@@ -241,6 +241,7 @@ const statusController = {
             //  "createdby as Created By",
             "createdAt as Date Created"
           ])
+          .orderBy('service_status.createdAt','desc')
           .offset(offset)
           .limit(per_page)
       ]);
@@ -270,13 +271,13 @@ const statusController = {
     }
   },
 
-  // Delete Common Area //
+  // ACTIVE/INACTIVE STATUS //
 
   deleteStatus: async (req, res) => {
     try {
-      let delCommonPayload = null;
       let orgId = req.orgId;
-
+      let message;
+      let updateStatusPayload;
       await knex.transaction(async trx => {
         let statusPaylaod = req.body;
 
@@ -302,35 +303,53 @@ const statusController = {
           validStatusId
         );
 
-        // Return error when username exist
-
+        const currentTime = new Date().getTime();
+        let updateDataResult;
         if (validStatusId && validStatusId.length) {
-          // Insert in users table,
-          const currentTime = new Date().getTime();
-          //console.log('[controllers][entrance][signup]: Expiry Time', tokenExpiryTime);
 
-          //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
-          const updateDataResult = await knex
-            .update({
-              isActive: "false",
-              updatedAt: currentTime
-            })
-            .where({
-              id: statusPaylaod.id,
-              orgId: orgId
-            })
-            .returning(["*"])
-            .transacting(trx)
-            .into("service_status");
+          if (validStatusId[0].isActive == true) {
 
-          console.log(
-            "[controllers][status][deletestatus]: Delete Data",
-            updateDataResult
-          );
+            updateDataResult = await knex
+              .update({
+                isActive: false,
+                updatedAt: currentTime
+              })
+              .where({
+                id: statusPaylaod.id
+              })
+              .returning(["*"])
+              .transacting(trx)
+              .into("service_status");
 
-          //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
+            console.log(
+              "[controllers][status][deletestatus]: Delete Data",
+              updateDataResult
+            );
+            updateStatusPayload = updateDataResult[0];
+            message = "Status deactivate successfully!"
 
-          updateStatusPayload = updateDataResult[0];
+          } else {
+
+            updateDataResult = await knex
+              .update({
+                isActive: true,
+                updatedAt: currentTime
+              })
+              .where({
+                id: statusPaylaod.id
+              })
+              .returning(["*"])
+              .transacting(trx)
+              .into("service_status");
+
+            console.log(
+              "[controllers][status][deletestatus]: Delete Data",
+              updateDataResult
+            );
+            updateStatusPayload = updateDataResult[0];
+            message = "Status activate successfully!"
+          }
+
         } else {
           return res.status(400).json({
             errors: [
@@ -349,7 +368,7 @@ const statusController = {
         data: {
           status: updateStatusPayload
         },
-        message: "Status deleted successfully !"
+        message: message
       });
     } catch (err) {
       console.log("[controllers][commonArea][updatecommonArea] :  Error", err);
@@ -408,7 +427,7 @@ const statusController = {
       let check = XLSX.writeFile(wb, filepath);
       const AWS = require("aws-sdk");
 
-      fs.readFile(filepath, function(err, file_buffer) {
+      fs.readFile(filepath, function (err, file_buffer) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
@@ -416,7 +435,7 @@ const statusController = {
           Body: file_buffer,
           ACL: "public-read"
         };
-        s3.putObject(params, function(err, data) {
+        s3.putObject(params, function (err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             res.status(500).json({
@@ -467,7 +486,7 @@ const statusController = {
         let current = new Date().getTime();
         let StatusResult = await knex("service_status")
           .select("service_status.*")
-          .where({ id: payload.id});
+          .where({ id: payload.id });
 
         statusDetail = _.omit(StatusResult[0], [
           "createdAt",
@@ -604,19 +623,19 @@ const statusController = {
     }
   },
   /*GET ALL STATUS LIST FOR DROP DOWN */
-  getAllStatus:async (req,res)=>{
-    try{
+  getAllStatus: async (req, res) => {
+    try {
 
-      let orgId  = req.orgId;
+      let orgId = req.orgId;
       let result = await knex.from('service_status')
-                   .select('id',"statusCode","descriptionEng",)
-                   .where({orgId})
+        .select('id', "statusCode", "descriptionEng")
+        .where({ orgId })
       return res.status(200).json({
-        data:result,
-        message:"All Status list"
+        data: result,
+        message: "All Status list"
       });
 
-    }catch(err){
+    } catch (err) {
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
