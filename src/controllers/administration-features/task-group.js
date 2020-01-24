@@ -1496,6 +1496,11 @@ const taskGroupController = {
                  })
           // GERERAL DETAILS CLOSE
 
+
+          //IMAGES
+          
+          // IMAGES CLOSED
+
                     return res.status(200).json({
                             data: {
                               pmTaskDetails  : _.uniqBy(taskDetails,'pmDate'),
