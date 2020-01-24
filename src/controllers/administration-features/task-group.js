@@ -186,8 +186,9 @@ const taskGroupController = {
 
       // Insert tasks into template_task
       let insertPaylaod = req.body.tasks.map(v => ({
-        taskName: v, templateId: taskGroupTemplate.id, createdAt: currentTime,createdBy:req.body.mainUserId,
+        taskName: v.taskName, templateId: taskGroupTemplate.id, createdAt: currentTime,createdBy:req.body.mainUserId,
           orgId: req.orgId,
+          taskSerialNumber:v.taskSerialNumber,
 
         updatedAt: currentTime}))
       insertedTasks = await knex('template_task').insert(insertPaylaod).returning(['*'])
@@ -1511,13 +1512,14 @@ const taskGroupController = {
 
 
           //IMAGES
-          
+          const images = await knex('images').where({entityId:taskId,entityType:'pm_task'}).select('s3Url')
           // IMAGES CLOSED
 
                     return res.status(200).json({
                             data: {
                               pmTaskDetails  : _.uniqBy(taskDetails,'pmDate'),
-                              generalDetails : generalDetails
+                              generalDetails : generalDetails,
+                              images
                             },
                             message: 'PM Task Details Successfully!'
                           })
