@@ -1332,7 +1332,7 @@ const partsController = {
 
                         return res.status(200).json({
                             data: {
-                                parts: parts
+                                parts: rows
                             },
                             url: url,
                             message: "Part Data Export Successfully!",
