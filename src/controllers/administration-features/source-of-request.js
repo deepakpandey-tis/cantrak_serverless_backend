@@ -424,6 +424,10 @@ const sourceofRequestController = {
         let fail = 0;
         let success = 0;
         let result = null;
+        let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
 
         if (
           data[0].A == "SOURCE_CODE" ||
@@ -464,6 +468,10 @@ const sourceofRequestController = {
                   }
                 } else {
                   fail++;
+                  let values = _.values(requestData)
+                  values.unshift('Request Code already exists.')
+                  errors.push(values);
+                  continue;
                 }
               }
             }
@@ -487,7 +495,8 @@ const sourceofRequestController = {
               console.log("File Deleting Error " + err);
             });
             return res.status(200).json({
-              message: message
+              message: message,
+              errors
             });
           }
         } else {
