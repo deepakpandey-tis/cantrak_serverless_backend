@@ -51,7 +51,7 @@ const AssetCategoryController = {
         // Return error when username exist
 
         if (existAssetCategory && existAssetCategory.length) {
-          
+
           return res.status(400).json({
             errors: [
               { code: "VALIDATION_ERROR", message: "Asset Category already exist!!" }
@@ -235,7 +235,7 @@ const AssetCategoryController = {
         }
         let check = await knex('asset_category_master').select('isActive').where({ id: payload.id, orgId: req.orgId }).first()
         let ProjectResult
-        if(check.isActive){
+        if (check.isActive) {
           ProjectResult = await knex
             .update({ isActive: false })
             .where({ id: payload.id, orgId: req.orgId })
@@ -301,7 +301,7 @@ const AssetCategoryController = {
             "users.name as Created By",
             "asset_category_master.createdAt as Date Created"
           ])
-          .orderBy('asset_category_master.id','desc')
+          .orderBy('asset_category_master.id', 'desc')
           .offset(offset)
           .limit(per_page)
       ]);
@@ -389,12 +389,12 @@ const AssetCategoryController = {
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
       var ws
 
-      if(rows && rows.length){
-      var ws = XLSX.utils.json_to_sheet(rows);
-      
-    } else {
-      ws = XLSX.utils.json_to_sheet([{CATEGORY_NAME:'',COMPANY:'',COMPANY_NAME:''}]);
-    }
+      if (rows && rows.length) {
+        var ws = XLSX.utils.json_to_sheet(rows);
+
+      } else {
+        ws = XLSX.utils.json_to_sheet([{ CATEGORY_NAME: '', COMPANY: '', COMPANY_NAME: '' }]);
+      }
 
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
@@ -403,7 +403,7 @@ const AssetCategoryController = {
       let check = XLSX.writeFile(wb, filepath);
       const AWS = require("aws-sdk");
 
-      fs.readFile(filepath, function(err, file_buffer) {
+      fs.readFile(filepath, function (err, file_buffer) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
@@ -411,7 +411,7 @@ const AssetCategoryController = {
           Body: file_buffer,
           ACL: "public-read"
         };
-        s3.putObject(params, function(err, data) {
+        s3.putObject(params, function (err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             res.status(500).json({
@@ -462,11 +462,16 @@ const AssetCategoryController = {
           header: "A",
           raw: false
         });
-        //data         = JSON.stringify(data);
+        let totalData = data.length - 1;
+        let fail = 0;
+        let success = 0;
         let result = null;
         let currentTime = new Date().getTime();
+        let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
 
-        //console.log('DATA: ',data)
 
         if (
           data[0].A == "Ã¯Â»Â¿CATEGORY_NAME" ||
@@ -474,8 +479,6 @@ const AssetCategoryController = {
         ) {
           if (data.length > 0) {
             let i = 0;
-            let success = 0
-            let fail = 0
             console.log("Data[0]", data[0]);
             for (let assetCategoryData of data) {
               i++;
@@ -494,24 +497,27 @@ const AssetCategoryController = {
                   //     companyId: assetCategoryData.B
                   //   });
                   //if (categoryIdResult && categoryIdResult.length) {
-                    success++;
-                    let insertData = {
-                      orgId: req.orgId,
-                      categoryName: assetCategoryData.A,
-                      isActive: true,
-                      createdBy: req.me.id,
-                      createdAt: currentTime
-                    };
+                  success++;
+                  let insertData = {
+                    orgId: req.orgId,
+                    categoryName: assetCategoryData.A,
+                    isActive: true,
+                    createdBy: req.me.id,
+                    createdAt: currentTime
+                  };
 
-                    resultData = await knex
-                      .insert(insertData)
-                      .returning(["*"])
-                      .into("asset_category_master");
+                  resultData = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .into("asset_category_master");
                   // } else {
                   //   fail++
                   // }
-                }else {
-                    fail++;
+                } else {
+                  let values = _.values(assetCategoryData)
+                  values.unshift('Asset category already exists')
+                  errors.push(values);
+                  fail++;
                 }
               }
             }
@@ -519,8 +525,26 @@ const AssetCategoryController = {
             let deleteFile = await fs.unlink(file_path, err => {
               console.log("File Deleting Error " + err);
             });
+            let message = null;
+            if (totalData == success) {
+              message =
+                "System have processed ( " +
+                totalData +
+                " ) entries and added them successfully!";
+            } else {
+              message =
+                "System have processed ( " +
+                totalData +
+                " ) entries out of which only ( " +
+                success +
+                " ) are added and others are failed ( " +
+                fail +
+                " ) due to validation!";
+            }
+
             return res.status(200).json({
-              message: "Asset Category Data Imported Successfully! "+"Success: "+success+" and Failed: "+fail
+              message: message,
+              errors:errors
             });
           }
         } else {

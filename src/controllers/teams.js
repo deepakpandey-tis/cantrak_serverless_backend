@@ -749,6 +749,10 @@ const teamsController = {
                 let projectFail = 0;
                 console.log("=======", data[0], "+++++++++++++++")
                 let result = null;
+                let errors = []
+                let header = Object.values(data[0]);
+                header.unshift('Error');
+                errors.push(header)
 
                 if (data[0].A == "Ã¯Â»Â¿TEAM_CODE" || data[0].A == "TEAM_CODE" &&
                     data[0].B == "TEAM_NAME" &&
@@ -838,9 +842,12 @@ const teamsController = {
                                             resultProjectData = await knex.insert(insertProjectData).returning(['*']).into('team_roles_project_master');
 
                                             if (resultProjectData && resultProjectData.length) {
-                                                success++;
+                                                //success++;
                                             }
                                         } else {
+                                            let values = _.values(teamData)
+                                            values.unshift('This project & team role already exists')
+                                            errors.push(values);
                                             fail++;
                                         }
                                     }
@@ -869,9 +876,15 @@ const teamsController = {
                                                 success++;
                                             }
                                         } else {
+                                            let values = _.values(teamData)
+                                            values.unshift('This project & team role already exists')
+                                            errors.push(values);
                                             fail++;
                                         }
                                     }
+                                    let values = _.values(teamData)
+                                    values.unshift('Team Code already exists')
+                                    errors.push(values);
                                     fail++;
                                 }
                             }
@@ -888,6 +901,7 @@ const teamsController = {
                         let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
                         return res.status(200).json({
                             message: message,
+                            errors:errors
                         });
 
                     }

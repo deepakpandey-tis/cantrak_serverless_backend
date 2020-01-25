@@ -676,7 +676,6 @@ const ProjectController = {
         let success = 0;
         console.log("=======", data[0], "+++++++++++++++")
         let result = null;
-
         let errors = []
         let header = Object.values(data[0]);
         header.unshift('Error');

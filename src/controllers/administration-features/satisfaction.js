@@ -563,6 +563,10 @@ const satisfactionController = {
         let fail = 0;
         let success = 0;
         let result = null;
+        let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
 
         if (
           data[0].A == "Ã¯Â»Â¿SATISFACTION_CODE" ||
@@ -602,6 +606,9 @@ const satisfactionController = {
                   }
                 } else {
                   fail++;
+                  let values = _.values(statusData)
+                  values.unshift('Satisfaction code already exists.')
+                  errors.push(values);
                 }
               }
             }
@@ -625,7 +632,8 @@ const satisfactionController = {
               console.log("File Deleting Error " + err);
             });
             return res.status(200).json({
-              message: message
+              message: message,
+              errors
             });
           }
         } else {

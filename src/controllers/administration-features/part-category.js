@@ -446,6 +446,13 @@ const PartCategoryController = {
         let currentTime = new Date().getTime();
         console.log('DATA:***************** ',data)
         //console.log('DATA: ',data)
+        let totalData = data.length - 1;
+        let fail = 0;
+        let success = 0;
+        let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
 
         if (
           data[0].A == "Ã¯Â»Â¿CATEGORY_NAME" ||
@@ -457,8 +464,6 @@ const PartCategoryController = {
         ) {
           if (data.length > 0) {
             let i = 0;
-            let success = 0;
-            let fail = 0;
             console.log("Data[0]", data[0]);
             for (let partCategoryData of data) {
               i++;
@@ -494,6 +499,9 @@ const PartCategoryController = {
                   //   fail++;
                   // }
                 } else {
+                  let values = _.values(partCategoryData)
+                  values.unshift('Part category already exists')
+                  errors.push(values);
                   fail++;
                 }
               }
@@ -502,13 +510,25 @@ const PartCategoryController = {
             let deleteFile = await fs.unlink(file_path, err => {
               console.log("File Deleting Error " + err);
             });
-            return res.status(200).json({
-              message:
-                "Part Category Data Imported Successfully! " +
-                "Success: " +
+            let message = null;
+            if (totalData == success) {
+              message =
+                "System have processed ( " +
+                totalData +
+                " ) entries and added them successfully!";
+            } else {
+              message =
+                "System have processed ( " +
+                totalData +
+                " ) entries out of which only ( " +
                 success +
-                " and Failed: " +
-                fail
+                " ) are added and others are failed ( " +
+                fail +
+                " ) due to validation!";
+            }
+            return res.status(200).json({
+              message:message,
+              errors:errors
             });
           }
         } else {
