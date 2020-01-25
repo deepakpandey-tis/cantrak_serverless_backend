@@ -856,7 +856,10 @@ const propertyUnitController = {
         });
         //data         = JSON.stringify(data);
         let result = null;
-
+        let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
         //console.log('DATA: ',data)
         let totalData = data.length - 1;
         let fail = 0;
@@ -970,23 +973,48 @@ const propertyUnitController = {
 
               if (!propertyTypeId) {
                 fail++;
+                let values = _.values(propertyUnitData)
+                values.unshift('Property Type does not exists')
+
+                //errors.push(header);
+                errors.push(values);
                 continue;
               }
               if (!buildingPhaseId) {
                 fail++;
+                let values = _.values(propertyUnitData)
+                values.unshift('Building ID does not exists')
+
+                //errors.push(header);
+                errors.push(values);
                 continue;
               }
               if (!floorZoneId) {
                 fail++;
+                let values = _.values(propertyUnitData)
+                values.unshift('Floor ID does not exists')
+
+                //errors.push(header);
+                errors.push(values);
                 continue;
               }
 
               if (!companyId) {
                 fail++;
+                let values = _.values(propertyUnitData)
+                values.unshift('Company ID already exists')
+
+                //errors.push(header);
+                errors.push(values);
                 continue;
               }
               if (!projectId) {
                 fail++;
+                let values = _.values(propertyUnitData)
+                values.unshift('Project ID already exists')
+
+                //errors.push(header);
+                errors.push(values);
                 continue;
               }
 
@@ -1031,6 +1059,9 @@ const propertyUnitController = {
                   success++;
                 } else {
                   fail++;
+                  let values = _.values(propertyUnitData)
+                  values.unshift('Property unit already exists in the same building.')
+                  errors.push(values);
                 }
               }
             }
@@ -1056,7 +1087,8 @@ const propertyUnitController = {
               console.log("File Deleting Error " + err);
             });
             return res.status(200).json({
-              message: message
+              message: message,
+              errors
             });
           }
         } else {

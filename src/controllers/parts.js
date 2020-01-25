@@ -1111,6 +1111,10 @@ const partsController = {
                 let fail = 0;
                 let success = 0;
                 let result = null;
+                let errors = []
+                let header = Object.values(data[0]);
+                header.unshift('Error');
+                errors.push(header)
 
                 if (data[0].A == "Ã¯Â»Â¿PART_CODE" || data[0].A == "PART_CODE" &&
                     data[0].B == "PART_NAME" &&
@@ -1159,6 +1163,9 @@ const partsController = {
                                 let companyId = null;
                                 if (!companyData.length) {
                                     fail++;
+                                    let values = _.values(partData)
+                                    values.unshift('Company ID does not exists.')
+                                    errors.push(values);
                                     continue;
                                 }
                                 if (companyData && companyData.length) {
@@ -1195,6 +1202,9 @@ const partsController = {
                                     }
                                 } else {
                                     fail++;
+                                    let values = _.values(partData)
+                                    values.unshift('Part name with corresponding part code already exists.')
+                                    errors.push(values);
                                 }
 
                             }
@@ -1218,6 +1228,7 @@ const partsController = {
                         let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
                         return res.status(200).json({
                             message: message,
+                            errors
                         });
                     }
 
@@ -1255,7 +1266,7 @@ const partsController = {
                 knex.from('part_master')
                     .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
                     .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
-                    .innerJoin(
+                    .leftJoin(
                         "companies",
                         "part_master.companyId",
                         "companies.id"
@@ -1321,10 +1332,10 @@ const partsController = {
 
                         return res.status(200).json({
                             data: {
-                                parts: parts
+                                parts: rows
                             },
+                            url: url,
                             message: "Part Data Export Successfully!",
-                            url: url
                         });
                     }
                 });
