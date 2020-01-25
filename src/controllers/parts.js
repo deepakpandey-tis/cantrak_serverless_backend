@@ -1266,7 +1266,7 @@ const partsController = {
                 knex.from('part_master')
                     .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
                     .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
-                    .innerJoin(
+                    .leftJoin(
                         "companies",
                         "part_master.companyId",
                         "companies.id"
@@ -1332,9 +1332,9 @@ const partsController = {
 
                         return res.status(200).json({
                             data: {
-                                // parts: parts
-                                url: url
+                                parts: parts
                             },
+                            url: url,
                             message: "Part Data Export Successfully!",
                         });
                     }
