@@ -706,6 +706,10 @@ const companyController = {
         let result = null;
         let userId = req.me.id;
         let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
+        //errors.push(header);
 
         if (
           data[0].A == "COMPANY" ||
@@ -722,7 +726,7 @@ const companyController = {
           // data[0].H == "STATUS"
         ) {
           if (data.length > 0) {
-            let header = Object.keys(data[0])
+            //let header = Object.keys(data[0])
 
             let i = 0;
             for (let companyData of data) {
@@ -774,20 +778,25 @@ const companyController = {
                     }
                   } else {
                     fail++;
-                    header.push('description')
-                    let values = Object.values(companyData)
-                    values.push('Company ID already exists')
-                    errors = [header,...values]
+                    //header.push('description')
+                    //let values = Object.values(companyData)
+                    //values.push('Company ID already exists')
+                    let values = _.values(companyData)
+                    values.unshift('Company ID already exists')
+
+                    //errors.push(header);
+                    errors.push(values);
                     //errors.push({...companyData,description:})
                   }
 
                 } else {
                   fail++;
                   //errors.push({...companyData,description:'Tax ID already exists'})
-                  header.push('description')
-                  let values = Object.values(companyData)
-                  values.push('Tax ID already exists')
-                  errors = [header, ...values]
+                  let values = _.values(companyData)
+                  values.unshift('Tax ID already exists')
+
+                  //errors.push(header);
+                  errors.push(values);
                 }
 
               }
