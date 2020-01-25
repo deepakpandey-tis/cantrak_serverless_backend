@@ -689,6 +689,8 @@ const companyController = {
         let success = 0;
         let result = null;
         let userId = req.me.id;
+        let errors = []
+
         if (
           data[0].A == "COMPANY" ||
           (data[0].A == "Ã¯Â»Â¿COMPANY" &&
@@ -704,6 +706,8 @@ const companyController = {
           // data[0].H == "STATUS"
         ) {
           if (data.length > 0) {
+            let header = Object.keys(data[0])
+
             let i = 0;
             for (let companyData of data) {
               i++;
@@ -754,10 +758,20 @@ const companyController = {
                     }
                   } else {
                     fail++;
+                    header.push('description')
+                    let values = Object.values(companyData)
+                    values.push('Company ID already exists')
+                    errors = [header,...values]
+                    //errors.push({...companyData,description:})
                   }
 
                 } else {
                   fail++;
+                  //errors.push({...companyData,description:'Tax ID already exists'})
+                  header.push('description')
+                  let values = Object.values(companyData)
+                  values.push('Tax ID already exists')
+                  errors = [header, ...values]
                 }
 
               }
@@ -782,7 +796,8 @@ const companyController = {
               console.log("File Deleting Error " + err);
             });
             return res.status(200).json({
-              message: message
+              message: message,
+              errors
             });
           }
         } else {
