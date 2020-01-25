@@ -705,6 +705,12 @@ const companyController = {
         let success = 0;
         let result = null;
         let userId = req.me.id;
+        let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
+        //errors.push(header);
+
         if (
           data[0].A == "COMPANY" ||
           (data[0].A == "Ã¯Â»Â¿COMPANY" &&
@@ -720,14 +726,19 @@ const companyController = {
           // data[0].H == "STATUS"
         ) {
           if (data.length > 0) {
+            //let header = Object.keys(data[0])
+
             let i = 0;
             for (let companyData of data) {
               i++;
 
               if (i > 1) {
-                let taxIdExists = await knex("companies")
+                let taxIdExists = [];
+                if(companyData.F){
+                 taxIdExists = await knex("companies")
                   .select("taxId")
                   .where({ taxId: companyData.F, orgId: req.orgId });
+              }
                 let checkExist = await knex("companies")
                   .select("companyName")
                   .where({ companyId: companyData.A, orgId: req.orgId });
@@ -770,10 +781,25 @@ const companyController = {
                     }
                   } else {
                     fail++;
+                    //header.push('description')
+                    //let values = Object.values(companyData)
+                    //values.push('Company ID already exists')
+                    let values = _.values(companyData)
+                    values.unshift('Company ID already exists')
+
+                    //errors.push(header);
+                    errors.push(values);
+                    //errors.push({...companyData,description:})
                   }
 
                 } else {
                   fail++;
+                  //errors.push({...companyData,description:'Tax ID already exists'})
+                  let values = _.values(companyData)
+                  values.unshift('Tax ID already exists')
+
+                  //errors.push(header);
+                  errors.push(values);
                 }
 
               }
@@ -798,7 +824,8 @@ const companyController = {
               console.log("File Deleting Error " + err);
             });
             return res.status(200).json({
-              message: message
+              message: message,
+              errors
             });
           }
         } else {

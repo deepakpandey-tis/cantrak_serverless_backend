@@ -218,30 +218,30 @@ const ProjectController = {
         if (role === "superAdmin" && name === "superAdmin") {
 
           ProjectResult = await knex("projects")
-          .leftJoin("companies", "projects.companyId", "companies.id")
-          .select("projects.*", "companies.companyId as compId", "companies.companyName")
-          .where({ "projects.id": payload.id})
+            .leftJoin("companies", "projects.companyId", "companies.id")
+            .select("projects.*", "companies.companyId as compId", "companies.companyName")
+            .where({ "projects.id": payload.id })
 
-        Project = _.omit(ProjectResult[0], [
-          "createdAt",
-          "updatedAt"
-        ]);
+          Project = _.omit(ProjectResult[0], [
+            "createdAt",
+            "updatedAt"
+          ]);
 
         } else {
 
           ProjectResult = await knex("projects")
-          .leftJoin("companies", "projects.companyId", "companies.id")
-          .select("projects.*", "companies.companyId as compId", "companies.companyName")
-          .where({ "projects.id": payload.id, 'projects.orgId': req.orgId })
+            .leftJoin("companies", "projects.companyId", "companies.id")
+            .select("projects.*", "companies.companyId as compId", "companies.companyName")
+            .where({ "projects.id": payload.id, 'projects.orgId': req.orgId })
 
-        Project = _.omit(ProjectResult[0], [
-          "createdAt",
-          "updatedAt"
-        ]);
+          Project = _.omit(ProjectResult[0], [
+            "createdAt",
+            "updatedAt"
+          ]);
 
         }
 
-        
+
         trx.commit;
       });
 
@@ -341,7 +341,7 @@ const ProjectController = {
             .from("projects")
             .leftJoin("companies", "projects.companyId", "companies.id")
             .leftJoin("users", "users.id", "projects.createdBy")
-            .where('companies.isActive',true)
+            .where('companies.isActive', true)
             .where(qb => {
               if (organisation) {
                 qb.where('projects.orgId', organisation)
@@ -357,7 +357,7 @@ const ProjectController = {
           knex("projects")
             .leftJoin("companies", "projects.companyId", "companies.id")
             .leftJoin("users", "users.id", "projects.createdBy")
-            .where('companies.isActive',true)
+            .where('companies.isActive', true)
             .where(qb => {
               if (organisation) {
                 qb.where('projects.orgId', organisation)
@@ -377,7 +377,7 @@ const ProjectController = {
               "users.name as Created By",
               "projects.createdAt as Date Created"
             ])
-            .orderBy('projects.id','desc')
+            .orderBy('projects.id', 'desc')
             .offset(offset)
             .limit(per_page)
         ]);
@@ -391,7 +391,7 @@ const ProjectController = {
             .leftJoin("companies", "projects.companyId", "companies.id")
             .leftJoin("users", "users.id", "projects.createdBy")
             .where({ "projects.orgId": req.orgId })
-            .where('companies.isActive',true)
+            .where('companies.isActive', true)
             .where(qb => {
               if (organisation) {
                 qb.where('projects.orgId', organisation)
@@ -407,7 +407,7 @@ const ProjectController = {
           knex("projects")
             .leftJoin("companies", "projects.companyId", "companies.id")
             .leftJoin("users", "users.id", "projects.createdBy")
-            .where('companies.isActive',true)
+            .where('companies.isActive', true)
             .where({ "projects.orgId": req.orgId })
             .where(qb => {
               if (organisation) {
@@ -429,7 +429,7 @@ const ProjectController = {
               "projects.createdAt as Date Created",
               "projects.project as projectId",
             ])
-            .orderBy('projects.id','desc')
+            .orderBy('projects.id', 'desc')
             .offset(offset)
             .limit(per_page)
         ]);
@@ -473,7 +473,7 @@ const ProjectController = {
           knex("projects")
             .leftJoin("companies", "projects.companyId", "companies.id")
             .leftJoin("users", "users.id", "projects.createdBy")
-            .where('companies.isActive',true)
+            .where('companies.isActive', true)
             .where({ "projects.orgId": orgId })
             .select([
               // "projects.orgId as ORGANIZATION_ID",
@@ -497,7 +497,7 @@ const ProjectController = {
             .from("projects")
             .leftJoin("companies", "projects.companyId", "companies.id")
             .leftJoin("users", "users.id", "projects.createdBy")
-            .where('companies.isActive',true)
+            .where('companies.isActive', true)
             .where({ "projects.companyId": companyId, "projects.orgId": orgId })
             .select([
               // "projects.orgId as ORGANIZATION_ID",
@@ -677,8 +677,13 @@ const ProjectController = {
         console.log("=======", data[0], "+++++++++++++++")
         let result = null;
 
+        let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
+
+
         if (
-          //data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" || data[0].A == "ORGANIZATION_ID" &&
           data[0].A == "Ã¯Â»Â¿PROJECT" ||
           (data[0].A == "PROJECT" &&
             data[0].B == "PROJECT_NAME" &&
@@ -701,7 +706,11 @@ const ProjectController = {
                 .select("id")
                 .where({ companyId: projectData.C, orgId: req.orgId });
               let companyId = null;
-              if (!companyData && !companyData.length) {
+              if (!companyData.length) {
+                let values = _.values(projectData)
+                values.unshift('Company ID does not exists')
+                errors.push(values);
+                fail++;
                 continue;
               }
               if (companyData && companyData.length) {
@@ -737,6 +746,9 @@ const ProjectController = {
                   }
                 } else {
                   fail++;
+                  let values = _.values(projectData)
+                  values.unshift('Project Code already exists')
+                  errors.push(values);
                 }
               }
             }
@@ -762,7 +774,8 @@ const ProjectController = {
               console.log("File Deleting Error " + err);
             });
             return res.status(200).json({
-              message: message
+              message: message,
+              errors
             });
           }
         } else {

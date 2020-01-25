@@ -1615,6 +1615,22 @@ const quotationsController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  deleteQuotation:async (req,res) => {
+    try {
+      const id = req.body.id;
+      const deletedRow = await knex('quotations').where({id}).del().returning(['*'])
+      return res.status(200).json({
+        data: {
+          deletedRow,
+          message: 'Deleted row successfully!'
+        }
+      })
+    } catch(err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 
