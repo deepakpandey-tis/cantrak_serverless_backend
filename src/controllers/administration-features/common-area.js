@@ -786,6 +786,10 @@ const commonAreaController = {
         //data         = JSON.stringify(data);
         console.log("data============", data, "Data===========")
         let result = null;
+        let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
         //console.log('DATA: ',data)
         let totalData = data.length - 1;
         let fail = 0;
@@ -836,6 +840,9 @@ const commonAreaController = {
               }
               if (!propertyTypeId) {
                 fail++;
+                let values = _.values(commonData)
+                values.unshift('Property type does not exists.')
+                errors.push(values);
                 console.log("breaking due to Property type id: ", propertyTypeId);
                 continue;
               }
@@ -845,6 +852,9 @@ const commonAreaController = {
               }
               if (!companyId) {
                 fail++;
+                let values = _.values(commonData)
+                values.unshift('Company ID does not exists.')
+                errors.push(values);
                 console.log('breaking due to Company Id: ', companyId)
                 continue;
 
@@ -854,6 +864,9 @@ const commonAreaController = {
               }
               if (!projectId) {
                 fail++;
+                let values = _.values(commonData)
+                values.unshift('Project Id does not exists.')
+                errors.push(values);
                 console.log("breaking due to Project Id: ", projectId);
                 continue;
               }
@@ -862,6 +875,9 @@ const commonAreaController = {
               }
               if (!buildingPhaseId) {
                 fail++;
+                let values = _.values(commonData)
+                values.unshift('Building/Phase Code does not exists.')
+                errors.push(values);
                 console.log("breaking due to building phase id: ", buildingPhaseId);
                 continue;
               }
@@ -870,6 +886,9 @@ const commonAreaController = {
               }
               if (!floorZoneId) {
                 fail++;
+                let values = _.values(commonData)
+                values.unshift('Floor/Zone code does not exists.')
+                errors.push(values);
                 console.log("breaking due to Floor zone id: ", floorZoneId);
                 continue;
               }
@@ -914,6 +933,9 @@ const commonAreaController = {
 
                 } else {
                   fail++;
+                  let values = _.values(commonData)
+                  values.unshift('Common area already exists.')
+                  errors.push(values);
                 }
               }
             }
@@ -927,6 +949,7 @@ const commonAreaController = {
             let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
             return res.status(200).json({
               message: message,
+              errors
             });
           }
         } else {
