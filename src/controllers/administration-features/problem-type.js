@@ -232,7 +232,7 @@ const problemTypeController = {
             "users.name as Created By",
             "incident_type.createdAt as Date Created"
           ])
-          .orderBy('incident_type.id','desc')
+          .orderBy('incident_type.id', 'desc')
           .offset(offset)
           .limit(per_page)
       ]);
@@ -417,6 +417,10 @@ const problemTypeController = {
         let success = 0;
         console.log("=======", data[0], "+++++++++++++++")
         let result = null;
+        let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
 
         if (
           data[0].A == "Ã¯Â»Â¿PROBLEM_TYPE_CODE" ||
@@ -452,6 +456,9 @@ const problemTypeController = {
                     success++;
                   }
                 } else {
+                  let values = _.values(problemData)
+                  values.unshift('Problem type code already exists')
+                  errors.push(values);
                   fail++;
                 }
               }
@@ -478,7 +485,8 @@ const problemTypeController = {
               console.log("File Deleting Error " + err);
             });
             return res.status(200).json({
-              message: message
+              message: message,
+              errors:errors
             });
           }
         } else {

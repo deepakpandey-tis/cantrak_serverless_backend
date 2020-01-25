@@ -247,7 +247,7 @@ const propertyCategoryController = {
               .returning(["*"])
               .transacting(trx)
               .into("incident_categories");
-              problemCategory = problemCategoryResult[0];
+            problemCategory = problemCategoryResult[0];
             message = "Problem Category deactivate successfully!"
 
           } else {
@@ -258,7 +258,7 @@ const propertyCategoryController = {
               .returning(["*"])
               .transacting(trx)
               .into("incident_categories");
-              problemCategory = problemCategoryResult[0];
+            problemCategory = problemCategoryResult[0];
             message = "Problem Category activate successfully!"
           }
         }
@@ -352,10 +352,10 @@ const propertyCategoryController = {
 
       [total, rows] = await Promise.all([
         knex.count("* as count").from("incident_categories")
-        .leftJoin("users","incident_categories.createdBy","users.id")
-        .where({"incident_categories.orgId": orgId }),
+          .leftJoin("users", "incident_categories.createdBy", "users.id")
+          .where({ "incident_categories.orgId": orgId }),
         knex("incident_categories")
-          .leftJoin("users","incident_categories.createdBy","users.id")
+          .leftJoin("users", "incident_categories.createdBy", "users.id")
           .select([
             "incident_categories.id as id",
             "incident_categories.categoryCode as Category",
@@ -365,8 +365,8 @@ const propertyCategoryController = {
             "users.name as Created By",
             "incident_categories.createdAt as Date Created"
           ])
-          .where({"incident_categories.orgId": orgId })
-          .orderBy('incident_categories.id','desc')
+          .where({ "incident_categories.orgId": orgId })
+          .orderBy('incident_categories.id', 'desc')
           .offset(offset)
           .limit(per_page)
       ]);
@@ -443,7 +443,7 @@ const propertyCategoryController = {
       let check = XLSX.writeFile(wb, filepath);
       const AWS = require("aws-sdk");
 
-      fs.readFile(filepath, function(err, file_buffer) {
+      fs.readFile(filepath, function (err, file_buffer) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
@@ -451,7 +451,7 @@ const propertyCategoryController = {
           Body: file_buffer,
           ACL: "public-read"
         };
-        s3.putObject(params, function(err, data) {
+        s3.putObject(params, function (err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             res.status(500).json({
@@ -650,6 +650,10 @@ const propertyCategoryController = {
         let fail = 0;
         let success = 0;
         let result = null;
+        let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
 
         if (
           data[0].A == "Ã¯Â»Â¿CATEGORY_CODE" ||
@@ -677,7 +681,7 @@ const propertyCategoryController = {
                     remark: categoryData.D,
                     createdAt: currentTime,
                     updatedAt: currentTime,
-                    createdBy:req.me.id
+                    createdBy: req.me.id
                   };
 
                   resultData = await knex
@@ -689,6 +693,9 @@ const propertyCategoryController = {
                     success++;
                   }
                 } else {
+                  let values = _.values(categoryData)
+                  values.unshift('Problem Category code already exists')
+                  errors.push(values);
                   fail++;
                 }
               }
@@ -713,7 +720,8 @@ const propertyCategoryController = {
               console.log("File Deleting Error " + err);
             });
             return res.status(200).json({
-              message: message
+              message: message,
+              errors:errors
             });
           }
         } else {

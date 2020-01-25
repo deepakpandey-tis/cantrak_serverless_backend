@@ -49,7 +49,7 @@ const problemController = {
               'incident_type.typeCode as problem_type_code',
               'incident_type.descriptionEng as problem_type_description',
             ])
-            .orderBy('incident_sub_categories.id','desc')
+            .orderBy('incident_sub_categories.id', 'desc')
             .where({ 'incident_sub_categories.orgId': req.orgId })
             .offset(offset).limit(per_page)
         ])
@@ -79,7 +79,7 @@ const problemController = {
                 'incident_type.typeCode as problem_type_code',
                 'incident_type.descriptionEng as problem_type_description',
               ])
-              .orderBy('incident_sub_categories.id','desc')
+              .orderBy('incident_sub_categories.id', 'desc')
               .where({ 'incident_sub_categories.orgId': req.orgId })
               .where(filters).offset(offset).limit(per_page)
           ])
@@ -315,6 +315,10 @@ const problemController = {
         let success = 0;
         console.log("=======", data[0], "+++++++++++++++")
         let result = null;
+        let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
 
         if (
           data[0].A == "Ã¯Â»Â¿PROBLEM_CATEGORY_CODE" ||
@@ -333,6 +337,9 @@ const problemController = {
                 .where({ categoryCode: problemData.A, orgId: req.orgId });
               let categoryId = null;
               if (!categoryData.length) {
+                let values = _.values(problemData)
+                values.unshift('Problem Category code does not exists')
+                errors.push(values);
                 fail++;
                 continue;
               }
@@ -342,14 +349,17 @@ const problemController = {
 
               let problemTypeData = await knex("incident_type")
                 .select("id")
-                .where({typeCode: problemData.E, orgId: req.orgId });
+                .where({ typeCode: problemData.E, orgId: req.orgId });
               let problemTypeId = null;
-              if(!problemTypeData.length){
+              if (!problemTypeData.length) {
+                let values = _.values(problemData)
+                values.unshift('Problem type code does not exists')
+                errors.push(values);
                 fail++;
                 continue;
               }
 
-              if(problemTypeData.length){
+              if (problemTypeData.length) {
                 problemTypeId = problemTypeData[0].id;
               }
 
@@ -368,7 +378,7 @@ const problemController = {
                     remark: problemData.D,
                     createdAt: currentTime,
                     updatedAt: currentTime,
-                    incidentTypeId:problemTypeId
+                    incidentTypeId: problemTypeId
                   };
 
                   resultData = await knex
@@ -379,12 +389,16 @@ const problemController = {
                     success++;
                   }
                 } else {
+                  let values = _.values(problemData)
+                  values.unshift('This Subcategory already exists')
+                  errors.push(values);
                   fail++;
                 }
               }
             }
 
             let message = null;
+            fail = fail-1;
             if (totalData == success) {
               message =
                 "System have processed ( " +
@@ -405,7 +419,8 @@ const problemController = {
               console.log("File Deleting Error " + err);
             });
             return res.status(200).json({
-              message: message
+              message: message,
+              errors:errors
             });
           }
         } else {

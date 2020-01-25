@@ -541,6 +541,11 @@ const propertyTypeController = {
         let fail = 0;
         let success = 0;
         let result = null;
+        let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
+
 
         if (data[0].A == "Ã¯Â»Â¿PROPERTY_TYPE_CODE" || data[0].A == "PROPERTY_TYPE_CODE" &&
           data[0].B == "PROPERTY_TYPE" &&
@@ -579,6 +584,9 @@ const propertyTypeController = {
                     success++;
                   }
                 } else {
+                  let values = _.values(propertyData)
+                  values.unshift('Property Type Code & Property Type already exists')
+                  errors.push(values);
                   fail++;
                 }
               }
@@ -592,6 +600,7 @@ const propertyTypeController = {
             let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
             return res.status(200).json({
               message: message,
+              errors:errors
             });
           }
 

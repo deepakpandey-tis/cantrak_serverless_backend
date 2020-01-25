@@ -640,6 +640,10 @@ const peopleController = {
         let success = 0;
         console.log("=======", data[0], "+++++++++++++++")
         let result = null;
+        let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
 
         if (data[0].A == "Ã¯Â»Â¿NAME" || data[0].A == "NAME" &&
           data[0].B == "EMAIL" &&
@@ -673,6 +677,9 @@ const peopleController = {
                   .where({ mobileNo: peopleData.D })
 
                 if (checkMobile.length) {
+                  let values = _.values(peopleData)
+                  values.unshift('Mobile number already exists')
+                  errors.push(values);
                   fail++;
                   continue;
                 }
@@ -741,6 +748,9 @@ const peopleController = {
                     success++;
                   }
                 } else {
+                  let values = _.values(peopleData)
+                  values.unshift('Email Id already exists')
+                  errors.push(values);
                   fail++;
                 }
               }
@@ -749,14 +759,15 @@ const peopleController = {
             // fail = fail-1;
             let message = null;
             if (totalData == success) {
-              message = "We have processed ( " + totalData + " ) entries and added them successfully!";
+              message = "System have processed ( " + totalData + " ) entries and added them successfully!";
             } else {
-              message = "We have processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
+              message = "System have processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
             }
 
             let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
             return res.status(200).json({
               message: message,
+              errors,errors
             });
 
           }
