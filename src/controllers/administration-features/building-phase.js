@@ -821,6 +821,10 @@ const buildingPhaseController = {
         let result = null;
 
         //console.log('DATA: ',data)
+        let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
 
         if (
           //data[0].A == "ORGANIZATION_ID" || data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" &&
@@ -892,15 +896,30 @@ const buildingPhaseController = {
               if (!companyId) {
                 console.log("breaking due to: null companyId");
                 fail++;
+                let values = _.values(buildingData)
+                values.unshift('Company ID does not exist')
+
+                //errors.push(header);
+                errors.push(values);
                 continue;
               }
               if (!projectId) {
                 fail++;
+                let values = _.values(buildingData)
+                values.unshift('Project ID does not exist')
+
+                //errors.push(header);
+                errors.push(values);
                 console.log("breaking due to: null projectId");
                 continue;
               }
               if (!propertyTypeId) {
                 fail++;
+                let values = _.values(buildingData)
+                values.unshift('Property Type ID does not exist')
+
+                //errors.push(header);
+                errors.push(values);
                 console.log("breaking due to: null propertyTypeId");
                 continue;
               }
@@ -921,6 +940,11 @@ const buildingPhaseController = {
               });
               if (checkExistance.length) {
                 fail++;
+                let values = _.values(buildingData)
+                values.unshift('Building/Phase Code already exist')
+
+                //errors.push(header);
+                errors.push(values);
                 continue;
               }
 
@@ -976,7 +1000,8 @@ const buildingPhaseController = {
                 " ) due to validation!";
             }
             return res.status(200).json({
-              message: message
+              message: message,
+              errors
             });
           }
         } else {

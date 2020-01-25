@@ -742,6 +742,11 @@ const floorZoneController = {
         let success = 0;
         console.log("=======", data[0], "+++++++++++++++");
         let result = null;
+        let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
+
 
         if (
           //data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" || data[0].A == "ORGANIZATION_ID" &&
@@ -776,6 +781,11 @@ const floorZoneController = {
               if (!companyData.length) {
                 console.log('*********************&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&', companyData)
                 fail++;
+                let values = _.values(floorData)
+                values.unshift('Company ID does not exist')
+
+                //errors.push(header);
+                errors.push(values);
                 continue;
 
               }
@@ -802,6 +812,11 @@ const floorZoneController = {
 
               if (!projectId) {
                 fail++;
+                let values = _.values(floorData)
+                values.unshift('Project ID does not exist')
+
+                //errors.push(header);
+                errors.push(values);
                 continue;
               }
 
@@ -812,6 +827,11 @@ const floorZoneController = {
               let propertyTypeId = null;
               if (!propertTypeData.length) {
                 fail++;
+                let values = _.values(floorData)
+                values.unshift('Property Type ID does not exist')
+
+                //errors.push(header);
+                errors.push(values);
                 continue;
               }
               if (propertTypeData && propertTypeData.length) {
@@ -823,6 +843,11 @@ const floorZoneController = {
 
               if (!buildingId) {
                 fail++;
+                let values = _.values(floorData)
+                values.unshift('Building ID does not exist')
+
+                //errors.push(header);
+                errors.push(values);
                 continue;
               }
 
@@ -863,6 +888,11 @@ const floorZoneController = {
                   }
                 } else {
                   fail++;
+                  let values = _.values(floorData)
+                  values.unshift('Floor/Zone ID already exist')
+
+                  //errors.push(header);
+                  errors.push(values);
                 }
               }
             }
@@ -889,7 +919,8 @@ const floorZoneController = {
               console.log("File Deleting Error " + err);
             });
             return res.status(200).json({
-              message: message
+              message: message,
+              errors
             });
           }
         } else {
