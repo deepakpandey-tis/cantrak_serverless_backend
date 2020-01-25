@@ -1533,6 +1533,68 @@ const serviceDetailsController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  sourceOfRequestStatus: async (req, res) => {
+    try {
+      let sourceOfRequest = null;
+      let orgId = req.orgId;
+      let message;
+      await knex.transaction(async trx => {
+        let payload = req.body;
+        const schema = Joi.object().keys({
+          id: Joi.string().required()
+        });
+        const result = Joi.validate(payload, schema);
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message }
+            ]
+          });
+        }
+        let requestResult;
+        let checkStatus = await knex.from('source_of_request').where({ id: payload.id }).returning(['*'])
+        if (checkStatus && checkStatus.length) {
+
+          if (checkStatus[0].isActive == true) {
+
+            requestResult = await knex
+              .update({ isActive: false })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("source_of_request");
+              sourceOfRequest = requestResult[0];
+            message = "Source Of Request Deactivate successfully!"
+          } else {
+            requestResult = await knex
+              .update({ isActive: true })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("source_of_request");
+              sourceOfRequest = requestResult[0];
+            message = "Source Of Request Activate successfully!"
+          }
+        }
+        trx.commit;
+      });
+      return res.status(200).json({
+        data: {
+          sourceOfRequest: sourceOfRequest
+        },
+        message: message
+      });
+    } catch (err) {
+      console.log(
+        "[controllers][generalsetup][togglePriority] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 

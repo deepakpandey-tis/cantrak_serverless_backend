@@ -24,7 +24,13 @@ const companyController = {
 
 
         const payload = _.omit(req.body, ["logoFile"]);
-        const orgId = req.orgId;
+        let orgId;
+        if(payload.orgId){
+           orgId = payload.orgId;
+        } else{
+          orgId = req.orgId;
+        }
+        
         const userId = req.me.id;
 
         if (payload.taxId) {
@@ -62,6 +68,9 @@ const companyController = {
             .allow("")
             .optional(),
           taxId: Joi.number()
+            .allow("")
+            .optional(),
+            orgId: Joi.number()
             .allow("")
             .optional()
         });
@@ -117,8 +126,6 @@ const companyController = {
           .into("companies");
         company = insertResult[0];
 
-
-
         trx.commit;
       });
 
@@ -140,9 +147,15 @@ const companyController = {
     try {
       let company = null;
       await knex.transaction(async trx => {
-        let orgId = req.orgId;
+        
         const payload = _.omit(req.body, ["logoFile"]);
-
+        let orgId;
+        if(payload.orgId){
+         orgId = payload.orgId;
+        }else {
+          orgId = req.orgId;
+        }
+        
         const schema = Joi.object().keys({
           id: Joi.string().required(),
           companyName: Joi.string().required(),
@@ -189,7 +202,11 @@ const companyController = {
             .optional(),
           taxId: Joi.number()
             .allow("").allow(null)
+            .optional(),
+            orgId: Joi.number()
+            .allow("")
             .optional()
+
         });
 
         const result = Joi.validate(payload, schema);
@@ -234,18 +251,17 @@ const companyController = {
         console.log("==============", req.body.logoFile)
         let insertData;
         if (req.body.logoFile.length) {
-          insertData = { ...payload, logoFile: logo, updatedAt: currentTime };
+          insertData = { ...payload,orgId, logoFile: logo, updatedAt: currentTime };
         } else {
-          insertData = { ...payload, updatedAt: currentTime };
+          insertData = { ...payload, orgId,updatedAt: currentTime };
         }
         let insertResult = await knex
           .update(insertData)
-          .where({ id: payload.id, orgId: req.orgId })
+          .where({ id: payload.id})
           .returning(["*"])
           .transacting(trx)
           .into("companies");
         company = insertResult[0];
-
 
 
         trx.commit;

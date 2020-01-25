@@ -457,7 +457,7 @@ const partsController = {
 
             console.log('[controllers][parts][getPartDetails]: Part Details', partData);
 
-            if( partQuantityDataResult[0]){
+            if (partQuantityDataResult[0]) {
                 return res.status(200).json({
                     data: { part: { quantity: totalQuantity, unitCost: partQuantityDataResult[0].unitCost, ...omitedPartDataResult, additionalAttributes, images, files, qrcode } },
                     message: "Part Details"
@@ -465,9 +465,9 @@ const partsController = {
             }
 
             return res.status(200).json({
-                    data: { part: { quantity: totalQuantity, unitCost: '', ...omitedPartDataResult, additionalAttributes, images, files, qrcode } },
-                    message: "Part Details"
-                });
+                data: { part: { quantity: totalQuantity, unitCost: '', ...omitedPartDataResult, additionalAttributes, images, files, qrcode } },
+                message: "Part Details"
+            });
 
 
         } catch (err) {
@@ -1181,13 +1181,13 @@ const partsController = {
                                         partName: partData.B,
                                         unitOfMeasure: partData.C,
                                         partCategory: partCategoryId,
-                                        companyId:companyId,
+                                        companyId: companyId,
                                         createdAt: currentTime,
                                         updatedAt: currentTime
                                     }
 
                                     resultData = await knex.insert(insertData).returning(['*']).into('part_master');
-                                    let quantityData = { partId: resultData[0].id, unitCost:partData.G, quantity:partData.F, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId };
+                                    let quantityData = { partId: resultData[0].id, unitCost: partData.G, quantity: partData.F, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId };
                                     let partQuantityResult = await knex.insert(quantityData).returning(['*']).into('part_ledger');
 
                                     if (resultData && resultData.length) {
@@ -1201,19 +1201,19 @@ const partsController = {
                         }
                         let message = null;
                         if (totalData == success) {
-                          message =
-                            "System has processed processed ( " +
-                            totalData +
-                            " ) entries and added them successfully!";
+                            message =
+                                "System has processed processed ( " +
+                                totalData +
+                                " ) entries and added them successfully!";
                         } else {
-                          message =
-                            "System has processed processed ( " +
-                            totalData +
-                            " ) entries out of which only ( " +
-                            success +
-                            " ) are added and others are failed ( " +
-                            fail +
-                            " ) due to validation!";
+                            message =
+                                "System has processed processed ( " +
+                                totalData +
+                                " ) entries out of which only ( " +
+                                success +
+                                " ) are added and others are failed ( " +
+                                fail +
+                                " ) due to validation!";
                         }
                         let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
                         return res.status(200).json({
@@ -1356,7 +1356,7 @@ const partsController = {
             let { serviceRequestId } = req.body;
             let serviceRequestResult = await knex('service_orders').where({ orgId: req.orgId, serviceRequestId: serviceRequestId }).returning(['*'])
 
-            console.log("serviceRequestPArtsData",serviceRequestResult);
+            console.log("serviceRequestPArtsData", serviceRequestResult);
             let serviceOrderId = serviceRequestResult[0].id;
 
             [total, rows] = await Promise.all([
@@ -1530,7 +1530,8 @@ const partsController = {
                         "part_master.id as id",
                         "part_master.partCode as partCode",
                         "assigned_parts.quantity as quantity",
-                        "assigned_parts.unitCost as unitCost"
+                        "assigned_parts.unitCost as unitCost",
+                        "assigned_parts.id as apId"
                     ])
                     .where({
                         entityId: quotationId,
@@ -1547,7 +1548,8 @@ const partsController = {
                         "part_master.id as id",
                         "part_master.partCode as partCode",
                         "assigned_parts.quantity as quantity",
-                        "assigned_parts.unitCost as unitCost"
+                        "assigned_parts.unitCost as unitCost",
+                        "assigned_parts.id as apId"
                     ])
                     .where({
                         entityId: quotationId,
@@ -1773,6 +1775,84 @@ const partsController = {
             })
         }
     },
+    deleteQuotationAssignedParts: async (req, res) => {
+        try {
+            const id = req.body.id;
+            const currentTime = new Date().getTime();
+
+
+            let getQuotationId = await knex('assigned_parts').where({ id, "entityType": "quotations" }).select('entityId', 'partId');
+            let quotationId = getQuotationId[0].entityId;
+            let partId = getQuotationId[0].partId;
+            let quotationsData = await knex('quotations').where({ "id": quotationId }).returning(['*']);
+            console.log("quotationsJsonArray", quotationsData);
+            //deletedRow = quotationsData;
+            let invoiceData = quotationsData[0].invoiceData[0];
+            console.log("invoiceData", invoiceData);
+            let partsData = invoiceData.parts;
+            let filtered = {}
+
+            filtered.parts = partsData.filter(function (partsData) {
+                return partsData.id !== partId;
+            });
+            console.log("filtererdPartsLength", filtered.parts);
+
+            let subTotalAmt = 0;
+            let stotal = 0;
+            for (let i = 0; i < filtered.parts.length; i++) {
+                console.log("idata", filtered.parts[i].quantity);
+                stotal = filtered.parts[i].unitCost * filtered.parts[i].quantity;
+                console.log("stotal", stotal);
+                subTotalAmt += stotal;
+            }
+
+            console.log("subTotalAmit", subTotalAmt);
+
+
+            let subChargesTotalAmt = 0;
+            let ctotal = 0;
+            for (let q = 0; q < invoiceData.charges.length; q++) {
+                ctotal = invoiceData.charges[q].rate * invoiceData.charges[q].totalHours;
+                subChargesTotalAmt += ctotal;
+            }
+            let subTotalFinal = 0;
+            subTotalFinal = (subTotalAmt + subChargesTotalAmt);
+            let grandTotal = 0;
+            grandTotal = subTotalFinal + (subTotalFinal * invoiceData.vatRate / 100);
+
+            console.log("grandTotal", grandTotal);
+
+            filtered.charges = invoiceData.charges;
+            filtered.vatId = invoiceData.vatId;
+            filtered.vatRate = invoiceData.vatRate;
+            filtered.subTotal = subTotalFinal;
+            filtered.grandTotal = grandTotal;
+
+            // deleteRow = filtered;
+            const deletedRow = await knex('assigned_parts').where({ id, "entityType": "quotations" }).del().returning(['*'])
+
+            let updateQuotationInvoiceData = await knex
+                .update({
+                    invoiceData: JSON.stringify(filtered),
+                    updatedAt: currentTime
+                })
+                .where({ id: quotationId })
+                .returning(["*"])
+                .into("quotations");
+
+
+            return res.status(200).json({
+                data: {
+                    updateQuotationInvoiceData,
+                    message: 'Deleted row successfully!'
+                }
+            })
+        } catch (err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    }
 }
 
 module.exports = partsController;
