@@ -235,6 +235,7 @@ const chargeController = {
             "users.name as Created By",
             "charge_master.createdAt as Date Created"
           ])
+          .orderBy('charge_master.id', 'desc')
           .offset(offset)
           .limit(per_page)
       ]);
@@ -819,6 +820,10 @@ const chargeController = {
         let totalData = data.length - 1;
         let fail = 0;
         let success = 0;
+        let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
 
         if (
           data[0].A == "Ã¯Â»Â¿CHARGE_CODE" ||
@@ -841,13 +846,19 @@ const chargeController = {
               let whtId = null;
               let vatPercentage = null;
               let whtPercentage = null;
+              i++;
 
-              let taxesIdResult = await knex("taxes")
+              if (i > 1) {
+
+                let taxesIdResult = await knex("taxes")
                 .select("id", "taxPercentage")
                 .where({ taxCode: chargesData.F, orgId: req.orgId });
               console.log("TaxIdResult", taxesIdResult);
 
               if (!taxesIdResult.length) {
+                let values = _.values(chargesData)
+                values.unshift('VAT code does not exists')
+                errors.push(values);
                 fail++;
                 continue;
               }
@@ -863,6 +874,9 @@ const chargeController = {
                 .where({ whtCode: chargesData.G, orgId: req.orgId });
 
               if (!whtResult.length) {
+                let values = _.values(chargesData)
+                values.unshift('WHT code does not exists')
+                errors.push(values);
                 fail++;
                 continue;
               }
@@ -871,10 +885,6 @@ const chargeController = {
                 whtPercentage = whtResult[0].taxPercentage;
               }
 
-
-              i++;
-
-              if (i > 1) {
                 let checkExist = await knex("charge_master")
                   .select("chargeCode")
                   .where({
@@ -906,6 +916,9 @@ const chargeController = {
                     success++;
                   }
                 } else {
+                  let values = _.values(chargesData)
+                  values.unshift('Charge code already exists')
+                  errors.push(values);
                   fail++;
                 }
               }
@@ -931,7 +944,8 @@ const chargeController = {
                 " ) due to validation!";
             }
             return res.status(200).json({
-              message: message
+              message: message,
+              errors:errors
             });
           }
         } else {
@@ -1127,9 +1141,9 @@ const chargeController = {
       let { serviceRequestId } = req.body;
       let serviceRequestResult = await knex('service_orders').where({ orgId: req.orgId, serviceRequestId: serviceRequestId }).returning(['*'])
 
-      console.log("serviceRequestPArtsData",serviceRequestResult);
+      console.log("serviceRequestPArtsData", serviceRequestResult);
       let serviceOrderId = serviceRequestResult[0].id;
-      
+
       [total, rows] = await Promise.all([
         knex("charge_master")
           .innerJoin(

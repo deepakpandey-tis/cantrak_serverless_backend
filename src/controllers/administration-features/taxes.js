@@ -241,6 +241,7 @@ const taxesfactionController = {
             "users.name as Created By",
             "taxes.createdAt as Date Created"
           ])
+          .orderBy('taxes.id','desc')
           .offset(offset)
           .limit(per_page)
       ]);
@@ -441,9 +442,9 @@ const taxesfactionController = {
           {
             "TAX CODE": "",
             "TAX PERCENTAGE": "",
-            "DESCRIPTION":"",
-            "ALTERNATE_LANGUAGE_DESCRIPTION":"",
-            "GL_ACCOUNT_CODE":""
+            "DESCRIPTION": "",
+            "ALTERNATE_LANGUAGE_DESCRIPTION": "",
+            "GL_ACCOUNT_CODE": ""
           }
         ]);
       }
@@ -520,14 +521,18 @@ const taxesfactionController = {
         let fail = 0;
         let success = 0;
         //console.log('DATA: ',data)
+        let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
 
         if (
           data[0].A == "Ã¯Â»Â¿TAX CODE" ||
-          (data[0].A == "TAX CODE" && 
-          data[0].B == "TAX PERCENTAGE" && 
-          data[0].C=="DESCRIPTION" && 
-          data[0].D == "ALTERNATE_LANGUAGE_DESCRIPTION" &&
-          data[0].E == "GL_ACCOUNT_CODE"
+          (data[0].A == "TAX CODE" &&
+            data[0].B == "TAX PERCENTAGE" &&
+            data[0].C == "DESCRIPTION" &&
+            data[0].D == "ALTERNATE_LANGUAGE_DESCRIPTION" &&
+            data[0].E == "GL_ACCOUNT_CODE"
           )
         ) {
           if (data.length > 0) {
@@ -550,9 +555,9 @@ const taxesfactionController = {
                     isActive: true,
                     createdBy: req.me.id,
                     createdAt: currentTime,
-                    descriptionEng:taxData.C,
-                    descriptionThai:taxData.D,
-                    glAccountCode:taxData.E
+                    descriptionEng: taxData.C,
+                    descriptionThai: taxData.D,
+                    glAccountCode: taxData.E
                   };
 
                   resultData = await knex
@@ -564,6 +569,9 @@ const taxesfactionController = {
                     success++;
                   }
                 } else {
+                  let values = _.values(taxData)
+                  values.unshift('VAT code already exists')
+                  errors.push(values);
                   fail++;
                 }
               }
@@ -590,7 +598,8 @@ const taxesfactionController = {
                 " ) due to validation!";
             }
             return res.status(200).json({
-              message: message
+              message: message,
+              errors:errors
             });
           }
         } else {

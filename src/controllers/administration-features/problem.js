@@ -332,39 +332,38 @@ const problemController = {
             for (let problemData of data) {
               i++;
 
-              let categoryData = await knex("incident_categories")
-                .select("id")
-                .where({ categoryCode: problemData.A, orgId: req.orgId });
-              let categoryId = null;
-              if (!categoryData.length) {
-                let values = _.values(problemData)
-                values.unshift('Problem Category code does not exists')
-                errors.push(values);
-                fail++;
-                continue;
-              }
-              if (categoryData && categoryData.length) {
-                categoryId = categoryData[0].id;
-              }
-
-              let problemTypeData = await knex("incident_type")
-                .select("id")
-                .where({ typeCode: problemData.E, orgId: req.orgId });
-              let problemTypeId = null;
-              if (!problemTypeData.length) {
-                let values = _.values(problemData)
-                values.unshift('Problem type code does not exists')
-                errors.push(values);
-                fail++;
-                continue;
-              }
-
-              if (problemTypeData.length) {
-                problemTypeId = problemTypeData[0].id;
-              }
-
-
               if (i > 1) {
+
+                let categoryData = await knex("incident_categories")
+                  .select("id")
+                  .where({ categoryCode: problemData.A, orgId: req.orgId });
+                let categoryId = null;
+                if (!categoryData.length) {
+                  let values = _.values(problemData)
+                  values.unshift('Problem Category code does not exists')
+                  errors.push(values);
+                  fail++;
+                  continue;
+                }
+                if (categoryData && categoryData.length) {
+                  categoryId = categoryData[0].id;
+                }
+
+                let problemTypeData = await knex("incident_type")
+                  .select("id")
+                  .where({ typeCode: problemData.E, orgId: req.orgId });
+                let problemTypeId = null;
+                if (!problemTypeData.length) {
+                  let values = _.values(problemData)
+                  values.unshift('Problem type code does not exists')
+                  errors.push(values);
+                  fail++;
+                  continue;
+                }
+
+                if (problemTypeData.length) {
+                  problemTypeId = problemTypeData[0].id;
+                }
                 let checkExist = await knex("incident_sub_categories")
                   .select("id")
                   .where({ incidentCategoryId: categoryId, descriptionEng: problemData.B, orgId: req.orgId });
@@ -398,7 +397,7 @@ const problemController = {
             }
 
             let message = null;
-            fail = fail-1;
+            fail = fail - 1;
             if (totalData == success) {
               message =
                 "System have processed ( " +
@@ -420,7 +419,7 @@ const problemController = {
             });
             return res.status(200).json({
               message: message,
-              errors:errors
+              errors: errors
             });
           }
         } else {

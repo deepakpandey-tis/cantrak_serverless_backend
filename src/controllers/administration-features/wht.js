@@ -242,6 +242,7 @@ const whtController = {
             "users.name as Created By",
             "wht_master.createdAt as Date Created"
           ])
+          .orderBy('wht_master.id','desc')
           .offset(offset)
           .limit(per_page)
       ]);
@@ -521,6 +522,10 @@ const whtController = {
         let totalData = data.length - 1;
         let fail = 0;
         let success = 0;
+        let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
 
         if (
           data[0].A == "Ã¯Â»Â¿WHT_CODE" ||
@@ -565,6 +570,9 @@ const whtController = {
                     success++;
                   }
                 } else {
+                  let values = _.values(whtData)
+                  values.unshift('WHT code already exists')
+                  errors.push(values);
                   fail++;
                 }
               }
@@ -591,7 +599,8 @@ const whtController = {
                 " ) due to validation!";
             }
             return res.status(200).json({
-              message: message
+              message: message,
+              errors:errors
             });
           }
         } else {
