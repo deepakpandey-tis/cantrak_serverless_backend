@@ -1991,6 +1991,10 @@ const assetController = {
         let fail = 0;
         let success = 0;
         let result = null;
+        let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
 
         if (data[0].A == "ASSET_CODE" || data[0].A == "Ã¯Â»Â¿ASSET_CODE" &&
           (data[0].B == "ASSET_NAME" &&
@@ -2018,6 +2022,8 @@ const assetController = {
             for (let assetData of data) {
               i++;
 
+              console.log('ASSET DATA:**************************************',assetData)
+
               if (i > 1) {
 
                 let companyId = ''
@@ -2027,6 +2033,9 @@ const assetController = {
                     companyId = companyResult.id
                   } else {
                     fail++;
+                    let values = _.values(assetData)
+                    values.unshift('Company ID does not exists.')
+                    errors.push(values);
                     continue;
                   }
                 } else {
@@ -2053,6 +2062,9 @@ const assetController = {
                 let teamResult = await knex('teams').where({ teamCode: assetData.O, orgId: req.orgId }).select('teamId')
                 if (!teamResult.length) {
                   fail++;
+                  let values = _.values(assetData)
+                  values.unshift('Team ID does not exists.')
+                  errors.push(values);
                   continue;
                 }
 
@@ -2069,6 +2081,9 @@ const assetController = {
                   let parentResult = await knex('asset_master').where({ assetCode: assetData.L, orgId: req.orgId }).select('id')
                   if (!parentResult.length) {
                     fail++;
+                    let values = _.values(assetData)
+                    values.unshift('Parent asset id does not exists.')
+                    errors.push(values);
                     continue;
                   }
 
@@ -2086,6 +2101,9 @@ const assetController = {
                    let locationResult = await knex('location_tags_master').where({ title: assetData.M, orgId: req.orgId }).select('id')
                    if (!locationResult.length) {
                      fail++;
+                     let values = _.values(assetData)
+                     values.unshift('Location Tag does not exists.')
+                     errors.push(values);
                      continue;
                    }
  
@@ -2144,7 +2162,9 @@ const assetController = {
 
                 } else {
                   fail++;
-
+                  let values = _.values(assetData)
+                  values.unshift('Asset name with corresponding asset code already exists.')
+                  errors.push(values);
                 }
               }
             }
@@ -2167,6 +2187,7 @@ const assetController = {
             let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
             return res.status(200).json({
               message: message,
+              errors
             });
           }
 
