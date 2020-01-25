@@ -1170,6 +1170,10 @@ const serviceDetailsController = {
         });
         //data         = JSON.stringify(data);
         let result = null;
+        let errors = []
+        let header = Object.values(data[0]);
+        header.unshift('Error');
+        errors.push(header)
         let currentTime = new Date().getTime();
         //console.log('DATA: ',data)
         let totalData = data.length - 1;
@@ -1213,6 +1217,9 @@ const serviceDetailsController = {
                     success++;
                 }else{
                   fail++;
+                  let values = _.values(locationTagData)
+                  values.unshift('Location tag already exists.')
+                  errors.push(values);
                 }
               }
             }
@@ -1238,7 +1245,8 @@ const serviceDetailsController = {
                 " ) due to validation!";
             }
             return res.status(200).json({
-              message: message
+              message: message,
+              errors
             });
           }
         } else {
