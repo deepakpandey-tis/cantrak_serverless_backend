@@ -41,7 +41,7 @@ var storage = multer.diskStorage({
 var upload = multer( { storage: storage } );
 router.post(
   "/import-building-data",
-  upload.single("file"),
+  // upload.single("file"),
   authMiddleware.isAuthenticated,
   buildingPhaseController.importBuildingData
 );

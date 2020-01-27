@@ -800,34 +800,17 @@ const buildingPhaseController = {
   },
   importBuildingData: async (req, res) => {
     try {
-      if (req.file) {
-        console.log(req.file);
-        let tempraryDirectory = null;
-        if (process.env.IS_OFFLINE) {
-          tempraryDirectory = "tmp/";
-        } else {
-          tempraryDirectory = "/tmp/";
-        }
-        let resultData = null;
-        let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: "binary" });
-        let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, {
-          type: "string",
-          header: "A",
-          raw: false
-        });
-        //data         = JSON.stringify(data);
+      
         let result = null;
-
-        //console.log('DATA: ',data)
+        let data = req.body;
+        
         let errors = []
         let header = Object.values(data[0]);
         header.unshift('Error');
         errors.push(header)
 
         if (
-          //data[0].A == "ORGANIZATION_ID" || data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" &&
+          
           data[0].A == "Ã¯Â»Â¿COMPANY" ||
           (data[0].A == "COMPANY" &&
             data[0].B == "COMPANY NAME" &&
@@ -836,10 +819,7 @@ const buildingPhaseController = {
             data[0].E == "PROPERTY_TYPE_CODE" &&
             data[0].F == "BUILDING_PHASE_CODE" &&
             data[0].G == "DESCRIPTION")
-          //&&
-          // data[0].I == "STATUS" &&
-          // data[0].J == "CREATED BY ID" &&
-          // data[0].K == "DATE CREATED"
+
         ) {
           if (data.length > 0) {
             let i = 0;
@@ -849,14 +829,15 @@ const buildingPhaseController = {
             let fail = 0;
 
             for (let buildingData of data) {
+              if (buildingData.B === 'COMPANY NAME'){
+                fail++;
+                continue;
+              }
               // Find Company primary key
               let companyId = null;
               let projectId = null;
               let propertyTypeId = null;
-              console.log(
-                "ORGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGID: ",
-                req.orgId
-              );
+             
               let companyIdResult = await knex("companies")
                 .select("id")
                 .where({ companyId: buildingData.A, orgId: req.orgId });
@@ -875,22 +856,14 @@ const buildingPhaseController = {
               }
 
 
-
               let propertyTypeIdResult = await knex("property_types")
                 .select("id")
                 .where({ propertyTypeCode: buildingData.E, orgId: req.orgId });
 
 
-
-
-              console.log(
-                "propertyTypeIdResult*****************************************: ",
-                propertyTypeIdResult
-              );
               if (propertyTypeIdResult && propertyTypeIdResult.length) {
                 propertyTypeId = propertyTypeIdResult[0].id;
               }
-
 
 
               if (!companyId) {
@@ -943,20 +916,13 @@ const buildingPhaseController = {
                 let values = _.values(buildingData)
                 values.unshift('Building/Phase Code already exist')
 
-                //errors.push(header);
                 errors.push(values);
                 continue;
               }
 
               //if (i > 1) {
               let currentTime = new Date().getTime();
-              // let checkExist = await knex("buildings_and_phases")
-              //   .select("buildingPhaseCode")
-              //   .where({
-              //     buildingPhaseCode: buildingData.F,
-              //     orgId: req.orgId
-              //   });
-              //if (checkExist.length < 1) {
+              
               success++;
               let insertData = {
                 orgId: req.orgId,
@@ -974,19 +940,17 @@ const buildingPhaseController = {
                 .insert(insertData)
                 .returning(["*"])
                 .into("buildings_and_phases");
-              //}
-              //}
+         
+       
             }
 
-            let deleteFile = await fs.unlink(file_path, err => {
-              console.log("File Deleting Error " + err);
-            });
+            
 
             let message = null;
             fail = fail - 1;
             if (totalData == success) {
               message =
-                "System have processed ( " +
+                "System has processed ( " +
                 totalData +
                 " ) entries and added them successfully!";
             } else {
@@ -1011,13 +975,7 @@ const buildingPhaseController = {
             ]
           });
         }
-      } else {
-        return res.status(400).json({
-          errors: [
-            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-          ]
-        });
-      }
+      
     } catch (err) {
       console.log(
         "[controllers][propertysetup][importCompanyData] :  Error",
