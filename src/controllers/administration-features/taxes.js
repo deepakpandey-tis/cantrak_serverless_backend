@@ -134,7 +134,7 @@ const taxesfactionController = {
 
         const result = Joi.validate(taxesPaylode, schema);
         if (result && result.hasOwnProperty("error") && result.error) {
-          return res.status(400).jtaxson({
+          return res.status(400).json({
             errors: [
               { code: "VALIDATION_ERROR", message: result.error.message }
             ]
