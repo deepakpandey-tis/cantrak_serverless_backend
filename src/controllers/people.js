@@ -257,6 +257,7 @@ const peopleController = {
               "users.mobileNo",
               "property_units.id",
               "users.lastLogin as lastVisit",
+              "users.isActive"
               //"companies.id as companyId",
               //"companies.companyName",
               //   "organisation_roles.name as roleName"
@@ -346,6 +347,7 @@ const peopleController = {
               "users.mobileNo",
               // "user_house_allocation.houseId",
               "users.lastLogin as lastVisit",
+              "users.isActive"
               //"companies.id as companyId",
               //"companies.companyName",
               //   "organisation_roles.name as roleName"

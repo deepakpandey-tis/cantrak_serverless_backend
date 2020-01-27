@@ -135,7 +135,7 @@ const whtController = {
 
         const result = Joi.validate(taxesPaylode, schema);
         if (result && result.hasOwnProperty("error") && result.error) {
-          return res.status(400).jtaxson({
+          return res.status(400).json({
             errors: [
               { code: "VALIDATION_ERROR", message: result.error.message }
             ]
@@ -240,7 +240,9 @@ const whtController = {
             "wht_master.taxPercentage as Tax Percentage",
             "wht_master.isActive as Status",
             "users.name as Created By",
-            "wht_master.createdAt as Date Created"
+            "wht_master.createdAt as Date Created",
+            "wht_master.descriptionEng",
+            "wht_master.descriptionThai",
           ])
           .orderBy('wht_master.id','desc')
           .offset(offset)
@@ -277,7 +279,8 @@ const whtController = {
   deleteWht: async (req, res) => {
     try {
       let delTaxPayload = null;
-
+      let whtResult;
+      let message;
       await knex.transaction(async trx => {
         let taxPaylaod = req.body;
 
@@ -297,18 +300,14 @@ const whtController = {
         const validTaxesId = await knex("taxes").where({ id: taxPaylaod.id });
 
         console.log("[controllers][tax][deletetax]: Taxes Code", validTaxesId);
-
-        // Return error when username exist
-
+        const currentTime = new Date().getTime();
         if (validTaxesId && validTaxesId.length) {
-          // Insert in users table,
-          const currentTime = new Date().getTime();
-          //console.log('[controllers][entrance][signup]: Expiry Time', tokenExpiryTime);
 
-          //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
-          const updateDataResult = await knex
+          if(validTaxesId[0].isActive==true){
+
+            const updateDataResult = await knex
             .update({
-              isActive: "false",
+              isActive: false,
               updatedAt: currentTime
             })
             .where({
@@ -322,10 +321,30 @@ const whtController = {
             "[controllers][tax][deletetax]: Delete Data",
             updateDataResult
           );
+          whtResult = updateDataResult[0];
+          message = "WHT deactivate successfully!"
 
-          //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
+          } else {
 
-          updateTaxPayload = updateDataResult[0];
+            const updateDataResult = await knex
+            .update({
+              isActive: true,
+              updatedAt: currentTime
+            })
+            .where({
+              id: taxPaylaod.id
+            })
+            .returning(["*"])
+            .transacting(trx)
+            .into("taxes");
+          console.log(
+            "[controllers][tax][deletetax]: Delete Data",
+            updateDataResult
+          );
+          whtResult = updateDataResult[0];
+          message = "WHT activate successfully!"
+
+          }
         } else {
           return res.status(400).json({
             errors: [
@@ -342,9 +361,9 @@ const whtController = {
 
       res.status(200).json({
         data: {
-          taxes: updateTaxPayload
+          taxes: whtResult
         },
-        message: "Taxes deleted successfully !"
+        message: message
       });
     } catch (err) {
       console.log("[controllers][tax][deletetax] :  Error", err);
