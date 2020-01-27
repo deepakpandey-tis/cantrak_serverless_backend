@@ -233,7 +233,9 @@ const chargeController = {
             "charge_master.rate as rate",
             "charge_master.isActive as Status",
             "users.name as Created By",
-            "charge_master.createdAt as Date Created"
+            "charge_master.createdAt as Date Created",
+            "charge_master.descriptionEng",
+            "charge_master.descriptionThai",
           ])
           .orderBy('charge_master.id', 'desc')
           .offset(offset)
@@ -268,7 +270,8 @@ const chargeController = {
   deleteCharges: async (req, res) => {
     try {
       let delChargesPayload = null;
-
+      let message;
+      let chargeResult;
       await knex.transaction(async trx => {
         let chargesPaylaod = req.body;
 
@@ -293,18 +296,16 @@ const chargeController = {
           "[controllers][charge][deleteCharge]: Charge Code",
           validChargesId
         );
-
-        // Return error when username exist
-
+        
+        let updateDataResult;
         if (validChargesId && validChargesId.length) {
-          // Insert in users table,
           const currentTime = new Date().getTime();
-          //console.log('[controllers][entrance][signup]: Expiry Time', tokenExpiryTime);
 
-          //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
-          const updateDataResult = await knex
+          if(validChargesId[0].isActive==true){
+
+            updateDataResult = await knex
             .update({
-              isActive: "false",
+              isActive: false,
               updatedAt: currentTime
             })
             .where({
@@ -318,10 +319,31 @@ const chargeController = {
             "[controllers][charge][deletecharge]: Delete Data",
             updateDataResult
           );
+          chargeResult = updateDataResult[0];
 
-          //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
+          } else{
 
-          updateChargesPayload = updateDataResult[0];
+            updateDataResult = await knex
+            .update({
+              isActive: true,
+              updatedAt: currentTime
+            })
+            .where({
+              id: chargesPaylaod.id
+            })
+            .returning(["*"])
+            .transacting(trx)
+            .into("charge_master");
+
+          console.log(
+            "[controllers][charge][deletecharge]: Delete Data",
+            updateDataResult
+          );
+          chargeResult = updateDataResult[0];
+
+          }
+          
+
         } else {
           return res.status(400).json({
             errors: [
@@ -337,9 +359,9 @@ const chargeController = {
 
       res.status(200).json({
         data: {
-          charges: updateChargesPayload
+          charges: chargeResult
         },
-        message: "Charges deleted successfully !"
+        message: message
       });
     } catch (err) {
       console.log("[controllers][charge][deletefaction] :  Error", err);

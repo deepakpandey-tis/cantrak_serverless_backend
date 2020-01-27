@@ -20,14 +20,22 @@ const ProjectController = {
       let userId = req.me.id;
       await knex.transaction(async trx => {
         const payload = req.body;
+        let orgId;
+        if (payload.orgId) {
+          orgId = payload.orgId;
+        } else {
+          orgId = req.orgId;
+        }
+
 
         const schema = Joi.object().keys({
           companyId: Joi.string().required(),
           project: Joi.string().required(),
           projectName: Joi.string().required(),
-          projectLocationThai: Joi.string().allow('').optional(),
-          projectLocationEng: Joi.string().allow('').optional(),
-          currency: Joi.string().allow('').optional()
+          projectLocationThai: Joi.string().allow('').allow(null).optional(),
+          projectLocationEng: Joi.string().allow('').allow(null).optional(),
+          currency: Joi.string().allow('').allow(null).optional(),
+          orgId: Joi.string().allow('').allow(null).optional()
           // projectStartDate: Joi.string().allow('').optional(),
           // projectEndDate: Joi.string().allow('').optional(),
           // branchId: Joi.string().allow('').optional(),
@@ -60,7 +68,7 @@ const ProjectController = {
 
         /*CHECK DUPLICATE VALUES OPEN */
         let existValue = await knex('projects')
-          .where({ project: payload.project, companyId: payload.companyId, orgId: req.orgId });
+          .where({ project: payload.project, companyId: payload.companyId, orgId: orgId });
         if (existValue && existValue.length) {
           return res.status(400).json({
             errors: [
@@ -76,7 +84,7 @@ const ProjectController = {
           createdBy: userId,
           createdAt: currentTime,
           updatedAt: currentTime,
-          orgId: req.orgId
+          orgId: orgId
         };
 
         console.log('Project Payload: ', insertData)
@@ -110,6 +118,12 @@ const ProjectController = {
       let Project = null;
       await knex.transaction(async trx => {
         const payload = req.body;
+        let orgId;
+        if (payload.orgId) {
+          orgId = payload.orgId;
+        } else {
+          orgId = req.orgId;
+        }
 
         const schema = Joi.object().keys({
           id: Joi.string().required(),
@@ -118,7 +132,8 @@ const ProjectController = {
           projectName: Joi.string().required(),
           projectLocationThai: Joi.string().allow('').allow(null).optional(),
           projectLocationEng: Joi.string().allow('').allow(null).optional(),
-          currency: Joi.string().allow('').allow(null).optional()
+          currency: Joi.string().allow('').allow(null).optional(),
+          orgId: Joi.string().allow('').allow(null).optional()
           // projectStartDate: Joi.string().allow('').optional(),
           // projectEndDate: Joi.string().allow('').optional(),
           // branchId: Joi.string().allow('').optional(),
@@ -150,7 +165,7 @@ const ProjectController = {
 
         /*CHECK DUPLICATE VALUES OPEN */
         let existValue = await knex('projects')
-          .where({ project: payload.project, companyId: payload.companyId, orgId: req.orgId });
+          .where({ project: payload.project, companyId: payload.companyId, orgId: orgId });
         if (existValue && existValue.length) {
 
           if (existValue[0].id === payload.id) {
@@ -167,10 +182,10 @@ const ProjectController = {
 
 
         let currentTime = new Date().getTime();
-        let insertData = { ...payload, updatedAt: currentTime };
+        let insertData = { ...payload,orgId:orgId, updatedAt: currentTime };
         let insertResult = await knex
           .update(insertData)
-          .where({ id: payload.id, orgId: req.orgId })
+          .where({ id: payload.id})
           .returning(["*"])
           .transacting(trx)
           .into("projects");
@@ -375,7 +390,8 @@ const ProjectController = {
               "companies.companyName as Company Name",
               "projects.isActive as Status",
               "users.name as Created By",
-              "projects.createdAt as Date Created"
+              "projects.createdAt as Date Created",
+              "projects.project as projectId",
             ])
             .orderBy('projects.id', 'desc')
             .offset(offset)

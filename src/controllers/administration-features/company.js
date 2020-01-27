@@ -25,12 +25,12 @@ const companyController = {
 
         const payload = _.omit(req.body, ["logoFile"]);
         let orgId;
-        if(payload.orgId){
-           orgId = payload.orgId;
-        } else{
+        if (payload.orgId) {
+          orgId = payload.orgId;
+        } else {
           orgId = req.orgId;
         }
-        
+
         const userId = req.me.id;
 
         if (payload.taxId) {
@@ -70,7 +70,7 @@ const companyController = {
           taxId: Joi.number()
             .allow("")
             .optional(),
-            orgId: Joi.number()
+          orgId: Joi.number()
             .allow("")
             .optional()
         });
@@ -147,15 +147,15 @@ const companyController = {
     try {
       let company = null;
       await knex.transaction(async trx => {
-        
+
         const payload = _.omit(req.body, ["logoFile"]);
         let orgId;
-        if(payload.orgId){
-         orgId = payload.orgId;
-        }else {
+        if (payload.orgId) {
+          orgId = payload.orgId;
+        } else {
           orgId = req.orgId;
         }
-        
+
         const schema = Joi.object().keys({
           id: Joi.string().required(),
           companyName: Joi.string().required(),
@@ -203,7 +203,7 @@ const companyController = {
           taxId: Joi.number()
             .allow("").allow(null)
             .optional(),
-            orgId: Joi.number()
+          orgId: Joi.number()
             .allow("")
             .optional()
 
@@ -251,13 +251,13 @@ const companyController = {
         console.log("==============", req.body.logoFile)
         let insertData;
         if (req.body.logoFile.length) {
-          insertData = { ...payload,orgId, logoFile: logo, updatedAt: currentTime };
+          insertData = { ...payload, orgId, logoFile: logo, updatedAt: currentTime };
         } else {
-          insertData = { ...payload, orgId,updatedAt: currentTime };
+          insertData = { ...payload, orgId, updatedAt: currentTime };
         }
         let insertResult = await knex
           .update(insertData)
-          .where({ id: payload.id})
+          .where({ id: payload.id })
           .returning(["*"])
           .transacting(trx)
           .into("companies");
@@ -648,12 +648,24 @@ const companyController = {
       let role = req.me.roles[0];
       let name = req.me.name;
       let result;
+      let orgId = req.query.orgId;
       if (role === "superAdmin" && name === "superAdmin") {
-        [result] = await Promise.all([
-          knex("companies")
-            .select("id", "companyId", "companyName as CompanyName")
-            .where({ isActive: "true" })
-        ]);
+
+        if (orgId) {
+
+          [result] = await Promise.all([
+            knex("companies")
+              .select("id", "companyId", "companyName as CompanyName")
+              .where({ isActive: "true", orgId: orgId })
+          ]);
+
+        } else {
+          [result] = await Promise.all([
+            knex("companies")
+              .select("id", "companyId", "companyName as CompanyName")
+              .where({ isActive: "true" })
+          ]);
+        }
       } else {
 
         [result] = await Promise.all([
@@ -734,11 +746,11 @@ const companyController = {
 
               if (i > 1) {
                 let taxIdExists = [];
-                if(companyData.F){
-                 taxIdExists = await knex("companies")
-                  .select("taxId")
-                  .where({ taxId: companyData.F, orgId: req.orgId });
-              }
+                if (companyData.F) {
+                  taxIdExists = await knex("companies")
+                    .select("taxId")
+                    .where({ taxId: companyData.F, orgId: req.orgId });
+                }
                 let checkExist = await knex("companies")
                   .select("companyName")
                   .where({ companyId: companyData.A, orgId: req.orgId });
