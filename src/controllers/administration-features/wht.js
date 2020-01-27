@@ -297,7 +297,7 @@ const whtController = {
           });
         }
 
-        const validTaxesId = await knex("taxes").where({ id: taxPaylaod.id });
+        const validTaxesId = await knex("wht_master").where({ id: taxPaylaod.id });
 
         console.log("[controllers][tax][deletetax]: Taxes Code", validTaxesId);
         const currentTime = new Date().getTime();
@@ -315,7 +315,7 @@ const whtController = {
             })
             .returning(["*"])
             .transacting(trx)
-            .into("taxes");
+            .into("wht_master");
 
           console.log(
             "[controllers][tax][deletetax]: Delete Data",
@@ -336,7 +336,7 @@ const whtController = {
             })
             .returning(["*"])
             .transacting(trx)
-            .into("taxes");
+            .into("wht_master");
           console.log(
             "[controllers][tax][deletetax]: Delete Data",
             updateDataResult
