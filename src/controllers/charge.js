@@ -320,6 +320,7 @@ const chargeController = {
             updateDataResult
           );
           chargeResult = updateDataResult[0];
+          message = "Deactivate Successfully!"
 
           } else{
 
@@ -340,7 +341,7 @@ const chargeController = {
             updateDataResult
           );
           chargeResult = updateDataResult[0];
-
+          message = "Activate Successfully!"
           }
           
 

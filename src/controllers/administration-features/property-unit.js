@@ -34,7 +34,7 @@ const propertyUnitController = {
           unitNumber: Joi.string().required(),
           houseId: Joi.string().optional().allow(''),
           description: Joi.string().allow("").optional(),
-          productCode: Joi.string().required(),
+          productCode: Joi.string().allow("").optional(),
           area: Joi.string().allow("").optional(),
         });
 
@@ -129,7 +129,7 @@ const propertyUnitController = {
           unitNumber: Joi.string().required(),
           houseId: Joi.string().allow('').allow(null).optional(),
           description: Joi.string().allow("").allow(null).optional(),
-          productCode: Joi.string().required(),
+          productCode: Joi.string().allow("").allow(null).optional(),
           area: Joi.string().allow("").allow(null).optional(),
           //createdBy:Joi.string().allow("").optional(),
         });
