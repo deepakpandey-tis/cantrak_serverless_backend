@@ -615,7 +615,7 @@ const ProjectController = {
 
       let rows = await knex("projects")
         .innerJoin("companies", "projects.companyId", "companies.id")
-        .where({ "projects.companyId": companyId, "projects.isActive": 'true' })
+        .where({ "projects.companyId": companyId, "projects.isActive": true })
         .whereIn('projects.id', projects)
         .select([
           "projects.id as id",

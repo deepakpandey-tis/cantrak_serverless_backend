@@ -656,14 +656,14 @@ const companyController = {
           [result] = await Promise.all([
             knex("companies")
               .select("id", "companyId", "companyName as CompanyName")
-              .where({ isActive: "true", orgId: orgId })
+              .where({ isActive: true, orgId: orgId })
           ]);
 
         } else {
           [result] = await Promise.all([
             knex("companies")
               .select("id", "companyId", "companyName as CompanyName")
-              .where({ isActive: "true" })
+              .where({ isActive: true })
           ]);
         }
       } else {
@@ -671,7 +671,7 @@ const companyController = {
         [result] = await Promise.all([
           knex("companies")
             .select("id", "companyId", "companyName as CompanyName")
-            .where({ isActive: "true", orgId: req.orgId })
+            .where({ isActive: true, orgId: req.orgId })
         ]);
       }
 
