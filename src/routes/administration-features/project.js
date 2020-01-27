@@ -46,5 +46,6 @@ var storage = multer.diskStorage({
 });
 var upload = multer( { storage: storage } );
 router.post('/import-project-data',upload.single('file'), authMiddleware.isAuthenticated, projectController.importProjectData)
+router.get("/get-user-project-by-companies",authMiddleware.isAuthenticated,projectController.getUserProjectByCompany);
 
 module.exports = router

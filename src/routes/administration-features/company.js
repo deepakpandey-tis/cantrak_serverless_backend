@@ -43,5 +43,9 @@ var storage = multer.diskStorage({
 });
 var upload = multer( { storage: storage } );
 router.post('/import-company-data',upload.single('file'), authMiddleware.isAuthenticated, companyController.importCompanyData)
+router.get('/user-company-lists',authMiddleware.isAuthenticated, companyController.getUserCompanyList)
+
+
+
 
 module.exports = router
