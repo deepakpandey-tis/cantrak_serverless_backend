@@ -126,7 +126,8 @@ const customerController = {
               "users.name as name",
               "users.email as email",
               "user_house_allocation.houseId as houseId",
-              "users.id as userId"
+              "users.id as userId",
+              "users.isActive"
             ])
 
             .where({
@@ -166,7 +167,8 @@ const customerController = {
               "users.name as name",
               "users.email as email",
               "user_house_allocation.houseId as houseId",
-              "users.id as userId"
+              "users.id as userId",
+              "users.isActive"
             ])
             .where({
               "application_user_roles.roleId": 4
@@ -212,7 +214,8 @@ const customerController = {
               "users.name as name",
               "users.email as email",
               "user_house_allocation.houseId as houseId",
-              "users.id as userId"
+              "users.id as userId",
+              "users.isActive"
             ])
 
             .where({
@@ -253,7 +256,8 @@ const customerController = {
               "users.name as name",
               "users.email as email",
               "user_house_allocation.houseId as houseId",
-              "users.id as userId"
+              "users.id as userId",
+              "users.isActive"
             ])
             .where({
               "application_user_roles.roleId": 4,

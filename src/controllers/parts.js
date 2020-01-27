@@ -1092,21 +1092,22 @@ const partsController = {
     importPartData: async (req, res) => {
         //req.setTimeout(900000);
         try {
-            if (req.file) {
-                console.log(req.file)
-                let tempraryDirectory = null;
-                if (process.env.IS_OFFLINE) {
-                    tempraryDirectory = 'tmp/';
-                } else {
-                    tempraryDirectory = '/tmp/';
-                }
-                let resultData = null;
-                let file_path = tempraryDirectory + req.file.filename;
-                let wb = XLSX.readFile(file_path, { type: 'string' });
-                let ws = wb.Sheets[wb.SheetNames[0]];
-                let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
-                //data         = JSON.stringify(data);
-                console.log("+++++++++++++", data, "=========")
+           // if (req.file) {
+                // console.log(req.file)
+                // let tempraryDirectory = null;
+                // if (process.env.IS_OFFLINE) {
+                //     tempraryDirectory = 'tmp/';
+                // } else {
+                //     tempraryDirectory = '/tmp/';
+                // }
+                // let resultData = null;
+                // let file_path = tempraryDirectory + req.file.filename;
+                // let wb = XLSX.readFile(file_path, { type: 'string' });
+                // let ws = wb.Sheets[wb.SheetNames[0]];
+                // let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
+                // //data         = JSON.stringify(data);
+                // console.log("+++++++++++++", data, "=========")
+                let data = req.body;
                 let totalData = data.length - 1;
                 let fail = 0;
                 let success = 0;
@@ -1194,6 +1195,24 @@ const partsController = {
                                     }
 
                                     resultData = await knex.insert(insertData).returning(['*']).into('part_master');
+
+                                    
+                                    if (isNaN(partData.G)){
+                                        fail++;
+                                        let values = _.values(partData)
+                                        values.unshift('Unit cost is not a number.')
+                                        errors.push(values);
+                                        continue;
+                                    }
+
+                                    if(isNaN(partData.F)){
+                                        fail++;
+                                        let values = _.values(partData)
+                                        values.unshift('Quantity is not a number.')
+                                        errors.push(values);
+                                        continue;
+                                    }
+
                                     let quantityData = { partId: resultData[0].id, unitCost: partData.G, quantity: partData.F, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId };
                                     let partQuantityResult = await knex.insert(quantityData).returning(['*']).into('part_ledger');
 
@@ -1225,7 +1244,7 @@ const partsController = {
                                 fail +
                                 " ) due to validation!";
                         }
-                        let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
+                        //let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
                         return res.status(200).json({
                             message: message,
                             errors
@@ -1240,15 +1259,15 @@ const partsController = {
                         ]
                     });
                 }
-            } else {
+            // } else {
 
-                return res.status(400).json({
-                    errors: [
-                        { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-                    ]
-                });
+                // return res.status(400).json({
+                //     errors: [
+                //         { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+                //     ]
+                // });
 
-            }
+            // }
 
         } catch (err) {
             console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
