@@ -1195,6 +1195,24 @@ const partsController = {
                                     }
 
                                     resultData = await knex.insert(insertData).returning(['*']).into('part_master');
+
+                                    
+                                    if (isNaN(partData.G)){
+                                        fail++;
+                                        let values = _.values(partData)
+                                        values.unshift('Unit cost is not a number.')
+                                        errors.push(values);
+                                        continue;
+                                    }
+
+                                    if(isNaN(partData.F)){
+                                        fail++;
+                                        let values = _.values(partData)
+                                        values.unshift('Quantity is not a number.')
+                                        errors.push(values);
+                                        continue;
+                                    }
+
                                     let quantityData = { partId: resultData[0].id, unitCost: partData.G, quantity: partData.F, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId };
                                     let partQuantityResult = await knex.insert(quantityData).returning(['*']).into('part_ledger');
 

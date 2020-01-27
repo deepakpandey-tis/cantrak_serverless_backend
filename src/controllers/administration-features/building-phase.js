@@ -829,6 +829,10 @@ const buildingPhaseController = {
             let fail = 0;
 
             for (let buildingData of data) {
+              if (buildingData.B === 'COMPANY NAME'){
+                fail++;
+                continue;
+              }
               // Find Company primary key
               let companyId = null;
               let projectId = null;
@@ -946,7 +950,7 @@ const buildingPhaseController = {
             fail = fail - 1;
             if (totalData == success) {
               message =
-                "System have processed ( " +
+                "System has processed ( " +
                 totalData +
                 " ) entries and added them successfully!";
             } else {
