@@ -1280,7 +1280,7 @@ const serviceDetailsController = {
     try {
 
       let orgId = req.orgId;
-      let result = await knex('location_tags_master').where({ 'orgId': orgId })
+      let result = await knex('location_tags_master').where({ 'orgId': orgId,isActive:true })
       return res.status(200).json({
         data: result,
         message: "Location list!"

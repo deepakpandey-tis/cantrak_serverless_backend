@@ -253,6 +253,7 @@ const usersController = {
                 //    .whereNotIn('organisation_user_roles.roleId', [1, 4])
                 //.where({'organisation_user_roles.orgId':req.orgId})
                 .where({ 'users.orgId': req.orgId, isActive: true })
+                .orderBy('users.name','asc')
                 .groupBy('users.id')
 
             return res.status(200).json({

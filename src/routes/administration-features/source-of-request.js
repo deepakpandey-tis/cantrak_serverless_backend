@@ -38,5 +38,5 @@ var storage = multer.diskStorage({
 });
 var upload = multer( { storage: storage } );
 router.post('/import-source-of-request-data',upload.single('file'), authMiddleware.isAuthenticated, sourceofRequestController.importSourceOfRequest)
-
+router.get('/get-all-source-of-request', authMiddleware.isAuthenticated, sourceofRequestController.getAllSourceOfRequest)
 module.exports = router

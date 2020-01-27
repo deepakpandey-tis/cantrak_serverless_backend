@@ -738,7 +738,7 @@ const buildingPhaseController = {
             "property_types.id"
           )
           .where({
-            "buildings_and_phases.isActive": "true",
+            "buildings_and_phases.isActive": true,
             "buildings_and_phases.projectId": projectId,
             "buildings_and_phases.orgId": orgId
           })
