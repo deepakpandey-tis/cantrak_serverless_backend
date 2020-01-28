@@ -352,6 +352,7 @@ const surveyOrderController = {
       let dueFromDate = "";
       let dueToDate = "";
       let compToDate = "";
+      const accessibleProjects = req.userProjectResources[0].projects
 
       let pagination = {};
       let per_page = req.query.per_page || 10;
@@ -557,7 +558,8 @@ const surveyOrderController = {
             "o.createdAt AS createdAt",
             "teams.teamName as teamName"
           )
-          .where({"assigned_service_team.entityType":"survey_orders"})          
+          .where({"assigned_service_team.entityType":"survey_orders"})
+          .whereIn('s.projectId', accessibleProjects)
           .groupBy([
             "o.id",
             "s.id",
@@ -622,6 +624,7 @@ const surveyOrderController = {
             "teams.teamId"
           )
           .leftJoin("users", "assigned_service_team.userId", "users.id")
+          .whereIn('s.projectId', accessibleProjects)
           .offset(offset)
           .limit(per_page);
       } else if (
@@ -673,7 +676,9 @@ const surveyOrderController = {
             "service_requests.serviceStatusCode as Status",
             "survey_orders.createdAt as Date Created",
             "teams.teamName as teamName"
-          ]);
+          ])
+          .whereIn('service_requests.projectId', accessibleProjects)
+
 
         // For get the rows With pagination
         rows = await knex
@@ -715,7 +720,8 @@ const surveyOrderController = {
             "teams.teamName as teamName"
           ])
           .offset(offset)
-          .limit(per_page);
+          .whereIn('service_requests.projectId', accessibleProjects)
+          .limit(per_page)
       } else {
         /* Get List of All survey order With out Filter */
 
@@ -755,6 +761,8 @@ const surveyOrderController = {
             "teams.teamId"
           ])
           .where({ "survey_orders.orgId": req.orgId,"assigned_service_team.entityType":"survey_orders" })
+          .whereIn('service_requests.projectId', accessibleProjects)
+
           .select([
             "survey_orders.id as S Id",
             "service_requests.description as Description",
@@ -808,6 +816,8 @@ const surveyOrderController = {
             "teams.teamName as teamName"
           ])
           .where({ "survey_orders.orgId": req.orgId,"assigned_service_team.entityType":"survey_orders" })
+          .whereIn('service_requests.projectId', accessibleProjects)
+
           .offset(offset)
           .limit(per_page);
       }
