@@ -890,7 +890,7 @@ const propertyUnitController = {
           // data[0].O == "DATE CREATED"
         ) {
           if (data.length > 0) {
-            let i = 1;
+            let i = 0;
             console.log("Data[0]", data[0]);
             for (let propertyUnitData of data) {
 
@@ -959,7 +959,7 @@ const propertyUnitController = {
                 // console.log({ buildingPhaseIdResult, floorZoneIdResult });
 
 
-                if (propertyTypeIdResult && propertyTypeIdResult.length) {
+                if (propertyTypeIdResult.length) {
                   propertyTypeId = propertyTypeIdResult[0].id;
                 }
 
@@ -1007,7 +1007,7 @@ const propertyUnitController = {
                 if (!companyId) {
                   fail++;
                   let values = _.values(propertyUnitData)
-                  values.unshift('Company ID already exists')
+                  values.unshift('Company ID does not exists')
 
                   //errors.push(header);
                   errors.push(values);
@@ -1016,7 +1016,7 @@ const propertyUnitController = {
                 if (!projectId) {
                   fail++;
                   let values = _.values(propertyUnitData)
-                  values.unshift('Project ID already exists')
+                  values.unshift('Project ID does not exists')
 
                   //errors.push(header);
                   errors.push(values);
@@ -1068,7 +1068,7 @@ const propertyUnitController = {
                 }
               }
             }
-            fail = fail - 1;
+            //fail = fail - 1;
             let message = null;
             if (totalData == success) {
               message =

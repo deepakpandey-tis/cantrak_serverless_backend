@@ -34,11 +34,20 @@ const peopleController = {
         }
 
         const existEmail = await knex('users').where({ email: payload.email });
-
+        const existUser = await knex('users').where({ userName: payload.userName });
+        
         if (existEmail && existEmail.length) {
           return res.status(400).json({
             errors: [
               { code: 'EMAIL_EXIST_ERROR', message: 'Email already exist !' }
+            ],
+          });
+        }
+
+        if (existUser && existUser.length) {
+          return res.status(400).json({
+            errors: [
+              { code: 'USER_EXIST_ERROR', message: 'Username already exist !' }
             ],
           });
         }
