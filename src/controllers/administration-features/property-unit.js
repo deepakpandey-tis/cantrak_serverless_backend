@@ -771,7 +771,7 @@ const propertyUnitController = {
       const { floorZoneId } = req.body;
       const unit = await knex("property_units")
         .select("*")
-        .where({ floorZoneId, orgId: orgId });
+        .where({ floorZoneId, orgId: orgId ,isActive:true});
       return res.status(200).json({
         data: {
           unit

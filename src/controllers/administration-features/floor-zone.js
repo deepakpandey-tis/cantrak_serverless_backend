@@ -694,14 +694,14 @@ const floorZoneController = {
       if (buildingPhaseId) {
         floor = await knex("floor_and_zones")
           .select("*")
-          .where({ buildingPhaseId, orgId: orgId });
+          .where({ buildingPhaseId,isActive:true, orgId: orgId });
       } else {
         floor = await knex("floor_and_zones")
           .select([
             'floor_and_zones.floorZoneCode as Floor/Zone',
             'floor_and_zones.id as id'
           ])
-          .where({ orgId: orgId });
+          .where({ isActive:true,orgId: orgId });
       }
       return res.status(200).json({
         data: {
