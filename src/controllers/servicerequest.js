@@ -466,9 +466,22 @@ const serviceRequestController = {
             ]
           });
         }
+        const currentTime = new Date().getTime();
+
+
+        // CHANGE ASSET LOCATION OPEN
+        
+        const sr = await knex('service_requests').select('houseId').where({id:req.body.serviceRequestId}).first()
+        let ids = null
+        if(sr){
+          ids = await knex('property_units').select(['companyId','projectId','buildingPhaseId','floorZoneId','houseId']).where({id:sr.houseId}).first()
+        }
+
+        await knex('asset_location').insert({assetId:req.body.assetId,companyId:ids.companyId,projectId:ids.projectId,buildingId:ids.buildingPhaseId,floorId:ids.floorZoneId,houseId:ids.houseId,unitId:sr.houseId,orgId:req.orgId,startDate:currentTime,serviceRequestId:req.body.serviceRequestId})
+
+        // CHANGE ASSET LOCATION END
 
         // Insert in assigned_parts table,
-        const currentTime = new Date().getTime();
 
         let assignedAssetInsertPayload = _.omit(assignedAssetPayload, [
           "serviceRequestId"
@@ -2372,6 +2385,27 @@ const serviceRequestController = {
           }
         })
       }
+
+    } catch(err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getServiceAssignedTeamAndUsers:async(req,res) => {
+    try {
+      const serviceRequestId = req.body.serviceRequestId;
+      const team = await knex('assigned_service_team').select(['teamId','userId as mainUserId']).where({entityId:serviceRequestId,entityType:'service_requests'})
+
+      let additionalUsers = await knex('assigned_service_additional_users').select(['userId']).where({entityId:serviceRequestId,entityType:'service_requests'})
+
+
+      return res.status(200).json({
+        data: {
+          team,
+          additionalUsers
+        }
+      })
 
     } catch(err) {
       return res.status(500).json({

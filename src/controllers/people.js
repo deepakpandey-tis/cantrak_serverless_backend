@@ -35,7 +35,7 @@ const peopleController = {
 
         const existEmail = await knex('users').where({ email: payload.email });
         const existUser = await knex('users').where({ userName: payload.userName });
-        
+
         if (existEmail && existEmail.length) {
           return res.status(400).json({
             errors: [
@@ -219,7 +219,7 @@ const peopleController = {
               "property_units.id"
             )
             .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
-            .whereNotIn('application_user_roles.roleId', [2])
+            .whereNotIn('application_user_roles.roleId', [2,4])
             .where(qb => {
               qb.where({ "users.orgId": req.orgId });
               if (name) {
@@ -251,7 +251,7 @@ const peopleController = {
             )
 
             .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
-            .whereNotIn('application_user_roles.roleId', [2])
+            .whereNotIn('application_user_roles.roleId', [2,4])
             .where(qb => {
               qb.where({ "users.orgId": req.orgId });
               if (name) {
@@ -322,7 +322,7 @@ const peopleController = {
             //   "admin"
             // ])
             .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
-            .whereNotIn('application_user_roles.roleId', [2])
+            .whereNotIn('application_user_roles.roleId', [2,4])
             .where({ "users.orgId": req.orgId })
             .first(),
           knex
@@ -357,7 +357,7 @@ const peopleController = {
             //   "admin"
             // ])
             .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
-            .whereNotIn('application_user_roles.roleId', [2])
+            .whereNotIn('application_user_roles.roleId', [2,4])
             .select([
               "users.id as userId",
               "users.name as name",
@@ -584,7 +584,6 @@ const peopleController = {
             NAME: "",
             EMAIL: "",
             TEAM_CODE: "",
-            ALTERNATE_LANGUAGE_NAME: "",
             MOBILE_NO: "",
             PHONE_NO: ""
           }

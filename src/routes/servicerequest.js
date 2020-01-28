@@ -80,4 +80,6 @@ router.post('/delete-service-problem', authMiddleware.isAuthenticated, roleMiddl
 
 router.post('/check-service-request-id', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
 	resourceAccessMiddleware.isCMAccessible, serviceRequestController.checkServiceRequestId)
+
+router.post('/get-service-request-assigned-teams', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isCMAccessible, serviceRequestController.getServiceAssignedTeamAndUsers)
 module.exports = router;
