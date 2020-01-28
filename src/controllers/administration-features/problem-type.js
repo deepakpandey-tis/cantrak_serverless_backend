@@ -116,7 +116,7 @@ const problemTypeController = {
           id: Joi.number().required(),
           typeCode: Joi.string().required(),
           descriptionEng: Joi.string().required(),
-          descriptionThai: Joi.string().allow("").optional()
+          descriptionThai: Joi.string().allow("").allow(null).optional()
         });
 
         const result = Joi.validate(statusPaylaod, schema);

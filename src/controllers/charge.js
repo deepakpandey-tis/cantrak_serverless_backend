@@ -103,15 +103,15 @@ const chargeController = {
         const schema = Joi.object().keys({
           id: Joi.number().required(),
           chargeCode: Joi.string().required(),
-          descriptionThai: Joi.string().allow("").optional(),
-          descriptionEng: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string().allow("").allow(null).optional(),
+          descriptionEng: Joi.string().allow("").allow(null).optional(),
           calculationUnit: Joi.string().required(),
           rate: Joi.string().required(),
           vatRate: Joi.string().required(),
           vatId: Joi.string().required(),
-          whtId: Joi.string().allow("").optional(),
-          whtRate: Joi.string().allow("").optional(),
-          glAccountCode: Joi.allow("").optional()
+          whtId: Joi.string().allow("").allow(null).optional(),
+          whtRate: Joi.string().allow("").allow(null).optional(),
+          glAccountCode: Joi.allow("").allow(null).optional()
         });
 
 

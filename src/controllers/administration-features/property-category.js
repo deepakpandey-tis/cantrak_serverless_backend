@@ -129,8 +129,8 @@ const propertyCategoryController = {
           id: Joi.number().required(),
           categoryCode: Joi.string().required(),
           descriptionEng: Joi.string().required(),
-          descriptionThai: Joi.string().allow("").optional(),
-          remark: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string().allow("").allow(null).optional(),
+          remark: Joi.string().allow("").allow(null).optional(),
         });
 
         const result = Joi.validate(categoryTypePayload, schema);

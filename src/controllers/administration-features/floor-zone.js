@@ -106,10 +106,10 @@ const floorZoneController = {
           id: Joi.string().required(),
           companyId: Joi.string().required(),
           projectId: Joi.string().required(),
-          propertyTypeId: Joi.string().allow("").optional(),
+          propertyTypeId: Joi.string().allow("").allow(null).optional(),
           buildingPhaseId: Joi.string().required(),
           floorZoneCode: Joi.string().required(),
-          description: Joi.string().allow("").optional(),
+          description: Joi.string().allow("").allow(null).optional(),
           totalFloorArea: Joi.string().required()
         });
 

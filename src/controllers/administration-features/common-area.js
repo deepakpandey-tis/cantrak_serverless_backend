@@ -136,7 +136,7 @@ const commonAreaController = {
           buildingPhaseId: Joi.number().required(),
           floorZoneId: Joi.number().required(),
           commonAreaCode: Joi.string().required(),
-          description: Joi.string().allow("").optional()
+          description: Joi.string().allow("").allow(null).optional()
         });
 
         const result = Joi.validate(commonUpdatePaylaod, schema);
