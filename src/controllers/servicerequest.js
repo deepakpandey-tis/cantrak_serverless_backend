@@ -2079,7 +2079,7 @@ const serviceRequestController = {
           location: Joi.string()
             .allow("")
             .optional(),
-          locationTags: Joi.array().items(Joi.number().optional()),
+          locationTags: Joi.array().items(Joi.string().optional()),
           project: Joi.string().required(),
           serviceType: Joi.string().required(),
           unit: Joi.string().required(),
@@ -2173,14 +2173,39 @@ const serviceRequestController = {
 
         /*INSERT LOCATION TAGS DATA OPEN */
 
-        let delLocation = await knex("location_tags")
-          .where({
-            entityId: payload.serviceRequestId,
-            entityType: "service_requests",
-            orgId: orgId
-          })
-          .del();
-        for (let locationId of payload.locationTags) {
+        // let delLocation = await knex("location_tags")
+        //   .where({
+        //     entityId: payload.serviceRequestId,
+        //     entityType: "service_requests",
+        //     orgId: orgId
+        //   })
+        //   .del();
+        // for (let locationId of payload.locationTags) {
+        //   const insertLocation = {
+        //     entityId: payload.serviceRequestId,
+        //     entityType: "service_requests",
+        //     locationTagId: locationId,
+        //     orgId: orgId,
+        //     createdAt: currentTime,
+        //     updatedAt: currentTime
+        //   };
+        //   let locationResult = await knex
+        //     .insert(insertLocation)
+        //     .returning(["*"])
+        //     .transacting(trx)
+        //     .into("location_tags");
+        // }
+        let locationTagIds = []
+        for (let locationTag of payload.locationTags) {
+          let result = await knex('location_tags_master').select('id').where({ title: locationTag })
+          if (result && result.length) {
+            locationTagIds.push(result[0].id)
+          } else {
+            result = await knex('location_tags_master').insert({ title: locationTag, orgId: req.orgId, createdBy: req.me.id, descriptionEng: locationTag }).returning(['*'])
+            locationTagIds.push(result[0].id)
+          }
+        }
+        for (let locationId of locationTagIds) {
           const insertLocation = {
             entityId: payload.serviceRequestId,
             entityType: "service_requests",
