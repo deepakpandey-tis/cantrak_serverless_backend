@@ -35,7 +35,7 @@ const peopleController = {
 
         const existEmail = await knex('users').where({ email: payload.email });
         const existUser = await knex('users').where({ userName: payload.userName });
-        
+
         if (existEmail && existEmail.length) {
           return res.status(400).json({
             errors: [
@@ -584,7 +584,6 @@ const peopleController = {
             NAME: "",
             EMAIL: "",
             TEAM_CODE: "",
-            ALTERNATE_LANGUAGE_NAME: "",
             MOBILE_NO: "",
             PHONE_NO: ""
           }
