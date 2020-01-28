@@ -84,7 +84,7 @@ const peopleController = {
         // let roleResult = await knex.insert(insertRoleData).returning(['*']).transacting(trx).into('organisation_user_roles');
         // role = roleResult[0];
 
-        await emailHelper.sendTemplateEmail({ to: payload.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, uuid: uid, layout: 'welcome-org-admin.ejs' } })
+        await emailHelper.sendTemplateEmail({ to: payload.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, uuid: uid,siteUrl:process.env.SITE_URL} })
 
         trx.commit;
         res.status(200).json({
@@ -660,35 +660,34 @@ const peopleController = {
             for (let peopleData of data) {
               i++;
 
-              let teamId = null;
-              if (peopleData.C) {
-                let teamData = await knex('teams').select('teamId').where({ teamCode: peopleData.C, orgId: req.orgId });
-
-                // if (!teamData.length) {
-                //   fail++;
-                //   continue;
-                // }
-                if (teamData && teamData.length) {
-                  teamId = teamData[0].teamId
-                }
-
-              }
-
-              if (peopleData.D) {
-                let checkMobile = await knex('users').select("id")
-                  .where({ mobileNo: peopleData.D })
-
-                if (checkMobile.length) {
-                  let values = _.values(peopleData)
-                  values.unshift('Mobile number already exists')
-                  errors.push(values);
-                  fail++;
-                  continue;
-                }
-              }
-
-
               if (i > 1) {
+
+                let teamId = null;
+                if (peopleData.C) {
+                  let teamData = await knex('teams').select('teamId').where({ teamCode: peopleData.C, orgId: req.orgId });
+
+                  // if (!teamData.length) {
+                  //   fail++;
+                  //   continue;
+                  // }
+                  if (teamData && teamData.length) {
+                    teamId = teamData[0].teamId
+                  }
+
+                }
+
+                if (peopleData.D) {
+                  let checkMobile = await knex('users').select("id")
+                    .where({ mobileNo: peopleData.D })
+
+                  if (checkMobile.length) {
+                    let values = _.values(peopleData)
+                    values.unshift('Mobile number already exists')
+                    errors.push(values);
+                    fail++;
+                    continue;
+                  }
+                }
 
                 let checkExist = await knex('users').select("id")
                   .where({ email: peopleData.B })
@@ -769,7 +768,7 @@ const peopleController = {
             let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
             return res.status(200).json({
               message: message,
-              errors,errors
+              errors, errors
             });
 
           }
