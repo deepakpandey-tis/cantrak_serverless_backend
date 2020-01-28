@@ -1994,26 +1994,45 @@ const serviceRequestController = {
           .where({ "service_requests.id": id });
         serviceResult = result[0];
 
-        let problem = await knex
-          .from("service_problems")
-          .leftJoin(
-            "incident_categories",
-            "service_problems.categoryId",
-            "incident_categories.id"
-          )
-          .leftJoin(
-            "incident_sub_categories",
-            "service_problems.problemId",
-            "incident_sub_categories.id"
-          )
+        // let problem = await knex
+        //   .from("service_problems")
+        //   .leftJoin(
+        //     "incident_categories",
+        //     "service_problems.categoryId",
+        //     "incident_categories.id"
+        //   )
+        //   .leftJoin(
+        //     "incident_sub_categories",
+        //     "service_problems.problemId",
+        //     "incident_sub_categories.id"
+        //   )
+        //   .select(
+        //     "service_problems.description",
+        //     "service_problems.id",
+        //     "incident_sub_categories.descriptionEng as Problem",
+        //     "incident_categories.descriptionEng as category"
+        //   )
+        //   .where({ serviceRequestId: id });
+
+        let problem = await knex("service_problems")
+          .leftJoin("incident_categories", "service_problems.categoryId", "=", "incident_categories.id")
+          .leftJoin("incident_sub_categories", "service_problems.problemId", "=", "incident_sub_categories.id")
           .select(
+            "incident_categories.categoryCode ",
+            "incident_categories.descriptionEng as category",
+            // "incident_sub_categories.categoryCode as subCategoryCode",
+            "incident_sub_categories.descriptionEng as subCategory",
             "service_problems.description",
             "service_problems.id",
-            "incident_sub_categories.descriptionEng as Problem",
-            "incident_categories.descriptionEng as category"
           )
-          .where({ serviceRequestId: id });
+          .where({
+            "service_problems.serviceRequestId": id,
+            "service_problems.orgId": req.orgId
+          });
+
         problemResult = problem;
+
+
         let location = await knex
           .from("location_tags")
           .select("locationTagId")
