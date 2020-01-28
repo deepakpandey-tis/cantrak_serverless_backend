@@ -1805,7 +1805,7 @@ const serviceRequestController = {
           if(result && result.length){
             locationTagIds.push(result[0].id)
           } else {
-            result = await knex('location_tags_master').insert({title:locationTag}).returning(['*'])
+            result = await knex('location_tags_master').insert({title:locationTag,orgId:req.orgId,createdBy:req.me.id,descriptionEng:locationTag}).returning(['*'])
             locationTagIds.push(result[0].id)
           }
         }
