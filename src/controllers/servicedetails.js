@@ -1314,8 +1314,10 @@ const serviceDetailsController = {
           .leftJoin("incident_categories", "service_problems.categoryId", "=", "incident_categories.id")
           .leftJoin("incident_sub_categories", "service_problems.problemId", "=", "incident_sub_categories.id")
           .select(
-            "incident_categories.categoryCode",
-            "incident_sub_categories.descriptionEng",
+            "incident_categories.categoryCode ",
+            "incident_categories.descriptionEng",
+            // "incident_sub_categories.categoryCode as subCategoryCode",
+            "incident_sub_categories.descriptionEng as subCategoryDescriptionEng",
             "service_problems.description"
           )
           .where({

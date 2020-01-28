@@ -55,7 +55,7 @@ const roleMiddleware = {
           //console.log(mappedProjects)
           req.userCompanyResources = userCompanyResources;
           req.userProjectResources = userProjectResources;
-          console.log(userCompanyResources, userProjectResources);
+          // console.log(userCompanyResources, userProjectResources);
           
         }
 
