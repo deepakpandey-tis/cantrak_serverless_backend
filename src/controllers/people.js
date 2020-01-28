@@ -33,6 +33,16 @@ const peopleController = {
           });
         }
 
+        const existEmail = await knex('users').where({ email: payload.email });
+
+        if (existEmail && existEmail.length) {
+          return res.status(400).json({
+            errors: [
+              { code: 'EMAIL_EXIST_ERROR', message: 'Email already exist !' }
+            ],
+          });
+        }
+
         let pass = '123456'
         if (payload.password) {
           pass = payload.password
@@ -84,7 +94,7 @@ const peopleController = {
         // let roleResult = await knex.insert(insertRoleData).returning(['*']).transacting(trx).into('organisation_user_roles');
         // role = roleResult[0];
 
-        await emailHelper.sendTemplateEmail({ to: payload.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, uuid: uid,siteUrl:process.env.SITE_URL} })
+        await emailHelper.sendTemplateEmail({ to: payload.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, uuid: uid, siteUrl: process.env.SITE_URL } })
 
         trx.commit;
         res.status(200).json({
