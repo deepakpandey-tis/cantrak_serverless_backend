@@ -296,54 +296,54 @@ const chargeController = {
           "[controllers][charge][deleteCharge]: Charge Code",
           validChargesId
         );
-        
+
         let updateDataResult;
         if (validChargesId && validChargesId.length) {
           const currentTime = new Date().getTime();
 
-          if(validChargesId[0].isActive==true){
+          if (validChargesId[0].isActive == true) {
 
             updateDataResult = await knex
-            .update({
-              isActive: false,
-              updatedAt: currentTime
-            })
-            .where({
-              id: chargesPaylaod.id
-            })
-            .returning(["*"])
-            .transacting(trx)
-            .into("charge_master");
+              .update({
+                isActive: false,
+                updatedAt: currentTime
+              })
+              .where({
+                id: chargesPaylaod.id
+              })
+              .returning(["*"])
+              .transacting(trx)
+              .into("charge_master");
 
-          console.log(
-            "[controllers][charge][deletecharge]: Delete Data",
-            updateDataResult
-          );
-          chargeResult = updateDataResult[0];
-          message = "Deactivate Successfully!"
+            console.log(
+              "[controllers][charge][deletecharge]: Delete Data",
+              updateDataResult
+            );
+            chargeResult = updateDataResult[0];
+            message = "Deactivate Successfully!"
 
-          } else{
+          } else {
 
             updateDataResult = await knex
-            .update({
-              isActive: true,
-              updatedAt: currentTime
-            })
-            .where({
-              id: chargesPaylaod.id
-            })
-            .returning(["*"])
-            .transacting(trx)
-            .into("charge_master");
+              .update({
+                isActive: true,
+                updatedAt: currentTime
+              })
+              .where({
+                id: chargesPaylaod.id
+              })
+              .returning(["*"])
+              .transacting(trx)
+              .into("charge_master");
 
-          console.log(
-            "[controllers][charge][deletecharge]: Delete Data",
-            updateDataResult
-          );
-          chargeResult = updateDataResult[0];
-          message = "Activate Successfully!"
+            console.log(
+              "[controllers][charge][deletecharge]: Delete Data",
+              updateDataResult
+            );
+            chargeResult = updateDataResult[0];
+            message = "Activate Successfully!"
           }
-          
+
 
         } else {
           return res.status(400).json({
@@ -874,39 +874,39 @@ const chargeController = {
               if (i > 1) {
 
                 let taxesIdResult = await knex("taxes")
-                .select("id", "taxPercentage")
-                .where({ taxCode: chargesData.F, orgId: req.orgId });
-              console.log("TaxIdResult", taxesIdResult);
+                  .select("id", "taxPercentage")
+                  .where({ taxCode: chargesData.F, orgId: req.orgId });
+                console.log("TaxIdResult", taxesIdResult);
 
-              if (!taxesIdResult.length) {
-                let values = _.values(chargesData)
-                values.unshift('VAT code does not exists')
-                errors.push(values);
-                fail++;
-                continue;
-              }
+                if (!taxesIdResult.length) {
+                  let values = _.values(chargesData)
+                  values.unshift('VAT code does not exists')
+                  errors.push(values);
+                  fail++;
+                  continue;
+                }
 
-              if (taxesIdResult && taxesIdResult.length) {
-                vatId = taxesIdResult[0].id;
-                vatPercentage = taxesIdResult[0].taxPercentage
-                console.log("vat id found: ", vatId);
-              }
+                if (taxesIdResult && taxesIdResult.length) {
+                  vatId = taxesIdResult[0].id;
+                  vatPercentage = taxesIdResult[0].taxPercentage
+                  console.log("vat id found: ", vatId);
+                }
 
-              let whtResult = await knex("wht_master")
-                .select("id", "taxPercentage")
-                .where({ whtCode: chargesData.G, orgId: req.orgId });
+                let whtResult = await knex("wht_master")
+                  .select("id", "taxPercentage")
+                  .where({ whtCode: chargesData.G, orgId: req.orgId });
 
-              if (!whtResult.length) {
-                let values = _.values(chargesData)
-                values.unshift('WHT code does not exists')
-                errors.push(values);
-                fail++;
-                continue;
-              }
-              if (whtResult.length) {
-                whtId = whtResult[0].id;
-                whtPercentage = whtResult[0].taxPercentage;
-              }
+                if (!whtResult.length) {
+                  let values = _.values(chargesData)
+                  values.unshift('WHT code does not exists')
+                  errors.push(values);
+                  fail++;
+                  continue;
+                }
+                if (whtResult.length) {
+                  whtId = whtResult[0].id;
+                  whtPercentage = whtResult[0].taxPercentage;
+                }
 
                 let checkExist = await knex("charge_master")
                   .select("chargeCode")
@@ -968,7 +968,7 @@ const chargeController = {
             }
             return res.status(200).json({
               message: message,
-              errors:errors
+              errors: errors
             });
           }
         } else {
@@ -1162,10 +1162,27 @@ const chargeController = {
       let offset = (page - 1) * per_page;
 
       let { serviceRequestId } = req.body;
-      let serviceRequestResult = await knex('service_orders').where({ orgId: req.orgId, serviceRequestId: serviceRequestId }).returning(['*'])
+      let serviceOrderResult = await knex('service_orders').where({ orgId: req.orgId, serviceRequestId: serviceRequestId }).returning(['*']).first();
 
-      console.log("serviceRequestPArtsData", serviceRequestResult);
-      let serviceOrderId = serviceRequestResult[0].id;
+      console.log("serviceRequestPArtsData", serviceOrderResult);
+      if (!serviceOrderResult) {
+        pagination.total = 0;
+        pagination.per_page = per_page;
+        pagination.offset = offset;
+        pagination.to = offset + 0;
+        pagination.last_page = null;
+        pagination.current_page = page;
+        pagination.from = offset;
+        pagination.data = [];
+
+        return res.status(200).json({
+          data: {
+            assignedCharges: pagination
+          }
+        })
+      }
+
+      let serviceOrderId = serviceOrderResult.id;
 
       [total, rows] = await Promise.all([
         knex("charge_master")
