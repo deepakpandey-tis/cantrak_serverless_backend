@@ -93,10 +93,10 @@ const sourceofRequestController = {
         requestCode: Joi.string().required(),
         descriptionThai: Joi.string()
           .optional()
-          .allow(""),
+          .allow("").allow(null),
         descriptionEng: Joi.string()
           .optional()
-          .allow("")
+          .allow("").allow(null)
       });
 
       const result = Joi.validate(payload, schema);

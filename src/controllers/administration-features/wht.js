@@ -124,12 +124,15 @@ const whtController = {
           taxPercentage: Joi.string().required(),
           descriptionEng: Joi.string()
             .allow("")
+            .allow(null)
             .optional(),
           descriptionThai: Joi.string()
             .allow("")
+            .allow(null)
             .optional(),
           glAccountCode: Joi.string()
             .allow("")
+            .allow(null)
             .optional()
         });
 
