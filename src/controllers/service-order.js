@@ -213,6 +213,8 @@ const serviceOrderController = {
 
             let reqData = req.query;
             let total, rows
+            const accessibleProjects = req.userProjectResources[0].projects
+
 
             let pagination = {};
             let per_page = reqData.per_page || 10;
@@ -365,7 +367,7 @@ const serviceOrderController = {
                             'service_requests.houseId as houseId'
                         ]).where((qb) => {
                             qb.where({ 'service_orders.orgId': req.orgId });
-
+qb.whereIn('service_requests.projectId', accessibleProjects)
                             if (filters) {
                                 qb.where(filters);
                             }
@@ -406,6 +408,7 @@ const serviceOrderController = {
 
                         ]).where((qb) => {
                             qb.where({ 'service_orders.orgId': req.orgId })
+                                qb.whereIn('service_requests.projectId', accessibleProjects)
                             if (filters) {
                                 qb.where(filters);
                             }
@@ -469,7 +472,9 @@ const serviceOrderController = {
                                 "u.id",
                                 "status.id"
                             ])
-                            .where({ "service_orders.orgId": req.orgId }),
+                            .where({ "service_orders.orgId": req.orgId })
+                            .whereIn('service_requests.projectId', accessibleProjects),
+
                         knex
                             .from("service_orders")
                             .leftJoin(
@@ -507,6 +512,7 @@ const serviceOrderController = {
                             .offset(offset)
                             .limit(per_page)
                             .where({ "service_orders.orgId": req.orgId })
+                            .whereIn('service_requests.projectId', accessibleProjects),
                     ]);
                 } else {
                     [total, rows] = await Promise.all([
@@ -557,6 +563,8 @@ const serviceOrderController = {
                             ])
                             .where(qb => {
                                 qb.where({ "service_orders.orgId": req.orgId });
+                                qb.whereIn('service_requests.projectId', accessibleProjects)
+
 
                                 if (filters) {
                                     qb.where(filters);
@@ -635,6 +643,8 @@ const serviceOrderController = {
                             ])
                             .where(qb => {
                                 qb.where({ "service_orders.orgId": req.orgId });
+                                qb.whereIn('service_requests.projectId', accessibleProjects)
+
 
                                 if (filters) {
                                     qb.where(filters);
