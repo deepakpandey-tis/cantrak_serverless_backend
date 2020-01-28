@@ -18,20 +18,27 @@ const chargeController = {
         let chargePayload = req.body;
         const schema = Joi.object().keys({
           chargeCode: Joi.string().required(),
-          descriptionThai: Joi.string().allow("").optional(),
-          descriptionEng: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string().allow("").allow(null).optional(),
+          descriptionEng: Joi.string().allow("").allow(null).optional(),
           calculationUnit: Joi.string().required(),
           rate: Joi.string().required(),
-          vatRate: Joi.string().required(),
-          vatId: Joi.string().required(),
-          whtId: Joi.string()
+          vatRate: Joi.string().allow("")
+          .allow(null)
+          .optional(),
+          vatId: Joi.number().allow("")
+          .allow(null)
+          .optional(),
+          whtId: Joi.number()
             .allow("")
+            .allow(null)
             .optional(),
           whtRate: Joi.string()
             .allow("")
+            .allow(null)
             .optional(),
           glAccountCode: Joi.string()
             .allow("")
+            .allow(null)
             .optional()
         });
 
@@ -107,8 +114,8 @@ const chargeController = {
           descriptionEng: Joi.string().allow("").allow(null).optional(),
           calculationUnit: Joi.string().required(),
           rate: Joi.string().required(),
-          vatRate: Joi.string().required(),
-          vatId: Joi.string().required(),
+          vatRate: Joi.string().allow("").allow(null).optional(),
+          vatId: Joi.string().allow("").allow(null).optional(),
           whtId: Joi.string().allow("").allow(null).optional(),
           whtRate: Joi.string().allow("").allow(null).optional(),
           glAccountCode: Joi.allow("").allow(null).optional()

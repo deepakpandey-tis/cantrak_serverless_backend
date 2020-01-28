@@ -430,7 +430,17 @@ const serviceDetailsController = {
         DataResult.locationTags = tags;
         console.log("locationResult",tags);
 
+        /*GET UPLOADED IMAGES OPEN  */
+           let imagesResult;
+           if(incidentRequestPayload.id){
+           imagesResult = await knex.from('images')
+                          .where({"entityId":incidentRequestPayload.id,"entityType":"service_requests",orgId:orgId})
+                          .select('s3Url as url','title','name');
+           }
+        /*GET UPLOADED IMAGES CLOSE  */
+
         generalDetails = DataResult;
+        generalDetails.uploadedImages= imagesResult;
         trx.commit;
 
       });
