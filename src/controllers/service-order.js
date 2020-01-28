@@ -18,6 +18,7 @@ const serviceOrderController = {
                 let serviceOrderPayload = req.body;
                 images = req.body.images
                 let serviceRequestId = req.body.serviceRequestId
+                await knex('service_requests').update({serviceStatusCode:'A'}).where({id:serviceRequestId})
                 let serviceRequest = { id: req.body.serviceRequestId };
                 serviceOrderPayload = _.omit(serviceOrderPayload, ['serviceRequest', 'teamId', 'mainUserId', 'additionalUsers', 'images'])
 
