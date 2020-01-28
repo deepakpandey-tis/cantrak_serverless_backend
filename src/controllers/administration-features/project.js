@@ -182,10 +182,10 @@ const ProjectController = {
 
 
         let currentTime = new Date().getTime();
-        let insertData = { ...payload,orgId:orgId, updatedAt: currentTime };
+        let insertData = { ...payload, orgId: orgId, updatedAt: currentTime };
         let insertResult = await knex
           .update(insertData)
-          .where({ id: payload.id})
+          .where({ id: payload.id })
           .returning(["*"])
           .transacting(trx)
           .into("projects");
@@ -717,22 +717,25 @@ const ProjectController = {
             for (let projectData of data) {
               i++;
 
-              let companyData = await knex("companies")
-                .select("id")
-                .where({ companyId: projectData.C, orgId: req.orgId });
-              let companyId = null;
-              if (!companyData.length) {
-                let values = _.values(projectData)
-                values.unshift('Company ID does not exists')
-                errors.push(values);
-                fail++;
-                continue;
-              }
-              if (companyData && companyData.length) {
-                companyId = companyData[0].id;
-              }
 
               if (i > 1) {
+
+                let companyData = await knex("companies")
+                  .select("id")
+                  .where({ companyId: projectData.C, orgId: req.orgId });
+                let companyId = null;
+                if (!companyData.length) {
+                  let values = _.values(projectData)
+                  values.unshift('Company ID does not exists')
+                  errors.push(values);
+                  fail++;
+                  continue;
+                }
+                if (companyData && companyData.length) {
+                  companyId = companyData[0].id;
+                }
+
+
                 let checkExist = await knex("projects")
                   .select("projectName")
                   .where({ project: projectData.A, companyId: companyId, orgId: req.orgId });

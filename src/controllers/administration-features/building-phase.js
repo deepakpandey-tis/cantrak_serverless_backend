@@ -829,6 +829,8 @@ const buildingPhaseController = {
             let fail = 0;
 
             for (let buildingData of data) {
+
+              i++;
               if (buildingData.B === 'COMPANY NAME'){
                 fail++;
                 continue;
@@ -904,7 +906,7 @@ const buildingPhaseController = {
                 propertyTypeId
               );
 
-              i++;
+              
               const checkExistance = await knex("buildings_and_phases").where({
                 orgId: req.orgId,
                 buildingPhaseCode: buildingData.F,

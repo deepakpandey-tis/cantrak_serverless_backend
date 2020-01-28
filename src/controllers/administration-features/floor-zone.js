@@ -771,7 +771,10 @@ const floorZoneController = {
             for (let floorData of data) {
               i++;
 
-              let companyData = await knex("companies")
+              if (i > 1) {
+
+
+                let companyData = await knex("companies")
                 .select("id")
                 .where({ companyId: floorData.A, orgId: req.orgId });
               let companyId = null;
@@ -850,10 +853,9 @@ const floorZoneController = {
                 errors.push(values);
                 continue;
               }
-
               /**GET BUILDING PHASE ID CLOSE */
 
-              if (i > 1) {
+
                 let checkExist = await knex("floor_and_zones")
                   .select("floorZoneCode")
                   .where({
@@ -897,7 +899,7 @@ const floorZoneController = {
               }
             }
 
-            fail = fail - 1;
+            //fail = fail - 1;
             let message = null;
             if (totalData == success) {
               message =
