@@ -585,7 +585,7 @@ const propertyTypeController = {
                   }
                 } else {
                   let values = _.values(propertyData)
-                  values.unshift('Property Type Code & Property Type already exists')
+                  values.unshift('Property Type Code already exists')
                   errors.push(values);
                   fail++;
                 }

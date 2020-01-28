@@ -1384,10 +1384,29 @@ const partsController = {
             let offset = (page - 1) * per_page;
 
             let { serviceRequestId } = req.body;
-            let serviceRequestResult = await knex('service_orders').where({ orgId: req.orgId, serviceRequestId: serviceRequestId }).returning(['*'])
+            let serviceOrderResult = await knex('service_orders').where({ orgId: req.orgId, serviceRequestId: serviceRequestId }).returning(['*']).first();
 
-            console.log("serviceRequestPArtsData", serviceRequestResult);
-            let serviceOrderId = serviceRequestResult[0].id;
+            console.log("serviceRequestPArtsData", serviceOrderResult);
+            
+            if(!serviceOrderResult){
+                pagination.total = 0;
+                pagination.per_page = per_page;
+                pagination.offset = offset;
+                pagination.to = offset + 0;
+                pagination.last_page = null;
+                pagination.current_page = page;
+                pagination.from = offset;
+                pagination.data = [];
+
+                return res.status(200).json({
+                    data: {
+                        assignedParts: pagination
+                    }
+                })
+            }
+
+
+            let serviceOrderId = serviceOrderResult.id;
 
             [total, rows] = await Promise.all([
                 knex("part_master")
@@ -1449,6 +1468,7 @@ const partsController = {
 
 
         } catch (err) {
+            console.log(err);
             return res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });

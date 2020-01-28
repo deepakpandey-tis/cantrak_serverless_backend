@@ -87,8 +87,8 @@ const serviceDetailsController = {
         const schema = Joi.object().keys({
           id: Joi.string().required(),
           incidentPriorityCode: Joi.string().required(),
-          descriptionThai: Joi.string().allow("").optional(),
-          descriptionEng: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string().allow("").allow(null).optional(),
+          descriptionEng: Joi.string().allow("").allow(null).optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -253,8 +253,8 @@ const serviceDetailsController = {
         const schema = Joi.object().keys({
           id: Joi.number().required(),
           title: Joi.string().required(),
-          descriptionThai: Joi.string().allow("").optional(),
-          descriptionEng: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string().allow("").allow(null).optional(),
+          descriptionEng: Joi.string().allow("").allow(null).optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -1314,8 +1314,10 @@ const serviceDetailsController = {
           .leftJoin("incident_categories", "service_problems.categoryId", "=", "incident_categories.id")
           .leftJoin("incident_sub_categories", "service_problems.problemId", "=", "incident_sub_categories.id")
           .select(
-            "incident_categories.categoryCode",
-            "incident_sub_categories.descriptionEng",
+            "incident_categories.categoryCode ",
+            "incident_categories.descriptionEng",
+            // "incident_sub_categories.categoryCode as subCategoryCode",
+            "incident_sub_categories.descriptionEng as subCategoryDescriptionEng",
             "service_problems.description"
           )
           .where({
