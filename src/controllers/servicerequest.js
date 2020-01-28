@@ -470,14 +470,14 @@ const serviceRequestController = {
 
 
         // CHANGE ASSET LOCATION OPEN
-        
-        const sr = await knex('service_requests').select('houseId').where({id:req.body.serviceRequestId}).first()
+
+        const sr = await knex('service_requests').select('houseId').where({ id: req.body.serviceRequestId }).first()
         let ids = null
-        if(sr){
-          ids = await knex('property_units').select(['companyId','projectId','buildingPhaseId','floorZoneId','houseId']).where({id:sr.houseId}).first()
+        if (sr) {
+          ids = await knex('property_units').select(['companyId', 'projectId', 'buildingPhaseId', 'floorZoneId', 'houseId']).where({ id: sr.houseId }).first()
         }
 
-        await knex('asset_location').insert({assetId:req.body.assetId,companyId:ids.companyId,projectId:ids.projectId,buildingId:ids.buildingPhaseId,floorId:ids.floorZoneId,houseId:ids.houseId,unitId:sr.houseId,orgId:req.orgId,startDate:currentTime,serviceRequestId:req.body.serviceRequestId})
+        await knex('asset_location').insert({ assetId: req.body.assetId, companyId: ids.companyId, projectId: ids.projectId, buildingId: ids.buildingPhaseId, floorId: ids.floorZoneId, houseId: ids.houseId, unitId: sr.houseId, orgId: req.orgId, startDate: currentTime, serviceRequestId: req.body.serviceRequestId })
 
         // CHANGE ASSET LOCATION END
 
@@ -811,7 +811,7 @@ const serviceRequestController = {
               "property_units.id"
             ])
             .where({ "service_requests.orgId": req.orgId })
-            .whereIn('service_requests.projectId',accessibleProjects),
+            .whereIn('service_requests.projectId', accessibleProjects),
 
           knex
             .from("service_requests")
@@ -841,7 +841,7 @@ const serviceRequestController = {
               "status.statusCode"
             )
             .leftJoin("users as u", "service_requests.requestedBy", "u.id")
-            
+
             .select([
               "service_requests.id as S Id",
               "service_requests.houseId as houseId",
@@ -857,8 +857,8 @@ const serviceRequestController = {
             .offset(offset)
             .limit(per_page)
             .where({ "service_requests.orgId": req.orgId })
-            .whereIn('service_requests.projectId',accessibleProjects)
-            .orderBy('service_requests.id','desc')
+            .whereIn('service_requests.projectId', accessibleProjects)
+            .orderBy('service_requests.id', 'desc')
         ]);
 
 
@@ -903,7 +903,7 @@ const serviceRequestController = {
               "status.statusCode"
             )
             .leftJoin("users as u", "service_requests.requestedBy", "u.id")
-          
+
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
@@ -939,7 +939,7 @@ const serviceRequestController = {
                 qb.where({ closedBy: "" })
               }
               qb.where(filters);
-              qb.whereIn('service_requests.projectId',accessibleProjects)
+              qb.whereIn('service_requests.projectId', accessibleProjects)
             })
             .groupBy([
               "service_requests.id",
@@ -982,7 +982,7 @@ const serviceRequestController = {
               "service_requests.serviceStatusCode",
               "status.statusCode"
             )
-            .leftJoin("users as u", "service_requests.requestedBy", "u.id")          
+            .leftJoin("users as u", "service_requests.requestedBy", "u.id")
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
@@ -994,7 +994,7 @@ const serviceRequestController = {
               "u.name as Requested By",
               "service_requests.createdAt as Date Created"
             ])
-            .orderBy('service_requests.id','desc')
+            .orderBy('service_requests.id', 'desc')
             .where({ "service_requests.orgId": req.orgId })
             .where(qb => {
               if (location) {
@@ -1783,7 +1783,7 @@ const serviceRequestController = {
             updatedAt: currentTime,
             isCreatedFromSo: req.body.isSo ? true : false,
             state: req.body.isSo ? 2 : 1,
-            createdBy:req.me.id
+            createdBy: req.me.id
           };
         } else {
           insertData = {
@@ -1800,7 +1800,7 @@ const serviceRequestController = {
             updatedAt: currentTime,
             isCreatedFromSo: req.body.isSo ? true : false,
             state: req.body.isSo ? 2 : 1,
-            createdBy:req.me.id
+            createdBy: req.me.id
           };
         }
         let serviceResult = await knex
@@ -1815,10 +1815,10 @@ const serviceRequestController = {
         let locationTagIds = []
         for (let locationTag of payload.locationTags) {
           let result = await knex('location_tags_master').select('id').where({ title: locationTag })
-          if(result && result.length){
+          if (result && result.length) {
             locationTagIds.push(result[0].id)
           } else {
-            result = await knex('location_tags_master').insert({title:locationTag,orgId:req.orgId,createdBy:req.me.id,descriptionEng:locationTag}).returning(['*'])
+            result = await knex('location_tags_master').insert({ title: locationTag, orgId: req.orgId, createdBy: req.me.id, descriptionEng: locationTag }).returning(['*'])
             locationTagIds.push(result[0].id)
           }
         }
@@ -2007,6 +2007,11 @@ const serviceRequestController = {
           .where({ "service_requests.id": id });
         serviceResult = result[0];
 
+        serviceResult.uploadedImages = await knex.from('images')
+        // .where({ "entityId": incidentRequestPayload.id, "entityType": "service_requests", orgId: orgId })
+        .where({ "entityId": id, "entityType": "service_requests" })
+        .select('s3Url', 'title', 'name');
+
         // let problem = await knex
         //   .from("service_problems")
         //   .leftJoin(
@@ -2044,6 +2049,17 @@ const serviceRequestController = {
           });
 
         problemResult = problem;
+
+        const Parallel = require('async-parallel');
+        problemResult = await Parallel.map(problemResult, async pd => {
+          imagesResult = await knex.from('images')
+            .where({ "entityId": id, "entityType": "service_problems" })
+            .select('s3Url', 'title', 'name');
+          return {
+            ...pd,
+            uploadedImages: imagesResult
+          };
+        });
 
 
         let location = await knex
@@ -2153,7 +2169,7 @@ const serviceRequestController = {
             location: payload.location,
             priority: priority,
             serviceStatusCode: "O",
-            createdBy:req.me.id,
+            createdBy: req.me.id,
             orgId: orgId,
             createdAt: currentTime,
             updatedAt: currentTime,
@@ -2307,10 +2323,10 @@ const serviceRequestController = {
       let serviceRequestId = req.body.data.serviceRequestId;
       let updateStatus = req.body.data.status;
       const currentTime = new Date().getTime();
-      console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7',req.body)
+      console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7', req.body)
 
       const status = await knex("service_requests")
-        .update({ serviceStatusCode: updateStatus,updatedAt:currentTime })
+        .update({ serviceStatusCode: updateStatus, updatedAt: currentTime })
         .where({ id: serviceRequestId });
       return res.status(200).json({
         data: {
@@ -2324,27 +2340,27 @@ const serviceRequestController = {
       });
     }
   },
-  deleteServiceProblem:async(req,res) => {
+  deleteServiceProblem: async (req, res) => {
     try {
       const id = req.body.id;
-      const deletedProblem = await knex('service_problems').where({id:id}).del().returning(['*'])
+      const deletedProblem = await knex('service_problems').where({ id: id }).del().returning(['*'])
       return res.status(200).json({
         data: {
           message: 'Deleted successfully!',
           deletedProblem
         }
       })
-    } catch(err) {
+    } catch (err) {
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
-  checkServiceRequestId:async(req,res) => {
+  checkServiceRequestId: async (req, res) => {
     try {
       const id = req.body.id;
 
-      if(!id){
+      if (!id) {
         return res.status(200).json({
           data: {
             exists: false,
@@ -2353,13 +2369,13 @@ const serviceRequestController = {
         })
       }
 
-      const srId = await knex('service_requests').select('*').where({id:id,orgId:req.orgId}).first()
+      const srId = await knex('service_requests').select('*').where({ id: id, orgId: req.orgId }).first()
       //const houseId = srId.houseId;
       //console.log('HOUSEID :**************************: ',houseId)
-      
+
       //console.log('Data :**************************: ', data)
 
-      if(srId){
+      if (srId) {
         const data = await knex('property_units')
           .select([
             "property_units.companyId",
@@ -2372,8 +2388,8 @@ const serviceRequestController = {
           .where({ id: srId.houseId, orgId: req.orgId }).first()
         return res.status(200).json({
           data: {
-            exists:true,
-            propertyData:data
+            exists: true,
+            propertyData: data
 
           }
         })
@@ -2386,18 +2402,18 @@ const serviceRequestController = {
         })
       }
 
-    } catch(err) {
+    } catch (err) {
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
-  getServiceAssignedTeamAndUsers:async(req,res) => {
+  getServiceAssignedTeamAndUsers: async (req, res) => {
     try {
       const serviceRequestId = req.body.serviceRequestId;
-      const team = await knex('assigned_service_team').select(['teamId','userId as mainUserId']).where({entityId:serviceRequestId,entityType:'service_requests'})
+      const team = await knex('assigned_service_team').select(['teamId', 'userId as mainUserId']).where({ entityId: serviceRequestId, entityType: 'service_requests' })
 
-      let additionalUsers = await knex('assigned_service_additional_users').select(['userId']).where({entityId:serviceRequestId,entityType:'service_requests'})
+      let additionalUsers = await knex('assigned_service_additional_users').select(['userId']).where({ entityId: serviceRequestId, entityType: 'service_requests' })
 
 
       return res.status(200).json({
@@ -2407,7 +2423,7 @@ const serviceRequestController = {
         }
       })
 
-    } catch(err) {
+    } catch (err) {
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
