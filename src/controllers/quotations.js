@@ -485,6 +485,7 @@ const quotationsController = {
       let reqData = req.query;
       //let filters = req.body;
       let total, rows;
+      const accessibleProjects = req.userProjectResources[0].projects
 
       let pagination = {};
       let per_page = reqData.per_page || 10;
@@ -581,6 +582,7 @@ const quotationsController = {
             )
             .leftJoin("users", "quotations.createdBy", "users.id")
             .where("quotations.orgId", req.orgId)
+            .whereIn('service_requests.projectId', accessibleProjects)
             .havingNotNull('quotations.quotationStatus')
             .groupBy(["quotations.id", "service_requests.id", "assigned_service_team.id", "users.id", "companies.companyName",
               "projects.projectName",
@@ -607,6 +609,7 @@ const quotationsController = {
             .leftJoin("users", "quotations.createdBy", "users.id")
 
             .where("quotations.orgId", req.orgId)
+            .whereIn('service_requests.projectId', accessibleProjects)
             .select([
               "quotations.id as QId",
               "quotations.serviceRequestId as serviceRequestId",
@@ -669,6 +672,8 @@ const quotationsController = {
                   ]);
                 }
                 qb.where("quotations.orgId", req.orgId)
+            qb.whereIn('service_requests.projectId',accessibleProjects)
+
               })
               .havingNotNull('quotations.quotationStatus')
               .groupBy([
@@ -724,6 +729,7 @@ const quotationsController = {
                   ]);
                 }
                 qb.where("quotations.orgId", req.orgId)
+                qb.whereIn('service_requests.projectId', accessibleProjects)
               })
               .offset(offset)
               .limit(per_page)

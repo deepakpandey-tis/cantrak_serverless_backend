@@ -667,6 +667,9 @@ const serviceRequestController = {
       } = req.body;
       let total, rows;
 
+      //console.log('USER**************************************',req.userProjectResources)
+      const accessibleProjects = req.userProjectResources[0].projects
+
       let pagination = {};
       let per_page = reqData.per_page || 10;
       let page = reqData.current_page || 1;
@@ -794,7 +797,9 @@ const serviceRequestController = {
               "u.id",
               "property_units.id"
             ])
-            .where({ "service_requests.orgId": req.orgId }),
+            .where({ "service_requests.orgId": req.orgId })
+            .whereIn('service_requests.projectId',accessibleProjects),
+
           knex
             .from("service_requests")
             // .leftJoin(
@@ -839,6 +844,7 @@ const serviceRequestController = {
             .offset(offset)
             .limit(per_page)
             .where({ "service_requests.orgId": req.orgId })
+            .whereIn('service_requests.projectId',accessibleProjects)
             .orderBy('service_requests.id','desc')
         ]);
 
@@ -920,8 +926,7 @@ const serviceRequestController = {
                 qb.where({ closedBy: "" })
               }
               qb.where(filters);
-
-
+              qb.whereIn('service_requests.projectId',accessibleProjects)
             })
             .groupBy([
               "service_requests.id",
@@ -1001,6 +1006,8 @@ const serviceRequestController = {
                 qb.where({ closedBy: "" })
               }
               qb.where(filters);
+              qb.whereIn('service_requests.projectId', accessibleProjects)
+
 
             })
             .offset(offset)
