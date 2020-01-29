@@ -478,6 +478,35 @@ const teamsController = {
         }
         // Export Team Data 
     },
+
+    getAssignedTeamAndUsers: async (req, res) => {
+        try {
+            const entityId = req.body.entityId;
+            const entityType = req.body.entityType;
+
+            console.log('entityId:', entityId, 'entityType:', entityType);
+            
+            const team = await knex('assigned_service_team').select(['teamId', 'userId as mainUserId']).where({ entityId: entityId, entityType: entityType })
+
+            let additionalUsers = await knex('assigned_service_additional_users').select(['userId']).where({ entityId: entityId, entityType: entityType })
+
+
+            return res.status(200).json({
+                data: {
+                    team,
+                    additionalUsers
+                }
+            })
+
+        } catch (err) {
+            console.error('Error:', err);
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+
+
     exportTeams: async (req, res) => {
 
         try {
@@ -901,7 +930,7 @@ const teamsController = {
                         let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
                         return res.status(200).json({
                             message: message,
-                            errors:errors
+                            errors: errors
                         });
 
                     }
@@ -970,7 +999,7 @@ const teamsController = {
                     'teams.teamName',
                     'teams.teamId'
                 ])
-                .where({ 'team_roles_project_master.projectId': teamPayload.projectId,'teams.isActive':true})
+                .where({ 'team_roles_project_master.projectId': teamPayload.projectId, 'teams.isActive': true })
                 .whereIn("team_roles_project_master.roleId", roleIds).returning('*')
 
             res.status(200).json({
