@@ -434,8 +434,9 @@ const serviceDetailsController = {
         let imagesResult;
         if (incidentRequestPayload.id) {
           imagesResult = await knex.from('images')
-            .where({ "entityId": incidentRequestPayload.id, "entityType": "service_requests", orgId: orgId })
-            .select('s3Url as url', 'title', 'name');
+            // .where({ "entityId": incidentRequestPayload.id, "entityType": "service_requests", orgId: orgId })
+            .where({ "entityId": incidentRequestPayload.id, "entityType": "service_requests" })
+            .select('s3Url', 'title', 'name');
         }
         /*GET UPLOADED IMAGES CLOSE  */
 
@@ -1348,14 +1349,14 @@ const serviceDetailsController = {
 
       /*GET UPLOADED IMAGES CLOSE  */
       problemDetails = DataResult;
-      uploadedImages = [];
 
       const Parallel = require('async-parallel');
       if (serviceRequestPayload.id) {
         problemDetails = await Parallel.map(problemDetails, async pd => {
           imagesResult = await knex.from('images')
-            .where({ "entityId": serviceRequestPayload.id, "entityType": "service_problems", orgId: orgId })
-            .select('s3Url as url', 'title', 'name');
+            // .where({ "entityId": serviceRequestPayload.id, "entityType": "service_problems", orgId: orgId })
+            .where({ "entityId": serviceRequestPayload.id, "entityType": "service_problems" })
+            .select('s3Url', 'title', 'name');
           return {
             ...pd,
             uploadedImages: imagesResult
