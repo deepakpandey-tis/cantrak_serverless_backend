@@ -2428,6 +2428,24 @@ const serviceRequestController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  updateServiceRequestProjectId:async(req,res) => {
+    try {
+      const {projectId,serviceRequestId} = req.body;
+       let result = await knex('service_requests').update({projectId:projectId}).where({id:serviceRequestId}).returning(['*'])
+      return res.status(200).json({
+        data: {
+          updated:true,
+          result
+        }
+      })
+    } catch(err) {
+return res.status(200).json({
+        data: {
+          update:false
+        }
+      })
+    }
   }
 };
 

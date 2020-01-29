@@ -46,4 +46,6 @@ router.post('/get-service-order-notes-list', authMiddleware.isAuthenticated, rol
 router.post('/delete-service-order-remark', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isCMAccessible,  serviceOrderController.deleteServiceOrderRemark);
 
+router.post('/get-service-order-due-date',authMiddleware.isAuthenticated,roleMiddleware.parseUserPermission,resourceAccessMiddleware.isCMAccessible,serviceOrderController.getServiceOrderDueDate)
+
 module.exports = router;

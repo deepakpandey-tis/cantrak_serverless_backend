@@ -47,5 +47,6 @@ var storage = multer.diskStorage({
 var upload = multer( { storage: storage } );
 router.post('/import-team-data',upload.single('file'), authMiddleware.isAuthenticated, teamsController.importTeamData)
 router.post('/get-team-list-by-projectid', authMiddleware.isAuthenticated, teamsController.getTeamListByProject);
+router.post('/get-team-by-entity', authMiddleware.isAuthenticated, teamsController.getTeamByEntity)
 
 module.exports = router;
