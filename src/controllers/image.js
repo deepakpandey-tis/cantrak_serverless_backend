@@ -25,10 +25,12 @@ const imageController = {
       const s3 = new AWS.S3();
       const id = req.body.id
       let filename = await knex('images').select('s3Url').where({id}).first()
-      let fileId = filename.s3Url.split('/').pop()
+      let s3Url = filename.s3Url.split('/');
+      let fileId = s3Url.pop()
+      let path = s3Url.pop()
       const deletedImage = await knex.del().from('images').where({ id: id })
       // Remove it from S3
-      var params = { Bucket: 'sls-app-resources-bucket', Key: 'Service_request/'+fileId };
+      var params = { Bucket: 'sls-app-resources-bucket', Key: path+'/'+fileId };
       s3.deleteObject(params, function (err, data) {
         if (err) {
           console.log(err, err.stack);  // error
