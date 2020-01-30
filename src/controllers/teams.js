@@ -1017,6 +1017,129 @@ const teamsController = {
                 ]
             });
         }
+    },
+
+    getTeamByEntity:async(req,res) => {
+        try {
+            const {entityId,entityType} = req.body;
+            let so
+            let sr
+            switch(entityType) {
+                case 'service_requests':
+                     sr = await knex('service_requests').select('projectId').where({id:entityId}).first()
+                    if(sr){
+                        let resourceData = await knex.from("role_resource_master")
+                            .select('roleId')
+                            .where("role_resource_master.resourceId", '2')
+
+                        let roleIds = resourceData.map(v => v.roleId) //
+
+                        teamResult = await knex('team_roles_project_master')
+                            .leftJoin('teams', 'team_roles_project_master.teamId', 'teams.teamId')
+                            .select([
+                                'teams.teamName',
+                                'teams.teamId'
+                            ])
+                            .where({ 'team_roles_project_master.projectId': sr.projectId, 'teams.isActive': true })
+                            .whereIn("team_roles_project_master.roleId", roleIds).returning('*')
+
+                       return res.status(200).json({
+                           data: {
+                               teams: teamResult
+                           }
+                       }) 
+                    }else {
+                        return res.status(200).json({
+                            data: {
+                                teams: []
+                            }
+                        })
+                    }
+                case 'service_orders':
+                     so = await knex('service_orders')
+                    .innerJoin('service_requests','service_orders.serviceRequestId','service_requests.id')
+                    .select('service_requests.projectId')
+                    .where({'service_orders.id':entityId})
+                    .first()
+                
+
+                    if (so) {
+                        let resourceData = await knex.from("role_resource_master")
+                            .select('roleId')
+                            .where("role_resource_master.resourceId", '2')
+
+                        let roleIds = resourceData.map(v => v.roleId) //
+
+                        teamResult = await knex('team_roles_project_master')
+                            .leftJoin('teams', 'team_roles_project_master.teamId', 'teams.teamId')
+                            .select([
+                                'teams.teamName',
+                                'teams.teamId'
+                            ])
+                            .where({ 'team_roles_project_master.projectId': so.projectId, 'teams.isActive': true })
+                            .whereIn("team_roles_project_master.roleId", roleIds).returning('*')
+
+                        return res.status(200).json({
+                            data: {
+                                teams: teamResult
+                            }
+                        })
+                    }else {
+                        return res.status(200).json({
+                            data: {
+                                teams: []
+                            }
+                        })
+                    }
+                case 'survey_orders':
+                     so = await knex('survey_orders')
+                        .innerJoin('service_requests', 'survey_orders.serviceRequestId', 'service_requests.id')
+                        .select('service_requests.projectId')
+                        .where({ 'survey_orders.id': entityId })
+                        .first()
+
+                    if (so) {
+                        let resourceData = await knex.from("role_resource_master")
+                            .select('roleId')
+                            .where("role_resource_master.resourceId", '2')
+
+                        let roleIds = resourceData.map(v => v.roleId) //
+
+                        teamResult = await knex('team_roles_project_master')
+                            .leftJoin('teams', 'team_roles_project_master.teamId', 'teams.teamId')
+                            .select([
+                                'teams.teamName',
+                                'teams.teamId'
+                            ])
+                            .where({ 'team_roles_project_master.projectId': so.projectId, 'teams.isActive': true })
+                            .whereIn("team_roles_project_master.roleId", roleIds).returning('*')
+
+                        return res.status(200).json({
+                            data: {
+                                teams: teamResult
+                            }
+                        })
+                    } else {
+                        return res.status(200).json({
+                            data: {
+                                teams: []
+                            }
+                        })
+                    }
+                default:
+                    return res.status(200).json({
+                        data: {
+                            teams:[]
+                        }
+                    })
+            }
+
+        } catch(err) {
+            console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
     }
 
 }

@@ -219,13 +219,24 @@ const chargeController = {
       let page = reqData.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
-
+      let {chargeCode,calculationUnit,description} = req.body;
       [total, rows] = await Promise.all([
         knex
           .count("* as count")
           .from("charge_master")
           .leftJoin("users", "users.id", "charge_master.createdBy")
           .where({ "charge_master.orgId": req.orgId })
+          .where(qb=>{
+            if(chargeCode){
+              qb.where('charge_master.chargeCode', 'iLIKE', `%${chargeCode}%`)
+            }
+            if(calculationUnit){
+              qb.where('charge_master.calculationUnit', 'iLIKE', `%${calculationUnit}%`)
+            }
+            if(description){
+              qb.where('charge_master.descriptionEng', 'iLIKE', `%${description}%`)
+            }
+          })
           .first(),
         knex("charge_master")
           .leftJoin("users", "users.id", "charge_master.createdBy")
@@ -244,6 +255,17 @@ const chargeController = {
             "charge_master.descriptionEng",
             "charge_master.descriptionThai",
           ])
+          .where(qb=>{
+            if(chargeCode){
+              qb.where('charge_master.chargeCode', 'iLIKE', `%${chargeCode}%`)
+            }
+            if(calculationUnit){
+              qb.where('charge_master.calculationUnit', 'iLIKE', `%${calculationUnit}%`)
+            }
+            if(description){
+              qb.where('charge_master.descriptionEng', 'iLIKE', `%${description}%`)
+            }
+          })
           .orderBy('charge_master.id', 'desc')
           .offset(offset)
           .limit(per_page)

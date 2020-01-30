@@ -408,6 +408,15 @@ const companyController = {
   },
   getCompanyList: async (req, res) => {
     try {
+      let sortPayload = req.body;
+      //if(sortPayload.sortBy && sortPayload.orderBy){
+        
+      //} else{
+        if(!sortPayload.sortBy && !sortPayload.orderBy){
+        sortPayload.sortBy = "companies.companyName";
+        sortPayload.orderBy= "asc"
+      }      
+
       let reqData = req.query;
       let pagination = {};
       let per_page = reqData.per_page || 10;
@@ -458,7 +467,7 @@ const companyController = {
               "companies.createdAt as Date Created",
               "companies.companyId",
             ])
-            .orderBy('companies.id', 'desc')
+            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .offset(offset)
             .limit(per_page)
         ]);
@@ -506,7 +515,7 @@ const companyController = {
               "companies.createdAt as Date Created",
               "companies.companyId",
             ])
-            .orderBy('companies.id', 'desc')
+            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .offset(offset)
             .limit(per_page)
         ]);
