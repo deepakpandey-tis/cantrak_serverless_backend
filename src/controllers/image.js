@@ -3,17 +3,42 @@ const _ = require('lodash');
 const moment = require("moment")
 
 const knex = require('../db/knex');
+const AWS = require("aws-sdk");
 
 
+if (process.env.IS_OFFLINE) {
+  AWS.config.update({
+    accessKeyId: "S3RVER",
+    secretAccessKey: "S3RVER"
+  });
+} else {
+  AWS.config.update({
+    accessKeyId: process.env.S3_ACCESS_KEY_ID,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+  });
+}
 
 const imageController = {
   deleteImage: async (req, res) => {
     try {
 
+      const s3 = new AWS.S3();
       const id = req.body.id
+      let filename = await knex('images').select('s3Url').where({id}).first()
+      let fileId = filename.split('/').pop()
       const deletedImage = await knex.del().from('images').where({ id: id })
-      return res.status(200).json({
-        deletedImage: !!deletedImage
+      // Remove it from S3
+      var params = { Bucket: 'sls-app-resources-bucket', Key: 'Service_request/'+fileId };
+      s3.deleteObject(params, function (err, data) {
+        if (err) {
+          console.log(err, err.stack);  // error
+        }
+        else {
+          return res.status(200).json({
+            deletedImage: !!deletedImage,
+            data
+          })
+        }
       })
     } catch (err) {
       console.log('[controllers][quotation][updateQuotation] :  Error', err);
