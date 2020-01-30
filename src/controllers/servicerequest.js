@@ -2010,7 +2010,7 @@ const serviceRequestController = {
         serviceResult.uploadedImages = await knex.from('images')
         // .where({ "entityId": incidentRequestPayload.id, "entityType": "service_requests", orgId: orgId })
         .where({ "entityId": id, "entityType": "service_requests" })
-        .select('s3Url', 'title', 'name');
+        .select('s3Url', 'title', 'name','id');
 
         // let problem = await knex
         //   .from("service_problems")
@@ -2054,7 +2054,7 @@ const serviceRequestController = {
         problemResult = await Parallel.map(problemResult, async pd => {
           imagesResult = await knex.from('images')
             .where({ "entityId": id, "entityType": "service_problems" })
-            .select('s3Url', 'title', 'name');
+            .select('s3Url', 'title', 'name','id');
           return {
             ...pd,
             uploadedImages: imagesResult
