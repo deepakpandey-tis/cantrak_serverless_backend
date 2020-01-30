@@ -29,6 +29,7 @@ const propertyTypeController = {
           descriptionEng: Joi.string()
             .optional()
             .allow("")
+            .allow(null)
         });
 
         const result = Joi.validate(payload, schema);
@@ -243,6 +244,12 @@ const propertyTypeController = {
   },
   getPropertyTypeList: async (req, res) => {
     try {
+
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "property_types.propertyType";
+        sortPayload.orderBy = "asc"
+      }
       let reqData = req.query;
       let orgId = req.orgId;
 
@@ -297,7 +304,7 @@ const propertyTypeController = {
                 qb.where('property_types.propertyTypeCode', 'iLIKE', `%${propertyTypeCode}%`)
               }
             })
-            .orderBy('property_types.id', 'desc')
+            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .offset(offset)
             .limit(per_page)
         ]);
@@ -322,7 +329,7 @@ const propertyTypeController = {
               "property_types.createdAt as Date Created"
             ])
             .where({ "property_types.orgId": orgId })
-            .orderBy('property_types.id', 'desc')
+            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .offset(offset)
             .limit(per_page)
         ]);
@@ -523,95 +530,107 @@ const propertyTypeController = {
   /**IMPORT PROPERTY TYPE DATA */
   importPropertyTypeData: async (req, res) => {
     try {
-      if (req.file) {
-        console.log(req.file)
-        let tempraryDirectory = null;
-        if (process.env.IS_OFFLINE) {
-          tempraryDirectory = 'tmp/';
-        } else {
-          tempraryDirectory = '/tmp/';
-        }
-        let resultData = null;
-        let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: 'binary' });
-        let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
-        console.log("+++++++++++++", data, "=========")
-        let totalData = data.length - 1;
-        let fail = 0;
-        let success = 0;
-        let result = null;
-        let errors = []
-        let header = Object.values(data[0]);
-        header.unshift('Error');
-        errors.push(header)
+      // if (req.file) {
+      // console.log(req.file)
+      // let tempraryDirectory = null;
+      // if (process.env.IS_OFFLINE) {
+      //   tempraryDirectory = 'tmp/';
+      // } else {
+      //   tempraryDirectory = '/tmp/';
+      // }
+      // let resultData = null;
+      // let file_path = tempraryDirectory + req.file.filename;
+      // let wb = XLSX.readFile(file_path, { type: 'binary' });
+      // let ws = wb.Sheets[wb.SheetNames[0]];
+      // let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
+      let data = req.body;
+      console.log("+++++++++++++", data, "=========")
+      let totalData = data.length - 1;
+      let fail = 0;
+      let success = 0;
+      let result = null;
+      let errors = []
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
 
 
-        if (data[0].A == "Ã¯Â»Â¿PROPERTY_TYPE_CODE" || data[0].A == "PROPERTY_TYPE_CODE" &&
-          data[0].B == "PROPERTY_TYPE" &&
-          data[0].C == "DESCRIPTION"
-          //&&
-          //data[0].D == "STATUS"
-        ) {
+      if (data[0].A == "Ã¯Â»Â¿PROPERTY_TYPE_CODE" || data[0].A == "PROPERTY_TYPE_CODE" &&
+        data[0].B == "PROPERTY_TYPE" &&
+        data[0].C == "DESCRIPTION"
+        //&&
+        //data[0].D == "STATUS"
+      ) {
 
-          if (data.length > 0) {
+        if (data.length > 0) {
 
-            let i = 0;
-            for (let propertyData of data) {
-              i++;
+          let i = 0;
+          for (let propertyData of data) {
+            i++;
 
-              if (i > 1) {
+            if (i > 1) {
 
-                let checkExist = await knex('property_types').select('id')
-                  .where({ propertyTypeCode: propertyData.A, orgId: req.orgId })
-                if (checkExist.length < 1) {
+              if (!propertyData.A) {
+                let values = _.values(propertyData)
+                values.unshift('Property Type Code can not empty')
+                errors.push(values);
+                fail++;
+                continue;
 
-                  let currentTime = new Date().getTime();
-                  let insertData = {
-                    orgId: req.orgId,
-                    propertyTypeCode: propertyData.A,
-                    propertyType: propertyData.B,
-                    descriptionEng: propertyData.C,
-                    isActive: true,
-                    createdAt: currentTime,
-                    updatedAt: currentTime,
-                    createdBy: req.me.id
-                  }
+              }
 
-                  resultData = await knex.insert(insertData).returning(['*']).into('property_types');
+              if (!propertyData.B) {
+                let values = _.values(propertyData)
+                values.unshift('Property Type  can not empty')
+                errors.push(values);
+                fail++;
+                continue;
 
-                  if (resultData && resultData.length) {
-                    success++;
-                  }
-                } else {
-                  let values = _.values(propertyData)
-                  values.unshift('Property Type Code already exists')
-                  errors.push(values);
-                  fail++;
+              }
+
+
+              let checkExist = await knex('property_types').select('id')
+                .where({ propertyTypeCode: propertyData.A, orgId: req.orgId })
+              if (checkExist.length < 1) {
+
+                let currentTime = new Date().getTime();
+                let insertData = {
+                  orgId: req.orgId,
+                  propertyTypeCode: propertyData.A,
+                  propertyType: propertyData.B,
+                  descriptionEng: propertyData.C,
+                  isActive: true,
+                  createdAt: currentTime,
+                  updatedAt: currentTime,
+                  createdBy: req.me.id
                 }
+
+                resultData = await knex.insert(insertData).returning(['*']).into('property_types');
+
+                if (resultData && resultData.length) {
+                  success++;
+                }
+              } else {
+                let values = _.values(propertyData)
+                values.unshift('Property Type Code already exists')
+                errors.push(values);
+                fail++;
               }
             }
-            let message = null;
-            if (totalData == success) {
-              message = "System have processed ( " + totalData + " ) entries and added them successfully!";
-            } else {
-              message = "System have processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
-            }
-            let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
-            return res.status(200).json({
-              message: message,
-              errors:errors
-            });
           }
-
-        } else {
-
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-            ]
+          let message = null;
+          if (totalData == success) {
+            message = "System have processed ( " + totalData + " ) entries and added them successfully!";
+          } else {
+            message = "System have processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
+          }
+          //  let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
+          return res.status(200).json({
+            message: message,
+            errors: errors
           });
         }
+
       } else {
 
         return res.status(400).json({
@@ -619,8 +638,16 @@ const propertyTypeController = {
             { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
           ]
         });
-
       }
+      // } else {
+
+      //   return res.status(400).json({
+      //     errors: [
+      //       { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+      //     ]
+      //   });
+
+      // }
 
     } catch (err) {
       console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
