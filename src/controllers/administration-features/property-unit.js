@@ -335,6 +335,12 @@ const propertyUnitController = {
   },
   getPropertyUnitList: async (req, res) => {
     try {
+
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "property_units.unitNumber";
+        sortPayload.orderBy = "asc"
+      }
       let { companyId,
         buildingPhaseId,
         floorZoneId,
@@ -431,7 +437,7 @@ const propertyUnitController = {
                 qb.where('property_units.houseId', 'iLIKE', `%${houseId}%`)
               }
             })
-            .orderBy('property_units.id', 'desc')
+            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .offset(offset)
             .limit(per_page)
           //.orderBy('desc', 'property_units.unitNumber')
@@ -478,7 +484,7 @@ const propertyUnitController = {
               "property_units.createdAt as Date Created"
             ])
             .where({ "property_units.orgId": orgId })
-            .orderBy('property_units.id', 'desc')
+            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .offset(offset)
             .limit(per_page)
           // .orderBy('desc','property_units.unitNumber')
@@ -542,25 +548,19 @@ const propertyUnitController = {
             )
             .innerJoin("users", "property_units.createdBy", "users.id")
             .select([
-              // "property_units.orgId as ORGANIZATION_ID",
               "companies.companyId as COMPANY",
-              "companies.companyName as COMPANY NAME",
+              "companies.companyName as COMPANY_NAME",
               "projects.project as PROJECT",
-              "projects.projectName as PROJECT NAME",
+              "projects.projectName as PROJECT_NAME",
               "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
-              // "property_units.buildingPhaseId as BUILDING_PHASE_CODE ID",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
-              // "property_units.floorZoneId as FLOOR_ZONE_CODE ID",
               "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
               "property_units.unitNumber as UNIT_NUMBER",
               "property_units.description as DESCRIPTION",
-              "property_units.area as ACTUAL SALE AREA",
+              "property_units.area as ACTUAL_SALE_AREA",
               "property_units.houseId as HOUSE_ID",
               "property_units.productCode as PRODUCT_CODE"
-              // "property_units.isActive as STAUS",
-              // "users.name as CREATED BY",
-              // "property_units.createdBy as CREATED BY ID",
-              // "property_units.createdAt as DATE CREATED"
+
             ])
             .where({ "property_units.orgId": orgId })
             .where({ "floor_and_zones.isActive": true })
@@ -588,26 +588,18 @@ const propertyUnitController = {
             )
             .innerJoin("users", "property_units.createdBy", "users.id")
             .select([
-              // "property_units.orgId as ORGANIZATION_ID",
               "companies.companyId as COMPANY",
-              "companies.companyName as COMPANY NAME",
+              "companies.companyName as COMPANY_NAME",
               "projects.project as PROJECT",
-              "projects.projectName as PROJECT NAME",
-              // "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
+              "projects.projectName as PROJECT_NAME",
               "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
-              // "property_units.buildingPhaseId as BUILDING_PHASE_CODE ID",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
-              // "property_units.floorZoneId as FLOOR_ZONE_CODE ID",
               "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
               "property_units.unitNumber as UNIT_NUMBER",
               "property_units.description as DESCRIPTION",
-              "property_units.area as ACTUAL SALE AREA",
+              "property_units.area as ACTUAL_SALE_AREA",
               "property_units.houseId as HOUSE_ID",
               "property_units.productCode as PRODUCT_CODE"
-              // "property_units.isActive as STATUS",
-              // "users.name as CREATED BY",
-              // "property_units.createdBy as CREATED BY ID",
-              // "property_units.createdAt as DATE CREATED"
             ])
             .where({
               "property_units.companyId": companyId,
@@ -635,15 +627,15 @@ const propertyUnitController = {
         ws = XLSX.utils.json_to_sheet([
           {
             COMPANY: "",
-            "COMPANY NAME": "",
+            "COMPANY_NAME": "",
             PROJECT: "",
-            "PROJECT NAME": "",
+            "PROJECT_NAME": "",
             PROPERTY_TYPE_CODE: "",
             BUILDING_PHASE_CODE: "",
             FLOOR_ZONE_CODE: "",
             UNIT_NUMBER: "",
             DESCRIPTION: "",
-            "SALE AREA": "",
+            "ACTUAL_SALE_AREA": "",
             "HOUSE_ID": "",
             "PRODUCT_CODE": ""
           }
@@ -837,268 +829,303 @@ const propertyUnitController = {
   },
   importPropertyUnitData: async (req, res) => {
     try {
-      if (req.file) {
-        console.log(req.file);
-        let tempraryDirectory = null;
-        if (process.env.IS_OFFLINE) {
-          tempraryDirectory = "tmp/";
-        } else {
-          tempraryDirectory = "/tmp/";
-        }
-        let resultData = null;
-        let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: "binary" });
-        let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, {
-          type: "string",
-          header: "A",
-          raw: false
-        });
-        //data         = JSON.stringify(data);
-        let result = null;
-        let errors = []
-        let header = Object.values(data[0]);
-        header.unshift('Error');
-        errors.push(header)
-        //console.log('DATA: ',data)
-        let totalData = data.length - 1;
-        let fail = 0;
-        let success = 0;
+      //if (req.file) {
+      // console.log(req.file);
+      // let tempraryDirectory = null;
+      // if (process.env.IS_OFFLINE) {
+      //   tempraryDirectory = "tmp/";
+      // } else {
+      //   tempraryDirectory = "/tmp/";
+      // }
+      // let resultData = null;
+      // let file_path = tempraryDirectory + req.file.filename;
+      // let wb = XLSX.readFile(file_path, { type: "binary" });
+      // let ws = wb.Sheets[wb.SheetNames[0]];
+      // let data = XLSX.utils.sheet_to_json(ws, {
+      //   type: "string",
+      //   header: "A",
+      //   raw: false
+      // });
+      let data = req.body;
+      //data         = JSON.stringify(data);
+      let result = null;
+      let errors = []
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
+      //console.log('DATA: ',data)
+      let totalData = data.length - 1;
+      let fail = 0;
+      let success = 0;
 
-        if (
-          data[0].A == "Ã¯Â»Â¿COMPANY" ||
-          //data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" &&
-          (data[0].A == "COMPANY" &&
-            data[0].B == "COMPANY NAME" &&
-            data[0].C == "PROJECT" &&
-            data[0].D == "PROJECT NAME" &&
-            data[0].E == "PROPERTY_TYPE_CODE" &&
-            // data[0].G == "BUILDING_PHASE_CODE ID" &&
-            data[0].F == "BUILDING_PHASE_CODE" &&
-            // data[0].I == "FLOOR_ZONE_CODE ID" &&
-            data[0].G == "FLOOR_ZONE_CODE" &&
-            data[0].H == "UNIT_NUMBER" &&
-            data[0].I == "DESCRIPTION" &&
-            data[0].J == "ACTUAL SALE AREA" &&
-            data[0].K == "HOUSE_ID" &&
-            data[0].L == "PRODUCT_CODE"
-          )
-          // &&
-          // data[0].L == "STATUS" &&
-          // data[0].M == "CREATED BY" &&
-          // data[0].N == "CREATED BY ID" &&
-          // data[0].O == "DATE CREATED"
-        ) {
-          if (data.length > 0) {
-            let i = 0;
-            console.log("Data[0]", data[0]);
-            for (let propertyUnitData of data) {
+      if (
+        data[0].A == "Ã¯Â»Â¿COMPANY" ||
+        (data[0].A == "COMPANY" &&
+          data[0].B == "COMPANY_NAME" &&
+          data[0].C == "PROJECT" &&
+          data[0].D == "PROJECT_NAME" &&
+          data[0].E == "PROPERTY_TYPE_CODE" &&
+          data[0].F == "BUILDING_PHASE_CODE" &&
+          data[0].G == "FLOOR_ZONE_CODE" &&
+          data[0].H == "UNIT_NUMBER" &&
+          data[0].I == "DESCRIPTION" &&
+          data[0].J == "ACTUAL_SALE_AREA" &&
+          data[0].K == "HOUSE_ID" &&
+          data[0].L == "PRODUCT_CODE"
+        )
+      ) {
+        if (data.length > 0) {
+          let i = 0;
+          console.log("Data[0]", data[0]);
+          for (let propertyUnitData of data) {
 
-              i++;
+            i++;
 
-              if (i > 1) {
+            if (i > 1) {
 
-                // Query from different tables and get data
-                let companyId = null;
-                let projectId = null;
-                let propertyTypeId = null;
-                let buildingPhaseId = null;
-                let floorZoneId = null;
-                console.log({ propertyUnitData });
-                let companyIdResult = await knex("companies")
+
+              if (!propertyUnitData.A) {
+                let values = _.values(propertyUnitData)
+                values.unshift('Company Id can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!propertyUnitData.C) {
+                let values = _.values(propertyUnitData)
+                values.unshift('Project Code can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!propertyUnitData.E) {
+                let values = _.values(propertyUnitData)
+                values.unshift('Property type Code can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!propertyUnitData.F) {
+                let values = _.values(propertyUnitData)
+                values.unshift('Building phase Code can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!propertyUnitData.G) {
+                let values = _.values(propertyUnitData)
+                values.unshift('Floor zone Code can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!propertyUnitData.H) {
+                let values = _.values(propertyUnitData)
+                values.unshift('Unit number can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
+
+              // Query from different tables and get data
+              let companyId = null;
+              let projectId = null;
+              let propertyTypeId = null;
+              let buildingPhaseId = null;
+              let floorZoneId = null;
+              console.log({ propertyUnitData });
+              let companyIdResult = await knex("companies")
+                .select("id")
+                .where({ companyId: propertyUnitData.A, orgId: req.orgId });
+
+              if (companyIdResult && companyIdResult.length) {
+                companyId = companyIdResult[0].id;
+
+                let projectIdResult = await knex("projects")
                   .select("id")
-                  .where({ companyId: propertyUnitData.A, orgId: req.orgId });
+                  .where({ project: propertyUnitData.C, companyId: companyId, orgId: req.orgId });
 
-                if (companyIdResult && companyIdResult.length) {
-                  companyId = companyIdResult[0].id;
+                if (projectIdResult && projectIdResult.length) {
+                  projectId = projectIdResult[0].id;
 
-                  let projectIdResult = await knex("projects")
+                  let buildingPhaseIdResult = await knex("buildings_and_phases")
                     .select("id")
-                    .where({ project: propertyUnitData.C, companyId: companyId, orgId: req.orgId });
+                    .where({
+                      buildingPhaseCode: propertyUnitData.F,
+                      projectId: projectId,
+                      companyId: companyId,
+                      orgId: req.orgId
+                    });
 
-                  if (projectIdResult && projectIdResult.length) {
-                    projectId = projectIdResult[0].id;
+                  if (buildingPhaseIdResult && buildingPhaseIdResult.length) {
+                    buildingPhaseId = buildingPhaseIdResult[0].id;
 
-                    let buildingPhaseIdResult = await knex("buildings_and_phases")
+                    let floorZoneIdResult = await knex("floor_and_zones")
                       .select("id")
                       .where({
-                        buildingPhaseCode: propertyUnitData.F,
+                        floorZoneCode: propertyUnitData.G,
+                        buildingPhaseId: buildingPhaseId,
+                        orgId: req.orgId,
                         projectId: projectId,
                         companyId: companyId,
-                        orgId: req.orgId
                       });
 
-                    if (buildingPhaseIdResult && buildingPhaseIdResult.length) {
-                      buildingPhaseId = buildingPhaseIdResult[0].id;
+                    if (floorZoneIdResult && floorZoneIdResult.length) {
+                      floorZoneId = floorZoneIdResult[0].id;
 
-                      let floorZoneIdResult = await knex("floor_and_zones")
-                        .select("id")
-                        .where({
-                          floorZoneCode: propertyUnitData.G,
-                          buildingPhaseId: buildingPhaseId,
-                          orgId: req.orgId,
-                          projectId: projectId,
-                          companyId: companyId,
-                        });
-
-                      if (floorZoneIdResult && floorZoneIdResult.length) {
-                        floorZoneId = floorZoneIdResult[0].id;
-
-                      }
                     }
                   }
                 }
+              }
 
-                let propertyTypeIdResult = await knex("property_types")
-                  .select("id")
-                  .where({
-                    propertyTypeCode: propertyUnitData.E,
-                    orgId: req.orgId
-                  });
+              let propertyTypeIdResult = await knex("property_types")
+                .select("id")
+                .where({
+                  propertyTypeCode: propertyUnitData.E,
+                  orgId: req.orgId
+                });
 
-                // console.log({ buildingPhaseIdResult, floorZoneIdResult });
+              // console.log({ buildingPhaseIdResult, floorZoneIdResult });
 
 
-                if (propertyTypeIdResult.length) {
-                  propertyTypeId = propertyTypeIdResult[0].id;
+              if (propertyTypeIdResult.length) {
+                propertyTypeId = propertyTypeIdResult[0].id;
+              }
+
+
+
+              console.log(
+                "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
+                {
+                  propertyTypeId,
+                  buildingPhaseId,
+                  floorZoneId,
+                  companyId,
+                  projectId
                 }
+              );
+
+              if (!companyId) {
+                fail++;
+                let values = _.values(propertyUnitData)
+                values.unshift('Company ID does not exists')
+
+                //errors.push(header);
+                errors.push(values);
+                continue;
+              }
+              if (!projectId) {
+                fail++;
+                let values = _.values(propertyUnitData)
+                values.unshift('Project ID does not exists')
+
+                //errors.push(header);
+                errors.push(values);
+                continue;
+              }
+
+              if (!propertyTypeId) {
+                fail++;
+                let values = _.values(propertyUnitData)
+                values.unshift('Property Type does not exists')
+
+                //errors.push(header);
+                errors.push(values);
+                continue;
+              }
+              if (!buildingPhaseId) {
+                fail++;
+                let values = _.values(propertyUnitData)
+                values.unshift('Building ID does not exists')
+
+                //errors.push(header);
+                errors.push(values);
+                continue;
+              }
+              if (!floorZoneId) {
+                fail++;
+                let values = _.values(propertyUnitData)
+                values.unshift('Floor ID does not exists')
+
+                //errors.push(header);
+                errors.push(values);
+                continue;
+              }
+
+            
 
 
+              console.log()
+              let checkExist = await knex("property_units")
+                .select("id")
+                .where({
+                  //companyId: companyId,
+                  // projectId: projectId,
+                  buildingPhaseId: buildingPhaseId,
+                  // floorZoneId: floorZoneId,
+                  // propertyTypeId: propertyTypeId,
+                  orgId: req.orgId,
+                  unitNumber: propertyUnitData.H
+                });
+              if (checkExist.length < 1) {
+                let insertData = {
+                  orgId: req.orgId,
+                  companyId,
+                  projectId,
+                  propertyTypeId,
+                  buildingPhaseId,
+                  floorZoneId,
+                  area: propertyUnitData.J,
+                  unitNumber: propertyUnitData.H,
+                  description: propertyUnitData.I,
+                  houseId: propertyUnitData.K,
+                  productCode: propertyUnitData.L,
+                  isActive: true,
+                  createdBy: req.me.id,
+                  createdAt: new Date().getTime(),
+                  updatedAt: new Date().getTime()
+                };
 
-                console.log(
-                  "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
-                  {
-                    propertyTypeId,
-                    buildingPhaseId,
-                    floorZoneId,
-                    companyId,
-                    projectId
-                  }
-                );
-
-                if (!propertyTypeId) {
-                  fail++;
-                  let values = _.values(propertyUnitData)
-                  values.unshift('Property Type does not exists')
-
-                  //errors.push(header);
-                  errors.push(values);
-                  continue;
-                }
-                if (!buildingPhaseId) {
-                  fail++;
-                  let values = _.values(propertyUnitData)
-                  values.unshift('Building ID does not exists')
-
-                  //errors.push(header);
-                  errors.push(values);
-                  continue;
-                }
-                if (!floorZoneId) {
-                  fail++;
-                  let values = _.values(propertyUnitData)
-                  values.unshift('Floor ID does not exists')
-
-                  //errors.push(header);
-                  errors.push(values);
-                  continue;
-                }
-
-                if (!companyId) {
-                  fail++;
-                  let values = _.values(propertyUnitData)
-                  values.unshift('Company ID does not exists')
-
-                  //errors.push(header);
-                  errors.push(values);
-                  continue;
-                }
-                if (!projectId) {
-                  fail++;
-                  let values = _.values(propertyUnitData)
-                  values.unshift('Project ID does not exists')
-
-                  //errors.push(header);
-                  errors.push(values);
-                  continue;
-                }
-
-
-                console.log()
-                let checkExist = await knex("property_units")
-                  .select("id")
-                  .where({
-                    //companyId: companyId,
-                    // projectId: projectId,
-                    buildingPhaseId: buildingPhaseId,
-                    // floorZoneId: floorZoneId,
-                    // propertyTypeId: propertyTypeId,
-                    orgId: req.orgId,
-                    unitNumber: propertyUnitData.H
-                  });
-                if (checkExist.length < 1) {
-                  let insertData = {
-                    orgId: req.orgId,
-                    companyId,
-                    projectId,
-                    propertyTypeId,
-                    buildingPhaseId,
-                    floorZoneId,
-                    area: propertyUnitData.J,
-                    unitNumber: propertyUnitData.H,
-                    description: propertyUnitData.I,
-                    houseId: propertyUnitData.K,
-                    productCode: propertyUnitData.L,
-                    isActive: true,
-                    createdBy: req.me.id,
-                    createdAt: new Date().getTime(),
-                    updatedAt: new Date().getTime()
-                  };
-
-                  resultData = await knex
-                    .insert(insertData)
-                    .returning(["*"])
-                    .into("property_units");
-                  success++;
-                } else {
-                  fail++;
-                  let values = _.values(propertyUnitData)
-                  values.unshift('Property unit already exists in the same building.')
-                  errors.push(values);
-                }
+                resultData = await knex
+                  .insert(insertData)
+                  .returning(["*"])
+                  .into("property_units");
+                success++;
+              } else {
+                fail++;
+                let values = _.values(propertyUnitData)
+                values.unshift('Property unit already exists in the same building.')
+                errors.push(values);
               }
             }
-            //fail = fail - 1;
-            let message = null;
-            if (totalData == success) {
-              message =
-                "System have processed ( " +
-                totalData +
-                " ) entries and added them successfully!";
-            } else {
-              message =
-                "System have processed ( " +
-                totalData +
-                " ) entries out of which only ( " +
-                success +
-                " ) are added and others are failed ( " +
-                fail +
-                " ) due to validation!";
-            }
-
-            let deleteFile = await fs.unlink(file_path, err => {
-              console.log("File Deleting Error " + err);
-            });
-            return res.status(200).json({
-              message: message,
-              errors
-            });
           }
-        } else {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-            ]
+          //fail = fail - 1;
+          let message = null;
+          if (totalData == success) {
+            message =
+              "System have processed ( " +
+              totalData +
+              " ) entries and added them successfully!";
+          } else {
+            message =
+              "System have processed ( " +
+              totalData +
+              " ) entries out of which only ( " +
+              success +
+              " ) are added and others are failed ( " +
+              fail +
+              " ) due to validation!";
+          }
+          return res.status(200).json({
+            message: message,
+            errors
           });
         }
       } else {
@@ -1108,6 +1135,13 @@ const propertyUnitController = {
           ]
         });
       }
+      // } else {
+      //   return res.status(400).json({
+      //     errors: [
+      //       { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+      //     ]
+      //   });
+      // }
     } catch (err) {
       console.log(
         "[controllers][propertysetup][importCompanyData] :  Error",

@@ -1432,7 +1432,32 @@ const serviceDetailsController = {
   /***GET PRIORITY ALL LIST */
   getPriorityAllList: async (req, res) => {
     try {
-      let result = await knex('incident_priority').where({ 'orgId': req.orgId, 'isActive': true })
+      let result = await knex('incident_priority')
+      .where({ 'orgId': req.orgId, 'isActive': true })
+      .orderBy('sequenceNo','asc')
+      return res.status(200).json({
+        data: result,
+        message: "Priority list!"
+      });
+    } catch (err) {
+      console.log("[controllers][servicedetails][signup] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+
+  getPriority: async (req, res) => {
+    try {
+      let result = await knex('incident_priority')
+      .leftJoin('users','incident_priority.createdBy','users.id')
+      .select([
+        'incident_priority.*',
+        'users.name'
+      ])
+      .where({ 'incident_priority.orgId': req.orgId})
+      .orderBy('incident_priority.sequenceNo','asc')
       return res.status(200).json({
         data: result,
         message: "Priority list!"
