@@ -18,6 +18,7 @@ const serviceOrderController = {
                 let serviceOrderPayload = req.body;
                 images = req.body.images
                 let serviceRequestId = req.body.serviceRequestId
+                await knex('service_requests').update({serviceStatusCode:'A'}).where({id:serviceRequestId})
                 let serviceRequest = { id: req.body.serviceRequestId };
                 serviceOrderPayload = _.omit(serviceOrderPayload, ['serviceRequest', 'teamId', 'mainUserId', 'additionalUsers', 'images'])
 
@@ -111,12 +112,23 @@ const serviceOrderController = {
 
                 // Insert into assigned_service_team table
                 let { teamId, mainUserId, additionalUsers } = req.body;
+                let assignedServiceAdditionalUsers = additionalUsers
+                
+                //Service Order Team Management
                 const assignedServiceTeamPayload = { teamId, userId: mainUserId, entityId: serviceOrder.id, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }
                 let assignedServiceTeamResult = await knex.insert(assignedServiceTeamPayload).returning(['*']).transacting(trx).into('assigned_service_team')
                 let assignedServiceTeam = assignedServiceTeamResult[0]
+                //Service Order Team Management End
+
+                // Service Request Team Management
+                const assignedServiceTeamPayloadSR = { teamId, userId: mainUserId, entityId: serviceRequestId, entityType: 'service_requests', createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }
+                let assignedServiceTeamResultSR = await knex.insert(assignedServiceTeamPayloadSR).returning(['*']).transacting(trx).into('assigned_service_team')
+                let assignedServiceTeamSR = assignedServiceTeamResultSR[0]
+                //Service Request Team Management End
 
 
-                let assignedServiceAdditionalUsers = additionalUsers
+
+                // Service Order Additional users
 
                 let selectedUsers = await knex.select().where({ entityId: serviceOrder.id, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_service_additional_users').map(user => user.userId)
 
@@ -170,8 +182,65 @@ const serviceOrderController = {
                     });
                 }
 
+                // Service Order Additional users End
 
 
+                // Service Request Additional Users
+
+
+                let selectedUsersSR = await knex.select().where({ entityId: serviceRequestId, entityType: 'service_requests' }).returning(['*']).transacting(trx).into('assigned_service_additional_users').map(user => user.userId)
+
+                let additionalUsersResultantArraySR = []
+
+                if (_.isEqual(selectedUsers, assignedServiceAdditionalUsers)) {
+                    // trx.commit
+                    trx.commit;
+                    res.status(200).json({
+                        data: { serviceOrder, serviceRequest, assignedServiceTeam },
+                        message: "Service Order added successfully !"
+                    });
+                } else {
+
+                    // Remove old users
+
+                    for (user of selectedUsers) {
+                        await knex
+                            .del()
+                            .where({
+                                entityId: serviceRequestId,
+                                entityType: "service_requests",
+                                orgId: req.orgId
+                            })
+                            .returning(["*"])
+                            .transacting(trx)
+                            .into("assigned_service_additional_users");
+                    }
+
+                    // Insert New Users
+
+                    for (user of assignedServiceAdditionalUsers) {
+                        let userResult = await knex
+                            .insert({
+                                userId: user,
+                                entityId: serviceRequestId,
+                                entityType: "service_requests",
+                                createdAt: currentTime,
+                                updatedAt: currentTime,
+                                orgId: req.orgId
+                            })
+                            .returning(["*"])
+                            .transacting(trx)
+                            .into("assigned_service_additional_users");
+                        additionalUsersResultantArraySR.push(userResult[0])
+                    }
+                    trx.commit;
+                    return res.status(200).json({
+                        data: { serviceOrder, assignedServiceTeamSR, assignedAdditionalUsers: additionalUsersResultantArraySR, images: images },
+                        message: "Service Order added successfully!"
+                    });
+                }
+
+                // Service Request Additional Users End
 
 
             })
@@ -213,6 +282,8 @@ const serviceOrderController = {
 
             let reqData = req.query;
             let total, rows
+            const accessibleProjects = req.userProjectResources[0].projects
+
 
             let pagination = {};
             let per_page = reqData.per_page || 10;
@@ -365,7 +436,7 @@ const serviceOrderController = {
                             'service_requests.houseId as houseId'
                         ]).where((qb) => {
                             qb.where({ 'service_orders.orgId': req.orgId });
-
+qb.whereIn('service_requests.projectId', accessibleProjects)
                             if (filters) {
                                 qb.where(filters);
                             }
@@ -406,6 +477,7 @@ const serviceOrderController = {
 
                         ]).where((qb) => {
                             qb.where({ 'service_orders.orgId': req.orgId })
+                                qb.whereIn('service_requests.projectId', accessibleProjects)
                             if (filters) {
                                 qb.where(filters);
                             }
@@ -469,7 +541,9 @@ const serviceOrderController = {
                                 "u.id",
                                 "status.id"
                             ])
-                            .where({ "service_orders.orgId": req.orgId }),
+                            .where({ "service_orders.orgId": req.orgId })
+                            .whereIn('service_requests.projectId', accessibleProjects),
+
                         knex
                             .from("service_orders")
                             .leftJoin(
@@ -507,6 +581,7 @@ const serviceOrderController = {
                             .offset(offset)
                             .limit(per_page)
                             .where({ "service_orders.orgId": req.orgId })
+                            .whereIn('service_requests.projectId', accessibleProjects),
                     ]);
                 } else {
                     [total, rows] = await Promise.all([
@@ -557,6 +632,8 @@ const serviceOrderController = {
                             ])
                             .where(qb => {
                                 qb.where({ "service_orders.orgId": req.orgId });
+                                qb.whereIn('service_requests.projectId', accessibleProjects)
+
 
                                 if (filters) {
                                     qb.where(filters);
@@ -635,6 +712,8 @@ const serviceOrderController = {
                             ])
                             .where(qb => {
                                 qb.where({ "service_orders.orgId": req.orgId });
+                                qb.whereIn('service_requests.projectId', accessibleProjects)
+
 
                                 if (filters) {
                                     qb.where(filters);
@@ -1985,6 +2064,33 @@ const serviceOrderController = {
             console.log("[controllers][quotation][remaks] :  Error", err);
             //trx.rollback
             return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    getServiceOrderDueDate: async(req,res) => {
+        try {
+            const soId = req.body.soId;
+            const so = await knex('service_orders').select('orderDueDate').where({id:soId}).first();
+            if(so){
+                return res.status(200).json({
+                    data: {
+                        orderDueDate:so.orderDueDate
+                    }
+                })
+            }
+            return res.status(200).json({
+                data: {
+                    orderDueDate: null
+                }
+            })
+        } catch(err) {
+             console.log(
+                "[controllers][quotation][getQuotationDetails] :  Error",
+                err
+            );
+            //trx.rollback
+            res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }

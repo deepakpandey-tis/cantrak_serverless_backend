@@ -125,13 +125,15 @@ const satisfactionController = {
         const schema = Joi.object().keys({
           id: Joi.number().required(),
           satisfactionCode: Joi.string().required(),
-          descriptionEng: Joi.string().allow("").optional(),
-          descriptionThai: Joi.string().allow("").optional(),
+          descriptionEng: Joi.string().allow("").allow(null).optional(),
+          descriptionThai: Joi.string().allow("").allow(null).optional(),
           remark: Joi.string()
             .allow("")
+            .allow(null)
             .optional(),
           defaultFlag: Joi.string()
             .allow("")
+            .allow(null)
             .optional()
         });
 

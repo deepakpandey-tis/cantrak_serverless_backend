@@ -34,7 +34,7 @@ const propertyUnitController = {
           unitNumber: Joi.string().required(),
           houseId: Joi.string().optional().allow(''),
           description: Joi.string().allow("").optional(),
-          productCode: Joi.string().required(),
+          productCode: Joi.string().allow("").optional(),
           area: Joi.string().allow("").optional(),
         });
 
@@ -129,7 +129,7 @@ const propertyUnitController = {
           unitNumber: Joi.string().required(),
           houseId: Joi.string().allow('').allow(null).optional(),
           description: Joi.string().allow("").allow(null).optional(),
-          productCode: Joi.string().required(),
+          productCode: Joi.string().allow("").allow(null).optional(),
           area: Joi.string().allow("").allow(null).optional(),
           //createdBy:Joi.string().allow("").optional(),
         });
@@ -771,7 +771,7 @@ const propertyUnitController = {
       const { floorZoneId } = req.body;
       const unit = await knex("property_units")
         .select("*")
-        .where({ floorZoneId, orgId: orgId });
+        .where({ floorZoneId, orgId: orgId, isActive: true });
       return res.status(200).json({
         data: {
           unit
@@ -890,136 +890,139 @@ const propertyUnitController = {
           // data[0].O == "DATE CREATED"
         ) {
           if (data.length > 0) {
-            let i = 1;
+            let i = 0;
             console.log("Data[0]", data[0]);
             for (let propertyUnitData of data) {
-              // Query from different tables and get data
-              let companyId = null;
-              let projectId = null;
-              let propertyTypeId = null;
-              let buildingPhaseId = null;
-              let floorZoneId = null;
-              console.log({ propertyUnitData });
-              let companyIdResult = await knex("companies")
-                .select("id")
-                .where({ companyId: propertyUnitData.A, orgId: req.orgId });
 
-              if (companyIdResult && companyIdResult.length) {
-                companyId = companyIdResult[0].id;
+              i++;
 
-                let projectIdResult = await knex("projects")
+              if (i > 1) {
+
+                // Query from different tables and get data
+                let companyId = null;
+                let projectId = null;
+                let propertyTypeId = null;
+                let buildingPhaseId = null;
+                let floorZoneId = null;
+                console.log({ propertyUnitData });
+                let companyIdResult = await knex("companies")
                   .select("id")
-                  .where({ project: propertyUnitData.C, companyId: companyId, orgId: req.orgId });
+                  .where({ companyId: propertyUnitData.A, orgId: req.orgId });
 
-                if (projectIdResult && projectIdResult.length) {
-                  projectId = projectIdResult[0].id;
+                if (companyIdResult && companyIdResult.length) {
+                  companyId = companyIdResult[0].id;
 
-                  let buildingPhaseIdResult = await knex("buildings_and_phases")
+                  let projectIdResult = await knex("projects")
                     .select("id")
-                    .where({
-                      buildingPhaseCode: propertyUnitData.F,
-                      projectId: projectId,
-                      companyId: companyId,
-                      orgId: req.orgId
-                    });
+                    .where({ project: propertyUnitData.C, companyId: companyId, orgId: req.orgId });
 
-                  if (buildingPhaseIdResult && buildingPhaseIdResult.length) {
-                    buildingPhaseId = buildingPhaseIdResult[0].id;
+                  if (projectIdResult && projectIdResult.length) {
+                    projectId = projectIdResult[0].id;
 
-                    let floorZoneIdResult = await knex("floor_and_zones")
+                    let buildingPhaseIdResult = await knex("buildings_and_phases")
                       .select("id")
                       .where({
-                        floorZoneCode: propertyUnitData.G,
-                        buildingPhaseId: buildingPhaseId,
-                        orgId: req.orgId,
+                        buildingPhaseCode: propertyUnitData.F,
                         projectId: projectId,
                         companyId: companyId,
+                        orgId: req.orgId
                       });
 
-                    if (floorZoneIdResult && floorZoneIdResult.length) {
-                      floorZoneId = floorZoneIdResult[0].id;
+                    if (buildingPhaseIdResult && buildingPhaseIdResult.length) {
+                      buildingPhaseId = buildingPhaseIdResult[0].id;
 
+                      let floorZoneIdResult = await knex("floor_and_zones")
+                        .select("id")
+                        .where({
+                          floorZoneCode: propertyUnitData.G,
+                          buildingPhaseId: buildingPhaseId,
+                          orgId: req.orgId,
+                          projectId: projectId,
+                          companyId: companyId,
+                        });
+
+                      if (floorZoneIdResult && floorZoneIdResult.length) {
+                        floorZoneId = floorZoneIdResult[0].id;
+
+                      }
                     }
                   }
                 }
-              }
 
-              let propertyTypeIdResult = await knex("property_types")
-                .select("id")
-                .where({
-                  propertyTypeCode: propertyUnitData.E,
-                  orgId: req.orgId
-                });
+                let propertyTypeIdResult = await knex("property_types")
+                  .select("id")
+                  .where({
+                    propertyTypeCode: propertyUnitData.E,
+                    orgId: req.orgId
+                  });
 
-              // console.log({ buildingPhaseIdResult, floorZoneIdResult });
-
-
-              if (propertyTypeIdResult && propertyTypeIdResult.length) {
-                propertyTypeId = propertyTypeIdResult[0].id;
-              }
+                // console.log({ buildingPhaseIdResult, floorZoneIdResult });
 
 
-
-              console.log(
-                "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
-                {
-                  propertyTypeId,
-                  buildingPhaseId,
-                  floorZoneId,
-                  companyId,
-                  projectId
+                if (propertyTypeIdResult.length) {
+                  propertyTypeId = propertyTypeIdResult[0].id;
                 }
-              );
 
-              if (!propertyTypeId) {
-                fail++;
-                let values = _.values(propertyUnitData)
-                values.unshift('Property Type does not exists')
 
-                //errors.push(header);
-                errors.push(values);
-                continue;
-              }
-              if (!buildingPhaseId) {
-                fail++;
-                let values = _.values(propertyUnitData)
-                values.unshift('Building ID does not exists')
 
-                //errors.push(header);
-                errors.push(values);
-                continue;
-              }
-              if (!floorZoneId) {
-                fail++;
-                let values = _.values(propertyUnitData)
-                values.unshift('Floor ID does not exists')
+                console.log(
+                  "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
+                  {
+                    propertyTypeId,
+                    buildingPhaseId,
+                    floorZoneId,
+                    companyId,
+                    projectId
+                  }
+                );
 
-                //errors.push(header);
-                errors.push(values);
-                continue;
-              }
+                if (!propertyTypeId) {
+                  fail++;
+                  let values = _.values(propertyUnitData)
+                  values.unshift('Property Type does not exists')
 
-              if (!companyId) {
-                fail++;
-                let values = _.values(propertyUnitData)
-                values.unshift('Company ID already exists')
+                  //errors.push(header);
+                  errors.push(values);
+                  continue;
+                }
+                if (!buildingPhaseId) {
+                  fail++;
+                  let values = _.values(propertyUnitData)
+                  values.unshift('Building ID does not exists')
 
-                //errors.push(header);
-                errors.push(values);
-                continue;
-              }
-              if (!projectId) {
-                fail++;
-                let values = _.values(propertyUnitData)
-                values.unshift('Project ID already exists')
+                  //errors.push(header);
+                  errors.push(values);
+                  continue;
+                }
+                if (!floorZoneId) {
+                  fail++;
+                  let values = _.values(propertyUnitData)
+                  values.unshift('Floor ID does not exists')
 
-                //errors.push(header);
-                errors.push(values);
-                continue;
-              }
+                  //errors.push(header);
+                  errors.push(values);
+                  continue;
+                }
 
-              i++;
-              if (i > 1) {
+                if (!companyId) {
+                  fail++;
+                  let values = _.values(propertyUnitData)
+                  values.unshift('Company ID does not exists')
+
+                  //errors.push(header);
+                  errors.push(values);
+                  continue;
+                }
+                if (!projectId) {
+                  fail++;
+                  let values = _.values(propertyUnitData)
+                  values.unshift('Project ID does not exists')
+
+                  //errors.push(header);
+                  errors.push(values);
+                  continue;
+                }
+
 
                 console.log()
                 let checkExist = await knex("property_units")
@@ -1065,7 +1068,7 @@ const propertyUnitController = {
                 }
               }
             }
-            fail = fail - 1;
+            //fail = fail - 1;
             let message = null;
             if (totalData == success) {
               message =

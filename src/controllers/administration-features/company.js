@@ -20,9 +20,6 @@ const companyController = {
       let company = null;
       await knex.transaction(async trx => {
 
-        console.log("===============", req.body, "Payload========")
-
-
         const payload = _.omit(req.body, ["logoFile"]);
         let orgId;
         if (payload.orgId) {
@@ -110,6 +107,10 @@ const companyController = {
             logo = image.s3Url;
           }
         }
+
+        let taxId = null;
+         taxId    =  payload.taxId ? payload.taxId :null;
+
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
@@ -171,40 +172,53 @@ const companyController = {
           companyAddressThai: Joi.string().allow("").allow(null)
             .optional(),
           country: Joi.string().allow("")
+            .allow(null)
             .optional(),
           state: Joi.string().allow("")
+            .allow(null)
             .optional(),
           city: Joi.string().allow("")
+            .allow(null)
             .optional(),
           zipCode: Joi.string()
             .allow("")
+            .allow(null)
             .optional(),
           telephone: Joi.string()
             .allow("")
+            .allow(null)
             .optional(),
           fax: Joi.string()
             .allow("")
+            .allow(null)
             .optional(),
           provinceCode: Joi.string()
             .allow("")
+            .allow(null)
             .optional(),
           amphurCode: Joi.string()
             .allow("")
+            .allow(null)
             .optional(),
           tumbonCode: Joi.string()
             .allow("")
+            .allow(null)
             .optional(),
           flag: Joi.string()
             .allow("")
+            .allow(null)
             .optional(),
           logoFile: Joi.string()
             .allow("")
+            .allow(null)
             .optional(),
           taxId: Joi.number()
             .allow("").allow(null)
+            .allow(null)
             .optional(),
           orgId: Joi.number()
             .allow("")
+            .allow(null)
             .optional()
 
         });
@@ -249,11 +263,13 @@ const companyController = {
           }
         }
         console.log("==============", req.body.logoFile)
+        let taxId = null;
+         taxId    =  payload.taxId ? payload.taxId :null;
         let insertData;
         if (req.body.logoFile.length) {
-          insertData = { ...payload, orgId, logoFile: logo, updatedAt: currentTime };
+          insertData = { ...payload, orgId,taxId, logoFile: logo, updatedAt: currentTime };
         } else {
-          insertData = { ...payload, orgId, updatedAt: currentTime };
+          insertData = { ...payload, orgId,taxId,updatedAt: currentTime };
         }
         let insertResult = await knex
           .update(insertData)
@@ -408,6 +424,15 @@ const companyController = {
   },
   getCompanyList: async (req, res) => {
     try {
+      let sortPayload = req.body;
+      //if(sortPayload.sortBy && sortPayload.orderBy){
+
+      //} else{
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "companies.companyName";
+        sortPayload.orderBy = "asc"
+      }
+
       let reqData = req.query;
       let pagination = {};
       let per_page = reqData.per_page || 10;
@@ -458,7 +483,7 @@ const companyController = {
               "companies.createdAt as Date Created",
               "companies.companyId",
             ])
-            .orderBy('companies.id', 'desc')
+            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .offset(offset)
             .limit(per_page)
         ]);
@@ -506,7 +531,7 @@ const companyController = {
               "companies.createdAt as Date Created",
               "companies.companyId",
             ])
-            .orderBy('companies.id', 'desc')
+            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .offset(offset)
             .limit(per_page)
         ]);
@@ -588,7 +613,8 @@ const companyController = {
             ADDRESS: "",
             ALTERNATE_ADDRESS: "",
             TAX_ID: "",
-            CONTACT_PERSON: ""
+            CONTACT_PERSON: "",
+            DESCRIPTION: ""
           }
         ]);
       }
@@ -656,14 +682,14 @@ const companyController = {
           [result] = await Promise.all([
             knex("companies")
               .select("id", "companyId", "companyName as CompanyName")
-              .where({ isActive: "true", orgId: orgId })
+              .where({ isActive: true, orgId: orgId })
           ]);
 
         } else {
           [result] = await Promise.all([
             knex("companies")
               .select("id", "companyId", "companyName as CompanyName")
-              .where({ isActive: "true" })
+              .where({ isActive: true })
           ]);
         }
       } else {
@@ -671,7 +697,7 @@ const companyController = {
         [result] = await Promise.all([
           knex("companies")
             .select("id", "companyId", "companyName as CompanyName")
-            .where({ isActive: "true", orgId: req.orgId })
+            .where({ isActive: true, orgId: req.orgId })
         ]);
       }
 
@@ -693,158 +719,186 @@ const companyController = {
   // Company List Data
   importCompanyData: async (req, res) => {
     try {
-      if (req.file) {
-        console.log(req.file);
-        let tempraryDirectory = null;
-        if (process.env.IS_OFFLINE) {
-          tempraryDirectory = "tmp/";
-        } else {
-          tempraryDirectory = "/tmp/";
-        }
-        let resultData = null;
-        let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: "binary" });
-        let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, {
-          type: "string",
-          header: "A",
-          raw: false
-        });
-        //data         = JSON.stringify(data);
-        console.log("+++++++++++++", data, "=========");
-        let totalData = data.length - 1;
-        let fail = 0;
-        let success = 0;
-        let result = null;
-        let userId = req.me.id;
-        let errors = []
-        let header = Object.values(data[0]);
-        header.unshift('Error');
-        errors.push(header)
-        //errors.push(header);
+      // if (req.file) {
+      // console.log(req.file);
+      // let tempraryDirectory = null;
+      // if (process.env.IS_OFFLINE) {
+      //   tempraryDirectory = "tmp/";
+      // } else {
+      //   tempraryDirectory = "/tmp/";
+      // }
+      // let resultData = null;
+      // let file_path = tempraryDirectory + req.file.filename;
+      // let wb = XLSX.readFile(file_path, { type: "binary" });
+      // let ws = wb.Sheets[wb.SheetNames[0]];
+      // let data = XLSX.utils.sheet_to_json(ws, {
+      //   type: "string",
+      //   header: "A",
+      //   raw: false
+      // });
+      //data         = JSON.stringify(data);
+      let data = req.body;
+      console.log("+++++++++++++", data[0], "=========");
 
-        if (
-          data[0].A == "COMPANY" ||
-          (data[0].A == "Ã¯Â»Â¿COMPANY" &&
-            data[0].B == "COMPANY_NAME" &&
-            data[0].C == "COMPANY_ALTERNATE_NAME" &&
-            data[0].D == "ADDRESS" &&
-            data[0].E == "ALTERNATE_ADDRESS" &&
-            data[0].F == "TAX_ID" &&
-            data[0].G == "CONTACT_PERSON" &&
-            data[0].H == "DESCRIPTION"
-          )
-          //&&
-          // data[0].H == "STATUS"
-        ) {
-          if (data.length > 0) {
-            //let header = Object.keys(data[0])
+      let totalData = data.length - 1;
+      let fail = 0;
+      let success = 0;
+      let result = null;
+      let userId = req.me.id;
+      let errors = []
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
+      //errors.push(header);
 
-            let i = 0;
-            for (let companyData of data) {
-              i++;
 
-              if (i > 1) {
-                let taxIdExists = [];
-                if (companyData.F) {
-                  taxIdExists = await knex("companies")
-                    .select("taxId")
-                    .where({ taxId: companyData.F, orgId: req.orgId });
+      if (data[0].B === 'COMPANY_NAME' &&
+        data[0].C === 'COMPANY_ALTERNATE_NAME' &&
+        data[0].D === 'ADDRESS' &&
+        data[0].E === 'ALTERNATE_ADDRESS' &&
+        data[0].F === 'TAX_ID' &&
+        data[0].G === 'CONTACT_PERSON' &&
+        data[0].H === 'DESCRIPTION' &&
+        data[0].A === 'COMPANY' || data[0].A === 'Ã¯Â»Â¿COMPANY'
+      ) {
+        if (data.length > 0) {
+
+          let i = 0;
+          for (let companyData of data) {
+            i++;
+
+            if (i > 1) {
+
+              if (!companyData.A) {
+                let values = _.values(companyData)
+                values.unshift('Company ID can not empty')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!companyData.B) {
+                let values = _.values(companyData)
+                values.unshift('Company Name can not empty')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
+              let taxIdExists = [];
+              if (companyData.F) {
+
+                let taxId = companyData.F;
+                taxId = taxId.toString();
+
+                if (taxId.length != 13) {
+                  let values = _.values(companyData)
+                  values.unshift('Enter tax id 13 digit!')
+                  errors.push(values);
+                  fail++;
+                  continue;
                 }
-                let checkExist = await knex("companies")
-                  .select("companyName")
-                  .where({ companyId: companyData.A, orgId: req.orgId });
-                console.log("Check list company: ", checkExist);
+                if (isNaN(taxId)) {
+                  let values = _.values(companyData)
+                  values.unshift('Enter tax id numeric!')
+                  errors.push(values);
+                  fail++;
+                  continue;
 
-                if (!taxIdExists.length) {
+                }
+
+                taxIdExists = await knex("companies")
+                  .select("taxId")
+                  .where({ taxId: companyData.F, orgId: req.orgId });
+              }
+              let checkExist = await knex("companies")
+                .select("companyName")
+                .where({ companyId: companyData.A, orgId: req.orgId });
+              console.log("Check list company: ", checkExist);
+
+              if (!taxIdExists.length) {
 
 
-                  if (checkExist.length < 1) {
+                if (checkExist.length < 1) {
 
-                    let taxId = companyData.F;
-                    if (taxId) {
-                      taxId = taxId.toString();
-                    }
-                    let currentTime = new Date().getTime();
-                    let insertData = {
-                      orgId: req.orgId,
-                      companyId: companyData.A,
-                      companyName: companyData.B,
-                      description1: companyData.C,
-                      companyAddressEng: companyData.D,
-                      companyAddressThai: companyData.E,
-                      taxId: taxId,
-                      contactPerson: companyData.G,
-                      descriptionEng: companyData.H,
-                      createdBy: req.me.id,
-                      isActive: true,
-                      createdAt: currentTime,
-                      updatedAt: currentTime,
-                      createdBy: userId
-                    };
-
-                    resultData = await knex
-                      .insert(insertData)
-                      .returning(["*"])
-                      .into("companies");
-
-                    if (resultData && resultData.length) {
-                      success++;
-                    }
-                  } else {
-                    fail++;
-                    //header.push('description')
-                    //let values = Object.values(companyData)
-                    //values.push('Company ID already exists')
-                    let values = _.values(companyData)
-                    values.unshift('Company ID already exists')
-
-                    //errors.push(header);
-                    errors.push(values);
-                    //errors.push({...companyData,description:})
+                  let taxId = companyData.F;
+                  if (taxId) {
+                    taxId = taxId.toString();
+                  }else{
+                    taxId = null;
                   }
 
+                  let currentTime = new Date().getTime();
+                  let insertData = {
+                    orgId: req.orgId,
+                    companyId: companyData.A,
+                    companyName: companyData.B,
+                    description1: companyData.C,
+                    companyAddressEng: companyData.D,
+                    companyAddressThai: companyData.E,
+                    taxId: taxId,
+                    contactPerson: companyData.G,
+                    descriptionEng: companyData.H,
+                    createdBy: req.me.id,
+                    isActive: true,
+                    createdAt: currentTime,
+                    updatedAt: currentTime,
+                    createdBy: userId
+                  };
+
+                  resultData = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .into("companies");
+
+                  if (resultData && resultData.length) {
+                    success++;
+                  }
                 } else {
                   fail++;
-                  //errors.push({...companyData,description:'Tax ID already exists'})
+                  //header.push('description')
+                  //let values = Object.values(companyData)
+                  //values.push('Company ID already exists')
                   let values = _.values(companyData)
-                  values.unshift('Tax ID already exists')
+                  values.unshift('Company ID already exists')
 
                   //errors.push(header);
                   errors.push(values);
+                  //errors.push({...companyData,description:})
                 }
 
+              } else {
+                fail++;
+                //errors.push({...companyData,description:'Tax ID already exists'})
+                let values = _.values(companyData)
+                values.unshift('Tax ID already exists')
+
+                //errors.push(header);
+                errors.push(values);
               }
+
             }
-            let message = null;
-            if (totalData == success) {
-              message =
-                "System has processed processed ( " +
-                totalData +
-                " ) entries and added them successfully!";
-            } else {
-              message =
-                "System has processed processed ( " +
-                totalData +
-                " ) entries out of which only ( " +
-                success +
-                " ) are added and others are failed ( " +
-                fail +
-                " ) due to validation!";
-            }
-            let deleteFile = await fs.unlink(file_path, err => {
-              console.log("File Deleting Error " + err);
-            });
-            return res.status(200).json({
-              message: message,
-              errors
-            });
           }
-        } else {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-            ]
+          let message = null;
+          if (totalData == success) {
+            message =
+              "System has processed processed ( " +
+              totalData +
+              " ) entries and added them successfully!";
+          } else {
+            message =
+              "System has processed processed ( " +
+              totalData +
+              " ) entries out of which only ( " +
+              success +
+              " ) are added and others are failed ( " +
+              fail +
+              " ) due to validation!";
+          }
+          return res.status(200).json({
+            message: message,
+            errors
           });
         }
       } else {
@@ -854,6 +908,13 @@ const companyController = {
           ]
         });
       }
+      // } else {
+      //   return res.status(400).json({
+      //     errors: [
+      //       { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+      //     ]
+      //   });
+      // }
     } catch (err) {
       console.log(
         "[controllers][propertysetup][importCompanyData] :  Error",

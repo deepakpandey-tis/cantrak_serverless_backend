@@ -33,6 +33,25 @@ const peopleController = {
           });
         }
 
+        const existEmail = await knex('users').where({ email: payload.email });
+        const existUser = await knex('users').where({ userName: payload.userName });
+
+        if (existEmail && existEmail.length) {
+          return res.status(400).json({
+            errors: [
+              { code: 'EMAIL_EXIST_ERROR', message: 'Email already exist !' }
+            ],
+          });
+        }
+
+        if (existUser && existUser.length) {
+          return res.status(400).json({
+            errors: [
+              { code: 'USER_EXIST_ERROR', message: 'Username already exist !' }
+            ],
+          });
+        }
+
         let pass = '123456'
         if (payload.password) {
           pass = payload.password
@@ -84,7 +103,7 @@ const peopleController = {
         // let roleResult = await knex.insert(insertRoleData).returning(['*']).transacting(trx).into('organisation_user_roles');
         // role = roleResult[0];
 
-        await emailHelper.sendTemplateEmail({ to: payload.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, uuid: uid, layout: 'welcome-org-admin.ejs' } })
+        await emailHelper.sendTemplateEmail({ to: payload.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, uuid: uid } })
 
         trx.commit;
         res.status(200).json({
@@ -200,7 +219,7 @@ const peopleController = {
               "property_units.id"
             )
             .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
-            .whereNotIn('application_user_roles.roleId', [2])
+            .whereNotIn('application_user_roles.roleId', [2,4])
             .where(qb => {
               qb.where({ "users.orgId": req.orgId });
               if (name) {
@@ -232,7 +251,7 @@ const peopleController = {
             )
 
             .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
-            .whereNotIn('application_user_roles.roleId', [2])
+            .whereNotIn('application_user_roles.roleId', [2,4])
             .where(qb => {
               qb.where({ "users.orgId": req.orgId });
               if (name) {
@@ -257,6 +276,7 @@ const peopleController = {
               "users.mobileNo",
               "property_units.id",
               "users.lastLogin as lastVisit",
+              "users.isActive"
               //"companies.id as companyId",
               //"companies.companyName",
               //   "organisation_roles.name as roleName"
@@ -302,7 +322,7 @@ const peopleController = {
             //   "admin"
             // ])
             .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
-            .whereNotIn('application_user_roles.roleId', [2])
+            .whereNotIn('application_user_roles.roleId', [2,4])
             .where({ "users.orgId": req.orgId })
             .first(),
           knex
@@ -337,7 +357,7 @@ const peopleController = {
             //   "admin"
             // ])
             .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
-            .whereNotIn('application_user_roles.roleId', [2])
+            .whereNotIn('application_user_roles.roleId', [2,4])
             .select([
               "users.id as userId",
               "users.name as name",
@@ -346,6 +366,7 @@ const peopleController = {
               "users.mobileNo",
               // "user_house_allocation.houseId",
               "users.lastLogin as lastVisit",
+              "users.isActive"
               //"companies.id as companyId",
               //"companies.companyName",
               //   "organisation_roles.name as roleName"
@@ -563,7 +584,6 @@ const peopleController = {
             NAME: "",
             EMAIL: "",
             TEAM_CODE: "",
-            ALTERNATE_LANGUAGE_NAME: "",
             MOBILE_NO: "",
             PHONE_NO: ""
           }
@@ -658,35 +678,34 @@ const peopleController = {
             for (let peopleData of data) {
               i++;
 
-              let teamId = null;
-              if (peopleData.C) {
-                let teamData = await knex('teams').select('teamId').where({ teamCode: peopleData.C, orgId: req.orgId });
-
-                // if (!teamData.length) {
-                //   fail++;
-                //   continue;
-                // }
-                if (teamData && teamData.length) {
-                  teamId = teamData[0].teamId
-                }
-
-              }
-
-              if (peopleData.D) {
-                let checkMobile = await knex('users').select("id")
-                  .where({ mobileNo: peopleData.D })
-
-                if (checkMobile.length) {
-                  let values = _.values(peopleData)
-                  values.unshift('Mobile number already exists')
-                  errors.push(values);
-                  fail++;
-                  continue;
-                }
-              }
-
-
               if (i > 1) {
+
+                let teamId = null;
+                if (peopleData.C) {
+                  let teamData = await knex('teams').select('teamId').where({ teamCode: peopleData.C, orgId: req.orgId });
+
+                  // if (!teamData.length) {
+                  //   fail++;
+                  //   continue;
+                  // }
+                  if (teamData && teamData.length) {
+                    teamId = teamData[0].teamId
+                  }
+
+                }
+
+                if (peopleData.D) {
+                  let checkMobile = await knex('users').select("id")
+                    .where({ mobileNo: peopleData.D })
+
+                  if (checkMobile.length) {
+                    let values = _.values(peopleData)
+                    values.unshift('Mobile number already exists')
+                    errors.push(values);
+                    fail++;
+                    continue;
+                  }
+                }
 
                 let checkExist = await knex('users').select("id")
                   .where({ email: peopleData.B })
@@ -767,7 +786,7 @@ const peopleController = {
             let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
             return res.status(200).json({
               message: message,
-              errors,errors
+              errors, errors
             });
 
           }

@@ -122,8 +122,8 @@ const statusController = {
         const schema = Joi.object().keys({
           id: Joi.number().required(),
           statusCode: Joi.string().required(),
-          descriptionEng: Joi.string().allow("").optional(),
-          descriptionThai: Joi.string().allow("").optional(),
+          descriptionEng: Joi.string().allow("").allow(null).optional(),
+          descriptionThai: Joi.string().allow("").allow(null).optional(),
           remark: Joi.string().required(),
           defaultFlag: Joi.string().required()
         });
@@ -175,8 +175,8 @@ const statusController = {
           })
           .where({
             id: statusPaylaod.id,
-            createdBy: userId,
-            orgId: orgId
+            //createdBy: userId,
+            //orgId: orgId
           })
           .returning(["*"])
           .transacting(trx)

@@ -220,7 +220,7 @@ const problemController = {
     try {
       let orgId = req.orgId
       //const incidentCategoryId = req.body.incidentCategoryId;
-      const categories = await knex.from('incident_categories').where({ orgId: orgId })
+      const categories = await knex.from('incident_categories').where({ orgId: orgId ,isActive:true})
       return res.status(200).json({
         data: {
           categories
@@ -239,7 +239,7 @@ const problemController = {
   getSubcategories: async (req, res) => {
     try {
       let incidentCategoryId = req.body.incidentCategoryId;
-      const subCategories = await knex('incident_sub_categories').select('*').where({ incidentCategoryId })
+      const subCategories = await knex('incident_sub_categories').select('*').where({ incidentCategoryId,isActive:true })
       return res.status(200).json({
         data: {
           subCategories

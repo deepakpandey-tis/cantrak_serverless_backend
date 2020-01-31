@@ -77,7 +77,7 @@ const sendSQSMessage = async (messageBody) => {
 
 
 const emailHelper = {
-    sendTemplateEmail: async ({ to, subject, template, templateData, layout }) => {
+    sendTemplateEmail: async ({ to, subject, template, templateData }) => {
         try {
 
             console.log('[helpers][email][sendTemplateEmail] To:', to);

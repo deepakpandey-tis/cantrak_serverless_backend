@@ -123,18 +123,21 @@ const taxesfactionController = {
           taxPercentage: Joi.string().required(),
           descriptionEng: Joi.string()
             .allow("")
+            .allow(null)
             .optional(),
           descriptionThai: Joi.string()
             .allow("")
+            .allow(null)
             .optional(),
           glAccountCode: Joi.string()
             .allow("")
+            .allow(null)
             .optional()
         });
 
         const result = Joi.validate(taxesPaylode, schema);
         if (result && result.hasOwnProperty("error") && result.error) {
-          return res.status(400).jtaxson({
+          return res.status(400).json({
             errors: [
               { code: "VALIDATION_ERROR", message: result.error.message }
             ]
@@ -239,9 +242,11 @@ const taxesfactionController = {
             "taxes.taxPercentage as Tax Percentage",
             "taxes.isActive as Status",
             "users.name as Created By",
-            "taxes.createdAt as Date Created"
+            "taxes.createdAt as Date Created",
+            "taxes.descriptionEng",
+            "taxes.descriptionThai",
           ])
-          .orderBy('taxes.id','desc')
+          .orderBy('taxes.id', 'desc')
           .offset(offset)
           .limit(per_page)
       ]);
@@ -276,7 +281,8 @@ const taxesfactionController = {
   deleteTaxes: async (req, res) => {
     try {
       let delTaxPayload = null;
-
+      let message;
+      let updateTaxPayload;
       await knex.transaction(async trx => {
         let taxPaylaod = req.body;
 
@@ -292,39 +298,54 @@ const taxesfactionController = {
             ]
           });
         }
-
         const validTaxesId = await knex("taxes").where({ id: taxPaylaod.id });
 
         console.log("[controllers][tax][deletetax]: Taxes Code", validTaxesId);
 
-        // Return error when username exist
-
+        let updateDataResult;
         if (validTaxesId && validTaxesId.length) {
-          // Insert in users table,
+
           const currentTime = new Date().getTime();
-          //console.log('[controllers][entrance][signup]: Expiry Time', tokenExpiryTime);
 
-          //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
-          const updateDataResult = await knex
-            .update({
-              isActive: "false",
-              updatedAt: currentTime
-            })
-            .where({
-              id: taxPaylaod.id
-            })
-            .returning(["*"])
-            .transacting(trx)
-            .into("taxes");
+          if (validTaxesId[0].isActive == true) {
 
-          console.log(
-            "[controllers][tax][deletetax]: Delete Data",
-            updateDataResult
-          );
+            updateDataResult = await knex
+              .update({
+                isActive: false,
+                updatedAt: currentTime
+              })
+              .where({
+                id: taxPaylaod.id
+              })
+              .returning(["*"])
+              .transacting(trx)
+              .into("taxes");
+            console.log(
+              "[controllers][tax][deletetax]: Delete Data",
+              updateDataResult
+            );
+            updateTaxPayload = updateDataResult[0];
+           message = "VAT deactivate successfully!"
+          } else {
 
-          //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
-
-          updateTaxPayload = updateDataResult[0];
+            updateDataResult = await knex
+              .update({
+                isActive: true,
+                updatedAt: currentTime
+              })
+              .where({
+                id: taxPaylaod.id
+              })
+              .returning(["*"])
+              .transacting(trx)
+              .into("taxes");
+            console.log(
+              "[controllers][tax][deletetax]: Delete Data",
+              updateDataResult
+            );
+            updateTaxPayload = updateDataResult[0];
+            message = "VAT activate successfully!"
+          }
         } else {
           return res.status(400).json({
             errors: [
@@ -343,7 +364,7 @@ const taxesfactionController = {
         data: {
           taxes: updateTaxPayload
         },
-        message: "Taxes deleted successfully !"
+        message:message
       });
     } catch (err) {
       console.log("[controllers][tax][deletetax] :  Error", err);
@@ -599,7 +620,7 @@ const taxesfactionController = {
             }
             return res.status(200).json({
               message: message,
-              errors:errors
+              errors: errors
             });
           }
         } else {

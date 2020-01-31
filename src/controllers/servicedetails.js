@@ -87,8 +87,8 @@ const serviceDetailsController = {
         const schema = Joi.object().keys({
           id: Joi.string().required(),
           incidentPriorityCode: Joi.string().required(),
-          descriptionThai: Joi.string().allow("").optional(),
-          descriptionEng: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string().allow("").allow(null).optional(),
+          descriptionEng: Joi.string().allow("").allow(null).optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -253,8 +253,8 @@ const serviceDetailsController = {
         const schema = Joi.object().keys({
           id: Joi.number().required(),
           title: Joi.string().required(),
-          descriptionThai: Joi.string().allow("").optional(),
-          descriptionEng: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string().allow("").allow(null).optional(),
+          descriptionEng: Joi.string().allow("").allow(null).optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -357,15 +357,15 @@ const serviceDetailsController = {
         // Get HouseId By Service Request Id
 
         const requestResult = await knex("service_requests")
-        .where({
-          "service_requests.isActive": "true",
-          "service_requests.id": incidentRequestPayload.id,
-          "service_requests.orgId": orgId
-        })
-        
+          .where({
+            "service_requests.isActive": "true",
+            "service_requests.id": incidentRequestPayload.id,
+            "service_requests.orgId": orgId
+          })
+
         console.log("serviceRequest", requestResult);
         let houseId = requestResult[0].houseId;
-        
+
         DataResult = await knex("property_units")
           .leftJoin("companies", "property_units.companyId", "=", "companies.id")
           .leftJoin("projects", "property_units.projectId", "=", "projects.id")
@@ -375,8 +375,8 @@ const serviceDetailsController = {
           .leftJoin("service_requests", "property_units.id", "=", "service_requests.houseId")
           .leftJoin('users', 'service_requests.createdBy', 'users.id')
           .leftJoin("users AS u", "service_requests.requestedBy", "u.id")
-          .leftJoin("source_of_request", "service_requests.serviceType","source_of_request.id")
-          .leftJoin("images", "service_requests.id","images.entityId")
+          .leftJoin("source_of_request", "service_requests.serviceType", "source_of_request.id")
+          .leftJoin("images", "service_requests.id", "images.entityId")
           .select(
             "companies.companyName",
             "projects.projectName",
@@ -419,18 +419,32 @@ const serviceDetailsController = {
         );
 
         let locationResult = await knex("location_tags")
-        .leftJoin("location_tags_master","location_tags.locationTagId","location_tags_master.id")
-        .where({
-          "location_tags.entityType": "service_requests",
-          "location_tags.entityId": incidentRequestPayload.id
-        })
-        .select("location_tags_master.title")
+          .leftJoin("location_tags_master", "location_tags.locationTagId", "location_tags_master.id")
+          .where({
+            "location_tags.entityType": "service_requests",
+            "location_tags.entityId": incidentRequestPayload.id
+          })
+          .select("location_tags_master.title")
         let tags = locationResult.map(v => v.title)//[userHouseId.houseId];
 
         DataResult.locationTags = tags;
-        console.log("locationResult",tags);
+        console.log("locationResult", tags);
+
+        /*GET UPLOADED IMAGES OPEN  */
+        let imagesResult;
+        if (incidentRequestPayload.id) {
+          imagesResult = await knex.from('images')
+            // .where({ "entityId": incidentRequestPayload.id, "entityType": "service_requests", orgId: orgId })
+            .where({ "entityId": incidentRequestPayload.id, "entityType": "service_requests" })
+            .select('s3Url', 'title', 'name');
+        }
+        /*GET UPLOADED IMAGES CLOSE  */
 
         generalDetails = DataResult;
+        generalDetails.uploadedImages = imagesResult;
+
+
+
         trx.commit;
 
       });
@@ -489,7 +503,7 @@ const serviceDetailsController = {
             "location_tags_master.createdAt as Date Created",
             "users.name as Created By"
           ])
-          .orderBy('location_tags_master.id','desc')
+          .orderBy('location_tags_master.id', 'desc')
           .offset(offset)
           .limit(per_page)
       ]);
@@ -615,7 +629,7 @@ const serviceDetailsController = {
             "users.name as Created By",
             "incident_priority.createdAt as Date Created"
           ])
-          .orderBy('incident_priority.id','desc')
+          .orderBy('incident_priority.id', 'desc')
           .offset(offset)
           .limit(per_page)
       ]);
@@ -1214,8 +1228,8 @@ const serviceDetailsController = {
                     .insert(insertData)
                     .returning(["*"])
                     .into("location_tags_master");
-                    success++;
-                }else{
+                  success++;
+                } else {
                   fail++;
                   let values = _.values(locationTagData)
                   values.unshift('Location tag already exists.')
@@ -1280,7 +1294,7 @@ const serviceDetailsController = {
     try {
 
       let orgId = req.orgId;
-      let result = await knex('location_tags_master').where({ 'orgId': orgId })
+      let result = await knex('location_tags_master').where({ 'orgId': orgId, isActive: true })
       return res.status(200).json({
         data: result,
         message: "Location list!"
@@ -1303,37 +1317,56 @@ const serviceDetailsController = {
       let DataResult = null;
       let userId = req.me.id;
       let orgId = req.orgId;
+      let uploadedImages;
 
-      await knex.transaction(async trx => {
-        // Insert in users table,
-        const serviceRequestPayload = req.body;
+      const serviceRequestPayload = req.body;
 
-        // Get HouseId By Service Request Id    
+      // Get HouseId By Service Request Id    
 
-        DataResult = await knex("service_problems")
-          .leftJoin("incident_categories", "service_problems.categoryId", "=", "incident_categories.id")
-          .leftJoin("incident_sub_categories", "service_problems.problemId", "=", "incident_sub_categories.id")
-          .select(
-            "incident_categories.categoryCode",
-            "incident_sub_categories.descriptionEng",
-            "service_problems.description"
-          )
-          .where({
-            "service_problems.serviceRequestId": serviceRequestPayload.id,
-            "service_problems.orgId": orgId
-          });
+      DataResult = await knex("service_problems")
+        .leftJoin("incident_categories", "service_problems.categoryId", "=", "incident_categories.id")
+        .leftJoin("incident_sub_categories", "service_problems.problemId", "=", "incident_sub_categories.id")
+        .select(
+          "incident_categories.categoryCode ",
+          "incident_categories.descriptionEng",
+          // "incident_sub_categories.categoryCode as subCategoryCode",
+          "incident_sub_categories.descriptionEng as subCategoryDescriptionEng",
+          "service_problems.description"
+        )
+        .where({
+          "service_problems.serviceRequestId": serviceRequestPayload.id,
+          "service_problems.orgId": orgId
+        });
 
-        console.log(
-          "[controllers][servicedetails][problemdetails]: View Data", DataResult
-        );
+      console.log(
+        "[controllers][servicedetails][problemdetails]: View Data", DataResult
+      );
 
-        problemDetails = DataResult;
-        trx.commit;
-      });
+
+
+      /*GET UPLOADED IMAGES OPEN  */
+      let imagesResult;
+
+      /*GET UPLOADED IMAGES CLOSE  */
+      problemDetails = DataResult;
+
+      const Parallel = require('async-parallel');
+      if (serviceRequestPayload.id) {
+        problemDetails = await Parallel.map(problemDetails, async pd => {
+          imagesResult = await knex.from('images')
+            // .where({ "entityId": serviceRequestPayload.id, "entityType": "service_problems", orgId: orgId })
+            .where({ "entityId": serviceRequestPayload.id, "entityType": "service_problems" })
+            .select('s3Url', 'title', 'name');
+          return {
+            ...pd,
+            uploadedImages: imagesResult
+          };
+        });
+      }
 
       res.status(200).json({
         data: {
-          problemDetails: problemDetails
+          problemDetails: problemDetails,
         },
         message: "Problem category & subcategory details !"
       });
@@ -1362,10 +1395,10 @@ const serviceDetailsController = {
         // Get Service Request Status      
 
         DataResult = await knex("service_requests").where({
-            isActive: "true",
-            id: incidentRequestPayload.id,
-            orgId: orgId
-          })
+          isActive: "true",
+          id: incidentRequestPayload.id,
+          orgId: orgId
+        })
           .select(
             "service_requests.id",
             "service_requests.description",
@@ -1395,10 +1428,10 @@ const serviceDetailsController = {
       });
     }
   },
-  
+
   /***GET PRIORITY ALL LIST */
   getPriorityAllList: async (req, res) => {
-    try {      
+    try {
       let result = await knex('incident_priority').where({ 'orgId': req.orgId, 'isActive': true })
       return res.status(200).json({
         data: result,
@@ -1444,7 +1477,7 @@ const serviceDetailsController = {
               .returning(["*"])
               .transacting(trx)
               .into("incident_priority");
-              priority = priorityResult[0];
+            priority = priorityResult[0];
             message = "Priority Deactivate successfully!"
 
           } else {
@@ -1455,7 +1488,7 @@ const serviceDetailsController = {
               .returning(["*"])
               .transacting(trx)
               .into("incident_priority");
-              priority = priorityResult[0];
+            priority = priorityResult[0];
             message = "Priority Activate successfully!"
 
           }
@@ -1510,7 +1543,7 @@ const serviceDetailsController = {
               .returning(["*"])
               .transacting(trx)
               .into("location_tags_master");
-              location = locationResult[0];
+            location = locationResult[0];
             message = "Location tag Deactivate successfully!"
           } else {
             locationResult = await knex
@@ -1519,7 +1552,7 @@ const serviceDetailsController = {
               .returning(["*"])
               .transacting(trx)
               .into("location_tags_master");
-              location = locationResult[0];
+            location = locationResult[0];
             message = "Location tag Activate successfully!"
           }
         }
@@ -1572,7 +1605,7 @@ const serviceDetailsController = {
               .returning(["*"])
               .transacting(trx)
               .into("source_of_request");
-              sourceOfRequest = requestResult[0];
+            sourceOfRequest = requestResult[0];
             message = "Source Of Request Deactivate successfully!"
           } else {
             requestResult = await knex
@@ -1581,7 +1614,7 @@ const serviceDetailsController = {
               .returning(["*"])
               .transacting(trx)
               .into("source_of_request");
-              sourceOfRequest = requestResult[0];
+            sourceOfRequest = requestResult[0];
             message = "Source Of Request Activate successfully!"
           }
         }

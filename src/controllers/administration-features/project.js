@@ -182,10 +182,10 @@ const ProjectController = {
 
 
         let currentTime = new Date().getTime();
-        let insertData = { ...payload,orgId:orgId, updatedAt: currentTime };
+        let insertData = { ...payload, orgId: orgId, updatedAt: currentTime };
         let insertResult = await knex
           .update(insertData)
-          .where({ id: payload.id})
+          .where({ id: payload.id })
           .returning(["*"])
           .transacting(trx)
           .into("projects");
@@ -337,6 +337,12 @@ const ProjectController = {
   },
   getProjectList: async (req, res) => {
     try {
+
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "projects.projectName";
+        sortPayload.orderBy = "asc"
+      }
       let companyId = req.query.companyId;
       let reqData = req.query;
       let pagination = {};
@@ -392,8 +398,9 @@ const ProjectController = {
               "users.name as Created By",
               "projects.createdAt as Date Created",
               "projects.project as projectId",
+              "companies.companyId"
             ])
-            .orderBy('projects.id', 'desc')
+            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .offset(offset)
             .limit(per_page)
         ]);
@@ -444,8 +451,9 @@ const ProjectController = {
               "users.name as Created By",
               "projects.createdAt as Date Created",
               "projects.project as projectId",
+              "companies.companyId"
             ])
-            .orderBy('projects.id', 'desc')
+            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .offset(offset)
             .limit(per_page)
         ]);
@@ -615,7 +623,7 @@ const ProjectController = {
 
       let rows = await knex("projects")
         .innerJoin("companies", "projects.companyId", "companies.id")
-        .where({ "projects.companyId": companyId, "projects.isActive": 'true' })
+        .where({ "projects.companyId": companyId, "projects.isActive": true })
         .whereIn('projects.id', projects)
         .select([
           "projects.id as id",
@@ -674,48 +682,76 @@ const ProjectController = {
   importProjectData: async (req, res) => {
     try {
 
-      if (req.file) {
-        let tempraryDirectory = null;
-        if (process.env.IS_OFFLINE) {
-          tempraryDirectory = 'tmp/';
-        } else {
-          tempraryDirectory = '/tmp/';
-        }
-        let resultData = null;
-        let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: 'binary' });
-        let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
+      // if (req.file) {
+      // let tempraryDirectory = null;
+      // if (process.env.IS_OFFLINE) {
+      //   tempraryDirectory = 'tmp/';
+      // } else {
+      //   tempraryDirectory = '/tmp/';
+      // }
+      // let resultData = null;
+      // let file_path = tempraryDirectory + req.file.filename;
+      // let wb = XLSX.readFile(file_path, { type: 'binary' });
+      // let ws = wb.Sheets[wb.SheetNames[0]];
+      // let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
+      let data = req.body;
+      let totalData = data.length - 1;
+      let fail = 0;
+      let success = 0;
+      console.log("=======", data, "+++++++++++++++")
+      let result = null;
+      let errors = []
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
 
-        let totalData = data.length - 1;
-        let fail = 0;
-        let success = 0;
-        console.log("=======", data[0], "+++++++++++++++")
-        let result = null;
-        let errors = []
-        let header = Object.values(data[0]);
-        header.unshift('Error');
-        errors.push(header)
 
+      if (data[0].B == "PROJECT_NAME" &&
+          data[0].C == "COMPANY" &&
+          data[0].D == "COMPANY_NAME" &&
+          data[0].E == "PROJECT_LOCATION" &&
+          data[0].F == "PROJECT_LOCATION_ALTERNATE_LANGUAGE" &&
+          data[0].G == "CURRENCY" &&
+          data[0].A == "PROJECT" || data[0].A == "Ã¯Â»Â¿PROJECT"
+      ) {
+        if (data.length > 0) {
+          let i = 0;
+          for (let projectData of data) {
+            i++;
 
-        if (
-          data[0].A == "Ã¯Â»Â¿PROJECT" ||
-          (data[0].A == "PROJECT" &&
-            data[0].B == "PROJECT_NAME" &&
-            data[0].C == "COMPANY" &&
-            data[0].D == "COMPANY_NAME" &&
-            data[0].E == "PROJECT_LOCATION" &&
-            data[0].F == "PROJECT_LOCATION_ALTERNATE_LANGUAGE" &&
-            data[0].G == "CURRENCY")
-          //  &&
-          // data[0].J == "CREATED BY" &&
-          // data[0].K == "CREATED BY ID" &&
-          // data[0].L == "DATE CREATED"
-        ) {
-          if (data.length > 0) {
-            let i = 0;
-            for (let projectData of data) {
-              i++;
+            if (i > 1) {
+
+              if(!projectData.A){
+                let values = _.values(projectData)
+                values.unshift('Project Code can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if(!projectData.B){
+                let values = _.values(projectData)
+                values.unshift('Project name can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if(!projectData.C){
+                let values = _.values(projectData)
+                values.unshift('Company Id can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if(!projectData.E){
+                let values = _.values(projectData)
+                values.unshift('Project location can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
 
               let companyData = await knex("companies")
                 .select("id")
@@ -732,83 +768,79 @@ const ProjectController = {
                 companyId = companyData[0].id;
               }
 
-              if (i > 1) {
-                let checkExist = await knex("projects")
-                  .select("projectName")
-                  .where({ project: projectData.A, companyId: companyId, orgId: req.orgId });
-                if (checkExist.length < 1) {
-                  let currentTime = new Date().getTime();
-                  let insertData = {
-                    orgId: req.orgId,
-                    companyId: companyId,
-                    projectName: projectData.B,
-                    project: projectData.A,
-                    projectLocationEng: projectData.E,
-                    projectLocationThai: projectData.F,
-                    currency: projectData.G,
-                    isActive: true,
-                    createdBy: req.me.id,
-                    createdAt: currentTime,
-                    updatedAt: currentTime
-                  };
+              let checkExist = await knex("projects")
+                .select("projectName")
+                .where({ project: projectData.A, companyId: companyId, orgId: req.orgId });
+              if (checkExist.length < 1) {
+                let currentTime = new Date().getTime();
+                let insertData = {
+                  orgId: req.orgId,
+                  companyId: companyId,
+                  projectName: projectData.B,
+                  project: projectData.A,
+                  projectLocationEng: projectData.E,
+                  projectLocationThai: projectData.F,
+                  currency: projectData.G,
+                  isActive: true,
+                  createdBy: req.me.id,
+                  createdAt: currentTime,
+                  updatedAt: currentTime
+                };
 
-                  resultData = await knex
-                    .insert(insertData)
-                    .returning(["*"])
-                    .into("projects");
-                  if (resultData && resultData.length) {
-                    success++;
-                  }
-                } else {
-                  fail++;
-                  let values = _.values(projectData)
-                  values.unshift('Project Code already exists')
-                  errors.push(values);
+                resultData = await knex
+                  .insert(insertData)
+                  .returning(["*"])
+                  .into("projects");
+                if (resultData && resultData.length) {
+                  success++;
                 }
+              } else {
+                fail++;
+                let values = _.values(projectData)
+                values.unshift('Project Code already exists')
+                errors.push(values);
               }
             }
-
-            let message = null;
-            if (totalData == success) {
-              message =
-                "System have processed ( " +
-                totalData +
-                " ) entries and added them successfully!";
-            } else {
-              message =
-                "System have processed ( " +
-                totalData +
-                " ) entries out of which only ( " +
-                success +
-                " ) are added and others are failed ( " +
-                fail +
-                " ) due to validation!";
-            }
-
-            let deleteFile = await fs.unlink(file_path, err => {
-              console.log("File Deleting Error " + err);
-            });
-            return res.status(200).json({
-              message: message,
-              errors
-            });
           }
-        } else {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-            ]
+
+          let message = null;
+          if (totalData == success) {
+            message =
+              "System have processed ( " +
+              totalData +
+              " ) entries and added them successfully!";
+          } else {
+            message =
+              "System have processed ( " +
+              totalData +
+              " ) entries out of which only ( " +
+              success +
+              " ) are added and others are failed ( " +
+              fail +
+              " ) due to validation!";
+          }
+
+          return res.status(200).json({
+            message: message,
+            errors
           });
         }
       } else {
-
         return res.status(400).json({
           errors: [
             { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
           ]
         });
-
       }
+      // } else {
+
+      //   return res.status(400).json({
+      //     errors: [
+      //       { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+      //     ]
+      //   });
+
+      // }
 
     } catch (err) {
       console.log("[controllers][propertysetup][importCompanyData] :  Error", err);

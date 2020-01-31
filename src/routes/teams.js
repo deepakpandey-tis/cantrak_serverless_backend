@@ -13,7 +13,10 @@ router.post('/update-teams', authMiddleware.isAuthenticated, teamsController.upd
 router.get('/get-team-list', authMiddleware.isAuthenticated, teamsController.getTeamList);
 router.post('/get-team-all-list', authMiddleware.isAuthenticated, teamsController.getTeamAllList);
 router.post('/add-team-users', authMiddleware.isAuthenticated, teamsController.addTeamUsers);
+
 router.get('/get-assigned-teams', authMiddleware.isAuthenticated, teamsController.getAssignedTeams);
+router.post('/get-assigned-teams-and-users', authMiddleware.isAuthenticated, teamsController.getAssignedTeamAndUsers);
+
 router.get('/get-team-details', authMiddleware.isAuthenticated, teamsController.getTeamDetails);
 router.post('/remove-team', authMiddleware.isAuthenticated, teamsController.removeTeam);
 // Export Team Data
@@ -44,5 +47,6 @@ var storage = multer.diskStorage({
 var upload = multer( { storage: storage } );
 router.post('/import-team-data',upload.single('file'), authMiddleware.isAuthenticated, teamsController.importTeamData)
 router.post('/get-team-list-by-projectid', authMiddleware.isAuthenticated, teamsController.getTeamListByProject);
+router.post('/get-team-by-entity', authMiddleware.isAuthenticated, teamsController.getTeamByEntity)
 
 module.exports = router;

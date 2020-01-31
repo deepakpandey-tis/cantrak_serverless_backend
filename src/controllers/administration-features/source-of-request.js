@@ -93,10 +93,10 @@ const sourceofRequestController = {
         requestCode: Joi.string().required(),
         descriptionThai: Joi.string()
           .optional()
-          .allow(""),
+          .allow("").allow(null),
         descriptionEng: Joi.string()
           .optional()
-          .allow("")
+          .allow("").allow(null)
       });
 
       const result = Joi.validate(payload, schema);
@@ -169,7 +169,7 @@ const sourceofRequestController = {
             .returning(["*"]);
           sourceofRequest = sourceofRequestResult[0];
           message = "Service Type deactivate successfully!"
-        } else{
+        } else {
 
           sourceofRequestResult = await knex("source_of_request")
             .update({ isActive: true })
@@ -231,7 +231,7 @@ const sourceofRequestController = {
             "source_of_request.createdAt as Date Created"
           ])
           .where({ 'source_of_request.orgId': orgId })
-          .orderBy('source_of_request.id','desc')
+          .orderBy('source_of_request.id', 'desc')
           .offset(offset)
           .limit(per_page)
       ]);
@@ -523,6 +523,26 @@ const sourceofRequestController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  /*GET ALL SOURCE OF REQUEST LIST */
+  getAllSourceOfRequest: async (req, res) => {
+
+    try {
+      let orgId = req.orgId;
+      let result = await knex.from('source_of_request').where({ orgId: orgId, isActive: true })
+
+      return res.status(200).json({
+        data: result,
+        message: " All Source of Request"
+      });
+    } catch (err) {
+      console.log("[controllers][generalsetup][sourceOfRequest] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+
   }
 };
 

@@ -136,7 +136,7 @@ const commonAreaController = {
           buildingPhaseId: Joi.number().required(),
           floorZoneId: Joi.number().required(),
           commonAreaCode: Joi.string().required(),
-          description: Joi.string().allow("").optional()
+          description: Joi.string().allow("").allow(null).optional()
         });
 
         const result = Joi.validate(commonUpdatePaylaod, schema);
@@ -809,93 +809,108 @@ const commonAreaController = {
             for (let commonData of data) {
 
               i++;
-              // Find Company primary key
-              let companyId = null;
-              let projectId = null;
-              let propertyTypeId = null;
-              let buildingPhaseId = null;
-              let floorZoneId = null;
-
-
-              let companyIdResult = await knex('companies').select('id').where({ companyId: commonData.A, orgId: req.orgId })
-
-              let projectIdResult = await knex("projects")
-                .select("id")
-                .where({ project: commonData.B, orgId: req.orgId });
-
-              let propertyTypeIdResult = await knex("property_types")
-                .select("id")
-                .where({ propertyTypeCode: commonData.C, orgId: req.orgId });
-
-              let buildingResult = await knex("buildings_and_phases")
-                .select("id")
-                .where({ buildingPhaseCode: commonData.D, orgId: req.orgId });
-
-              let floorResult = await knex("floor_and_zones")
-                .select("id")
-                .where({ floorZoneCode: commonData.E, orgId: req.orgId });
-
-              if (propertyTypeIdResult && propertyTypeIdResult.length) {
-                propertyTypeId = propertyTypeIdResult[0].id;
-              }
-              if (!propertyTypeId) {
-                fail++;
-                let values = _.values(commonData)
-                values.unshift('Property type does not exists.')
-                errors.push(values);
-                console.log("breaking due to Property type id: ", propertyTypeId);
-                continue;
-              }
-
-              if (companyIdResult && companyIdResult.length) {
-                companyId = companyIdResult[0].id;
-              }
-              if (!companyId) {
-                fail++;
-                let values = _.values(commonData)
-                values.unshift('Company ID does not exists.')
-                errors.push(values);
-                console.log('breaking due to Company Id: ', companyId)
-                continue;
-
-              }
-              if (projectIdResult && projectIdResult.length) {
-                projectId = projectIdResult[0].id;
-              }
-              if (!projectId) {
-                fail++;
-                let values = _.values(commonData)
-                values.unshift('Project Id does not exists.')
-                errors.push(values);
-                console.log("breaking due to Project Id: ", projectId);
-                continue;
-              }
-              if (buildingResult && buildingResult.length) {
-                buildingPhaseId = buildingResult[0].id;
-              }
-              if (!buildingPhaseId) {
-                fail++;
-                let values = _.values(commonData)
-                values.unshift('Building/Phase Code does not exists.')
-                errors.push(values);
-                console.log("breaking due to building phase id: ", buildingPhaseId);
-                continue;
-              }
-              if (floorResult && floorResult.length) {
-                floorZoneId = floorResult[0].id;
-              }
-              if (!floorZoneId) {
-                fail++;
-                let values = _.values(commonData)
-                values.unshift('Floor/Zone code does not exists.')
-                errors.push(values);
-                console.log("breaking due to Floor zone id: ", floorZoneId);
-                continue;
-              }
-
-             
 
               if (i > 1) {
+
+
+                // Find Company primary key
+                let companyId = null;
+                let projectId = null;
+                let propertyTypeId = null;
+                let buildingPhaseId = null;
+                let floorZoneId = null;
+
+                let companyIdResult = await knex('companies').select('id').where({ companyId: commonData.A, orgId: req.orgId })
+
+                if (companyIdResult && companyIdResult.length) {
+                  companyId = companyIdResult[0].id;
+                }
+
+                let projectIdResult = await knex("projects")
+                  .select("id")
+                  .where({ project: commonData.B, companyId: companyId, orgId: req.orgId });
+
+                if (projectIdResult && projectIdResult.length) {
+                  projectId = projectIdResult[0].id;
+                }
+
+                let propertyTypeIdResult = await knex("property_types")
+                  .select("id")
+                  .where({ propertyTypeCode: commonData.C, orgId: req.orgId });
+
+                let buildingResult = await knex("buildings_and_phases")
+                  .select("id")
+                  .where({
+                    buildingPhaseCode: commonData.D,
+                    companyId: companyId,
+                    projectId: projectId,
+                    orgId: req.orgId
+                  });
+
+                if (buildingResult && buildingResult.length) {
+                  buildingPhaseId = buildingResult[0].id;
+                }
+
+                let floorResult = await knex("floor_and_zones")
+                  .select("id")
+                  .where({ floorZoneCode: commonData.E,
+                            orgId: req.orgId ,
+                            buildingPhaseId:buildingPhaseId,
+                            companyId:companyId,
+                            projectId:projectId
+                          });
+
+                if (propertyTypeIdResult && propertyTypeIdResult.length) {
+                  propertyTypeId = propertyTypeIdResult[0].id;
+                }
+                if (!propertyTypeId) {
+                  fail++;
+                  let values = _.values(commonData)
+                  values.unshift('Property type does not exists.')
+                  errors.push(values);
+                  console.log("breaking due to Property type id: ", propertyTypeId);
+                  continue;
+                }
+
+                if (!companyId) {
+                  fail++;
+                  let values = _.values(commonData)
+                  values.unshift('Company ID does not exists.')
+                  errors.push(values);
+                  console.log('breaking due to Company Id: ', companyId)
+                  continue;
+
+                }
+
+                if (!projectId) {
+                  fail++;
+                  let values = _.values(commonData)
+                  values.unshift('Project Id does not exists.')
+                  errors.push(values);
+                  console.log("breaking due to Project Id: ", projectId);
+                  continue;
+                }
+
+                if (!buildingPhaseId) {
+                  fail++;
+                  let values = _.values(commonData)
+                  values.unshift('Building/Phase Code does not exists.')
+                  errors.push(values);
+                  console.log("breaking due to building phase id: ", buildingPhaseId);
+                  continue;
+                }
+                if (floorResult && floorResult.length) {
+                  floorZoneId = floorResult[0].id;
+                }
+                if (!floorZoneId) {
+                  fail++;
+                  let values = _.values(commonData)
+                  values.unshift('Floor/Zone code does not exists.')
+                  errors.push(values);
+                  console.log("breaking due to Floor zone id: ", floorZoneId);
+                  continue;
+                }
+
                 let currentTime = new Date().getTime()
                 let checkExist = await knex("common_area")
                   .select("commonAreaCode")
