@@ -936,7 +936,7 @@ const surveyOrderController = {
     }
   },
 
-  updateSurveyOrderNotes: async (req, res) => {
+  updateRemarksNotes: async (req, res) => {
     // Define try/catch block
     try {
       let surveyNotesResponse = null;
@@ -946,59 +946,48 @@ const surveyOrderController = {
 
       await knex.transaction(async trx => {
         let upNotesPayload = _.omit(req.body, ["images"]);
-        console.log(
-          "[controllers][survey][updateNotes] : Request Body",
-          upNotesPayload
-        );
+        console.log("[controllers][surveyOrder][updateRemarksNotes] : Request Body",upNotesPayload);
 
         // validate keys
         const schema = Joi.object().keys({
-          surveyOrderId: Joi.number().required(),
+          entityId: Joi.number().required(),
+          entityType: Joi.string().required(),
           description: Joi.string().required()
         });
 
-        // let problemImages = upNotesPayload.problemsImages;
-        // let noteImages = upNotesPayload.notesImages;
         // // validate params
         const result = Joi.validate(upNotesPayload, schema);
 
         if (result && result.hasOwnProperty("error") && result.error) {
           res.status(400).json({
             errors: [
-              { code: "VALIDATON ERRORS", message: result.message.error }
+              { code: "VALIDATION ERRORS", message: result.message.error }
             ]
           });
         }
 
         const currentTime = new Date().getTime();
-        // Insert into survey order post update table
+        // Insert into remarks master table
         const insertData = {
-          surveyOrderId: upNotesPayload.surveyOrderId,
+          entityId: upNotesPayload.entityId,
+          entityType: upNotesPayload.entityType,
           description: upNotesPayload.description,
           orgId: req.orgId,
           createdBy: userId,
           createdAt: currentTime,
           updatedAt: currentTime
         };
-        console.log(
-          "[controllers][survey][surveyPostNotes] : Insert Data ",
-          insertData
-        );
+        console.log("[controllers][surveyOrder][postRemarksNotes] : Insert Data",insertData);
 
-        const resultSurveyNotes = await knex
+        const resultRemarksNotes = await knex
           .insert(insertData)
           .returning(["*"])
           .transacting(trx)
-          .into("survey_order_post_update");
-        notesData = resultSurveyNotes;
-        surveyNoteId = notesData[0];
+          .into("remarks_master");
+        notesData = resultRemarksNotes;
+        remarkNoteId = notesData[0];
 
-        // const Parallel = require('async-parallel');
-        //  let notesResData = await Parallel.map(notesData, async item => {
-        //       let username = await knex('users').where({ id: item.createdBy }).select('name');
-        //       username = username[0].name;
-        //       return notesData;
-        //   });
+
         let usernameRes = await knex('users').where({ id: notesData[0].createdBy }).select('name')
         let username = usernameRes[0].name;
         notesData = { ...notesData[0], createdBy: username }
@@ -1010,9 +999,9 @@ const surveyOrderController = {
           for (image of imagesData) {
             let d = await knex
               .insert({
-                entityId: surveyNoteId.id,
+                entityId: remarkNoteId.id,
                 ...image,
-                entityType: "survey_order_notes",
+                entityType: upNotesPayload.entityType,
                 createdAt: currentTime,
                 updatedAt: currentTime,
                 orgId: req.orgId
@@ -1026,84 +1015,43 @@ const surveyOrderController = {
         }
 
         /*INSERT IMAGE TABLE DATA CLOSE */
-
-        notesData = { ...notesData, s3Url: problemImagesData[0].s3Url }
-
-        // // Insert Problems Images
-        // for (prodImg of problemImages) {
-        //   let insertProblemData = {
-        //     entityId: surveyNoteId.id,
-        //     entityType: "survey_order_post_update",
-        //     s3Url: prodImg.s3Url,
-        //     name: prodImg.name,
-        //     title: prodImg.title,
-        //     orgId: req.orgId,
-        //     createdAt: currentTime,
-        //     updatedAt: currentTime
-        //   };
-        //   let resultProblemsImg = await knex
-        //     .insert(insertProblemData)
-        //     .returning(["*"])
-        //     .transacting(trx)
-        //     .into("images");
-        //   console.log("problemImageResponse", resultProblemsImg);
-        //   problemImagesData.push(resultProblemsImg[0]);
-        // }
-
-        // Insert Problems Images
-        // for (noteImg of noteImages) {
-        //   let insertNoteData = {
-        //     entityId: upNotesPayload.surveyOrderId,
-        //     entityType: "survey_order",
-        //     s3Url: noteImg.s3Url,
-        //     name: noteImg.name,
-        //     title: noteImg.title,
-        //     orgId: req.orgId,
-        //     createdAt: currentTime,
-        //     updatedAt: currentTime
-        //   };
-        //   let resultSurveyNotesImg = await knex
-        //     .insert(insertNoteData)
-        //     .returning(["*"])
-        //     .transacting(trx)
-        //     .into("images");
-        //   noteImagesData.push(resultSurveyNotesImg[0]);
-        // }
+        if(problemImagesData.length){
+          notesData = { ...notesData, s3Url: problemImagesData[0].s3Url }
+        }else{
+          notesData = { ...notesData, s3Url: '' }
+        }
 
         trx.commit;
 
         res.status(200).json({
           data: {
-            surveyNotesResponse: {
+            remarksNotesResponse: {
               notesData: [notesData]
             }
           },
-          message: "Survey Note updated successfully !"
+          message: "Remarks Notes updated successfully !"
         });
       });
     } catch (err) {
-      console.log("[controllers][survey][surveyPostNotes] : Error", err);
-      //trx.rollback
+      console.log("[controllers][surveyOrder][addRemarks]:  : Error", err);
+
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
-  getSurveyOrderNoteList: async (req, res) => {
+  getRemarksNotesList: async (req, res) => {
     try {
-      let surveyOrderNoteList = null;
-
-      //await knex.transaction(async (trx) => {
-      let surveyOrder = req.body;
+      let remarksNotesList = null;
+      let remarksData = req.body;
 
       const schema = Joi.object().keys({
-        surveyOrderId: Joi.number().required()
+        entityId: Joi.number().required(),
+        entityType: Joi.string().required()
       });
-      let result = Joi.validate(surveyOrder, schema);
-      console.log(
-        "[controllers][surveyOrder][getsurveyPostNotes]: JOi Result",
-        result
-      );
+      
+      let result = Joi.validate(remarksData, schema);
+      console.log("[controllers][surveyOrder][getRemarksNotes]: JOi Result", result);
 
       if (result && result.hasOwnProperty("error") && result.error) {
         return res.status(400).json({
@@ -1111,44 +1059,28 @@ const surveyOrderController = {
         });
       }
 
-      let surveyOrderId = surveyOrder.surveyOrderId;
+      let entityId = remarksData.entityId;
+      let entityType = remarksData.entityType;
 
-      // surveyOrderNoteResult = await knex
-      //   .from("survey_order_post_update")
-      //   .select()
-      //   .where({
-      //     surveyOrderId: surveyOrder.surveyOrderId,
-      //     isActive: "true",
-      //     orgId: req.orgId
-      //   });
-      // surveyOrderNoteList = surveyOrderNoteResult;
+      let remarksNotesResult = await knex.raw(`select "remarks_master".*,"images"."s3Url","users"."name" as "createdBy" from "remarks_master"  left join "users" on "remarks_master"."createdBy" = "users"."id"  left join "images" on "remarks_master"."id" = "images"."entityId" where "remarks_master"."orgId" = ${req.orgId} and "remarks_master"."entityId" = ${entityId} and "remarks_master"."entityType" = '${entityType}' and "remarks_master"."isActive" = 'true'`)
 
-      let surveyOrderNoteResult = await knex.raw(`select "survey_order_post_update".*,"images"."s3Url","users"."name" as "createdBy" from "survey_order_post_update"  left join "users" on "survey_order_post_update"."createdBy" = "users"."id"  left join "images" on "survey_order_post_update"."id" = "images"."entityId" where "survey_order_post_update"."orgId" = ${req.orgId} and "survey_order_post_update"."surveyOrderId" = ${surveyOrderId} and "survey_order_post_update"."isActive" = 'true'`)
-
-      //let surveyOrderImages = await knex.raw(`select "survey_order_post_update".id,"images"."s3Url" from "survey_order_post_update" left join "images" on "survey_order_post_update"."id" = "images"."entityId" where "survey_order_post_update"."orgId" = ${req.orgId} and "survey_order_post_update"."surveyOrderId" = ${surveyOrderId} and "survey_order_post_update"."isActive" = 'true'`)
-
-      surveyOrderNoteList = surveyOrderNoteResult.rows;
+      remarksNotesList = remarksNotesResult.rows;
 
       return res.status(200).json({
-        data: surveyOrderNoteList,
-        message: "Survey Order Details"
+        data: remarksNotesList,
+        message: "Remarks Notes Details"
       });
 
-      //});
     } catch (err) {
-      console.log(
-        "[controllers][surveyOrder][getSurveyOrderDetails] :  Error",
-        err
-      );
-      //trx.rollback
+      console.log("[controllers][surveyOrder][getRemarks]:  : Error", err);
+
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
-  deleteSurveyRemark: async (req, res) => {
+  deleteRemarksNotes: async (req, res) => {
     try {
-      let serviceOrder = null;
       await knex.transaction(async trx => {
         let currentTime = new Date().getTime();
         const remarkPayload = req.body;
@@ -1157,7 +1089,7 @@ const surveyOrderController = {
         });
 
         let result = Joi.validate(remarkPayload, schema);
-        console.log("[controllers][survey][order]: JOi Result", result);
+        console.log("[controllers][surveyOrder][deleteRemarks]: JOi Result", result);
 
         if (result && result.hasOwnProperty("error") && result.error) {
           return res.status(400).json({
@@ -1179,19 +1111,20 @@ const surveyOrderController = {
           })
           .returning(["*"])
           .transacting(trx)
-          .into("survey_order_post_update");
+          .into("remarks_master");
+
         trx.commit;
 
         return res.status(200).json({
           data: {
             deletedRemark: updatedRemark
           },
-          message: "Survey order remarks deleted successfully !"
+          message: "Remarks deleted successfully !"
         });
       });
     } catch (err) {
-      console.log("[controllers][survey][remaks] :  Error", err);
-      //trx.rollback
+      console.log("[controllers][surveyOrder][deleteRemarks]:  : Error", err);
+
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });

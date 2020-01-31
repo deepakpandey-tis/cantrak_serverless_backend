@@ -49,7 +49,7 @@ const buildingPhaseController = {
 
         /*CHECK DUPLICATE VALUES OPEN */
         let existValue = await knex('buildings_and_phases')
-          .where({ buildingPhaseCode: payload.buildingPhaseCode, companyId: payload.companyId, projectId: payload.projectId, orgId: orgId });
+          .where({ buildingPhaseCode: payload.buildingPhaseCode, projectId: payload.projectId, orgId: orgId });
         if (existValue && existValue.length) {
           return res.status(400).json({
             errors: [
@@ -131,7 +131,7 @@ const buildingPhaseController = {
 
         /*CHECK DUPLICATE VALUES OPEN */
         let existValue = await knex('buildings_and_phases')
-          .where({ buildingPhaseCode: payload.buildingPhaseCode, companyId: payload.companyId, projectId: payload.projectId, orgId: orgId });
+          .where({ buildingPhaseCode: payload.buildingPhaseCode, projectId: payload.projectId, orgId: orgId });
 
         if (existValue && existValue.length) {
 
@@ -269,15 +269,15 @@ const buildingPhaseController = {
             ]
           });
         }
-        
+
 
         let buildingPhaseResult;
-        let checkStatus = await knex.from('buildings_and_phases').where({ id:payload.id }).returning(['*'])
+        let checkStatus = await knex.from('buildings_and_phases').where({ id: payload.id }).returning(['*'])
         if (checkStatus && checkStatus.length) {
 
           if (checkStatus[0].isActive == true) {
 
-             buildingPhaseResult = await knex
+            buildingPhaseResult = await knex
               .update({ isActive: false })
               .where({ id: payload.id })
               .returning(["*"])
@@ -288,7 +288,7 @@ const buildingPhaseController = {
 
           } else {
 
-             buildingPhaseResult = await knex
+            buildingPhaseResult = await knex
               .update({ isActive: true })
               .where({ id: payload.id })
               .returning(["*"])
@@ -320,6 +320,12 @@ const buildingPhaseController = {
   },
   getBuildingPhaseList: async (req, res) => {
     try {
+
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "buildings_and_phases.buildingPhaseCode";
+        sortPayload.orderBy = "asc"
+      }
       let orgId = req.orgId;
       let { companyId,
         projectId,
@@ -424,7 +430,6 @@ const buildingPhaseController = {
               }
 
             })
-            .orderBy('buildings_and_phases.id', 'desc')
             .select([
               "buildings_and_phases.id as id",
               "buildings_and_phases.buildingPhaseCode as Building/Phase",
@@ -434,9 +439,12 @@ const buildingPhaseController = {
               "buildings_and_phases.description as Description",
               "users.name as Created By",
               "buildings_and_phases.createdAt as Date Created",
-              "property_types.propertyType"
+              "property_types.propertyType",
+              "companies.companyId",
+              "projects.project as projectCode",
+              "property_types.propertyTypeCode",
             ])
-            .orderBy('buildings_and_phases.id', 'desc')
+            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .offset(offset)
             .limit(per_page)
         ]);
@@ -522,9 +530,12 @@ const buildingPhaseController = {
               "buildings_and_phases.description as Description",
               "users.name as Created By",
               "buildings_and_phases.createdAt as Date Created",
-              "property_types.propertyType"
+              "property_types.propertyType",
+              "companies.companyId",
+              "projects.project as projectCode",
+              "property_types.propertyTypeCode",
             ])
-            .orderBy('buildings_and_phases.id', 'desc')
+            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .offset(offset)
             .limit(per_page)
         ]);
@@ -588,17 +599,13 @@ const buildingPhaseController = {
             .where({ "projects.isActive": true })
             .where({ "buildings_and_phases.orgId": orgId })
             .select([
-              // "buildings_and_phases.orgId as ORGANIZATION_ID",
               "companies.companyId as COMPANY",
-              "companies.companyName as COMPANY NAME",
+              "companies.companyName as COMPANY_NAME",
               "projects.project as PROJECT",
-              "projects.projectName as PROJECT NAME",
+              "projects.projectName as PROJECT_NAME",
               "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
               "buildings_and_phases.description as DESCRIPTION"
-              // "buildings_and_phases.isActive as STATUS"
-              // "buildings_and_phases.createdBy as CREATED BY ID",
-              // "buildings_and_phases.createdAt as DATE CREATED"
             ])
         ]);
       } else {
@@ -620,17 +627,13 @@ const buildingPhaseController = {
               "buildings_and_phases.orgId": orgId
             })
             .select([
-              //"buildings_and_phases.orgId as ORGANIZATION_ID",
               "companies.companyId as COMPANY",
-              "companies.companyName as COMPANY NAME",
+              "companies.companyName as COMPANY_NAME",
               "projects.project as PROJECT",
-              "projects.projectName as PROJECT NAME",
+              "projects.projectName as PROJECT_NAME",
               "buildings_and_phases.propertyTypeId as PROPERTY_TYPE_CODE",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
               "buildings_and_phases.description as DESCRIPTION"
-              // "buildings_and_phases.isActive as STATUS"
-              // "buildings_and_phases.createdBy as CREATED BY ID",
-              // "buildings_and_phases.createdAt as DATE CREATED"
             ])
         ]);
       }
@@ -654,9 +657,9 @@ const buildingPhaseController = {
         ws = XLSX.utils.json_to_sheet([
           {
             COMPANY: "",
-            "COMPANY NAME": "",
+            "COMPANY_NAME": "",
             PROJECT: "",
-            "PROJECT NAME": "",
+            "PROJECT_NAME": "",
             PROPERTY_TYPE_CODE: "",
             BUILDING_PHASE_CODE: "",
             DESCRIPTION: ""
@@ -746,6 +749,7 @@ const buildingPhaseController = {
             "buildings_and_phases.id as id",
             "buildings_and_phases.buildingPhaseCode",
             "property_types.propertyType",
+            "buildings_and_phases.description",
             "property_types.propertyTypeCode",
           ])
       ]);
@@ -800,46 +804,81 @@ const buildingPhaseController = {
   },
   importBuildingData: async (req, res) => {
     try {
-      
-        let result = null;
-        let data = req.body;
-        
-        let errors = []
-        let header = Object.values(data[0]);
-        header.unshift('Error');
-        errors.push(header)
 
-        if (
-          
-          data[0].A == "Ã¯Â»Â¿COMPANY" ||
-          (data[0].A == "COMPANY" &&
-            data[0].B == "COMPANY NAME" &&
-            data[0].C == "PROJECT" &&
-            data[0].D == "PROJECT NAME" &&
-            data[0].E == "PROPERTY_TYPE_CODE" &&
-            data[0].F == "BUILDING_PHASE_CODE" &&
-            data[0].G == "DESCRIPTION")
+      let result = null;
+      let data = req.body;
 
-        ) {
-          if (data.length > 0) {
-            let i = 0;
-            console.log("Data[0]", data[0]);
-            let success = 0;
-            let totalData = data.length - 1;
-            let fail = 0;
+      let errors = []
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
 
-            for (let buildingData of data) {
+      if (
 
-              i++;
-              if (buildingData.B === 'COMPANY NAME'){
+        data[0].A == "Ã¯Â»Â¿COMPANY" ||
+        (data[0].A == "COMPANY" &&
+          data[0].B == "COMPANY_NAME" &&
+          data[0].C == "PROJECT" &&
+          data[0].D == "PROJECT_NAME" &&
+          data[0].E == "PROPERTY_TYPE_CODE" &&
+          data[0].F == "BUILDING_PHASE_CODE" &&
+          data[0].G == "DESCRIPTION")
+
+      ) {
+        if (data.length > 0) {
+          let i = 0;
+          console.log("Data[0]", data[0]);
+          let success = 0;
+          let totalData = data.length - 1;
+          let fail = 0;
+
+          for (let buildingData of data) {
+
+            i++;
+
+            if (i > 1) {
+
+
+
+              if (!buildingData.A) {
+                let values = _.values(buildingData)
+                values.unshift('Company Id can not empty!')
+                errors.push(values);
                 fail++;
                 continue;
               }
+
+              if (!buildingData.C) {
+                let values = _.values(buildingData)
+                values.unshift('Project Code can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!buildingData.E) {
+                let values = _.values(buildingData)
+                values.unshift('Property type Code can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
+              if (!buildingData.F) {
+                let values = _.values(buildingData)
+                values.unshift('Building phase Code can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
               // Find Company primary key
               let companyId = null;
               let projectId = null;
               let propertyTypeId = null;
-             
+
               let companyIdResult = await knex("companies")
                 .select("id")
                 .where({ companyId: buildingData.A, orgId: req.orgId });
@@ -891,7 +930,7 @@ const buildingPhaseController = {
               if (!propertyTypeId) {
                 fail++;
                 let values = _.values(buildingData)
-                values.unshift('Property Type ID does not exist')
+                values.unshift('Property Type code does not exist')
 
                 //errors.push(header);
                 errors.push(values);
@@ -906,7 +945,6 @@ const buildingPhaseController = {
                 propertyTypeId
               );
 
-              
               const checkExistance = await knex("buildings_and_phases").where({
                 orgId: req.orgId,
                 buildingPhaseCode: buildingData.F,
@@ -917,14 +955,13 @@ const buildingPhaseController = {
                 fail++;
                 let values = _.values(buildingData)
                 values.unshift('Building/Phase Code already exist')
-
                 errors.push(values);
                 continue;
               }
 
               //if (i > 1) {
               let currentTime = new Date().getTime();
-              
+
               success++;
               let insertData = {
                 orgId: req.orgId,
@@ -942,42 +979,40 @@ const buildingPhaseController = {
                 .insert(insertData)
                 .returning(["*"])
                 .into("buildings_and_phases");
-         
-       
-            }
 
-            
-
-            let message = null;
-            fail = fail - 1;
-            if (totalData == success) {
-              message =
-                "System has processed ( " +
-                totalData +
-                " ) entries and added them successfully!";
-            } else {
-              message =
-                "System have processed ( " +
-                totalData +
-                " ) entries out of which only ( " +
-                success +
-                " ) are added and others are failed ( " +
-                fail +
-                " ) due to validation!";
             }
-            return res.status(200).json({
-              message: message,
-              errors
-            });
           }
-        } else {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-            ]
+
+          let message = null;
+          // fail = fail - 1;
+          if (totalData == success) {
+            message =
+              "System has processed ( " +
+              totalData +
+              " ) entries and added them successfully!";
+          } else {
+            message =
+              "System have processed ( " +
+              totalData +
+              " ) entries out of which only ( " +
+              success +
+              " ) are added and others are failed ( " +
+              fail +
+              " ) due to validation!";
+          }
+          return res.status(200).json({
+            message: message,
+            errors
           });
         }
-      
+      } else {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
+      }
+
     } catch (err) {
       console.log(
         "[controllers][propertysetup][importCompanyData] :  Error",
