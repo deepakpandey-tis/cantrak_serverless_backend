@@ -746,6 +746,7 @@ const buildingPhaseController = {
             "buildings_and_phases.id as id",
             "buildings_and_phases.buildingPhaseCode",
             "property_types.propertyType",
+            "buildings_and_phases.description",
             "property_types.propertyTypeCode",
           ])
       ]);
