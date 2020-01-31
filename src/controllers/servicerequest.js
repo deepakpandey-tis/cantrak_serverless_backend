@@ -1728,7 +1728,8 @@ const serviceRequestController = {
           project: Joi.string().required(),
           serviceType: Joi.string().required(),
           unit: Joi.string().required(),
-          userId: Joi.string().required(),
+          userId: Joi.string().allow("")
+            .optional(),
           priority: Joi.string()
             .allow("")
             .optional(),
@@ -1758,6 +1759,11 @@ const serviceRequestController = {
         }
         const currentTime = new Date().getTime();
 
+
+        // Insert into requested by
+
+        const requestedByResult = await knex('requested_by').insert({name:payload.name,mobile:payload.mobile,email:payload.email}).returning(['*'])
+
         /*UPDATE SERVICE REQUEST DATA OPEN */
         let common;
         let priority;
@@ -1773,7 +1779,8 @@ const serviceRequestController = {
             projectId: payload.project,
             houseId: payload.house,
             commonId: payload.commonArea,
-            requestedBy: payload.userId,
+            // requestedBy: payload.userId,
+            requestedBy: requestedByResult[0].id,
             serviceType: payload.serviceType,
             location: payload.location,
             priority: priority,
@@ -1790,7 +1797,8 @@ const serviceRequestController = {
             description: payload.description,
             projectId: payload.project,
             houseId: payload.house,
-            requestedBy: payload.userId,
+            requestedBy: requestedByResult[0].id,
+            // requestedBy: payload.userId,
             serviceType: payload.serviceType,
             location: payload.location,
             priority: priority,
@@ -1988,6 +1996,11 @@ const serviceRequestController = {
             "service_requests.houseId",
             "property_units.id"
           )
+          .leftJoin(
+            'requested_by',
+            'service_requests.requestedBy',
+            'requested_by.id'
+          )
           .select(
             "service_requests.houseId as house",
             "service_requests.commonId as commonArea",
@@ -1995,7 +2008,9 @@ const serviceRequestController = {
             "service_requests.location",
             "service_requests.priority",
             "service_requests.serviceType",
-            "service_requests.requestedBy as userId",
+            "requested_by.name as requestedByName",
+            "requested_by.email as requestedByEmail",
+            "requested_by.mobile as requestedByMobile",
             "property_units.companyId as company",
             "property_units.buildingPhaseId as building",
             "property_units.floorZoneId as floor",
@@ -2112,7 +2127,7 @@ const serviceRequestController = {
           project: Joi.string().required(),
           serviceType: Joi.string().required(),
           unit: Joi.string().required(),
-          userId: Joi.string().required(),
+          userId: Joi.string().allow('').optional(),
           priority: Joi.string()
             .allow("")
             .optional(),
@@ -2148,6 +2163,9 @@ const serviceRequestController = {
           });
         }
         const currentTime = new Date().getTime();
+
+        //const requestedByResult = await knex('requested_by').update({name:payload.name,mobile:payload.mobile,email:payload.email}).where({id})
+
 
         /*UPDATE SERVICE REQUEST DATA OPEN */
         let common;
