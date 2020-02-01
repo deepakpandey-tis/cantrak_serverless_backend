@@ -455,7 +455,7 @@ const singupController = {
         let uuidv4 = uuid()
         let currentTime = new Date().getTime()
         insertedUser = await knex("users")
-          .insert({ ...payload, verifyToken: uuidv4, emailVerified: true })
+          .insert({ ...payload, verifyToken: uuidv4, emailVerified: true ,createdAt: currentTime, updatedAt: currentTime, orgId: orgId })
           .returning(["*"])
           .transacting(trx);
         console.log(payload);
@@ -468,7 +468,7 @@ const singupController = {
         /*INSERT HOUSE ID CLOSE */
 
         // Insert this users role as customer
-        roleInserted = await knex('application_user_roles').insert({ userId: insertedUser[0].id, roleId: 4, createdAt: currentTime, updatedAt: currentTime })
+        roleInserted = await knex('application_user_roles').insert({ userId: insertedUser[0].id, roleId: 4, createdAt: currentTime, updatedAt: currentTime,orgId:orgId})
           .returning(['*']).transacting(trx)
 
         let user = insertedUser[0]
