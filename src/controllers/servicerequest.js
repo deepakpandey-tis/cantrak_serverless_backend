@@ -2109,7 +2109,7 @@ const serviceRequestController = {
       let result;
       let orgId = req.orgId;
       await knex.transaction(async trx => {
-        let payload = _.omit(req.body, ["images"]);
+        let payload = _.omit(req.body, ["images","name","mobile","email"]);
         const schema = Joi.object().keys({
           serviceRequestId: Joi.number().required(),
           areaName: Joi.string()
@@ -2134,15 +2134,15 @@ const serviceRequestController = {
           priority: Joi.string()
             .allow("")
             .optional(),
-          name: Joi.string()
-            .allow("")
-            .optional(),
-          mobile: Joi.string()
-            .allow("")
-            .optional(),
-          email: Joi.string()
-            .allow("")
-            .optional(),
+          // name: Joi.string()
+          //   .allow("")
+          //   .optional(),
+          // mobile: Joi.string()
+          //   .allow("")
+          //   .optional(),
+          // email: Joi.string()
+          //   .allow("")
+          //   .optional(),
           uid: Joi.string()
             .allow("")
             .optional(),
