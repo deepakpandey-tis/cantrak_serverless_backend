@@ -829,25 +829,7 @@ const propertyUnitController = {
   },
   importPropertyUnitData: async (req, res) => {
     try {
-      //if (req.file) {
-      // console.log(req.file);
-      // let tempraryDirectory = null;
-      // if (process.env.IS_OFFLINE) {
-      //   tempraryDirectory = "tmp/";
-      // } else {
-      //   tempraryDirectory = "/tmp/";
-      // }
-      // let resultData = null;
-      // let file_path = tempraryDirectory + req.file.filename;
-      // let wb = XLSX.readFile(file_path, { type: "binary" });
-      // let ws = wb.Sheets[wb.SheetNames[0]];
-      // let data = XLSX.utils.sheet_to_json(ws, {
-      //   type: "string",
-      //   header: "A",
-      //   raw: false
-      // });
       let data = req.body;
-      //data         = JSON.stringify(data);
       let result = null;
       let errors = []
       let header = Object.values(data[0]);
