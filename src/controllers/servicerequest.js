@@ -1706,7 +1706,7 @@ const serviceRequestController = {
       let result;
       let orgId = req.orgId;
       await knex.transaction(async trx => {
-        let payload = _.omit(req.body, ["images", "isSo"]);
+        let payload = _.omit(req.body, ["images", "isSo","mobile","email","name"]);
         const schema = Joi.object().keys({
           serviceRequestId: Joi.number().required(),
           areaName: Joi.string()
@@ -1733,15 +1733,15 @@ const serviceRequestController = {
           priority: Joi.string()
             .allow("")
             .optional(),
-          name: Joi.string()
-            .allow("")
-            .optional(),
-          mobile: Joi.string()
-            .allow("")
-            .optional(),
-          email: Joi.string()
-            .allow("")
-            .optional(),
+          // name: Joi
+          //   .allow("")
+          //   .optional(),
+          // mobile: Joi
+          //   .allow("")
+          //   .optional(),
+          // email: Joi.string()
+          //   .allow("")
+          //   .optional(),
           uid: Joi.string()
             .allow("")
             .optional()
@@ -1762,7 +1762,7 @@ const serviceRequestController = {
 
         // Insert into requested by
 
-        const requestedByResult = await knex('requested_by').insert({name:payload.name,mobile:payload.mobile,email:payload.email}).returning(['*'])
+        const requestedByResult = await knex('requested_by').insert({name:req.body.name,mobile:req.body.mobile,email:req.body.email}).returning(['*'])
 
         /*UPDATE SERVICE REQUEST DATA OPEN */
         let common;
@@ -2011,6 +2011,7 @@ const serviceRequestController = {
             "requested_by.name as requestedByName",
             "requested_by.email as requestedByEmail",
             "requested_by.mobile as requestedByMobile",
+            "requested_by.id as requestedById",
             "property_units.companyId as company",
             "property_units.buildingPhaseId as building",
             "property_units.floorZoneId as floor",
@@ -2053,6 +2054,8 @@ const serviceRequestController = {
           .select(
             "incident_categories.categoryCode ",
             "incident_categories.descriptionEng as category",
+            "incident_categories.id as categoryId",
+            "incident_sub_categories.id as subCategoryId",
             // "incident_sub_categories.categoryCode as subCategoryCode",
             "incident_sub_categories.descriptionEng as subCategory",
             "service_problems.description",
