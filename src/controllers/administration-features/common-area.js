@@ -238,6 +238,13 @@ const commonAreaController = {
 
   getCommonAreaList: async (req, res) => {
     try {
+
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "common_area.commonAreaCode";
+        sortPayload.orderBy = "asc"
+      }
+
       let reqData = req.query;
       let total = null;
       let rows = null;
@@ -319,7 +326,8 @@ const commonAreaController = {
               "projects.projectName as Project",
               "common_area.isActive as Status",
               "users.name as Created By",
-              "common_area.createdAt as Date Created"
+              "common_area.createdAt as Date Created",
+              "projects.project as projectCode"
             ])
             .offset(offset)
             .limit(per_page)
@@ -345,7 +353,7 @@ const commonAreaController = {
                 qb.where('common_area.commonAreaCode', 'iLIKE', `%${commonAreaCode}%`)
               }
             })
-            .orderBy('common_area.id', 'desc')
+            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
         ]);
       } else {
         [total, rows] = await Promise.all([
@@ -381,7 +389,7 @@ const commonAreaController = {
             .leftJoin("users", "common_area.createdBy", "users.id")
             .where({ "floor_and_zones.isActive": true })
             .where({ "common_area.orgId": orgId })
-            .orderBy('common_area.id', 'desc')
+            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .select([
               "common_area.id as id",
               "common_area.commonAreaCode as Common Area",
@@ -390,7 +398,8 @@ const commonAreaController = {
               "projects.projectName as Project",
               "common_area.isActive as Status",
               "users.name as Created By",
-              "common_area.createdAt as Date Created"
+              "common_area.createdAt as Date Created",
+              "projects.project as projectCode"
             ])
             .offset(offset)
             .limit(per_page)
@@ -719,7 +728,26 @@ const commonAreaController = {
       }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(rows);
+
+      var ws
+
+      if (rows && rows.length) {
+        ws = XLSX.utils.json_to_sheet(rows);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          {
+            COMPANY: "",
+            PROJECT: "",
+            PROPERTY_TYPE_CODE: "",
+            BUILDING_PHASE_CODE: "",
+            FLOOR_ZONE_CODE: "",
+            COMMON_AREA_CODE: "",
+            DESCRIPTION: "",
+          }
+        ]);
+      }
+
+
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "CommonAreaData-" + Date.now() + ".csv";
@@ -766,212 +794,240 @@ const commonAreaController = {
   importCommonAreaData: async (req, res) => {
 
     try {
-      if (req.file) {
-        console.log(req.file);
-        let tempraryDirectory = null;
-        if (process.env.IS_OFFLINE) {
-          tempraryDirectory = "tmp/";
-        } else {
-          tempraryDirectory = "/tmp/";
-        }
-        let resultData = null;
-        let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: "binary" });
-        let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, {
-          type: "string",
-          header: "A",
-          raw: false
-        });
-        //data         = JSON.stringify(data);
-        console.log("data============", data, "Data===========")
-        let result = null;
-        let errors = []
-        let header = Object.values(data[0]);
-        header.unshift('Error');
-        errors.push(header)
-        //console.log('DATA: ',data)
-        let totalData = data.length - 1;
-        let fail = 0;
-        let success = 0;
-        if (
-          data[0].A == "Ã¯Â»Â¿COMPANY" || data[0].A == "COMPANY" &&
-          data[0].B == "PROJECT" &&
-          data[0].C == "PROPERTY_TYPE_CODE" &&
-          data[0].D == "BUILDING_PHASE_CODE" &&
-          data[0].E == "FLOOR_ZONE_CODE" &&
-          data[0].F == "COMMON_AREA_CODE" &&
-          data[0].G == "DESCRIPTION"
-        ) {
-          if (data.length > 0) {
-            let i = 0;
-            console.log('Data[0]', data[0])
-            for (let commonData of data) {
+      let data = req.body;
+      console.log("data============", data, "Data===========")
+      let result = null;
+      let errors = []
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
+      //console.log('DATA: ',data)
+      let totalData = data.length - 1;
+      let fail = 0;
+      let success = 0;
+      if (
+        data[0].A == "Ã¯Â»Â¿COMPANY" || data[0].A == "COMPANY" &&
+        data[0].B == "PROJECT" &&
+        data[0].C == "PROPERTY_TYPE_CODE" &&
+        data[0].D == "BUILDING_PHASE_CODE" &&
+        data[0].E == "FLOOR_ZONE_CODE" &&
+        data[0].F == "COMMON_AREA_CODE" &&
+        data[0].G == "DESCRIPTION"
+      ) {
+        if (data.length > 0) {
+          let i = 0;
+          console.log('Data[0]', data[0])
+          for (let commonData of data) {
 
-              i++;
+            i++;
 
-              if (i > 1) {
+            if (i > 1) {
 
 
-                // Find Company primary key
-                let companyId = null;
-                let projectId = null;
-                let propertyTypeId = null;
-                let buildingPhaseId = null;
-                let floorZoneId = null;
+              if (!commonData.A) {
+                let values = _.values(commonData)
+                values.unshift('Company Id can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
 
-                let companyIdResult = await knex('companies').select('id').where({ companyId: commonData.A, orgId: req.orgId })
+              if (!commonData.B) {
+                let values = _.values(commonData)
+                values.unshift('Project Code can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
 
-                if (companyIdResult && companyIdResult.length) {
-                  companyId = companyIdResult[0].id;
+              if (!commonData.C) {
+                let values = _.values(commonData)
+                values.unshift('Property type Code can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!commonData.D) {
+                let values = _.values(commonData)
+                values.unshift('Building phase Code can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!commonData.E) {
+                let values = _.values(commonData)
+                values.unshift('Floor zone Code can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!commonData.F) {
+                let values = _.values(commonData)
+                values.unshift('Common area Code can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
+              // Find Company primary key
+              let companyId = null;
+              let projectId = null;
+              let propertyTypeId = null;
+              let buildingPhaseId = null;
+              let floorZoneId = null;
+
+              let companyIdResult = await knex('companies').select('id').where({ companyId: commonData.A, orgId: req.orgId })
+
+              if (companyIdResult && companyIdResult.length) {
+                companyId = companyIdResult[0].id;
+              }
+
+              let projectIdResult = await knex("projects")
+                .select("id")
+                .where({ project: commonData.B, companyId: companyId, orgId: req.orgId });
+
+              if (projectIdResult && projectIdResult.length) {
+                projectId = projectIdResult[0].id;
+              }
+
+              let propertyTypeIdResult = await knex("property_types")
+                .select("id")
+                .where({ propertyTypeCode: commonData.C, orgId: req.orgId });
+
+              let buildingResult = await knex("buildings_and_phases")
+                .select("id")
+                .where({
+                  buildingPhaseCode: commonData.D,
+                  companyId: companyId,
+                  projectId: projectId,
+                  orgId: req.orgId
+                });
+
+              if (buildingResult && buildingResult.length) {
+                buildingPhaseId = buildingResult[0].id;
+              }
+
+              let floorResult = await knex("floor_and_zones")
+                .select("id")
+                .where({
+                  floorZoneCode: commonData.E,
+                  orgId: req.orgId,
+                  buildingPhaseId: buildingPhaseId,
+                  companyId: companyId,
+                  projectId: projectId
+                });
+
+              if (propertyTypeIdResult && propertyTypeIdResult.length) {
+                propertyTypeId = propertyTypeIdResult[0].id;
+              }
+
+              if (!companyId) {
+                fail++;
+                let values = _.values(commonData)
+                values.unshift('Company ID does not exists.')
+                errors.push(values);
+                console.log('breaking due to Company Id: ', companyId)
+                continue;
+
+              }
+
+              if (!projectId) {
+                fail++;
+                let values = _.values(commonData)
+                values.unshift('Project Id does not exists.')
+                errors.push(values);
+                console.log("breaking due to Project Id: ", projectId);
+                continue;
+              }
+
+              if (!propertyTypeId) {
+                fail++;
+                let values = _.values(commonData)
+                values.unshift('Property type does not exists.')
+                errors.push(values);
+                console.log("breaking due to Property type id: ", propertyTypeId);
+                continue;
+              }
+
+
+
+              if (!buildingPhaseId) {
+                fail++;
+                let values = _.values(commonData)
+                values.unshift('Building/Phase Code does not exists.')
+                errors.push(values);
+                console.log("breaking due to building phase id: ", buildingPhaseId);
+                continue;
+              }
+              if (floorResult && floorResult.length) {
+                floorZoneId = floorResult[0].id;
+              }
+              if (!floorZoneId) {
+                fail++;
+                let values = _.values(commonData)
+                values.unshift('Floor/Zone code does not exists.')
+                errors.push(values);
+                console.log("breaking due to Floor zone id: ", floorZoneId);
+                continue;
+              }
+
+              let currentTime = new Date().getTime()
+              let checkExist = await knex("common_area")
+                .select("commonAreaCode")
+                .where({
+                  //companyId: companyId,
+                  // projectId: projectId,
+                  // propertyTypeId: propertyTypeId,
+                  // buildingPhaseId: buildingPhaseId,
+                  floorZoneId: floorZoneId,
+                  commonAreaCode: commonData.F,
+                  orgId: req.orgId
+                });
+              if (checkExist.length < 1) {
+                let insertData = {
+                  orgId: req.orgId,
+                  companyId: companyId,
+                  projectId: projectId,
+                  propertyTypeId: propertyTypeId,
+                  buildingPhaseId: buildingPhaseId,
+                  floorZoneId: floorZoneId,
+                  commonAreaCode: commonData.F,
+                  description: commonData.G,
+                  createdAt: currentTime,
+                  updatedAt: currentTime,
+                  createdBy: req.me.id
+                };
+
+                resultData = await knex
+                  .insert(insertData)
+                  .returning(["*"])
+                  .into("common_area");
+                if (resultData && resultData.length) {
+                  success++;
                 }
 
-                let projectIdResult = await knex("projects")
-                  .select("id")
-                  .where({ project: commonData.B, companyId: companyId, orgId: req.orgId });
-
-                if (projectIdResult && projectIdResult.length) {
-                  projectId = projectIdResult[0].id;
-                }
-
-                let propertyTypeIdResult = await knex("property_types")
-                  .select("id")
-                  .where({ propertyTypeCode: commonData.C, orgId: req.orgId });
-
-                let buildingResult = await knex("buildings_and_phases")
-                  .select("id")
-                  .where({
-                    buildingPhaseCode: commonData.D,
-                    companyId: companyId,
-                    projectId: projectId,
-                    orgId: req.orgId
-                  });
-
-                if (buildingResult && buildingResult.length) {
-                  buildingPhaseId = buildingResult[0].id;
-                }
-
-                let floorResult = await knex("floor_and_zones")
-                  .select("id")
-                  .where({ floorZoneCode: commonData.E,
-                            orgId: req.orgId ,
-                            buildingPhaseId:buildingPhaseId,
-                            companyId:companyId,
-                            projectId:projectId
-                          });
-
-                if (propertyTypeIdResult && propertyTypeIdResult.length) {
-                  propertyTypeId = propertyTypeIdResult[0].id;
-                }
-                if (!propertyTypeId) {
-                  fail++;
-                  let values = _.values(commonData)
-                  values.unshift('Property type does not exists.')
-                  errors.push(values);
-                  console.log("breaking due to Property type id: ", propertyTypeId);
-                  continue;
-                }
-
-                if (!companyId) {
-                  fail++;
-                  let values = _.values(commonData)
-                  values.unshift('Company ID does not exists.')
-                  errors.push(values);
-                  console.log('breaking due to Company Id: ', companyId)
-                  continue;
-
-                }
-
-                if (!projectId) {
-                  fail++;
-                  let values = _.values(commonData)
-                  values.unshift('Project Id does not exists.')
-                  errors.push(values);
-                  console.log("breaking due to Project Id: ", projectId);
-                  continue;
-                }
-
-                if (!buildingPhaseId) {
-                  fail++;
-                  let values = _.values(commonData)
-                  values.unshift('Building/Phase Code does not exists.')
-                  errors.push(values);
-                  console.log("breaking due to building phase id: ", buildingPhaseId);
-                  continue;
-                }
-                if (floorResult && floorResult.length) {
-                  floorZoneId = floorResult[0].id;
-                }
-                if (!floorZoneId) {
-                  fail++;
-                  let values = _.values(commonData)
-                  values.unshift('Floor/Zone code does not exists.')
-                  errors.push(values);
-                  console.log("breaking due to Floor zone id: ", floorZoneId);
-                  continue;
-                }
-
-                let currentTime = new Date().getTime()
-                let checkExist = await knex("common_area")
-                  .select("commonAreaCode")
-                  .where({
-                    //companyId: companyId,
-                    // projectId: projectId,
-                    // propertyTypeId: propertyTypeId,
-                    // buildingPhaseId: buildingPhaseId,
-                    floorZoneId: floorZoneId,
-                    commonAreaCode: commonData.F,
-                    orgId: req.orgId
-                  });
-                if (checkExist.length < 1) {
-                  let insertData = {
-                    orgId: req.orgId,
-                    companyId: companyId,
-                    projectId: projectId,
-                    propertyTypeId: propertyTypeId,
-                    buildingPhaseId: buildingPhaseId,
-                    floorZoneId: floorZoneId,
-                    commonAreaCode: commonData.F,
-                    description: commonData.G,
-                    createdAt: currentTime,
-                    updatedAt: currentTime,
-                    createdBy: req.me.id
-                  };
-
-                  resultData = await knex
-                    .insert(insertData)
-                    .returning(["*"])
-                    .into("common_area");
-                  if (resultData && resultData.length) {
-                    success++;
-                  }
-
-                } else {
-                  fail++;
-                  let values = _.values(commonData)
-                  values.unshift('Common area already exists.')
-                  errors.push(values);
-                }
+              } else {
+                fail++;
+                let values = _.values(commonData)
+                values.unshift('Common area already exists.')
+                errors.push(values);
               }
             }
-
-            let message = null;
-            if (totalData == success) {
-              message = "System have processed ( " + totalData + " ) entries and added them successfully!";
-            } else {
-              message = "System have processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
-            }
-            let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
-            return res.status(200).json({
-              message: message,
-              errors
-            });
           }
-        } else {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-            ]
+
+          let message = null;
+          if (totalData == success) {
+            message = "System have processed ( " + totalData + " ) entries and added them successfully!";
+          } else {
+            message = "System have processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
+          }
+          return res.status(200).json({
+            message: message,
+            errors
           });
         }
       } else {
@@ -981,6 +1037,13 @@ const commonAreaController = {
           ]
         });
       }
+      // } else {
+      //   return res.status(400).json({
+      //     errors: [
+      //       { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+      //     ]
+      //   });
+      // }
     } catch (err) {
       console.log(
         "[controllers][propertysetup][importCompanyData] :  Error",

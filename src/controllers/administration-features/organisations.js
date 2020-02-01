@@ -1,9 +1,9 @@
 const Joi = require("@hapi/joi");
-const moment = require("moment");
-const uuidv4 = require("uuid/v4");
-var jwt = require("jsonwebtoken");
+// const moment = require("moment");
+// const uuidv4 = require("uuid/v4");
+// var jwt = require("jsonwebtoken");
 const _ = require("lodash");
-const XLSX = require("xlsx");
+// const XLSX = require("xlsx");
 const saltRounds = 10;
 const bcrypt = require('bcrypt');
 const knex = require("../../db/knex");

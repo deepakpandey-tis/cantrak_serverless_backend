@@ -21,12 +21,15 @@ const serviceDetailsController = {
       let orgId = req.orgId;
 
       await knex.transaction(async trx => {
-        const payload = req.body;
+        const payload = _.omit(req.body,'editMode');
 
         const schema = Joi.object().keys({
           incidentPriorityCode: Joi.string().required(),
-          descriptionThai: Joi.string().allow("").optional(),
-          descriptionEng: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string().allow("").allow(null).optional(),
+          descriptionEng: Joi.string().required(),
+          sequenceNo: Joi.number().allow("").allow(null).optional(),
+         
+
         });
 
         const result = Joi.validate(payload, schema);
@@ -82,13 +85,14 @@ const serviceDetailsController = {
       let orgId = req.orgId;
 
       await knex.transaction(async trx => {
-        const payload = req.body;
+        const payload = _.omit(req.body,'editMode','createdAt','updatedAt','createdBy','isActive','name','orgId');
 
         const schema = Joi.object().keys({
           id: Joi.string().required(),
           incidentPriorityCode: Joi.string().required(),
           descriptionThai: Joi.string().allow("").allow(null).optional(),
           descriptionEng: Joi.string().allow("").allow(null).optional(),
+          sequenceNo: Joi.number().allow("").allow(null).optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -374,7 +378,7 @@ const serviceDetailsController = {
           .leftJoin("floor_and_zones", "property_units.floorZoneId", "=", "floor_and_zones.id")
           .leftJoin("service_requests", "property_units.id", "=", "service_requests.houseId")
           .leftJoin('users', 'service_requests.createdBy', 'users.id')
-          .leftJoin("users AS u", "service_requests.requestedBy", "u.id")
+          .leftJoin("requested_by AS reqBy", "service_requests.requestedBy", "reqBy.id")
           .leftJoin("source_of_request", "service_requests.serviceType", "source_of_request.id")
           .leftJoin("images", "service_requests.id", "images.entityId")
           .select(
@@ -390,7 +394,7 @@ const serviceDetailsController = {
             "service_requests.serviceStatusCode as serviceStatusCode",
             "service_requests.updatedAt as updatedAt",
             "service_requests.createdAt as createdAt",
-            "u.name as requestedBy",
+            "reqBy.name as requestedBy",
             "users.name as createdUser",
             "source_of_request.descriptionEng as serviceType",
             "images.s3Url",
@@ -427,7 +431,7 @@ const serviceDetailsController = {
             "location_tags.entityId": incidentRequestPayload.id
           })
           .select("location_tags_master.title")
-        let tags = locationResult.map(v => v.title)//[userHouseId.houseId];
+        let tags = _.uniq(locationResult.map(v => v.title))//[userHouseId.houseId];
 
         DataResult.locationTags = tags;
         console.log("locationResult", tags);
@@ -1436,7 +1440,7 @@ const serviceDetailsController = {
     try {
       let result = await knex('incident_priority')
       .where({ 'orgId': req.orgId, 'isActive': true })
-      .orderBy('sequenceNo','asc')
+      .orderBy('sequenceNo','desc')
       return res.status(200).json({
         data: result,
         message: "Priority list!"
@@ -1459,7 +1463,7 @@ const serviceDetailsController = {
         'users.name'
       ])
       .where({ 'incident_priority.orgId': req.orgId})
-      .orderBy('incident_priority.sequenceNo','asc')
+      .orderBy('incident_priority.sequenceNo','desc')
       return res.status(200).json({
         data: result,
         message: "Priority list!"
