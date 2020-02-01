@@ -48,10 +48,9 @@ var storage = multer.diskStorage({
 var upload = multer({ storage: storage });
 router.post("/import-charge-data", upload.single("file"), authMiddleware.isAuthenticated, chargeController.importChargeData);
 
-router.post("/get-quotation-assigned-charges",authMiddleware.isAuthenticated,chargeController.getQuotationAssignedCharges)
-router.post("/get-service-order-assigned-charges",authMiddleware.isAuthenticated,chargeController.getServiceOrderAssignedCharges)
-router.post("/get-service-request-assigned-charges",authMiddleware.isAuthenticated,chargeController.getServiceRequestAssignedCharges)
-
-
+router.post("/get-quotation-assigned-charges", authMiddleware.isAuthenticated, chargeController.getQuotationAssignedCharges)
+router.post("/get-service-order-assigned-charges", authMiddleware.isAuthenticated, chargeController.getServiceOrderAssignedCharges)
+router.post("/get-service-request-assigned-charges", authMiddleware.isAuthenticated, chargeController.getServiceRequestAssignedCharges)
+router.post("/delete-quotations-assigned-charges/", authMiddleware.isAuthenticated, chargeController.deleteQuotationAssignedCharges);
 
 module.exports = router;
