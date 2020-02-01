@@ -21,12 +21,15 @@ const serviceDetailsController = {
       let orgId = req.orgId;
 
       await knex.transaction(async trx => {
-        const payload = req.body;
+        const payload = _.omit(req.body,'editMode');
 
         const schema = Joi.object().keys({
           incidentPriorityCode: Joi.string().required(),
-          descriptionThai: Joi.string().allow("").optional(),
-          descriptionEng: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string().allow("").allow(null).optional(),
+          descriptionEng: Joi.string().required(),
+          sequenceNo: Joi.number().allow("").allow(null).optional(),
+         
+
         });
 
         const result = Joi.validate(payload, schema);
@@ -82,13 +85,14 @@ const serviceDetailsController = {
       let orgId = req.orgId;
 
       await knex.transaction(async trx => {
-        const payload = req.body;
+        const payload = _.omit(req.body,'editMode','createdAt','updatedAt','createdBy','isActive','name','orgId');
 
         const schema = Joi.object().keys({
           id: Joi.string().required(),
           incidentPriorityCode: Joi.string().required(),
           descriptionThai: Joi.string().allow("").allow(null).optional(),
           descriptionEng: Joi.string().allow("").allow(null).optional(),
+          sequenceNo: Joi.number().allow("").allow(null).optional(),
         });
 
         const result = Joi.validate(payload, schema);

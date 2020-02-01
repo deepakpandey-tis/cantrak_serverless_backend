@@ -719,7 +719,26 @@ const commonAreaController = {
       }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(rows);
+
+      var ws
+
+      if (rows && rows.length) {
+        ws = XLSX.utils.json_to_sheet(rows);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          {
+              COMPANY:"",
+              PROJECT:"",
+              PROPERTY_TYPE_CODE:"",
+              BUILDING_PHASE_CODE:"",
+              FLOOR_ZONE_CODE:"",
+              COMMON_AREA_CODE:"",
+              DESCRIPTION:"",
+          }
+        ]);
+      }
+
+
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "CommonAreaData-" + Date.now() + ".csv";
@@ -853,12 +872,13 @@ const commonAreaController = {
 
                 let floorResult = await knex("floor_and_zones")
                   .select("id")
-                  .where({ floorZoneCode: commonData.E,
-                            orgId: req.orgId ,
-                            buildingPhaseId:buildingPhaseId,
-                            companyId:companyId,
-                            projectId:projectId
-                          });
+                  .where({
+                    floorZoneCode: commonData.E,
+                    orgId: req.orgId,
+                    buildingPhaseId: buildingPhaseId,
+                    companyId: companyId,
+                    projectId: projectId
+                  });
 
                 if (propertyTypeIdResult && propertyTypeIdResult.length) {
                   propertyTypeId = propertyTypeIdResult[0].id;
