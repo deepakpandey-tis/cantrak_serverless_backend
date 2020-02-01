@@ -80,16 +80,16 @@ const quotationsController = {
           "[controllers][quotations][updateQuotation] : Quotation Body", quotationPayload
         );
 
-        
-         // validate keys for part
-         const quotationSinglePart = Joi.object().keys({
+
+        // validate keys for part
+        const quotationSinglePart = Joi.object().keys({
           partName: Joi.string().required(),
           id: Joi.string().required(),
           partCode: Joi.string().required(),
           quantity: Joi.string().required(),
           unitCost: Joi.number().required(),
         })
-         // validate keys for charges
+        // validate keys for charges
         const quotationSingleCharge = Joi.object().keys({
           chargeCode: Joi.string().required(),
           id: Joi.string().required(),
@@ -97,8 +97,8 @@ const quotationsController = {
           rate: Joi.number().required(),
           totalHours: Joi.string().required(),
         })
-     
-      
+
+
 
         // validate keys
         const schema = Joi.object().keys({
@@ -133,8 +133,8 @@ const quotationsController = {
         const currentTime = new Date().getTime();
         let serId = 0
 
-        if(quotationPayload.serviceRequestId){
-           serId = quotationPayload.serviceRequestId
+        if (quotationPayload.serviceRequestId) {
+          serId = quotationPayload.serviceRequestId
         }
 
         const updateQuotationReq = await knex
@@ -161,7 +161,7 @@ const quotationsController = {
           .into("quotations");
 
 
-            // Start Update Assigned Parts In Quotations
+        // Start Update Assigned Parts In Quotations
 
         let partsLength = quotationPayload.quotationData[0].parts.length;
         console.log("parts length", partsLength);
@@ -264,11 +264,11 @@ const quotationsController = {
         let quotationRequestId = payload.quotationId;
 
         quotationView = await knex("quotations")
-          .leftJoin('companies','quotations.companyId','companies.id')
-          .leftJoin('projects','quotations.projectId','projects.id')
-          .leftJoin('buildings_and_phases','quotations.buildingId','buildings_and_phases.id')
-          .leftJoin('floor_and_zones', 'quotations.floorId','floor_and_zones.id')
-          .leftJoin('property_units','quotations.unitId','property_units.id')
+          .leftJoin('companies', 'quotations.companyId', 'companies.id')
+          .leftJoin('projects', 'quotations.projectId', 'projects.id')
+          .leftJoin('buildings_and_phases', 'quotations.buildingId', 'buildings_and_phases.id')
+          .leftJoin('floor_and_zones', 'quotations.floorId', 'floor_and_zones.id')
+          .leftJoin('property_units', 'quotations.unitId', 'property_units.id')
           .leftJoin(
             "assigned_service_team as astm", "astm.entityId", "=", "quotations.id",
             "astm.entityType", "=", "quotations"
@@ -622,7 +622,7 @@ const quotationsController = {
               "buildings_and_phases.buildingPhaseCode",
               "floor_and_zones.floorZoneCode",
               "property_units.unitNumber",
-              
+
               "quotations.quotationStatus as Status",
               "quotations.createdAt as Date Created"
             ])
@@ -672,7 +672,7 @@ const quotationsController = {
                   ]);
                 }
                 qb.where("quotations.orgId", req.orgId)
-            qb.whereIn('service_requests.projectId',accessibleProjects)
+                qb.whereIn('service_requests.projectId', accessibleProjects)
 
               })
               .havingNotNull('quotations.quotationStatus')
@@ -716,7 +716,7 @@ const quotationsController = {
                 "buildings_and_phases.buildingPhaseCode",
                 "floor_and_zones.floorZoneCode",
                 "property_units.unitNumber",
-                
+
                 "quotations.quotationStatus as Status",
                 "quotations.createdAt as Date Created"
               ])
@@ -1057,7 +1057,7 @@ const quotationsController = {
 
         /*INSERT IMAGE TABLE DATA CLOSE */
 
-        if (problemImagesData[0] && problemImagesData[0].s3Url){
+        if (problemImagesData[0] && problemImagesData[0].s3Url) {
           notesData = { ...notesData, s3Url: problemImagesData[0].s3Url }
         }
 
@@ -1516,7 +1516,7 @@ const quotationsController = {
         const currentTime = new Date().getTime();
         let srId = 0
 
-        if(quotationPayload.serviceRequestId){
+        if (quotationPayload.serviceRequestId) {
           srId = quotationPayload.serviceRequestId
         }
 
@@ -1606,33 +1606,63 @@ const quotationsController = {
     }
   },
 
-  deleteQuotation:async (req,res) => {
+  // deleteQuotation:async (req,res) => {
+  //   try {
+  //     const id = req.body.id;
+  //     const deletedRow = await knex('quotations').where({id}).del().returning(['*'])
+  //     return res.status(200).json({
+  //       data: {
+  //         deletedRow,
+  //         message: 'Deleted row successfully!'
+  //       }
+  //     })
+  //   } catch(err) {
+  //     return res.status(500).json({
+  //       errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+  //     });
+  //   }
+  // },
+  deleteQuotation: async (req, res) => {
     try {
       const id = req.body.id;
-      const deletedRow = await knex('quotations').where({id}).del().returning(['*'])
+      const deletedRow = await knex('quotations').where({ id }).del().returning(['*'])
       return res.status(200).json({
         data: {
           deletedRow,
           message: 'Deleted row successfully!'
         }
       })
-    } catch(err) {
+    } catch (err) {
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
-  deleteQuotation:async (req,res) => {
+  updateQuotationsStatus: async (req, res) => {
     try {
-      const id = req.body.id;
-      const deletedRow = await knex('quotations').where({id}).del().returning(['*'])
-      return res.status(200).json({
-        data: {
-          deletedRow,
-          message: 'Deleted row successfully!'
-        }
-      })
-    } catch(err) {
+      let quotationId = req.body.data.quotationId;
+      let updateStatus = req.body.data.status;
+      const currentTime = new Date();
+      console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7', req.body)
+      let status;
+      if (updateStatus == 'Approved') {
+        status = await knex("quotations")
+          .update({ quotationStatus: updateStatus, approvedOn: currentTime, approvedBy: req.me.id })
+          .where({ id: quotationId });
+      } else if (updateStatus == 'Cancelled') {
+        status = await knex("quotations")
+          .update({ quotationStatus: updateStatus, cancelledOn: currentTime, cancelledBy: req.me.id })
+          .where({ id: quotationId });
+      }
+
+      return res.status(200).json({ 
+        data: { 
+          status: updateStatus 
+        }, 
+        message: "Quotation status updated successfully!" 
+      });
+
+    } catch (err) {
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
