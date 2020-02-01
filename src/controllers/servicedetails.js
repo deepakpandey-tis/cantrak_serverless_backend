@@ -378,7 +378,7 @@ const serviceDetailsController = {
           .leftJoin("floor_and_zones", "property_units.floorZoneId", "=", "floor_and_zones.id")
           .leftJoin("service_requests", "property_units.id", "=", "service_requests.houseId")
           .leftJoin('users', 'service_requests.createdBy', 'users.id')
-          .leftJoin("users AS u", "service_requests.requestedBy", "u.id")
+          .leftJoin("requested_by AS reqBy", "service_requests.requestedBy", "reqBy.id")
           .leftJoin("source_of_request", "service_requests.serviceType", "source_of_request.id")
           .leftJoin("images", "service_requests.id", "images.entityId")
           .select(
@@ -394,7 +394,7 @@ const serviceDetailsController = {
             "service_requests.serviceStatusCode as serviceStatusCode",
             "service_requests.updatedAt as updatedAt",
             "service_requests.createdAt as createdAt",
-            "u.name as requestedBy",
+            "reqBy.name as requestedBy",
             "users.name as createdUser",
             "source_of_request.descriptionEng as serviceType",
             "images.s3Url",
@@ -431,7 +431,7 @@ const serviceDetailsController = {
             "location_tags.entityId": incidentRequestPayload.id
           })
           .select("location_tags_master.title")
-        let tags = locationResult.map(v => v.title)//[userHouseId.houseId];
+        let tags = _.uniq(locationResult.map(v => v.title))//[userHouseId.houseId];
 
         DataResult.locationTags = tags;
         console.log("locationResult", tags);
