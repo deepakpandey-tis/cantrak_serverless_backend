@@ -2080,11 +2080,11 @@ const serviceRequestController = {
         });
 
 
-        let location = await knex
-          .from("location_tags")
-          .select("locationTagId")
+        let location = await knex("location_tags")
+          .innerJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
+          .select(["location_tags.locationTagId",'location_tags_master.title'])
           .where({ entityId: id, entityType: "service_requests" });
-        locationTags = location.map(v => Number(v.locationTagId));
+        locationTags = _.uniqBy(location,'title')
       });
 
       return res.status(200).json({
@@ -2245,8 +2245,14 @@ const serviceRequestController = {
         //     .transacting(trx)
         //     .into("location_tags");
         // }
+
+        // Discard if some location tags already exists
+        
+
         let locationTagIds = []
-        for (let locationTag of payload.locationTags) {
+        let finalLocationTags = _.uniq(payload.locationTags)
+
+        for (let locationTag of finalLocationTags) {
           let result = await knex('location_tags_master').select('id').where({ title: locationTag })
           if (result && result.length) {
             locationTagIds.push(result[0].id)

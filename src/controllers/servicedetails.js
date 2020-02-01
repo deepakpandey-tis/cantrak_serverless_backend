@@ -431,7 +431,7 @@ const serviceDetailsController = {
             "location_tags.entityId": incidentRequestPayload.id
           })
           .select("location_tags_master.title")
-        let tags = locationResult.map(v => v.title)//[userHouseId.houseId];
+        let tags = _.uniq(locationResult.map(v => v.title))//[userHouseId.houseId];
 
         DataResult.locationTags = tags;
         console.log("locationResult", tags);
