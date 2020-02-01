@@ -83,6 +83,6 @@ router.get('/get-priority-all-list', authMiddleware.isAuthenticated, serviceDeta
 router.post('/toggle-priority-status', authMiddleware.isAuthenticated, serviceDetailsController.togglePriorityStatus);
 router.post('/toggle-location-tag-status', authMiddleware.isAuthenticated, serviceDetailsController.toggleLocationTagStatus);
 router.post('/source-of-request-status', authMiddleware.isAuthenticated, serviceDetailsController.sourceOfRequestStatus);
-
+router.get('/get-priority', authMiddleware.isAuthenticated, serviceDetailsController.getPriority);
 
 module.exports = router;

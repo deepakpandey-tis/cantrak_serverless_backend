@@ -16,7 +16,7 @@ const path = require("path");
 const floorZoneController = {
   addFloorZone: async (req, res) => {
     try {
-      
+
       let floorZone = null;
       let userId = req.me.id;
       let orgId = req.orgId;
@@ -29,7 +29,7 @@ const floorZoneController = {
           propertyTypeId: Joi.string().allow("").optional(),
           buildingPhaseId: Joi.string().required(),
           floorZoneCode: Joi.string().required(),
-          description: Joi.string().allow("").optional(),
+          description: Joi.string().allow("").allow(null).optional(),
           totalFloorArea: Joi.string().required()
         });
 
@@ -304,6 +304,12 @@ const floorZoneController = {
   },
   getFloorZoneList: async (req, res) => {
     try {
+
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "floor_and_zones.floorZoneCode";
+        sortPayload.orderBy = "asc"
+      }
       let orgId = req.orgId;
 
       let reqData = req.query;
@@ -399,7 +405,7 @@ const floorZoneController = {
             })
             .offset(offset)
             .limit(per_page)
-            .orderBy('floor_and_zones.createdAt', 'desc')
+            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
 
         ]);
 
@@ -454,7 +460,7 @@ const floorZoneController = {
             .where({ "buildings_and_phases.isActive": true })
             .offset(offset)
             .limit(per_page)
-            .orderBy('floor_and_zones.id', 'desc')
+            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
         ]);
 
         let count = total.count;
@@ -507,7 +513,6 @@ const floorZoneController = {
               "property_types.id"
             )
             .select([
-              // "floor_and_zones.orgId as ORGANIZATION_ID",
               "companies.companyId as COMPANY",
               "companies.companyName as COMPANY_NAME",
               "projects.project as PROJECT",
@@ -517,10 +522,6 @@ const floorZoneController = {
               "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
               "floor_and_zones.description as DESCRIPTION",
               "floor_and_zones.totalFloorArea as TOTAL_FLOOR_AREA"
-              //"floor_and_zones.isActive as STATUS",
-              //"users.name as CREATED_BY",
-              //"floor_and_zones.createdBy as CREATED_BY_ID",
-              //"floor_and_zones.createdAt as DATE_CREATED"
             ])
             .where({ "floor_and_zones.orgId": orgId })
             .where({ "buildings_and_phases.isActive": true })
@@ -543,7 +544,6 @@ const floorZoneController = {
               "property_types.id"
             )
             .select([
-              //"floor_and_zones.orgId as ORGANIZATION_ID",
               "companies.companyId as COMPANY",
               "companies.companyName as COMPANY_NAME",
               "projects.project as PROJECT",
@@ -553,10 +553,6 @@ const floorZoneController = {
               "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
               "floor_and_zones.description as DESCRIPTION",
               "floor_and_zones.totalFloorArea as TOTAL_FLOOR_AREA"
-              //"floor_and_zones.isActive as STATUS",
-              // "users.name as CREATED_BY",
-              // "floor_and_zones.createdBy as CREATED_BY_ID",
-              // "floor_and_zones.createdAt as DATE_CREATED"
             ])
             .where({
               "floor_and_zones.companyId": companyId,
@@ -694,14 +690,14 @@ const floorZoneController = {
       if (buildingPhaseId) {
         floor = await knex("floor_and_zones")
           .select("*")
-          .where({ buildingPhaseId,isActive:true, orgId: orgId });
+          .where({ buildingPhaseId, isActive: true, orgId: orgId });
       } else {
         floor = await knex("floor_and_zones")
           .select([
             'floor_and_zones.floorZoneCode as Floor/Zone',
             'floor_and_zones.id as id'
           ])
-          .where({ isActive:true,orgId: orgId });
+          .where({ isActive: true, orgId: orgId });
       }
       return res.status(200).json({
         data: {
@@ -720,23 +716,24 @@ const floorZoneController = {
   /**IMPORT FLOOR ZONE DATA */
   importFloorZoneData: async (req, res) => {
     try {
-      if (req.file) {
-        let tempraryDirectory = null;
-        if (process.env.IS_OFFLINE) {
-          tempraryDirectory = "tmp/";
-        } else {
-          tempraryDirectory = "/tmp/";
-        }
-        let resultData = null;
-        let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: "binary" });
-        let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, {
-          type: "string",
-          header: "A",
-          raw: false
-        });
+     // if (req.file) {
+        // let tempraryDirectory = null;
+        // if (process.env.IS_OFFLINE) {
+        //   tempraryDirectory = "tmp/";
+        // } else {
+        //   tempraryDirectory = "/tmp/";
+        // }
+        // let resultData = null;
+        // let file_path = tempraryDirectory + req.file.filename;
+        // let wb = XLSX.readFile(file_path, { type: "binary" });
+        // let ws = wb.Sheets[wb.SheetNames[0]];
+        // let data = XLSX.utils.sheet_to_json(ws, {
+        //   type: "string",
+        //   header: "A",
+        //   raw: false
+        // });
 
+        let data = req.body;
         let totalData = data.length - 1;
         let fail = 0;
         let success = 0;
@@ -747,10 +744,7 @@ const floorZoneController = {
         header.unshift('Error');
         errors.push(header)
 
-
-        if (
-          //data[0].A == "Ã¯Â»Â¿ORGANIZATION_ID" || data[0].A == "ORGANIZATION_ID" &&
-          data[0].A == "Ã¯Â»Â¿COMPANY" ||
+        if (data[0].A == "Ã¯Â»Â¿COMPANY" ||
           (data[0].A == "COMPANY" &&
             data[0].B == "COMPANY_NAME" &&
             data[0].C == "PROJECT" &&
@@ -760,11 +754,6 @@ const floorZoneController = {
             data[0].G == "FLOOR_ZONE_CODE" &&
             data[0].H == "DESCRIPTION" &&
             data[0].I == "TOTAL_FLOOR_AREA")
-          //&&
-          // data[0].K == "STATUS" &&
-          // data[0].L == "CREATED_BY" &&
-          // data[0].M == "CREATED_BY_ID" &&
-          // data[0].N == "DATE_CREATED"
         ) {
           if (data.length > 0) {
             let i = 0;
@@ -774,86 +763,136 @@ const floorZoneController = {
               if (i > 1) {
 
 
+
+                if (!floorData.A) {
+                  let values = _.values(floorData)
+                  values.unshift('Company Id can not empty!')
+                  errors.push(values);
+                  fail++;
+                  continue;
+                }
+  
+                if (!floorData.C) {
+                  let values = _.values(floorData)
+                  values.unshift('Project Code can not empty!')
+                  errors.push(values);
+                  fail++;
+                  continue;
+                }
+  
+                if (!floorData.E) {
+                  let values = _.values(floorData)
+                  values.unshift('Property type Code can not empty!')
+                  errors.push(values);
+                  fail++;
+                  continue;
+                }
+
+                if (!floorData.F) {
+                  let values = _.values(floorData)
+                  values.unshift('Building phase Code can not empty!')
+                  errors.push(values);
+                  fail++;
+                  continue;
+                }
+
+                if (!floorData.G) {
+                  let values = _.values(floorData)
+                  values.unshift('Floor zone Code can not empty!')
+                  errors.push(values);
+                  fail++;
+                  continue;
+                }
+
+                if (!floorData.I) {
+                  let values = _.values(floorData)
+                  values.unshift('Total area can not empty!')
+                  errors.push(values);
+                  fail++;
+                  continue;
+                }
+
+
                 let companyData = await knex("companies")
-                .select("id")
-                .where({ companyId: floorData.A, orgId: req.orgId });
-              let companyId = null;
-              let projectId = null;
-              let buildingId = null;
-
-              if (!companyData.length) {
-                console.log('*********************&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&', companyData)
-                fail++;
-                let values = _.values(floorData)
-                values.unshift('Company ID does not exist')
-
-                //errors.push(header);
-                errors.push(values);
-                continue;
-
-              }
-              if (companyData && companyData.length) {
-                companyId = companyData[0].id;
-                let projectData = await knex("projects")
                   .select("id")
-                  .where({ project: floorData.C, companyId: companyId, orgId: req.orgId });
-                if (projectData && projectData.length) {
-                  projectId = projectData[0].id;
-                  let buildingData = await knex("buildings_and_phases")
+                  .where({ companyId: floorData.A, orgId: req.orgId });
+                let companyId = null;
+                let projectId = null;
+                let buildingId = null;
+
+                if (!companyData.length) {
+                  console.log('*********************&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&', companyData)
+                  fail++;
+                  let values = _.values(floorData)
+                  values.unshift('Company ID does not exist')
+
+                  //errors.push(header);
+                  errors.push(values);
+                  continue;
+
+                }
+                if (companyData && companyData.length) {
+                  companyId = companyData[0].id;
+                  let projectData = await knex("projects")
                     .select("id")
-                    .where({ 
-                      buildingPhaseCode: floorData.F, 
-                      orgId: req.orgId,
-                      companyId:companyId,
-                      projectId:projectId
-                    });
-                  if (buildingData && buildingData.length) {
-                    buildingId = buildingData[0].id;
+                    .where({ project: floorData.C, companyId: companyId, orgId: req.orgId });
+                  if (projectData && projectData.length) {
+                    projectId = projectData[0].id;
+                    let buildingData = await knex("buildings_and_phases")
+                      .select("id")
+                      .where({
+                        buildingPhaseCode: floorData.F,
+                        orgId: req.orgId,
+                        companyId: companyId,
+                        projectId: projectId
+                      });
+                    if (buildingData && buildingData.length) {
+                      buildingId = buildingData[0].id;
+                    }
                   }
                 }
-              }
 
-              if (!projectId) {
-                fail++;
-                let values = _.values(floorData)
-                values.unshift('Project ID does not exist')
+                if (!projectId) {
+                  fail++;
+                  let values = _.values(floorData)
+                  values.unshift('Project ID does not exist')
 
-                //errors.push(header);
-                errors.push(values);
-                continue;
-              }
+                  //errors.push(header);
+                  errors.push(values);
+                  continue;
+                }
 
-              /**GET PROPERTY TYPE ID OPEN */
-              let propertTypeData = await knex("property_types")
-                .select("id")
-                .where({ propertyTypeCode: floorData.E, orgId: req.orgId });
-              let propertyTypeId = null;
-              if (!propertTypeData.length) {
-                fail++;
-                let values = _.values(floorData)
-                values.unshift('Property Type ID does not exist')
+                /**GET PROPERTY TYPE ID OPEN */
+                let propertTypeData = await knex("property_types")
+                  .select("id")
+                  .where({ propertyTypeCode: floorData.E, orgId: req.orgId });
+                let propertyTypeId = null;
+                if (!propertTypeData.length) {
+                  fail++;
+                  let values = _.values(floorData)
+                  values.unshift('Property Type ID does not exist')
 
-                //errors.push(header);
-                errors.push(values);
-                continue;
-              }
-              if (propertTypeData && propertTypeData.length) {
-                propertyTypeId = propertTypeData[0].id;
-              }
-              /**GET PROPERTY TYPE ID CLOSE */
+                  //errors.push(header);
+                  errors.push(values);
+                  continue;
+                }
+                if (propertTypeData && propertTypeData.length) {
+                  propertyTypeId = propertTypeData[0].id;
+                }
+                /**GET PROPERTY TYPE ID CLOSE */
 
-              /**GET BUILDING PHASE ID OPEN */
+                /**GET BUILDING PHASE ID OPEN */
 
-              if (!buildingId) {
-                fail++;
-                let values = _.values(floorData)
-                values.unshift('Building ID does not exist')
+                if (!buildingId) {
+                  fail++;
+                  let values = _.values(floorData)
+                  values.unshift('Building ID does not exist')
 
-                //errors.push(header);
-                errors.push(values);
-                continue;
-              }
-              /**GET BUILDING PHASE ID CLOSE */
+                  //errors.push(header);
+                  errors.push(values);
+                  continue;
+                }
+                /**GET BUILDING PHASE ID CLOSE */
 
 
                 let checkExist = await knex("floor_and_zones")
@@ -916,10 +955,6 @@ const floorZoneController = {
                 fail +
                 " ) due to validation!";
             }
-
-            let deleteFile = await fs.unlink(file_path, err => {
-              console.log("File Deleting Error " + err);
-            });
             return res.status(200).json({
               message: message,
               errors
@@ -932,13 +967,13 @@ const floorZoneController = {
             ]
           });
         }
-      } else {
-        return res.status(400).json({
-          errors: [
-            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-          ]
-        });
-      }
+      // } else {
+      //   return res.status(400).json({
+      //     errors: [
+      //       { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+      //     ]
+      //   });
+      // }
     } catch (err) {
       console.log(
         "[controllers][propertysetup][importCompanyData] :  Error",
