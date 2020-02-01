@@ -7,17 +7,17 @@ const serviceOrderController = require("../controllers/service-order")
 const router = Router()
 
 router.post("/add-service-order", authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,  serviceOrderController.addServiceOrder)
+  resourceAccessMiddleware.isCMAccessible, serviceOrderController.addServiceOrder)
 router.post('/get-service-orders-list', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,  serviceOrderController.getServiceOrderList)
+  resourceAccessMiddleware.isCMAccessible, serviceOrderController.getServiceOrderList)
 router.post('/get-service-order-details', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,  serviceOrderController.getServiceOrderDetails)
+  resourceAccessMiddleware.isCMAccessible, serviceOrderController.getServiceOrderDetails)
 router.post('/update-service-order', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,  serviceOrderController.updateServiceOrder)
+  resourceAccessMiddleware.isCMAccessible, serviceOrderController.updateServiceOrder)
 router.post('/add-service-order-part', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,  serviceOrderController.addServiceOrderPart)
+  resourceAccessMiddleware.isCMAccessible, serviceOrderController.addServiceOrderPart)
 router.post('/add-service-order-asset', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,  serviceOrderController.addServiceOrderAsset)
+  resourceAccessMiddleware.isCMAccessible, serviceOrderController.addServiceOrderAsset)
 router.post('/delete-service-order-part', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isCMAccessible, serviceOrderController.deleteServiceOrderPart)
 router.post('/delete-service-order-asset', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
@@ -29,7 +29,7 @@ router.post(
 );
 // Service order Export Data 
 router.post('/export-service-order', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,  serviceOrderController.exportServiceOrder)
+  resourceAccessMiddleware.isCMAccessible, serviceOrderController.exportServiceOrder)
 
 router.get('/get-new-service-order-id', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isCMAccessible, serviceOrderController.getNewServiceOrderId)
@@ -42,10 +42,13 @@ router.post('/get-service-appointment-details', authMiddleware.isAuthenticated, 
 router.post('/update-service-order-notes', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isCMAccessible, serviceOrderController.updateServiceOrderNotes)
 router.post('/get-service-order-notes-list', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,  serviceOrderController.getServiceOrderNoteList)
+  resourceAccessMiddleware.isCMAccessible, serviceOrderController.getServiceOrderNoteList)
 router.post('/delete-service-order-remark', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,  serviceOrderController.deleteServiceOrderRemark);
+  resourceAccessMiddleware.isCMAccessible, serviceOrderController.deleteServiceOrderRemark);
 
-router.post('/get-service-order-due-date',authMiddleware.isAuthenticated,roleMiddleware.parseUserPermission,resourceAccessMiddleware.isCMAccessible,serviceOrderController.getServiceOrderDueDate)
+router.post('/get-service-order-due-date', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isCMAccessible, serviceOrderController.getServiceOrderDueDate)
+
+router.post('/update-appointment-status', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isCMAccessible, serviceOrderController.updateAppointmentStatus)
 
 module.exports = router;
