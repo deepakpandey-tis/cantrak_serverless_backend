@@ -2170,7 +2170,7 @@ const serviceRequestController = {
         const currentTime = new Date().getTime();
 
         let currentServiceRequestData = await knex('service_requests').select('*').where({ 'id': payload.serviceRequestId }).first();
-        await knex('requested_by').update({ name: payload.name, mobile: payload.mobile, email: payload.email }).where({ id: currentServiceRequestData.requestedBy });
+        await knex('requested_by').update({ name: req.body.name, mobile: req.body.mobile, email: req.body.email }).where({ id: currentServiceRequestData.requestedBy });
 
 
         /*UPDATE SERVICE REQUEST DATA OPEN */
