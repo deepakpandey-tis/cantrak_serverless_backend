@@ -53,8 +53,8 @@ const customerController = {
           ])
           .where({ 'users.id': customerId });
         return res.status(200).json({
-           userDetails: {...userDetails[0],propertyDetails:userDetails},
-          });
+          userDetails: { ...userDetails[0], propertyDetails: userDetails },
+        });
       }
 
       let filters = {}
@@ -171,7 +171,7 @@ const customerController = {
               "users.id as userId",
               "users.isActive"
             ])
-            .orderBy('users.id','desc')
+            .orderBy('users.id', 'desc')
             .where({
               "application_user_roles.roleId": 4
             })
@@ -261,7 +261,7 @@ const customerController = {
               "users.id as userId",
               "users.isActive"
             ])
-            .orderBy('users.id','desc')
+            .orderBy('users.id', 'desc')
             .where({
               "application_user_roles.roleId": 4,
               "users.orgId": req.orgId
@@ -375,31 +375,17 @@ const customerController = {
       let insertedUser;
       await knex.transaction(async trx => {
         let orgId = req.orgId;
-        // if (!orgId) {
-        //   companyResult = await knex.from('companies').where({ id: req.body.companyId }).returning(['*'])
-        //   orgId = companyResult[0].orgId;
-        // }
 
         console.log("======================", orgId)
-        // let payload = _.omit(req.body, [
-        //   "company",
-        //   "project",
-        //   "building",
-        //   "floor",
-        //   "unitNumber",
-        //   "companyId",
-        //   "floorZoneId",
-        //   "buildingId",
-        //   "projectId",
-        //   "unitId",
-        //   "houseId",
-        //   "houseNo"
-        // ]);
+        let payload = _.omit(req.body, [
+          "buildingPhaseId",
+          "companyId",
+          "floorZoneId",
+          "projectId",
+          "unit",
+        ]);
 
-
-        let payload = req.body;
-
-        //return res.json({payload,message:"dfsdf"})
+        //let payload = req.body;
 
         const schema = Joi.object().keys({
           userType: Joi.number().required(),
@@ -461,6 +447,7 @@ const customerController = {
         if (payload.allowLogin) {
           emailVerified = true;
         }
+        let pass = payload.password;
         payload = _.omit(payload, 'allowLogin')
         let hash = await bcrypt.hash(payload.password, saltRounds);
         payload.password = hash;
@@ -486,38 +473,142 @@ const customerController = {
         let user = insertedUser[0]
         console.log('User: ', insertedUser)
         if (insertedUser && insertedUser.length) {
-          // await emailHelper.sendTemplateEmail({
-          //   to: user.email,
-          //   subject: 'Verify Account',
-          //   template: 'test-email.ejs',
-          //   templateData: {
-          //     fullName: user.name,
-          //     OTP: 'http://localhost:4200/signup/verify-account/' + user.verifyToken
-          //   }
-          // })
-          // let orgAdmins = await knex('application_user_roles')
-          //   .select('userId')
-          //   .where({ 'application_user_roles.orgId': orgId, roleId: 2 })
-          // let Parallel = require('async-parallel')
-          // let admins = await Parallel.map(orgAdmins, async admin => {
-          //   let adminres = await knex('users').where({ id: admin.userId }).select(['name', 'email']).first()
-          //   return adminres;
-          // })
-          // for (let admin of admins) {
-          //   await emailHelper.sendTemplateEmail({
-          //     to: admin.email,
-          //     subject: 'New user added to your organization',
-          //     template: 'message.ejs',
-          //     templateData: { fullName: admin.name, message: 'New user ' + insertedUser[0].name + ' added to your organization. username is ' + insertedUser[0].userName + '.' },
-          //   })
-          // }
+
+          await emailHelper.sendTemplateEmail({ to: payload.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, uuid: uuidv4 } })
 
         }
         trx.commit;
       })
       return res.status(200).json({
         insertedUser, roleInserted,
-        message: "Tenant & companies add successfully!"
+        message: "Tenant & companies created successfully!"
+
+      });
+    } catch (err) {
+      console.log(
+        "[controllers][customers][createCustome] :  Error",
+        err
+      );
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+
+  /*UPDATE CUSTOMER OR TENANT COMPANY */
+  updateCustomer: async (req, res) => {
+    try {
+      let insertedUser;
+      await knex.transaction(async trx => {
+        let orgId = req.orgId;
+
+        console.log("======================", orgId)
+        let payload = _.omit(req.body, [
+          "buildingPhaseId",
+          "companyId",
+          "floorZoneId",
+          "projectId",
+          "unit",
+        ]);
+
+        //let payload = req.body;
+
+        const schema = Joi.object().keys({
+          userType: Joi.number().required(),
+          name: Joi.string().required(),
+          userName: Joi.string().required(),
+          email: Joi.string().required(),
+          mobileNo: Joi.string().allow("").allow(null).optional(),
+          phoneNo: Joi.string().allow("").allow(null).optional(),
+          location: Joi.string().allow("").allow(null).optional(),
+          taxId: Joi.string().allow("").allow(null).optional(),
+          nationalId: Joi.string().allow("").allow(null).optional(),
+          allowLogin: Joi.boolean().allow("").allow(null).optional(),
+          password: Joi.string().allow("").allow(null).optional(),
+          id: Joi.string().required(),
+        });
+
+        const result = Joi.validate(payload, schema);
+        console.log(
+          "[controllers][administrationFeatures][addfloorZone]: JOi Result",
+          result
+        );
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message }
+            ]
+          });
+        }
+
+        /*CHECK DUPLICATION USERNAME , EMAIL & MOBILE NO. OPEN */
+        const existUser = await knex('users').where({ userName: payload.userName });
+        const existEmail = await knex('users').where({ email: payload.email });
+        const existMobile = await knex('users').where({ mobileNo: payload.mobileNo });
+
+        if (existUser && existUser.length) {
+          if (existUser[0].id == payload.id) {
+
+          } else {
+            return res.status(400).json({
+              errors: [
+                { code: 'USER_EXIST_ERROR', message: 'Username already exist !' }
+              ],
+            });
+          }
+        }
+
+        if (existEmail && existEmail.length) {
+
+          if (existEmail[0].id == payload.id) {
+
+          } else {
+            return res.status(400).json({
+              errors: [
+                { code: 'EMAIL_EXIST_ERROR', message: 'Email already exist !' }
+              ],
+            });
+          }
+        }
+
+        if (existMobile && existMobile.length) {
+
+          if (existMobile[0].id == payload.id) {
+
+          } else {
+
+            return res.status(400).json({
+              errors: [
+                { code: 'MOBILE_EXIST_ERROR', message: 'MobileNo already exist !' }
+              ],
+            });
+          }
+        }
+        /*CHECK DUPLICATION USERNAME , EMAIL & MOBILE NO. CLOSE */
+        let emailVerified = false;
+        if (payload.allowLogin) {
+          emailVerified = true;
+        }
+        payload = _.omit(payload, 'allowLogin')
+        let currentTime = new Date().getTime()
+        insertedUser = await knex("users")
+          .update({ ...payload, emailVerified: emailVerified, updatedAt: currentTime, orgId: orgId })
+          .returning(["*"])
+          .transacting(trx)
+          .where({ id: payload.id });
+        console.log(payload);
+
+        /*INSERT HOUSE ID OPEN */
+        // let houseResult = await knex("user_house_allocation")
+        //   .insert({ houseId: req.body.unitId, userId: insertedUser[0].id, status: 1, orgId: orgId, createdAt: currentTime, updatedAt: currentTime })
+        //   .returning(["*"])
+        //   .transacting(trx);
+        /*INSERT HOUSE ID CLOSE */
+        trx.commit;
+      })
+      return res.status(200).json({
+        insertedUser,
+        message: "Tenant & companies updated successfully!"
 
       });
     } catch (err) {

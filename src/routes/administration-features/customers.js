@@ -8,6 +8,7 @@ router.get('/reset-password',authMiddleware.isAuthenticated,customerMiddleware.r
 router.post('/disassociate-house',authMiddleware.isAuthenticated,customerMiddleware.disassociateHouse)
 
 router.post('/create-customer',authMiddleware.isAuthenticated,customerMiddleware.createCustomer)
+router.post('/update-customer',authMiddleware.isAuthenticated,customerMiddleware.updateCustomer)
 
 
 

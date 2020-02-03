@@ -1629,7 +1629,8 @@ const serviceRequestController = {
             "asset_master.assetName as assetName",
             "asset_master.model as model",
             "asset_category_master.categoryName as categoryName",
-            "companies.companyName as companyName"
+            "companies.companyName as companyName",
+            "assigned_assets.id as aid"
           ])
           .where({
             entityType: "service_requests",
@@ -1667,7 +1668,8 @@ const serviceRequestController = {
             "asset_master.assetName as assetName",
             "asset_master.model as model",
             "asset_category_master.categoryName as categoryName",
-            "companies.companyName as companyName"
+            "companies.companyName as companyName",
+            "assigned_assets.id as aid"
           ])
           .where({
             entityType: "service_requests",
@@ -1706,7 +1708,7 @@ const serviceRequestController = {
       let result;
       let orgId = req.orgId;
       await knex.transaction(async trx => {
-        let payload = _.omit(req.body, ["images", "isSo","mobile","email","name"]);
+        let payload = _.omit(req.body, ["images", "isSo", "mobile", "email", "name"]);
         const schema = Joi.object().keys({
           serviceRequestId: Joi.number().required(),
           areaName: Joi.string()
@@ -1762,7 +1764,7 @@ const serviceRequestController = {
 
         // Insert into requested by
 
-        const requestedByResult = await knex('requested_by').insert({name:req.body.name,mobile:req.body.mobile,email:req.body.email}).returning(['*'])
+        const requestedByResult = await knex('requested_by').insert({ name: req.body.name, mobile: req.body.mobile, email: req.body.email }).returning(['*'])
 
         /*UPDATE SERVICE REQUEST DATA OPEN */
         let common;
@@ -2024,9 +2026,9 @@ const serviceRequestController = {
         serviceResult = result[0];
 
         serviceResult.uploadedImages = await knex.from('images')
-        // .where({ "entityId": incidentRequestPayload.id, "entityType": "service_requests", orgId: orgId })
-        .where({ "entityId": id, "entityType": "service_requests" })
-        .select('s3Url', 'title', 'name','id');
+          // .where({ "entityId": incidentRequestPayload.id, "entityType": "service_requests", orgId: orgId })
+          .where({ "entityId": id, "entityType": "service_requests" })
+          .select('s3Url', 'title', 'name', 'id');
 
         // let problem = await knex
         //   .from("service_problems")
@@ -2072,7 +2074,7 @@ const serviceRequestController = {
         problemResult = await Parallel.map(problemResult, async pd => {
           imagesResult = await knex.from('images')
             .where({ "entityId": id, "entityType": "service_problems" })
-            .select('s3Url', 'title', 'name','id');
+            .select('s3Url', 'title', 'name', 'id');
           return {
             ...pd,
             uploadedImages: imagesResult
@@ -2081,10 +2083,10 @@ const serviceRequestController = {
 
 
         let location = await knex("location_tags")
-          .innerJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
-          .select(["location_tags.locationTagId",'location_tags_master.title'])
+          .innerJoin('location_tags_master', 'location_tags.locationTagId', 'location_tags_master.id')
+          .select(["location_tags.locationTagId", 'location_tags_master.title'])
           .where({ entityId: id, entityType: "service_requests" });
-        locationTags = _.uniqBy(location,'title')
+        locationTags = _.uniqBy(location, 'title')
       });
 
       return res.status(200).json({
@@ -2109,7 +2111,7 @@ const serviceRequestController = {
       let result;
       let orgId = req.orgId;
       await knex.transaction(async trx => {
-        let payload = _.omit(req.body, ["images","name","mobile","email"]);
+        let payload = _.omit(req.body, ["images", "name", "mobile", "email"]);
         const schema = Joi.object().keys({
           serviceRequestId: Joi.number().required(),
           areaName: Joi.string()
@@ -2167,7 +2169,8 @@ const serviceRequestController = {
         }
         const currentTime = new Date().getTime();
 
-        //const requestedByResult = await knex('requested_by').update({name:payload.name,mobile:payload.mobile,email:payload.email}).where({id})
+        let currentServiceRequestData = await knex('service_requests').select('*').where({ 'id': payload.serviceRequestId }).first();
+        await knex('requested_by').update({ name: payload.name, mobile: payload.mobile, email: payload.email }).where({ id: currentServiceRequestData.requestedBy });
 
 
         /*UPDATE SERVICE REQUEST DATA OPEN */
@@ -2247,7 +2250,7 @@ const serviceRequestController = {
         // }
 
         // Discard if some location tags already exists
-        
+
 
         let locationTagIds = []
         let finalLocationTags = _.uniq(payload.locationTags)
@@ -2456,20 +2459,20 @@ const serviceRequestController = {
       });
     }
   },
-  updateServiceRequestProjectId:async(req,res) => {
+  updateServiceRequestProjectId: async (req, res) => {
     try {
-      const {projectId,serviceRequestId} = req.body;
-       let result = await knex('service_requests').update({projectId:projectId}).where({id:serviceRequestId}).returning(['*'])
+      const { projectId, serviceRequestId } = req.body;
+      let result = await knex('service_requests').update({ projectId: projectId }).where({ id: serviceRequestId }).returning(['*'])
       return res.status(200).json({
         data: {
-          updated:true,
+          updated: true,
           result
         }
       })
-    } catch(err) {
-return res.status(200).json({
+    } catch (err) {
+      return res.status(200).json({
         data: {
-          update:false
+          update: false
         }
       })
     }
