@@ -14,7 +14,6 @@ const assetController = {
 
   getAssetList: async (req, res) => {
 
-    res.json("dsfsdfsd")
     // name, model, area, category
     try {
 
