@@ -1295,10 +1295,9 @@ const chargeController = {
       //deletedRow = quotationsData;
       let filtered = {};
       if (quotationsData && quotationsData.invoiceData) {
-        let invoiceData = quotationsData.invoiceData[0];
+        let invoiceData = quotationsData.invoiceData;
         console.log("invoiceData", invoiceData);
         let chargesData = invoiceData.charges;
-        updateQuotationInvoiceData = chargesData;
 
         filtered.charges = chargesData.filter(function (chargesData) {
           return chargesData.id !== chargeId;
@@ -1318,15 +1317,15 @@ const chargeController = {
         console.log("subTotalAmit", subTotalAmt);
 
 
-        let subChargesTotalAmt = 0;
+        let subPartsTotalAmt = 0;
         let ctotal = 0;
         for (let q = 0; q < invoiceData.parts.length; q++) {
           ctotal = invoiceData.parts[q].unitCost * invoiceData.parts[q].quantity;
-          subChargesTotalAmt += ctotal;
+          subPartsTotalAmt += ctotal;
         }
         
         let subTotalFinal = 0;
-        subTotalFinal = (subTotalAmt + subChargesTotalAmt);
+        subTotalFinal = (subTotalAmt + subPartsTotalAmt);
         let grandTotal = 0;
         grandTotal = subTotalFinal + (subTotalFinal * invoiceData.vatRate / 100);
 

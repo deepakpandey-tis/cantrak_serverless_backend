@@ -1839,7 +1839,7 @@ const partsController = {
             //deletedRow = quotationsData;
             let filtered = {};
             if (quotationsData && quotationsData.invoiceData) {
-                let invoiceData = quotationsData.invoiceData[0];
+                let invoiceData = quotationsData.invoiceData;
                 console.log("invoiceData", invoiceData);
                 let partsData = invoiceData.parts;
                 
