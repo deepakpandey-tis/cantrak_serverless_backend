@@ -1092,180 +1092,180 @@ const partsController = {
     importPartData: async (req, res) => {
         //req.setTimeout(900000);
         try {
-           // if (req.file) {
-                // console.log(req.file)
-                // let tempraryDirectory = null;
-                // if (process.env.IS_OFFLINE) {
-                //     tempraryDirectory = 'tmp/';
-                // } else {
-                //     tempraryDirectory = '/tmp/';
-                // }
-                // let resultData = null;
-                // let file_path = tempraryDirectory + req.file.filename;
-                // let wb = XLSX.readFile(file_path, { type: 'string' });
-                // let ws = wb.Sheets[wb.SheetNames[0]];
-                // let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
-                // //data         = JSON.stringify(data);
-                // console.log("+++++++++++++", data, "=========")
-                let data = req.body;
-                let totalData = data.length - 1;
-                let fail = 0;
-                let success = 0;
-                let result = null;
-                let errors = []
-                let header = Object.values(data[0]);
-                header.unshift('Error');
-                errors.push(header)
+            // if (req.file) {
+            // console.log(req.file)
+            // let tempraryDirectory = null;
+            // if (process.env.IS_OFFLINE) {
+            //     tempraryDirectory = 'tmp/';
+            // } else {
+            //     tempraryDirectory = '/tmp/';
+            // }
+            // let resultData = null;
+            // let file_path = tempraryDirectory + req.file.filename;
+            // let wb = XLSX.readFile(file_path, { type: 'string' });
+            // let ws = wb.Sheets[wb.SheetNames[0]];
+            // let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
+            // //data         = JSON.stringify(data);
+            // console.log("+++++++++++++", data, "=========")
+            let data = req.body;
+            let totalData = data.length - 1;
+            let fail = 0;
+            let success = 0;
+            let result = null;
+            let errors = []
+            let header = Object.values(data[0]);
+            header.unshift('Error');
+            errors.push(header)
 
-                if (data[0].A == "Ã¯Â»Â¿PART_CODE" || data[0].A == "PART_CODE" &&
-                    data[0].B == "PART_NAME" &&
-                    data[0].C == "UNIT_OF_MEASURE" &&
-                    data[0].D == "PART_CATEGORY_CODE" &&
-                    data[0].E == "COMPANY_ID" &&
-                    data[0].F == "quantity" &&
-                    data[0].G == "unit_cost"
-                ) {
+            if (data[0].A == "Ã¯Â»Â¿PART_CODE" || data[0].A == "PART_CODE" &&
+                data[0].B == "PART_NAME" &&
+                data[0].C == "UNIT_OF_MEASURE" &&
+                data[0].D == "PART_CATEGORY_CODE" &&
+                data[0].E == "COMPANY_ID" &&
+                data[0].F == "quantity" &&
+                data[0].G == "unit_cost"
+            ) {
 
-                    if (data.length > 0) {
+                if (data.length > 0) {
 
-                        let i = 0;
-                        for (let partData of data) {
-                            i++;
+                    let i = 0;
+                    for (let partData of data) {
+                        i++;
 
-                            if (i > 1) {
-                                let currentTime = new Date().getTime()
-                                // let checkExist = await knex('asset_master').select('companyName')
-                                //   .where({ companyName: partData.B, orgId: req.orgId })
-                                //   console.log("Check list company: ", checkExist);
-                                //if (checkExist.length < 1) {
+                        if (i > 1) {
+                            let currentTime = new Date().getTime()
+                            // let checkExist = await knex('asset_master').select('companyName')
+                            //   .where({ companyName: partData.B, orgId: req.orgId })
+                            //   console.log("Check list company: ", checkExist);
+                            //if (checkExist.length < 1) {
 
-                                // Check if this asset category exists
-                                // if not create new and put that id
-                                let partCategoryId = ''
-                                const cat = await knex('part_category_master').where({ categoryName: partData.D, orgId: req.orgId }).select('id')
-                                if (cat && cat.length) {
-                                    partCategoryId = cat[0].id;
-                                } else {
-                                    const catResult = await knex("part_category_master")
-                                        .insert({
-                                            categoryName: partData.D,
-                                            orgId: req.orgId,
-                                            createdAt: currentTime,
-                                            updatedAt: currentTime
-                                        })
-                                        .returning(["id"]);
-                                    partCategoryId = catResult[0].id;
+                            // Check if this asset category exists
+                            // if not create new and put that id
+                            let partCategoryId = ''
+                            const cat = await knex('part_category_master').where({ categoryName: partData.D, orgId: req.orgId }).select('id')
+                            if (cat && cat.length) {
+                                partCategoryId = cat[0].id;
+                            } else {
+                                const catResult = await knex("part_category_master")
+                                    .insert({
+                                        categoryName: partData.D,
+                                        orgId: req.orgId,
+                                        createdAt: currentTime,
+                                        updatedAt: currentTime
+                                    })
+                                    .returning(["id"]);
+                                partCategoryId = catResult[0].id;
+                            }
+
+
+                            let companyData = await knex("companies")
+                                .select("id")
+                                .where({ companyId: partData.E, orgId: req.orgId });
+                            let companyId = null;
+                            if (!companyData.length) {
+                                fail++;
+                                let values = _.values(partData)
+                                values.unshift('Company ID does not exists.')
+                                errors.push(values);
+                                continue;
+                            }
+                            if (companyData && companyData.length) {
+                                companyId = companyData[0].id;
+                            }
+
+
+                            let checkExist = await knex("part_master")
+                                .select("id")
+                                .where({
+                                    partCode: partData.A,
+                                    partName: partData.B,
+                                    orgId: req.orgId
+                                });
+                            if (checkExist.length < 1) {
+
+                                let insertData = {
+                                    orgId: req.orgId,
+                                    partCode: partData.A,
+                                    partName: partData.B,
+                                    unitOfMeasure: partData.C,
+                                    partCategory: partCategoryId,
+                                    companyId: companyId,
+                                    createdAt: currentTime,
+                                    updatedAt: currentTime
                                 }
 
+                                resultData = await knex.insert(insertData).returning(['*']).into('part_master');
 
-                                let companyData = await knex("companies")
-                                    .select("id")
-                                    .where({ companyId: partData.E, orgId: req.orgId });
-                                let companyId = null;
-                                if (!companyData.length) {
+
+                                if (isNaN(partData.G)) {
                                     fail++;
                                     let values = _.values(partData)
-                                    values.unshift('Company ID does not exists.')
+                                    values.unshift('Unit cost is not a number.')
                                     errors.push(values);
                                     continue;
                                 }
-                                if (companyData && companyData.length) {
-                                    companyId = companyData[0].id;
-                                }
 
-
-                                let checkExist = await knex("part_master")
-                                    .select("id")
-                                    .where({
-                                        partCode: partData.A,
-                                        partName: partData.B,
-                                        orgId: req.orgId
-                                    });
-                                if (checkExist.length < 1) {
-
-                                    let insertData = {
-                                        orgId: req.orgId,
-                                        partCode: partData.A,
-                                        partName: partData.B,
-                                        unitOfMeasure: partData.C,
-                                        partCategory: partCategoryId,
-                                        companyId: companyId,
-                                        createdAt: currentTime,
-                                        updatedAt: currentTime
-                                    }
-
-                                    resultData = await knex.insert(insertData).returning(['*']).into('part_master');
-
-                                    
-                                    if (isNaN(partData.G)){
-                                        fail++;
-                                        let values = _.values(partData)
-                                        values.unshift('Unit cost is not a number.')
-                                        errors.push(values);
-                                        continue;
-                                    }
-
-                                    if(isNaN(partData.F)){
-                                        fail++;
-                                        let values = _.values(partData)
-                                        values.unshift('Quantity is not a number.')
-                                        errors.push(values);
-                                        continue;
-                                    }
-
-                                    let quantityData = { partId: resultData[0].id, unitCost: partData.G, quantity: partData.F, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId };
-                                    let partQuantityResult = await knex.insert(quantityData).returning(['*']).into('part_ledger');
-
-                                    if (resultData && resultData.length) {
-                                        success++;
-                                    }
-                                } else {
+                                if (isNaN(partData.F)) {
                                     fail++;
                                     let values = _.values(partData)
-                                    values.unshift('Part name with corresponding part code already exists.')
+                                    values.unshift('Quantity is not a number.')
                                     errors.push(values);
+                                    continue;
                                 }
 
+                                let quantityData = { partId: resultData[0].id, unitCost: partData.G, quantity: partData.F, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId };
+                                let partQuantityResult = await knex.insert(quantityData).returning(['*']).into('part_ledger');
+
+                                if (resultData && resultData.length) {
+                                    success++;
+                                }
+                            } else {
+                                fail++;
+                                let values = _.values(partData)
+                                values.unshift('Part name with corresponding part code already exists.')
+                                errors.push(values);
                             }
+
                         }
-                        let message = null;
-                        if (totalData == success) {
-                            message =
-                                "System has processed processed ( " +
-                                totalData +
-                                " ) entries and added them successfully!";
-                        } else {
-                            message =
-                                "System has processed processed ( " +
-                                totalData +
-                                " ) entries out of which only ( " +
-                                success +
-                                " ) are added and others are failed ( " +
-                                fail +
-                                " ) due to validation!";
-                        }
-                        //let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
-                        return res.status(200).json({
-                            message: message,
-                            errors
-                        });
                     }
-
-                } else {
-
-                    return res.status(400).json({
-                        errors: [
-                            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-                        ]
+                    let message = null;
+                    if (totalData == success) {
+                        message =
+                            "System has processed processed ( " +
+                            totalData +
+                            " ) entries and added them successfully!";
+                    } else {
+                        message =
+                            "System has processed processed ( " +
+                            totalData +
+                            " ) entries out of which only ( " +
+                            success +
+                            " ) are added and others are failed ( " +
+                            fail +
+                            " ) due to validation!";
+                    }
+                    //let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
+                    return res.status(200).json({
+                        message: message,
+                        errors
                     });
                 }
+
+            } else {
+
+                return res.status(400).json({
+                    errors: [
+                        { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+                    ]
+                });
+            }
             // } else {
 
-                // return res.status(400).json({
-                //     errors: [
-                //         { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-                //     ]
-                // });
+            // return res.status(400).json({
+            //     errors: [
+            //         { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+            //     ]
+            // });
 
             // }
 
@@ -1387,8 +1387,8 @@ const partsController = {
             let serviceOrderResult = await knex('service_orders').where({ orgId: req.orgId, serviceRequestId: serviceRequestId }).returning(['*']).first();
 
             console.log("serviceRequestPArtsData", serviceOrderResult);
-            
-            if(!serviceOrderResult){
+
+            if (!serviceOrderResult) {
                 pagination.total = 0;
                 pagination.per_page = per_page;
                 pagination.offset = offset;
@@ -1834,49 +1834,56 @@ const partsController = {
             let getQuotationId = await knex('assigned_parts').where({ id, "entityType": "quotations" }).select('entityId', 'partId');
             let quotationId = getQuotationId[0].entityId;
             let partId = getQuotationId[0].partId;
-            let quotationsData = await knex('quotations').where({ "id": quotationId }).returning(['*']);
+            let quotationsData = await knex('quotations').where({ "id": quotationId }).returning(['*']).first();
             console.log("quotationsJsonArray", quotationsData);
             //deletedRow = quotationsData;
-            let invoiceData = quotationsData[0].invoiceData[0];
-            console.log("invoiceData", invoiceData);
-            let partsData = invoiceData.parts;
-            let filtered = {}
+            let filtered = {};
+            if (quotationsData && quotationsData.invoiceData) {
+                let invoiceData = quotationsData.invoiceData;
+                console.log("invoiceData", invoiceData);
+                let partsData = invoiceData.parts;
+                
 
-            filtered.parts = partsData.filter(function (partsData) {
-                return partsData.id !== partId;
-            });
-            console.log("filtererdPartsLength", filtered.parts);
+                filtered.parts = partsData.filter(function (partsData) {
+                    return partsData.id !== partId;
+                });
 
-            let subTotalAmt = 0;
-            let stotal = 0;
-            for (let i = 0; i < filtered.parts.length; i++) {
-                console.log("idata", filtered.parts[i].quantity);
-                stotal = filtered.parts[i].unitCost * filtered.parts[i].quantity;
-                console.log("stotal", stotal);
-                subTotalAmt += stotal;
+                console.log("filtererdPartsLength", filtered.parts);
+
+                let subTotalAmt = 0;
+                let stotal = 0;
+                for (let i = 0; i < filtered.parts.length; i++) {
+                    console.log("idata", filtered.parts[i].quantity);
+                    stotal = filtered.parts[i].unitCost * filtered.parts[i].quantity;
+                    console.log("stotal", stotal);
+                    subTotalAmt += stotal;
+                }
+
+                console.log("subTotalAmt", subTotalAmt);
+
+
+                let subChargesTotalAmt = 0;
+                let ctotal = 0;
+                for (let q = 0; q < invoiceData.charges.length; q++) {
+                    ctotal = invoiceData.charges[q].rate * invoiceData.charges[q].totalHours;
+                    subChargesTotalAmt += ctotal;
+                }
+                let subTotalFinal = 0;
+                subTotalFinal = (subTotalAmt + subChargesTotalAmt);
+                let grandTotal = 0;
+                grandTotal = subTotalFinal + (subTotalFinal * invoiceData.vatRate / 100);
+
+                console.log("grandTotal", grandTotal);
+
+                filtered.charges = invoiceData.charges;
+                filtered.vatId = invoiceData.vatId;
+                filtered.vatRate = invoiceData.vatRate;
+                filtered.subTotal = subTotalFinal;
+                filtered.grandTotal = grandTotal;
+
+
             }
 
-            console.log("subTotalAmit", subTotalAmt);
-
-
-            let subChargesTotalAmt = 0;
-            let ctotal = 0;
-            for (let q = 0; q < invoiceData.charges.length; q++) {
-                ctotal = invoiceData.charges[q].rate * invoiceData.charges[q].totalHours;
-                subChargesTotalAmt += ctotal;
-            }
-            let subTotalFinal = 0;
-            subTotalFinal = (subTotalAmt + subChargesTotalAmt);
-            let grandTotal = 0;
-            grandTotal = subTotalFinal + (subTotalFinal * invoiceData.vatRate / 100);
-
-            console.log("grandTotal", grandTotal);
-
-            filtered.charges = invoiceData.charges;
-            filtered.vatId = invoiceData.vatId;
-            filtered.vatRate = invoiceData.vatRate;
-            filtered.subTotal = subTotalFinal;
-            filtered.grandTotal = grandTotal;
 
             // deleteRow = filtered;
             const deletedRow = await knex('assigned_parts').where({ id, "entityType": "quotations" }).del().returning(['*'])
@@ -1894,6 +1901,82 @@ const partsController = {
             return res.status(200).json({
                 data: {
                     updateQuotationInvoiceData,
+                    message: 'Deleted row successfully!'
+                }
+            })
+        } catch (err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    deleteQuotationAssignedPartsNew: async (req, res) => {
+        try {
+            const id = req.body.id;
+            const currentTime = new Date().getTime();
+
+            let getQuotationId = await knex('assigned_parts').where({ id, "entityType": "quotations" }).select('entityId', 'partId');
+            let quotationId = getQuotationId[0].entityId;
+            let partId = getQuotationId[0].partId;
+            let quotationsData = await knex('quotations').where({ "id": quotationId }).returning(['*']);
+            //console.log("quotationsJsonArray", quotationsData);
+            //deletedRow = quotationsData;
+            // let invoiceData = quotationsData[0].invoiceData[0];
+            // console.log("invoiceData", invoiceData);
+            // let partsData = invoiceData.parts;
+            // let filtered = {}
+
+            // filtered.parts = partsData.filter(function (partsData) {
+            //     return partsData.id !== partId;
+            // });
+            // console.log("filtererdPartsLength", filtered.parts);
+
+            // let subTotalAmt = 0;
+            // let stotal = 0;
+            // for (let i = 0; i < filtered.parts.length; i++) {
+            //     console.log("idata", filtered.parts[i].quantity);
+            //     stotal = filtered.parts[i].unitCost * filtered.parts[i].quantity;
+            //     console.log("stotal", stotal);
+            //     subTotalAmt += stotal;
+            // }
+
+            // console.log("subTotalAmit", subTotalAmt);
+
+
+            // let subChargesTotalAmt = 0;
+            // let ctotal = 0;
+            // for (let q = 0; q < invoiceData.charges.length; q++) {
+            //     ctotal = invoiceData.charges[q].rate * invoiceData.charges[q].totalHours;
+            //     subChargesTotalAmt += ctotal;
+            // }
+            // let subTotalFinal = 0;
+            // subTotalFinal = (subTotalAmt + subChargesTotalAmt);
+            // let grandTotal = 0;
+            // grandTotal = subTotalFinal + (subTotalFinal * invoiceData.vatRate / 100);
+
+            // console.log("grandTotal", grandTotal);
+
+            // filtered.charges = invoiceData.charges;
+            // filtered.vatId = invoiceData.vatId;
+            // filtered.vatRate = invoiceData.vatRate;
+            // filtered.subTotal = subTotalFinal;
+            // filtered.grandTotal = grandTotal;
+
+            // deleteRow = filtered;
+            const deletedRow = await knex('assigned_parts').where({ id, "entityType": "quotations" }).del().returning(['*'])
+
+            // let updateQuotationInvoiceData = await knex
+            //     .update({
+            //         invoiceData: JSON.stringify(filtered),
+            //         updatedAt: currentTime
+            //     })
+            //     .where({ id: quotationId })
+            //     .returning(["*"])
+            //     .into("quotations");
+
+
+            return res.status(200).json({
+                data: {
                     message: 'Deleted row successfully!'
                 }
             })

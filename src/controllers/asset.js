@@ -16,9 +16,9 @@ const assetController = {
       let categories
       let filters = req.body;
       if (filters) {
-        categories = await knex('asset_category_master').select().where({ ...filters, orgId: req.orgId,isActive:true })
+        categories = await knex('asset_category_master').select().where({ ...filters, orgId: req.orgId, isActive: true })
       } else {
-        categories = await knex('asset_category_master').select().where({ orgId: req.orgId,isActive:true });
+        categories = await knex('asset_category_master').select().where({ orgId: req.orgId, isActive: true });
       }
       res.status(200).json({
         data: {
@@ -514,7 +514,7 @@ const assetController = {
           .where({ orgId: req.orgId }),
 
         knex("asset_master")
-          .select(["id", "assetName", "model", "barcode", "areaName","assetSerial"])
+          .select(["id", "assetName", "model", "barcode", "areaName", "assetSerial"])
           .where({ assetCategoryId, companyId })
           .offset(offset)
           .limit(per_page)
@@ -1972,94 +1972,94 @@ const assetController = {
   importAssetData: async (req, res) => {
 
     try {
-     // if (req.file) {
-       // console.log(req.file)
-       // let tempraryDirectory = null;
-        // if (process.env.IS_OFFLINE) {
-        //   tempraryDirectory = 'tmp/';
-        // } else {
-        //   tempraryDirectory = '/tmp/';
-        // }
+      // if (req.file) {
+      // console.log(req.file)
+      // let tempraryDirectory = null;
+      // if (process.env.IS_OFFLINE) {
+      //   tempraryDirectory = 'tmp/';
+      // } else {
+      //   tempraryDirectory = '/tmp/';
+      // }
       //  let resultData = null;
-    //    let file_path = tempraryDirectory + req.file.filename;
+      //    let file_path = tempraryDirectory + req.file.filename;
       //  let wb = XLSX.readFile(file_path, { type: "base64", cellDates: true });
       //  let ws = wb.Sheets[wb.SheetNames[0]];
       //  let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
-        //data         = JSON.stringify(data);
-     ///   console.log("+++++++++++++", data, "=========")
-     let data = req.body;
-     let totalData = data.length - 1;
-        let fail = 0;
-        let success = 0;
-        let result = null;
-        let errors = []
-        let header = Object.values(data[0]);
-        header.unshift('Error');
-        errors.push(header)
+      //data         = JSON.stringify(data);
+      ///   console.log("+++++++++++++", data, "=========")
+      let data = req.body;
+      let totalData = data.length - 1;
+      let fail = 0;
+      let success = 0;
+      let result = null;
+      let errors = []
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
 
-        if (data[0].A == "ASSET_CODE" || data[0].A == "Ã¯Â»Â¿ASSET_CODE" &&
-          (data[0].B == "ASSET_NAME" &&
-            data[0].C == "UNIT_OF_MEASURE" &&
-            data[0].D == "MODEL_CODE" &&
-            data[0].E == "ASSET_CATEGORY_NAME" &&
-            data[0].F == "COMPANY" &&
-            data[0].G == "PRICE" &&
-            data[0].H == "ASSET_SERIAL_NO" &&
-            data[0].I == "INSTALMENT_DATE" &&
-            data[0].J == "WARRANTY_DATE" &&
-            data[0].K == "BARCODE" &&
-            data[0].L == "PARENT_ASSET_CODE" &&
-            data[0].M == "LOCATION" &&
-            data[0].N == "ASSIGN_USER" &&
-            data[0].O == "ASSIGN_TEAM" &&
-            data[0].P == "ASSIGN_VENDOR" &&
-            data[0].Q == "ASSIGN_INFORMATION"
-          )
-        ) {
+      if (data[0].A == "ASSET_CODE" || data[0].A == "Ã¯Â»Â¿ASSET_CODE" &&
+        (data[0].B == "ASSET_NAME" &&
+          data[0].C == "UNIT_OF_MEASURE" &&
+          data[0].D == "MODEL_CODE" &&
+          data[0].E == "ASSET_CATEGORY_NAME" &&
+          data[0].F == "COMPANY" &&
+          data[0].G == "PRICE" &&
+          data[0].H == "ASSET_SERIAL_NO" &&
+          data[0].I == "INSTALMENT_DATE" &&
+          data[0].J == "WARRANTY_DATE" &&
+          data[0].K == "BARCODE" &&
+          data[0].L == "PARENT_ASSET_CODE" &&
+          data[0].M == "LOCATION" &&
+          data[0].N == "ASSIGN_USER" &&
+          data[0].O == "ASSIGN_TEAM" &&
+          data[0].P == "ASSIGN_VENDOR" &&
+          data[0].Q == "ASSIGN_INFORMATION"
+        )
+      ) {
 
-          if (data.length > 0) {
+        if (data.length > 0) {
 
-            let i = 0;
-            for (let assetData of data) {
-              i++;
+          let i = 0;
+          for (let assetData of data) {
+            i++;
 
-              console.log('ASSET DATA:**************************************',assetData)
+            console.log('ASSET DATA:**************************************', assetData)
 
-              if (i > 1) {
+            if (i > 1) {
 
-                let companyId = ''
-                if (assetData.F) {
-                  let companyResult = await knex('companies').select('id').where({ companyId: assetData.F, orgId: req.orgId }).first()
-                  if (companyResult && companyResult.id) {
-                    companyId = companyResult.id
-                  } else {
-                    fail++;
-                    let values = _.values(assetData)
-                    values.unshift('Company ID does not exists.')
-                    errors.push(values);
-                    continue;
-                  }
+              let companyId = ''
+              if (assetData.F) {
+                let companyResult = await knex('companies').select('id').where({ companyId: assetData.F, orgId: req.orgId }).first()
+                if (companyResult && companyResult.id) {
+                  companyId = companyResult.id
                 } else {
+                  fail++;
+                  let values = _.values(assetData)
+                  values.unshift('Company ID does not exists.')
+                  errors.push(values);
                   continue;
                 }
+              } else {
+                continue;
+              }
 
-                let assetCategoryId = ''
-                const cat = await knex('asset_category_master').where({ categoryName: assetData.E, orgId: req.orgId }).select('id')
-                if (cat && cat.length) {
-                  assetCategoryId = cat[0].id;
-                } else {
-                  const catResult = await knex('asset_category_master').insert({ categoryName: assetData.E, orgId: req.orgId }).returning(['id'])
-                  assetCategoryId = catResult[0].id;
-                }
-                let price = 0;
-                if (assetData.G) {
-                  price = assetData.G;
-                }
+              let assetCategoryId = ''
+              const cat = await knex('asset_category_master').where({ categoryName: assetData.E, orgId: req.orgId }).select('id')
+              if (cat && cat.length) {
+                assetCategoryId = cat[0].id;
+              } else {
+                const catResult = await knex('asset_category_master').insert({ categoryName: assetData.E, orgId: req.orgId }).returning(['id'])
+                assetCategoryId = catResult[0].id;
+              }
+              let price = 0;
+              if (assetData.G) {
+                price = assetData.G;
+              }
 
 
-                /*GET TEAM ID TO TEAM CODE OPEN */
-                let teamId = null;
-                if(assetData.O){
+              /*GET TEAM ID TO TEAM CODE OPEN */
+              let teamId = null;
+              if (assetData.O) {
                 let teamResult = await knex('teams').where({ teamCode: assetData.O, orgId: req.orgId }).select('teamId')
                 if (!teamResult.length) {
                   fail++;
@@ -2073,142 +2073,142 @@ const assetController = {
                   teamId = teamResult[0].teamId;
                 }
               }
-                /*GET TEAM ID TO TEAM CODE CLOSE */
+              /*GET TEAM ID TO TEAM CODE CLOSE */
 
-                /*GET PARENT ID TO PARENT ASSET CODE OPEN */
+              /*GET PARENT ID TO PARENT ASSET CODE OPEN */
 
-                let parentId= null;
-                if (assetData.L) {
-                  let parentResult = await knex('asset_master').where({ assetCode: assetData.L, orgId: req.orgId }).select('id')
-                  if (!parentResult.length) {
-                    fail++;
-                    let values = _.values(assetData)
-                    values.unshift('Parent asset id does not exists.')
-                    errors.push(values);
-                    continue;
-                  }
-
-                  if (parentResult.length) {
-                    parentId = parentResult[0].id;
-                  }
-                }
-                /*GET PARENT ID TO PARENT CODE CLOSE */
-
-
-                 /*GET LOCATION ID BY LOCATION CODE OPEN */
-
-                 let locationId = null;
-                 if (assetData.M) {
-                   let locationResult = await knex('location_tags_master').where({ title: assetData.M, orgId: req.orgId }).select('id')
-                   if (!locationResult.length) {
-                     fail++;
-                     let values = _.values(assetData)
-                     values.unshift('Location Tag does not exists.')
-                     errors.push(values);
-                     continue;
-                   }
- 
-                   if (locationResult.length) {
-                    locationId = locationResult[0].id;
-                   }
-                 }
-                 /*GET LOCATION ID BY LOCATION CODE CLOSE */
-
-
-                let checkExist = await knex("asset_master")
-                  .select("id")
-                  .where({ assetCode: assetData.A, assetName: assetData.B, orgId: req.orgId });
-
-                if (checkExist.length < 1) {
-
-                  let currentTime = new Date().getTime();
-
-                  let installDate = '';
-                  let expireDate = '';
-                  if (assetData.I) {
-                    installDate = moment(assetData.I).format()
-                  }
-                  if (assetData.J) {
-                    expireDate = moment(assetData.J).format()
-                  }
-
-                  let insertData = {
-                    orgId: req.orgId,
-                    assetCode: assetData.A,
-                    assetName: assetData.B,
-                    unitOfMeasure: assetData.C,
-                    model: assetData.D,
-                    price: assetData.G,
-                    companyId: companyId,
-                    assetCategoryId,
-                    createdAt: currentTime,
-                    updatedAt: currentTime,
-                    assignedTeams: teamId,
-                    parentAssetId: parentId,
-                    assetSerial: assetData.H,
-                    installationDate: installDate,
-                    warrentyExpiration: expireDate,
-                    barcode: assetData.K,
-                    locationId: locationId,
-                    assignedUsers: assetData.N,
-                    assignedVendors: assetData.P,
-                    additionalInformation: assetData.Q
-                  }
-
-                  resultData = await knex.insert(insertData).returning(['*']).into('asset_master');
-
-                  if (resultData && resultData.length) {
-                    success++;
-                  }
-
-                } else {
+              let parentId = null;
+              if (assetData.L) {
+                let parentResult = await knex('asset_master').where({ assetCode: assetData.L, orgId: req.orgId }).select('id')
+                if (!parentResult.length) {
                   fail++;
                   let values = _.values(assetData)
-                  values.unshift('Asset name with corresponding asset code already exists.')
+                  values.unshift('Parent asset id does not exists.')
                   errors.push(values);
+                  continue;
+                }
+
+                if (parentResult.length) {
+                  parentId = parentResult[0].id;
                 }
               }
+              /*GET PARENT ID TO PARENT CODE CLOSE */
+
+
+              /*GET LOCATION ID BY LOCATION CODE OPEN */
+
+              let locationId = null;
+              if (assetData.M) {
+                let locationResult = await knex('location_tags_master').where({ title: assetData.M, orgId: req.orgId }).select('id')
+                if (!locationResult.length) {
+                  fail++;
+                  let values = _.values(assetData)
+                  values.unshift('Location Tag does not exists.')
+                  errors.push(values);
+                  continue;
+                }
+
+                if (locationResult.length) {
+                  locationId = locationResult[0].id;
+                }
+              }
+              /*GET LOCATION ID BY LOCATION CODE CLOSE */
+
+
+              let checkExist = await knex("asset_master")
+                .select("id")
+                .where({ assetCode: assetData.A, assetName: assetData.B, orgId: req.orgId });
+
+              if (checkExist.length < 1) {
+
+                let currentTime = new Date().getTime();
+
+                let installDate = '';
+                let expireDate = '';
+                if (assetData.I) {
+                  installDate = moment(assetData.I).format()
+                }
+                if (assetData.J) {
+                  expireDate = moment(assetData.J).format()
+                }
+
+                let insertData = {
+                  orgId: req.orgId,
+                  assetCode: assetData.A,
+                  assetName: assetData.B,
+                  unitOfMeasure: assetData.C,
+                  model: assetData.D,
+                  price: assetData.G,
+                  companyId: companyId,
+                  assetCategoryId,
+                  createdAt: currentTime,
+                  updatedAt: currentTime,
+                  assignedTeams: teamId,
+                  parentAssetId: parentId,
+                  assetSerial: assetData.H,
+                  installationDate: installDate,
+                  warrentyExpiration: expireDate,
+                  barcode: assetData.K,
+                  locationId: locationId,
+                  assignedUsers: assetData.N,
+                  assignedVendors: assetData.P,
+                  additionalInformation: assetData.Q
+                }
+
+                resultData = await knex.insert(insertData).returning(['*']).into('asset_master');
+
+                if (resultData && resultData.length) {
+                  success++;
+                }
+
+              } else {
+                fail++;
+                let values = _.values(assetData)
+                values.unshift('Asset name with corresponding asset code already exists.')
+                errors.push(values);
+              }
             }
-            let message = null;
-            if (totalData == success) {
-              message =
-                "System has processed processed ( " +
-                totalData +
-                " ) entries and added them successfully!";
-            } else {
-              message =
-                "System has processed processed ( " +
-                totalData +
-                " ) entries out of which only ( " +
-                success +
-                " ) are added and others are failed ( " +
-                fail +
-                " ) due to validation!";
-            }
-            //let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
-            return res.status(200).json({
-              message: message,
-              errors
-            });
           }
-
-        } else {
-
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-            ]
+          let message = null;
+          if (totalData == success) {
+            message =
+              "System has processed processed ( " +
+              totalData +
+              " ) entries and added them successfully!";
+          } else {
+            message =
+              "System has processed processed ( " +
+              totalData +
+              " ) entries out of which only ( " +
+              success +
+              " ) are added and others are failed ( " +
+              fail +
+              " ) due to validation!";
+          }
+          //let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
+          return res.status(200).json({
+            message: message,
+            errors
           });
         }
-     // } else {
 
-        // return res.status(400).json({
-        //   errors: [
-        //     { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-        //   ]
-        // });
+      } else {
 
-     // }
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
+      }
+      // } else {
+
+      // return res.status(400).json({
+      //   errors: [
+      //     { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+      //   ]
+      // });
+
+      // }
 
     } catch (err) {
       console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
@@ -2499,6 +2499,24 @@ const assetController = {
       })
     } catch (err) {
       res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  deleteServiceAssignedAsset: async (req, res) => {
+    try {
+      const id = req.body.id;
+      // deleteRow = filtered;
+      const deletedRow = await knex('assigned_assets').where({ id, "entityType": "service_requests" }).del().returning(['*'])
+      let resultData = deletedRow.rows;
+      return res.status(200).json({
+        data: {
+          resultData,
+          message: 'Deleted row successfully!'
+        }
+      })
+    } catch (err) {
+      return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }

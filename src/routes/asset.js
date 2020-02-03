@@ -147,5 +147,7 @@ router.post(
 router.post('/add-serivce-order-replace-asset', authMiddleware.isAuthenticated,assetController.replaceAsset)
 router.post('/get-service-order-replaced-asset', authMiddleware.isAuthenticated, assetController.getReplacedAssetList)
 router.post('/get-asset-list-for-replace',authMiddleware.isAuthenticated,assetController.getAssetListForReplace)
+router.post('/delete-service-assigned-asset/', authMiddleware.isAuthenticated, assetController.deleteServiceAssignedAsset);
+
 
 module.exports = router

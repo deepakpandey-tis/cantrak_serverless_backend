@@ -920,6 +920,9 @@ const serviceRequestController = {
               if (location) {
                 qb.where('service_requests.location', 'iLIKE', `%${location}%`)
               }
+              if (priority) {
+                qb.where('service_requests.priority', 'iLIKE', `%${priority}%`)
+              }
               if (description) {
                 qb.where('service_requests.description', 'iLIKE', `%${description}%`)
               }
@@ -999,6 +1002,9 @@ const serviceRequestController = {
             .where(qb => {
               if (location) {
                 qb.where('service_requests.location', 'iLIKE', `%${location}%`)
+              }
+              if (priority) {
+                qb.where('service_requests.priority', 'iLIKE', `%${priority}%`)
               }
               if (description) {
                 qb.where('service_requests.description', 'iLIKE', `%${description}%`)
@@ -1629,7 +1635,8 @@ const serviceRequestController = {
             "asset_master.assetName as assetName",
             "asset_master.model as model",
             "asset_category_master.categoryName as categoryName",
-            "companies.companyName as companyName"
+            "companies.companyName as companyName",
+            "assigned_assets.id as aid"
           ])
           .where({
             entityType: "service_requests",
@@ -1667,7 +1674,8 @@ const serviceRequestController = {
             "asset_master.assetName as assetName",
             "asset_master.model as model",
             "asset_category_master.categoryName as categoryName",
-            "companies.companyName as companyName"
+            "companies.companyName as companyName",
+            "assigned_assets.id as aid"
           ])
           .where({
             entityType: "service_requests",
@@ -1706,7 +1714,7 @@ const serviceRequestController = {
       let result;
       let orgId = req.orgId;
       await knex.transaction(async trx => {
-        let payload = _.omit(req.body, ["images", "isSo"]);
+        let payload = _.omit(req.body, ["images", "isSo", "mobile", "email", "name"]);
         const schema = Joi.object().keys({
           serviceRequestId: Joi.number().required(),
           areaName: Joi.string()
@@ -1728,19 +1736,20 @@ const serviceRequestController = {
           project: Joi.string().required(),
           serviceType: Joi.string().required(),
           unit: Joi.string().required(),
-          userId: Joi.string().required(),
+          userId: Joi.string().allow("")
+            .optional(),
           priority: Joi.string()
             .allow("")
             .optional(),
-          name: Joi.string()
-            .allow("")
-            .optional(),
-          mobile: Joi.string()
-            .allow("")
-            .optional(),
-          email: Joi.string()
-            .allow("")
-            .optional(),
+          // name: Joi
+          //   .allow("")
+          //   .optional(),
+          // mobile: Joi
+          //   .allow("")
+          //   .optional(),
+          // email: Joi.string()
+          //   .allow("")
+          //   .optional(),
           uid: Joi.string()
             .allow("")
             .optional()
@@ -1758,6 +1767,11 @@ const serviceRequestController = {
         }
         const currentTime = new Date().getTime();
 
+
+        // Insert into requested by
+
+        const requestedByResult = await knex('requested_by').insert({ name: req.body.name, mobile: req.body.mobile, email: req.body.email }).returning(['*'])
+
         /*UPDATE SERVICE REQUEST DATA OPEN */
         let common;
         let priority;
@@ -1773,11 +1787,12 @@ const serviceRequestController = {
             projectId: payload.project,
             houseId: payload.house,
             commonId: payload.commonArea,
-            requestedBy: payload.userId,
+            // requestedBy: payload.userId,
+            requestedBy: requestedByResult[0].id,
             serviceType: payload.serviceType,
             location: payload.location,
             priority: priority,
-            serviceStatusCode: "O",
+            serviceStatusCode: payload.serviceStatusCode,
             orgId: orgId,
             createdAt: currentTime,
             updatedAt: currentTime,
@@ -1790,11 +1805,12 @@ const serviceRequestController = {
             description: payload.description,
             projectId: payload.project,
             houseId: payload.house,
-            requestedBy: payload.userId,
+            requestedBy: requestedByResult[0].id,
+            // requestedBy: payload.userId,
             serviceType: payload.serviceType,
             location: payload.location,
             priority: priority,
-            serviceStatusCode: "O",
+            serviceStatusCode: payload.serviceStatusCode,
             orgId: orgId,
             createdAt: currentTime,
             updatedAt: currentTime,
@@ -1988,6 +2004,11 @@ const serviceRequestController = {
             "service_requests.houseId",
             "property_units.id"
           )
+          .leftJoin(
+            'requested_by',
+            'service_requests.requestedBy',
+            'requested_by.id'
+          )
           .select(
             "service_requests.houseId as house",
             "service_requests.commonId as commonArea",
@@ -1995,7 +2016,10 @@ const serviceRequestController = {
             "service_requests.location",
             "service_requests.priority",
             "service_requests.serviceType",
-            "service_requests.requestedBy as userId",
+            "requested_by.name as requestedByName",
+            "requested_by.email as requestedByEmail",
+            "requested_by.mobile as requestedByMobile",
+            "requested_by.id as requestedById",
             "property_units.companyId as company",
             "property_units.buildingPhaseId as building",
             "property_units.floorZoneId as floor",
@@ -2008,9 +2032,9 @@ const serviceRequestController = {
         serviceResult = result[0];
 
         serviceResult.uploadedImages = await knex.from('images')
-        // .where({ "entityId": incidentRequestPayload.id, "entityType": "service_requests", orgId: orgId })
-        .where({ "entityId": id, "entityType": "service_requests" })
-        .select('s3Url', 'title', 'name','id');
+          // .where({ "entityId": incidentRequestPayload.id, "entityType": "service_requests", orgId: orgId })
+          .where({ "entityId": id, "entityType": "service_requests" })
+          .select('s3Url', 'title', 'name', 'id');
 
         // let problem = await knex
         //   .from("service_problems")
@@ -2038,6 +2062,8 @@ const serviceRequestController = {
           .select(
             "incident_categories.categoryCode ",
             "incident_categories.descriptionEng as category",
+            "incident_categories.id as categoryId",
+            "incident_sub_categories.id as subCategoryId",
             // "incident_sub_categories.categoryCode as subCategoryCode",
             "incident_sub_categories.descriptionEng as subCategory",
             "service_problems.description",
@@ -2054,7 +2080,7 @@ const serviceRequestController = {
         problemResult = await Parallel.map(problemResult, async pd => {
           imagesResult = await knex.from('images')
             .where({ "entityId": id, "entityType": "service_problems" })
-            .select('s3Url', 'title', 'name','id');
+            .select('s3Url', 'title', 'name', 'id');
           return {
             ...pd,
             uploadedImages: imagesResult
@@ -2062,11 +2088,11 @@ const serviceRequestController = {
         });
 
 
-        let location = await knex
-          .from("location_tags")
-          .select("locationTagId")
+        let location = await knex("location_tags")
+          .innerJoin('location_tags_master', 'location_tags.locationTagId', 'location_tags_master.id')
+          .select(["location_tags.locationTagId", 'location_tags_master.title'])
           .where({ entityId: id, entityType: "service_requests" });
-        locationTags = location.map(v => Number(v.locationTagId));
+        locationTags = _.uniqBy(location, 'title')
       });
 
       return res.status(200).json({
@@ -2091,7 +2117,7 @@ const serviceRequestController = {
       let result;
       let orgId = req.orgId;
       await knex.transaction(async trx => {
-        let payload = _.omit(req.body, ["images"]);
+        let payload = _.omit(req.body, ["images", "name", "mobile", "email"]);
         const schema = Joi.object().keys({
           serviceRequestId: Joi.number().required(),
           areaName: Joi.string()
@@ -2112,19 +2138,19 @@ const serviceRequestController = {
           project: Joi.string().required(),
           serviceType: Joi.string().required(),
           unit: Joi.string().required(),
-          userId: Joi.string().required(),
+          userId: Joi.string().allow('').optional(),
           priority: Joi.string()
             .allow("")
             .optional(),
-          name: Joi.string()
-            .allow("")
-            .optional(),
-          mobile: Joi.string()
-            .allow("")
-            .optional(),
-          email: Joi.string()
-            .allow("")
-            .optional(),
+          // name: Joi.string()
+          //   .allow("")
+          //   .optional(),
+          // mobile: Joi.string()
+          //   .allow("")
+          //   .optional(),
+          // email: Joi.string()
+          //   .allow("")
+          //   .optional(),
           uid: Joi.string()
             .allow("")
             .optional(),
@@ -2149,6 +2175,10 @@ const serviceRequestController = {
         }
         const currentTime = new Date().getTime();
 
+        let currentServiceRequestData = await knex('service_requests').select('*').where({ 'id': payload.serviceRequestId }).first();
+        await knex('requested_by').update({ name: req.body.name, mobile: req.body.mobile, email: req.body.email }).where({ id: currentServiceRequestData.requestedBy });
+
+
         /*UPDATE SERVICE REQUEST DATA OPEN */
         let common;
         let priority;
@@ -2164,7 +2194,7 @@ const serviceRequestController = {
             projectId: payload.project,
             houseId: payload.house,
             commonId: payload.commonArea,
-            requestedBy: payload.userId,
+            // requestedBy: payload.userId,
             serviceType: payload.serviceType,
             location: payload.location,
             priority: priority,
@@ -2180,7 +2210,7 @@ const serviceRequestController = {
             description: payload.description,
             projectId: payload.project,
             houseId: payload.house,
-            requestedBy: payload.userId,
+            // requestedBy: payload.userId,
             serviceType: payload.serviceType,
             location: payload.location,
             createdBy: req.me.id,
@@ -2224,8 +2254,14 @@ const serviceRequestController = {
         //     .transacting(trx)
         //     .into("location_tags");
         // }
+
+        // Discard if some location tags already exists
+
+
         let locationTagIds = []
-        for (let locationTag of payload.locationTags) {
+        let finalLocationTags = _.uniq(payload.locationTags)
+
+        for (let locationTag of finalLocationTags) {
           let result = await knex('location_tags_master').select('id').where({ title: locationTag })
           if (result && result.length) {
             locationTagIds.push(result[0].id)
@@ -2429,20 +2465,20 @@ const serviceRequestController = {
       });
     }
   },
-  updateServiceRequestProjectId:async(req,res) => {
+  updateServiceRequestProjectId: async (req, res) => {
     try {
-      const {projectId,serviceRequestId} = req.body;
-       let result = await knex('service_requests').update({projectId:projectId}).where({id:serviceRequestId}).returning(['*'])
+      const { projectId, serviceRequestId } = req.body;
+      let result = await knex('service_requests').update({ projectId: projectId }).where({ id: serviceRequestId }).returning(['*'])
       return res.status(200).json({
         data: {
-          updated:true,
+          updated: true,
           result
         }
       })
-    } catch(err) {
-return res.status(200).json({
+    } catch (err) {
+      return res.status(200).json({
         data: {
-          update:false
+          update: false
         }
       })
     }

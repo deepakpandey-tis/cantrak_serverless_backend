@@ -283,8 +283,6 @@ const teamsController = {
 
             teamResult = await knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId"  where "teams"."orgId" = ' + req.orgId + ' and "teams"."isActive"=true group by "teams"."teamId" order by "teams"."createdAt" desc');
 
-
-
             // teamResult =  await knex('teams').leftJoin('team_users','team_users.teamId', '=', 'teams.teamId').select('teams.*').count("team_users.userId").groupByRaw('teams.teamId');
             // teamResult = await knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" group by "teams"."teamId"');
             //console.log('[controllers][teams][getTeamList] : Team List', teamResult);

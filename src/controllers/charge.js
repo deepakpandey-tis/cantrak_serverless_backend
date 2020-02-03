@@ -23,11 +23,11 @@ const chargeController = {
           calculationUnit: Joi.string().required(),
           rate: Joi.string().required(),
           vatRate: Joi.string().allow("")
-          .allow(null)
-          .optional(),
+            .allow(null)
+            .optional(),
           vatId: Joi.number().allow("")
-          .allow(null)
-          .optional(),
+            .allow(null)
+            .optional(),
           whtId: Joi.number()
             .allow("")
             .allow(null)
@@ -219,21 +219,21 @@ const chargeController = {
       let page = reqData.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
-      let {chargeCode,calculationUnit,description} = req.body;
+      let { chargeCode, calculationUnit, description } = req.body;
       [total, rows] = await Promise.all([
         knex
           .count("* as count")
           .from("charge_master")
           .leftJoin("users", "users.id", "charge_master.createdBy")
           .where({ "charge_master.orgId": req.orgId })
-          .where(qb=>{
-            if(chargeCode){
+          .where(qb => {
+            if (chargeCode) {
               qb.where('charge_master.chargeCode', 'iLIKE', `%${chargeCode}%`)
             }
-            if(calculationUnit){
+            if (calculationUnit) {
               qb.where('charge_master.calculationUnit', 'iLIKE', `%${calculationUnit}%`)
             }
-            if(description){
+            if (description) {
               qb.where('charge_master.descriptionEng', 'iLIKE', `%${description}%`)
             }
           })
@@ -255,14 +255,14 @@ const chargeController = {
             "charge_master.descriptionEng",
             "charge_master.descriptionThai",
           ])
-          .where(qb=>{
-            if(chargeCode){
+          .where(qb => {
+            if (chargeCode) {
               qb.where('charge_master.chargeCode', 'iLIKE', `%${chargeCode}%`)
             }
-            if(calculationUnit){
+            if (calculationUnit) {
               qb.where('charge_master.calculationUnit', 'iLIKE', `%${calculationUnit}%`)
             }
-            if(description){
+            if (description) {
               qb.where('charge_master.descriptionEng', 'iLIKE', `%${description}%`)
             }
           })
@@ -1048,10 +1048,13 @@ const chargeController = {
           )
           .select([
             "charge_master.chargeCode as chargeCode",
+            "charge_master.descriptionEng as descriptionEng",
+            "charge_master.descriptionThai as descriptionThai",
             "charge_master.id as id",
             "charge_master.calculationUnit as calculationUnit",
             "assigned_service_charges.rate as rate",
-            "assigned_service_charges.totalHours as totalHours"
+            "assigned_service_charges.totalHours as totalHours",
+            "assigned_service_charges.id as cid"
           ])
           .where({
             entityId: quotationId,
@@ -1065,10 +1068,13 @@ const chargeController = {
           )
           .select([
             "charge_master.chargeCode as chargeCode",
+            "charge_master.descriptionEng as descriptionEng",
+            "charge_master.descriptionThai as descriptionThai",
             "charge_master.id as id",
             "charge_master.calculationUnit as calculationUnit",
             "assigned_service_charges.rate as rate",
-            "assigned_service_charges.totalHours as totalHours"
+            "assigned_service_charges.totalHours as totalHours",
+            "assigned_service_charges.id as cid"
           ])
           .where({
             entityId: quotationId,
@@ -1270,6 +1276,87 @@ const chargeController = {
       })
 
 
+    } catch (err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  deleteQuotationAssignedCharges: async (req, res) => {
+    try {
+      const id = req.body.id;
+      const currentTime = new Date().getTime();
+
+      let getQuotationId = await knex('assigned_service_charges').where({ id, "entityType": "quotations" }).select('entityId', 'chargeId');
+      let quotationId = getQuotationId[0].entityId;
+      let chargeId = getQuotationId[0].chargeId;
+      let quotationsData = await knex('quotations').where({ "id": quotationId }).returning(['*']).first();
+      console.log("quotationsJsonArray", quotationsData);
+      //deletedRow = quotationsData;
+      let filtered = {};
+      if (quotationsData && quotationsData.invoiceData) {
+        let invoiceData = quotationsData.invoiceData;
+        console.log("invoiceData", invoiceData);
+        let chargesData = invoiceData.charges;
+
+        filtered.charges = chargesData.filter(function (chargesData) {
+          return chargesData.id !== chargeId;
+        });
+
+        console.log("filtererdPartsLength", filtered.charges);
+
+        let subTotalAmt = 0;
+        let stotal = 0;
+        for (let i = 0; i < filtered.charges.length; i++) {
+          console.log("idata", filtered.charges[i].totalHours);
+          stotal = filtered.charges[i].rate * filtered.charges[i].totalHours;
+          console.log("stotal", stotal);
+          subTotalAmt += stotal;
+        }
+
+        console.log("subTotalAmit", subTotalAmt);
+
+
+        let subPartsTotalAmt = 0;
+        let ctotal = 0;
+        for (let q = 0; q < invoiceData.parts.length; q++) {
+          ctotal = invoiceData.parts[q].unitCost * invoiceData.parts[q].quantity;
+          subPartsTotalAmt += ctotal;
+        }
+        
+        let subTotalFinal = 0;
+        subTotalFinal = (subTotalAmt + subPartsTotalAmt);
+        let grandTotal = 0;
+        grandTotal = subTotalFinal + (subTotalFinal * invoiceData.vatRate / 100);
+
+        console.log("grandTotal", grandTotal);
+
+        filtered.parts = invoiceData.parts;
+        filtered.vatId = invoiceData.vatId;
+        filtered.vatRate = invoiceData.vatRate;
+        filtered.subTotal = subTotalFinal;
+        filtered.grandTotal = grandTotal;
+      }
+
+      // deleteRow = filtered;
+      const deletedRow = await knex('assigned_service_charges').where({ id, "entityType": "quotations" }).del().returning(['*'])
+
+      let updateQuotationInvoiceData = await knex
+        .update({
+          invoiceData: JSON.stringify(filtered),
+          updatedAt: currentTime
+        })
+        .where({ id: quotationId })
+        .returning(["*"])
+        .into("quotations");
+
+
+      return res.status(200).json({
+        data: {
+          updateQuotationInvoiceData,
+          message: 'Deleted row successfully!'
+        }
+      })
     } catch (err) {
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
