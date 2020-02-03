@@ -480,7 +480,7 @@ const singupController = {
             template: 'test-email.ejs',
             templateData: {
               fullName: user.name,
-              OTP: 'http://localhost:4200/signup/verify-account/' + user.verifyToken
+              OTP: 'https://dj47f2ckirq9d.cloudfront.net/signup/verify-account/' + user.verifyToken
             }
           })
           let orgAdmins = await knex('application_user_roles')
