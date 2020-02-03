@@ -10,7 +10,6 @@ const resourceAccessMiddleware = require('../middlewares/resourceAccessMiddlewar
 router.post('/get-asset-list', 
 authMiddleware.isAuthenticated, 
 roleMiddleware.parseUserPermission,
-resourceAccessMiddleware.isAssetAccessible,
 sharedController.getAssetList
 )
 router.post(

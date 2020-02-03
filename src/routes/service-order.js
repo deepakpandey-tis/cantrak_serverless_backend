@@ -25,6 +25,8 @@ router.post('/delete-service-order-asset', authMiddleware.isAuthenticated, roleM
 router.post(
   "/get-service-order-assigned-assets",
   authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isCMAccessible,
   serviceOrderController.getServiceOrderAssignedAssets
 );
 // Service order Export Data 
