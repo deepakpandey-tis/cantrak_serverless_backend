@@ -378,7 +378,7 @@ const serviceDetailsController = {
           .leftJoin("floor_and_zones", "property_units.floorZoneId", "=", "floor_and_zones.id")
           .leftJoin("service_requests", "property_units.id", "=", "service_requests.houseId")
           .leftJoin('users', 'service_requests.createdBy', 'users.id')
-          .leftJoin("requested_by AS reqBy", "service_requests.requestedBy", "reqBy.id")
+          //.leftJoin("requested_by AS reqBy", "service_requests.requestedBy", "reqBy.id")
           .leftJoin("source_of_request", "service_requests.serviceType", "source_of_request.id")
           .leftJoin("images", "service_requests.id", "images.entityId")
           .select(
@@ -394,28 +394,31 @@ const serviceDetailsController = {
             "service_requests.serviceStatusCode as serviceStatusCode",
             "service_requests.updatedAt as updatedAt",
             "service_requests.createdAt as createdAt",
-            "reqBy.name as requestedBy",
+            //"reqBy.name as requestedBy",
             "users.name as createdUser",
             "source_of_request.descriptionEng as serviceType",
             "images.s3Url",
             "images.title",
             "images.name",
-            "property_units.*"
+            "property_units.*",
+            "service_requests.requestedBy"
           )
           .where({
             "property_units.id": houseId,
             "service_requests.orgId": orgId,
             "service_requests.id": incidentRequestPayload.id
-          });
+          }).first();
 
         console.log(
           "[controllers][servicedetails][generaldetails]: View Data", DataResult
         );
 
+
+
         //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
 
         DataResult = _.omit(
-          DataResult[0],
+          DataResult,
           ["companyId"],
           // ["projectId"],
           ["propertyTypeId"],
@@ -435,6 +438,13 @@ const serviceDetailsController = {
 
         DataResult.locationTags = tags;
         console.log("locationResult", tags);
+
+
+        // Get Requested By:
+        DataResult.requestedBy = await knex("requested_by")
+          .where({
+            "id": DataResult.requestedBy
+          }).select("*").first();
 
         /*GET UPLOADED IMAGES OPEN  */
         let imagesResult;
