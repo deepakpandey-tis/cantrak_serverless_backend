@@ -920,6 +920,9 @@ const serviceRequestController = {
               if (location) {
                 qb.where('service_requests.location', 'iLIKE', `%${location}%`)
               }
+              if (priority) {
+                qb.where('service_requests.priority', 'iLIKE', `%${priority}%`)
+              }
               if (description) {
                 qb.where('service_requests.description', 'iLIKE', `%${description}%`)
               }
@@ -999,6 +1002,9 @@ const serviceRequestController = {
             .where(qb => {
               if (location) {
                 qb.where('service_requests.location', 'iLIKE', `%${location}%`)
+              }
+              if (priority) {
+                qb.where('service_requests.priority', 'iLIKE', `%${priority}%`)
               }
               if (description) {
                 qb.where('service_requests.description', 'iLIKE', `%${description}%`)
