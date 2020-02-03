@@ -1440,7 +1440,7 @@ const serviceDetailsController = {
     try {
       let result = await knex('incident_priority')
       .where({ 'orgId': req.orgId, 'isActive': true })
-      .orderBy('sequenceNo','desc')
+      .orderBy('sequenceNo','asc')
       return res.status(200).json({
         data: result,
         message: "Priority list!"
@@ -1463,7 +1463,7 @@ const serviceDetailsController = {
         'users.name'
       ])
       .where({ 'incident_priority.orgId': req.orgId})
-      .orderBy('incident_priority.sequenceNo','desc')
+      .orderBy('incident_priority.sequenceNo','asc')
       return res.status(200).json({
         data: result,
         message: "Priority list!"
