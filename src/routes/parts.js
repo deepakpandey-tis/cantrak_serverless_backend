@@ -167,21 +167,21 @@ router.post(
   "/get-service-request-assigned-parts",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPartAccessible,
+  resourceAccessMiddleware.isCMAccessible,
   partsController.getServiceRequestAssignedParts
 );    
 
 router.post("/get-service-order-assigned-parts",
 authMiddleware.isAuthenticated,
 roleMiddleware.parseUserPermission,
-resourceAccessMiddleware.isPartAccessible,
+resourceAccessMiddleware.isCMAccessible,
 partsController.getServiceOrderAssignedParts)
 
 
 router.post("/get-quotation-assigned-parts",
 authMiddleware.isAuthenticated,
 roleMiddleware.parseUserPermission,
-resourceAccessMiddleware.isPartAccessible,
+resourceAccessMiddleware.isCMAccessible,
 partsController.getQuotationAssignedParts)
 
 router.post('/get-pending-approval-requests-for-parts', 

@@ -81,16 +81,16 @@ const assetController = {
           knex
             .count("* as count")
             .from("asset_master")
-            .leftJoin(
-              "location_tags",
-              "asset_master.id",
-              "location_tags.entityId"
-            )
-            .leftJoin(
-              "location_tags_master",
-              "location_tags.locationTagId",
-              "location_tags_master.id"
-            )
+            // .leftJoin(
+            //   "location_tags",
+            //   "asset_master.id",
+            //   "location_tags.entityId"
+            // )
+            // .leftJoin(
+            //   "location_tags_master",
+            //   "location_tags.locationTagId",
+            //   "location_tags_master.id"
+            // )
             .leftJoin(
               "asset_category_master",
               "asset_master.assetCategoryId",
@@ -127,16 +127,16 @@ const assetController = {
             .first()
             .where({ 'asset_master.orgId': req.orgId }),
           knex("asset_master")
-            .leftJoin(
-              "location_tags",
-              "asset_master.id",
-              "location_tags.entityId"
-            )
-            .leftJoin(
-              "location_tags_master",
-              "location_tags.locationTagId",
-              "location_tags_master.id"
-            )
+            // .leftJoin(
+            //   "location_tags",
+            //   "asset_master.id",
+            //   "location_tags.entityId"
+            // )
+            // .leftJoin(
+            //   "location_tags_master",
+            //   "location_tags.locationTagId",
+            //   "location_tags_master.id"
+            // )
             .leftJoin(
               "asset_category_master",
               "asset_master.assetCategoryId",
@@ -150,7 +150,7 @@ const assetController = {
             .select([
               "asset_master.assetName as Name",
               "asset_master.id as ID",
-              "location_tags_master.title as Location",
+              //"location_tags_master.title as Location",
               "asset_master.model as Model",
               "asset_master.barcode as Barcode",
               "asset_master.areaName as Area",
