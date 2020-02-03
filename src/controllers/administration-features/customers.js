@@ -52,7 +52,9 @@ const customerController = {
             "user_house_allocation.status"
           ])
           .where({ 'users.id': customerId });
-        return res.status(200).json({ userDetails: userDetails[0],propertyDetails:userDetails});
+        return res.status(200).json({
+           userDetails: {...userDetails[0],propertyDetails:userDetails},
+          });
       }
 
       let filters = {}
