@@ -582,7 +582,7 @@ const quotationsController = {
             )
             .leftJoin("users", "quotations.createdBy", "users.id")
             .where("quotations.orgId", req.orgId)
-            .whereIn('service_requests.projectId', accessibleProjects)
+            .whereIn('quotations.projectId', accessibleProjects)
             .havingNotNull('quotations.quotationStatus')
             .groupBy(["quotations.id", "service_requests.id", "assigned_service_team.id", "users.id", "companies.companyName",
               "projects.projectName",
@@ -609,7 +609,7 @@ const quotationsController = {
             .leftJoin("users", "quotations.createdBy", "users.id")
 
             .where("quotations.orgId", req.orgId)
-            .whereIn('service_requests.projectId', accessibleProjects)
+            .whereIn('quotations.projectId', accessibleProjects)
             .select([
               "quotations.id as QId",
               "quotations.serviceRequestId as serviceRequestId",
@@ -672,7 +672,7 @@ const quotationsController = {
                   ]);
                 }
                 qb.where("quotations.orgId", req.orgId)
-                qb.whereIn('service_requests.projectId', accessibleProjects)
+                qb.whereIn('quotations.projectId', accessibleProjects)
 
               })
               .havingNotNull('quotations.quotationStatus')
@@ -729,7 +729,7 @@ const quotationsController = {
                   ]);
                 }
                 qb.where("quotations.orgId", req.orgId)
-                qb.whereIn('service_requests.projectId', accessibleProjects)
+                qb.whereIn('quotations.projectId', accessibleProjects)
               })
               .offset(offset)
               .limit(per_page)
@@ -1383,15 +1383,18 @@ const quotationsController = {
       ]);
 
 
-      let serviceMaster = await knex("quotations")
+      let quotationMaster = await knex("quotations")
         .leftJoin("users", "quotations.createdBy", "=", "users.id")
         .select(
           "quotations.serviceRequestId",
-          "users.name as quotationsCreated"
+          "users.name as quotationsCreated",
+          "quotations.unitId",
+          "quotations.createdAt"
+          
         )
         .where({ "quotations.id": quotationId, "quotations.orgId": orgId }).first();
 
-      let serviceRequestId = serviceMaster.serviceRequestId;
+      let serviceRequestId = quotationMaster.serviceRequestId;
       console.log("serviceRequestId", serviceRequestId);
 
       const DataResult = await knex("service_requests").where({
@@ -1406,7 +1409,9 @@ const quotationsController = {
         .select(
           "requested_by.name",
           "source_of_request.requestCode",
-          "service_requests.createdAt"
+          "service_requests.createdAt",
+          "service_requests.description",
+          "service_requests.location"
         )
         .where({
           "service_requests.id": serviceRequestId
@@ -1424,7 +1429,7 @@ const quotationsController = {
           "users.location"
         )
         .where({
-          "user_house_allocation.houseId": DataResult.houseId
+          "user_house_allocation.houseId": quotationMaster.unitId
         }).first();
       tenantData = tenantInfo;
       console.log("tenantDataInfo", tenantData);
@@ -1448,10 +1453,12 @@ const quotationsController = {
           "companies.logoFile"
         )
         .where({
-          "property_units.id": DataResult.houseId
+          "property_units.id": quotationMaster.unitId
         }).first();
 
-      userInfo = { ...tenantInfo, requesterInfo, propertyInfo, serviceMaster }
+        console.log("PropertyInfo",propertyInfo);
+
+      userInfo = { ...tenantInfo, requesterInfo, propertyInfo, serviceMaster: quotationMaster }
       pagination.data = rows;
       pagination.tenant = userInfo;
       // pagination.propertyDetails = userInfo;
