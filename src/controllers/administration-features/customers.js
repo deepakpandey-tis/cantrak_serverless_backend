@@ -213,6 +213,8 @@ const customerController = {
 
       } else {
 
+
+
         [total, rows] = await Promise.all([
           knex("users")
             .leftJoin(
@@ -237,11 +239,11 @@ const customerController = {
               "users.id as userId",
               "users.isActive"
             ])
-
             .where({
               "application_user_roles.roleId": 4,
               "users.orgId": req.orgId
             })
+            .whereIn('property_units.projectId',resourceProject)
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
 
@@ -284,6 +286,7 @@ const customerController = {
               "application_user_roles.roleId": 4,
               "users.orgId": req.orgId
             })
+            .whereIn('property_units.projectId',resourceProject)
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
 

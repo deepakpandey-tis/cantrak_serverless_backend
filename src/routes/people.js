@@ -34,4 +34,6 @@ var storage = multer.diskStorage({
 });
 var upload = multer( { storage: storage } );
 router.post('/import-people-data',upload.single('file'), authMiddleware.isAuthenticated, peopleController.importPeopleData)
+
+router.post('/update-people', authMiddleware.isAuthenticated, peopleController.updatePeople)
 module.exports = router;
