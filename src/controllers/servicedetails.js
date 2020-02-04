@@ -393,7 +393,7 @@ const serviceDetailsController = {
             "service_requests.location",
             "service_requests.serviceStatusCode as serviceStatusCode",
             "service_requests.updatedAt as sRUpdatedAt",
-            "service_requests.createdAt as createdAt",
+            "service_requests.createdAt as sRCreatedAt",
             //"reqBy.name as requestedBy",
             "users.name as createdUser",
             "source_of_request.descriptionEng as serviceType",
@@ -412,8 +412,6 @@ const serviceDetailsController = {
         console.log(
           "[controllers][servicedetails][generaldetails]: View Data", DataResult
         );
-
-
 
         //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
 
