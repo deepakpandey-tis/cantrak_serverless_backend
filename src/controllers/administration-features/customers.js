@@ -619,17 +619,41 @@ const customerController = {
           .where({ id: payload.id });
         console.log(payload);
 
-        // TODO: need to change this in future
-        let assignedHouseIds = await knex('user_house_allocation').select('houseId').where({userId:payload.id})
-        let newHouseIds = req.body.houses.map(v => v.unit);
-        console.log('ASSIGNED*******************************************************', assignedHouseIds, '*******', newHouseIds)
 
-        // await knex('user_house_allocation').del().where({ userId: payload.id})
-        // for (let house of req.body.houses) {
-        //   await knex("user_house_allocation")
-        //     .insert({ houseId: house.unit, userId: insertedUser[0].id, status: 1, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime })
-        //     // .insert({ houseId: house.unit, updatedAt: currentTime })
-        // }
+        let dbItems = await knex('user_house_allocation').select(['houseId','userId']).where({userId:payload.id})
+        let items = req.body.houses.map(v => ({houseId:v.unit, userId:payload.id}))
+        console.log('DB Items:********************************************************** ',dbItems)
+        console.log('Items:*********************************************************** ',items)
+        const removedItems = _.differenceWith(dbItems, items, (a,b) => {
+          if(a.houseId == b.houseId && a.userId == b.userId){
+            return true;
+          }
+          return false
+        });
+
+        console.log('Removed Items:********************************************************** ', removedItems)
+
+
+        const newItems = _.differenceWith(items, dbItems, (a, b) => {
+          if (a.houseId == b.houseId && a.userId == b.userId) {
+            return true;
+          }
+          return false
+        });
+
+        console.log('New Items:********************************************************** ', newItems)
+
+        for(let r of removedItems){
+          await knex('user_house_allocation').del().where({houseId:r.houseId})
+        }
+
+        for (let house of newItems) {
+          //let s = await knex('user_house_allocation').select(['houseId']).where({houseId:house.unit,userId:insertedUser[0].id})
+         // if(Array.isArray(s) && !s.length){
+            await knex("user_house_allocation")
+              .insert({ houseId: house.houseId, userId: insertedUser[0].id, status: 1, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime })
+         // }
+        }
         trx.commit;
       })
       return res.status(200).json({
