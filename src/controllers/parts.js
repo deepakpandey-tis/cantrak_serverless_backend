@@ -547,7 +547,7 @@ const partsController = {
                 }
 
                 let quantity;
-                if (partStockPayload.adjustType == 5) {
+                if (partStockPayload.adjustType == 1 || partStockPayload.adjustType == 2 || partStockPayload.adjustType == 5 || partStockPayload.adjustType == 7) {
                     quantity = "-" + partStockPayload.quantity;
                 } else {
                     quantity = partStockPayload.quantity;
@@ -557,8 +557,10 @@ const partsController = {
                 // Insert in part_ledger table,
                 let currentTime = new Date().getTime();
 
-                let insertData = { ...partStockPayload, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId, unitCost: unitCost,
-                    quantity:quantity };
+                let insertData = {
+                    ...partStockPayload, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId, unitCost: unitCost,
+                    quantity: quantity
+                };
 
                 console.log('[controllers][part][addPartStock]: Insert Data', insertData);
 
@@ -1733,10 +1735,26 @@ const partsController = {
     approvePartRequisitionRequest: async (req, res) => {
         try {
             let approvalId = req.body.approvalId;
+            let currentTime = new Date().getTime();
             const update = await knex('assigned_parts').update({ status: 'approved' }).where({ orgId: req.orgId, id: approvalId }).returning(['*'])
+            let assignedResult = update[0];
+            let quantity = "-" + assignedResult.quantity;
+
+            let ledgerObject = {
+                partId: assignedResult.partId,
+                unitCost: assignedResult.unitCost,
+                quantity: quantity,
+                isPartAdded: true,
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                adjustType: 1,
+                serviceOrderNo: assignedResult.entityId,
+                orgId: req.orgId
+            }
+            let partLedger = await knex.insert(ledgerObject).returning(['*']).into('part_ledger');
             return res.status(200).json({
                 data: {
-                    updatedStatus: update
+                    updatedStatus: {...update,partLedger}
                 }
             })
         } catch (err) {

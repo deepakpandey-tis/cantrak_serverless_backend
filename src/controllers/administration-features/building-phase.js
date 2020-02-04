@@ -321,6 +321,8 @@ const buildingPhaseController = {
   getBuildingPhaseList: async (req, res) => {
     try {
 
+      let resourceProject = req.userProjectResources[0].projects;
+
       let sortPayload = req.body;
       if (!sortPayload.sortBy && !sortPayload.orderBy) {
         sortPayload.sortBy = "buildings_and_phases.buildingPhaseCode";
@@ -387,6 +389,7 @@ const buildingPhaseController = {
               }
 
             })
+            .whereIn('buildings_and_phases.projectId',resourceProject)
             .first(),
           knex("buildings_and_phases")
             .leftJoin(
@@ -430,6 +433,7 @@ const buildingPhaseController = {
               }
 
             })
+            .whereIn('buildings_and_phases.projectId',resourceProject)
             .select([
               "buildings_and_phases.id as id",
               "buildings_and_phases.buildingPhaseCode as Building/Phase",
@@ -494,6 +498,7 @@ const buildingPhaseController = {
               "buildings_and_phases.orgId": orgId,
               "projects.isActive": true
             })
+            .whereIn('buildings_and_phases.projectId',resourceProject)
             .first(),
 
           knex("buildings_and_phases")
@@ -521,6 +526,7 @@ const buildingPhaseController = {
               "projects.isActive": true,
               "buildings_and_phases.orgId": orgId
             })
+            .whereIn('buildings_and_phases.projectId',resourceProject)
             .select([
               "buildings_and_phases.id as id",
               "buildings_and_phases.buildingPhaseCode as Building/Phase",
