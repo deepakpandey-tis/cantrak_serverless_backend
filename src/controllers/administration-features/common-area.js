@@ -239,6 +239,8 @@ const commonAreaController = {
   getCommonAreaList: async (req, res) => {
     try {
 
+      let resourceProject = req.userProjectResources[0].projects;
+      
       let sortPayload = req.body;
       if (!sortPayload.sortBy && !sortPayload.orderBy) {
         sortPayload.sortBy = "common_area.commonAreaCode";
@@ -303,6 +305,7 @@ const commonAreaController = {
                 qb.where('common_area.commonAreaCode', 'iLIKE', `%${commonAreaCode}%`)
               }
             })
+            .whereIn('common_area.projectId',resourceProject)
           ,
           knex("common_area")
             .leftJoin(
@@ -354,6 +357,7 @@ const commonAreaController = {
               }
             })
             .orderBy(sortPayload.sortBy, sortPayload.orderBy)
+            .whereIn('common_area.projectId',resourceProject)
         ]);
       } else {
         [total, rows] = await Promise.all([
@@ -373,7 +377,9 @@ const commonAreaController = {
             .leftJoin("projects", "common_area.projectId", "projects.id")
             .leftJoin("users", "common_area.createdBy", "users.id")
             .where({ "floor_and_zones.isActive": true })
-            .where({ "common_area.orgId": orgId }),
+            .where({ "common_area.orgId": orgId })
+            .whereIn('common_area.projectId',resourceProject)
+            ,
           knex("common_area")
             .leftJoin(
               "floor_and_zones",
@@ -401,6 +407,7 @@ const commonAreaController = {
               "common_area.createdAt as Date Created",
               "projects.project as projectCode"
             ])
+            .whereIn('common_area.projectId',resourceProject)
             .offset(offset)
             .limit(per_page)
         ]);

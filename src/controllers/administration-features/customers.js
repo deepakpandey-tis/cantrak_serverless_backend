@@ -15,6 +15,7 @@ const emailHelper = require('../../helpers/email')
 const customerController = {
   getCustomers: async (req, res) => {
     try {
+      let resourceProject = req.userProjectResources[0].projects;
       let userDetails = null;
       let units = null
       let fullLocationDetails = []

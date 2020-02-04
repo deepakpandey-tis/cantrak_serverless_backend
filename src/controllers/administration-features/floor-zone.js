@@ -305,6 +305,7 @@ const floorZoneController = {
   getFloorZoneList: async (req, res) => {
     try {
 
+      let resourceProject = req.userProjectResources[0].projects;
       let sortPayload = req.body;
       if (!sortPayload.sortBy && !sortPayload.orderBy) {
         sortPayload.sortBy = "floor_and_zones.floorZoneCode";
@@ -364,6 +365,7 @@ const floorZoneController = {
                 qb.where('floor_and_zones.floorZoneCode', 'iLIKE', `%${floorZoneCode}%`)
               }
             })
+            .whereIn('floor_and_zones.projectId',resourceProject)
             .first(),
           knex
             .from("floor_and_zones")
@@ -403,6 +405,7 @@ const floorZoneController = {
                 qb.where('floor_and_zones.floorZoneCode', 'iLIKE', `%${floorZoneCode}%`)
               }
             })
+            .whereIn('floor_and_zones.projectId',resourceProject)
             .offset(offset)
             .limit(per_page)
             .orderBy(sortPayload.sortBy, sortPayload.orderBy)
@@ -437,6 +440,7 @@ const floorZoneController = {
             .leftJoin("property_types", "floor_and_zones.propertyTypeId", "property_types.id")
             .where({ "floor_and_zones.orgId": orgId })
             .where({ "buildings_and_phases.isActive": true })
+            .whereIn('floor_and_zones.projectId',resourceProject)
             .first(),
           knex("floor_and_zones")
             .leftJoin("companies", "floor_and_zones.companyId", "companies.id")
@@ -458,6 +462,7 @@ const floorZoneController = {
             ])
             .where({ "floor_and_zones.orgId": orgId })
             .where({ "buildings_and_phases.isActive": true })
+            .whereIn('floor_and_zones.projectId',resourceProject)
             .offset(offset)
             .limit(per_page)
             .orderBy(sortPayload.sortBy, sortPayload.orderBy)
