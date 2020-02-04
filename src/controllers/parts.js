@@ -481,7 +481,6 @@ const partsController = {
     },
     addPartStock: async (req, res) => {
 
-
         try {
 
             let partStock = null;
@@ -494,7 +493,7 @@ const partsController = {
                 if (partStockPayload.adjustType == "1" || partStockPayload.adjustType == "3") {
                     const schema = Joi.object().keys({
                         partId: Joi.string().required(),
-                        unitCost: Joi.number().required(),
+                        unitCost: Joi.number().allow("").allow(null).optional(),
                         quantity: Joi.number().required(),
                         adjustType: Joi.string().required(),
                         serviceOrderNo: Joi.string().required(),
@@ -505,7 +504,7 @@ const partsController = {
                 } else if (partStockPayload.adjustType == "10") {
                     const schema = Joi.object().keys({
                         partId: Joi.string().required(),
-                        unitCost: Joi.number().required(),
+                        unitCost: Joi.number().allow("").allow(null).optional(),
                         quantity: Joi.number().required(),
                         adjustType: Joi.string().required(),
                         workOrderId: Joi.string().required(),
@@ -516,7 +515,7 @@ const partsController = {
                 } else {
                     const schema = Joi.object().keys({
                         partId: Joi.string().required(),
-                        unitCost: Joi.number().required(),
+                        unitCost: Joi.number().allow("").allow(null).optional(),
                         quantity: Joi.number().required(),
                         adjustType: Joi.string().required(),
                         isPartAdded: Joi.string().required()
@@ -535,10 +534,33 @@ const partsController = {
                     });
                 }
 
+
+                let unitCost;
+                if (partStockPayload.unitCost) {
+                    unitCost = partStockPayload.unitCost
+                } else {
+                    let ledgerResult = await knex.from('part_ledger').where({ partId: partStockPayload.partId })
+                        .select('unitCost')
+                        .orderBy('id', 'desc')
+                        .first()
+                    unitCost = ledgerResult.unitCost;
+                }
+
+                let quantity;
+                if (partStockPayload.adjustType == 1 || partStockPayload.adjustType == 2 || partStockPayload.adjustType == 5 || partStockPayload.adjustType == 7) {
+                    quantity = "-" + partStockPayload.quantity;
+                } else {
+                    quantity = partStockPayload.quantity;
+                }
+
+
                 // Insert in part_ledger table,
                 let currentTime = new Date().getTime();
 
-                let insertData = { ...partStockPayload, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId };
+                let insertData = {
+                    ...partStockPayload, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId, unitCost: unitCost,
+                    quantity: quantity
+                };
 
                 console.log('[controllers][part][addPartStock]: Insert Data', insertData);
 
@@ -1648,13 +1670,29 @@ const partsController = {
             [total, rows] = await Promise.all([
                 knex('assigned_parts')
                     .leftJoin('part_master', 'assigned_parts.partId', 'part_master.id')
-                    .select(['assigned_parts.id as approvalId', 'part_master.id', 'part_master.partName', 'part_master.minimumQuantity', 'assigned_parts.unitCost as requestedPartsUnitCost', 'assigned_parts.quantity as requestedParts', 'assigned_parts.status as approvalStatus'])
+                    .select([
+                        'assigned_parts.id as approvalId',
+                        'part_master.id',
+                        'part_master.partName',
+                        'part_master.minimumQuantity',
+                        'assigned_parts.unitCost as requestedPartsUnitCost',
+                        'assigned_parts.quantity as requestedParts',
+                        'assigned_parts.status as approvalStatus',
+                        'assigned_parts.entityId'
+                    ])
                     .where({ 'part_master.orgId': req.orgId, 'assigned_parts.entityType': 'service_orders' }),
                 knex('assigned_parts')
                     .leftJoin('part_master', 'assigned_parts.partId', 'part_master.id')
                     .select(['assigned_parts.id as approvalId',
                         'part_master.partCategory',
-                        'part_master.id', 'part_master.partName', 'part_master.minimumQuantity', 'assigned_parts.unitCost as requestedPartsUnitCost', 'assigned_parts.quantity as requestedParts', 'assigned_parts.status as approvalStatus'])
+                        'part_master.id',
+                        'part_master.partName',
+                        'part_master.minimumQuantity',
+                        'assigned_parts.unitCost as requestedPartsUnitCost',
+                        'assigned_parts.quantity as requestedParts',
+                        'assigned_parts.status as approvalStatus',
+                        'assigned_parts.entityId'
+                    ])
                     .where({ 'part_master.orgId': req.orgId, 'assigned_parts.entityType': 'service_orders' })
                     .offset(offset)
                     .limit(per_page)
@@ -1697,10 +1735,26 @@ const partsController = {
     approvePartRequisitionRequest: async (req, res) => {
         try {
             let approvalId = req.body.approvalId;
+            let currentTime = new Date().getTime();
             const update = await knex('assigned_parts').update({ status: 'approved' }).where({ orgId: req.orgId, id: approvalId }).returning(['*'])
+            let assignedResult = update[0];
+            let quantity = "-" + assignedResult.quantity;
+
+            let ledgerObject = {
+                partId: assignedResult.partId,
+                unitCost: assignedResult.unitCost,
+                quantity: quantity,
+                isPartAdded: true,
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                adjustType: 1,
+                serviceOrderNo: assignedResult.entityId,
+                orgId: req.orgId
+            }
+            let partLedger = await knex.insert(ledgerObject).returning(['*']).into('part_ledger');
             return res.status(200).json({
                 data: {
-                    updatedStatus: update
+                    updatedStatus: {...update,partLedger}
                 }
             })
         } catch (err) {
@@ -1842,7 +1896,7 @@ const partsController = {
                 let invoiceData = quotationsData.invoiceData;
                 console.log("invoiceData", invoiceData);
                 let partsData = invoiceData.parts;
-                
+
 
                 filtered.parts = partsData.filter(function (partsData) {
                     return partsData.id !== partId;

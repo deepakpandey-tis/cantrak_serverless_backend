@@ -336,6 +336,8 @@ const propertyUnitController = {
   getPropertyUnitList: async (req, res) => {
     try {
 
+      let resourceProject = req.userProjectResources[0].projects;
+
       let sortPayload = req.body;
       if (!sortPayload.sortBy && !sortPayload.orderBy) {
         sortPayload.sortBy = "property_units.unitNumber";
@@ -393,8 +395,8 @@ const propertyUnitController = {
               if (houseId) {
                 qb.where('property_units.houseId', 'iLIKE', `%${houseId}%`)
               }
-
             })
+            .whereIn('property_units.projectId',resourceProject)
             .first(),
           knex
             .from("property_units")
@@ -437,6 +439,7 @@ const propertyUnitController = {
                 qb.where('property_units.houseId', 'iLIKE', `%${houseId}%`)
               }
             })
+            .whereIn('property_units.projectId',resourceProject)
             .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .offset(offset)
             .limit(per_page)
@@ -469,6 +472,7 @@ const propertyUnitController = {
             .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
             .where({ "floor_and_zones.isActive": true })
             .where({ "property_units.orgId": orgId })
+            .whereIn('property_units.projectId',resourceProject)
             .first(),
           knex("property_units")
             .leftJoin('users', 'property_units.createdBy', 'users.id')
@@ -484,6 +488,7 @@ const propertyUnitController = {
               "property_units.createdAt as Date Created"
             ])
             .where({ "property_units.orgId": orgId })
+            .whereIn('property_units.projectId',resourceProject)
             .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .offset(offset)
             .limit(per_page)

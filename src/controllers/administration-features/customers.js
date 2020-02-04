@@ -15,7 +15,10 @@ const emailHelper = require('../../helpers/email')
 const customerController = {
   getCustomers: async (req, res) => {
     try {
+      let resourceProject = req.userProjectResources[0].projects;
       let userDetails = null;
+      let units = null
+      let fullLocationDetails = []
       let customerId = req.query.customerId;
       if (customerId) {
         userDetails = await knex("users")
@@ -52,8 +55,23 @@ const customerController = {
             "user_house_allocation.status"
           ])
           .where({ 'users.id': customerId });
+
+        // Users property units start
+        units = await knex('user_house_allocation').select(['houseId','id']).where({userId:customerId})
+        for(let u of units){
+          let a = await knex('property_units').select([
+            'companyId',
+            'projectId',
+            'buildingPhaseId',
+            'floorZoneId',
+            'id as unit'
+          ]).where({id:u.houseId})
+          fullLocationDetails.push(a)
+
+        }
+        // users property units end
         return res.status(200).json({
-          userDetails: { ...userDetails[0], propertyDetails: userDetails },
+          userDetails: { ...userDetails[0], propertyDetails: userDetails, fullLocationDetails },
         });
       }
 
@@ -195,6 +213,8 @@ const customerController = {
 
       } else {
 
+
+
         [total, rows] = await Promise.all([
           knex("users")
             .leftJoin(
@@ -219,11 +239,11 @@ const customerController = {
               "users.id as userId",
               "users.isActive"
             ])
-
             .where({
               "application_user_roles.roleId": 4,
               "users.orgId": req.orgId
             })
+            .whereIn('property_units.projectId',resourceProject)
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
 
@@ -266,6 +286,7 @@ const customerController = {
               "application_user_roles.roleId": 4,
               "users.orgId": req.orgId
             })
+            .whereIn('property_units.projectId',resourceProject)
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
 
@@ -383,6 +404,7 @@ const customerController = {
           "floorZoneId",
           "projectId",
           "unit",
+          "houses"
         ]);
 
         //let payload = req.body;
@@ -460,10 +482,12 @@ const customerController = {
         console.log(payload);
 
         /*INSERT HOUSE ID OPEN */
-        // let houseResult = await knex("user_house_allocation")
-        //   .insert({ houseId: req.body.unitId, userId: insertedUser[0].id, status: 1, orgId: orgId, createdAt: currentTime, updatedAt: currentTime })
-        //   .returning(["*"])
-        //   .transacting(trx);
+        for(let house of req.body.houses){
+         await knex("user_house_allocation")
+            .insert({ houseId: house.unit, userId: insertedUser[0].id, status: 1, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime })
+            .returning(["*"])
+            .transacting(trx);
+        }
         /*INSERT HOUSE ID CLOSE */
 
         // Insert this users role as customer
@@ -509,6 +533,7 @@ const customerController = {
           "floorZoneId",
           "projectId",
           "unit",
+          "houses"
         ]);
 
         //let payload = req.body;
@@ -598,12 +623,41 @@ const customerController = {
           .where({ id: payload.id });
         console.log(payload);
 
-        /*INSERT HOUSE ID OPEN */
-        // let houseResult = await knex("user_house_allocation")
-        //   .insert({ houseId: req.body.unitId, userId: insertedUser[0].id, status: 1, orgId: orgId, createdAt: currentTime, updatedAt: currentTime })
-        //   .returning(["*"])
-        //   .transacting(trx);
-        /*INSERT HOUSE ID CLOSE */
+
+        let dbItems = await knex('user_house_allocation').select(['houseId','userId']).where({userId:payload.id})
+        let items = req.body.houses.map(v => ({houseId:v.unit, userId:payload.id}))
+        console.log('DB Items:********************************************************** ',dbItems)
+        console.log('Items:*********************************************************** ',items)
+        const removedItems = _.differenceWith(dbItems, items, (a,b) => {
+          if(a.houseId == b.houseId && a.userId == b.userId){
+            return true;
+          }
+          return false
+        });
+
+        console.log('Removed Items:********************************************************** ', removedItems)
+
+
+        const newItems = _.differenceWith(items, dbItems, (a, b) => {
+          if (a.houseId == b.houseId && a.userId == b.userId) {
+            return true;
+          }
+          return false
+        });
+
+        console.log('New Items:********************************************************** ', newItems)
+
+        for(let r of removedItems){
+          await knex('user_house_allocation').del().where({houseId:r.houseId})
+        }
+
+        for (let house of newItems) {
+          //let s = await knex('user_house_allocation').select(['houseId']).where({houseId:house.unit,userId:insertedUser[0].id})
+         // if(Array.isArray(s) && !s.length){
+            await knex("user_house_allocation")
+              .insert({ houseId: house.houseId, userId: insertedUser[0].id, status: 1, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime })
+         // }
+        }
         trx.commit;
       })
       return res.status(200).json({

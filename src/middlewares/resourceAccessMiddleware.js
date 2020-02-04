@@ -2,7 +2,7 @@ const createError = require('http-errors')
 
 const resourceAccessMiddleware = {
   isPMAccessible: async (req, res, next) => {
-    if(req.superAdmin) {
+    if (req.superAdmin) {
       return next();
     }
     let keys = req.userProjectResources.map(v => v.id);
@@ -13,7 +13,7 @@ const resourceAccessMiddleware = {
     }
   },
   isCMAccessible: async (req, res, next) => {
-    if(req.superAdmin) {
+    if (req.superAdmin) {
       return next();
     }
     let keys = req.userProjectResources.map(v => v.id);
@@ -24,7 +24,7 @@ const resourceAccessMiddleware = {
     }
   },
   isPartAccessible: async (req, res, next) => {
-    if(req.superAdmin) {
+    if (req.superAdmin) {
       return next();
     }
     let keys = req.userProjectResources.map(v => v.id);
@@ -35,9 +35,10 @@ const resourceAccessMiddleware = {
     }
   },
   isAssetAccessible: async (req, res, next) => {
-    if(req.superAdmin) {
+    if (req.superAdmin) {
       return next();
     }
+    //console.log("===================",req.userProjectResources,"==================")
     let keys = req.userProjectResources.map(v => v.id);
     if (keys.includes("4")) {
       next();
@@ -46,11 +47,22 @@ const resourceAccessMiddleware = {
     }
   },
   isBillingAccessible: async (req, res, next) => {
-    if(req.superAdmin) {
+    if (req.superAdmin) {
       return next();
     }
     let keys = req.userProjectResources.map(v => v.id);
     if (keys.includes("6")) {
+      next();
+    } else {
+      next(createError(403));
+    }
+  },
+  isPropertySetupAccessible: async (req, res, next) => {
+    if (req.superAdmin) {
+      return next();
+    }
+    let keys = req.userProjectResources.map(v => v.id);
+    if (keys.includes("7")) {
       next();
     } else {
       next(createError(403));
