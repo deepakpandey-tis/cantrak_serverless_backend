@@ -392,7 +392,7 @@ const serviceDetailsController = {
             "service_requests.description as descriptions",
             "service_requests.location",
             "service_requests.serviceStatusCode as serviceStatusCode",
-            "service_requests.updatedAt as updatedAt",
+            "service_requests.updatedAt as sRUpdatedAt",
             "service_requests.createdAt as createdAt",
             //"reqBy.name as requestedBy",
             "users.name as createdUser",
@@ -458,11 +458,7 @@ const serviceDetailsController = {
 
         generalDetails = DataResult;
         generalDetails.uploadedImages = imagesResult;
-
-
-
         trx.commit;
-
       });
 
       res.status(200).json({

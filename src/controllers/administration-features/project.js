@@ -849,6 +849,44 @@ const ProjectController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  getUserProjectByCompany: async (req, res) => {
+    try {
+      let companyId = req.query.companyId;
+    
+
+      let pagination = {}
+      console.log("companyId", companyId);
+
+      let rows = await knex("projects")
+        .innerJoin("companies", "projects.companyId", "companies.id")
+        .where({ "projects.companyId": companyId, "projects.isActive": 'true' })
+        .select([
+          "projects.id as id",
+          "projects.projectName",
+          "companies.companyName",
+          "companies.id as cid",
+          "companies.companyId",
+          "projects.project as projectId"
+        ])
+
+      console.log("rows", rows);
+
+      pagination.data = rows;
+
+      return res.status(200).json({
+        data: {
+          projects: pagination
+        },
+        message: "projects List!"
+      });
+    } catch (err) {
+      console.log("[controllers][generalsetup][viewProject] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 
 };
