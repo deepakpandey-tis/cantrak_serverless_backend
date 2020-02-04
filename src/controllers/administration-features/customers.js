@@ -16,6 +16,8 @@ const customerController = {
   getCustomers: async (req, res) => {
     try {
       let userDetails = null;
+      let units = null
+      let fullLocationDetails = []
       let customerId = req.query.customerId;
       if (customerId) {
         userDetails = await knex("users")
@@ -52,8 +54,23 @@ const customerController = {
             "user_house_allocation.status"
           ])
           .where({ 'users.id': customerId });
+
+        // Users property units start
+        units = await knex('user_house_allocation').select(['houseId','id']).where({userId:customerId})
+        for(let u of units){
+          let a = await knex('property_units').select([
+            'companyId',
+            'projectId',
+            'buildingPhaseId',
+            'floorZoneId',
+            'id as unit'
+          ]).where({id:u.houseId})
+          fullLocationDetails.push(a)
+
+        }
+        // users property units end
         return res.status(200).json({
-          userDetails: { ...userDetails[0], propertyDetails: userDetails },
+          userDetails: { ...userDetails[0], propertyDetails: userDetails, fullLocationDetails },
         });
       }
 
@@ -383,6 +400,7 @@ const customerController = {
           "floorZoneId",
           "projectId",
           "unit",
+          "houses"
         ]);
 
         //let payload = req.body;
@@ -460,10 +478,12 @@ const customerController = {
         console.log(payload);
 
         /*INSERT HOUSE ID OPEN */
-        // let houseResult = await knex("user_house_allocation")
-        //   .insert({ houseId: req.body.unitId, userId: insertedUser[0].id, status: 1, orgId: orgId, createdAt: currentTime, updatedAt: currentTime })
-        //   .returning(["*"])
-        //   .transacting(trx);
+        for(let house of req.body.houses){
+         await knex("user_house_allocation")
+            .insert({ houseId: house.unit, userId: insertedUser[0].id, status: 1, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime })
+            .returning(["*"])
+            .transacting(trx);
+        }
         /*INSERT HOUSE ID CLOSE */
 
         // Insert this users role as customer
@@ -509,6 +529,7 @@ const customerController = {
           "floorZoneId",
           "projectId",
           "unit",
+          "houses"
         ]);
 
         //let payload = req.body;
@@ -598,12 +619,17 @@ const customerController = {
           .where({ id: payload.id });
         console.log(payload);
 
-        /*INSERT HOUSE ID OPEN */
-        // let houseResult = await knex("user_house_allocation")
-        //   .insert({ houseId: req.body.unitId, userId: insertedUser[0].id, status: 1, orgId: orgId, createdAt: currentTime, updatedAt: currentTime })
-        //   .returning(["*"])
-        //   .transacting(trx);
-        /*INSERT HOUSE ID CLOSE */
+        // TODO: need to change this in future
+        let assignedHouseIds = await knex('user_house_allocation').select('houseId').where({userId:payload.id})
+        let newHouseIds = req.body.houses.map(v => v.unit);
+        console.log('ASSIGNED*******************************************************', assignedHouseIds, '*******', newHouseIds)
+
+        // await knex('user_house_allocation').del().where({ userId: payload.id})
+        // for (let house of req.body.houses) {
+        //   await knex("user_house_allocation")
+        //     .insert({ houseId: house.unit, userId: insertedUser[0].id, status: 1, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime })
+        //     // .insert({ houseId: house.unit, updatedAt: currentTime })
+        // }
         trx.commit;
       })
       return res.status(200).json({
