@@ -122,12 +122,8 @@ const serviceRequestController = {
           serviceRequestId: Joi.string().required(),
           problemId: Joi.string().required(),
           categoryId: Joi.string().required(),
-          description: Joi.string().required(),
-          images: Joi.array().items(
-            Joi.object()
-              .keys()
-              .min(1)
-          )
+          description: Joi.string().allow("").optional(),
+          images: Joi.array().items(Joi.object().keys().min(1))
         });
 
         const result = Joi.validate(serviceProblemPayload, schema);

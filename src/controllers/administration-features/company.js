@@ -925,6 +925,70 @@ const companyController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  }, // Company User List Data
+  getUserCompanyList: async (req, res) => {
+    try {
+      let reqData = req.query;
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+      let total, rows;
+    
+      [total, rows] = await Promise.all([
+        knex
+          .count("* as count")
+          .from("companies")
+          .leftJoin("users", "users.id", "companies.createdBy")
+          .leftJoin("organisations", "companies.orgId", "organisations.id")
+          .where('organisations.isActive', true)
+          .where({ "companies.orgId": req.orgId })
+          .first(),
+        knex("companies")
+          .leftJoin("users", "users.id", "companies.createdBy")
+          .leftJoin("organisations", "companies.orgId", "organisations.id")
+          .where('organisations.isActive', true)
+          .where({ "companies.orgId": req.orgId })         
+          .select([
+            "companies.id as id",
+            "companies.companyName as Company Name",
+            "companies.contactPerson as Contact Person",
+            "companies.telephone as Contact Number",
+            "companies.isActive as Status",
+            "users.name as Created By",
+            "companies.createdAt as Date Created",
+            "companies.companyId",
+          ])
+          .orderBy('companies.id', 'desc')
+          .offset(offset)
+          .limit(per_page)
+      ]);
+
+
+      let count = total.count;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+      return res.status(200).json({
+        data: {
+          companies: pagination
+        },
+        message: "Companies List!"
+      });
+    } catch (err) {
+      console.log("[controllers][generalsetup][viewCompany] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 

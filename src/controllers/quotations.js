@@ -1360,7 +1360,6 @@ const quotationsController = {
     try {
       let { quotationId } = req.body;
       let rows;
-      let companyInfo;
       let userInfo;
       let requesterInfo;
       let orgId = req.orgId;
@@ -1385,67 +1384,190 @@ const quotationsController = {
 
 
       let serviceMaster = await knex("quotations")
-        .select("serviceRequestId")
-        .where({ id: quotationId, orgId: orgId });
+        .leftJoin("users", "quotations.createdBy", "=", "users.id")
+        .select(
+          "quotations.serviceRequestId",
+          "users.name as quotationsCreated"
+        )
+        .where({ "quotations.id": quotationId, "quotations.orgId": orgId }).first();
 
-      let serviceRequestId = serviceMaster[0].serviceRequestId;
-      console.log("serviceReqeuestId", serviceRequestId);
+      let serviceRequestId = serviceMaster.serviceRequestId;
+      console.log("serviceRequestId", serviceRequestId);
 
       const DataResult = await knex("service_requests").where({
         id: serviceRequestId,
         isActive: "true"
-      });
+      }).first();
+
 
       requesterInfo = await knex("service_requests")
-        .join("users", "service_requests.requestedBy", "=", "users.id")
-        .join("application_user_roles", "service_requests.requestedBy", "=", "application_user_roles.userId")
+        .leftJoin("requested_by", "service_requests.requestedBy", "=", "requested_by.id")
+        .leftJoin("source_of_request", "service_requests.serviceType", "=", "source_of_request.id")
+        .select(
+          "requested_by.name",
+          "source_of_request.requestCode",
+          "service_requests.createdAt"
+        )
+        .where({
+          "service_requests.id": serviceRequestId
+        }).first();
+      requesterData = requesterInfo;
+      console.log("requestedByDetails", requesterData);
+
+
+      tenantInfo = await knex("user_house_allocation")
+        .leftJoin("users", "user_house_allocation.userId", "=", "users.id")
         .select(
           "users.name",
+          "users.mobileNo",
           "users.email",
-          "users.mobileNo"
+          "users.location"
         )
         .where({
-          "service_requests.id": serviceRequestId,
-          "service_requests.orgId": orgId,
-          "application_user_roles.roleId": 4
-        });
+          "user_house_allocation.houseId": DataResult.houseId
+        }).first();
+      tenantData = tenantInfo;
+      console.log("tenantDataInfo", tenantData);
 
-      if (requesterInfo.length > 0) {
-        userInfo = requesterInfo[0];
-      } else {
-        requesterInfo = await knex("user_house_allocation")
-          .join("users", "user_house_allocation.userId", "=", "users.id")
-          .select(
-            "users.name",
-            "users.email",
-            "users.mobileNo"
-          )
-          .where({
-            "user_house_allocation.houseId": DataResult[0].houseId,
-            "user_house_allocation.orgId": orgId
-          });
-        console.log("requestInfo", requesterInfo);
-
-        userInfo = requesterInfo[0];
-      }
-
-      console.log("requestId", userInfo);
-
-      companyInfo = await knex("property_units")
-        .join("companies", "property_units.companyId", "=", "companies.id")
+      propertyInfo = await knex("property_units")
+        .leftJoin("companies", "property_units.companyId", "=", "companies.id")
+        .leftJoin("projects", "property_units.projectId", "=", "projects.id")
+        .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "=", "buildings_and_phases.id")
+        .leftJoin("floor_and_zones", "property_units.floorZoneId", "=", "floor_and_zones.id")
         .select(
           "companies.companyName",
-          "companies.contactPerson",
-          "companies.companyAddressEng"
+          "projects.project as projectCode",
+          "projects.projectName",
+          "buildings_and_phases.buildingPhaseCode",
+          "buildings_and_phases.description as buildingPhaseDescription",
+          "floor_and_zones.floorZoneCode",
+          "floor_and_zones.description as floorZoneDescription",
+          "property_units.unitNumber as unitNumber",
+          "property_units.description as unitDescription",
+          "property_units.houseId as houseId",
+          "companies.logoFile"
         )
         .where({
-          "property_units.id": DataResult[0].houseId,
-          "property_units.orgId": orgId
-        });
+          "property_units.id": DataResult.houseId
+        }).first();
 
+      userInfo = { ...tenantInfo, requesterInfo, propertyInfo, serviceMaster }
       pagination.data = rows;
-      pagination.company = companyInfo;
-      pagination.customer = userInfo;
+      pagination.tenant = userInfo;
+      // pagination.propertyDetails = userInfo;
+      // pagination.companyData = companyInfo;
+
+      return res.status(200).json({
+        data: {
+          quotation: pagination
+        }
+      });
+    } catch (err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getServiceOrderInvoice: async (req, res) => {
+    try {
+      let { serviceOrderId } = req.body;
+      let rows;
+      let userInfo;
+      let requesterInfo;
+      let orgId = req.orgId;
+
+      let pagination = {};
+      [rows] = await Promise.all([
+        knex("quotations")
+          .leftJoin(
+            "taxes",
+            "quotations.vatId",
+            "taxes.id"
+          )
+          .select([
+            "taxes.taxCode as taxCode",
+            "quotations.*"
+          ])
+          .where({
+            "quotations.id": quotationId,
+            "quotations.orgId": req.orgId
+          })
+      ]);
+
+
+      let serviceMaster = await knex("quotations")
+        .leftJoin("users", "quotations.createdBy", "=", "users.id")
+        .select(
+          "quotations.serviceRequestId",
+          "users.name as quotationsCreated"
+        )
+        .where({ "quotations.id": quotationId, "quotations.orgId": orgId }).first();
+
+      let serviceRequestId = serviceMaster.serviceRequestId;
+      console.log("serviceRequestId", serviceRequestId);
+
+      const DataResult = await knex("service_requests").where({
+        id: serviceRequestId,
+        isActive: "true"
+      }).first();
+
+
+      requesterInfo = await knex("service_requests")
+        .leftJoin("requested_by", "service_requests.requestedBy", "=", "requested_by.id")
+        .leftJoin("source_of_request", "service_requests.serviceType", "=", "source_of_request.id")
+        .select(
+          "requested_by.name",
+          "source_of_request.requestCode",
+          "service_requests.createdAt"
+        )
+        .where({
+          "service_requests.id": serviceRequestId
+        }).first();
+      requesterData = requesterInfo;
+      console.log("requestedByDetails", requesterData);
+
+
+      tenantInfo = await knex("user_house_allocation")
+        .leftJoin("users", "user_house_allocation.userId", "=", "users.id")
+        .select(
+          "users.name",
+          "users.mobileNo",
+          "users.email",
+          "users.location"
+        )
+        .where({
+          "user_house_allocation.houseId": DataResult.houseId
+        }).first();
+      tenantData = tenantInfo;
+      console.log("tenantDataInfo", tenantData);
+
+      propertyInfo = await knex("property_units")
+        .leftJoin("companies", "property_units.companyId", "=", "companies.id")
+        .leftJoin("projects", "property_units.projectId", "=", "projects.id")
+        .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "=", "buildings_and_phases.id")
+        .leftJoin("floor_and_zones", "property_units.floorZoneId", "=", "floor_and_zones.id")
+        .select(
+          "companies.companyName",
+          "projects.project as projectCode",
+          "projects.projectName",
+          "buildings_and_phases.buildingPhaseCode",
+          "buildings_and_phases.description as buildingPhaseDescription",
+          "floor_and_zones.floorZoneCode",
+          "floor_and_zones.description as floorZoneDescription",
+          "property_units.unitNumber as unitNumber",
+          "property_units.description as unitDescription",
+          "property_units.houseId as houseId",
+          "companies.logoFile"
+        )
+        .where({
+          "property_units.id": DataResult.houseId
+        }).first();
+
+      userInfo = { ...tenantInfo, requesterInfo, propertyInfo, serviceMaster }
+      pagination.data = rows;
+      pagination.tenant = userInfo;
+      // pagination.propertyDetails = userInfo;
+      // pagination.companyData = companyInfo;
 
       return res.status(200).json({
         data: {
@@ -1655,11 +1777,11 @@ const quotationsController = {
           .where({ id: quotationId });
       }
 
-      return res.status(200).json({ 
-        data: { 
-          status: updateStatus 
-        }, 
-        message: "Quotation status updated successfully!" 
+      return res.status(200).json({
+        data: {
+          status: updateStatus
+        },
+        message: "Quotation status updated successfully!"
       });
 
     } catch (err) {
