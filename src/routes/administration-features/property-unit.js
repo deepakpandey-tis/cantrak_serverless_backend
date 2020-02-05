@@ -34,8 +34,6 @@ router.post('/delete-property-unit',
 
 router.post('/get-unit-by-floor',
   authMiddleware.isAuthenticated,
-  //roleMiddleware.parseUserPermission,
-  //resourceAccessMiddleware.isPropertySetupAccessible,
   propertyUnitController.getPropertyUnitListByFloor)
 
 router.post('/get-property-unit-list',
@@ -64,8 +62,6 @@ router.post('/get-property-unit-details',
 
 router.post("/check-house-id",
   authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
   propertyUnitController.checkHouseId);
 
 
@@ -100,8 +96,6 @@ router.post(
 /*GET ALL PROPERTY UNIT LIST FOR DROP DOWN */
 router.get("/get-all-property-unit",
   authMiddleware.isAuthenticated,
-  //roleMiddleware.parseUserPermission,
-  //resourceAccessMiddleware.isPropertySetupAccessible,
   propertyUnitController.getAllPropertyUnit);
 
 router.post('/toggle-status',

@@ -34,8 +34,6 @@ router.post('/delete-building-phase',
 
 router.post('/get-building-phase-by-project-id',
   authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
   buildingPhaseController.getBuildingPhaseListByProjectId)
 
 router.post('/get-building-phase-list',
@@ -52,8 +50,6 @@ router.get('/export-building-phase',
 
 router.get('/get-buildings-phases-all-list',
   authMiddleware.isAuthenticated,
-  //roleMiddleware.parseUserPermission,
-  //resourceAccessMiddleware.isPropertySetupAccessible,
   buildingPhaseController.getBuildingPhaseAllList)
 
 

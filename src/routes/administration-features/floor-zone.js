@@ -32,8 +32,6 @@ router.post('/delete-floor-zone',
 
 router.post('/get-floor-zone-list-by-building-id',
   authMiddleware.isAuthenticated,
-  //roleMiddleware.parseUserPermission,
-  //resourceAccessMiddleware.isPropertySetupAccessible,
   floorZoneController.getFloorZoneListByBuildingId)
 
 router.post('/get-floor-zone-list',
@@ -53,6 +51,7 @@ router.get('/get-floor-zone-all-list',
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
   floorZoneController.getFloorZoneAllList)
+  
 /**IMPORT FLOOR/ZONE DATA */
 const path = require('path');
 let tempraryDirectory = null;
