@@ -100,8 +100,8 @@ router.post(
 /*GET ALL PROPERTY UNIT LIST FOR DROP DOWN */
 router.get("/get-all-property-unit",
   authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  //roleMiddleware.parseUserPermission,
+  //resourceAccessMiddleware.isPropertySetupAccessible,
   propertyUnitController.getAllPropertyUnit);
 
 router.post('/toggle-status',
