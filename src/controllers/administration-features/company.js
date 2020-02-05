@@ -989,6 +989,109 @@ const companyController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  getCompanyListHavingPropertyUnits:async(req,res) => {
+    try {
+      let pagination = {};
+      let result;
+      let companyHavingPU1
+      let companyArr1 = []
+      // let companyHavingPU2
+      // let companyArr2 =[]
+      // let companyHavingPU3
+      // let companyArr3=[]
+      // let companyHavingPU4
+      // let companyArr4=[]
+      // if(req.query.areaName === 'common'){
+      //   companyHavingPU2 = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+      //   companyArr2 = companyHavingPU2.map(v => v.companyId)
+
+      //   companyHavingPU3 = await knex('floor_and_zones').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+      //   companyArr3 = companyHavingPU3.map(v => v.companyId)
+
+      //   companyHavingPU4 = await knex('projects').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+      //   companyArr4 = companyHavingPU4.map(v => v.companyId)
+      // } else {
+
+      // companyHavingPU1 = await knex('property_units').select(['companyId']).where({orgId:req.orgId,isActive:true})
+      // companyArr1 = companyHavingPU1.map(v => v.companyId)
+
+      // companyHavingPU2 = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+      // companyArr2 = companyHavingPU2.map(v => v.companyId)
+
+      // companyHavingPU3 = await knex('floor_and_zones').select(['companyId']).where({orgId:req.orgId,isActive:true})
+      // companyArr3 = companyHavingPU3.map(v => v.companyId)
+
+      // companyHavingPU4 = await knex('projects').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+      // companyArr4 = companyHavingPU4.map(v => v.companyId)
+      // }
+
+      //let finalArr = _.intersection(companyArr4, companyArr2, companyArr3,companyArr1)
+
+
+      if(req.query.areaName === 'common'){
+        companyHavingPU1 = await knex('common_area').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+        companyArr1 = companyHavingPU1.map(v => v.companyId)
+        result = await knex("companies")
+          .innerJoin('common_area', 'companies.id', 'common_area.companyId')
+          .select("companies.id", "companies.companyId", "companies.companyName as CompanyName")
+          .where({ 'companies.isActive': true, 'companies.orgId': req.orgId })
+          .whereIn('companies.id', companyArr1)
+          .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
+          .orderBy('companies.companyName', 'asc')
+
+//         result = await knex.raw(`
+//         SELECT public.companies.*
+// FROM public.companies
+// WHERE EXISTS (
+// SELECT 1 FROM public.common_area
+// WHERE public.common_area."companyId" = public.companies.id
+// ) and public.companies."orgId" = ${req.orgId}
+// `)
+
+      } else {
+
+//         result = await knex.raw(`
+//         SELECT public.companies.*
+// FROM public.companies
+// WHERE EXISTS (
+// SELECT 1 FROM public.common_area
+// WHERE public.common_area."companyId" = public.companies.id
+// ) and public.companies."orgId" = ${req.orgId}
+//         `)
+
+        companyHavingPU1 = await knex('property_units').select(['companyId']).where({orgId:req.orgId,isActive:true})
+        companyArr1 = companyHavingPU1.map(v => v.companyId)
+          result =await knex("companies")
+            .innerJoin('property_units','companies.id','property_units.companyId')
+              .select("companies.id", "companies.companyId", "companies.companyName as CompanyName")
+              .where({ 'companies.isActive': true, 'companies.orgId': req.orgId })
+              .whereIn('companies.id',companyArr1)
+            .groupBy(['companies.id', 'companies.companyName','companies.companyId'])
+              .orderBy('companies.companyName','asc')
+      }
+        
+
+      
+     
+
+      pagination.data = result;
+      return res.status(200).json({
+        data: {
+          companies: pagination
+        },
+        message: "Companies List!"
+      });
+    } catch(err) {
+      console.log(
+        "[controllers][propertysetup][getCompanyListHavingPropertyUnits] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 

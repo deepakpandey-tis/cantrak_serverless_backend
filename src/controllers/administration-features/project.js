@@ -887,6 +887,89 @@ const ProjectController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  getProjectListHavingPropertyUnits:async(req,res) =>{
+    try {
+      let companyId = req.query.companyId;
+      let projects = _.flatten(
+        req.userProjectResources.map(v => v.projects)
+      ).map(v => Number(v));
+
+      console.log("==========", projects, "==========")
+
+      let pagination = {}
+      console.log("companyId", companyId);
+      let companyHavingProjects = []
+      let companyArr1 = []
+      let rows = []
+
+      if(req.query.areaName === 'common'){
+       
+        companyHavingProjects = await knex('projects').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+        companyArr1 = companyHavingProjects.map(v => v.companyId)
+        rows = await knex("projects")
+          .innerJoin('companies', 'projects.companyId', 'companies.id')
+          .innerJoin('common_area', 'projects.id', 'common_area.projectId')
+          .where({ "projects.companyId": companyId, "projects.isActive": true })
+          .whereIn('projects.id', projects)
+          .whereIn('projects.companyId', companyArr1)
+          .select([
+            "projects.id as id",
+            "projects.projectName",
+            "companies.companyName",
+            "companies.id as cid",
+            "companies.companyId",
+            "projects.project as projectId"
+          ]).groupBy(["projects.id",
+            "projects.projectName",
+            "companies.companyName",
+            "companies.id",
+            "companies.companyId",
+            "projects.project"])
+          .orderBy('projects.projectName', 'asc')
+      } else {
+        
+        companyHavingProjects = await knex('projects').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+        companyArr1 = companyHavingProjects.map(v => v.companyId)
+        rows = await knex("projects")
+          .innerJoin('companies','projects.companyId','companies.id')
+          .innerJoin('property_units', 'projects.id', 'property_units.projectId')
+          .where({ "projects.companyId": companyId, "projects.isActive": true })
+          .whereIn('projects.id', projects)
+          .whereIn('projects.companyId',companyArr1)
+          .select([
+            "projects.id as id",
+            "projects.projectName",
+            "companies.companyName",
+            "companies.id as cid",
+            "companies.companyId",
+            "projects.project as projectId"
+          ]).groupBy(["projects.id",
+            "projects.projectName",
+            "companies.companyName",
+            "companies.id",
+            "companies.companyId",
+            "projects.project"])
+            .orderBy('projects.projectName','asc')
+      }
+
+      console.log("rows", rows);
+
+      pagination.data = rows;
+
+      return res.status(200).json({
+        data: {
+          projects: pagination
+        },
+        message: "projects List!"
+      });
+    } catch(err) {
+      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 
 };
