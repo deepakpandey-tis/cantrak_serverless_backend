@@ -83,4 +83,7 @@ router.post('/check-service-request-id', authMiddleware.isAuthenticated, roleMid
 
 router.post('/get-service-request-assigned-teams', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isCMAccessible, serviceRequestController.getServiceAssignedTeamAndUsers)
 router.post('/update-service-request-project-id',authMiddleware.isAuthenticated,roleMiddleware.parseUserPermission,resourceAccessMiddleware.isCMAccessible,serviceRequestController.updateServiceRequestProjectId)
+
+router.post('/get-assigned-assets-by-entity',authMiddleware.isAuthenticated,roleMiddleware.parseUserPermission,resourceAccessMiddleware.isAssetAccessible,serviceRequestController.getAssignedAssetsByEntity)
+
 module.exports = router;

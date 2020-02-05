@@ -1131,10 +1131,13 @@ const chargeController = {
           )
           .select([
             "charge_master.chargeCode as chargeCode",
+            "charge_master.descriptionEng as descriptionEng",
+            "charge_master.descriptionThai as descriptionThai",
             "charge_master.id as id",
             "charge_master.calculationUnit as calculationUnit",
             "assigned_service_charges.rate as rate",
-            "assigned_service_charges.totalHours as totalHours"
+            "assigned_service_charges.totalHours as totalHours",
+            "assigned_service_charges.id as cid"
           ])
           .where({
             entityId: serviceOrderId,
@@ -1148,10 +1151,13 @@ const chargeController = {
           )
           .select([
             "charge_master.chargeCode as chargeCode",
+            "charge_master.descriptionEng as descriptionEng",
+            "charge_master.descriptionThai as descriptionThai",
             "charge_master.id as id",
             "charge_master.calculationUnit as calculationUnit",
             "assigned_service_charges.rate as rate",
-            "assigned_service_charges.totalHours as totalHours"
+            "assigned_service_charges.totalHours as totalHours",
+            "assigned_service_charges.id as cid"
           ])
           .where({
             entityId: serviceOrderId,
