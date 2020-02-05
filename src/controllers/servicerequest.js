@@ -2478,6 +2478,26 @@ const serviceRequestController = {
         }
       })
     }
+  },
+  getAssignedAssetsByEntity:async(req,res) => {
+    try {
+      const {entityId,entityType} = req.body;
+      let assigned_assets = []
+        assigned_assets = await knex('assigned_assets')
+        .innerJoin('asset_master','assigned_assets.assetId','asset_master.id')
+        .select(['asset.id as assetId','asset_master.assetName'])
+        .where({'assigned_assets.entityId':entityId,'assigned_assets.entityType':entityType})
+        
+      return res.status(200).json({
+        data: {
+          assigned_assets
+        }
+      })
+    } catch(err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 
