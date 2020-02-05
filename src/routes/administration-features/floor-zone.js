@@ -32,8 +32,8 @@ router.post('/delete-floor-zone',
 
 router.post('/get-floor-zone-list-by-building-id',
   authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  //roleMiddleware.parseUserPermission,
+  //resourceAccessMiddleware.isPropertySetupAccessible,
   floorZoneController.getFloorZoneListByBuildingId)
 
 router.post('/get-floor-zone-list',

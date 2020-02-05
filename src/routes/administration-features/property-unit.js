@@ -34,8 +34,8 @@ router.post('/delete-property-unit',
 
 router.post('/get-unit-by-floor',
   authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  //roleMiddleware.parseUserPermission,
+  //resourceAccessMiddleware.isPropertySetupAccessible,
   propertyUnitController.getPropertyUnitListByFloor)
 
 router.post('/get-property-unit-list',

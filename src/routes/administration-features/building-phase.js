@@ -52,8 +52,8 @@ router.get('/export-building-phase',
 
 router.get('/get-buildings-phases-all-list',
   authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  //roleMiddleware.parseUserPermission,
+  //resourceAccessMiddleware.isPropertySetupAccessible,
   buildingPhaseController.getBuildingPhaseAllList)
 
 
