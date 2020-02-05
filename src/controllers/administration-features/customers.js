@@ -15,7 +15,6 @@ const emailHelper = require('../../helpers/email')
 const customerController = {
   getCustomers: async (req, res) => {
     try {
-      let resourceProject = req.userProjectResources[0].projects;
       let userDetails = null;
       let units = null
       let fullLocationDetails = []
@@ -213,7 +212,7 @@ const customerController = {
 
       } else {
 
-
+        let resourceProject = req.userProjectResources[0].projects;
 
         [total, rows] = await Promise.all([
           knex("users")
