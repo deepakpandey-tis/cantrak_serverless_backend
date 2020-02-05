@@ -55,6 +55,7 @@ const surveyUserOrderRouter = require("./users/surveyorder");
 const serviceAppointmentRouter = require("./users/service-appointment");
 const quotationUserRouter = require("./users/quotations"); 
 const sharedListingRouter = require('./shared-listing')
+const invoiceRouter = require('./invoice')
 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
@@ -119,5 +120,6 @@ router.use('/users/surveyorder', surveyUserOrderRouter);
 router.use('/users/service-appointment', serviceAppointmentRouter);
 router.use('/users/quotations', quotationUserRouter);
 router.use('/shared-listing',sharedListingRouter)
+router.use('/invoice',invoiceRouter)
 
 module.exports = router;
