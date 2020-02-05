@@ -1029,6 +1029,111 @@ const buildingPhaseController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  getBuildingPhaseAllListHavingPropertyUnits: async (req, res) => {
+    try {
+      let projectId = req.query.projectId;
+      let orgId = req.orgId;
+
+      let buildingData = {};
+      //console.log(orgId);
+
+      let companyHavingProjects = []
+      let companyArr1 = []
+      let rows = []
+
+      if(req.query.areaName === 'common'){
+        companyHavingProjects = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+        companyArr1 = companyHavingProjects.map(v => v.companyId)
+        rows = await knex("buildings_and_phases")
+            .innerJoin(
+              "projects",
+              "buildings_and_phases.projectId",
+              "projects.id"
+            )
+            .innerJoin(
+              "property_types",
+              "buildings_and_phases.propertyTypeId",
+              "property_types.id"
+            )
+            .innerJoin('common_area', 'buildings_and_phases.id', 'common_area.buildingPhaseId')
+            .where({
+              "buildings_and_phases.isActive": true,
+              "buildings_and_phases.projectId": projectId,
+              "buildings_and_phases.orgId": orgId
+            })
+            .select([
+              "buildings_and_phases.id as id",
+              "buildings_and_phases.buildingPhaseCode",
+              "property_types.propertyType",
+              "buildings_and_phases.description",
+              "property_types.propertyTypeCode",
+            ])
+            .whereIn('projects.companyId', companyArr1)
+            .groupBy(["buildings_and_phases.id",
+              "buildings_and_phases.buildingPhaseCode",
+              "property_types.propertyType",
+              "buildings_and_phases.description",
+              "property_types.propertyTypeCode",])
+        
+
+      } else {
+        companyHavingProjects = await knex('projects').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+        companyArr1 = companyHavingProjects.map(v => v.companyId)
+        rows = await knex("buildings_and_phases")
+            .innerJoin(
+              "projects",
+              "buildings_and_phases.projectId",
+              "projects.id"
+            )
+            .innerJoin(
+              "property_types",
+              "buildings_and_phases.propertyTypeId",
+              "property_types.id"
+            )
+            .innerJoin('property_units', 'buildings_and_phases.id', 'property_units.buildingPhaseId')
+            .where({
+              "buildings_and_phases.isActive": true,
+              "buildings_and_phases.projectId": projectId,
+              "buildings_and_phases.orgId": orgId
+            })
+            .select([
+              "buildings_and_phases.id as id",
+              "buildings_and_phases.buildingPhaseCode",
+              "property_types.propertyType",
+              "buildings_and_phases.description",
+              "property_types.propertyTypeCode",
+            ])
+            .whereIn('projects.companyId', companyArr1)
+            .groupBy(["buildings_and_phases.id",
+              "buildings_and_phases.buildingPhaseCode",
+              "property_types.propertyType",
+              "buildings_and_phases.description",
+              "property_types.propertyTypeCode",])
+        
+
+        console.log('BUILDING LIST:******************************************************************* ',rows)
+      }
+
+
+      buildingData.data = rows;
+
+      return res.status(200).json({
+        data: {
+          buildingPhases: buildingData
+        },
+        message: "Building Phases List!"
+      });
+    } catch (err) {
+      console.log(
+        "[controllers][generalsetup][viewbuildingPhase] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 

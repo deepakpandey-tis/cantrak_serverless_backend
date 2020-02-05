@@ -1404,24 +1404,26 @@ const taskGroupController = {
                             })
                           
           // ADDITIONAL USER CLOSE
-          // TASK OPEN
-        tasks =  await knex('pm_task')
-        .select([
-          'pm_task.id as taskId',
-          'pm_task.taskName as taskName',
-          'pm_task.status as status'
-        ])
-        .where({
-          'pm_task.taskGroupScheduleAssignAssetId': payload.taskGroupScheduleAssignAssetId,
-          'pm_task.orgId':req.orgId
-        })
+          
+      }
+
+        // TASK OPEN
+        tasks = await knex('pm_task')
+          .select([
+            'pm_task.id as taskId',
+            'pm_task.taskName as taskName',
+            'pm_task.status as status'
+          ])
+          .where({
+            'pm_task.taskGroupScheduleAssignAssetId': payload.taskGroupScheduleAssignAssetId,
+            'pm_task.orgId': req.orgId
+          })
         let statuses = tasks.filter(t => t.status !== "CMTD")
-        if(statuses.length === 0){
+        if (statuses.length === 0) {
           status = 'complete'
         } else {
           status = 'incomplete'
         }
-      }
        // TASK CLOSE
          return res.status(200).json({
           data: {
