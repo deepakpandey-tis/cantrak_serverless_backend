@@ -217,25 +217,25 @@ const invoiceController = {
                 surveyOrderStatus: "Approved"
             }).orderBy("surveyOrderStatus", "desc").limit(1).select("id", "appointedDate").first();
 
-            let entityType = 'survey_order_notes';
-            let remarksNotesResult = await knex.raw(`select "remarks_master".*,"users"."name" as "createdBy" from "remarks_master"  left join "users" on "remarks_master"."createdBy" = "users"."id"   where "remarks_master"."entityId" = ${surveyOrderData.id} and "remarks_master"."entityType" = '${entityType}' and "remarks_master"."isActive" = 'true' order by "remarks_master"."entityId" desc  limit 3`)
+            // let entityType = 'survey_order_notes';
+            // let remarksNotesResult = await knex.raw(`select "remarks_master".*,"users"."name" as "createdBy" from "remarks_master"  left join "users" on "remarks_master"."createdBy" = "users"."id"   where "remarks_master"."entityId" = ${surveyOrderData.id} and "remarks_master"."entityType" = '${entityType}' and "remarks_master"."isActive" = 'true' order by "remarks_master"."entityId" desc  limit 3`)
 
-            let remarksNotesList = remarksNotesResult.rows;
+            // // let remarksNotesList = remarksNotesResult.rows;
+            // // let remarkNotes;
+            // // if (remarksNotesList) {
+            // //     remarkNotes = remarksNotesList;
+            // // } else {
+            // //     remarkNotes = ''
+            // // }
             let remarkNotes;
-            if (remarksNotesList) {
-                remarkNotes = remarksNotesList;
-            } else {
-                remarkNotes = ''
-            }
 
+            let teamsResult = await knex.raw(`select "service_orders"."id" as "SOId","users"."name" as "assignedTo","teams"."teamName" as "teamName" from "service_orders" left join "assigned_service_team" on "service_orders"."id" = "assigned_service_team"."entityId" left join "teams" on "assigned_service_team"."teamId" = "teams"."teamId" left join "users" on "assigned_service_team"."userId" = "users"."id" where "service_orders"."id" = ${serviceOrderId} and "assigned_service_team"."entityType"='service_orders' limit 1`)
+            let othersUserData = await knex.raw(`select "assigned_service_additional_users"."userId" as "userId","users"."name" as "addUsers" from "assigned_service_additional_users" left join "users" on "assigned_service_additional_users"."userId" = "users"."id" where "assigned_service_additional_users"."entityId" = ${serviceOrderId} and "assigned_service_additional_users"."entityType"='service_orders'`)
 
-            let results = await knex.raw(`select "survey_orders"."id" as "SId","service_requests"."description" as "description","survey_orders"."appointedDate" as "appointedDate","survey_orders"."appointedTime" as "appointedTime","users"."name" as "assignedTo","users"."email" as "email", "users"."mobileNo" as "mobileNo","teams"."teamName" as "teamName","service_requests"."id" as "SRId","service_requests"."priority" as "priority","survey_orders"."createdBy" as "createdBy", "survey_orders"."surveyOrderStatus" as "status","survey_orders"."createdAt" as "dateCreated" from "survey_orders" inner join "service_requests" on "survey_orders"."serviceRequestId" = "service_requests"."id" left join "assigned_service_team" on "survey_orders"."id" = "assigned_service_team"."entityId" left join "teams" on "assigned_service_team"."teamId" = "teams"."teamId" left join "users" on "assigned_service_team"."userId" = "users"."id" where "survey_orders"."orgId" = ${req.orgId} and "survey_orders"."id" = ${surveyOrderid} and "assigned_service_team"."entityType"='survey_orders'`)
-            let othersUserData = await knex.raw(`select "assigned_service_additional_users"."userId" as "userId","users"."name" as "addUsers","users"."email" as "email", "users"."mobileNo" as "mobileNo" from "assigned_service_additional_users" left join "users" on "assigned_service_additional_users"."userId" = "users"."id" where "assigned_service_additional_users"."orgId" = ${req.orgId} and "assigned_service_additional_users"."entityId" = ${surveyOrderid} and "assigned_service_additional_users"."entityType"='survey_orders'`)
-
-            console.log("results", results.rows);
+            console.log("results", teamsResult.rows);
 
             let additionalUsers = othersUserData.rows;
-            let resultData = { ...results.rows, additionalUsers };
+            let teamData = { ...teamsResult.rows, additionalUsers };
 
 
             console.log("SurveyOrderDate", surveyOrderData);
@@ -295,7 +295,7 @@ const invoiceController = {
 
             console.log("PropertyInfo", propertyInfo);
 
-            userInfo = { ...tenantInfo, requesterInfo, propertyInfo, serviceMaster: serviceOrderMaster, surveyData: surveyOrderData, surveyOrderNotes: remarkNotes }
+            userInfo = { ...tenantInfo, requesterInfo, propertyInfo, serviceMaster: serviceOrderMaster, surveyData: surveyOrderData, surveyOrderNotes: remarkNotes, teams:teamData }
             pagination.data = rows;
             pagination.tenant = userInfo;
 
