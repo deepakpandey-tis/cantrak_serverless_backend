@@ -80,29 +80,39 @@ const teamsController = {
                     for (let i = 0; i < roleProjectData.length; i++) {
 
 
-                        if (roleProjectData[i].projectId) {
+                        if (roleProjectData[i].projectId && roleProjectData[i].roleId) {
 
-                            for (let role of roleProjectData[i].roleId) {
+                            //for (let role of roleProjectData[i].roleId) {
 
-                                let insertObject = {
-                                    teamId: teamsData.teamId,
-                                    roleId: role,
-                                    projectId: roleProjectData[i].projectId,
-                                    orgId: orgId,
-                                    createdAt: currentTime,
-                                    updatedAt: currentTime
-                                }
+                            let insertObject = {
+                                teamId: teamsData.teamId,
+                                roleId: roleProjectData[i].roleId,
+                                projectId: roleProjectData[i].projectId,
+                                orgId: orgId,
+                                createdAt: currentTime,
+                                updatedAt: currentTime
+                            }
+
+
+                            let checkProject = await knex.from('team_roles_project_master').where({
+                                teamId: teamsData.teamId,
+                                roleId: roleProjectData[i].roleId,
+                                projectId: roleProjectData[i].projectId,
+                                orgId: orgId
+                            });
+
+                            if (!checkProject.length) {
 
                                 let insertProjectResult = await knex.insert(insertObject).returning(['*']).into('team_roles_project_master')
                                 teamRoleProject = insertProjectResult
-
                             }
+                            //}
                         } else {
-                            return res.status(400).json({
-                                errors: [
-                                    { code: "VALIDATION_ERROR", message: "Select Project!! " }
-                                ]
-                            });
+                            // return res.status(400).json({
+                            //     errors: [
+                            //         { code: "VALIDATION_ERROR", message: "Select Project!! " }
+                            //     ]
+                            // });
                         }
 
                     }
@@ -215,27 +225,39 @@ const teamsController = {
                     let deletedProject = await knex('team_roles_project_master').where({ teamId: upTeamsPayload.teamId }).del();
                     for (let i = 0; i < roleProjectData.length; i++) {
 
-                        if (roleProjectData[i].projectId) {
-                            for (let role of roleProjectData[i].roleId) {
+                        if (roleProjectData[i].projectId && roleProjectData[i].roleId) {
+                          //  for (let role of roleProjectData[i].roleId) {
 
                                 let insertObject = {
                                     teamId: upTeamsPayload.teamId,
-                                    roleId: role,
+                                    roleId: roleProjectData[i].roleId,
                                     projectId: roleProjectData[i].projectId,
                                     orgId: orgId,
                                     createdAt: currentTime,
                                     updatedAt: currentTime
                                 }
 
-                                let insertProjectResult = await knex.insert(insertObject).returning(['*']).into('team_roles_project_master')
-                                teamRoleProject = insertProjectResult
-                            }
+
+                                let checkProject = await knex.from('team_roles_project_master').where({
+                                    teamId: upTeamsPayload.teamId,
+                                    roleId: roleProjectData[i].roleId,
+                                    projectId: roleProjectData[i].projectId,
+                                    orgId: orgId
+                                });
+
+                                if (!checkProject.length) {
+
+                                    let insertProjectResult = await knex.insert(insertObject).returning(['*']).into('team_roles_project_master')
+                                    teamRoleProject = insertProjectResult;
+
+                                }
+                           // }
                         } else {
-                            return res.status(400).json({
-                                errors: [
-                                    { code: "VALIDATION_ERROR", message: "Select Project!! " }
-                                ]
-                            });
+                            // return res.status(400).json({
+                            //     errors: [
+                            //         { code: "VALIDATION_ERROR", message: "Select Project & role!! " }
+                            //     ]
+                            // });
                         }
                     }
                 }
@@ -483,7 +505,7 @@ const teamsController = {
             const entityType = req.body.entityType;
 
             console.log('entityId:', entityId, 'entityType:', entityType);
-            
+
             const team = await knex('assigned_service_team').select(['teamId', 'userId as mainUserId']).where({ entityId: entityId, entityType: entityType })
 
             let additionalUsers = await knex('assigned_service_additional_users').select(['userId']).where({ entityId: entityId, entityType: entityType })
@@ -675,13 +697,16 @@ const teamsController = {
                         'team_roles_project_master.projectId',
                         'team_roles_project_master.roleId',
                         'projects.projectName',
-                        'organisation_roles.name as roleName'
+                        'organisation_roles.name as roleName',
+                        'projects.project as projectCode'
                     ])
                     .where({ 'team_roles_project_master.teamId': teamId }).returning('*')
             ])
 
 
-            let projectUpdateDetails = _.chain(projectResult).groupBy("projectId").map((value, key) => ({ roleId: value.map(a => a.roleId), projectId: key })).value();
+            let projectUpdateDetails = _.compact(projectResult.map((value, key) => ({ roleId: value.roleId, projectId: value.projectId })))
+
+            //            let projectUpdateDetails = _.chain(projectResult).groupBy("projectId").map((value, key) => ({ roleId: value.map(a => a.roleId), projectId: key })).value();
 
             res.status(200).json({
                 data: {
@@ -1017,15 +1042,15 @@ const teamsController = {
         }
     },
 
-    getTeamByEntity:async(req,res) => {
+    getTeamByEntity: async (req, res) => {
         try {
-            const {entityId,entityType} = req.body;
+            const { entityId, entityType } = req.body;
             let so
             let sr
-            switch(entityType) {
+            switch (entityType) {
                 case 'service_requests':
-                     sr = await knex('service_requests').select('projectId').where({id:entityId}).first()
-                    if(sr){
+                    sr = await knex('service_requests').select('projectId').where({ id: entityId }).first()
+                    if (sr) {
                         let resourceData = await knex.from("role_resource_master")
                             .select('roleId')
                             .where("role_resource_master.resourceId", '2')
@@ -1041,12 +1066,12 @@ const teamsController = {
                             .where({ 'team_roles_project_master.projectId': sr.projectId, 'teams.isActive': true })
                             .whereIn("team_roles_project_master.roleId", roleIds).returning('*')
 
-                       return res.status(200).json({
-                           data: {
-                               teams: teamResult
-                           }
-                       }) 
-                    }else {
+                        return res.status(200).json({
+                            data: {
+                                teams: teamResult
+                            }
+                        })
+                    } else {
                         return res.status(200).json({
                             data: {
                                 teams: []
@@ -1054,12 +1079,12 @@ const teamsController = {
                         })
                     }
                 case 'service_orders':
-                     so = await knex('service_orders')
-                    .innerJoin('service_requests','service_orders.serviceRequestId','service_requests.id')
-                    .select('service_requests.projectId')
-                    .where({'service_orders.id':entityId})
-                    .first()
-                
+                    so = await knex('service_orders')
+                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                        .select('service_requests.projectId')
+                        .where({ 'service_orders.id': entityId })
+                        .first()
+
 
                     if (so) {
                         let resourceData = await knex.from("role_resource_master")
@@ -1082,7 +1107,7 @@ const teamsController = {
                                 teams: teamResult
                             }
                         })
-                    }else {
+                    } else {
                         return res.status(200).json({
                             data: {
                                 teams: []
@@ -1090,7 +1115,7 @@ const teamsController = {
                         })
                     }
                 case 'survey_orders':
-                     so = await knex('survey_orders')
+                    so = await knex('survey_orders')
                         .innerJoin('service_requests', 'survey_orders.serviceRequestId', 'service_requests.id')
                         .select('service_requests.projectId')
                         .where({ 'survey_orders.id': entityId })
@@ -1127,12 +1152,12 @@ const teamsController = {
                 default:
                     return res.status(200).json({
                         data: {
-                            teams:[]
+                            teams: []
                         }
                     })
             }
 
-        } catch(err) {
+        } catch (err) {
             console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
             res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
