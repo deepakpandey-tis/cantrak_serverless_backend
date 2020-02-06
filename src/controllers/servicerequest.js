@@ -2498,6 +2498,21 @@ const serviceRequestController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  getServiceOrderIdByServiceRequestId:async(req,res) => {
+    try {
+      const serviceRequestId = req.body.serviceRequestId;
+      const serviceOrderId = await knex('service_orders').select('id').where({serviceRequestId:serviceRequestId}).first()
+      return res.status(200).json({data: {
+        serviceOrderId
+      }})
+    } catch(err) {
+      return res.status(200).json({
+        data: {
+          update: false
+        }
+      })
+    }
   }
 };
 
