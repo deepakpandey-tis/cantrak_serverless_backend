@@ -61,13 +61,13 @@ const peopleController = {
           });
         }
 
-        let random = Math.floor((Math.random() * 1000000) + 1); 
-        let pass = ""+random+"";
+        let random = Math.floor((Math.random() * 1000000) + 1);
+        let pass = "" + random + "";
         if (payload.password) {
           pass = payload.password
         }
 
-        console.log("passssssssssssssss",pass,"ppppppppppppppppppppppppppp")
+        console.log("passssssssssssssss", pass, "ppppppppppppppppppppppppppp")
 
         const hash = await bcrypt.hash(
           pass,
@@ -78,7 +78,7 @@ const peopleController = {
         let uid = uuid();
         payload.verifyToken = uid;
         let currentTime = new Date().getTime();
-        const people = await knex('users').insert({ ...payload, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime }).returning(['*'])
+        const people = await knex('users').insert({ ...payload, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime,createdBy:req.me.id}).returning(['*'])
 
         //Insert Application Role
         let applicationUserRole = await knex(
@@ -204,6 +204,13 @@ const peopleController = {
   getPeopleList: async (req, res) => {
     try {
 
+
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "users.name";
+        sortPayload.orderBy = "asc"
+      }
+
       let { name, email, accountType } = req.body;
       let peopleData = null;
       let pagination = {}
@@ -293,7 +300,7 @@ const peopleController = {
               //"companies.companyName",
               //   "organisation_roles.name as roleName"
             ])
-            .orderBy('users.id', 'desc')
+            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .offset(offset)
             .limit(per_page)
         ]);
@@ -383,7 +390,7 @@ const peopleController = {
               //"companies.companyName",
               //   "organisation_roles.name as roleName"
             ])
-            .orderBy('users.id', 'desc')
+            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .offset(offset)
             .limit(per_page)
             .where({ "users.orgId": req.orgId })
@@ -564,7 +571,7 @@ const peopleController = {
             "team_users.teamId",
             "teams.teamId"
           )
-          .whereNotIn('application_user_roles.roleId', [2])
+          .whereNotIn('application_user_roles.roleId', [2, 4])
           .select([
             "users.name as NAME",
             "users.email as EMAIL",
@@ -573,6 +580,7 @@ const peopleController = {
             "users.mobileNo as MOBILE_NO",
             "users.phoneNo as PHONE_NO"
           ])
+          .orderBy('users.name', 'asc')
           .where({ "users.orgId": req.orgId })
       ]);
 
@@ -652,165 +660,220 @@ const peopleController = {
 
     try {
       let orgId = req.orgId;
+      let resultData = null;
+      let data = req.body;
+      let totalData = data.length - 1;
+      let fail = 0;
+      let success = 0;
+      console.log("=======", data[0], "+++++++++++++++")
+      let result = null;
+      let errors = []
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
 
-      console.log("====================", orgId, "==========================")
-      if (req.file) {
-        let tempraryDirectory = null;
-        if (process.env.IS_OFFLINE) {
-          tempraryDirectory = 'tmp/';
-        } else {
-          tempraryDirectory = '/tmp/';
-        }
-        let resultData = null;
-        let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: 'binary' });
-        let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
+      if (data[0].A == "Ã¯Â»Â¿NAME" || data[0].A == "NAME" &&
+        data[0].B == "EMAIL" &&
+        data[0].C == "TEAM_CODE" &&
+        data[0].D == "MOBILE_NO" &&
+        data[0].E == "PHONE_NO"
+      ) {
 
-        let totalData = data.length - 1;
-        let fail = 0;
-        let success = 0;
-        console.log("=======", data[0], "+++++++++++++++")
-        let result = null;
-        let errors = []
-        let header = Object.values(data[0]);
-        header.unshift('Error');
-        errors.push(header)
+        if (data.length > 0) {
 
-        if (data[0].A == "Ã¯Â»Â¿NAME" || data[0].A == "NAME" &&
-          data[0].B == "EMAIL" &&
-          data[0].C == "TEAM_CODE" &&
-          data[0].D == "MOBILE_NO" &&
-          data[0].E == "PHONE_NO"
-        ) {
+          let i = 0;
+          for (let peopleData of data) {
+            i++;
 
-          if (data.length > 0) {
+            if (i > 1) {
 
-            let i = 0;
-            for (let peopleData of data) {
-              i++;
 
-              if (i > 1) {
 
-                let teamId = null;
-                if (peopleData.C) {
-                  let teamData = await knex('teams').select('teamId').where({ teamCode: peopleData.C, orgId: req.orgId });
+              if (!peopleData.A) {
+                let values = _.values(peopleData)
+                values.unshift('Name can not empty')
+                errors.push(values);
+                fail++;
+                continue;
+              }
 
-                  // if (!teamData.length) {
-                  //   fail++;
-                  //   continue;
-                  // }
-                  if (teamData && teamData.length) {
-                    teamId = teamData[0].teamId
-                  }
+              if (!peopleData.B) {
+                let values = _.values(peopleData)
+                values.unshift('Email Id can not empty')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
+              let teamId = null;
+              if (peopleData.C) {
+                let teamData = await knex('teams').select('teamId').where({ teamCode: peopleData.C, orgId: req.orgId });
+
+                // if (!teamData.length) {
+                //   fail++;
+                //   continue;
+                // }
+                if (teamData && teamData.length) {
+                  teamId = teamData[0].teamId
+                }
+
+              }
+
+              if (peopleData.D) {
+
+                let mobile = peopleData.D;
+                mobile = mobile.toString();
+
+                if (mobile.length != 10) {
+                  let values = _.values(peopleData)
+                  values.unshift('Enter valid mobile No.!')
+                  errors.push(values);
+                  fail++;
+                  continue;
+                }
+                if (isNaN(mobile)) {
+                  let values = _.values(peopleData)
+                  values.unshift('Enter valid mobile No.')
+                  errors.push(values);
+                  fail++;
+                  continue;
 
                 }
 
+                let checkMobile = await knex('users').select("id")
+                  .where({ mobileNo: peopleData.D })
+
+                if (checkMobile.length) {
+
+                  let values = _.values(peopleData)
+                  values.unshift('Mobile number already exists')
+                  errors.push(values);
+                  fail++;
+                  continue;
+                }
+              }
+
+              let checkExist = await knex('users').select("id")
+                .where({ email: peopleData.B })
+              let currentTime = new Date().getTime();
+              if (checkExist.length < 1) {
+
+                let pass = '123456';
+                const hash = await bcrypt.hash(
+                  pass,
+                  saltRounds
+                );
+
+                let mobile = null;
                 if (peopleData.D) {
-                  let checkMobile = await knex('users').select("id")
-                    .where({ mobileNo: peopleData.D })
-
-                  if (checkMobile.length) {
-                    let values = _.values(peopleData)
-                    values.unshift('Mobile number already exists')
-                    errors.push(values);
-                    fail++;
-                    continue;
-                  }
+                  mobile = peopleData.D
                 }
 
-                let checkExist = await knex('users').select("id")
-                  .where({ email: peopleData.B })
-                if (checkExist.length < 1) {
+                let insertData = {
+                  orgId: req.orgId,
+                  name: peopleData.A,
+                  email: peopleData.B,
+                  createdAt: currentTime,
+                  updatedAt: currentTime,
+                  emailVerified: false,
+                  password: hash,
+                  mobileNo: mobile,
+                  phoneNo: peopleData.E,
+                  createdBy:req.me.id
+                }
 
+                resultData = await knex.insert(insertData).returning(['*']).into('users');
 
-                  //let endDate   = Math.round(new Date().getTime()/1000);
-                  //let startDate = Math.round(new Date().getTime()/1000);
-                  let pass = '123456';
-                  const hash = await bcrypt.hash(
-                    pass,
-                    saltRounds
-                  );
-                  let currentTime = new Date().getTime();
-                  let insertData = {
+                if (resultData[0].id) {
+                  let insertRole = {
                     orgId: req.orgId,
-                    name: peopleData.A,
-                    email: peopleData.B,
+                    userId: resultData[0].id,
+                    roleId: 3,
                     createdAt: currentTime,
-                    updatedAt: currentTime,
-                    emailVerified: true,
-                    password: hash,
-                    mobileNo: peopleData.D,
-                    phoneNo: peopleData.E
+                    updatedAt: currentTime
+                  }
+                  let roleResult = await knex.insert(insertRole).returning(['*']).into('application_user_roles');
+
+                  if (teamId) {
+
+                    let checkTeam = await knex.from('team_users').where({ userId: resultData[0].id, orgId: orgId })
+                    if (!checkTeam.length) {
+
+                      let insertTeam = {
+                        orgId: req.orgId,
+                        teamId: teamId,
+                        userId: resultData[0].id,
+                        createdAt: currentTime,
+                        updatedAt: currentTime
+                      }
+
+                      let teamResult = await knex.insert(insertTeam).returning(['*']).into('team_users');
+                    }
                   }
 
-                  resultData = await knex.insert(insertData).returning(['*']).into('users');
+                }
 
-                  if (resultData[0].id) {
-                    let insertRole = {
-                      orgId: req.orgId,
-                      userId: resultData[0].id,
-                      roleId: 3,
+                if (resultData && resultData.length) {
+                  success++;
+                }
+              } else {
+
+
+                if (teamId) {
+
+                  let checkTeam = await knex.from('team_users').where({ userId: checkExist[0].id, orgId: orgId })
+                  if (!checkTeam.length) {
+
+                    let insertTeam = {
+                      orgId: orgId,
+                      teamId: teamId,
+                      userId: checkExist[0].id,
                       createdAt: currentTime,
                       updatedAt: currentTime
                     }
-                    let roleResult = await knex.insert(insertRole).returning(['*']).into('application_user_roles');
+                    let teamResult = await knex.insert(insertTeam).returning(['*']).into('team_users');
 
-                    if (teamId) {
+                    let values = _.values(peopleData)
+                    values.unshift('Email Id already exists, People added in teams')
+                    errors.push(values);
+                    fail++;
 
-                      let checkTeam = await knex.from('team_users').where({ userId: resultData[0].id })
-                      if (!checkTeam.length) {
+                  } else {
 
-                        let insertTeam = {
-                          orgId: req.orgId,
-                          teamId: teamId,
-                          userId: resultData[0].id,
-                          createdAt: currentTime,
-                          updatedAt: currentTime
-                        }
-
-                        let teamResult = await knex.insert(insertTeam).returning(['*']).into('team_users');
-                      }
-                    }
+                    let values = _.values(peopleData)
+                    values.unshift('Email Id already exists')
+                    errors.push(values);
+                    fail++;
 
                   }
 
-                  if (resultData && resultData.length) {
-                    success++;
-                  }
                 } else {
+
                   let values = _.values(peopleData)
                   values.unshift('Email Id already exists')
                   errors.push(values);
                   fail++;
                 }
               }
-
             }
-            // fail = fail-1;
-            let message = null;
-            if (totalData == success) {
-              message = "System have processed ( " + totalData + " ) entries and added them successfully!";
-            } else {
-              message = "System have processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
-            }
-
-            let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
-            return res.status(200).json({
-              message: message,
-              errors, errors
-            });
 
           }
+          // fail = fail-1;
+          let message = null;
+          if (totalData == success) {
+            message = "System have processed ( " + totalData + " ) entries and added them successfully!";
+          } else {
+            message = "System have processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
+          }
 
-        } else {
-
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-            ]
+          return res.status(200).json({
+            message: message,
+            errors, errors
           });
+
         }
+
       } else {
 
         return res.status(400).json({
@@ -818,8 +881,8 @@ const peopleController = {
             { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
           ]
         });
-
       }
+
 
     } catch (err) {
       console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
@@ -837,11 +900,11 @@ const peopleController = {
         let orgId = req.orgId;
 
         console.log("======================", orgId)
-        let payload = _.omit(req.body,"password");
-        
+        let payload = _.omit(req.body, "password");
+
 
         const schema = Joi.object().keys({
-        
+
           name: Joi.string().required(),
           userName: Joi.string().required(),
           email: Joi.string().required(),
@@ -907,10 +970,10 @@ const peopleController = {
           }
         }
         /*CHECK DUPLICATION USERNAME , EMAIL & MOBILE NO. CLOSE */
-        
+
         let currentTime = new Date().getTime()
         insertedUser = await knex("users")
-          .update({ ...payload,updatedAt: currentTime, orgId: orgId })
+          .update({ ...payload, updatedAt: currentTime, orgId: orgId })
           .returning(["*"])
           .transacting(trx)
           .where({ id: payload.id });
