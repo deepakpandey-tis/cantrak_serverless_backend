@@ -491,7 +491,7 @@ const serviceOrderController = {
                                 qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
                             }
 
-                        }).offset(offset).limit(per_page)
+                        }).offset(offset).limit(per_page).orderBy('service_orders.id','desc')
                 ])
             }
             else
@@ -581,7 +581,7 @@ const serviceOrderController = {
                             .offset(offset)
                             .limit(per_page)
                             .where({ "service_orders.orgId": req.orgId })
-                            .whereIn('service_requests.projectId', accessibleProjects),
+                            .whereIn('service_requests.projectId', accessibleProjects).orderBy('service_orders.id', 'desc'),
                     ]);
                 } else {
                     [total, rows] = await Promise.all([
@@ -738,7 +738,7 @@ const serviceOrderController = {
                                 }
                             })
                             .offset(offset)
-                            .limit(per_page)
+                            .limit(per_page).orderBy('service_orders.id', 'desc')
                     ]);
 
                 }
