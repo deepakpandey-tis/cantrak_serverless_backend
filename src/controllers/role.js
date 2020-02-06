@@ -176,6 +176,12 @@ const roleController = {
   /*ROLE LIST*/
   getOrgRoleList: async (req, res) => {
     try {
+
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "name";
+        sortPayload.orderBy = "asc"
+      }
       let reqData = req.query;
       let total, rows;
       let pagination = {};
@@ -203,7 +209,7 @@ const roleController = {
           )
           .where({ "organisation_roles.orgId": req.orgId })
           .select(["organisation_roles.*", "organisations.organisationName"])
-          .orderBy("organisation_roles.createdAt", "desc")
+          .orderBy(sortPayload.sortBy, sortPayload.orderBy)
           .offset(offset)
           .limit(per_page)
       ]);

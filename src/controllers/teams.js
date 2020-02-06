@@ -67,7 +67,7 @@ const teamsController = {
 
                 const currentTime = new Date().getTime();
                 // Insert into teams table
-                const insertData = { ...payload, createdAt: currentTime, updatedAt: currentTime, createdBy: 1, orgId: orgId };
+                const insertData = { ...payload, createdAt: currentTime, updatedAt: currentTime, createdBy: req.me.id, orgId: orgId };
                 console.log('[controllers][teams][addNewTeams] : Insert Data ', insertData);
 
                 const resultTeams = await knex.insert(insertData).returning(['*']).transacting(trx).into('teams');
@@ -98,7 +98,8 @@ const teamsController = {
                                 teamId: teamsData.teamId,
                                 roleId: roleProjectData[i].roleId,
                                 projectId: roleProjectData[i].projectId,
-                                orgId: orgId
+                                orgId: orgId,
+                                createdBy:req.me.id
                             });
 
                             if (!checkProject.length) {
@@ -226,32 +227,32 @@ const teamsController = {
                     for (let i = 0; i < roleProjectData.length; i++) {
 
                         if (roleProjectData[i].projectId && roleProjectData[i].roleId) {
-                          //  for (let role of roleProjectData[i].roleId) {
+                            //  for (let role of roleProjectData[i].roleId) {
 
-                                let insertObject = {
-                                    teamId: upTeamsPayload.teamId,
-                                    roleId: roleProjectData[i].roleId,
-                                    projectId: roleProjectData[i].projectId,
-                                    orgId: orgId,
-                                    createdAt: currentTime,
-                                    updatedAt: currentTime
-                                }
+                            let insertObject = {
+                                teamId: upTeamsPayload.teamId,
+                                roleId: roleProjectData[i].roleId,
+                                projectId: roleProjectData[i].projectId,
+                                orgId: orgId,
+                                createdAt: currentTime,
+                                updatedAt: currentTime
+                            }
 
 
-                                let checkProject = await knex.from('team_roles_project_master').where({
-                                    teamId: upTeamsPayload.teamId,
-                                    roleId: roleProjectData[i].roleId,
-                                    projectId: roleProjectData[i].projectId,
-                                    orgId: orgId
-                                });
+                            let checkProject = await knex.from('team_roles_project_master').where({
+                                teamId: upTeamsPayload.teamId,
+                                roleId: roleProjectData[i].roleId,
+                                projectId: roleProjectData[i].projectId,
+                                orgId: orgId
+                            });
 
-                                if (!checkProject.length) {
+                            if (!checkProject.length) {
 
-                                    let insertProjectResult = await knex.insert(insertObject).returning(['*']).into('team_roles_project_master')
-                                    teamRoleProject = insertProjectResult;
+                                let insertProjectResult = await knex.insert(insertObject).returning(['*']).into('team_roles_project_master')
+                                teamRoleProject = insertProjectResult;
 
-                                }
-                           // }
+                            }
+                            // }
                         } else {
                             // return res.status(400).json({
                             //     errors: [
@@ -331,6 +332,11 @@ const teamsController = {
     getTeamAllList: async (req, res) => {
         // Define try/catch block
         try {
+            let sortPayload = req.body;
+            if (!sortPayload.sortBy && !sortPayload.orderBy) {
+                sortPayload.sortBy = "teamName";
+                sortPayload.orderBy = "asc"
+            }
             let { teamName } = req.body;
             let teamResult = null;
             let reqData = req.query;
@@ -352,7 +358,7 @@ const teamsController = {
                         })
                         .first(),
                     // knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams"."orgId" = ' + req.orgId + ' and "teams"."teamName" = "' + String(teamName) + '" group by "teams"."teamId" limit ' + per_page + ' OFFSET ' + offset + '')
-                    knex.raw(`select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams"."orgId" = '${req.orgId}' and "teams"."teamName" ilike '%${teamName}%' group by "teams"."teamId" limit '${per_page}' OFFSET '${offset}'`)
+                    knex.raw(`select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams"."orgId" = '${req.orgId}' and "teams"."teamName" ilike '%${teamName}%' group by "teams"."teamId"  order by "` + sortPayload.sortBy + `"  ` + sortPayload.orderBy + `  limit '${per_page}' OFFSET '${offset}'`)
                 ])
 
             } else {
@@ -366,7 +372,7 @@ const teamsController = {
                     knex.raw(
                         'select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams"."orgId" = ' +
                         req.orgId +
-                        ' group by "teams"."teamId" limit ' +
+                        ' group by "teams"."teamId" order by "' + sortPayload.sortBy + '"  ' + sortPayload.orderBy + ' limit ' +
                         per_page +
                         " OFFSET " +
                         offset +
@@ -781,69 +787,48 @@ const teamsController = {
     importTeamData: async (req, res) => {
 
         try {
-            if (req.file) {
-                let tempraryDirectory = null;
-                if (process.env.IS_OFFLINE) {
-                    tempraryDirectory = 'tmp/';
-                } else {
-                    tempraryDirectory = '/tmp/';
-                }
-                let resultData = null;
-                let file_path = tempraryDirectory + req.file.filename;
-                let wb = XLSX.readFile(file_path, { type: 'binary' });
-                let ws = wb.Sheets[wb.SheetNames[0]];
-                let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
 
-                let totalData = data.length - 1;
-                let fail = 0;
-                let success = 0;
-                let projectSuccess = 0;
-                let projectFail = 0;
-                console.log("=======", data[0], "+++++++++++++++")
-                let result = null;
-                let errors = []
-                let header = Object.values(data[0]);
-                header.unshift('Error');
-                errors.push(header)
+            let data = req.body;
+            let totalData = data.length - 1;
+            let fail = 0;
+            let success = 0;
+            let projectSuccess = 0;
+            let projectFail = 0;
+            console.log("=======", data[0], "+++++++++++++++")
+            let result = null;
+            let errors = []
+            let header = Object.values(data[0]);
+            header.unshift('Error');
+            errors.push(header)
 
-                if (data[0].A == "Ã¯Â»Â¿TEAM_CODE" || data[0].A == "TEAM_CODE" &&
-                    data[0].B == "TEAM_NAME" &&
-                    data[0].C == "TEAM_ALTERNATE_NAME" &&
-                    data[0].D == "PROJECT_CODE" &&
-                    data[0].E == "ROLE_NAME"
-                ) {
+            if (data[0].A == "Ã¯Â»Â¿TEAM_CODE" || data[0].A == "TEAM_CODE" &&
+                data[0].B == "TEAM_NAME" &&
+                data[0].C == "TEAM_ALTERNATE_NAME" &&
+                data[0].D == "PROJECT_CODE" &&
+                data[0].E == "ROLE_NAME"
+            ) {
 
-                    if (data.length > 0) {
+                if (data.length > 0) {
 
-                        let i = 0;
-                        let currentTime = new Date().getTime();
-                        for (let teamData of data) {
-                            i++;
+                    let i = 0;
+                    let currentTime = new Date().getTime();
+                    for (let teamData of data) {
+                        i++;
 
-                            /**GET COMPANY ID OPEN */
-                            //let companyData = await knex('companies').select('id').where({companyId: teamData.E});
-                            // let companyId   = null;
-                            //   if(!companyData && !companyData.length){
-                            //     continue;
-                            //   } 
-                            //if(companyData && companyData.length){
-                            //companyId    = companyData[0].id
-                            //}
-                            /**GET COMPANY ID CLOSE */
+                        if (i > 1) {
+
 
                             /**GET PROJECT ID OPEN */
                             let projectId = null;
                             if (teamData.D) {
                                 let projectData = await knex('projects').select('id').where({ project: teamData.D, orgId: req.orgId });
 
-                                //   if(!projectData && !projectData.length){
-                                //     continue;
-                                //   } 
                                 if (projectData && projectData.length) {
                                     projectId = projectData[0].id
                                 }
                             }
                             /**GET PROJECT ID CLOSE */
+
 
                             /**GET ROLE ID OPEN */
                             let roleId = null;
@@ -856,116 +841,112 @@ const teamsController = {
                             /**GET ROLE ID CLOSE */
 
 
-                            if (i > 1) {
+                            let checkExist = await knex('teams').select("teamId")
+                                .where({ teamCode: teamData.A, orgId: req.orgId })
+                            if (checkExist.length < 1) {
+                                let insertData = {
+                                    orgId: req.orgId,
+                                    teamName: teamData.B,
+                                    teamCode: teamData.A,
+                                    description: teamData.C,
+                                    createdAt: currentTime,
+                                    updatedAt: currentTime,
+                                    createdBy: req.me.id,
+                                }
+                                resultData = await knex.insert(insertData).returning(['*']).into('teams');
 
-                                let checkExist = await knex('teams').select("teamId")
-                                    .where({ teamCode: teamData.A, orgId: req.orgId })
-                                if (checkExist.length < 1) {
-                                    let insertData = {
-                                        orgId: req.orgId,
-                                        teamName: teamData.B,
-                                        teamCode: teamData.A,
-                                        description: teamData.C,
-                                        createdAt: currentTime,
-                                        updatedAt: currentTime,
-                                    }
-                                    resultData = await knex.insert(insertData).returning(['*']).into('teams');
+                                if (resultData && resultData.length) {
+                                    success++;
+                                }
+                                let teamId = resultData[0].teamId;
 
-                                    if (resultData && resultData.length) {
-                                        success++;
-                                    }
-                                    let teamId = resultData[0].teamId;
+                                if (projectId && roleId) {
+                                    let checkRoleMaster = await knex('team_roles_project_master').select("id")
+                                        .where({ teamId: teamId, projectId: projectId, orgId: req.orgId, roleId: roleId })
 
-                                    if (projectId && roleId) {
-                                        let checkRoleMaster = await knex('team_roles_project_master').select("id")
-                                            .where({ teamId: teamId, projectId: projectId, orgId: req.orgId, roleId: roleId })
+                                    if (!checkRoleMaster.length) {
 
-                                        if (checkRoleMaster.length < 1) {
-
-                                            let insertProjectData = {
-                                                orgId: req.orgId,
-                                                teamId: teamId,
-                                                projectId: projectId,
-                                                createdAt: currentTime,
-                                                updatedAt: currentTime,
-                                                roleId: roleId,
-                                                createdBy: req.me.id
-                                            }
-                                            resultProjectData = await knex.insert(insertProjectData).returning(['*']).into('team_roles_project_master');
-
-                                            if (resultProjectData && resultProjectData.length) {
-                                                //success++;
-                                            }
-                                        } else {
-                                            let values = _.values(teamData)
-                                            values.unshift('This project & team role already exists')
-                                            errors.push(values);
-                                            fail++;
+                                        let insertProjectData = {
+                                            orgId: req.orgId,
+                                            teamId: teamId,
+                                            projectId: projectId,
+                                            createdAt: currentTime,
+                                            updatedAt: currentTime,
+                                            roleId: roleId,
+                                            createdBy: req.me.id
                                         }
+                                        resultProjectData = await knex.insert(insertProjectData).returning(['*']).into('team_roles_project_master');
+
+                                        if (resultProjectData && resultProjectData.length) {
+                                            //success++;
+                                        }
+                                    } else {
+                                        // let values = _.values(teamData)
+                                        // values.unshift('This project & team role already exists')
+                                        // errors.push(values);
+                                        // fail++;
                                     }
+                                }
 
 
+                            } else {
+
+
+                                if (projectId && roleId) {
+
+
+                                    let checkRoleMaster = await knex('team_roles_project_master').select("id")
+                                        .where({ teamId: checkExist[0].teamId, projectId: projectId, orgId: req.orgId, roleId: roleId })
+                                    if (!checkRoleMaster.length) {
+                                        let insertProjectData = {
+                                            orgId: req.orgId,
+                                            teamId: checkExist[0].teamId,
+                                            projectId: projectId,
+                                            createdAt: currentTime,
+                                            updatedAt: currentTime,
+                                            roleId: roleId,
+                                            createdBy: req.me.id
+                                        }
+                                        resultProjectData = await knex.insert(insertProjectData).returning(['*']).into('team_roles_project_master');
+                                        if (resultProjectData && resultProjectData.length) {
+
+                                            let values = _.values(teamData)
+                                            values.unshift('Team Code already exists, added role project')
+                                            errors.push(values);
+                                            success++;
+                                        }
+                                    } else {
+
+                                        let values = _.values(teamData)
+                                        values.unshift('Team Code already exists')
+                                        errors.push(values);
+                                        fail++;
+                                    }
                                 } else {
-
-
-                                    if (projectId && roleId) {
-
-
-                                        let checkRoleMaster = await knex('team_roles_project_master').select("id")
-                                            .where({ teamId: checkExist[0].teamId, projectId: projectId, orgId: req.orgId, roleId: roleId })
-                                        if (checkRoleMaster.length < 1) {
-                                            let insertProjectData = {
-                                                orgId: req.orgId,
-                                                teamId: checkExist[0].teamId,
-                                                projectId: projectId,
-                                                createdAt: currentTime,
-                                                updatedAt: currentTime,
-                                                roleId: roleId,
-                                                createdBy: req.me.id
-                                            }
-                                            resultProjectData = await knex.insert(insertProjectData).returning(['*']).into('team_roles_project_master');
-                                            if (resultProjectData && resultProjectData.length) {
-                                                success++;
-                                            }
-                                        } else {
-                                            let values = _.values(teamData)
-                                            values.unshift('This project & team role already exists')
-                                            errors.push(values);
-                                            fail++;
-                                        }
-                                    }
                                     let values = _.values(teamData)
                                     values.unshift('Team Code already exists')
                                     errors.push(values);
                                     fail++;
                                 }
                             }
-
                         }
-
-                        let message = null;
-                        if (totalData == success) {
-                            message = "System has processed ( " + totalData + " ) entries and added them successfully!";
-                        } else {
-                            message = "System has processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
-                        }
-
-                        let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
-                        return res.status(200).json({
-                            message: message,
-                            errors: errors
-                        });
 
                     }
 
-                } else {
+                    let message = null;
+                    if (totalData == success) {
+                        message = "System has processed ( " + totalData + " ) entries and added them successfully!";
+                    } else {
+                        message = "System has processed ( " + totalData + " ) entries out of which only ( " + success + " ) are added and others are failed ( " + fail + " ) due to validation!";
+                    }
 
-                    return res.status(400).json({
-                        errors: [
-                            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-                        ]
+                    return res.status(200).json({
+                        message: message,
+                        errors: errors
                     });
+
                 }
+
             } else {
 
                 return res.status(400).json({
@@ -973,7 +954,6 @@ const teamsController = {
                         { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
                     ]
                 });
-
             }
 
         } catch (err) {
