@@ -81,4 +81,10 @@ router.post('/import-floor-zone-data', upload.single('file'),
   floorZoneController.importFloorZoneData)
 
 
+router.post('/get-floor-zone-list-by-building-id-having-property-units', 
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  floorZoneController.getFloorZoneListByBuildingIdHavingPropertyUnits
+)
+
 module.exports = router

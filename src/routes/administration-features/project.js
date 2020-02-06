@@ -48,4 +48,9 @@ var upload = multer( { storage: storage } );
 router.post('/import-project-data',upload.single('file'), authMiddleware.isAuthenticated, projectController.importProjectData)
 router.get("/get-user-project-by-companies",authMiddleware.isAuthenticated,projectController.getUserProjectByCompany);
 
+
+
+
+router.get('/project-lists-having-property-units', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, projectController.getProjectListHavingPropertyUnits)
+
 module.exports = router

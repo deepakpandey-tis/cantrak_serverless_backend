@@ -81,22 +81,22 @@ const quotationsController = {
         );
 
 
-        // validate keys for part
-        const quotationSinglePart = Joi.object().keys({
-          partName: Joi.string().required(),
-          id: Joi.string().required(),
-          partCode: Joi.string().required(),
-          quantity: Joi.string().required(),
-          unitCost: Joi.number().required(),
-        })
-        // validate keys for charges
-        const quotationSingleCharge = Joi.object().keys({
-          chargeCode: Joi.string().required(),
-          id: Joi.string().required(),
-          calculationUnit: Joi.string().required(),
-          rate: Joi.number().required(),
-          totalHours: Joi.string().required(),
-        })
+        // // validate keys for part
+        // const quotationSinglePart = Joi.object().keys({
+        //   partName: Joi.string().required(),
+        //   id: Joi.string().required(),
+        //   partCode: Joi.string().required(),
+        //   quantity: Joi.string().required(),
+        //   unitCost: Joi.number().required(),
+        // })
+        // // validate keys for charges
+        // const quotationSingleCharge = Joi.object().keys({
+        //   chargeCode: Joi.string().required(),
+        //   id: Joi.string().required(),
+        //   calculationUnit: Joi.string().required(),
+        //   rate: Joi.number().required(),
+        //   totalHours: Joi.string().required(),
+        // })
 
 
 
@@ -111,8 +111,8 @@ const quotationsController = {
           quotationId: Joi.number().required(),
           checkedBy: Joi.string().required(),
           inspectedBy: Joi.string().required(),
-          acknowledgeBy: Joi.string().required(),
-          quotationData: Joi.array().required()
+          acknowledgeBy: Joi.string().required()
+          // quotationData: Joi.array().required()
         });
 
         const result = Joi.validate(quotationPayload, schema);
@@ -148,7 +148,7 @@ const quotationsController = {
             checkedBy: quotationPayload.checkedBy,
             inspectedBy: quotationPayload.inspectedBy,
             acknowledgeBy: quotationPayload.acknowledgeBy,
-            invoiceData: JSON.stringify(quotationPayload.quotationData),
+            // invoiceData: JSON.stringify(quotationPayload.quotationData),
             updatedAt: currentTime,
             isActive: true,
             moderationStatus: 1,
@@ -163,60 +163,60 @@ const quotationsController = {
 
         // Start Update Assigned Parts In Quotations
 
-        let partsLength = quotationPayload.quotationData[0].parts.length;
-        console.log("parts length", partsLength);
+        // let partsLength = quotationPayload.quotationData[0].parts.length;
+        // console.log("parts length", partsLength);
 
-        let partsData;
-        for (let i = 0; i < partsLength; i++) {
-          console.log("partsArray", quotationPayload.quotationData[0].parts[i]);
-          partsData = quotationPayload.quotationData[0].parts[i];
-          updateAssignedParts = await knex
-            .update({
-              unitCost: partsData.unitCost,
-              quantity: partsData.quantity,
-              updatedAt: currentTime
-            })
-            .where({
-              entityId: quotationPayload.quotationId,
-              entityType: "quotations",
-              partId: partsData.id
-            })
-            .returning(["*"])
-            .transacting(trx)
-            .into("assigned_parts");
-        }
+        // let partsData;
+        // for (let i = 0; i < partsLength; i++) {
+        //   console.log("partsArray", quotationPayload.quotationData[0].parts[i]);
+        //   partsData = quotationPayload.quotationData[0].parts[i];
+        //   updateAssignedParts = await knex
+        //     .update({
+        //       unitCost: partsData.unitCost,
+        //       quantity: partsData.quantity,
+        //       updatedAt: currentTime
+        //     })
+        //     .where({
+        //       entityId: quotationPayload.quotationId,
+        //       entityType: "quotations",
+        //       partId: partsData.id
+        //     })
+        //     .returning(["*"])
+        //     .transacting(trx)
+        //     .into("assigned_parts");
+        // }
 
 
         // Start Update Assigned Charges In Quotations
 
-        let chargesLength = quotationPayload.quotationData[0].charges.length;
-        console.log("charges length", chargesLength);
+        // let chargesLength = quotationPayload.quotationData[0].charges.length;
+        // console.log("charges length", chargesLength);
 
-        let chargesData;
-        for (let j = 0; j < chargesLength; j++) {
-          console.log("chargesArray", quotationPayload.quotationData[0].charges[j]);
-          chargesData = quotationPayload.quotationData[0].charges[j];
-          updateAssignedCharges = await knex
-            .update({
-              chargeId: chargesData.id,
-              totalHours: chargesData.totalHours,
-              rate: chargesData.rate,
-              updatedAt: currentTime
-            })
-            .where({
-              entityId: quotationPayload.quotationId,
-              entityType: "quotations",
-              chargeId: chargesData.id
-            })
-            .returning(["*"])
-            .transacting(trx)
-            .into("assigned_service_charges");
-        }
+        // let chargesData;
+        // for (let j = 0; j < chargesLength; j++) {
+        //   console.log("chargesArray", quotationPayload.quotationData[0].charges[j]);
+        //   chargesData = quotationPayload.quotationData[0].charges[j];
+        //   updateAssignedCharges = await knex
+        //     .update({
+        //       chargeId: chargesData.id,
+        //       totalHours: chargesData.totalHours,
+        //       rate: chargesData.rate,
+        //       updatedAt: currentTime
+        //     })
+        //     .where({
+        //       entityId: quotationPayload.quotationId,
+        //       entityType: "quotations",
+        //       chargeId: chargesData.id
+        //     })
+        //     .returning(["*"])
+        //     .transacting(trx)
+        //     .into("assigned_service_charges");
+        // }
 
-        console.log(
-          "[controllers][quotations][updateQuotation]: Update Data",
-          updateQuotationReq
-        );
+        // console.log(
+        //   "[controllers][quotations][updateQuotation]: Update Data",
+        //   updateQuotationReq
+        // );
         quotationsResponse = updateQuotationReq[0];
         trx.commit;
 
@@ -1459,118 +1459,6 @@ const quotationsController = {
         console.log("PropertyInfo",propertyInfo);
 
       userInfo = { ...tenantInfo, requesterInfo, propertyInfo, serviceMaster: quotationMaster }
-      pagination.data = rows;
-      pagination.tenant = userInfo;
-      // pagination.propertyDetails = userInfo;
-      // pagination.companyData = companyInfo;
-
-      return res.status(200).json({
-        data: {
-          quotation: pagination
-        }
-      });
-    } catch (err) {
-      return res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-      });
-    }
-  },
-  getServiceOrderInvoice: async (req, res) => {
-    try {
-      let { serviceOrderId } = req.body;
-      let rows;
-      let userInfo;
-      let requesterInfo;
-      let orgId = req.orgId;
-
-      let pagination = {};
-      [rows] = await Promise.all([
-        knex("quotations")
-          .leftJoin(
-            "taxes",
-            "quotations.vatId",
-            "taxes.id"
-          )
-          .select([
-            "taxes.taxCode as taxCode",
-            "quotations.*"
-          ])
-          .where({
-            "quotations.id": quotationId,
-            "quotations.orgId": req.orgId
-          })
-      ]);
-
-
-      let serviceMaster = await knex("quotations")
-        .leftJoin("users", "quotations.createdBy", "=", "users.id")
-        .select(
-          "quotations.serviceRequestId",
-          "users.name as quotationsCreated"
-        )
-        .where({ "quotations.id": quotationId, "quotations.orgId": orgId }).first();
-
-      let serviceRequestId = serviceMaster.serviceRequestId;
-      console.log("serviceRequestId", serviceRequestId);
-
-      const DataResult = await knex("service_requests").where({
-        id: serviceRequestId,
-        isActive: "true"
-      }).first();
-
-
-      requesterInfo = await knex("service_requests")
-        .leftJoin("requested_by", "service_requests.requestedBy", "=", "requested_by.id")
-        .leftJoin("source_of_request", "service_requests.serviceType", "=", "source_of_request.id")
-        .select(
-          "requested_by.name",
-          "source_of_request.requestCode",
-          "service_requests.createdAt"
-        )
-        .where({
-          "service_requests.id": serviceRequestId
-        }).first();
-      requesterData = requesterInfo;
-      console.log("requestedByDetails", requesterData);
-
-
-      tenantInfo = await knex("user_house_allocation")
-        .leftJoin("users", "user_house_allocation.userId", "=", "users.id")
-        .select(
-          "users.name",
-          "users.mobileNo",
-          "users.email",
-          "users.location"
-        )
-        .where({
-          "user_house_allocation.houseId": DataResult.houseId
-        }).first();
-      tenantData = tenantInfo;
-      console.log("tenantDataInfo", tenantData);
-
-      propertyInfo = await knex("property_units")
-        .leftJoin("companies", "property_units.companyId", "=", "companies.id")
-        .leftJoin("projects", "property_units.projectId", "=", "projects.id")
-        .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "=", "buildings_and_phases.id")
-        .leftJoin("floor_and_zones", "property_units.floorZoneId", "=", "floor_and_zones.id")
-        .select(
-          "companies.companyName",
-          "projects.project as projectCode",
-          "projects.projectName",
-          "buildings_and_phases.buildingPhaseCode",
-          "buildings_and_phases.description as buildingPhaseDescription",
-          "floor_and_zones.floorZoneCode",
-          "floor_and_zones.description as floorZoneDescription",
-          "property_units.unitNumber as unitNumber",
-          "property_units.description as unitDescription",
-          "property_units.houseId as houseId",
-          "companies.logoFile"
-        )
-        .where({
-          "property_units.id": DataResult.houseId
-        }).first();
-
-      userInfo = { ...tenantInfo, requesterInfo, propertyInfo, serviceMaster }
       pagination.data = rows;
       pagination.tenant = userInfo;
       // pagination.propertyDetails = userInfo;
