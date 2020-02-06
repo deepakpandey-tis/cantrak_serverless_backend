@@ -1658,14 +1658,61 @@ const quotationsController = {
   updateQuotationsStatus: async (req, res) => {
     try {
       let quotationId = req.body.data.quotationId;
+      //let serviceOrderId = req.body.data.serviceOrderId;
       let updateStatus = req.body.data.status;
+      let invoiceDataRow = null 
+      let assignedParts = null
+     // let finalParts = [];
       const currentTime = new Date();
       console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7', req.body)
       let status;
       if (updateStatus == 'Approved') {
+        let serviceRequestIdRow = await knex('quotations').where({id:quotationId}).select('serviceRequestId').first()
+        let serviceOrderIdRow = await knex('service_orders').select('id').where({ serviceRequestId: serviceRequestIdRow.serviceRequestId}).first()
         status = await knex("quotations")
-          .update({ quotationStatus: updateStatus, approvedOn: currentTime, approvedBy: req.me.id })
-          .where({ id: quotationId });
+      .update({ quotationStatus: updateStatus, approvedOn: currentTime, approvedBy: req.me.id })
+      .where({ id: quotationId });
+
+      
+        if (serviceOrderIdRow){
+        
+              // Add the invoice Data to SO
+                 invoiceDataRow = await knex('quotations').select('invoiceData').where({id:quotationId}).first()
+                let data = JSON.stringify(invoiceDataRow.invoiceData)
+                await knex('service_orders').update({ invoiceData: data }).where({ id: serviceOrderIdRow.id})
+        
+              // Get assigned parts to quotation
+                 assignedParts = await knex('assigned_parts').select('*').where({entityId:quotationId,entityType:'quotations'})
+                 assignedCharges = await knex('assigned_service_charges').select([
+
+                   "chargeId",
+                   "entityId",
+                   "entityType",
+                   "createdAt",
+                   "updatedAt",
+                   "isActive",
+                   "orgId",
+                   "status",
+                   "totalHours",
+                   "rate",
+
+                 ]).where({entityId:quotationId,entityType:'quotations'})
+                  
+                 if(assignedCharges && assignedCharges.length){
+                   for (let p of assignedCharges) {
+                     await knex('assigned_service_charges').insert({ ...p, status: 'in progress', orgId: req.orgId, createdAt: currentTime.getTime(), updatedAt: currentTime.getTime(), entityId: serviceOrderIdRow.id, entityType: 'service_orders' })
+                   }
+                 }
+
+                  if(assignedParts && assignedParts.length){
+                    //finalParts = assignedParts.map(v => v.partId)
+                    for (let p of assignedParts){
+                      await knex('assigned_parts').insert({ unitCost:p.unitCost,quantity:p.quantity,status:'in progress',orgId:req.orgId,createdAt:currentTime.getTime(),updatedAt:currentTime.getTime(),partId:p.partId,entityId: serviceOrderIdRow.id,entityType:'service_orders'})
+                    }
+                  }
+
+      }
+
       } else if (updateStatus == 'Cancelled') {
         status = await knex("quotations")
           .update({ quotationStatus: updateStatus, cancelledOn: currentTime, cancelledBy: req.me.id })
