@@ -414,7 +414,7 @@ const serviceOrderController = {
 
 
                 [total, rows] = await Promise.all([
-                    knex.count('* as count').from('service_orders')
+                    knex.from('service_orders')
                         .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
                         .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
                         .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
@@ -422,6 +422,10 @@ const serviceOrderController = {
                         .leftJoin('users', 'assigned_service_team.userId', 'users.id')
                         .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
                         .leftJoin("users AS u", "service_requests.createdBy", "u.id")
+                        .leftJoin('teams', 'assigned_service_team.teamId','teams.teamId')
+                        .leftJoin('property_units','service_requests.houseId','property_units.id')
+                        .leftJoin('buildings_and_phases','property_units.buildingPhaseId','buildings_and_phases.id')
+                        .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
                         .select([
                             'service_orders.id as So Id',
                             'service_requests.description as Description',
@@ -433,7 +437,12 @@ const serviceOrderController = {
                             'u.name as Created By',
                             'status.descriptionEng as Status',
                             'service_orders.createdAt as Date Created',
-                            'service_requests.houseId as houseId'
+                            'service_requests.houseId as houseId',
+                            "buildings_and_phases.description as Building Name",
+                            "users.userName as Assigned Main User",
+                            "teams.teamName as Team Name",
+                            "requested_by.name as Requested By",
+                            "property_units.unitNumber as Unit Number"
                         ]).where((qb) => {
                             qb.where({ 'service_orders.orgId': req.orgId });
                             qb.whereIn('service_requests.projectId', accessibleProjects)
@@ -450,7 +459,12 @@ const serviceOrderController = {
                                 qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
                             }
 
-                        }).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id', 'assigned_service_team.id', 'users.id', 'u.id', 'status.id']),
+                        }).groupBy([
+                            'buildings_and_phases.id',
+                            'teams.teamId',
+                            'requested_by.id',
+                            'property_units.id',
+                            'service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id', 'assigned_service_team.id', 'users.id', 'u.id', 'status.id','users.id']),
 
                     knex.from('service_orders')
                         .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
@@ -460,6 +474,14 @@ const serviceOrderController = {
                         .leftJoin('users', 'assigned_service_team.userId', 'users.id')
                         .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
                         .leftJoin("users AS u", "service_requests.createdBy", "u.id")
+                        .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                        .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+                        //.leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+                        // .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
+                        // .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                        // .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+                        .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+                        .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
                         .select([
                             'service_orders.id as So Id',
                             'service_requests.description as Description',
@@ -472,7 +494,12 @@ const serviceOrderController = {
                             'u.name as Created By',
                             'status.descriptionEng as Status',
                             'service_orders.createdAt as Date Created',
-                            'service_requests.houseId as houseId'
+                            'service_requests.houseId as houseId',
+                            "buildings_and_phases.description as Building Name",
+                            "users.userName as Assigned Main User",
+                            "teams.teamName as Team Name",
+                            "requested_by.name as Requested By",
+                            "property_units.unitNumber as Unit Number"
 
 
                         ]).where((qb) => {
@@ -491,14 +518,14 @@ const serviceOrderController = {
                                 qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
                             }
 
-                        }).offset(offset).limit(per_page)
+                        }).offset(offset).limit(per_page).orderBy('service_orders.id','desc')
                 ])
             }
             else
                 if (_.isEmpty(filters)) {
                     [total, rows] = await Promise.all([
                         knex
-                            .count("* as count")
+                            
                             .from("service_orders")
                             .leftJoin(
                                 "service_requests",
@@ -515,9 +542,16 @@ const serviceOrderController = {
                                 "service_problems.categoryId",
                                 "incident_categories.id"
                             )
+                            .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
+
                             .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
                             .leftJoin("users AS u", "service_requests.createdBy", "u.id")
+                            .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                            .leftJoin('users', 'assigned_service_team.userId', 'users.id')
 
+                            .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+                            .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+                            .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
                             .select([
                                 "service_orders.id as So Id",
                                 "service_requests.description as Description",
@@ -531,7 +565,12 @@ const serviceOrderController = {
                                 'u.name as Created By',
                                 'status.descriptionEng as Status',
                                 'service_orders.createdAt as Date Created',
-                                'service_requests.houseId as houseId'
+                                'service_requests.houseId as houseId',
+                                "buildings_and_phases.description as Building Name",
+                                "users.userName as Assigned Main User",
+                                "teams.teamName as Team Name",
+                                "requested_by.name as Requested By",
+                                "property_units.unitNumber as Unit Number"
                             ])
                             .groupBy([
                                 "service_requests.id",
@@ -539,7 +578,12 @@ const serviceOrderController = {
                                 "service_problems.id",
                                 "incident_categories.id",
                                 "u.id",
-                                "status.id"
+                                "status.id",
+                                'buildings_and_phases.id',
+                                'teams.teamId',
+                                'requested_by.id',
+                                'property_units.id',
+                                'users.id'
                             ])
                             .where({ "service_orders.orgId": req.orgId })
                             .whereIn('service_requests.projectId', accessibleProjects),
@@ -561,8 +605,16 @@ const serviceOrderController = {
                                 "service_problems.categoryId",
                                 "incident_categories.id"
                             )
+                            .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
+
                             .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
                             .leftJoin("users AS u", "service_requests.createdBy", "u.id")
+                            .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                            .leftJoin('users', 'assigned_service_team.userId', 'users.id')
+
+                            .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+                            .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+                            .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
                             .select([
                                 "service_orders.id as So Id",
                                 "service_requests.description as Description",
@@ -575,18 +627,23 @@ const serviceOrderController = {
                                 "orderDueDate as Due Date",
                                 "status.descriptionEng as Status",
                                 "service_orders.createdAt as Date Created",
-                                'service_requests.houseId as houseId'
+                                'service_requests.houseId as houseId',
+                                "buildings_and_phases.description as Building Name",
+                                "users.userName as Assigned Main User",
+                                "teams.teamName as Team Name",
+                                "requested_by.name as Requested By",
+                                "property_units.unitNumber as Unit Number"
 
                             ])
                             .offset(offset)
                             .limit(per_page)
                             .where({ "service_orders.orgId": req.orgId })
-                            .whereIn('service_requests.projectId', accessibleProjects),
+                            .whereIn('service_requests.projectId', accessibleProjects).orderBy('service_orders.id', 'desc'),
                     ]);
                 } else {
                     [total, rows] = await Promise.all([
                         knex
-                            .count("* as count")
+                           
                             .from("service_orders")
                             .leftJoin(
                                 "service_requests",
@@ -615,7 +672,10 @@ const serviceOrderController = {
                             )
                             .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
                             .leftJoin("users AS u", "service_requests.createdBy", "u.id")
-
+                            .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                            .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+                            .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+                            .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
                             .select([
                                 "service_orders.id as So Id",
                                 "service_requests.description as Description",
@@ -627,7 +687,12 @@ const serviceOrderController = {
                                 "status.descriptionEng as Status",
                                 "u.name as Created By",
                                 "service_orders.createdAt as Date Created",
-                                'service_requests.houseId as houseId'
+                                'service_requests.houseId as houseId',
+                                "buildings_and_phases.description as Building Name",
+                                "users.userName as Assigned Main User",
+                                "teams.teamName as Team Name",
+                                "requested_by.name as Requested By",
+                                "property_units.unitNumber as Unit Number"
 
                             ])
                             .where(qb => {
@@ -665,7 +730,11 @@ const serviceOrderController = {
                                 "assigned_service_team.id",
                                 "users.id",
                                 "u.id",
-                                "status.id"
+                                "status.id",
+                                'buildings_and_phases.id',
+                                'teams.teamId',
+                                'requested_by.id',
+                                'property_units.id',
                             ]),
                         knex
                             .from("service_orders")
@@ -696,7 +765,10 @@ const serviceOrderController = {
                             )
                             .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
                             .leftJoin("users AS u", "service_requests.createdBy", "u.id")
-
+                            .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                            .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+                            .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+                            .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
                             .select([
                                 "service_orders.id as So Id",
                                 "service_requests.description as Description",
@@ -708,7 +780,13 @@ const serviceOrderController = {
                                 'service_requests.houseId as houseId',
                                 "orderDueDate as Due Date",
                                 "status.descriptionEng as Status",
-                                "service_orders.createdAt as Date Created"
+                                "service_orders.createdAt as Date Created",
+                                "buildings_and_phases.description as Building Name",
+                                "users.userName as Assigned Main User",
+                                "teams.teamName as Team Name",
+                                "requested_by.name as Requested By",
+                                "property_units.unitNumber as Unit Number"
+
                             ])
                             .where(qb => {
                                 qb.where({ "service_orders.orgId": req.orgId });
@@ -738,7 +816,7 @@ const serviceOrderController = {
                                 }
                             })
                             .offset(offset)
-                            .limit(per_page)
+                            .limit(per_page).orderBy('service_orders.id', 'desc')
                     ]);
 
                 }
