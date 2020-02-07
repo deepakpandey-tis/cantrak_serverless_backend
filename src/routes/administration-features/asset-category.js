@@ -36,7 +36,7 @@ router.get('/export-asset-category',
   resourceAccessMiddleware.isAssetAccessible,
   assetCategoryController.exportAssetCategory)
 
-router.get('/get-asset-category-list',
+router.post('/get-asset-category-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
