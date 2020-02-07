@@ -2515,6 +2515,21 @@ const serviceRequestController = {
         }
       })
     }
+  },
+  getServiceRequestIdByServiceOrderId:async(req,res) => {
+    try {
+      const serviceOrderId = req.body.serviceOrderId;
+      const serviceRequestId = await knex('service_orders').select('serviceRequestId').where({id:serviceOrderId}).first()
+      return res.status(200).json({data: {
+        serviceRequestId
+      }})
+    } catch(err) {
+      return res.status(200).json({
+        data: {
+          update: false
+        }
+      })
+    }
   }
 };
 
