@@ -759,21 +759,6 @@ const serviceRequestController = {
           knex
             // .count("* as count")
             .from("service_requests")
-            // .leftJoin(
-            //   "service_problems",
-            //   "service_requests.id",
-            //   "service_problems.serviceRequestId"
-            // )
-            // .leftJoin(
-            //   "incident_categories",
-            //   "service_problems.categoryId",
-            //   "incident_categories.id"
-            // )
-            // .leftJoin(
-            //   "incident_sub_categories",
-            //   "incident_categories.id",
-            //   "incident_sub_categories.incidentCategoryId"
-            // )
             .leftJoin(
               "property_units",
               "service_requests.houseId",
@@ -785,12 +770,29 @@ const serviceRequestController = {
               "status.statusCode"
             )
             .leftJoin("users as u", "service_requests.requestedBy", "u.id")
+            .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
+            .leftJoin(
+              "service_problems",
+              "service_requests.id",
+              "service_problems.serviceRequestId"
+            )
+            .leftJoin(
+              "requested_by",
+              "service_requests.requestedBy",
+              "requested_by.id"
+            )
+            .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
+            .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+            .leftJoin('users as mainUsers', 'assigned_service_team.userId', 'mainUsers.id')
+            .leftJoin(
+              "incident_categories",
+              "service_problems.categoryId",
+              "incident_categories.id"
+            )
             .select([
               "service_requests.id as S Id",
               "service_requests.houseId as houseId",
               "service_requests.description as Description",
-              // "incident_categories.descriptionEng as Category",
-              // "incident_sub_categories.descriptionEng as Problem",
               "service_requests.priority as Priority",
               "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
@@ -799,33 +801,25 @@ const serviceRequestController = {
             ])
             .groupBy([
               "service_requests.id",
-              // "service_problems.id",
-              // "incident_categories.id",
-              // "incident_sub_categories.id",
               "status.id",
               "u.id",
-              "property_units.id"
+              "property_units.id",
+              "buildings_and_phases.id",
+              "service_problems.id",
+              "requested_by.id",
+              "assigned_service_team.id",
+              "teams.teamId",
+              "mainUsers.id",
+              "incident_categories.id"
             ])
             .where({ "service_requests.orgId": req.orgId })
-            .whereIn('service_requests.projectId', accessibleProjects),
+            .whereIn('service_requests.projectId', accessibleProjects)
+            .distinct('service_requests.id')
+          ,
 
-          knex
-            .from("service_requests")
-            // .leftJoin(
-            //   "service_problems",
-            //   "service_requests.id",
-            //   "service_problems.serviceRequestId"
-            // )
-            // .leftJoin(
-            //   "incident_categories",
-            //   "service_problems.categoryId",
-            //   "incident_categories.id"
-            // )
-            // .leftJoin(
-            //   "incident_sub_categories",
-            //   "incident_categories.id",
-            //   "incident_sub_categories.incidentCategoryId"
-            // )
+
+
+          knex.from("service_requests")
             .leftJoin(
               "property_units",
               "service_requests.houseId",
@@ -837,24 +831,128 @@ const serviceRequestController = {
               "status.statusCode"
             )
             .leftJoin("users as u", "service_requests.requestedBy", "u.id")
-
+            .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
+            .leftJoin(
+              "service_problems",
+              "service_requests.id",
+              "service_problems.serviceRequestId"
+            )
+            .leftJoin(
+              "requested_by",
+              "service_requests.requestedBy",
+              "requested_by.id"
+            )
+            .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
+            .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+            .leftJoin('users as mainUsers', 'assigned_service_team.userId', 'mainUsers.id')
+            .leftJoin(
+              "incident_categories",
+              "service_problems.categoryId",
+              "incident_categories.id"
+            )
             .select([
               "service_requests.id as S Id",
               "service_requests.houseId as houseId",
               "service_requests.description as Description",
-              // "incident_categories.descriptionEng as Category",
-              // "incident_sub_categories.descriptionEng as Problem",
               "service_requests.priority as Priority",
               "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
-              "u.name as Requested By",
-              "service_requests.createdAt as Date Created"
+              "requested_by.name as Requested By",
+              "service_requests.createdAt as Date Created",
+              "buildings_and_phases.buildingPhaseCode",
+              "buildings_and_phases.description as buildingDescription",
+              "incident_categories.descriptionEng as problemDescription",
+              "requested_by.email as requestedByEmail",
+              "teams.teamName",
+              "teams.teamCode",
+              "mainUsers.name as mainUser"
             ])
-            .offset(offset)
-            .limit(per_page)
+            .groupBy([
+              "service_requests.id",
+              "status.id",
+              "u.id",
+              "property_units.id",
+              "buildings_and_phases.id",
+              "service_problems.id",
+              "requested_by.id",
+              "assigned_service_team.id",
+              "teams.teamId",
+              "mainUsers.id",
+              "incident_categories.id"
+            ])
             .where({ "service_requests.orgId": req.orgId })
             .whereIn('service_requests.projectId', accessibleProjects)
+            .distinct('service_requests.id')
             .orderBy('service_requests.id', 'desc')
+            .offset(offset)
+            .limit(per_page)
+
+          //
+
+          // knex
+          //   .from("service_requests")
+          //   .leftJoin(
+          //     "property_units",
+          //     "service_requests.houseId",
+          //     "property_units.id"
+          //   )
+          //   .leftJoin(
+          //     "service_status AS status",
+          //     "service_requests.serviceStatusCode",
+          //     "status.statusCode"
+          //   )
+          //   .leftJoin("users as u", "service_requests.requestedBy", "u.id")
+          //   .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
+          //   .leftJoin(
+          //     "service_problems",
+          //     "service_requests.id",
+          //     "service_problems.serviceRequestId"
+          //   )
+          //   .leftJoin(
+          //     "requested_by",
+          //     "service_requests.requestedBy",
+          //     "requested_by.id"
+          //   )
+          //   .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
+          //   .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+          //   .leftJoin('users as mainUsers', 'assigned_service_team.userId', 'mainUsers.id')
+          //   .select([
+          //     "service_requests.id as S Id",
+          //     "service_requests.houseId as houseId",
+          //     "service_requests.description as Description",
+          //     // "incident_categories.descriptionEng as Category",
+          //     // "incident_sub_categories.descriptionEng as Problem",
+          //     "service_requests.priority as Priority",
+          //     "status.descriptionEng as Status",
+          //     "property_units.unitNumber as Unit No",
+          //     "requested_by.name as Requested By",
+          //     "service_requests.createdAt as Date Created",
+          //     "buildings_and_phases.buildingPhaseCode",
+          //     "buildings_and_phases.description as buildingDescription",
+          //     "service_problems.description as problemDescription",
+          //     "requested_by.email as requestedByEmail",
+          //     "teams.teamName",
+          //     "teams.teamCode",
+          //     "mainUsers.name as mainUser"
+          //   ])
+          //   .offset(offset)
+          //   .limit(per_page)
+          //   .where({ "service_requests.orgId": req.orgId })
+          //   .whereIn('service_requests.projectId', accessibleProjects)
+          //   .orderBy('service_requests.id', 'desc')
+          //   .groupBy([
+          //     "service_requests.id",
+          //     "status.id",
+          //     "u.id",
+          //     "property_units.id",
+          //     "buildings_and_phases.id",
+          //     "service_problems.id",
+          //     "requested_by.id",
+          //     "assigned_service_team.id",
+          //     "teams.teamId",
+          //     "mainUsers.id"
+          //   ])
+          //   .distinct('service_requests.id')
         ]);
 
 
@@ -867,21 +965,6 @@ const serviceRequestController = {
           knex
             // .count("* as count")
             .from("service_requests")
-            // .leftJoin(
-            //   "service_problems",
-            //   "service_requests.id",
-            //   "service_problems.serviceRequestId"
-            // )
-            // .leftJoin(
-            //   "incident_categories",
-            //   "service_problems.categoryId",
-            //   "incident_categories.id"
-            // )
-            // .leftJoin(
-            //   "incident_sub_categories",
-            //   "incident_categories.id",
-            //   "incident_sub_categories.incidentCategoryId"
-            // )
             .leftJoin(
               "property_units",
               "service_requests.houseId",
@@ -899,7 +982,24 @@ const serviceRequestController = {
               "status.statusCode"
             )
             .leftJoin("users as u", "service_requests.requestedBy", "u.id")
-
+            .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
+            .leftJoin(
+              "service_problems",
+              "service_requests.id",
+              "service_problems.serviceRequestId"
+            )
+            .leftJoin(
+              "requested_by",
+              "service_requests.requestedBy",
+              "requested_by.id"
+            )
+            .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+            .leftJoin('users as mainUsers', 'assigned_service_team.userId', 'mainUsers.id')
+            .leftJoin(
+              "incident_categories",
+              "service_problems.categoryId",
+              "incident_categories.id"
+            )
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
@@ -940,32 +1040,32 @@ const serviceRequestController = {
               qb.where(filters);
               qb.whereIn('service_requests.projectId', accessibleProjects)
             })
+            // .groupBy([
+            //   "service_requests.id",
+            //   // "service_problems.id",
+            //   // "incident_categories.id",
+            //   // "incident_sub_categories.id",
+            //   "property_units.id",
+            //   "status.id",
+            //   "u.id"
+            // ]),,
             .groupBy([
               "service_requests.id",
-              // "service_problems.id",
-              // "incident_categories.id",
-              // "incident_sub_categories.id",
-              "property_units.id",
               "status.id",
-              "u.id"
-            ]),
+              "u.id",
+              "property_units.id",
+              "buildings_and_phases.id",
+              "service_problems.id",
+              "requested_by.id",
+              "assigned_service_team.id",
+              "teams.teamId",
+              "mainUsers.id",
+              "incident_categories.id"
+            ])
+            .distinct('service_requests.id')
+            ,
           knex
             .from("service_requests")
-            // .leftJoin(
-            //   "service_problems",
-            //   "service_requests.id",
-            //   "service_problems.serviceRequestId"
-            // )
-            // .leftJoin(
-            //   "incident_categories",
-            //   "service_problems.categoryId",
-            //   "incident_categories.id"
-            // )
-            // .leftJoin(
-            //   "incident_sub_categories",
-            //   "incident_categories.id",
-            //   "incident_sub_categories.incidentCategoryId"
-            // )
             .leftJoin(
               "property_units",
               "service_requests.houseId",
@@ -982,16 +1082,39 @@ const serviceRequestController = {
               "status.statusCode"
             )
             .leftJoin("users as u", "service_requests.requestedBy", "u.id")
+            .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
+            .leftJoin(
+              "service_problems",
+              "service_requests.id",
+              "service_problems.serviceRequestId"
+            )
+            .leftJoin(
+              "requested_by",
+              "service_requests.requestedBy",
+              "requested_by.id"
+            )
+            .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+            .leftJoin('users as mainUsers', 'assigned_service_team.userId', 'mainUsers.id')
+            .leftJoin(
+              "incident_categories",
+              "service_problems.categoryId",
+              "incident_categories.id"
+            )
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
-              // "incident_categories.descriptionEng as Category",
-              // "incident_sub_categories.descriptionEng as Problem",
               "service_requests.priority as Priority",
               "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
-              "u.name as Requested By",
-              "service_requests.createdAt as Date Created"
+              "requested_by.name as Requested By",
+              "service_requests.createdAt as Date Created",
+              "buildings_and_phases.buildingPhaseCode",
+              "buildings_and_phases.description as buildingDescription",
+              "incident_categories.descriptionEng as problemDescription",
+              "requested_by.email as requestedByEmail",
+              "teams.teamName",
+              "teams.teamCode",
+              "mainUsers.name as mainUser"
             ])
             .orderBy('service_requests.id', 'desc')
             .where({ "service_requests.orgId": req.orgId })
@@ -1027,6 +1150,20 @@ const serviceRequestController = {
             })
             .offset(offset)
             .limit(per_page)
+            .groupBy([
+              "service_requests.id",
+              "status.id",
+              "u.id",
+              "property_units.id",
+              "buildings_and_phases.id",
+              "service_problems.id",
+              "requested_by.id",
+              "assigned_service_team.id",
+              "teams.teamId",
+              "mainUsers.id",
+              "incident_categories.id"
+            ])
+            .distinct('service_requests.id')
         ]);
       }
 
@@ -1038,11 +1175,29 @@ const serviceRequestController = {
       pagination.last_page = Math.ceil(count / per_page);
       pagination.current_page = page;
       pagination.from = offset;
+
+      const Parallel = require('async-parallel');
+
+      // rows.tenantName = await Parallel.map(rows, async item => {
+
+      //   let userId = await knex('assigned_service_additional_users').where({ entityId: item["S Id"] ,'entityType':'service_requests'}).select('userId').first();
+
+      //   let tenantName =null;   
+      //   if(userId){
+      //   tenantName = await knex('users').where({ id: userId }).select('name').first();
+      //   tenantName="assssssssssss"
+      //   }
+
+      //   return userId;
+        
+      // });
+
       pagination.data = rows;
+
 
       return res.status(200).json({
         data: {
-          service_requests: pagination
+          service_requests: pagination,
         },
         message: "Service Request List!"
       });
@@ -2481,34 +2636,36 @@ const serviceRequestController = {
       })
     }
   },
-  getAssignedAssetsByEntity:async(req,res) => {
+  getAssignedAssetsByEntity: async (req, res) => {
     try {
-      const {entityId,entityType} = req.body;
+      const { entityId, entityType } = req.body;
       let assigned_assets = []
-        assigned_assets = await knex('assigned_assets')
-        .innerJoin('asset_master','assigned_assets.assetId','asset_master.id')
-        .select(['asset.id as assetId','asset_master.assetName'])
-        .where({'assigned_assets.entityId':entityId,'assigned_assets.entityType':entityType})
-        
+      assigned_assets = await knex('assigned_assets')
+        .innerJoin('asset_master', 'assigned_assets.assetId', 'asset_master.id')
+        .select(['asset.id as assetId', 'asset_master.assetName'])
+        .where({ 'assigned_assets.entityId': entityId, 'assigned_assets.entityType': entityType })
+
       return res.status(200).json({
         data: {
           assigned_assets
         }
       })
-    } catch(err) {
+    } catch (err) {
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
-  getServiceOrderIdByServiceRequestId:async(req,res) => {
+  getServiceOrderIdByServiceRequestId: async (req, res) => {
     try {
       const serviceRequestId = req.body.serviceRequestId;
-      const serviceOrderId = await knex('service_orders').select('id').where({serviceRequestId:serviceRequestId}).first()
-      return res.status(200).json({data: {
-        serviceOrderId
-      }})
-    } catch(err) {
+      const serviceOrderId = await knex('service_orders').select('id').where({ serviceRequestId: serviceRequestId }).first()
+      return res.status(200).json({
+        data: {
+          serviceOrderId
+        }
+      })
+    } catch (err) {
       return res.status(200).json({
         data: {
           update: false
