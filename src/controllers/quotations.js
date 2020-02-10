@@ -581,6 +581,21 @@ const quotationsController = {
               "assigned_service_team.entityId"
             )
             .leftJoin("users", "quotations.createdBy", "users.id")
+            .leftJoin(
+              "service_problems",
+              "service_requests.id",
+              "service_problems.serviceRequestId"
+            )
+            .leftJoin(
+              "requested_by",
+              "service_requests.requestedBy",
+              "requested_by.id"
+            )
+            .leftJoin(
+              "incident_categories",
+              "service_problems.categoryId",
+              "incident_categories.id"
+            )
             .where("quotations.orgId", req.orgId)
             .whereIn('quotations.projectId', accessibleProjects)
             .havingNotNull('quotations.quotationStatus')
@@ -588,7 +603,11 @@ const quotationsController = {
               "projects.projectName",
               "buildings_and_phases.buildingPhaseCode",
               "floor_and_zones.floorZoneCode",
-              "property_units.unitNumber",]),
+              "property_units.unitNumber",
+              "requested_by.id",
+              "service_problems.id",
+              "incident_categories.id",
+            ]),
           knex
             .from("quotations")
             .leftJoin('companies', 'quotations.companyId', 'companies.id')
@@ -607,7 +626,21 @@ const quotationsController = {
               "assigned_service_team.entityId"
             )
             .leftJoin("users", "quotations.createdBy", "users.id")
-
+            .leftJoin(
+              "service_problems",
+              "service_requests.id",
+              "service_problems.serviceRequestId"
+            )
+            .leftJoin(
+              "requested_by",
+              "service_requests.requestedBy",
+              "requested_by.id"
+            )
+            .leftJoin(
+              "incident_categories",
+              "service_problems.categoryId",
+              "incident_categories.id"
+            )
             .where("quotations.orgId", req.orgId)
             .whereIn('quotations.projectId', accessibleProjects)
             .select([
@@ -622,16 +655,23 @@ const quotationsController = {
               "buildings_and_phases.buildingPhaseCode",
               "floor_and_zones.floorZoneCode",
               "property_units.unitNumber",
-
               "quotations.quotationStatus as Status",
-              "quotations.createdAt as Date Created"
+              "quotations.createdAt as Date Created",
+              "incident_categories.descriptionEng as problemDescription",
+              "requested_by.name as requestedBy",
             ])
             .havingNotNull('quotations.quotationStatus')
             .groupBy(["quotations.id", "service_requests.id", "assigned_service_team.id", "users.id", "companies.companyName",
               "projects.projectName",
               "buildings_and_phases.buildingPhaseCode",
               "floor_and_zones.floorZoneCode",
-              "property_units.unitNumber",])
+              "property_units.unitNumber",
+              "requested_by.id",
+              "service_problems.id",
+              "incident_categories.id",
+              "incident_categories.descriptionEng",
+            ])
+            .orderBy('quotations.id','desc')
             .offset(offset)
             .limit(per_page)
         ]);

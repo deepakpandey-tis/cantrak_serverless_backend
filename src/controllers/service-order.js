@@ -635,6 +635,8 @@ const serviceOrderController = {
                                 "property_units.unitNumber as Unit Number"
 
                             ])
+                            .distinct('service_requests.id')
+                            .orderBy('service_orders.id','desc')
                             .offset(offset)
                             .limit(per_page)
                             .where({ "service_orders.orgId": req.orgId })

@@ -275,6 +275,12 @@ const AssetCategoryController = {
   },
   getAssetCategoryList: async (req, res) => {
     try {
+
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "categoryName";
+        sortPayload.orderBy = "asc"
+      }
       let reqData = req.query;
       let pagination = {};
 
@@ -301,7 +307,7 @@ const AssetCategoryController = {
             "users.name as Created By",
             "asset_category_master.createdAt as Date Created"
           ])
-          .orderBy('asset_category_master.id', 'desc')
+          .orderBy(sortPayload.sortBy,sortPayload.orderBy)
           .offset(offset)
           .limit(per_page)
       ]);
@@ -462,99 +468,99 @@ const AssetCategoryController = {
       //     header: "A",
       //     raw: false
       //   });
-        let data = req.body;
-        let totalData = data.length - 1;
-        let fail = 0;
-        let success = 0;
-        let result = null;
-        let currentTime = new Date().getTime();
-        let errors = []
-        let header = Object.values(data[0]);
-        header.unshift('Error');
-        errors.push(header)
+      let data = req.body;
+      let totalData = data.length - 1;
+      let fail = 0;
+      let success = 0;
+      let result = null;
+      let currentTime = new Date().getTime();
+      let errors = []
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
 
 
-        if (
-          data[0].A == "Ã¯Â»Â¿CATEGORY_NAME" ||
-          (data[0].A == "CATEGORY_NAME")
-        ) {
-          if (data.length > 0) {
-            let i = 0;
-            console.log("Data[0]", data[0]);
-            for (let assetCategoryData of data) {
-              i++;
-              if (i > 1) {
-                let checkExist = await knex("asset_category_master")
-                  .select("categoryName")
-                  .where({
-                    categoryName: assetCategoryData.A,
-                    orgId: req.orgId
-                  });
-                if (checkExist.length < 1 && assetCategoryData.A) {
-                  // let categoryIdResult = await knex("companies")
-                  //   .select("id")
-                  //   .where({
-                  //     orgId: req.orgId,
-                  //     companyId: assetCategoryData.B
-                  //   });
-                  //if (categoryIdResult && categoryIdResult.length) {
-                  success++;
-                  let insertData = {
-                    orgId: req.orgId,
-                    categoryName: assetCategoryData.A,
-                    isActive: true,
-                    createdBy: req.me.id,
-                    createdAt: currentTime
-                  };
+      if (
+        data[0].A == "Ã¯Â»Â¿CATEGORY_NAME" ||
+        (data[0].A == "CATEGORY_NAME")
+      ) {
+        if (data.length > 0) {
+          let i = 0;
+          console.log("Data[0]", data[0]);
+          for (let assetCategoryData of data) {
+            i++;
+            if (i > 1) {
+              let checkExist = await knex("asset_category_master")
+                .select("categoryName")
+                .where({
+                  categoryName: assetCategoryData.A,
+                  orgId: req.orgId
+                });
+              if (checkExist.length < 1 && assetCategoryData.A) {
+                // let categoryIdResult = await knex("companies")
+                //   .select("id")
+                //   .where({
+                //     orgId: req.orgId,
+                //     companyId: assetCategoryData.B
+                //   });
+                //if (categoryIdResult && categoryIdResult.length) {
+                success++;
+                let insertData = {
+                  orgId: req.orgId,
+                  categoryName: assetCategoryData.A,
+                  isActive: true,
+                  createdBy: req.me.id,
+                  createdAt: currentTime
+                };
 
-                  resultData = await knex
-                    .insert(insertData)
-                    .returning(["*"])
-                    .into("asset_category_master");
-                  // } else {
-                  //   fail++
-                  // }
-                } else {
-                  let values = _.values(assetCategoryData)
-                  values.unshift('Asset category already exists')
-                  errors.push(values);
-                  fail++;
-                }
+                resultData = await knex
+                  .insert(insertData)
+                  .returning(["*"])
+                  .into("asset_category_master");
+                // } else {
+                //   fail++
+                // }
+              } else {
+                let values = _.values(assetCategoryData)
+                values.unshift('Asset category already exists')
+                errors.push(values);
+                fail++;
               }
             }
-
-            // let deleteFile = await fs.unlink(file_path, err => {
-            //   console.log("File Deleting Error " + err);
-            // });
-            let message = null;
-            if (totalData == success) {
-              message =
-                "System have processed ( " +
-                totalData +
-                " ) entries and added them successfully!";
-            } else {
-              message =
-                "System have processed ( " +
-                totalData +
-                " ) entries out of which only ( " +
-                success +
-                " ) are added and others are failed ( " +
-                fail +
-                " ) due to validation!";
-            }
-
-            return res.status(200).json({
-              message: message,
-              errors:errors
-            });
           }
-        } else {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-            ]
+
+          // let deleteFile = await fs.unlink(file_path, err => {
+          //   console.log("File Deleting Error " + err);
+          // });
+          let message = null;
+          if (totalData == success) {
+            message =
+              "System have processed ( " +
+              totalData +
+              " ) entries and added them successfully!";
+          } else {
+            message =
+              "System have processed ( " +
+              totalData +
+              " ) entries out of which only ( " +
+              success +
+              " ) are added and others are failed ( " +
+              fail +
+              " ) due to validation!";
+          }
+
+          return res.status(200).json({
+            message: message,
+            errors: errors
           });
         }
+      } else {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
+      }
       // } else {
       //   return res.status(400).json({
       //     errors: [

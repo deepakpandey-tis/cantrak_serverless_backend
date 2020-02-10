@@ -545,6 +545,27 @@ const surveyOrderController = {
           )
           .leftJoin("users", "assigned_service_team.userId", "users.id")
           .leftJoin("users AS u", "o.createdBy", "u.id")
+          .leftJoin(
+            "property_units",
+            "s.houseId",
+            "property_units.id"
+          )
+          .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
+          .leftJoin(
+            "service_problems",
+            "s.id",
+            "service_problems.serviceRequestId"
+          )
+          .leftJoin(
+            "requested_by",
+            "s.requestedBy",
+            "requested_by.id"
+          )
+          .leftJoin(
+            "incident_categories",
+            "service_problems.categoryId",
+            "incident_categories.id"
+          )
           .select(
             "o.id AS surveyId",
             "o.serviceRequestId",
@@ -587,7 +608,12 @@ const surveyOrderController = {
             // "status.descriptionEng AS Status",
             "o.surveyOrderStatus as Status",
             "o.createdAt as Date Created",
-            "teams.teamName as teamName"
+            "teams.teamName as teamName",
+            "buildings_and_phases.buildingPhaseCode",
+            "buildings_and_phases.description as buildingDescription",
+            "property_units.unitNumber",
+            "incident_categories.descriptionEng as problemDescription",
+            "requested_by.name as requestedBy",
           )
           .from("survey_orders As o")
           .where(qb => {
@@ -627,7 +653,29 @@ const surveyOrderController = {
             "teams.teamId"
           )
           .leftJoin("users", "assigned_service_team.userId", "users.id")
+          .leftJoin(
+            "property_units",
+            "s.houseId",
+            "property_units.id"
+          )
+          .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
+          .leftJoin(
+            "service_problems",
+            "s.id",
+            "service_problems.serviceRequestId"
+          )
+          .leftJoin(
+            "requested_by",
+            "s.requestedBy",
+            "requested_by.id"
+          )
+          .leftJoin(
+            "incident_categories",
+            "service_problems.categoryId",
+            "incident_categories.id"
+          )
           .whereIn('s.projectId', accessibleProjects)
+          .orderBy('o.id','desc')
           .offset(offset)
           .limit(per_page);
       } else if (
@@ -946,7 +994,7 @@ const surveyOrderController = {
 
       await knex.transaction(async trx => {
         let upNotesPayload = _.omit(req.body, ["images"]);
-        console.log("[controllers][surveyOrder][updateRemarksNotes] : Request Body",upNotesPayload);
+        console.log("[controllers][surveyOrder][updateRemarksNotes] : Request Body", upNotesPayload);
 
         // validate keys
         const schema = Joi.object().keys({
@@ -977,7 +1025,7 @@ const surveyOrderController = {
           createdAt: currentTime,
           updatedAt: currentTime
         };
-        console.log("[controllers][surveyOrder][postRemarksNotes] : Insert Data",insertData);
+        console.log("[controllers][surveyOrder][postRemarksNotes] : Insert Data", insertData);
 
         const resultRemarksNotes = await knex
           .insert(insertData)
@@ -1015,9 +1063,9 @@ const surveyOrderController = {
         }
 
         /*INSERT IMAGE TABLE DATA CLOSE */
-        if(problemImagesData.length){
+        if (problemImagesData.length) {
           notesData = { ...notesData, s3Url: problemImagesData[0].s3Url }
-        }else{
+        } else {
           notesData = { ...notesData, s3Url: '' }
         }
 
@@ -1049,7 +1097,7 @@ const surveyOrderController = {
         entityId: Joi.number().required(),
         entityType: Joi.string().required()
       });
-      
+
       let result = Joi.validate(remarksData, schema);
       console.log("[controllers][surveyOrder][getRemarksNotes]: JOi Result", result);
 
