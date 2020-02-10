@@ -1296,13 +1296,16 @@ const chargeController = {
   },
   deleteQuotationAssignedCharges: async (req, res) => {
     try {
-      const id = req.body.id;
+      const id = req.body.partId;
+      const entityId = req.body.entityId;
+      const entityType = req.body.entityType;
+
       const currentTime = new Date().getTime();
 
-      let getQuotationId = await knex('assigned_service_charges').where({ id, "entityType": "quotations" }).select('entityId', 'chargeId');
+      let getQuotationId = await knex('assigned_service_charges').where({ id, "entityType": entityType }).select('entityId', 'chargeId');
       let quotationId = getQuotationId[0].entityId;
       let chargeId = getQuotationId[0].chargeId;
-      let quotationsData = await knex('quotations').where({ "id": quotationId }).returning(['*']).first();
+      let quotationsData = await knex(entityType).where({ "id": quotationId }).returning(['*']);
       console.log("quotationsJsonArray", quotationsData);
       //deletedRow = quotationsData;
       let filtered = {};
@@ -1335,7 +1338,7 @@ const chargeController = {
           ctotal = invoiceData.parts[q].unitCost * invoiceData.parts[q].quantity;
           subPartsTotalAmt += ctotal;
         }
-        
+
         let subTotalFinal = 0;
         subTotalFinal = (subTotalAmt + subPartsTotalAmt);
         let grandTotal = 0;
@@ -1351,7 +1354,7 @@ const chargeController = {
       }
 
       // deleteRow = filtered;
-      const deletedRow = await knex('assigned_service_charges').where({ id, "entityType": "quotations" }).del().returning(['*'])
+      const deletedRow = await knex('assigned_service_charges').where({ id, "entityType": entityType }).del().returning(['*'])
 
       let updateQuotationInvoiceData = await knex
         .update({
@@ -1360,7 +1363,7 @@ const chargeController = {
         })
         .where({ id: quotationId })
         .returning(["*"])
-        .into("quotations");
+        .into(entityType);
 
 
       return res.status(200).json({
