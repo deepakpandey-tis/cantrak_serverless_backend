@@ -45,7 +45,7 @@ const commonAreaController = {
           });
         }
 
-        const existCommonAreaCode = await knex("property_units").where({
+        const existunitNumber = await knex("property_units").where({
           unitNumber: req.body.unitNumber,
           orgId: orgId,
           type:2,
@@ -54,12 +54,12 @@ const commonAreaController = {
 
         console.log(
           "[controllers][commonArea][addcommonArea]: Common Are Code",
-          existCommonAreaCode
+          existunitNumber
         );
 
         // Return error when username exist
 
-        if (existCommonAreaCode && existCommonAreaCode.length) {
+        if (existunitNumber && existunitNumber.length) {
           return res.status(400).json({
             errors: [
               { code: "VALIDATION_ERROR", message: "Common Area code already exist!!" }
@@ -138,7 +138,7 @@ const commonAreaController = {
           propertyTypeId: Joi.number().allow("").optional(),
           buildingPhaseId: Joi.number().required(),
           floorZoneId: Joi.number().required(),
-          commonAreaCode: Joi.string().required(),
+          unitNumber: Joi.string().required(),
           description: Joi.string().allow("").allow(null).optional()
         });
 
@@ -151,9 +151,9 @@ const commonAreaController = {
           });
         }
 
-        const existCommonAreaCode = await knex("common_area")
+        const existunitNumber = await knex("common_area")
           .where({
-            commonAreaCode: commonUpdatePaylaod.commonAreaCode,
+            unitNumber: commonUpdatePaylaod.unitNumber,
             orgId: orgId,
             floorZoneId: commonUpdatePaylaod.floorZoneId
           })
@@ -161,12 +161,12 @@ const commonAreaController = {
 
         console.log(
           "[controllers][commonArea][addcommonArea]: Common Are Code",
-          existCommonAreaCode
+          existunitNumber
         );
 
         //Return error when username exist
 
-        if (existCommonAreaCode && existCommonAreaCode.length) {
+        if (existunitNumber && existunitNumber.length) {
           return res.status(400).json({
             errors: [
               {
@@ -190,7 +190,7 @@ const commonAreaController = {
         /*GET PROPERTY TYPE ID OPEN */
         const updateDataResult = await knex
           .update({
-            commonAreaCode: commonUpdatePaylaod.commonAreaCode.toUpperCase(),
+            unitNumber: commonUpdatePaylaod.unitNumber.toUpperCase(),
             companyId: commonUpdatePaylaod.companyId,
             projectId: commonUpdatePaylaod.projectId,
             propertyTypeId: propertyType,
@@ -468,7 +468,8 @@ const commonAreaController = {
         }
 
         const validCommonAreaId = await knex("property_units").where({
-          id: delcommonAreaPaylaod.id
+          id: delcommonAreaPaylaod.id,
+          type:2
         });
 
         console.log(
@@ -488,11 +489,12 @@ const commonAreaController = {
                 updatedAt: currentTime
               })
               .where({
-                id: delcommonAreaPaylaod.id
+                id: delcommonAreaPaylaod.id,
+                type:2
               })
               .returning(["*"])
               .transacting(trx)
-              .into("common_area");
+              .into("property_units");
 
             console.log(
               "[controllers][commonArea][delcommonArea]: Delete Data",
@@ -512,7 +514,7 @@ const commonAreaController = {
               })
               .returning(["*"])
               .transacting(trx)
-              .into("common_area");
+              .into("property_units");
 
             console.log(
               "[controllers][commonArea][delcommonArea]: Delete Data",
@@ -667,66 +669,66 @@ const commonAreaController = {
 
       if (companyId) {
         [rows] = await Promise.all([
-          knex("common_area")
+          knex("property_units")
             .leftJoin(
               "floor_and_zones",
-              "common_area.floorZoneId",
+              "property_units.floorZoneId",
               "floor_and_zones.id"
             )
             .leftJoin(
               "buildings_and_phases",
-              "common_area.buildingPhaseId",
+              "property_units.buildingPhaseId",
               "buildings_and_phases.id"
             )
-            .leftJoin("projects", "common_area.projectId", "projects.id")
+            .leftJoin("projects", "property_units.projectId", "projects.id")
             .leftJoin(
               "companies",
-              "common_area.companyId",
+              "property_units.companyId",
               "companies.id"
             )
-            .leftJoin("property_types", "common_area.propertyTypeId", "property_types.id")
+            .leftJoin("property_types", "property_units.propertyTypeId", "property_types.id")
             .select([
               "companies.companyId as COMPANY",
               "projects.project as PROJECT",
               "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
               "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
-              "common_area.commonAreaCode as COMMON_AREA_CODE",
-              "common_area.description as DESCRIPTION",
+              "property_units.unitNumber as UNIT_NUMBER",
+              "property_units.description as DESCRIPTION",
             ])
-            .where({ "common_area.companyId": companyId, "common_area.orgId": orgId })
+            .where({ "property_units.companyId": companyId, "property_units.orgId": orgId,type:2 })
             .where({ "floor_and_zones.isActive": true })
         ]);
       } else {
         [rows] = await Promise.all([
-          knex("common_area")
+          knex("property_units")
             .leftJoin(
               "floor_and_zones",
-              "common_area.floorZoneId",
+              "property_units.floorZoneId",
               "floor_and_zones.id"
             )
             .leftJoin(
               "buildings_and_phases",
-              "common_area.buildingPhaseId",
+              "property_units.buildingPhaseId",
               "buildings_and_phases.id"
             )
-            .leftJoin("projects", "common_area.projectId", "projects.id")
+            .leftJoin("projects", "property_units.projectId", "projects.id")
             .leftJoin(
               "companies",
-              "common_area.companyId",
+              "property_units.companyId",
               "companies.id"
             )
-            .leftJoin("property_types", "common_area.propertyTypeId", "property_types.id")
+            .leftJoin("property_types", "property_units.propertyTypeId", "property_types.id")
             .select([
               "companies.companyId as COMPANY",
               "projects.project as PROJECT",
               "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
               "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
               "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
-              "common_area.commonAreaCode as COMMON_AREA_CODE",
-              "common_area.description as DESCRIPTION",
+              "property_units.unitNumber as UNIT_NUMBER",
+              "property_units.description as DESCRIPTION",
             ])
-            .where({ "common_area.orgId": orgId })
+            .where({ "property_units.orgId": orgId,type:2 })
             .where({ "floor_and_zones.isActive": true })
         ]);
       }
@@ -825,7 +827,7 @@ const commonAreaController = {
         data[0].C == "PROPERTY_TYPE_CODE" &&
         data[0].D == "BUILDING_PHASE_CODE" &&
         data[0].E == "FLOOR_ZONE_CODE" &&
-        data[0].F == "COMMON_AREA_CODE" &&
+        data[0].F == "UNIT_NUMBER" &&
         data[0].G == "DESCRIPTION"
       ) {
         if (data.length > 0) {
@@ -880,7 +882,7 @@ const commonAreaController = {
 
               if (!commonData.F) {
                 let values = _.values(commonData)
-                values.unshift('Common area Code can not empty!')
+                values.unshift('Unit Number can not be empty!')
                 errors.push(values);
                 fail++;
                 continue;
@@ -990,15 +992,15 @@ const commonAreaController = {
               }
 
               let currentTime = new Date().getTime()
-              let checkExist = await knex("common_area")
-                .select("commonAreaCode")
+              let checkExist = await knex("property_units")
+                .select("unitNumber")
                 .where({
                   //companyId: companyId,
                   // projectId: projectId,
                   // propertyTypeId: propertyTypeId,
                   // buildingPhaseId: buildingPhaseId,
                   floorZoneId: floorZoneId,
-                  commonAreaCode: commonData.F,
+                  unitNumber: commonData.F,
                   orgId: req.orgId
                 });
               if (checkExist.length < 1) {
@@ -1009,17 +1011,18 @@ const commonAreaController = {
                   propertyTypeId: propertyTypeId,
                   buildingPhaseId: buildingPhaseId,
                   floorZoneId: floorZoneId,
-                  commonAreaCode: commonData.F,
+                  unitNumber: commonData.F,
                   description: commonData.G,
                   createdAt: currentTime,
                   updatedAt: currentTime,
-                  createdBy: req.me.id
+                  createdBy: req.me.id,
+                  type:2
                 };
 
                 resultData = await knex
                   .insert(insertData)
                   .returning(["*"])
-                  .into("common_area");
+                  .into("property_units");
                 if (resultData && resultData.length) {
                   success++;
                 }
