@@ -399,7 +399,7 @@ const AssetCategoryController = {
         var ws = XLSX.utils.json_to_sheet(rows);
 
       } else {
-        ws = XLSX.utils.json_to_sheet([{ CATEGORY_NAME: '', COMPANY: '', COMPANY_NAME: '' }]);
+        ws = XLSX.utils.json_to_sheet([{ CATEGORY_NAME: ''}]);
       }
 
       XLSX.utils.book_append_sheet(wb, ws, "pres");
@@ -427,9 +427,9 @@ const AssetCategoryController = {
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
-            let deleteFile = fs.unlink(filepath, err => {
-              console.log("File Deleting Error " + err);
-            });
+            // let deleteFile = fs.unlink(filepath, err => {
+            //   console.log("File Deleting Error " + err);
+            // });
             let url =
               "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Asset_Category/" +
               filename;
@@ -490,6 +490,18 @@ const AssetCategoryController = {
           for (let assetCategoryData of data) {
             i++;
             if (i > 1) {
+
+
+
+
+              if (!assetCategoryData.A) {
+                let values = _.values(assetCategoryData)
+                values.unshift('Asset Category can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
               let checkExist = await knex("asset_category_master")
                 .select("categoryName")
                 .where({

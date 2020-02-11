@@ -665,6 +665,7 @@ const quotationsController = {
               "companies.companyName",
               "projects.projectName",
               "buildings_and_phases.buildingPhaseCode",
+              "buildings_and_phases.description as buildingDescription",
               "floor_and_zones.floorZoneCode",
               "property_units.unitNumber",
               "assignUser.name as Tenant Name",
@@ -684,7 +685,8 @@ const quotationsController = {
               "incident_categories.id",
               "incident_categories.descriptionEng",
               "assignUser.id",
-              "user_house_allocation.id"
+              "user_house_allocation.id",
+              "buildings_and_phases.description",
             ])
             .orderBy('quotations.id', 'desc')
             .offset(offset)
