@@ -1030,12 +1030,12 @@ const companyController = {
 
 
       if(req.query.areaName === 'common'){
-        companyHavingPU1 = await knex('common_area').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+        companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true,type:2 })
         companyArr1 = companyHavingPU1.map(v => v.companyId)
         result = await knex("companies")
-          .innerJoin('common_area', 'companies.id', 'common_area.companyId')
+          .innerJoin('property_units', 'companies.id', 'property_units.companyId')
           .select("companies.id", "companies.companyId", "companies.companyName as CompanyName")
-          .where({ 'companies.isActive': true, 'companies.orgId': req.orgId })
+          .where({ 'companies.isActive': true, 'companies.orgId': req.orgId,'property_units.type':2 })
           .whereIn('companies.id', companyArr1)
           .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
           .orderBy('companies.companyName', 'asc')
@@ -1060,12 +1060,12 @@ const companyController = {
 // ) and public.companies."orgId" = ${req.orgId}
 //         `)
 
-        companyHavingPU1 = await knex('property_units').select(['companyId']).where({orgId:req.orgId,isActive:true})
+        companyHavingPU1 = await knex('property_units').select(['companyId']).where({orgId:req.orgId,isActive:true,type:1})
         companyArr1 = companyHavingPU1.map(v => v.companyId)
           result =await knex("companies")
             .innerJoin('property_units','companies.id','property_units.companyId')
               .select("companies.id", "companies.companyId", "companies.companyName as CompanyName")
-              .where({ 'companies.isActive': true, 'companies.orgId': req.orgId })
+            .where({ 'companies.isActive': true, 'companies.orgId': req.orgId,'property_units.type':1 })
               .whereIn('companies.id',companyArr1)
             .groupBy(['companies.id', 'companies.companyName','companies.companyId'])
               .orderBy('companies.companyName','asc')

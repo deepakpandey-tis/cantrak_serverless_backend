@@ -2200,7 +2200,8 @@ const serviceRequestController = {
             "property_units.buildingPhaseId as building",
             "property_units.floorZoneId as floor",
             "property_units.projectId as project",
-            "property_units.id as unit"
+            "property_units.id as unit",
+            "property_units.type as type"
             //'property_units.',
             //'property_units.',
           )
