@@ -368,7 +368,7 @@ const serviceRequestController = {
         data: {
           uploadUrlData: uploadUrlData
         },
-        message: "Upload Url generated succesfully!"
+        message: "Upload Url generated successfully!"
       });
     } catch (err) {
       console.log("[controllers][service][getImageUploadUrl] :  Error", err);
@@ -790,7 +790,7 @@ const serviceRequestController = {
               "incident_categories.id"
             )
             .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')         
+            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
             .select([
               "service_requests.id as S Id",
               "service_requests.houseId as houseId",
@@ -856,8 +856,8 @@ const serviceRequestController = {
               "incident_categories.id"
             )
             .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')         
-         
+            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+
             .select([
               "service_requests.id as S Id",
               "service_requests.houseId as houseId",
@@ -1012,8 +1012,8 @@ const serviceRequestController = {
               "incident_categories.id"
             )
             .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')         
-          
+            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
@@ -1080,7 +1080,7 @@ const serviceRequestController = {
               "user_house_allocation.id"
             ])
             .distinct('service_requests.id')
-            ,
+          ,
           knex
             .from("service_requests")
             .leftJoin(
@@ -1118,8 +1118,8 @@ const serviceRequestController = {
               "incident_categories.id"
             )
             .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')         
-          
+            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
@@ -1212,7 +1212,7 @@ const serviceRequestController = {
       //   }
 
       //   return userId;
-        
+
       // });
 
       pagination.data = rows;
@@ -1893,30 +1893,21 @@ const serviceRequestController = {
         let payload = _.omit(req.body, ["images", "isSo", "mobile", "email", "name"]);
         const schema = Joi.object().keys({
           serviceRequestId: Joi.number().required(),
-          areaName: Joi.string()
-            .allow("")
-            .optional(),
+          areaName: Joi.string().allow("").optional(),
           building: Joi.string().required(),
-          commonArea: Joi.string()
-            .allow("")
-            .optional(),
+          commonArea: Joi.string().allow("").optional(),
           company: Joi.string().required(),
           serviceStatusCode: Joi.string().required(),
           description: Joi.string().required(),
           floor: Joi.string().required(),
           house: Joi.string().allow('').optional(),
-          location: Joi.string()
-            .allow("")
-            .optional(),
+          location: Joi.string().allow("").optional(),
           locationTags: Joi.array().items(Joi.string().optional()),
           project: Joi.string().required(),
           serviceType: Joi.string().required(),
           unit: Joi.string().required(),
-          userId: Joi.string().allow("")
-            .optional(),
-          priority: Joi.string()
-            .allow("")
-            .optional(),
+          userId: Joi.string().allow("").optional(),
+          priority: Joi.string().allow("").optional(),
           // name: Joi
           //   .allow("")
           //   .optional(),
@@ -1926,9 +1917,7 @@ const serviceRequestController = {
           // email: Joi.string()
           //   .allow("")
           //   .optional(),
-          uid: Joi.string()
-            .allow("")
-            .optional()
+          uid: Joi.string().allow("").optional()
         });
 
         const result = Joi.validate(payload, schema);
@@ -2697,14 +2686,16 @@ const serviceRequestController = {
       })
     }
   },
-  getServiceRequestIdByServiceOrderId:async(req,res) => {
+  getServiceRequestIdByServiceOrderId: async (req, res) => {
     try {
       const serviceOrderId = req.body.serviceOrderId;
-      const serviceRequestId = await knex('service_orders').select('serviceRequestId').where({id:serviceOrderId}).first()
-      return res.status(200).json({data: {
-        serviceRequestId
-      }})
-    } catch(err) {
+      const serviceRequestId = await knex('service_orders').select('serviceRequestId').where({ id: serviceOrderId }).first()
+      return res.status(200).json({
+        data: {
+          serviceRequestId
+        }
+      })
+    } catch (err) {
       return res.status(200).json({
         data: {
           update: false
