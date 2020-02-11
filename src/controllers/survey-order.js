@@ -566,6 +566,8 @@ const surveyOrderController = {
             "service_problems.categoryId",
             "incident_categories.id"
           )
+          .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
+          .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
           .select(
             "o.id AS surveyId",
             "o.serviceRequestId",
@@ -579,7 +581,8 @@ const surveyOrderController = {
             "o.appointedDate AS appointmentDate",
             "o.appointedTime AS appointmentTime",
             "o.createdAt AS createdAt",
-            "teams.teamName as teamName"
+            "teams.teamName as teamName",
+            "assignUser.name  as Tenant Name"
           )
           .where({ "assigned_service_team.entityType": "survey_orders" })
           .whereIn('s.projectId', accessibleProjects)
@@ -591,7 +594,9 @@ const surveyOrderController = {
             "u.id",
             "users.id",
             "teams.teamId",
-            "assigned_service_team.entityType"
+            "assigned_service_team.entityType",
+            "assignUser.id",
+            "user_house_allocation.id"
           ]);
 
         // For Get Rows In Pagination With Offset and Limit
@@ -614,6 +619,7 @@ const surveyOrderController = {
             "property_units.unitNumber",
             "incident_categories.descriptionEng as problemDescription",
             "requested_by.name as requestedBy",
+            "assignUser.name  as Tenant Name"
           )
           .from("survey_orders As o")
           .where(qb => {
@@ -674,8 +680,10 @@ const surveyOrderController = {
             "service_problems.categoryId",
             "incident_categories.id"
           )
+          .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
+          .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
           .whereIn('s.projectId', accessibleProjects)
-          .orderBy('o.id','desc')
+          .orderBy('o.id', 'desc')
           .offset(offset)
           .limit(per_page);
       } else if (
@@ -706,6 +714,9 @@ const surveyOrderController = {
             "assigned_service_team.teamId",
             "teams.teamId"
           )
+          .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
+          .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+
           .groupBy([
             "service_requests.id",
             "survey_orders.id",
@@ -713,7 +724,9 @@ const surveyOrderController = {
             "users.id",
             "u.id",
             "teams.teamId",
-            "assigned_service_team.entityType"
+            "assigned_service_team.entityType",
+            "assignUser.id",
+            "user_house_allocation.id"
           ])
           .select([
             "survey_orders.id as S Id",
@@ -727,7 +740,8 @@ const surveyOrderController = {
             // "service_requests.serviceStatusCode as Status",
             "survey_orders.surveyOrderStatus as Status",
             "survey_orders.createdAt as Date Created",
-            "teams.teamName as teamName"
+            "teams.teamName as teamName",
+            "assignUser.name  as Tenant Name"
           ])
           .whereIn('service_requests.projectId', accessibleProjects)
 
@@ -758,6 +772,9 @@ const surveyOrderController = {
             "assigned_service_team.teamId",
             "teams.teamId"
           )
+          .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+          .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+
           .select([
             "survey_orders.id as S Id",
             "service_requests.description as Description",
@@ -770,7 +787,8 @@ const surveyOrderController = {
             // "status.descriptionEng AS Status",
             "survey_orders.surveyOrderStatus as Status",
             "survey_orders.createdAt as Date Created",
-            "teams.teamName as teamName"
+            "teams.teamName as teamName",
+            "assignUser.name  as Tenant Name"
           ])
           .offset(offset)
           .whereIn('service_requests.projectId', accessibleProjects)
@@ -804,6 +822,9 @@ const surveyOrderController = {
             "assigned_service_team.teamId",
             "teams.teamId"
           )
+          .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+          .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+
           .groupBy([
             "service_requests.id",
             "survey_orders.id",
@@ -811,7 +832,10 @@ const surveyOrderController = {
             "users.id",
             "u.id",
             "status.id",
-            "teams.teamId"
+            "teams.teamId",
+            "assignUser.id",
+            "user_house_allocation.id"
+         
           ])
           .where({ "survey_orders.orgId": req.orgId, "assigned_service_team.entityType": "survey_orders" })
           .whereIn('service_requests.projectId', accessibleProjects)
@@ -828,7 +852,8 @@ const surveyOrderController = {
             "survey_orders.surveyOrderStatus as Status",
             // "status.descriptionEng AS Status",
             "survey_orders.createdAt as Date Created",
-            "teams.teamName as teamName"
+            "teams.teamName as teamName",
+            "assignUser.name  as Tenant Name"
           ]);
 
         // For get the rows With pagination
@@ -856,6 +881,9 @@ const surveyOrderController = {
             "assigned_service_team.teamId",
             "teams.teamId"
           )
+          .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+          .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+
           .select([
             "survey_orders.id as S Id",
             "service_requests.description as Description",
@@ -868,7 +896,8 @@ const surveyOrderController = {
             "survey_orders.surveyOrderStatus as Status",
             // "status.descriptionEng AS Status",
             "survey_orders.createdAt as Date Created",
-            "teams.teamName as teamName"
+            "teams.teamName as teamName",
+            "assignUser.name  as Tenant Name"
           ])
           .where({ "survey_orders.orgId": req.orgId, "assigned_service_team.entityType": "survey_orders" })
           .whereIn('service_requests.projectId', accessibleProjects)

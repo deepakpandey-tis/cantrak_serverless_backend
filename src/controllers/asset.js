@@ -693,11 +693,11 @@ const assetController = {
           "asset_location.unitId",
           "property_units.id"
         )
-        .leftJoin(
-          'common_area',
-          'asset_location.commonAreaId',
-          'common_area.id'
-        )
+        // .leftJoin(
+        //   'property_units',
+        //   'asset_location.commonAreaId',
+        //   'property_units.id'
+        // )
         .select([
           "companies.companyName as companyName",
           "projects.projectName as projectName",
@@ -709,8 +709,9 @@ const assetController = {
           "buildings_and_phases.id as buildingId",
           "floor_and_zones.id as floorId",
           "property_units.id as unitId",
-          "common_area.id as commonAreaId",
-          "common_area.commonAreaCode",
+          "property_units.id as commonAreaId",
+          "property_units.type as type",
+          "property_units.unitNumber as commonAreaCode",
           "asset_location.startDate as startDate",
           "asset_location.endDate as endDate",
           "asset_location.id as assetLocationId",

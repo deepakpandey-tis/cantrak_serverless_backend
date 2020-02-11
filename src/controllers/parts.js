@@ -1443,7 +1443,8 @@ const partsController = {
                         "part_master.partCode as partCode",
                         "assigned_parts.quantity as quantity",
                         "assigned_parts.unitCost as unitCost",
-                        "assigned_parts.status as status"
+                        "assigned_parts.status as status",
+                        "assigned_parts.id as apId"
                     ])
                     .where({
                         "assigned_parts.entityId": serviceOrderId,
@@ -1461,7 +1462,8 @@ const partsController = {
                         "part_master.partCode as partCode",
                         "assigned_parts.quantity as quantity",
                         "assigned_parts.unitCost as unitCost",
-                        "assigned_parts.status as status"
+                        "assigned_parts.status as status",
+                        "assigned_parts.id as apId"
                     ])
                     .where({
                         "assigned_parts.entityId": serviceOrderId,
@@ -1523,7 +1525,8 @@ const partsController = {
                         "part_master.partCode as partCode",
                         "assigned_parts.quantity as quantity",
                         "assigned_parts.unitCost as unitCost",
-                        "assigned_parts.status as status"
+                        "assigned_parts.status as status",
+                        "assigned_parts.id as apId"
                     ])
                     .where({
                         entityId: serviceOrderId,
@@ -1541,7 +1544,8 @@ const partsController = {
                         "part_master.partCode as partCode",
                         "assigned_parts.quantity as quantity",
                         "assigned_parts.unitCost as unitCost",
-                        "assigned_parts.status as status"
+                        "assigned_parts.status as status",
+                        "assigned_parts.id as apId"
 
                     ])
                     .where({
@@ -1881,14 +1885,18 @@ const partsController = {
     },
     deleteQuotationAssignedParts: async (req, res) => {
         try {
-            const id = req.body.id;
+            const id = req.body.partId;
+            const entityId = req.body.entityId;
+            const entityType = req.body.entityType;
+
+
             const currentTime = new Date().getTime();
 
 
-            let getQuotationId = await knex('assigned_parts').where({ id, "entityType": "quotations" }).select('entityId', 'partId');
+            let getQuotationId = await knex('assigned_parts').where({ id, "entityType": entityType }).select('entityId', 'partId');
             let quotationId = getQuotationId[0].entityId;
             let partId = getQuotationId[0].partId;
-            let quotationsData = await knex('quotations').where({ "id": quotationId }).returning(['*']).first();
+            let quotationsData = await knex(entityType).where({ "id": quotationId }).returning(['*']);
             console.log("quotationsJsonArray", quotationsData);
             //deletedRow = quotationsData;
             let filtered = {};
@@ -1896,13 +1904,13 @@ const partsController = {
                 let invoiceData = quotationsData.invoiceData;
                 console.log("invoiceData", invoiceData);
                 let partsData = invoiceData.parts;
-
+                console.log("parts data ++++++++++++++++++", partsData);
 
                 filtered.parts = partsData.filter(function (partsData) {
                     return partsData.id !== partId;
                 });
 
-                console.log("filtererdPartsLength", filtered.parts);
+                console.log("filteredPartsLength", filtered.parts);
 
                 let subTotalAmt = 0;
                 let stotal = 0;
@@ -1940,7 +1948,7 @@ const partsController = {
 
 
             // deleteRow = filtered;
-            const deletedRow = await knex('assigned_parts').where({ id, "entityType": "quotations" }).del().returning(['*'])
+            const deletedRow = await knex('assigned_parts').where({ id, "entityType": entityType }).del().returning(['*'])
 
             let updateQuotationInvoiceData = await knex
                 .update({
@@ -1949,7 +1957,7 @@ const partsController = {
                 })
                 .where({ id: quotationId })
                 .returning(["*"])
-                .into("quotations");
+                .into(entityType);
 
 
             return res.status(200).json({

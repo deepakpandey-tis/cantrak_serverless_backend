@@ -368,7 +368,7 @@ const serviceRequestController = {
         data: {
           uploadUrlData: uploadUrlData
         },
-        message: "Upload Url generated succesfully!"
+        message: "Upload Url generated successfully!"
       });
     } catch (err) {
       console.log("[controllers][service][getImageUploadUrl] :  Error", err);
@@ -789,11 +789,14 @@ const serviceRequestController = {
               "service_problems.categoryId",
               "incident_categories.id"
             )
+            .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
             .select([
               "service_requests.id as S Id",
               "service_requests.houseId as houseId",
               "service_requests.description as Description",
               "service_requests.priority as Priority",
+              "assignUser.name as Tenant Name",
               "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
               "u.name as Requested By",
@@ -810,7 +813,9 @@ const serviceRequestController = {
               "assigned_service_team.id",
               "teams.teamId",
               "mainUsers.id",
-              "incident_categories.id"
+              "incident_categories.id",
+              "assignUser.id",
+              "user_house_allocation.id"
             ])
             .where({ "service_requests.orgId": req.orgId })
             .whereIn('service_requests.projectId', accessibleProjects)
@@ -850,11 +855,15 @@ const serviceRequestController = {
               "service_problems.categoryId",
               "incident_categories.id"
             )
+            .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+
             .select([
               "service_requests.id as S Id",
               "service_requests.houseId as houseId",
               "service_requests.description as Description",
               "service_requests.priority as Priority",
+              "assignUser.name as Tenant Name",
               "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
               "requested_by.name as Requested By",
@@ -878,7 +887,9 @@ const serviceRequestController = {
               "assigned_service_team.id",
               "teams.teamId",
               "mainUsers.id",
-              "incident_categories.id"
+              "incident_categories.id",
+              "assignUser.id",
+              "user_house_allocation.id"
             ])
             .where({ "service_requests.orgId": req.orgId })
             .whereIn('service_requests.projectId', accessibleProjects)
@@ -1000,12 +1011,16 @@ const serviceRequestController = {
               "service_problems.categoryId",
               "incident_categories.id"
             )
+            .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
               // "incident_categories.descriptionEng as Category",
               // "incident_sub_categories.descriptionEng as Problem",
               "service_requests.priority as Priority",
+              "assignUser.name as Tenant Name",
               "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
               "u.name as Requested By",
@@ -1060,10 +1075,12 @@ const serviceRequestController = {
               "assigned_service_team.id",
               "teams.teamId",
               "mainUsers.id",
-              "incident_categories.id"
+              "incident_categories.id",
+              "assignUser.id",
+              "user_house_allocation.id"
             ])
             .distinct('service_requests.id')
-            ,
+          ,
           knex
             .from("service_requests")
             .leftJoin(
@@ -1100,12 +1117,16 @@ const serviceRequestController = {
               "service_problems.categoryId",
               "incident_categories.id"
             )
+            .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
               "service_requests.priority as Priority",
               "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
+              "assignUser.name as Tenant Name",
               "requested_by.name as Requested By",
               "service_requests.createdAt as Date Created",
               "buildings_and_phases.buildingPhaseCode",
@@ -1161,7 +1182,9 @@ const serviceRequestController = {
               "assigned_service_team.id",
               "teams.teamId",
               "mainUsers.id",
-              "incident_categories.id"
+              "incident_categories.id",
+              "assignUser.id",
+              "user_house_allocation.id"
             ])
             .distinct('service_requests.id')
         ]);
@@ -1189,7 +1212,7 @@ const serviceRequestController = {
       //   }
 
       //   return userId;
-        
+
       // });
 
       pagination.data = rows;
@@ -1870,30 +1893,21 @@ const serviceRequestController = {
         let payload = _.omit(req.body, ["images", "isSo", "mobile", "email", "name"]);
         const schema = Joi.object().keys({
           serviceRequestId: Joi.number().required(),
-          areaName: Joi.string()
-            .allow("")
-            .optional(),
+          areaName: Joi.string().allow("").optional(),
           building: Joi.string().required(),
-          commonArea: Joi.string()
-            .allow("")
-            .optional(),
+          commonArea: Joi.string().allow("").optional(),
           company: Joi.string().required(),
           serviceStatusCode: Joi.string().required(),
           description: Joi.string().required(),
           floor: Joi.string().required(),
           house: Joi.string().allow('').optional(),
-          location: Joi.string()
-            .allow("")
-            .optional(),
+          location: Joi.string().allow("").optional(),
           locationTags: Joi.array().items(Joi.string().optional()),
           project: Joi.string().required(),
           serviceType: Joi.string().required(),
           unit: Joi.string().required(),
-          userId: Joi.string().allow("")
-            .optional(),
-          priority: Joi.string()
-            .allow("")
-            .optional(),
+          userId: Joi.string().allow("").optional(),
+          priority: Joi.string().allow("").optional(),
           // name: Joi
           //   .allow("")
           //   .optional(),
@@ -1903,9 +1917,7 @@ const serviceRequestController = {
           // email: Joi.string()
           //   .allow("")
           //   .optional(),
-          uid: Joi.string()
-            .allow("")
-            .optional()
+          uid: Joi.string().allow("").optional()
         });
 
         const result = Joi.validate(payload, schema);
@@ -2177,7 +2189,8 @@ const serviceRequestController = {
             "property_units.buildingPhaseId as building",
             "property_units.floorZoneId as floor",
             "property_units.projectId as project",
-            "property_units.id as unit"
+            "property_units.id as unit",
+            "property_units.type as type"
             //'property_units.',
             //'property_units.',
           )
@@ -2663,6 +2676,23 @@ const serviceRequestController = {
       return res.status(200).json({
         data: {
           serviceOrderId
+        }
+      })
+    } catch (err) {
+      return res.status(200).json({
+        data: {
+          update: false
+        }
+      })
+    }
+  },
+  getServiceRequestIdByServiceOrderId: async (req, res) => {
+    try {
+      const serviceOrderId = req.body.serviceOrderId;
+      const serviceRequestId = await knex('service_orders').select('serviceRequestId').where({ id: serviceOrderId }).first()
+      return res.status(200).json({
+        data: {
+          serviceRequestId
         }
       })
     } catch (err) {
