@@ -1215,7 +1215,7 @@ const serviceRequestController = {
 
       // });
 
-      pagination.data = rows;
+      pagination.data = _.uniqBy(rows,'S Id');
 
 
       return res.status(200).json({
