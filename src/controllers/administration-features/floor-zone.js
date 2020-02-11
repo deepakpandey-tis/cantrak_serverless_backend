@@ -1004,21 +1004,21 @@ const floorZoneController = {
       if(req.query.areaName === 'common'){
         if (buildingPhaseId) {
           floor = await knex("floor_and_zones")
-            .innerJoin('common_area','floor_and_zones.id','common_area.floorZoneId')
+            .innerJoin('property_units','floor_and_zones.id','property_units.floorZoneId')
             .select("floor_and_zones.*")
             .where({
-              'floor_and_zones.buildingPhaseId': buildingPhaseId, 'floor_and_zones.isActive': true, 'floor_and_zones.orgId': orgId })
+              'floor_and_zones.buildingPhaseId': buildingPhaseId, 'floor_and_zones.isActive': true, 'floor_and_zones.orgId': orgId,'property_units.type':2 })
             .whereIn('floor_and_zones.companyId',companyArr1)
             .groupBy(['floor_and_zones.id'])
             
         } else {
           floor = await knex("floor_and_zones")
-            .innerJoin('common_area', 'floor_and_zones.id', 'common_area.floorZoneId')
+            .innerJoin('property_units', 'floor_and_zones.id', 'property_units.floorZoneId')
             .select([
               'floor_and_zones.floorZoneCode as Floor/Zone',
               'floor_and_zones.id as id'
             ])
-            .where({ isActive: true, orgId: orgId })
+            .where({ isActive: true, orgId: orgId,"property_units.type":1 })
             .whereIn('floor_and_zones.companyId', companyArr1)
             .groupBy(['floor_and_zones.id'])
 
