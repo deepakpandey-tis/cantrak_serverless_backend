@@ -109,7 +109,7 @@ const companyController = {
         }
 
         let taxId = null;
-         taxId    =  payload.taxId ? payload.taxId :null;
+        taxId = payload.taxId ? payload.taxId : null;
 
         let currentTime = new Date().getTime();
         let insertData = {
@@ -264,12 +264,12 @@ const companyController = {
         }
         console.log("==============", req.body.logoFile)
         let taxId = null;
-         taxId    =  payload.taxId ? payload.taxId :null;
+        taxId = payload.taxId ? payload.taxId : null;
         let insertData;
         if (req.body.logoFile.length) {
-          insertData = { ...payload, orgId,taxId, logoFile: logo, updatedAt: currentTime };
+          insertData = { ...payload, orgId, taxId, logoFile: logo, updatedAt: currentTime };
         } else {
-          insertData = { ...payload, orgId,taxId,updatedAt: currentTime };
+          insertData = { ...payload, orgId, taxId, updatedAt: currentTime };
         }
         let insertResult = await knex
           .update(insertData)
@@ -825,7 +825,7 @@ const companyController = {
                   let taxId = companyData.F;
                   if (taxId) {
                     taxId = taxId.toString();
-                  }else{
+                  } else {
                     taxId = null;
                   }
 
@@ -935,7 +935,7 @@ const companyController = {
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
       let total, rows;
-    
+
       [total, rows] = await Promise.all([
         knex
           .count("* as count")
@@ -949,7 +949,7 @@ const companyController = {
           .leftJoin("users", "users.id", "companies.createdBy")
           .leftJoin("organisations", "companies.orgId", "organisations.id")
           .where('organisations.isActive', true)
-          .where({ "companies.orgId": req.orgId })         
+          .where({ "companies.orgId": req.orgId })
           .select([
             "companies.id as id",
             "companies.companyName as Company Name",
@@ -990,7 +990,7 @@ const companyController = {
       });
     }
   },
-  getCompanyListHavingPropertyUnits:async(req,res) => {
+  getCompanyListHavingPropertyUnits: async (req, res) => {
     try {
       let pagination = {};
       let result;
@@ -1029,51 +1029,65 @@ const companyController = {
       //let finalArr = _.intersection(companyArr4, companyArr2, companyArr3,companyArr1)
 
 
-      if(req.query.areaName === 'common'){
-        companyHavingPU1 = await knex('common_area').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+      if (req.query.areaName === 'common') {
+        // companyHavingPU1 = await knex('common_area').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+        // companyArr1 = companyHavingPU1.map(v => v.companyId)
+        // result = await knex("companies")
+        //   .innerJoin('common_area', 'companies.id', 'common_area.companyId')
+        //   .select("companies.id", "companies.companyId", "companies.companyName as CompanyName")
+        //   .where({ 'companies.isActive': true, 'companies.orgId': req.orgId })
+        //   .whereIn('companies.id', companyArr1)
+        //   .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
+        //   .orderBy('companies.companyName', 'asc')
+
+        companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, type:2, isActive: true })
         companyArr1 = companyHavingPU1.map(v => v.companyId)
         result = await knex("companies")
-          .innerJoin('common_area', 'companies.id', 'common_area.companyId')
+          .innerJoin('property_units', 'companies.id', 'property_units.companyId')
           .select("companies.id", "companies.companyId", "companies.companyName as CompanyName")
           .where({ 'companies.isActive': true, 'companies.orgId': req.orgId })
           .whereIn('companies.id', companyArr1)
           .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
           .orderBy('companies.companyName', 'asc')
 
-//         result = await knex.raw(`
-//         SELECT public.companies.*
-// FROM public.companies
-// WHERE EXISTS (
-// SELECT 1 FROM public.common_area
-// WHERE public.common_area."companyId" = public.companies.id
-// ) and public.companies."orgId" = ${req.orgId}
-// `)
+
+
+
+
+        //         result = await knex.raw(`
+        //         SELECT public.companies.*
+        // FROM public.companies
+        // WHERE EXISTS (
+        // SELECT 1 FROM public.common_area
+        // WHERE public.common_area."companyId" = public.companies.id
+        // ) and public.companies."orgId" = ${req.orgId}
+        // `)
 
       } else {
 
-//         result = await knex.raw(`
-//         SELECT public.companies.*
-// FROM public.companies
-// WHERE EXISTS (
-// SELECT 1 FROM public.common_area
-// WHERE public.common_area."companyId" = public.companies.id
-// ) and public.companies."orgId" = ${req.orgId}
-//         `)
+        //         result = await knex.raw(`
+        //         SELECT public.companies.*
+        // FROM public.companies
+        // WHERE EXISTS (
+        // SELECT 1 FROM public.common_area
+        // WHERE public.common_area."companyId" = public.companies.id
+        // ) and public.companies."orgId" = ${req.orgId}
+        //         `)
 
-        companyHavingPU1 = await knex('property_units').select(['companyId']).where({orgId:req.orgId,isActive:true})
+        companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true, type:1 })
         companyArr1 = companyHavingPU1.map(v => v.companyId)
-          result =await knex("companies")
-            .innerJoin('property_units','companies.id','property_units.companyId')
-              .select("companies.id", "companies.companyId", "companies.companyName as CompanyName")
-              .where({ 'companies.isActive': true, 'companies.orgId': req.orgId })
-              .whereIn('companies.id',companyArr1)
-            .groupBy(['companies.id', 'companies.companyName','companies.companyId'])
-              .orderBy('companies.companyName','asc')
+        result = await knex("companies")
+          .innerJoin('property_units', 'companies.id', 'property_units.companyId')
+          .select("companies.id", "companies.companyId", "companies.companyName as CompanyName")
+          .where({ 'companies.isActive': true, 'companies.orgId': req.orgId })
+          .whereIn('companies.id', companyArr1)
+          .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
+          .orderBy('companies.companyName', 'asc')
       }
-        
 
-      
-     
+
+
+
 
       pagination.data = result;
       return res.status(200).json({
@@ -1082,7 +1096,7 @@ const companyController = {
         },
         message: "Companies List!"
       });
-    } catch(err) {
+    } catch (err) {
       console.log(
         "[controllers][propertysetup][getCompanyListHavingPropertyUnits] :  Error",
         err
