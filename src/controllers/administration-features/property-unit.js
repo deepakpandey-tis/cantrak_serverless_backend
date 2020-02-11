@@ -84,7 +84,7 @@ const propertyUnitController = {
           orgId: orgId,
           createdAt: currentTime,
           updatedAt: currentTime,
-          propertyTypeId: propertyType
+          propertyTypeId: propertyType,
         };
         let insertResult = await knex
           .insert(insertData)
@@ -395,6 +395,7 @@ const propertyUnitController = {
               if (houseId) {
                 qb.where('property_units.houseId', 'iLIKE', `%${houseId}%`)
               }
+              qb.where({type:1})
             })
             .whereIn('property_units.projectId',resourceProject)
             .first(),
@@ -434,6 +435,8 @@ const propertyUnitController = {
               if (unitNumber) {
                 qb.where('property_units.unitNumber', 'iLIKE', `%${unitNumber}%`)
               }
+              qb.where({ type: 1 })
+
 
               if (houseId) {
                 qb.where('property_units.houseId', 'iLIKE', `%${houseId}%`)
@@ -487,7 +490,7 @@ const propertyUnitController = {
               "users.name as Created By",
               "property_units.createdAt as Date Created"
             ])
-            .where({ "property_units.orgId": orgId })
+            .where({ "property_units.orgId": orgId,type:1 })
             .whereIn('property_units.projectId',resourceProject)
             .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .offset(offset)
