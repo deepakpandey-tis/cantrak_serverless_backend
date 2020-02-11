@@ -139,7 +139,8 @@ const commonAreaController = {
           buildingPhaseId: Joi.number().required(),
           floorZoneId: Joi.number().required(),
           unitNumber: Joi.string().required(),
-          description: Joi.string().allow("").allow(null).optional()
+          description: Joi.string().allow("").allow(null).optional(),
+          type:Joi.number().required()
         });
 
         const result = Joi.validate(commonUpdatePaylaod, schema);
@@ -151,11 +152,12 @@ const commonAreaController = {
           });
         }
 
-        const existunitNumber = await knex("common_area")
+        const existunitNumber = await knex("property_units")
           .where({
             unitNumber: commonUpdatePaylaod.unitNumber,
             orgId: orgId,
-            floorZoneId: commonUpdatePaylaod.floorZoneId
+            floorZoneId: commonUpdatePaylaod.floorZoneId,
+            type: commonUpdatePaylaod.type
           })
           .whereNot({ id: commonUpdatePaylaod.id });
 
@@ -206,7 +208,7 @@ const commonAreaController = {
           })
           .returning(["*"])
           .transacting(trx)
-          .into("common_area");
+          .into("property_units");
 
         // const updateData = { ...incidentTypePayload, typeCode: incidentTypePayload.typeCode.toUpperCase(), isActive: 'true', createdAt: currentTime, updatedAt: currentTime };
 
