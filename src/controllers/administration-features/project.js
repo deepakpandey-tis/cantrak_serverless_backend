@@ -909,8 +909,8 @@ const ProjectController = {
         companyArr1 = companyHavingProjects.map(v => v.companyId)
         rows = await knex("projects")
           .innerJoin('companies', 'projects.companyId', 'companies.id')
-          .innerJoin('common_area', 'projects.id', 'common_area.projectId')
-          .where({ "projects.companyId": companyId, "projects.isActive": true })
+          .innerJoin('property_units', 'projects.id', 'property_units.projectId')
+          .where({ "projects.companyId": companyId, "projects.isActive": true,'property_units.type':2 })
           .whereIn('projects.id', projects)
           .whereIn('projects.companyId', companyArr1)
           .select([
@@ -934,7 +934,7 @@ const ProjectController = {
         rows = await knex("projects")
           .innerJoin('companies','projects.companyId','companies.id')
           .innerJoin('property_units', 'projects.id', 'property_units.projectId')
-          .where({ "projects.companyId": companyId, "projects.isActive": true })
+          .where({ "projects.companyId": companyId, "projects.isActive": true,'property_units.type':1 })
           .whereIn('projects.id', projects)
           .whereIn('projects.companyId',companyArr1)
           .select([

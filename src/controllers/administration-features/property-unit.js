@@ -768,10 +768,10 @@ const propertyUnitController = {
     try {
       let orgId = req.orgId;
 
-      const { floorZoneId, type } = req.body;
+      const { floorZoneId,type } = req.body;
       const unit = await knex("property_units")
         .select("*")
-        .where({ floorZoneId, orgId: orgId, type: type, isActive: true });
+        .where({ floorZoneId, orgId: orgId, isActive: true,type:type });
       return res.status(200).json({
         data: {
           unit
@@ -797,7 +797,7 @@ const propertyUnitController = {
       let floorId = req.query.floorId;
       let result = await knex("property_units")
         .select(["id", "unitNumber", "houseId"])
-        .where({ floorZoneId: floorId, orgId: orgId });
+        .where({ floorZoneId: floorId, orgId: orgId,type:1 });
 
       return res.status(200).json({
         data: {
