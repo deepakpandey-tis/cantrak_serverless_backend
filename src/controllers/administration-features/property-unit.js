@@ -395,9 +395,9 @@ const propertyUnitController = {
               if (houseId) {
                 qb.where('property_units.houseId', 'iLIKE', `%${houseId}%`)
               }
-              qb.where({type:1})
+              qb.where({ type: 1 })
             })
-            .whereIn('property_units.projectId',resourceProject)
+            .whereIn('property_units.projectId', resourceProject)
             .first(),
           knex
             .from("property_units")
@@ -442,7 +442,7 @@ const propertyUnitController = {
                 qb.where('property_units.houseId', 'iLIKE', `%${houseId}%`)
               }
             })
-            .whereIn('property_units.projectId',resourceProject)
+            .whereIn('property_units.projectId', resourceProject)
             .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .offset(offset)
             .limit(per_page)
@@ -475,7 +475,7 @@ const propertyUnitController = {
             .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
             .where({ "floor_and_zones.isActive": true })
             .where({ "property_units.orgId": orgId })
-            .whereIn('property_units.projectId',resourceProject)
+            .whereIn('property_units.projectId', resourceProject)
             .first(),
           knex("property_units")
             .leftJoin('users', 'property_units.createdBy', 'users.id')
@@ -490,8 +490,8 @@ const propertyUnitController = {
               "users.name as Created By",
               "property_units.createdAt as Date Created"
             ])
-            .where({ "property_units.orgId": orgId,type:1 })
-            .whereIn('property_units.projectId',resourceProject)
+            .where({ "property_units.orgId": orgId, type: 1 })
+            .whereIn('property_units.projectId', resourceProject)
             .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .offset(offset)
             .limit(per_page)
@@ -768,10 +768,10 @@ const propertyUnitController = {
     try {
       let orgId = req.orgId;
 
-      const { floorZoneId } = req.body;
+      const { floorZoneId, type } = req.body;
       const unit = await knex("property_units")
         .select("*")
-        .where({ floorZoneId, orgId: orgId, isActive: true });
+        .where({ floorZoneId, orgId: orgId, type: type, isActive: true });
       return res.status(200).json({
         data: {
           unit
@@ -1049,7 +1049,7 @@ const propertyUnitController = {
                 continue;
               }
 
-            
+
 
 
               console.log()
