@@ -1043,7 +1043,7 @@ const buildingPhaseController = {
       let rows = []
 
       if(req.query.areaName === 'common'){
-        companyHavingProjects = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+        companyHavingProjects = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true})
         companyArr1 = companyHavingProjects.map(v => v.companyId)
         rows = await knex("buildings_and_phases")
             .innerJoin(
@@ -1056,11 +1056,12 @@ const buildingPhaseController = {
               "buildings_and_phases.propertyTypeId",
               "property_types.id"
             )
-            .innerJoin('common_area', 'buildings_and_phases.id', 'common_area.buildingPhaseId')
+            .innerJoin('property_units', 'buildings_and_phases.id', 'property_units.buildingPhaseId')
             .where({
               "buildings_and_phases.isActive": true,
               "buildings_and_phases.projectId": projectId,
-              "buildings_and_phases.orgId": orgId
+              "buildings_and_phases.orgId": orgId,
+              'property_units.type':2
             })
             .select([
               "buildings_and_phases.id as id",
@@ -1095,7 +1096,8 @@ const buildingPhaseController = {
             .where({
               "buildings_and_phases.isActive": true,
               "buildings_and_phases.projectId": projectId,
-              "buildings_and_phases.orgId": orgId
+              "buildings_and_phases.orgId": orgId,
+              'property_units.type': 1
             })
             .select([
               "buildings_and_phases.id as id",
