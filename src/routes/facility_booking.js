@@ -21,6 +21,7 @@ router.post('/add-facility', authMiddleware.isAuthenticated,facilityBookingContr
 
 router.post('/facility-details',authMiddleware.isAuthenticated,facilityBookingController.facilityDetails)
 
+router.post('/get-facility-booking-list',authMiddleware.isAuthenticated,facilityBookingController.getFacilityBookingList)
 router.get('/generate-facility-id',authMiddleware.isAuthenticated,facilityBookingController.generateFacilityId)
 
 module.exports = router;
