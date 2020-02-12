@@ -42,8 +42,9 @@ const facilityBookingController = {
             let currentTime = new Date().getTime()
 
             // Insert Facility
-            const addedFacilityResult = await knex('facility_master')
-                .insert({ ...payload, updatedAt: currentTime, createdAt: currentTime, orgId: req.orgId, createdBy: req.me.id }).first()
+            let addedFacilityResultData = await knex('facility_master')
+            .insert({...payload,updatedAt:currentTime,createdAt:currentTime,orgId:req.orgId,createdBy:req.me.id}).returning(['*'])
+            let addedFacilityResult = addedFacilityResultData[0]
 
 
             // Insert Rules
@@ -55,7 +56,7 @@ const facilityBookingController = {
                 {rules,
                 "rulesAlternateLang",}
                 */
-                let addedRulesResult = await knex('rules_and_regulations').insert({ entityId: addedFacilityResult.id, entityType: 'facility_master', ...rule, updatedAt: currentTime, createdAt: currentTime, orgId: req.orgId, createdBy: req.me.id })
+                let addedRulesResult = await knex('rules_and_regulations').insert({ entityId: addedFacilityResult.id, entityType: 'facility_master', ...rule, updatedAt: currentTime, createdAt: currentTime, orgId: req.orgId, createdBy: req.me.id }).returning(['*'])
                 addedRules.push(addedRulesResult[0])
             }
 
@@ -68,20 +69,23 @@ const facilityBookingController = {
             */
 
             const open_close_times = req.body.open_close_times
-            let addedOpenCloseTimeResult = await knex('entity_open_close_times').insert({ entityId: addedFacilityResult.id, entityType: 'facility_master', ...open_close_times, updatedAt: currentTime, createdAt: currentTime, orgId: req.orgId, createdBy: req.me.id })
-
+            let addedOpenCloseTimeResult = await knex('entity_open_close_times').insert({ entityId: addedFacilityResult.id, entityType: 'facility_master', ...open_close_times, updatedAt: currentTime, createdAt: currentTime, orgId: req.orgId }).returning(['*'])
+            
 
             // Images
             const images = req.body.images;
             let insertedImages = []
-            for (let img of images) {
-                let insertedImage = await knex('images').insert({
-                    entityType: 'facility_master',
-                    entityId: addedFacilityResult.id,
-                    s3Url: img.s3Url,
-                    name: img.filename,
-                    title: img.title
-                })
+            for(let img of images){
+                let insertedImage = await knex('images').insert({ entityType: 'facility_master',
+                 entityId: addedFacilityResult.id,
+                 s3Url:img.s3Url,
+                 name:img.filename,
+                title: img.title, 
+                orgId: req.orgId,
+                updatedAt: currentTime,
+                createdAt: currentTime,
+
+                }).returning(['*'])
                 insertedImages.push(insertedImage[0])
             }
 
@@ -95,13 +99,13 @@ const facilityBookingController = {
              */
             const feesResult = await knex('entity_fees_master').insert({
                 ...fees_payload,
-                entityId: addedRulesResult.id,
-                entityType: 'facility_master',
-                updatedAt: currentTime,
-                createdAt: currentTime,
-                orgId: req.orgId,
-                createdBy: req.me.id
-            })
+                entityId:addedFacilityResult.id,
+                entityType:'facility_master',
+                updatedAt: currentTime, 
+                createdAt: currentTime, 
+                orgId: req.orgId, 
+                
+            }).returning(['*'])
 
 
             // Booking Frequency limit
@@ -111,15 +115,14 @@ const facilityBookingController = {
                 "limitValue"
             */
             const bookingFrequencyResult = await knex('entity_booking_limit')
-                .insert({
-                    ...booking_frequency,
-                    entityType: 'facility_booking',
-                    entityId: addedFacilityResult.id,
+                .insert({ ...booking_frequency,
+                    entityType:'facility_master',
+                    entityId:addedFacilityResult.id,
                     updatedAt: currentTime,
                     createdAt: currentTime,
                     orgId: req.orgId,
-                    createdBy: req.me.id
-                })
+                    
+                }).returning(['*'])
 
             // Booking Criteria
             /**
@@ -140,9 +143,9 @@ const facilityBookingController = {
                     updatedAt: currentTime,
                     createdAt: currentTime,
                     orgId: req.orgId,
-                    createdBy: req.me.id
-                })
-
+                    
+                }).returning(['*'])
+            
 
             return res.status(200).json({
                 data: {
