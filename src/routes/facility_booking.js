@@ -9,4 +9,6 @@ router.get('/', authMiddleware.isAuthenticated,
 roleMiddleware.parseUserPermission,
 facilityBookingController.test)
 
+router.post('/facility-details',authMiddleware.isAuthenticated,facilityBookingController.facilityDetails)
+
 module.exports = router;

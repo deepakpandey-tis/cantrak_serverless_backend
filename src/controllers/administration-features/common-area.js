@@ -171,7 +171,7 @@ const commonAreaController = {
             errors: [
               {
                 code: "COMMON_AREA_CODE_EXIST_ERROR",
-                message: "Common Area Code already exist !"
+                message: "This Code already exist !"
               }
             ]
           });
