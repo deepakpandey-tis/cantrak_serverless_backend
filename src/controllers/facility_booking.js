@@ -16,7 +16,8 @@ const facilityBookingController = {
                 'open_close_times', 'images',
                 'fees_payload',
                 'booking_frequency',
-                'booking_criteria'
+                'booking_criteria',
+                'facilityId'
             ]);
 
             const schema = Joi.object().keys({
@@ -43,7 +44,7 @@ const facilityBookingController = {
 
             // Insert Facility
             let addedFacilityResultData = await knex('facility_master')
-            .insert({...payload,updatedAt:currentTime,createdAt:currentTime,orgId:req.orgId,createdBy:req.me.id}).returning(['*'])
+            .update({...payload,updatedAt:currentTime,createdAt:currentTime,orgId:req.orgId,createdBy:req.me.id}).where({id:req.body.facilityId}).returning(['*'])
             let addedFacilityResult = addedFacilityResultData[0]
 
 
@@ -400,6 +401,21 @@ const facilityBookingController = {
                 message: "Facility List!"
             });
         } catch (err) {
+            console.log("[controllers][facilityBooking][list] :  Error", err);
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    generateFacilityId:async(req,res) => {
+        try {
+            const generatedId = await knex('facility_master').insert({}).returning(['*'])
+            return res.status(200).json({
+                data: {
+                    id:generatedId.id
+                }
+            })
+        } catch(err) {
             console.log("[controllers][facilityBooking][list] :  Error", err);
             return res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
