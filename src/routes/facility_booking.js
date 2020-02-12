@@ -13,5 +13,12 @@ router.post('/get-facility-list', authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
     facilityBookingController.facilityListing)
 
+// router.get('/', authMiddleware.isAuthenticated, 
+// roleMiddleware.parseUserPermission,
+// facilityBookingController.test)
+
+router.post('/add-facility', authMiddleware.isAuthenticated,facilityBookingController.addFacility)
+
+router.post('/facility-details',authMiddleware.isAuthenticated,facilityBookingController.facilityDetails)
 
 module.exports = router;
