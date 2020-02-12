@@ -5,9 +5,11 @@ const resourceAccessMiddleware = require('../middlewares/resourceAccessMiddlewar
 const facilityBookingController = require('../controllers/facility_booking')
 const router = Router()
 
-router.get('/', authMiddleware.isAuthenticated, 
-roleMiddleware.parseUserPermission,
-facilityBookingController.test)
+// router.get('/', authMiddleware.isAuthenticated, 
+// roleMiddleware.parseUserPermission,
+// facilityBookingController.test)
+
+router.post('/add-facility', authMiddleware.isAuthenticated,facilityBookingController.addFacility)
 
 router.post('/facility-details',authMiddleware.isAuthenticated,facilityBookingController.facilityDetails)
 
