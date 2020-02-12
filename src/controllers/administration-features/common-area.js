@@ -48,8 +48,7 @@ const commonAreaController = {
         const existunitNumber = await knex("property_units").where({
           unitNumber: req.body.unitNumber,
           orgId: orgId,
-          type:2,
-          floorZoneId: commonPayload.floorZoneId
+          buildingPhaseId: commonPayload.buildingPhaseId
         });
 
         console.log(
@@ -156,8 +155,7 @@ const commonAreaController = {
           .where({
             unitNumber: commonUpdatePaylaod.unitNumber,
             orgId: orgId,
-            floorZoneId: commonUpdatePaylaod.floorZoneId,
-            type: commonUpdatePaylaod.type
+            buildingPhaseId: commonUpdatePaylaod.buildingPhaseId,
           })
           .whereNot({ id: commonUpdatePaylaod.id });
 
