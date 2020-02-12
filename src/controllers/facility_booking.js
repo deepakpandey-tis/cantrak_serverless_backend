@@ -409,10 +409,10 @@ const facilityBookingController = {
     },
     generateFacilityId:async(req,res) => {
         try {
-            const generatedId = await knex('facility_master').insert({}).returning(['*'])
+            const generatedId = await knex('facility_master').insert({createdAt:new Date().getTime()}).returning(['*'])
             return res.status(200).json({
                 data: {
-                    id:generatedId.id
+                    id:generatedId[0].id
                 }
             })
         } catch(err) {
