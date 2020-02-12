@@ -237,7 +237,7 @@ const facilityBookingController = {
                     ])
                     .where({ 'facility_master.id': payload.id }).first()
                 ,
-                knex.from('entity_open_close_times').where({ entityId: payload.id, entityType: 'facility_master' })
+                knex.from('entity_open_close_times').where({ entityId: payload.id, entityType: 'facility_master' }).first()
                 ,
                 knex.from('rules_and_regulations').where({ entityId: payload.id, entityType: 'facility_master' })
                 ,
