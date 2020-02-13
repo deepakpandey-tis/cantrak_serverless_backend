@@ -44,7 +44,7 @@ const facilityBookingController = {
 
             // Insert Facility
             let addedFacilityResultData = await knex('facility_master')
-            .update({...payload,updatedAt:currentTime,createdAt:currentTime,orgId:req.orgId,createdBy:req.me.id}).where({id:req.body.facilityId}).returning(['*'])
+                .update({ ...payload, updatedAt: currentTime, createdAt: currentTime, orgId: req.orgId, createdBy: req.me.id }).where({ id: req.body.facilityId }).returning(['*'])
             let addedFacilityResult = addedFacilityResultData[0]
 
 
@@ -277,15 +277,107 @@ const facilityBookingController = {
             if (page < 1) page = 1;
             let offset = (page - 1) * per_page;
             let filters = {};
-            let {
-                facilityId
-            } = req.body;
+            let { companyId,
+                projectId,
+                buildingPhaseId,
+                floorZoneId,
+                facilityName } = req.body;
 
-            if (facilityId) {
-                filters["facility_master.id"] = facilityId;
-            }
 
-            if (_.isEmpty(filters)) {
+            if (companyId || projectId || buildingPhaseId || floorZoneId || facilityName) {
+                try {
+                    [total, rows] = await Promise.all([
+                        knex
+                            .count("* as count")
+                            .from("facility_master")
+                            .leftJoin('companies', 'facility_master.companyId', 'companies.id')
+                            .leftJoin('projects', 'facility_master.projectId', 'projects.id')
+                            .leftJoin('buildings_and_phases', 'facility_master.buildingPhaseId', 'buildings_and_phases.id')
+                            .leftJoin('floor_and_zones', 'facility_master.floorZoneId', 'floor_and_zones.id')
+
+                            .where(qb => {
+                                if (facilityName) {
+                                    qb.where('facility_master.name', 'iLIKE', `%${facilityName}%`)
+                                }
+                                if (projectId) {
+                                    qb.where('facility_master.projectId', projectId)
+
+                                }
+                                if (buildingPhaseId) {
+                                    qb.where('facility_master.buildingPhaseId', buildingPhaseId)
+                                }
+                                if (floorZoneId) {
+                                    qb.where('facility_master.floorZoneId', floorZoneId)
+                                }
+                                if (companyId) {
+                                    qb.where('facility_master.companyId', companyId)
+                                }
+                                qb.where("facility_master.orgId", req.orgId)
+
+                            })
+                            .groupBy([
+                                "facility_master.id",
+                                "companies.id",
+                                "projects.id",
+                                "buildings_and_phases.id",
+                                "floor_and_zones.id"
+                            ]),
+                        knex
+                            .from("facility_master")
+                            .leftJoin('companies', 'facility_master.companyId', 'companies.id')
+                            .leftJoin('projects', 'facility_master.projectId', 'projects.id')
+                            .leftJoin('buildings_and_phases', 'facility_master.buildingPhaseId', 'buildings_and_phases.id')
+                            .leftJoin('floor_and_zones', 'facility_master.floorZoneId', 'floor_and_zones.id')
+
+                            .select([
+                                "facility_master.id",
+                                "facility_master.name",
+                                "companies.companyName",
+                                "projects.projectName",
+                                "buildings_and_phases.buildingPhaseCode",
+                                "buildings_and_phases.description as buildingDescription",
+                                "floor_and_zones.floorZoneCode"
+                            ])
+                            .where(qb => {
+                                if (facilityName) {
+                                    qb.where('facility_master.name', 'iLIKE', `%${facilityName}%`)
+                                }
+                                if (projectId) {
+                                    qb.where('facility_master.projectId', projectId)
+
+                                }
+                                if (buildingPhaseId) {
+                                    qb.where('facility_master.buildingPhaseId', buildingPhaseId)
+                                }
+                                if (floorZoneId) {
+                                    qb.where('facility_master.floorZoneId', floorZoneId)
+                                }
+                                if (companyId) {
+                                    qb.where('facility_master.companyId', companyId)
+                                }
+                                qb.where("facility_master.orgId", req.orgId)
+
+                            })
+                            .offset(offset)
+                            .limit(per_page)
+                    ]);
+
+                    let count = total.length;
+
+                    pagination.total = count;
+                    pagination.per_page = per_page;
+                    pagination.offset = offset;
+                    pagination.to = offset + rows.length;
+                    pagination.last_page = Math.ceil(count / per_page);
+                    pagination.current_page = page;
+                    pagination.from = offset;
+                    pagination.data = rows;
+                } catch (e) {
+                    // Error
+                }
+
+            } else {
+
                 [total, rows] = await Promise.all([
                     knex
                         .count("* as count")
@@ -329,72 +421,21 @@ const facilityBookingController = {
                         .offset(offset)
                         .limit(per_page)
                 ]);
-            } else {
-                filters = _.omitBy(filters, val =>
-                    val === "" || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val)
-                        ? true
-                        : false
-                );
-                try {
-                    [total, rows] = await Promise.all([
-                        knex
-                            .count("* as count")
-                            .from("facility_master")
-                            .leftJoin('companies', 'facility_master.companyId', 'companies.id')
-                            .leftJoin('projects', 'facility_master.projectId', 'projects.id')
-                            .leftJoin('buildings_and_phases', 'facility_master.buildingPhaseId', 'buildings_and_phases.id')
-                            .leftJoin('floor_and_zones', 'facility_master.floorZoneId', 'floor_and_zones.id')
 
-                            .where(qb => {
-                                qb.where(filters);
-                                qb.where("facility_master.orgId", req.orgId)
 
-                            })
-                            .groupBy([
-                                "facility_master.id",
-                                "companies.id",
-                                "projects.id",
-                                "buildings_and_phases.id",
-                                "floor_and_zones.id"
-                            ]),
-                        knex
-                            .from("facility_master")
-                            .leftJoin('companies', 'facility_master.companyId', 'companies.id')
-                            .leftJoin('projects', 'facility_master.projectId', 'projects.id')
-                            .leftJoin('buildings_and_phases', 'facility_master.buildingPhaseId', 'buildings_and_phases.id')
-                            .leftJoin('floor_and_zones', 'facility_master.floorZoneId', 'floor_and_zones.id')
+                let count = total.length;
 
-                            .select([
-                                "facility_master.id",
-                                "facility_master.name",
-                                "companies.companyName",
-                                "projects.projectName",
-                                "buildings_and_phases.buildingPhaseCode",
-                                "buildings_and_phases.description as buildingDescription",
-                                "floor_and_zones.floorZoneCode"
-                            ])
-                            .where(qb => {
-                                qb.where(filters);
-                                qb.where("facility_master.orgId", req.orgId)
-                            })
-                            .offset(offset)
-                            .limit(per_page)
-                    ]);
-                } catch (e) {
-                    // Error
-                }
+                pagination.total = count;
+                pagination.per_page = per_page;
+                pagination.offset = offset;
+                pagination.to = offset + rows.length;
+                pagination.last_page = Math.ceil(count / per_page);
+                pagination.current_page = page;
+                pagination.from = offset;
+                pagination.data = rows;
             }
 
-            let count = total.length;
 
-            pagination.total = count;
-            pagination.per_page = per_page;
-            pagination.offset = offset;
-            pagination.to = offset + rows.length;
-            pagination.last_page = Math.ceil(count / per_page);
-            pagination.current_page = page;
-            pagination.from = offset;
-            pagination.data = rows;
 
             return res.status(200).json({
                 data: {
@@ -409,15 +450,15 @@ const facilityBookingController = {
             });
         }
     },
-    generateFacilityId:async(req,res) => {
+    generateFacilityId: async (req, res) => {
         try {
-            const generatedId = await knex('facility_master').insert({createdAt:new Date().getTime()}).returning(['*'])
+            const generatedId = await knex('facility_master').insert({ createdAt: new Date().getTime() }).returning(['*'])
             return res.status(200).json({
                 data: {
-                    id:generatedId[0].id
+                    id: generatedId[0].id
                 }
             })
-        } catch(err) {
+        } catch (err) {
             console.log("[controllers][facilityBooking][list] :  Error", err);
             return res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
@@ -450,13 +491,13 @@ const facilityBookingController = {
                     .where({ orgId })
                     .where(qb => {
                         if (fromDate && toDate) {
-                             qb.whereBetween("entity_bookings.bookingStartDateTime", [newFromDate,newFromDate]);
+                            qb.whereBetween("entity_bookings.bookingStartDateTime", [newFromDate, newFromDate]);
 
-                            qb.whereBetween("entity_bookings.bookingEndDateTime", [newToDate,newToDate]);
+                            qb.whereBetween("entity_bookings.bookingEndDateTime", [newToDate, newToDate]);
                         }
                         if (id) {
-                               //qb.where('entity_bookings.entityId',id)
-                               //qb.where('entity_bookings.entityType','facility_master')
+                            //qb.where('entity_bookings.entityId',id)
+                            //qb.where('entity_bookings.entityType','facility_master')
                         }
                     })
 
