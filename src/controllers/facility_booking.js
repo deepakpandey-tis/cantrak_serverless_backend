@@ -11,13 +11,24 @@ const _ = require("lodash");
 const facilityBookingController = {
     addFacility: async (req, res) => {
         try {
+            let addedFacilityResult = null
+            let addedRules = []
+            let addedOpenCloseTimeResult = []
+            let insertedImages = []
+            let feesResult = []
+            let bookingFrequencyResult = []
+            let addedBookingCriteriaResult = []
+            await knex.transaction(async() => {
+
+
             const payload = _.omit(req.body, [
                 'rules_and_regulations',
                 'open_close_times', 'images',
                 'fees_payload',
                 'booking_frequency',
                 'booking_criteria',
-                'facilityId'
+                'facilityId',
+                'descriptionAlternateLang'
             ]);
 
             const schema = Joi.object().keys({
@@ -27,7 +38,7 @@ const facilityBookingController = {
                 "buildingPhaseId": Joi.string().required(),
                 "floorZoneId": Joi.string().required(),
                 "description": Joi.string().required(),
-                "descriptionAlternateLang": Joi.string().required(),
+                // "descriptionAlternateLang": Joi.string().required(),
             })
 
             const result = Joi.validate(payload, schema);
@@ -41,17 +52,17 @@ const facilityBookingController = {
 
 
             let currentTime = new Date().getTime()
-
+            let descriptionAlternateLang = req.body.descriptionAlternateLang ? req.body.descriptionAlternateLang : ''
             // Insert Facility
             let addedFacilityResultData = await knex('facility_master')
-            .update({...payload,updatedAt:currentTime,createdAt:currentTime,orgId:req.orgId,createdBy:req.me.id}).where({id:req.body.facilityId}).returning(['*'])
-            let addedFacilityResult = addedFacilityResultData[0]
+            .update({...payload,descriptionAlternateLang,updatedAt:currentTime,createdAt:currentTime,orgId:req.orgId,createdBy:req.me.id}).where({id:req.body.facilityId}).returning(['*'])
+             addedFacilityResult = addedFacilityResultData[0]
 
 
             // Insert Rules
 
             let rulesPayload = req.body.rules_and_regulations
-            let addedRules = []
+            addedRules = []
             for (let rule of rulesPayload) {
                 /*
                 {rules,
@@ -70,12 +81,17 @@ const facilityBookingController = {
             */
 
             const open_close_times = req.body.open_close_times
-            let addedOpenCloseTimeResult = await knex('entity_open_close_times').insert({ entityId: addedFacilityResult.id, entityType: 'facility_master', ...open_close_times, updatedAt: currentTime, createdAt: currentTime, orgId: req.orgId }).returning(['*'])
+             addedOpenCloseTimeResult = []
+            for(let a of open_close_times){
+                addedOpenCloseTimeResultData = await knex('entity_open_close_times').insert({ entityId: addedFacilityResult.id, entityType: 'facility_master', ...a, updatedAt: currentTime, createdAt: currentTime, orgId: req.orgId }).returning(['*'])
+                addedOpenCloseTimeResult.push(addedOpenCloseTimeResultData[0])
+            }
+
 
 
             // Images
             const images = req.body.images;
-            let insertedImages = []
+            insertedImages = []
             for (let img of images) {
                 let insertedImage = await knex('images').insert({
                     entityType: 'facility_master',
@@ -99,7 +115,7 @@ const facilityBookingController = {
                 "feesAmount"
                 duration
              */
-            const feesResult = await knex('entity_fees_master').insert({
+            feesResult = await knex('entity_fees_master').insert({
                 ...fees_payload,
                 entityId: addedFacilityResult.id,
                 entityType: 'facility_master',
@@ -116,16 +132,20 @@ const facilityBookingController = {
                 "limitType" 
                 "limitValue"
             */
-            const bookingFrequencyResult = await knex('entity_booking_limit')
-                .insert({
-                    ...booking_frequency,
-                    entityType: 'facility_master',
-                    entityId: addedFacilityResult.id,
-                    updatedAt: currentTime,
-                    createdAt: currentTime,
-                    orgId: req.orgId,
-
-                }).returning(['*'])
+             bookingFrequencyResult = []
+           for(let b of booking_frequency){
+            let bookingFrequencyResultData = await knex('entity_booking_limit')
+                   .insert({
+                       ...b,
+                       entityType: 'facility_master',
+                       entityId: addedFacilityResult.id,
+                       updatedAt: currentTime,
+                       createdAt: currentTime,
+                       orgId: req.orgId,
+   
+                   }).returning(['*'])
+            bookingFrequencyResult.push(bookingFrequencyResultData)
+           }
 
             // Booking Criteria
             /**
@@ -138,7 +158,7 @@ const facilityBookingController = {
              */
 
             const bookingCriteriaPayload = req.body.booking_criteria;
-            const addedBookingCriteriaResult = await knex('entity_booking_criteria')
+            addedBookingCriteriaResult = await knex('entity_booking_criteria')
                 .insert({
                     ...bookingCriteriaPayload,
                     entityId: addedFacilityResult.id,
@@ -148,19 +168,22 @@ const facilityBookingController = {
                     orgId: req.orgId,
 
                 }).returning(['*'])
-
-
-            return res.status(200).json({
-                data: {
-                    addedFacility: addedFacilityResult,
-                    addedRules: addedRules,
-                    addedOpenCloseTime: addedOpenCloseTimeResult,
-                    addedImages: insertedImages,
-                    addedFees: feesResult,
-                    addedBookingFrequency: bookingFrequencyResult,
-                    addedBookingCriteria: addedBookingCriteriaResult
-                }
             })
+                    return res.status(200).json({
+                        data: {
+                            addedFacility: addedFacilityResult,
+                            addedRules: addedRules,
+                            addedOpenCloseTime: addedOpenCloseTimeResult,
+                            addedImages: insertedImages,
+                            addedFees: feesResult,
+                            addedBookingFrequency: bookingFrequencyResult,
+                            addedBookingCriteria: addedBookingCriteriaResult
+                        }
+                    })
+
+            trx.commit
+
+            
         } catch (err) {
             console.log('ADD FACILITY ERROR: ', err)
             return res.status(500).json({
@@ -216,7 +239,9 @@ const facilityBookingController = {
                 openingCloseingDetail,
                 ruleRegulationDetail,
                 bookingCriteriaDetail,
-                facilityImages
+                facilityImages,
+                feeDetails,
+                bookingLimits
             ] = await Promise.all([
 
                 knex.from('facility_master')
@@ -230,6 +255,10 @@ const facilityBookingController = {
                         'facility_master.description',
                         'facility_master.descriptionAlternateLang',
                         'companies.companyId',
+                        'companies.id as cid',
+                        'projects.id as pid',
+                        'buildings_and_phases.id as bid',
+                        'floor_and_zones.id as fid',
                         'companies.companyName',
                         'projects.project as projectId',
                         'projects.projectName',
@@ -246,11 +275,13 @@ const facilityBookingController = {
                 ,
                 knex.from('entity_booking_criteria').where({ entityId: payload.id, entityType: 'facility_master' }).first()
                 ,
-                knex.from('images').where({ entityId: payload.id, entityType: 'facility_master' })
+                knex.from('images').where({ entityId: payload.id, entityType: 'facility_master' }),
+                knex('entity_fees_master').select(['feesType','feesAmount','duration']).where({entityId:payload.id,entityType:'facility_master',orgId:req.orgId}),
+                knex('entity_booking_limit').select(['limitType','limitValue']).where({entityId:payload.id,entityType:'facility_master',orgId:req.orgId})
             ])
 
             return res.status(200).json({
-                facilityDetails: { ...facilityDetails, openingCloseingDetail, ruleRegulationDetail, bookingCriteriaDetail, facilityImages },
+                facilityDetails: { ...facilityDetails, openingCloseingDetail, ruleRegulationDetail, bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits },
                 message: "Facility Details!"
             });
 
