@@ -485,67 +485,67 @@ const facilityBookingController = {
 
             let result;
 
-            if (id || fromDate || toDate) {
+
+            console.log(newToDate, "=======================================from date")
+
+
+            if (id || fromDate && toDate) {
 
                 result = await knex.from('entity_bookings')
                     .where({ orgId })
                     .where(qb => {
+
+
                         if (fromDate && toDate) {
-                            qb.whereBetween("entity_bookings.bookingStartDateTime", [newFromDate, newFromDate]);
 
-                            qb.whereBetween("entity_bookings.bookingEndDateTime", [newToDate, newToDate]);
-                        }
-                        if (id) {
-                            //qb.where('entity_bookings.entityId',id)
-                            //qb.where('entity_bookings.entityType','facility_master')
-                        }
-                    })
+                            qb.where('bookingStartDateTime', '>=', newFromDate)
+                            qb.where('bookingEndDateTime', '<', newToDate)
+               //qb.whereBetween("entity_bookings.bookingStartDateTime", [newFromDate, newFromDate]);
 
-            } else {
-                result = await knex.from('entity_bookings')
-                    .where({ orgId })
-
+               // qb.whereBetween("entity_bookings.bookingEndDateTime", [newToDate, newToDate]);
             }
 
+            if (id === "undefined") {
 
+            } else {
 
-            result = await knex.from('entity_bookings')
-                .where({ orgId })
-                .where(qb => {
-                    if (fromDate && toDate) {
-                        // qb.whereBetween("entity_bookings.bookingStartDateTime", [newFromDate,newFromDate]);
+                qb.where('entity_bookings.entityId', id)
+                qb.where('entity_bookings.entityType', 'facility_master')
+            }
 
-                        //qb.whereBetween("entity_bookings.bookingEndDateTime", [newToDate,newToDate]);
-                    }
-                    if (id) {
-                        //   qb.where('entity_bookings.entityId',id)
-                    }
-                })
+        })
+
+    } else {
+        result = await knex.from('entity_bookings')
+            .where({ orgId })
+
+    }
+
 
             const Parallel = require('async-parallel');
-            result = await Parallel.map(result, async item => {
-                let id = item.bookedBy;
-                let book = await knex('users').where({ id: id }).select('name', 'email', 'mobileNo', 'id').first();
-                return {
-                    ...item,
-                    bookedBy: book
-                };
-            })
+    result = await Parallel.map(result, async item => {
+        let id = item.bookedBy;
+        let book = await knex('users').where({ id: id }).select('name', 'email', 'mobileNo', 'id').first();
+        return {
+            ...item,
+            bookedBy: book
+        };
+    })
 
             return res.status(200).json({
-                data: {
-                    bookedData: result
-                },
-                message: "Booked List!"
-            });
+        data: {
+            bookedData: result
+        },
+        message: "Booked List!"
+    });
 
 
-        } catch (err) {
-            console.log("[controllers][facilityBooking]:  Error", err);
-            return res.status(500).json({
-                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-            });
-        }
+} catch (err) {
+    console.log("[controllers][facilityBooking]:  Error", err);
+    return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+    });
+}
 
     }
 
