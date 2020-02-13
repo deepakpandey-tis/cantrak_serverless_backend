@@ -441,12 +441,7 @@ const facilityBookingController = {
                 newToDate = new Date(toDate).getTime();
             }
 
-
             let result;
-
-
-            console.log(newToDate, "=======================================from date")
-
 
             if (id || fromDate && toDate) {
 
@@ -459,9 +454,8 @@ const facilityBookingController = {
 
                             qb.where('bookingStartDateTime', '>=', newFromDate)
                             qb.where('bookingEndDateTime', '<', newToDate)
-               //qb.whereBetween("entity_bookings.bookingStartDateTime", [newFromDate, newFromDate]);
-
-               // qb.whereBetween("entity_bookings.bookingEndDateTime", [newToDate, newToDate]);
+                          //qb.whereBetween("entity_bookings.bookingStartDateTime", [newFromDate, newFromDate]);
+                         // qb.whereBetween("entity_bookings.bookingEndDateTime", [newToDate, newToDate]);
             }
 
             if (id === "undefined") {

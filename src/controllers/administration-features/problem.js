@@ -168,7 +168,22 @@ const problemController = {
       }
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(rows);
+
+      var ws;
+      if (rows && rows.length) {
+        ws = XLSX.utils.json_to_sheet(rows);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          {
+            PROBLEM_CATEGORY_CODE: "",
+            DESCRIPTION: "",
+            ALTERNATE_DESCRIPTION: "",
+            REMARK: "",
+            PROBLEM_TYPE_CODE: ""
+          }
+        ]);
+      }
+
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "ProblemSubcategoryData-" + Date.now() + ".csv";
@@ -220,7 +235,7 @@ const problemController = {
     try {
       let orgId = req.orgId
       //const incidentCategoryId = req.body.incidentCategoryId;
-      const categories = await knex.from('incident_categories').where({ orgId: orgId ,isActive:true})
+      const categories = await knex.from('incident_categories').where({ orgId: orgId, isActive: true })
       return res.status(200).json({
         data: {
           categories
@@ -239,7 +254,7 @@ const problemController = {
   getSubcategories: async (req, res) => {
     try {
       let incidentCategoryId = req.body.incidentCategoryId;
-      const subCategories = await knex('incident_sub_categories').select('*').where({ incidentCategoryId,isActive:true })
+      const subCategories = await knex('incident_sub_categories').select('*').where({ incidentCategoryId, isActive: true })
       return res.status(200).json({
         data: {
           subCategories
@@ -297,147 +312,153 @@ const problemController = {
   importProblemSubCategoryData: async (req, res) => {
     try {
 
-      if (req.file) {
-        let tempraryDirectory = null;
-        if (process.env.IS_OFFLINE) {
-          tempraryDirectory = 'tmp/';
-        } else {
-          tempraryDirectory = '/tmp/';
-        }
-        let resultData = null;
-        let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: 'binary' });
-        let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
+      let resultData = null;
+      let data = req.body;
+      let totalData = data.length - 1;
+      let fail = 0;
+      let success = 0;
+      console.log("=======", data[0], "+++++++++++++++")
+      let result = null;
+      let errors = []
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
 
-        let totalData = data.length - 1;
-        let fail = 0;
-        let success = 0;
-        console.log("=======", data[0], "+++++++++++++++")
-        let result = null;
-        let errors = []
-        let header = Object.values(data[0]);
-        header.unshift('Error');
-        errors.push(header)
+      if (
+        data[0].A == "Ã¯Â»Â¿PROBLEM_CATEGORY_CODE" ||
+        (data[0].A == "PROBLEM_CATEGORY_CODE" &&
+          data[0].B == "DESCRIPTION" &&
+          data[0].C == "ALTERNATE_DESCRIPTION" &&
+          data[0].D == "REMARK" && data[0].E == "PROBLEM_TYPE_CODE")
+      ) {
+        if (data.length > 0) {
+          let i = 0;
+          for (let problemData of data) {
+            i++;
 
-        if (
-          data[0].A == "Ã¯Â»Â¿PROBLEM_CATEGORY_CODE" ||
-          (data[0].A == "PROBLEM_CATEGORY_CODE" &&
-            data[0].B == "DESCRIPTION" &&
-            data[0].C == "ALTERNATE_DESCRIPTION" &&
-            data[0].D == "REMARK" && data[0].E == "PROBLEM_TYPE_CODE")
-        ) {
-          if (data.length > 0) {
-            let i = 0;
-            for (let problemData of data) {
-              i++;
+            if (i > 1) {
 
-              if (i > 1) {
 
-                let categoryData = await knex("incident_categories")
-                  .select("id")
-                  .where({ categoryCode: problemData.A, orgId: req.orgId });
-                let categoryId = null;
-                if (!categoryData.length) {
-                  let values = _.values(problemData)
-                  values.unshift('Problem Category code does not exists')
-                  errors.push(values);
-                  fail++;
-                  continue;
+              if (!problemData.A) {
+                let values = _.values(problemData)
+                values.unshift("Problem Category code can not empty")
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
+              if (!problemData.B) {
+                let values = _.values(problemData)
+                values.unshift("Description can not empty")
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!problemData.E) {
+                let values = _.values(problemData)
+                values.unshift("Problem Type code can not empty")
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
+
+              let categoryData = await knex("incident_categories")
+                .select("id")
+                .where({ categoryCode: problemData.A.toUpperCase(), orgId: req.orgId });
+              let categoryId = null;
+              if (!categoryData.length) {
+                let values = _.values(problemData)
+                values.unshift('Problem Category code does not exists')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+              if (categoryData && categoryData.length) {
+                categoryId = categoryData[0].id;
+              }
+
+              let problemTypeData = await knex("incident_type")
+                .select("id")
+                .where({ typeCode: problemData.E.toUpperCase(), orgId: req.orgId });
+              let problemTypeId = null;
+              if (!problemTypeData.length) {
+                let values = _.values(problemData)
+                values.unshift('Problem type code does not exists')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (problemTypeData.length) {
+                problemTypeId = problemTypeData[0].id;
+              }
+              let checkExist = await knex("incident_sub_categories")
+                .select("id")
+                .where({ incidentCategoryId: categoryId, descriptionEng: problemData.B, orgId: req.orgId,incidentTypeId:problemTypeId});
+              if (checkExist.length < 1) {
+                let currentTime = new Date().getTime();
+                let insertData = {
+                  orgId: req.orgId,
+                  incidentCategoryId: categoryId,
+                  descriptionEng: problemData.B,
+                  descriptionThai: problemData.C,
+                  remark: problemData.D,
+                  createdAt: currentTime,
+                  updatedAt: currentTime,
+                  incidentTypeId: problemTypeId
+                };
+
+                resultData = await knex
+                  .insert(insertData)
+                  .returning(["*"])
+                  .into("incident_sub_categories");
+                if (resultData && resultData.length) {
+                  success++;
                 }
-                if (categoryData && categoryData.length) {
-                  categoryId = categoryData[0].id;
-                }
-
-                let problemTypeData = await knex("incident_type")
-                  .select("id")
-                  .where({ typeCode: problemData.E, orgId: req.orgId });
-                let problemTypeId = null;
-                if (!problemTypeData.length) {
-                  let values = _.values(problemData)
-                  values.unshift('Problem type code does not exists')
-                  errors.push(values);
-                  fail++;
-                  continue;
-                }
-
-                if (problemTypeData.length) {
-                  problemTypeId = problemTypeData[0].id;
-                }
-                let checkExist = await knex("incident_sub_categories")
-                  .select("id")
-                  .where({ incidentCategoryId: categoryId, descriptionEng: problemData.B, orgId: req.orgId });
-                if (checkExist.length < 1) {
-                  let currentTime = new Date().getTime();
-                  let insertData = {
-                    orgId: req.orgId,
-                    incidentCategoryId: categoryId,
-                    descriptionEng: problemData.B,
-                    descriptionThai: problemData.C,
-                    remark: problemData.D,
-                    createdAt: currentTime,
-                    updatedAt: currentTime,
-                    incidentTypeId: problemTypeId
-                  };
-
-                  resultData = await knex
-                    .insert(insertData)
-                    .returning(["*"])
-                    .into("incident_sub_categories");
-                  if (resultData && resultData.length) {
-                    success++;
-                  }
-                } else {
-                  let values = _.values(problemData)
-                  values.unshift('This Subcategory already exists')
-                  errors.push(values);
-                  fail++;
-                }
+              } else {
+                let values = _.values(problemData)
+                values.unshift('This Subcategory already exists')
+                errors.push(values);
+                fail++;
               }
             }
-
-            let message = null;
-            fail = fail - 1;
-            if (totalData == success) {
-              message =
-                "System have processed ( " +
-                totalData +
-                " ) entries and added them successfully!";
-            } else {
-              message =
-                "System have processed ( " +
-                totalData +
-                " ) entries out of which only ( " +
-                success +
-                " ) are added and others are failed ( " +
-                fail +
-                " ) due to validation!";
-            }
-
-            let deleteFile = await fs.unlink(file_path, err => {
-              console.log("File Deleting Error " + err);
-            });
-            return res.status(200).json({
-              message: message,
-              errors: errors
-            });
           }
-        } else {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-            ]
+
+          let message = null;
+          if (totalData == success) {
+            message =
+              "System have processed ( " +
+              totalData +
+              " ) entries and added them successfully!";
+          } else {
+            message =
+              "System have processed ( " +
+              totalData +
+              " ) entries out of which only ( " +
+              success +
+              " ) are added and others are failed ( " +
+              fail +
+              " ) due to validation!";
+          }
+
+         
+          return res.status(200).json({
+            message: message,
+            errors: errors
           });
         }
       } else {
-
         return res.status(400).json({
           errors: [
             { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
           ]
         });
-
       }
+
 
     } catch (err) {
       console.log("[controllers][propertysetup][importCompanyData] :  Error", err);

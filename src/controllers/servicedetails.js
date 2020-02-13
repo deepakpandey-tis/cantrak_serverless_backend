@@ -21,14 +21,14 @@ const serviceDetailsController = {
       let orgId = req.orgId;
 
       await knex.transaction(async trx => {
-        const payload = _.omit(req.body,'editMode');
+        const payload = _.omit(req.body, 'editMode');
 
         const schema = Joi.object().keys({
           incidentPriorityCode: Joi.string().required(),
           descriptionThai: Joi.string().allow("").allow(null).optional(),
           descriptionEng: Joi.string().required(),
           sequenceNo: Joi.number().allow("").allow(null).optional(),
-         
+
 
         });
 
@@ -85,7 +85,7 @@ const serviceDetailsController = {
       let orgId = req.orgId;
 
       await knex.transaction(async trx => {
-        const payload = _.omit(req.body,'editMode','createdAt','updatedAt','createdBy','isActive','name','orgId');
+        const payload = _.omit(req.body, 'editMode', 'createdAt', 'updatedAt', 'createdBy', 'isActive', 'name', 'orgId');
 
         const schema = Joi.object().keys({
           id: Joi.string().required(),
@@ -938,7 +938,20 @@ const serviceDetailsController = {
         bucketName = process.env.S3_BUCKET_NAME;
       }
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(rows);
+      var ws;
+
+      if (rows && rows.length) {
+        ws = XLSX.utils.json_to_sheet(rows);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          {
+            TITLE: "",
+            DESCRIPTION: "",
+            ALTERNATE_DESCRIPTION: ""
+          }
+        ]);
+      }
+
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
       let filename = "LocationTagData-" + Date.now() + ".csv";
@@ -1175,109 +1188,94 @@ const serviceDetailsController = {
 
   importLocationTag: async (req, res) => {
     try {
-      if (req.file) {
-        console.log(req.file);
-        let tempraryDirectory = null;
-        if (process.env.IS_OFFLINE) {
-          tempraryDirectory = "tmp/";
-        } else {
-          tempraryDirectory = "/tmp/";
-        }
-        let resultData = null;
-        let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: "binary" });
-        let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, {
-          type: "string",
-          header: "A",
-          raw: false
-        });
-        //data         = JSON.stringify(data);
-        let result = null;
-        let errors = []
-        let header = Object.values(data[0]);
-        header.unshift('Error');
-        errors.push(header)
-        let currentTime = new Date().getTime();
-        //console.log('DATA: ',data)
-        let totalData = data.length - 1;
-        let fail = 0;
-        let success = 0;
 
-        if (
-          data[0].A == "Ã¯Â»Â¿TITLE" || data[0].A == "TITLE" &&
-          data[0].B == "DESCRIPTION" &&
-          data[0].C == "ALTERNATE_DESCRIPTION"
-        ) {
-          if (data.length > 0) {
-            let i = 0;
-            console.log("Data[0]", data[0]);
-            for (let locationTagData of data) {
-              i++;
+      let resultData = null;
+      let data = req.body;
+      //data         = JSON.stringify(data);
+      let result = null;
+      let errors = []
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
+      let currentTime = new Date().getTime();
+      //console.log('DATA: ',data)
+      let totalData = data.length - 1;
+      let fail = 0;
+      let success = 0;
 
-              if (i > 1) {
-                let checkExist = await knex("location_tags_master")
-                  .select("title")
-                  .where({
-                    title: locationTagData.A,
-                    orgId: req.orgId
-                  });
-                if (checkExist.length < 1) {
-                  let insertData = {
-                    orgId: req.orgId,
-                    title: locationTagData.A,
-                    descriptionEng: locationTagData.B,
-                    descriptionThai: locationTagData.C,
-                    isActive: true,
-                    createdBy: req.me.id,
-                    createdAt: currentTime,
-                    updatedAt: currentTime
-                  };
+      if (
+        data[0].A == "Ã¯Â»Â¿TITLE" || data[0].A == "TITLE" &&
+        data[0].B == "DESCRIPTION" &&
+        data[0].C == "ALTERNATE_DESCRIPTION"
+      ) {
+        if (data.length > 0) {
+          let i = 0;
+          console.log("Data[0]", data[0]);
+          for (let locationTagData of data) {
+            i++;
 
-                  resultData = await knex
-                    .insert(insertData)
-                    .returning(["*"])
-                    .into("location_tags_master");
-                  success++;
-                } else {
-                  fail++;
-                  let values = _.values(locationTagData)
-                  values.unshift('Location tag already exists.')
-                  errors.push(values);
-                }
+            if (i > 1) {
+
+
+              if (!locationTagData.A) {
+                let values = _.values(locationTagData)
+                values.unshift('title can not empty')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              let checkExist = await knex("location_tags_master")
+                .select("title")
+                .where({
+                  title: locationTagData.A,
+                  orgId: req.orgId
+                });
+              if (checkExist.length < 1) {
+                let insertData = {
+                  orgId: req.orgId,
+                  title: locationTagData.A,
+                  descriptionEng: locationTagData.B,
+                  descriptionThai: locationTagData.C,
+                  isActive: true,
+                  createdBy: req.me.id,
+                  createdAt: currentTime,
+                  updatedAt: currentTime
+                };
+
+                resultData = await knex
+                  .insert(insertData)
+                  .returning(["*"])
+                  .into("location_tags_master");
+                success++;
+              } else {
+                fail++;
+                let values = _.values(locationTagData)
+                values.unshift('Location tag already exists.')
+                errors.push(values);
               }
             }
-
-            let deleteFile = await fs.unlink(file_path, err => {
-              console.log("File Deleting Error " + err);
-            });
-
-            let message = null;
-            if (totalData == success) {
-              message =
-                "System has processed processed ( " +
-                totalData +
-                " ) entries and added them successfully!";
-            } else {
-              message =
-                "System has processed processed ( " +
-                totalData +
-                " ) entries out of which only ( " +
-                success +
-                " ) are added and others are failed ( " +
-                fail +
-                " ) due to validation!";
-            }
-            return res.status(200).json({
-              message: message,
-              errors
-            });
           }
-        } else {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-            ]
+
+          let message = null;
+          if (totalData == success) {
+            message =
+              "System has processed processed ( " +
+              totalData +
+              " ) entries and added them successfully!";
+          } else {
+            message =
+              "System has processed processed ( " +
+              totalData +
+              " ) entries out of which only ( " +
+              success +
+              " ) are added and others are failed ( " +
+              fail +
+              " ) due to validation!";
+          }
+          return res.status(200).json({
+            message: message,
+            errors
           });
         }
       } else {
@@ -1287,6 +1285,7 @@ const serviceDetailsController = {
           ]
         });
       }
+
     } catch (err) {
       console.log(
         "[controllers][propertysetup][importCompanyData] :  Error",
@@ -1443,8 +1442,8 @@ const serviceDetailsController = {
   getPriorityAllList: async (req, res) => {
     try {
       let result = await knex('incident_priority')
-      .where({ 'orgId': req.orgId, 'isActive': true })
-      .orderBy('sequenceNo','asc')
+        .where({ 'orgId': req.orgId, 'isActive': true })
+        .orderBy('sequenceNo', 'asc')
       return res.status(200).json({
         data: result,
         message: "Priority list!"
@@ -1461,13 +1460,13 @@ const serviceDetailsController = {
   getPriority: async (req, res) => {
     try {
       let result = await knex('incident_priority')
-      .leftJoin('users','incident_priority.createdBy','users.id')
-      .select([
-        'incident_priority.*',
-        'users.name'
-      ])
-      .where({ 'incident_priority.orgId': req.orgId})
-      .orderBy('incident_priority.sequenceNo','asc')
+        .leftJoin('users', 'incident_priority.createdBy', 'users.id')
+        .select([
+          'incident_priority.*',
+          'users.name'
+        ])
+        .where({ 'incident_priority.orgId': req.orgId })
+        .orderBy('incident_priority.sequenceNo', 'asc')
       return res.status(200).json({
         data: result,
         message: "Priority list!"
