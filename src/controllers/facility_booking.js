@@ -44,7 +44,7 @@ const facilityBookingController = {
 
             // Insert Facility
             let addedFacilityResultData = await knex('facility_master')
-            .update({...payload,updatedAt:currentTime,createdAt:currentTime,orgId:req.orgId,createdBy:req.me.id}).where({id:req.body.facilityId}).returning(['*'])
+                .update({ ...payload, updatedAt: currentTime, createdAt: currentTime, orgId: req.orgId, createdBy: req.me.id }).where({ id: req.body.facilityId }).returning(['*'])
             let addedFacilityResult = addedFacilityResultData[0]
 
 
@@ -409,15 +409,15 @@ const facilityBookingController = {
             });
         }
     },
-    generateFacilityId:async(req,res) => {
+    generateFacilityId: async (req, res) => {
         try {
-            const generatedId = await knex('facility_master').insert({createdAt:new Date().getTime()}).returning(['*'])
+            const generatedId = await knex('facility_master').insert({ createdAt: new Date().getTime() }).returning(['*'])
             return res.status(200).json({
                 data: {
-                    id:generatedId[0].id
+                    id: generatedId[0].id
                 }
             })
-        } catch(err) {
+        } catch (err) {
             console.log("[controllers][facilityBooking][list] :  Error", err);
             return res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
@@ -444,67 +444,67 @@ const facilityBookingController = {
 
             let result;
 
-            if (id || fromDate || toDate) {
+
+            console.log(newToDate, "=======================================from date")
+
+
+            if (id || fromDate && toDate) {
 
                 result = await knex.from('entity_bookings')
                     .where({ orgId })
                     .where(qb => {
+
+
                         if (fromDate && toDate) {
-                             qb.whereBetween("entity_bookings.bookingStartDateTime", [newFromDate,newFromDate]);
 
-                            qb.whereBetween("entity_bookings.bookingEndDateTime", [newToDate,newToDate]);
-                        }
-                        if (id) {
-                               //qb.where('entity_bookings.entityId',id)
-                               //qb.where('entity_bookings.entityType','facility_master')
-                        }
-                    })
+                            qb.where('bookingStartDateTime', '>=', newFromDate)
+                            qb.where('bookingEndDateTime', '<', newToDate)
+               //qb.whereBetween("entity_bookings.bookingStartDateTime", [newFromDate, newFromDate]);
 
-            } else {
-                result = await knex.from('entity_bookings')
-                    .where({ orgId })
-
+               // qb.whereBetween("entity_bookings.bookingEndDateTime", [newToDate, newToDate]);
             }
 
+            if (id === "undefined") {
 
+            } else {
 
-            result = await knex.from('entity_bookings')
-                .where({ orgId })
-                .where(qb => {
-                    if (fromDate && toDate) {
-                        // qb.whereBetween("entity_bookings.bookingStartDateTime", [newFromDate,newFromDate]);
+                qb.where('entity_bookings.entityId', id)
+                qb.where('entity_bookings.entityType', 'facility_master')
+            }
 
-                        //qb.whereBetween("entity_bookings.bookingEndDateTime", [newToDate,newToDate]);
-                    }
-                    if (id) {
-                        //   qb.where('entity_bookings.entityId',id)
-                    }
-                })
+        })
+
+    } else {
+        result = await knex.from('entity_bookings')
+            .where({ orgId })
+
+    }
+
 
             const Parallel = require('async-parallel');
-            result = await Parallel.map(result, async item => {
-                let id = item.bookedBy;
-                let book = await knex('users').where({ id: id }).select('name', 'email', 'mobileNo', 'id').first();
-                return {
-                    ...item,
-                    bookedBy: book
-                };
-            })
+    result = await Parallel.map(result, async item => {
+        let id = item.bookedBy;
+        let book = await knex('users').where({ id: id }).select('name', 'email', 'mobileNo', 'id').first();
+        return {
+            ...item,
+            bookedBy: book
+        };
+    })
 
             return res.status(200).json({
-                data: {
-                    bookedData: result
-                },
-                message: "Booked List!"
-            });
+        data: {
+            bookedData: result
+        },
+        message: "Booked List!"
+    });
 
 
-        } catch (err) {
-            console.log("[controllers][facilityBooking]:  Error", err);
-            return res.status(500).json({
-                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-            });
-        }
+} catch (err) {
+    console.log("[controllers][facilityBooking]:  Error", err);
+    return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+    });
+}
 
     }
 
