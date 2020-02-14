@@ -702,7 +702,9 @@ const assetController = {
           "companies.companyName as companyName",
           "projects.projectName as projectName",
           "buildings_and_phases.description as building",
+          "buildings_and_phases.buildingPhaseCode as buildingPhaseCode",
           "floor_and_zones.description as floorZone",
+          "floor_and_zones.floorZoneCode as floorZoneCode",
           "property_units.description as propertyUnit",
           "companies.id as companyId",
           "projects.id as projectId",
@@ -717,7 +719,7 @@ const assetController = {
           "asset_location.id as assetLocationId",
           "asset_location.houseId as houseId"
         ])
-        .where({ assetId: id, 'asset_location.orgId': req.orgId });
+        .where({ assetId: id, 'asset_location.orgId': req.orgId }).orderBy('asset_location.createdAt','desc');
       //   .where({ orgId: req.orgId });
 
 
