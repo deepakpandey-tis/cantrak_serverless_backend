@@ -9,17 +9,70 @@ const path = require('path');
 
 /* GET users listing. */
 
-// router.post('/post-service-request', authMiddleware.isAuthenticated, serviceRequestController.addServiceRequest);
 
-// router.post('/add-service-problems', authMiddleware.isAuthenticated, serviceRequestController.addServiceProblems);
+// GET COMPANY LIST HAVING PROPERTY UNITS
+router.get('/company-lists-having-property-units',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.getCompanyListHavingPropertyUnits)
+
+router.get('/get-building-phase-all-list-having-property-units',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.getBuildingPhaseAllListHavingPropertyUnits
+)
+
+router.post('/get-floor-zone-list-by-building-id-having-property-units',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.getFloorZoneListByBuildingIdHavingPropertyUnits
+)
+
+router.post('/get-unit-by-floor',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.getPropertyUnitListByFloor)
+
+
+router.get('/project-lists-having-property-units',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.getProjectListHavingPropertyUnits)
+
+router.post('/post-service-request',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.addServiceRequest);
+
+router.get('/get-category-list',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.getIncidentCategories)
+
+router.post('/get-subcategories-by-category',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.getSubcategories)
+
+router.post('/add-service-problems',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.addServiceProblems);
 
 // router.post('/update-service-request', authMiddleware.isAuthenticated, serviceRequestController.updateServiceRequest);
 
-router.post('/get-service-request-list',authMiddleware.isAuthenticated,userMiddleware.customerInfo,serviceRequestController.getServiceRequestList)
+router.post('/get-service-request-list',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.getServiceRequestList)
 
 // router.post('/upload-images', authMiddleware.isAuthenticated, serviceRequestController.updateImages);
 
-// router.post('/upload-image-url', authMiddleware.isAuthenticated, serviceRequestController.getImageUploadUrl);
+router.post('/upload-image-url',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.getImageUploadUrl);
+
+router.post('/delete-image',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.deleteImage)
+
+router.post('/upload-image-by-entity',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.uploadImageByEntity)
+
+router.post('/delete-service-problem',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.deleteServiceProblem)
 
 // router.post('/add-service-request-part', authMiddleware.isAuthenticated, serviceRequestController.addServiceRequestPart)
 
@@ -37,16 +90,23 @@ router.post('/get-service-request-list',authMiddleware.isAuthenticated,userMiddl
 // router.get('/get-house-details',authMiddleware.isAuthenticated,serviceRequestController.getHouseDetailData)
 
 /*** CREATE SERVICE REQUEST */
-// router.post('/create-service-request', authMiddleware.isAuthenticated,serviceRequestController.createServiceRequest)
+router.post('/create-service-request',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.createServiceRequest)
 
 /*GET HOUSE ID BY UNIT NO. */
 // router.get('/get-houseid-by-unit-no', authMiddleware.isAuthenticated,serviceRequestController.getHouseIdByUnitNo)
 /*GET SERVICE REQUEST DETAILS BY SERVICE REQUEST ID. */
-// router.get('/get-service-request-detail-by-id', authMiddleware.isAuthenticated,serviceRequestController.getServiceRequestDetailById)
+router.get('/get-service-request-detail-by-id',
+ authMiddleware.isAuthenticated,serviceRequestController.getServiceRequestDetailById)
 
 /*** UPDATE SERVICE REQUEST */
-// router.post('/edit-service-request', authMiddleware.isAuthenticated,serviceRequestController.editServiceRequest)
+router.post('/edit-service-request', authMiddleware.isAuthenticated,serviceRequestController.editServiceRequest)
 
 // router.post('/decline-service-request',authMiddleware.isAuthenticated,serviceRequestController.declineServiceRequest)
 // router.post("/approve-service-request",  authMiddleware.isAuthenticated,serviceRequestController.approveServiceRequest);
+router.post('/update-service-request-project-id',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.updateServiceRequestProjectId)
+
 module.exports = router;
