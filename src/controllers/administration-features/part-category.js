@@ -424,23 +424,9 @@ const PartCategoryController = {
   },
   importPartCategoryData: async (req, res) => {
     try {
-      if (req.file) {
-        console.log(req.file);
-        let tempraryDirectory = null;
-        if (process.env.IS_OFFLINE) {
-          tempraryDirectory = "tmp/";
-        } else {
-          tempraryDirectory = "/tmp/";
-        }
+      
         let resultData = null;
-        let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: "binary" });
-        let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, {
-          type: "string",
-          header: "A",
-          raw: false
-        });
+        let data = req.body;
         //data         = JSON.stringify(data);
         let result = null;
         let currentTime = new Date().getTime();
@@ -468,6 +454,17 @@ const PartCategoryController = {
             for (let partCategoryData of data) {
               i++;
               if (i > 1) {
+
+
+
+                if (!partCategoryData.A) {
+                  let values = _.values(partCategoryData)
+                  values.unshift("Category name can not empty")
+                  errors.push(values);
+                  fail++;
+                  continue;
+                }
+
                 let checkExist = await knex("part_category_master")
                   .select("categoryName")
                   .where({
@@ -482,7 +479,7 @@ const PartCategoryController = {
                   //     companyId: partCategoryData.B
                   //   });
                   // if (categoryIdResult && categoryIdResult.length) {
-                    success++;
+                   
                     let insertData = {
                       orgId: req.orgId,
                       categoryName: partCategoryData.A,
@@ -495,6 +492,8 @@ const PartCategoryController = {
                       .insert(insertData)
                       .returning(["*"])
                       .into("part_category_master");
+                      
+                      success++;
                   // } else {
                   //   fail++;
                   // }
@@ -507,9 +506,7 @@ const PartCategoryController = {
               }
             }
 
-            let deleteFile = await fs.unlink(file_path, err => {
-              console.log("File Deleting Error " + err);
-            });
+           
             let message = null;
             if (totalData == success) {
               message =
@@ -538,13 +535,7 @@ const PartCategoryController = {
             ]
           });
         }
-      } else {
-        return res.status(400).json({
-          errors: [
-            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-          ]
-        });
-      }
+      
     } catch (err) {
       console.log(
         "[controllers][propertysetup][importCompanyData] :  Error",

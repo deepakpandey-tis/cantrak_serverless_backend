@@ -39,7 +39,8 @@ const problemTypeController = {
         }
 
         const existTypeCode = await knex("incident_type").where({
-          typeCode: problemTypePayload.typeCode
+          typeCode: problemTypePayload.typeCode.toUpperCase(),
+          orgId:orgId
         });
 
         console.log(
@@ -129,7 +130,7 @@ const problemTypeController = {
         }
 
         const existStatusCode = await knex("incident_type")
-          .where({ typeCode: statusPaylaod.typeCode.toUpperCase() })
+          .where({ typeCode: statusPaylaod.typeCode.toUpperCase(),orgId:orgId })
           .whereNot({ id: statusPaylaod.id });
 
         console.log(
@@ -139,16 +140,16 @@ const problemTypeController = {
 
         // Return error when username exist
 
-        // if (existStatusCode && existStatusCode.length) {
-        //   return res.status(400).json({
-        //     errors: [
-        //       {
-        //         code: "COMMON_AREA_CODE_EXIST_ERROR",
-        //         message: "Problem Type Code already exist !"
-        //       }
-        //     ]
-        //   });
-        // }
+        if (existStatusCode && existStatusCode.length) {
+          return res.status(400).json({
+            errors: [
+              {
+                code: "PROBLEM_TYPE_EXIST_ERROR",
+                message: "Problem Type Code already exist !"
+              }
+            ]
+          });
+        }
 
         // Insert in users table,
         const currentTime = new Date().getTime();
@@ -398,102 +399,100 @@ const problemTypeController = {
   importProblemTypeData: async (req, res) => {
     try {
 
-      if (req.file) {
-        const userId = req.me.id;
-        let tempraryDirectory = null;
-        if (process.env.IS_OFFLINE) {
-          tempraryDirectory = 'tmp/';
-        } else {
-          tempraryDirectory = '/tmp/';
-        }
-        let resultData = null;
-        let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: 'binary' });
-        let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
+      const userId = req.me.id;
+      let data = req.body;
+      let totalData = data.length - 1;
+      let fail = 0;
+      let success = 0;
+      console.log("=======", data[0], "+++++++++++++++")
+      let result = null;
+      let errors = []
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
 
-        let totalData = data.length - 1;
-        let fail = 0;
-        let success = 0;
-        console.log("=======", data[0], "+++++++++++++++")
-        let result = null;
-        let errors = []
-        let header = Object.values(data[0]);
-        header.unshift('Error');
-        errors.push(header)
+      if (
+        data[0].A == "Ã¯Â»Â¿PROBLEM_TYPE_CODE" ||
+        (data[0].A == "PROBLEM_TYPE_CODE" &&
+          data[0].B == "DESCRIPTION" &&
+          data[0].C == "ALTERNATE_DESCRIPTION")
+      ) {
+        if (data.length > 0) {
+          let i = 0;
+          for (let problemData of data) {
+            i++;
 
-        if (
-          data[0].A == "Ã¯Â»Â¿PROBLEM_TYPE_CODE" ||
-          (data[0].A == "PROBLEM_TYPE_CODE" &&
-            data[0].B == "DESCRIPTION" &&
-            data[0].C == "ALTERNATE_DESCRIPTION")
-        ) {
-          if (data.length > 0) {
-            let i = 0;
-            for (let problemData of data) {
-              i++;
+            if (i > 1) {
 
-              if (i > 1) {
-                let checkExist = await knex("incident_type")
-                  .select("id")
-                  .where({ typeCode: problemData.A, orgId: req.orgId });
-                if (checkExist.length < 1) {
-                  let currentTime = new Date().getTime();
-                  let insertData = {
-                    orgId: req.orgId,
-                    typeCode: problemData.A,
-                    descriptionEng: problemData.B,
-                    descriptionThai: problemData.C,
-                    createdAt: currentTime,
-                    updatedAt: currentTime,
-                    createdBy: userId
-                  };
-                  resultData = await knex
-                    .insert(insertData)
-                    .returning(["*"])
-                    .into("incident_type");
-                  if (resultData && resultData.length) {
-                    success++;
-                  }
-                } else {
-                  let values = _.values(problemData)
-                  values.unshift('Problem type code already exists')
-                  errors.push(values);
-                  fail++;
+
+              if (!problemData.A) {
+                let values = _.values(problemData)
+                values.unshift("Problem type code can not empty")
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
+              if (!problemData.B) {
+                let values = _.values(problemData)
+                values.unshift("Problem type description can not empty")
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
+              let checkExist = await knex("incident_type")
+                .select("id")
+                .where({ typeCode: problemData.A, orgId: req.orgId });
+              if (checkExist.length < 1) {
+                let currentTime = new Date().getTime();
+                let insertData = {
+                  orgId: req.orgId,
+                  typeCode: problemData.A,
+                  descriptionEng: problemData.B,
+                  descriptionThai: problemData.C,
+                  createdAt: currentTime,
+                  updatedAt: currentTime,
+                  createdBy: userId
+                };
+                resultData = await knex
+                  .insert(insertData)
+                  .returning(["*"])
+                  .into("incident_type");
+                if (resultData && resultData.length) {
+                  success++;
                 }
+              } else {
+                let values = _.values(problemData)
+                values.unshift('Problem type code already exists')
+                errors.push(values);
+                fail++;
               }
             }
-
-            let message = null;
-            if (totalData == success) {
-              message =
-                "System have processed ( " +
-                totalData +
-                " ) entries and added them successfully!";
-            } else {
-              message =
-                "System have processed ( " +
-                totalData +
-                " ) entries out of which only ( " +
-                success +
-                " ) are added and others are failed ( " +
-                fail +
-                " ) due to validation!";
-            }
-
-            let deleteFile = await fs.unlink(file_path, err => {
-              console.log("File Deleting Error " + err);
-            });
-            return res.status(200).json({
-              message: message,
-              errors:errors
-            });
           }
-        } else {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-            ]
+
+          let message = null;
+          if (totalData == success) {
+            message =
+              "System have processed ( " +
+              totalData +
+              " ) entries and added them successfully!";
+          } else {
+            message =
+              "System have processed ( " +
+              totalData +
+              " ) entries out of which only ( " +
+              success +
+              " ) are added and others are failed ( " +
+              fail +
+              " ) due to validation!";
+          }
+
+          return res.status(200).json({
+            message: message,
+            errors: errors
           });
         }
       } else {
@@ -503,6 +502,7 @@ const problemTypeController = {
           ]
         });
       }
+
     } catch (err) {
       console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
       //trx.rollback

@@ -43,19 +43,22 @@ const propertysubCategoryController = {
         }
 
         // Check typeCode already exists
-        // const existSubCategoryCode = await knex('incident_categories').where({ categoryCode: categoryPayload.categoryCode });
+        let existSubCategoryCode = await knex('incident_sub_categories')
+        .where({ incidentCategoryId:subcategoryPayload.incidentCategoryId,
+          incidentTypeId:subcategoryPayload.incidentTypeId ,
+          descriptionEng:subcategoryPayload.descriptionEng,
+          orgId:orgId
+        });
 
         // console.log('[controllers][category][add]: CategoryCode', existCategoryCode);
 
-        // Return error when username exist
-
-        // if (existCategoryCode && existCategoryCode.length) {
-        //     return res.status(400).json({
-        //         errors: [
-        //             { code: 'TYPE_CODE_EXIST_ERROR', message: 'Category Code already exist !' }
-        //         ],
-        //     });
-        // }
+        if (existSubCategoryCode && existSubCategoryCode.length) {
+            return res.status(400).json({
+                errors: [
+                    { code: 'TYPE_CODE_EXIST_ERROR', message: 'Sub Category already exist !' }
+                ],
+            });
+        }
 
         // Insert in users table,
         const currentTime = new Date().getTime();
@@ -64,7 +67,7 @@ const propertysubCategoryController = {
         const insertData = {
           ...subcategoryPayload,
           orgId: orgId,
-          isActive: "true",
+          //isActive: "true",
           createdAt: currentTime,
           updatedAt: currentTime
         };
@@ -135,20 +138,24 @@ const propertysubCategoryController = {
           });
         }
 
-        // Check typeCode already exists
-        // const existCateoryTypeCode = await knex('incident_categories').where({ categoryCode: categoryTypePayload.categoryCode });
+       
+        let existSubCategoryCode = await knex('incident_sub_categories')
+        .where({ incidentCategoryId:subCategoryPayload.incidentCategoryId,
+          incidentTypeId:subCategoryPayload.incidentTypeId ,
+          descriptionEng:subCategoryPayload.descriptionEng,
+          orgId:orgId
+        })
+        .whereNot({ id: subCategoryPayload.id });
+  
 
-        // console.log('[controllers][Category][categoryType]: CategoryTypeCode', existCateoryTypeCode);
+        if (existSubCategoryCode && existSubCategoryCode.length) {
+          return res.status(400).json({
+              errors: [
+                  { code: 'TYPE_CODE_EXIST_ERROR', message: 'Sub Category already exist !' }
+              ],
+          });
+      }
 
-        // Return error when username exist
-
-        // if (existCateoryTypeCode && existCateoryTypeCode.length) {
-        //     return res.status(400).json({
-        //         errors: [
-        //             { code: 'TYPE_CODE_EXIST_ERROR', message: 'Category Code already exist !' }
-        //         ],
-        //     });
-        // }
 
         // Insert in users table,
         const currentTime = new Date().getTime();
