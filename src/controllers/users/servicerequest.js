@@ -772,7 +772,9 @@ const serviceRequestController = {
               "status.id"
             ])
             .where({ "service_requests.orgId": req.orgId })
-            .whereIn("service_requests.houseId", houseIds),
+            .whereIn("service_requests.houseId", houseIds)
+            .orWhere("service_requests.createdBy", req.me.id),
+
           knex
             .from("service_requests")
             .leftJoin(
@@ -799,6 +801,7 @@ const serviceRequestController = {
             .limit(per_page)
             .where({ "service_requests.orgId": req.orgId })
             .whereIn("service_requests.houseId", houseIds)
+            .orWhere("service_requests.createdBy", req.me.id)
         ]);
 
       } else {
@@ -830,6 +833,7 @@ const serviceRequestController = {
             ])
             .where({ "service_requests.orgId": req.orgId })
             .whereIn("service_requests.houseId", houseIds)
+            .orWhere("service_requests.createdBy", req.me.id)
             .where(qb => {
               if (location) {
                 qb.where('service_requests.location', 'iLIKE', `%${location}%`)
@@ -845,7 +849,6 @@ const serviceRequestController = {
               }
               if (dueDateFrom && dueDateTo) {
 
-                console.log("dsfsdfsdfsdfsdfffffffffffffffffff=========")
                 qb.whereBetween("service_requests.createdAt", [
                   dueFrom,
                   dueTo
@@ -885,6 +888,7 @@ const serviceRequestController = {
             ])
             .where({ "service_requests.orgId": req.orgId })
             .whereIn("service_requests.houseId", houseIds)
+            .orWhere("service_requests.createdBy", req.me.id)
             .where(qb => {
               if (location) {
                 qb.where('service_requests.location', 'iLIKE', `%${location}%`)
@@ -1800,15 +1804,19 @@ const serviceRequestController = {
   },
   approveServiceRequest: async (req, res) => {
     try {
-      const serviceRequestId = req.body.serviceRequestId;
+      let serviceRequestId = req.body.data.serviceRequestId;
+      let updateStatus = req.body.data.status;
+      const currentTime = new Date().getTime();
+      console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7', req.body)
+
       const status = await knex("service_requests")
-        .update({ serviceStatusCode: "A" })
+        .update({ serviceStatusCode: updateStatus, updatedAt: currentTime, updatedBy: req.me.id })
         .where({ id: serviceRequestId });
       return res.status(200).json({
         data: {
-          status: "APPROVED"
+          status: updateStatus
         },
-        message: "Service Approved Successfully!"
+        message: "Service status updated successfully!"
       });
     } catch (err) {
       return res.status(500).json({
@@ -2285,6 +2293,303 @@ const serviceRequestController = {
       });
     }
   },
+  getInvoiceDetails: async (req, res) => {
+    try {
+
+      let payload = { entityId: req.query.entityId, entityType: req.query.entityType };
+
+      console.log('[controllers][invoice][getInvoiceDetails]:  Payloads:', payload);
+
+      const schema = Joi.object().keys({
+        entityId: Joi.number().required(),
+        entityType: Joi.string().required()
+      });
+
+      let result = Joi.validate(payload, schema);
+      console.log(
+        "[controllers][invoice][getInvoiceDetails]: JOi Result",
+        result
+      );
+
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message }
+          ]
+        });
+      }
+
+      let { entityType, entityId } = payload;
+      let invoiceDetail = null;
+
+      if (entityType == 'quotations') {
+        invoiceDetail = await knex("quotations").where({
+          id: entityId
+        }).select('invoiceData', 'id').first();
+      }
+
+      if (entityType == 'service_orders') {
+        invoiceDetail = await knex("service_orders").where({
+          id: entityId
+        }).select('invoiceData', 'id').first();
+      }
+
+      res.status(200).json({
+        data: invoiceDetail,
+        message: "Invoice details !"
+      });
+    } catch (err) {
+      console.log("[controllers][invoice][getInvoiceDetails]: Error", err)
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  // Get List of Taxes
+
+  getTaxesList: async (req, res) => {
+    try {
+      let reqData = req.query;
+      let total;
+      let rows;
+      let pagination = {};
+
+      [total, rows] = await Promise.all([
+        knex
+          .count("* as count")
+          .from("taxes")
+          .leftJoin("users", "users.id", "taxes.createdBy")
+          .where({ "taxes.orgId": req.orgId })
+          //.offset(offset)
+          //.limit(per_page)
+          .first(),
+        knex
+          .from("taxes")
+          .leftJoin("users", "users.id", "taxes.createdBy")
+          .where({ "taxes.orgId": req.orgId })
+          .select([
+            "taxes.id",
+            "taxes.taxCode as Tax Code",
+            "taxes.taxPercentage as Tax Percentage",
+            "taxes.isActive as Status",
+            "users.name as Created By",
+            "taxes.createdAt as Date Created",
+            "taxes.descriptionEng",
+            "taxes.descriptionThai",
+          ])
+          .orderBy('taxes.id', 'desc')
+      ]);
+
+      let count = total.count;
+      pagination.total = count;
+      pagination.data = rows;
+
+      res.status(200).json({
+        data: {
+          taxes: pagination
+        },
+        message: "Tax list successfully !"
+      });
+    } catch (err) {
+      console.log("[controllers][tax][gettax] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+
+  getMainAndAdditionalUsersByTeamId: async (req, res) => {
+    try {
+      let teamId = req.body.teamId;
+      let mainUsers = await knex('team_users').innerJoin('users', 'team_users.userId', 'users.id').select(['users.id as id', 'users.name as name']).where({ 'team_users.teamId': teamId, 'users.orgId': req.orgId })
+      let additionalUsers = await knex('users').select(['id', 'name']).where({ orgId: req.orgId })
+      //additionalUsers = additionalUsers.map(user => _.omit(user, ['password','username']))
+
+      const Parallel = require('async-parallel')
+      const usersWithRoles = await Parallel.map(additionalUsers, async user => {
+        const roles = await knex('organisation_user_roles').select('roleId').where({ userId: user.id, orgId: req.orgId });
+        const roleNames = await Parallel.map(roles, async role => {
+          const roleNames = await knex('organisation_roles').select('name').where({ id: role.roleId, orgId: req.orgId }).whereNotIn('name', ['superAdmin', 'admin', 'customer'])
+          return roleNames.map(role => role.name).join(',')
+        })
+        return { ...user, roleNames: roleNames.filter(v => v).join(',') };
+      })
+
+      res.status(200).json({
+        data: {
+          mainUsers,
+          additionalUsers: mainUsers
+        }
+      });
+
+    } catch (err) {
+      console.log('[controllers][teams][getAssignedTeams] : Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ]
+      });
+    }
+  },
+  getAssignedTeamAndUsers: async (req, res) => {
+    try {
+      const entityId = req.body.entityId;
+      const entityType = req.body.entityType;
+
+      console.log('entityId:', entityId, 'entityType:', entityType);
+
+      const team = await knex('assigned_service_team')
+        .select(['assigned_service_team.teamId', 'teams.teamName as Team', 'users.name as MainUser', 'assigned_service_team.userId as mainUserId'])
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .leftJoin("users", "assigned_service_team.userId", "users.id")
+        .where({ entityId: entityId, entityType: entityType })
+
+
+      // let additionalUsers = await knex('assigned_service_additional_users')
+      //   .select(['userId']).where({ entityId: entityId, entityType: entityType })
+
+      let othersUserData = await knex.raw(`select "assigned_service_additional_users"."userId" as "userId","users"."name" as "addUsers","users"."email" as "email", "users"."mobileNo" as "mobileNo" from "assigned_service_additional_users" left join "users" on "assigned_service_additional_users"."userId" = "users"."id" where "assigned_service_additional_users"."orgId" = ${req.orgId} and "assigned_service_additional_users"."entityId" = ${entityId} and "assigned_service_additional_users"."entityType"='${entityType}'`)
+      let additionalUsers = othersUserData.rows;
+
+
+      return res.status(200).json({
+        data: {
+          team,
+          additionalUsers
+        }
+      })
+
+    } catch (err) {
+      console.error('Error:', err);
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getTeamByEntity: async (req, res) => {
+    try {
+      const { entityId, entityType } = req.body;
+      let so
+      let sr
+      switch (entityType) {
+        case 'service_requests':
+          sr = await knex('service_requests').select('projectId').where({ id: entityId }).first()
+          if (sr) {
+            let resourceData = await knex.from("role_resource_master")
+              .select('roleId')
+              .where("role_resource_master.resourceId", '2')
+
+            let roleIds = resourceData.map(v => v.roleId) //
+
+            teamResult = await knex('team_roles_project_master')
+              .leftJoin('teams', 'team_roles_project_master.teamId', 'teams.teamId')
+              .select([
+                'teams.teamName',
+                'teams.teamId'
+              ])
+              .where({ 'team_roles_project_master.projectId': sr.projectId, 'teams.isActive': true })
+              .whereIn("team_roles_project_master.roleId", roleIds).returning('*')
+
+            return res.status(200).json({
+              data: {
+                teams: teamResult
+              }
+            })
+          } else {
+            return res.status(200).json({
+              data: {
+                teams: []
+              }
+            })
+          }
+        case 'service_orders':
+          so = await knex('service_orders')
+            .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+            .select('service_requests.projectId')
+            .where({ 'service_orders.id': entityId })
+            .first()
+
+
+          if (so) {
+            let resourceData = await knex.from("role_resource_master")
+              .select('roleId')
+              .where("role_resource_master.resourceId", '2')
+
+            let roleIds = resourceData.map(v => v.roleId) //
+
+            teamResult = await knex('team_roles_project_master')
+              .leftJoin('teams', 'team_roles_project_master.teamId', 'teams.teamId')
+              .select([
+                'teams.teamName',
+                'teams.teamId'
+              ])
+              .where({ 'team_roles_project_master.projectId': so.projectId, 'teams.isActive': true })
+              .whereIn("team_roles_project_master.roleId", roleIds).returning('*')
+
+            return res.status(200).json({
+              data: {
+                teams: teamResult
+              }
+            })
+          } else {
+            return res.status(200).json({
+              data: {
+                teams: []
+              }
+            })
+          }
+        case 'survey_orders':
+          so = await knex('survey_orders')
+            .innerJoin('service_requests', 'survey_orders.serviceRequestId', 'service_requests.id')
+            .select('service_requests.projectId')
+            .where({ 'survey_orders.id': entityId })
+            .first()
+
+          if (so) {
+            let resourceData = await knex.from("role_resource_master")
+              .select('roleId')
+              .where("role_resource_master.resourceId", '2')
+
+            let roleIds = resourceData.map(v => v.roleId) //
+
+            teamResult = await knex('team_roles_project_master')
+              .leftJoin('teams', 'team_roles_project_master.teamId', 'teams.teamId')
+              .select([
+                'teams.teamName',
+                'teams.teamId'
+              ])
+              .where({ 'team_roles_project_master.projectId': so.projectId, 'teams.isActive': true })
+              .whereIn("team_roles_project_master.roleId", roleIds).returning('*')
+
+            return res.status(200).json({
+              data: {
+                teams: teamResult
+              }
+            })
+          } else {
+            return res.status(200).json({
+              data: {
+                teams: []
+              }
+            })
+          }
+        default:
+          return res.status(200).json({
+            data: {
+              teams: []
+            }
+          })
+      }
+
+    } catch (err) {
+      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  }
+
 };
 
 // Y, M, D

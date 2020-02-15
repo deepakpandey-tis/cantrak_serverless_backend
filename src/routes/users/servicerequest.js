@@ -98,15 +98,40 @@ router.post('/create-service-request',
 // router.get('/get-houseid-by-unit-no', authMiddleware.isAuthenticated,serviceRequestController.getHouseIdByUnitNo)
 /*GET SERVICE REQUEST DETAILS BY SERVICE REQUEST ID. */
 router.get('/get-service-request-detail-by-id',
- authMiddleware.isAuthenticated,serviceRequestController.getServiceRequestDetailById)
+    authMiddleware.isAuthenticated, serviceRequestController.getServiceRequestDetailById)
 
 /*** UPDATE SERVICE REQUEST */
-router.post('/edit-service-request', authMiddleware.isAuthenticated,serviceRequestController.editServiceRequest)
+router.post('/edit-service-request', authMiddleware.isAuthenticated, serviceRequestController.editServiceRequest)
 
 // router.post('/decline-service-request',authMiddleware.isAuthenticated,serviceRequestController.declineServiceRequest)
-// router.post("/approve-service-request",  authMiddleware.isAuthenticated,serviceRequestController.approveServiceRequest);
+router.post("/approve-service-request",
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.approveServiceRequest);
+
 router.post('/update-service-request-project-id',
     authMiddleware.isAuthenticated, userMiddleware.customerInfo,
     serviceRequestController.updateServiceRequestProjectId)
+
+router.get('/get-invoice',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.getInvoiceDetails);
+
+router.get('/get-taxes-list',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.getTaxesList);
+
+router.post('/get-main-and-additional-users-by-teamid',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.getMainAndAdditionalUsersByTeamId)
+
+
+router.post('/get-assigned-teams-and-users',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.getAssignedTeamAndUsers);
+
+router.post('/get-team-by-entity',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.getTeamByEntity)
+
 
 module.exports = router;

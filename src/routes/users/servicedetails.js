@@ -10,7 +10,10 @@ const path = require('path');
 
 /* GET users listing. */
 
-// router.post('/get-general-details', authMiddleware.isAuthenticated, serviceDetailsController.getGeneralDetails);
+router.post('/get-general-details',
+    authMiddleware.isAuthenticated,
+    userMiddleware.customerInfo,
+    serviceDetailsController.getGeneralDetails);
 // router.get('/get-location-tags', authMiddleware.isAuthenticated, serviceDetailsController.getLocationTags);
 // router.get('/get-service-type', authMiddleware.isAuthenticated, serviceDetailsController.getServiceType);
 // router.get('/get-priority-list', authMiddleware.isAuthenticated, serviceDetailsController.getPriorityList);
