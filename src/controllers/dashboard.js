@@ -19,13 +19,13 @@ const dashboardController = {
       let orgId = req.orgId;
       let accessibleProjects = req.userProjectResources[0].projects
 
-      let prioritySeq = await knex('incident_priority').max('sequenceNo').where({ orgId });
+      let prioritySeq = await knex('incident_priority').max('sequenceNo').where({orgId:orgId });
       let priority;
-      let priorityValue;
+      let priorityValue = null;
       if (prioritySeq.length) {
 
         let maxSeq = prioritySeq[0].max;
-        priority = await knex('incident_priority').where({ sequenceNo: maxSeq }).groupBy(['incident_priority.incidentPriorityCode', 'incident_priority.id']).first();
+        priority = await knex('incident_priority').where({ sequenceNo: maxSeq,orgId:orgId}).groupBy(['incident_priority.incidentPriorityCode', 'incident_priority.id']).first();
         priorityValue = priority.incidentPriorityCode;
       }
 
@@ -73,6 +73,8 @@ const dashboardController = {
           open_service_orders,
           open_service_requests_high_priority,
           open_service_orders_high_priority,
+          priorityValue
+
         },
         message: 'Dashboard data'
       })
@@ -444,7 +446,6 @@ const dashboardController = {
             'assigned_service_team.id'
           ])
           .distinct('o.id')
-
           .orderBy('o.id', 'desc')
 
       }
@@ -474,23 +475,24 @@ const dashboardController = {
       let usersDetails = req.me;
       let roles = usersDetails.roles;
       let id = usersDetails.id;
-      let currentDate = moment().format('L');
-      let currentTime = new Date(currentDate).getTime();
+      let startDate = moment().startOf('date', 'day').format();
+      let endDate = moment().endOf('date', 'day').format();
+      let currentTime = new Date(startDate).getTime();
       let result;
       let orgId = req.orgId;
       if (roles.includes("superAdmin") || roles.includes("orgAdmin")) {
 
-        result  = await knex.from('task_group_schedule')
-                   .leftJoin('task_group_schedule_assign_assets','task_group_schedule.id',"task_group_schedule_assign_assets.scheduleId")
-                   .select([
-                     'task_group_schedule.id',
-                     'task_group_schedule_assign_assets.id as workOrderId'
-                   ])
-                   .where({'task_group_schedule.orgId':orgId})
-                   .whereBetween('task_group_schedule_assign_assets.pmDate',[currentDate,currentDate])
-                   .orderBy('task_group_schedule.id','desc')
+        result = await knex.from('task_group_schedule')
+          .leftJoin('task_group_schedule_assign_assets', 'task_group_schedule.id', "task_group_schedule_assign_assets.scheduleId")
+          .select([
+            'task_group_schedule.id',
+            'task_group_schedule_assign_assets.id as workOrderId'
+          ])
+          .where({ 'task_group_schedule.orgId': orgId })
+          .whereBetween('task_group_schedule_assign_assets.pmDate', [startDate, endDate])
+          .orderBy('task_group_schedule.id', 'desc')
 
-      }else{
+      } else {
 
       }
 
