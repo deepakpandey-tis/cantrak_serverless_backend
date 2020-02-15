@@ -819,6 +819,7 @@ const serviceRequestController = {
             ])
             .where({ "service_requests.orgId": req.orgId })
             .whereIn('service_requests.projectId', accessibleProjects)
+            .where({'service_requests.isCreatedFromSo':false})
             .distinct('service_requests.id')
           ,
 
@@ -893,6 +894,7 @@ const serviceRequestController = {
             ])
             .where({ "service_requests.orgId": req.orgId })
             .whereIn('service_requests.projectId', accessibleProjects)
+            .where({'service_requests.isCreatedFromSo':false})
             .distinct('service_requests.id')
             .orderBy('service_requests.id', 'desc')
             .offset(offset)
@@ -1027,6 +1029,7 @@ const serviceRequestController = {
               "service_requests.createdAt as Date Created"
             ])
             .where({ "service_requests.orgId": req.orgId })
+            .where({'service_requests.isCreatedFromSo':false})
             .where(qb => {
               if (location) {
                 qb.where('service_requests.location', 'iLIKE', `%${location}%`)
@@ -1139,6 +1142,7 @@ const serviceRequestController = {
             ])
             .orderBy('service_requests.id', 'desc')
             .where({ "service_requests.orgId": req.orgId })
+            .where({'service_requests.isCreatedFromSo':false})
             .where(qb => {
               if (location) {
                 qb.where('service_requests.location', 'iLIKE', `%${location}%`)

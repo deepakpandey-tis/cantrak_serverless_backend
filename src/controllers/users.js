@@ -247,7 +247,7 @@ const usersController = {
         try {
             const users = await knex('users')
                 .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
-                .whereNotIn('application_user_roles.roleId', [2])
+                .whereNotIn('application_user_roles.roleId', [2,4])
                 //.leftJoin('organisation_user_roles','users.id','organisation_user_roles.userId')
                 .select('users.id', 'users.name', 'users.email')
                 //    .whereNotIn('organisation_user_roles.roleId', [1, 4])
