@@ -36,7 +36,7 @@ router.get('/export-part-category',
   resourceAccessMiddleware.isPartAccessible,
   partCategoryController.exportPartCategory)
 
-router.get('/get-part-category-list',
+router.post('/get-part-category-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPartAccessible,
