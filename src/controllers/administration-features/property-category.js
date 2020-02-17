@@ -338,9 +338,15 @@ const propertyCategoryController = {
   },
   categoryList: async (req, res) => {
     try {
+
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "incident_categories.categoryCode";
+        sortPayload.orderBy = "asc"
+      }
+
       let listCategories = null;
       let orgId = req.orgId;
-
       let reqData = req.query;
       let total = null;
       let rows = null;
@@ -349,13 +355,23 @@ const propertyCategoryController = {
       let page = reqData.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
+      let { searchValue } = req.body;
 
       //await knex.transaction(async (trx) => {
 
       [total, rows] = await Promise.all([
         knex.count("* as count").from("incident_categories")
           .leftJoin("users", "incident_categories.createdBy", "users.id")
-          .where({ "incident_categories.orgId": orgId }),
+          .where({ "incident_categories.orgId": orgId })
+          .where(qb => {
+            if (searchValue) {
+              qb.where('incident_categories.categoryCode', 'iLIKE', `%${searchValue}%`);
+              qb.orWhere('incident_categories.descriptionEng', 'iLIKE', `%${searchValue}%`);
+              qb.orWhere('incident_categories.descriptionThai', 'iLIKE', `%${searchValue}%`);
+            }
+          })
+        ,
+
         knex("incident_categories")
           .leftJoin("users", "incident_categories.createdBy", "users.id")
           .select([
@@ -368,7 +384,14 @@ const propertyCategoryController = {
             "incident_categories.createdAt as Date Created"
           ])
           .where({ "incident_categories.orgId": orgId })
-          .orderBy('incident_categories.id', 'desc')
+          .where(qb => {
+            if (searchValue) {
+              qb.where('incident_categories.categoryCode', 'iLIKE', `%${searchValue}%`);
+              qb.orWhere('incident_categories.descriptionEng', 'iLIKE', `%${searchValue}%`);
+              qb.orWhere('incident_categories.descriptionThai', 'iLIKE', `%${searchValue}%`);
+            }
+          })
+          .orderBy(sortPayload.sortBy, sortPayload.orderBy)
           .offset(offset)
           .limit(per_page)
       ]);

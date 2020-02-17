@@ -15,8 +15,13 @@ const problemController = {
     // List with filter and pagination
     try {
 
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "incident_categories.categoryCode";
+        sortPayload.orderBy = "asc"
+      }
       let reqData = req.query;
-      let filters = req.body;
+      let { searchValue } = req.body;
       let total, rows
 
       let pagination = {};
@@ -25,69 +30,87 @@ const problemController = {
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
 
-      if (_.isEmpty(filters)) {
-        [total, rows] = await Promise.all([
-          knex.count('* as count').from("incident_sub_categories")
-            .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
-            .leftJoin('users', 'incident_categories.createdBy', 'users.id')
-            .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
-            .where({ 'incident_sub_categories.orgId': req.orgId })
-          ,
-          knex("incident_sub_categories")
-            .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
-            .leftJoin('users', 'incident_categories.createdBy', 'users.id')
-            .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
-            .select([
-              'incident_sub_categories.id as ID',
-              'incident_categories.categoryCode as Problem Code',
-              'incident_sub_categories.descriptionEng as Description(Eng)',
-              'incident_sub_categories.descriptionThai as Description(Thai)',
-              'incident_categories.descriptionEng as Category',
-              'incident_sub_categories.isActive as Status',
-              'users.name as Created By',
-              'incident_sub_categories.createdAt as Date Created',
-              'incident_type.typeCode as problem_type_code',
-              'incident_type.descriptionEng as problem_type_description',
-            ])
-            .orderBy('incident_sub_categories.id', 'desc')
-            .where({ 'incident_sub_categories.orgId': req.orgId })
-            .offset(offset).limit(per_page)
-        ])
-      } else {
-        filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
-        try {
-          [total, rows] = await Promise.all([
-            knex.count('* as count').from("incident_sub_categories")
-              .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
-              .leftJoin('users', 'incident_categories.createdBy', 'users.id')
-              .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
-              .where({ 'incident_sub_categories.orgId': req.orgId })
-              .where(filters).offset(offset).limit(per_page),
-            knex("incident_sub_categories")
-              .innerJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
-              .leftJoin('users', 'incident_categories.createdBy', 'users.id')
-              .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
-              .select([
-                'incident_sub_categories.id as ID',
-                'incident_categories.categoryCode as Problem Code',
-                'incident_sub_categories.descriptionEng as Description(Eng)',
-                'incident_sub_categories.descriptionThai as Description(Thai)',
-                'incident_categories.descriptionEng as Category',
-                'incident_sub_categories.isActive as Status',
-                'users.name as Created By',
-                'incident_sub_categories.createdAt as Date Created',
-                'incident_type.typeCode as problem_type_code',
-                'incident_type.descriptionEng as problem_type_description',
-              ])
-              .orderBy('incident_sub_categories.id', 'desc')
-              .where({ 'incident_sub_categories.orgId': req.orgId })
-              .where(filters).offset(offset).limit(per_page)
+      // if (_.isEmpty(filters)) {
+      [total, rows] = await Promise.all([
+        knex.count('* as count').from("incident_sub_categories")
+          .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
+          .leftJoin('users', 'incident_categories.createdBy', 'users.id')
+          .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
+          .where({ 'incident_sub_categories.orgId': req.orgId })
+          .where(qb => {
+            if (searchValue) {
+              qb.where('incident_categories.categoryCode', 'iLIKE', `%${searchValue}%`);
+              qb.orWhere('incident_sub_categories.descriptionEng', 'iLIKE', `%${searchValue}%`);
+              qb.orWhere('incident_sub_categories.descriptionThai', 'iLIKE', `%${searchValue}%`);
+              qb.orWhere('incident_type.typeCode', 'iLIKE', `%${searchValue}%`);
+              qb.orWhere('incident_categories.descriptionEng', 'iLIKE', `%${searchValue}%`);
+            }
+          })
+        ,
+        knex("incident_sub_categories")
+          .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
+          .leftJoin('users', 'incident_categories.createdBy', 'users.id')
+          .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
+          .select([
+            'incident_sub_categories.id as ID',
+            'incident_categories.categoryCode as Problem Code',
+            'incident_sub_categories.descriptionEng as Description(Eng)',
+            'incident_sub_categories.descriptionThai as Description(Thai)',
+            'incident_categories.descriptionEng as Category',
+            'incident_sub_categories.isActive as Status',
+            'users.name as Created By',
+            'incident_sub_categories.createdAt as Date Created',
+            'incident_type.typeCode as problem_type_code',
+            'incident_type.descriptionEng as problem_type_description',
           ])
-        } catch (e) {
-          // Error
-          console.log('Error: ' + e.message)
-        }
-      }
+          .orderBy(sortPayload.sortBy, sortPayload.orderBy)
+          .where({ 'incident_sub_categories.orgId': req.orgId })
+          .where(qb => {
+            if (searchValue) {
+              qb.where('incident_categories.categoryCode', 'iLIKE', `%${searchValue}%`);
+              qb.orWhere('incident_sub_categories.descriptionEng', 'iLIKE', `%${searchValue}%`);
+              qb.orWhere('incident_sub_categories.descriptionThai', 'iLIKE', `%${searchValue}%`);
+              qb.orWhere('incident_type.typeCode', 'iLIKE', `%${searchValue}%`);
+              qb.orWhere('incident_categories.descriptionEng', 'iLIKE', `%${searchValue}%`);
+            }
+          })
+          .offset(offset).limit(per_page)
+      ])
+      // } else {
+      // filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
+      // try {
+      //   [total, rows] = await Promise.all([
+      //     knex.count('* as count').from("incident_sub_categories")
+      //       .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
+      //       .leftJoin('users', 'incident_categories.createdBy', 'users.id')
+      //       .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
+      //       .where({ 'incident_sub_categories.orgId': req.orgId })
+      //       .where(filters).offset(offset).limit(per_page),
+      //     knex("incident_sub_categories")
+      //       .innerJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
+      //       .leftJoin('users', 'incident_categories.createdBy', 'users.id')
+      //       .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
+      //       .select([
+      //         'incident_sub_categories.id as ID',
+      //         'incident_categories.categoryCode as Problem Code',
+      //         'incident_sub_categories.descriptionEng as Description(Eng)',
+      //         'incident_sub_categories.descriptionThai as Description(Thai)',
+      //         'incident_categories.descriptionEng as Category',
+      //         'incident_sub_categories.isActive as Status',
+      //         'users.name as Created By',
+      //         'incident_sub_categories.createdAt as Date Created',
+      //         'incident_type.typeCode as problem_type_code',
+      //         'incident_type.descriptionEng as problem_type_description',
+      //       ])
+      //       .orderBy('incident_sub_categories.id', 'desc')
+      //       .where({ 'incident_sub_categories.orgId': req.orgId })
+      //       .where(filters).offset(offset).limit(per_page)
+      //   ])
+      // } catch (e) {
+      //   // Error
+      //   console.log('Error: ' + e.message)
+      // }
+      //      }
 
       let count = total[0].count;
       pagination.total = count;
@@ -398,7 +421,7 @@ const problemController = {
               }
               let checkExist = await knex("incident_sub_categories")
                 .select("id")
-                .where({ incidentCategoryId: categoryId, descriptionEng: problemData.B, orgId: req.orgId,incidentTypeId:problemTypeId});
+                .where({ incidentCategoryId: categoryId, descriptionEng: problemData.B, orgId: req.orgId, incidentTypeId: problemTypeId });
               if (checkExist.length < 1) {
                 let currentTime = new Date().getTime();
                 let insertData = {
@@ -445,7 +468,7 @@ const problemController = {
               " ) due to validation!";
           }
 
-         
+
           return res.status(200).json({
             message: message,
             errors: errors

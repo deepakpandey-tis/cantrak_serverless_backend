@@ -23,7 +23,7 @@ router.post('/problem-type-details',
   resourceAccessMiddleware.isCMAccessible,
   problemTypeController.viewProblemType)
 // router.post('/delete-project', authMiddleware.isAuthenticated, projectController.deleteProject)
-router.get('/get-problem-type-list',
+router.post('/get-problem-type-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isCMAccessible,

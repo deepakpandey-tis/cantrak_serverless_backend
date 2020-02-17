@@ -29,7 +29,7 @@ router.post('/delete-category',
 
 router.get('/property-category-list', authMiddleware.isAuthenticated, propertyCategoryController.propertyCategoryList);
 
-router.get('/category-list',
+router.post('/category-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isCMAccessible,

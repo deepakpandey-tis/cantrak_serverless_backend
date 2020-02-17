@@ -811,7 +811,25 @@ const quotationsController = {
       pagination.last_page = Math.ceil(count / per_page);
       pagination.current_page = page;
       pagination.from = offset;
-      pagination.data = rows;
+
+      let rowsWithDays = rows.map(q => {
+        if(q['Date Created']){
+
+        let creationDate = new Date(+q['Date Created'])
+        let todaysDate = new Date()
+        // console.log(q['Date Created'],creationDate,todaysDate,'***************************************************************************88')
+        
+        let a = moment([creationDate.getFullYear(), creationDate.getMonth(), creationDate.getDate()]);
+        let b = moment([todaysDate.getFullYear(), todaysDate.getMonth(), todaysDate.getDate()]);
+        let diff = b.diff(a, 'days')   // =1
+        return {...q,Status:q['Status']+` (${diff} days)`}
+        }else {
+          return {...q} 
+        }
+
+      })
+      pagination.data = rowsWithDays;
+
 
       return res.status(200).json({
         data: {
