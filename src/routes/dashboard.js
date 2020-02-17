@@ -28,6 +28,11 @@ router.post('/get-schedule-work-order-list', authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
     dashboardController.getScheduleWorkOrderList)
 
+/*GET START DATE END DATE TOTAL SERVICE REQUIEST AND TOTAL SERVICE ORDER */
+router.post('/get-start-end-service-request-service-order', authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    dashboardController.getStartEndServiceRequestServiceOrder)
+
 
 module.exports = router;
 
