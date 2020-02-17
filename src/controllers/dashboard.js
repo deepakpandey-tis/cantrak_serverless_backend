@@ -19,13 +19,13 @@ const dashboardController = {
       let orgId = req.orgId;
       let accessibleProjects = req.userProjectResources[0].projects
 
-      let prioritySeq = await knex('incident_priority').max('sequenceNo').where({orgId:orgId });
+      let prioritySeq = await knex('incident_priority').max('sequenceNo').where({ orgId: orgId });
       let priority;
       let priorityValue = null;
       if (prioritySeq.length) {
 
         let maxSeq = prioritySeq[0].max;
-        priority = await knex('incident_priority').where({ sequenceNo: maxSeq,orgId:orgId}).groupBy(['incident_priority.incidentPriorityCode', 'incident_priority.id']).first();
+        priority = await knex('incident_priority').where({ sequenceNo: maxSeq, orgId: orgId }).groupBy(['incident_priority.incidentPriorityCode', 'incident_priority.id']).first();
         priorityValue = priority.incidentPriorityCode;
       }
 
@@ -177,6 +177,7 @@ const dashboardController = {
           ])
           .where({ "service_requests.orgId": req.orgId })
           .where('service_requests.createdAt', '>=', currentTime)
+          .where({ 'service_requests.isCreatedFromSo': false })
           .distinct('service_requests.id')
           .orderBy('service_requests.id', 'desc')
 
@@ -235,9 +236,10 @@ const dashboardController = {
 
           ])
           .where({ "service_requests.orgId": req.orgId })
+          .where({ 'service_requests.isCreatedFromSo': false })
           .where('service_requests.createdAt', '>=', currentTime)
-          .where({ 'assigned_service_team.userId': id, 'assigned_service_team.entityType': 'service_requests' })
-          .orWhere({ 'assigned_service_additional_users.userId': id, 'assigned_service_additional_users.entityType': 'service_requests' })
+          .where({ 'assigned_service_team.userId': id, 'assigned_service_team.entityType': 'service_appointments' })
+          .orWhere({ 'assigned_service_additional_users.userId': id, 'assigned_service_additional_users.entityType': 'service_appointments' })
           .distinct('service_requests.id')
           .orderBy('service_requests.id', 'desc')
 
@@ -482,26 +484,58 @@ const dashboardController = {
       let orgId = req.orgId;
       if (roles.includes("superAdmin") || roles.includes("orgAdmin")) {
 
-        result = await knex.from('task_group_schedule')
-          .leftJoin('task_group_schedule_assign_assets', 'task_group_schedule.id', "task_group_schedule_assign_assets.scheduleId")
+        result = await knex.from('task_group_schedule_assign_assets')
+          .leftJoin('task_group_schedule', 'task_group_schedule_assign_assets.scheduleId', "task_group_schedule.id")
+          .leftJoin('pm_task_groups', 'task_group_schedule.taskGroupId', 'pm_task_groups.id')
+          .leftJoin('assigned_service_team', 'pm_task_groups.id', 'assigned_service_team.entityId')
+          .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+          .leftJoin('users', 'assigned_service_team.userId', 'users.id')
+          .leftJoin(
+            "assigned_service_additional_users",
+            "pm_task_groups.id",
+            "assigned_service_additional_users.entityId"
+          )
           .select([
-            'task_group_schedule.id',
-            'task_group_schedule_assign_assets.id as workOrderId'
+            'task_group_schedule.id as scheduleId',
+            'task_group_schedule_assign_assets.*',
+            'teams.teamName as teamName',
+            'assigned_service_team.userId as mainUserId',
+            'users.name as mainUser',
           ])
-          .where({ 'task_group_schedule.orgId': orgId })
+          .where({ 'task_group_schedule_assign_assets.orgId': orgId })
           .whereBetween('task_group_schedule_assign_assets.pmDate', [startDate, endDate])
-          .orderBy('task_group_schedule.id', 'desc')
+          .orderBy('task_group_schedule_assign_assets.id', 'desc')
 
       } else {
 
+        result = await knex.from('task_group_schedule_assign_assets')
+          .leftJoin('task_group_schedule', 'task_group_schedule_assign_assets.scheduleId', "task_group_schedule.id")
+          .leftJoin('pm_task_groups', 'task_group_schedule.taskGroupId', 'pm_task_groups.id')
+          .leftJoin('assigned_service_team', 'pm_task_groups.id', 'assigned_service_team.entityId')
+          .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+          .leftJoin('users', 'assigned_service_team.userId', 'users.id')
+          .leftJoin(
+            "assigned_service_additional_users",
+            "pm_task_groups.id",
+            "assigned_service_additional_users.entityId"
+          )
+          .select([
+            'task_group_schedule.id as scheduleId',
+            'task_group_schedule_assign_assets.*',
+            'teams.teamName as teamName',
+            'assigned_service_team.userId as mainUserId',
+            'users.name as mainUser',
+          ])
+          .where({ 'task_group_schedule_assign_assets.orgId': orgId, 'assigned_service_team.userId': id, 'assigned_service_team.entityType': 'pm_task_groups' })
+          .orWhere({ 'assigned_service_additional_users.userId': id, 'assigned_service_additional_users.entityType': 'pm_task_groups' })
+          .whereBetween('task_group_schedule_assign_assets.pmDate', [startDate, endDate])
+          .orderBy('task_group_schedule_assign_assets.id', 'desc')
       }
 
       return res.status(200).json({
         data: result,
         message: " Today Schedule Work order List!"
       });
-
-
 
     } catch (err) {
 
@@ -513,7 +547,193 @@ const dashboardController = {
       });
 
     }
+  },
+  /*GET START DATE END DATE TOTAL SERVICE REQUIEST AND TOTAL SERVICE ORDER */
+  getStartEndServiceRequestServiceOrder: async (req, res) => {
 
+    try {
+
+      let orgId = req.orgId;
+      let payload = req.body;
+      let totalServiceRequest;
+      let startDate = payload.startDate;
+      let endDate = payload.endDate;
+      let startNewDate = moment(startDate).startOf('date').format();
+      let endNewDate = moment(endDate).endOf('date', 'day').format();
+      let currentStartTime = new Date(startNewDate).getTime();
+      let currentEndTime = new Date(endNewDate).getTime();
+      const accessibleProjects = req.userProjectResources[0].projects
+      let reqData = req.query;
+      let pagination = {};
+      let pagination2 = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+      if (startDate && endDate) {
+
+        [totalServiceRequest, totalServiceOrder] = await Promise.all([
+
+          knex
+            .from("service_requests")
+            .leftJoin(
+              "service_problems",
+              "service_requests.id",
+              "service_problems.serviceRequestId"
+            )
+            .leftJoin(
+              "incident_categories",
+              "service_problems.categoryId",
+              "incident_categories.id"
+            )
+            .leftJoin(
+              "incident_sub_categories",
+              "incident_categories.id",
+              "incident_sub_categories.incidentCategoryId"
+            )
+            .leftJoin(
+              "property_units",
+              "service_requests.houseId",
+              "property_units.id"
+            )
+            .leftJoin(
+              "assigned_service_team",
+              "service_requests.id",
+              "assigned_service_team.entityId"
+            )
+            .leftJoin(
+              "teams",
+              "assigned_service_team.teamId",
+              "teams.teamId"
+            )
+            .select([
+              "service_requests.id",
+              "service_requests.houseId as houseId",
+              "service_requests.description as description",
+              "incident_categories.descriptionEng as category",
+              "incident_sub_categories.descriptionEng as problem",
+              "service_requests.priority",
+              "service_requests.serviceStatusCode as status",
+              "property_units.unitNumber as unitNo",
+              "service_requests.requestedBy as requestedBy",
+              "service_requests.createdAt as dateCreated",
+              "teams.teamName",
+              "teams.teamCode",
+            ])
+            .where({ "service_requests.orgId": orgId })
+            .whereBetween('service_requests.createdAt', [currentStartTime, currentEndTime])
+            .where({ 'service_requests.isCreatedFromSo': false })
+            .distinct('service_requests.id')
+            .orderBy('service_requests.id', 'desc')
+            .offset(offset).limit(per_page)
+          ,
+
+          knex
+            .from("service_orders")
+            .leftJoin(
+              "service_requests",
+              "service_orders.serviceRequestId",
+              "service_requests.id"
+            )
+            .leftJoin(
+              "service_problems",
+              "service_requests.id",
+              "service_problems.serviceRequestId"
+            )
+            .leftJoin(
+              "incident_categories",
+              "service_problems.categoryId",
+              "incident_categories.id"
+            )
+            .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
+            .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
+            .leftJoin("users AS u", "service_requests.createdBy", "u.id")
+            .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+            .leftJoin('users', 'assigned_service_team.userId', 'users.id')
+            .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+            .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+            .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
+            .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+            .select([
+              "service_orders.id as SoId",
+              "service_requests.description as description",
+              "service_requests.location as location",
+              "service_requests.id as SrId",
+              "incident_categories.descriptionEng as problem",
+              "service_requests.priority as priority",
+              "u.name as createdBy",
+              //   "service_orders.createdBy as Created By",
+              "orderDueDate as dueDate",
+              "status.descriptionEng as status",
+              "service_orders.createdAt as dateCreated",
+              'service_requests.houseId as houseId',
+              "buildings_and_phases.description as buildingName",
+              "users.userName as assignedMainUser",
+              "teams.teamName as teamName",
+              "requested_by.name as requestedBy",
+              "property_units.unitNumber as unitNumber",
+              "assignUser.name as tenantName"
+            ])
+            .distinct('service_requests.id')
+            .orderBy('service_orders.id', 'desc')
+            .where({ "service_orders.orgId": req.orgId })
+            .whereIn('service_requests.projectId', accessibleProjects).orderBy('service_orders.id', 'desc')
+            .offset(offset).limit(per_page)
+            ,
+
+        ])
+      } else {
+
+
+
+      }
+
+
+      let count = totalServiceRequest.length;
+      pagination.total = count;
+      pagination.per_page  = per_page;
+      pagination.offset   = offset;
+      pagination.to = offset+count;
+      pagination.last_page = Math.ceil(count/per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data   = totalServiceRequest;
+
+
+      let count2 = totalServiceOrder.length;
+      pagination2.total = count2;
+      pagination2.per_page  = per_page;
+      pagination2.offset   = offset;
+      pagination2.to = offset+count2;
+      pagination2.last_page = Math.ceil(count2/per_page);
+      pagination2.current_page = page;
+      pagination2.from = offset;
+      pagination2.data   = totalServiceOrder;
+
+
+      return res.status(200).json({
+        data: {
+          serviceRequestData: pagination,
+          totalServiceRequest: totalServiceRequest.length,
+          serviceOrderData: pagination2,
+          totalServiceOrder: totalServiceOrder.length
+        },
+        message: "Start Date End Date Service request & Service order!"
+      });
+
+
+
+    } catch (err) {
+
+      console.log('[controllers][dashboard][getStartEndServiceRequestServiceOrder] : Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ]
+      });
+    }
   }
 };
 

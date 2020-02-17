@@ -519,10 +519,10 @@ const peopleController = {
 
           if (checkStatus[0].isActive == true) {
             peopleData = await knex.update({ isActive: false, updatedAt: currentTime }).where({ id: id }).returning(['*']).transacting(trx).into('users');
-            message = "People Inactive Successfully";
+            message = "Status Inactive Successfully";
           } else {
             peopleData = await knex.update({ isActive: true, updatedAt: currentTime }).where({ id: id }).returning(['*']).transacting(trx).into('users');
-            message = "People Active Successfully";
+            message = "Status Active Successfully";
           }
         }
         people = peopleData[0];
