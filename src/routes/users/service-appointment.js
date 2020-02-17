@@ -25,4 +25,10 @@ router.post("/get-service-request-assigned-parts",
     authMiddleware.isAuthenticated, userMiddleware.customerInfo,
     serviceAppointmentController.getServiceRequestAssignedParts);
 
+router.post('/get-service-appointment-details',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceAppointmentController.getServiceAppointmentDetails)
+
+    
+
 module.exports = router;

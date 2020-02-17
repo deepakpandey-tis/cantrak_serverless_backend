@@ -48,6 +48,8 @@ const serviceAppointmentController = {
                         'service_appointments.id as id',
                         'service_appointments.serviceOrderId as serviceOrderId',
                         'service_requests.priority as Priority',
+                        'service_requests.id as SRID',
+                        'service_orders.id as SOID',
                         'users.name as createdBy',
                         'service_appointments.appointedDate as appointedDate',
                         'service_appointments.createdAt as dateCreated',
@@ -64,6 +66,8 @@ const serviceAppointmentController = {
                         'service_appointments.id as id',
                         'service_appointments.serviceOrderId as serviceOrderId',
                         'service_requests.priority as Priority',
+                        'service_requests.id as SRID',
+                        'service_orders.id as SOID',
                         'users.name as createdBy',
                         'service_appointments.appointedDate as appointedDate',
                         'service_appointments.createdAt as dateCreated',
@@ -921,6 +925,54 @@ const serviceAppointmentController = {
         } catch (err) {
             return res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+
+    getServiceAppointmentDetails: async (req, res) => {
+        try {
+
+            await knex.transaction(async trx => {
+                let serviceAppointmentId = req.body.serviceAppointmentId;
+                let serviceRequestId = req.body.serviceRequestId;
+                console.log("serviceAppointmentId", serviceAppointmentId);
+                // Get Service Appointment Details
+                let serviceAppointmentResult = await knex.select().where({ id: serviceAppointmentId }).returning(['*']).transacting(trx).into('service_appointments')
+
+                // Get Service Request Details
+
+                let serviceRequestResult = await knex.select().where({ id: serviceRequestId }).returning(['*']).transacting(trx).into('service_requests')
+
+
+                // Get Team details based on ids provided
+                let assignedServiceTeam = null
+                if (serviceAppointmentId) {
+                    assignedServiceTeam = await knex.select().where({ entityId: serviceAppointmentId, entityType: 'service_appointments' }).returning(['*']).transacting(trx).into('assigned_service_team')
+                }
+
+                let assignedServiceTeamUser = null
+                if (assignedServiceTeam) {
+                    assignedServiceTeamUser = await knex.select('name').where({ id: assignedServiceTeam[0]['userId'] }).returning(['*']).transacting(trx).into('users')
+                }
+
+
+                // Get additional users
+                let additionalUsers = []
+                if (serviceAppointmentId) {
+                    additionalUsers = await knex.select().where({ entityId: serviceAppointmentId, entityType: 'service_appointments' }).returning(['*']).transacting(trx).into('assigned_service_additional_users')
+                }
+
+                res.status(200).json({
+                    data: { serviceAppointment: serviceAppointmentResult[0], assignedServiceTeamUser, additionalUsers, serviceRequest: serviceRequestResult[0] },
+                    message: "Service Appointment Details!"
+                });
+            })
+        } catch (err) {
+            console.log('[controllers][serviceOrder][GetServiceAppointmentsDetails] :  Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
             });
         }
     }
