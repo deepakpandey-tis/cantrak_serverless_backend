@@ -47,7 +47,8 @@ const satisfactionController = {
         }
 
         const existSatisfactionCode = await knex("satisfaction").where({
-          satisfactionCode: satisfactionPayload.satisfactionCode
+          satisfactionCode: satisfactionPayload.satisfactionCode.toUpperCase(),
+          orgId:req.orgId
         });
 
         console.log(
@@ -76,7 +77,7 @@ const satisfactionController = {
           satisfactionCode: satisfactionPayload.satisfactionCode.toUpperCase(),
           createdBy: userId,
           orgId: orgId,
-          isActive: "true",
+          isActive: true,
           createdAt: currentTime,
           updatedAt: currentTime
         };
@@ -148,7 +149,8 @@ const satisfactionController = {
 
         const existSatisfactionCode = await knex("satisfaction")
           .where({
-            satisfactionCode: satisfactionPaylaod.satisfactionCode.toUpperCase()
+            satisfactionCode: satisfactionPaylaod.satisfactionCode.toUpperCase(),
+            orgId:req.orgId
           })
           .whereNot({ id: satisfactionPaylaod.id });
 
@@ -227,6 +229,13 @@ const satisfactionController = {
 
   getSatisfactionList: async (req, res) => {
     try {
+
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "satisfaction.satisfactionCode";
+        sortPayload.orderBy = "asc"
+      }
+
       let reqData = req.query;
       let orgId = req.orgId;
 
@@ -240,6 +249,7 @@ const satisfactionController = {
       let page = reqData.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
+      let {searchValue} = req.body;
 
       [total, rows] = await Promise.all([
         knex
@@ -247,6 +257,13 @@ const satisfactionController = {
           .from("satisfaction")
           .leftJoin("users", "users.id", "satisfaction.createdBy")
           .where({ "satisfaction.orgId": orgId })
+          .where(qb=>{
+            if(searchValue){
+              qb.where('satisfaction.satisfactionCode','iLIKE',`%${searchValue}%`)
+              qb.orWhere('satisfaction.descriptionEng','iLIKE',`%${searchValue}%`)
+              qb.orWhere('satisfaction.descriptionThai','iLIKE',`%${searchValue}%`)
+            }
+          })
           .first(),
         knex("satisfaction")
           .leftJoin("users", "users.id", "satisfaction.createdBy")
@@ -260,7 +277,14 @@ const satisfactionController = {
             "users.name as Created By",
             "satisfaction.createdAt as Date Created"
           ])
-          .orderBy('satisfaction.id','desc')
+          .where(qb=>{
+            if(searchValue){
+              qb.where('satisfaction.satisfactionCode','iLIKE',`%${searchValue}%`)
+              qb.orWhere('satisfaction.descriptionEng','iLIKE',`%${searchValue}%`)
+              qb.orWhere('satisfaction.descriptionThai','iLIKE',`%${searchValue}%`)
+            }
+          })
+          .orderBy(sortPayload.sortBy, sortPayload.orderBy)
           .offset(offset)
           .limit(per_page)
       ]);
@@ -437,7 +461,8 @@ const satisfactionController = {
           {
             SATISFACTION_CODE: "",
             DESCRIPTION: "",
-            ALTERNATE_DESCRIPTION: ""
+            ALTERNATE_DESCRIPTION: "",
+            DEFAULT_FLAG: ""
           }
         ]);
       }
@@ -543,106 +568,111 @@ const satisfactionController = {
   /**IMPORT SATISFACTION DATA */
   importSatisfactionData: async (req, res) => {
     try {
-      if (req.file) {
-        console.log(req.file);
-        let tempraryDirectory = null;
-        if (process.env.IS_OFFLINE) {
-          tempraryDirectory = "tmp/";
-        } else {
-          tempraryDirectory = "/tmp/";
-        }
-        let resultData = null;
-        let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: "binary" });
-        let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, {
-          type: "string",
-          header: "A",
-          raw: false
-        });
-        console.log("+++++++++++++", data, "=========");
-        let totalData = data.length - 1;
-        let fail = 0;
-        let success = 0;
-        let result = null;
-        let errors = []
-        let header = Object.values(data[0]);
-        header.unshift('Error');
-        errors.push(header)
 
-        if (
-          data[0].A == "Ã¯Â»Â¿SATISFACTION_CODE" ||
-          (data[0].A == "SATISFACTION_CODE" &&
-            data[0].B == "DESCRIPTION" &&
-            data[0].C == "ALTERNATE_DESCRIPTION" && data[0].D == "DEFAULT_FLAG")
-        ) {
-          if (data.length > 0) {
-            let i = 0;
-            for (let statusData of data) {
-              i++;
+      let data = req.body;
+      console.log("+++++++++++++", data, "=========");
+      let totalData = data.length - 1;
+      let fail = 0;
+      let success = 0;
+      let result = null;
+      let errors = []
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
 
-              if (i > 1) {
-                let checkExist = await knex("satisfaction")
-                  .select("id")
-                  .where({ satisfactionCode: statusData.A, orgId: req.orgId });
-                if (checkExist.length < 1) {
-                  let currentTime = new Date().getTime();
-                  let insertData = {
-                    orgId: req.orgId,
-                    satisfactionCode: statusData.A,
-                    descriptionEng: statusData.B,
-                    descriptionThai: statusData.C,
-                    createdAt: currentTime,
-                    updatedAt: currentTime,
-                    defaultFlag: statusData.D,
-                    createdBy: req.me.id
-                  };
+      if (
+        data[0].A == "Ã¯Â»Â¿SATISFACTION_CODE" ||
+        (data[0].A == "SATISFACTION_CODE" &&
+          data[0].B == "DESCRIPTION" &&
+          data[0].C == "ALTERNATE_DESCRIPTION" && data[0].D == "DEFAULT_FLAG")
+      ) {
+        if (data.length > 0) {
+          let i = 0;
+          for (let statusData of data) {
+            i++;
 
-                  resultData = await knex
-                    .insert(insertData)
-                    .returning(["*"])
-                    .into("satisfaction");
+            if (i > 1) {
 
-                  if (resultData && resultData.length) {
-                    success++;
-                  }
-                } else {
-                  fail++;
-                  let values = _.values(statusData)
-                  values.unshift('Satisfaction code already exists.')
-                  errors.push(values);
+
+
+              if (!statusData.A) {
+                let values = _.values(statusData)
+                values.unshift("Satisfaction code can not empty")
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!statusData.B) {
+                let values = _.values(statusData)
+                values.unshift("Description can not empty")
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
+              if (!statusData.D) {
+                let values = _.values(statusData)
+                values.unshift("Default flag can not empty")
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
+              let checkExist = await knex("satisfaction")
+                .select("id")
+                .where({ satisfactionCode: statusData.A.toUpperCase(), orgId: req.orgId });
+              if (checkExist.length < 1) {
+                let currentTime = new Date().getTime();
+                let insertData = {
+                  orgId: req.orgId,
+                  satisfactionCode: statusData.A.toUpperCase(),
+                  descriptionEng: statusData.B,
+                  descriptionThai: statusData.C,
+                  createdAt: currentTime,
+                  updatedAt: currentTime,
+                  defaultFlag: statusData.D,
+                  createdBy: req.me.id
+                };
+
+                resultData = await knex
+                  .insert(insertData)
+                  .returning(["*"])
+                  .into("satisfaction");
+
+                if (resultData && resultData.length) {
+                  success++;
                 }
+              } else {
+                fail++;
+                let values = _.values(statusData)
+                values.unshift('Satisfaction code already exists.')
+                errors.push(values);
               }
             }
-            let message = null;
-            if (totalData == success) {
-              message =
-                "System have processed ( " +
-                totalData +
-                " ) entries and added them successfully!";
-            } else {
-              message =
-                "System have processed ( " +
-                totalData +
-                " ) entries out of which only ( " +
-                success +
-                " ) are added and others are failed ( " +
-                fail +
-                " ) due to validation!";
-            }
-            let deleteFile = await fs.unlink(file_path, err => {
-              console.log("File Deleting Error " + err);
-            });
-            return res.status(200).json({
-              message: message,
-              errors
-            });
           }
-        } else {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-            ]
+          let message = null;
+          if (totalData == success) {
+            message =
+              "System have processed ( " +
+              totalData +
+              " ) entries and added them successfully!";
+          } else {
+            message =
+              "System have processed ( " +
+              totalData +
+              " ) entries out of which only ( " +
+              success +
+              " ) are added and others are failed ( " +
+              fail +
+              " ) due to validation!";
+          }
+          
+          return res.status(200).json({
+            message: message,
+            errors
           });
         }
       } else {
@@ -652,6 +682,7 @@ const satisfactionController = {
           ]
         });
       }
+
     } catch (err) {
       console.log(
         "[controllers][propertysetup][importCompanyData] :  Error",

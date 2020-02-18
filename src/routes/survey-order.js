@@ -14,12 +14,9 @@ router.post('/get-survey-orders', authMiddleware.isAuthenticated, roleMiddleware
     resourceAccessMiddleware.isCMAccessible, surveyOrderController.getSurveyOrderList)
 router.post('/get-survey-order-details', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
     resourceAccessMiddleware.isCMAccessible, surveyOrderController.getSurveyOrderDetails)
-router.post('/update-remarks-notes', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible, surveyOrderController.updateRemarksNotes)
-router.post('/get-remarks-notes-list', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible, surveyOrderController.getRemarksNotesList)
-router.post('/delete-remarks-notes', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible, surveyOrderController.deleteRemarksNotes);
+router.post('/update-remarks-notes', authMiddleware.isAuthenticated, surveyOrderController.updateRemarksNotes)
+router.post('/get-remarks-notes-list', authMiddleware.isAuthenticated, surveyOrderController.getRemarksNotesList)
+router.post('/delete-remarks-notes', authMiddleware.isAuthenticated, surveyOrderController.deleteRemarksNotes);
 /// Survey Order Export Data 
 router.post('/export-survey-order', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
     resourceAccessMiddleware.isCMAccessible, surveyOrderController.exportSurveyOrder);

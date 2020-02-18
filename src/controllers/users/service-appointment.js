@@ -48,6 +48,8 @@ const serviceAppointmentController = {
                         'service_appointments.id as id',
                         'service_appointments.serviceOrderId as serviceOrderId',
                         'service_requests.priority as Priority',
+                        'service_requests.id as SRID',
+                        'service_orders.id as SOID',
                         'users.name as createdBy',
                         'service_appointments.appointedDate as appointedDate',
                         'service_appointments.createdAt as dateCreated',
@@ -64,6 +66,8 @@ const serviceAppointmentController = {
                         'service_appointments.id as id',
                         'service_appointments.serviceOrderId as serviceOrderId',
                         'service_requests.priority as Priority',
+                        'service_requests.id as SRID',
+                        'service_orders.id as SOID',
                         'users.name as createdBy',
                         'service_appointments.appointedDate as appointedDate',
                         'service_appointments.createdAt as dateCreated',
@@ -731,7 +735,9 @@ const serviceAppointmentController = {
             let offset = (page - 1) * per_page;
 
             let { serviceRequestId } = req.body;
-            let serviceOrderResult = await knex('service_orders').where({ orgId: req.orgId, serviceRequestId: serviceRequestId }).returning(['*']).first();
+            let serviceOrderResult = await knex('service_orders')
+                .where({ orgId: req.orgId, serviceRequestId: serviceRequestId })
+                .returning(['*']).first();
 
             console.log("serviceRequestPArtsData", serviceOrderResult);
 
@@ -823,99 +829,151 @@ const serviceAppointmentController = {
     },
     getServiceRequestAssignedCharges: async (req, res) => {
         try {
-          let reqData = req.query;
-          let total, rows;
-    
-          let pagination = {};
-          let per_page = reqData.per_page || 10;
-          let page = reqData.current_page || 1;
-          if (page < 1) page = 1;
-          let offset = (page - 1) * per_page;
-    
-          let { serviceRequestId } = req.body;
-          let serviceOrderResult = await knex('service_orders').where({ orgId: req.orgId, serviceRequestId: serviceRequestId }).returning(['*']).first();
-    
-          console.log("serviceRequestPArtsData", serviceOrderResult);
-          if (!serviceOrderResult) {
-            pagination.total = 0;
+            let reqData = req.query;
+            let total, rows;
+
+            let pagination = {};
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
+
+            let { serviceRequestId } = req.body;
+            let serviceOrderResult = await knex('service_orders').where({ orgId: req.orgId, serviceRequestId: serviceRequestId }).returning(['*']).first();
+
+            console.log("serviceRequestPArtsData", serviceOrderResult);
+            if (!serviceOrderResult) {
+                pagination.total = 0;
+                pagination.per_page = per_page;
+                pagination.offset = offset;
+                pagination.to = offset + 0;
+                pagination.last_page = null;
+                pagination.current_page = page;
+                pagination.from = offset;
+                pagination.data = [];
+
+                return res.status(200).json({
+                    data: {
+                        assignedCharges: pagination
+                    }
+                })
+            }
+
+            let serviceOrderId = serviceOrderResult.id;
+
+            [total, rows] = await Promise.all([
+                knex("charge_master")
+                    .innerJoin(
+                        "assigned_service_charges",
+                        "charge_master.id",
+                        "assigned_service_charges.chargeId"
+                    )
+                    .select([
+                        "charge_master.chargeCode as chargeCode",
+                        "charge_master.descriptionEng as descriptionEng",
+                        "charge_master.descriptionThai as descriptionThai",
+                        "charge_master.id as id",
+                        "charge_master.calculationUnit as calculationUnit",
+                        "assigned_service_charges.rate as rate",
+                        "assigned_service_charges.totalHours as totalHours"
+                    ])
+                    .where({
+                        "assigned_service_charges.entityId": serviceOrderId,
+                        "assigned_service_charges.entityType": "service_orders"
+                    }),
+                knex("charge_master")
+                    .innerJoin(
+                        "assigned_service_charges",
+                        "charge_master.id",
+                        "assigned_service_charges.chargeId"
+                    )
+                    .select([
+                        "charge_master.chargeCode as chargeCode",
+                        "charge_master.descriptionEng as descriptionEng",
+                        "charge_master.descriptionThai as descriptionThai",
+                        "charge_master.id as id",
+                        "charge_master.calculationUnit as calculationUnit",
+                        "assigned_service_charges.rate as rate",
+                        "assigned_service_charges.totalHours as totalHours"
+                    ])
+                    .where({
+                        "assigned_service_charges.entityId": serviceOrderId,
+                        "assigned_service_charges.entityType": "service_orders"
+                    })
+                    .offset(offset)
+                    .limit(per_page)
+            ]);
+
+
+            let count = total.length;
+            pagination.total = count;
             pagination.per_page = per_page;
             pagination.offset = offset;
-            pagination.to = offset + 0;
-            pagination.last_page = null;
+            pagination.to = offset + rows.length;
+            pagination.last_page = Math.ceil(count / per_page);
             pagination.current_page = page;
             pagination.from = offset;
-            pagination.data = [];
-    
+            pagination.data = rows;
+
             return res.status(200).json({
-              data: {
-                assignedCharges: pagination
-              }
+                data: {
+                    assignedCharges: pagination
+                }
             })
-          }
-    
-          let serviceOrderId = serviceOrderResult.id;
-    
-          [total, rows] = await Promise.all([
-            knex("charge_master")
-              .innerJoin(
-                "assigned_service_charges",
-                "charge_master.id",
-                "assigned_service_charges.chargeId"
-              )
-              .select([
-                "charge_master.chargeCode as chargeCode",
-                "charge_master.id as id",
-                "charge_master.calculationUnit as calculationUnit",
-                "assigned_service_charges.rate as rate",
-                "assigned_service_charges.totalHours as totalHours"
-              ])
-              .where({
-                "assigned_service_charges.entityId": serviceOrderId,
-                "assigned_service_charges.entityType": "service_orders"
-              }),
-            knex("charge_master")
-              .innerJoin(
-                "assigned_service_charges",
-                "charge_master.id",
-                "assigned_service_charges.chargeId"
-              )
-              .select([
-                "charge_master.chargeCode as chargeCode",
-                "charge_master.id as id",
-                "charge_master.calculationUnit as calculationUnit",
-                "assigned_service_charges.rate as rate",
-                "assigned_service_charges.totalHours as totalHours"
-              ])
-              .where({
-                "assigned_service_charges.entityId": serviceOrderId,
-                "assigned_service_charges.entityType": "service_orders"
-              })
-              .offset(offset)
-              .limit(per_page)
-          ]);
-    
-    
-          let count = total.length;
-          pagination.total = count;
-          pagination.per_page = per_page;
-          pagination.offset = offset;
-          pagination.to = offset + rows.length;
-          pagination.last_page = Math.ceil(count / per_page);
-          pagination.current_page = page;
-          pagination.from = offset;
-          pagination.data = rows;
-    
-          return res.status(200).json({
-            data: {
-              assignedCharges: pagination
-            }
-          })
-    
-    
+
+
         } catch (err) {
-          return res.status(500).json({
-            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-          });
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+
+    getServiceAppointmentDetails: async (req, res) => {
+        try {
+
+            await knex.transaction(async trx => {
+                let serviceAppointmentId = req.body.serviceAppointmentId;
+                let serviceRequestId = req.body.serviceRequestId;
+                console.log("serviceAppointmentId", serviceAppointmentId);
+                // Get Service Appointment Details
+                let serviceAppointmentResult = await knex.select().where({ id: serviceAppointmentId }).returning(['*']).transacting(trx).into('service_appointments')
+
+                // Get Service Request Details
+
+                let serviceRequestResult = await knex.select().where({ id: serviceRequestId }).returning(['*']).transacting(trx).into('service_requests')
+
+
+                // Get Team details based on ids provided
+                let assignedServiceTeam = null
+                if (serviceAppointmentId) {
+                    assignedServiceTeam = await knex.select().where({ entityId: serviceAppointmentId, entityType: 'service_appointments' }).returning(['*']).transacting(trx).into('assigned_service_team')
+                }
+
+                let assignedServiceTeamUser = null
+                if (assignedServiceTeam) {
+                    assignedServiceTeamUser = await knex.select('name').where({ id: assignedServiceTeam[0]['userId'] }).returning(['*']).transacting(trx).into('users')
+                }
+
+
+                // Get additional users
+                let additionalUsers = []
+                if (serviceAppointmentId) {
+                    additionalUsers = await knex.select().where({ entityId: serviceAppointmentId, entityType: 'service_appointments' }).returning(['*']).transacting(trx).into('assigned_service_additional_users')
+                }
+
+                res.status(200).json({
+                    data: { serviceAppointment: serviceAppointmentResult[0], assignedServiceTeamUser, additionalUsers, serviceRequest: serviceRequestResult[0] },
+                    message: "Service Appointment Details!"
+                });
+            })
+        } catch (err) {
+            console.log('[controllers][serviceOrder][GetServiceAppointmentsDetails] :  Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
         }
     }
 
