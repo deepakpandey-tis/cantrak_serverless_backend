@@ -31,7 +31,13 @@ router.post('/get-schedule-work-order-list', authMiddleware.isAuthenticated,
 /*GET START DATE END DATE TOTAL SERVICE REQUIEST AND TOTAL SERVICE ORDER */
 router.post('/get-start-end-service-request-service-order', authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    dashboardController.getStartEndServiceRequestServiceOrder)
+    dashboardController.getServiceRequestServiceOrderBwDates)
+
+
+router.post('/get-main-data-for-pie-chart', 
+authMiddleware.isAuthenticated, 
+roleMiddleware.parseUserPermission, 
+dashboardController.getMainDataForPieChart)
 
 
 module.exports = router;

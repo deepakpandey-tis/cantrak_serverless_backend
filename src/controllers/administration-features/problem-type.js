@@ -202,6 +202,12 @@ const problemTypeController = {
   },
   getProblemTypeList: async (req, res) => {
     try {
+
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "incident_type.typeCode";
+        sortPayload.orderBy = "asc"
+      }
       let reqData = req.query;
       console.log("reqQuery", reqData);
       let pagination = {};
@@ -210,6 +216,7 @@ const problemTypeController = {
       let page = reqData.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
+      let {searchValue} = req.body;
 
       let [total, rows] = await Promise.all([
         knex
@@ -217,8 +224,13 @@ const problemTypeController = {
           .from("incident_type")
           .leftJoin("users", "users.id", "incident_type.createdBy")
           .where({ "incident_type.orgId": req.orgId })
-          .offset(offset)
-          .limit(per_page)
+          .where(qb=>{
+            if(searchValue){
+              qb.where('incident_type.typeCode','iLIKE',`%${searchValue}%`);
+              qb.orWhere('incident_type.descriptionEng','iLIKE',`%${searchValue}%`);
+              qb.orWhere('incident_type.descriptionThai','iLIKE',`%${searchValue}%`);
+            }
+          })
           .first(),
         knex
           .from("incident_type")
@@ -233,7 +245,14 @@ const problemTypeController = {
             "users.name as Created By",
             "incident_type.createdAt as Date Created"
           ])
-          .orderBy('incident_type.id', 'desc')
+          .where(qb=>{
+            if(searchValue){
+              qb.where('incident_type.typeCode','iLIKE',`%${searchValue}%`);
+              qb.orWhere('incident_type.descriptionEng','iLIKE',`%${searchValue}%`);
+              qb.orWhere('incident_type.descriptionThai','iLIKE',`%${searchValue}%`);
+            }
+          })
+          .orderBy(sortPayload.sortBy, sortPayload.orderBy)
           .offset(offset)
           .limit(per_page)
       ]);

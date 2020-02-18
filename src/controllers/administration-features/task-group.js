@@ -190,7 +190,7 @@ const taskGroupController = {
         taskName: v.taskName, templateId: taskGroupTemplate.id, createdAt: currentTime, createdBy: req.body.mainUserId,
         orgId: req.orgId,
         taskSerialNumber: v.taskSerialNumber,
-
+        taskNameAlternate:v.taskNameAlternate,
         updatedAt: currentTime
       }))
       insertedTasks = await knex('template_task').insert(insertPaylaod).returning(['*'])
@@ -1415,7 +1415,9 @@ const taskGroupController = {
         .select([
           'pm_task.id as taskId',
           'pm_task.taskName as taskName',
-          'pm_task.status as status'
+          'pm_task.status as status',
+          'pm_task.taskNameAlternate',
+          'pm_task.taskSerialNumber'
         ])
         .where({
           'pm_task.taskGroupScheduleAssignAssetId': payload.taskGroupScheduleAssignAssetId,
@@ -1683,7 +1685,7 @@ const taskGroupController = {
       let taskGroup = taskGroupResult[0]
 
 
-      const tasks = await knex('template_task').where({ templateId: req.body.id, orgId: req.orgId }).select('taskName', 'id')
+      const tasks = await knex('template_task').where({ templateId: req.body.id, orgId: req.orgId }).select('taskName', 'id','taskNameAlternate','taskSerialNumber')
 
       // Get the team and main user
       let team = await knex('assigned_service_team')

@@ -238,9 +238,9 @@ const PartCategoryController = {
             ]
           });
         }
-        let check = await knex('part_category_master').select('isActive').where({id:payload.id,orgId:req.orgId}).first()
+        let check = await knex('part_category_master').select('isActive').where({ id: payload.id, orgId: req.orgId }).first()
         let ProjectResult
-        if(check.isActive){
+        if (check.isActive) {
           ProjectResult = await knex
             .update({ isActive: false })
             .where({ id: payload.id, orgId: req.orgId })
@@ -280,9 +280,16 @@ const PartCategoryController = {
   },
   getPartCategoryList: async (req, res) => {
     try {
+
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "categoryName";
+        sortPayload.orderBy = "asc"
+      }
       let reqData = req.query;
       let pagination = {};
       let orgId = req.orgId;
+      let {categoryName}  = req.body;
 
       let per_page = reqData.per_page || 10;
       let page = reqData.current_page || 1;
@@ -295,6 +302,11 @@ const PartCategoryController = {
           .from("part_category_master")
           .leftJoin("users", "users.id", "part_category_master.createdBy")
           .where({ "part_category_master.orgId": orgId })
+          .where(qb => {
+            if (categoryName) {
+              qb.where('part_category_master.categoryName', 'iLIKE', `%${categoryName}%`)
+            }
+          })
           .first(),
         knex
           .from("part_category_master")
@@ -307,7 +319,12 @@ const PartCategoryController = {
             "part_category_master.createdAt as Date Created"
           ])
           .where({ "part_category_master.orgId": orgId })
-          .orderBy('part_category_master.id','desc')
+          .where(qb => {
+            if (categoryName) {
+              qb.where('part_category_master.categoryName', 'iLIKE', `%${categoryName}%`)
+            }
+          })
+          .orderBy(sortPayload.sortBy, sortPayload.orderBy)
           .offset(offset)
           .limit(per_page)
       ]);
@@ -366,10 +383,10 @@ const PartCategoryController = {
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
       var ws
 
-      if(rows && rows.length){
+      if (rows && rows.length) {
         ws = XLSX.utils.json_to_sheet(rows);
       } else {
-        ws = XLSX.utils.json_to_sheet([{CATEGORY_NAME:''}]);
+        ws = XLSX.utils.json_to_sheet([{ CATEGORY_NAME: '' }]);
       }
 
       XLSX.utils.book_append_sheet(wb, ws, "pres");
@@ -379,7 +396,7 @@ const PartCategoryController = {
       let check = XLSX.writeFile(wb, filepath);
       const AWS = require("aws-sdk");
 
-      fs.readFile(filepath, function(err, file_buffer) {
+      fs.readFile(filepath, function (err, file_buffer) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
@@ -387,7 +404,7 @@ const PartCategoryController = {
           Body: file_buffer,
           ACL: "public-read"
         };
-        s3.putObject(params, function(err, data) {
+        s3.putObject(params, function (err, data) {
           if (err) {
             console.log("Error at uploadCSVFileOnS3Bucket function", err);
             res.status(500).json({
@@ -424,118 +441,118 @@ const PartCategoryController = {
   },
   importPartCategoryData: async (req, res) => {
     try {
-      
-        let resultData = null;
-        let data = req.body;
-        //data         = JSON.stringify(data);
-        let result = null;
-        let currentTime = new Date().getTime();
-        console.log('DATA:***************** ',data)
-        //console.log('DATA: ',data)
-        let totalData = data.length - 1;
-        let fail = 0;
-        let success = 0;
-        let errors = []
-        let header = Object.values(data[0]);
-        header.unshift('Error');
-        errors.push(header)
 
-        if (
-          data[0].A == "Ã¯Â»Â¿CATEGORY_NAME" ||
-          (data[0].A == "CATEGORY_NAME" 
+      let resultData = null;
+      let data = req.body;
+      //data         = JSON.stringify(data);
+      let result = null;
+      let currentTime = new Date().getTime();
+      console.log('DATA:***************** ', data)
+      //console.log('DATA: ',data)
+      let totalData = data.length - 1;
+      let fail = 0;
+      let success = 0;
+      let errors = []
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
+
+      if (
+        data[0].A == "Ã¯Â»Â¿CATEGORY_NAME" ||
+        (data[0].A == "CATEGORY_NAME"
           //&&
-            // data[0].B == "COMPANY" &&
-            // data[0].C == "COMPANY_NAME"
-            )
-        ) {
-          if (data.length > 0) {
-            let i = 0;
-            console.log("Data[0]", data[0]);
-            for (let partCategoryData of data) {
-              i++;
-              if (i > 1) {
+          // data[0].B == "COMPANY" &&
+          // data[0].C == "COMPANY_NAME"
+        )
+      ) {
+        if (data.length > 0) {
+          let i = 0;
+          console.log("Data[0]", data[0]);
+          for (let partCategoryData of data) {
+            i++;
+            if (i > 1) {
 
 
 
-                if (!partCategoryData.A) {
-                  let values = _.values(partCategoryData)
-                  values.unshift("Category name can not empty")
-                  errors.push(values);
-                  fail++;
-                  continue;
-                }
+              if (!partCategoryData.A) {
+                let values = _.values(partCategoryData)
+                values.unshift("Category name can not empty")
+                errors.push(values);
+                fail++;
+                continue;
+              }
 
-                let checkExist = await knex("part_category_master")
-                  .select("categoryName")
-                  .where({
-                    categoryName: partCategoryData.A,
-                    orgId: req.orgId
-                  });
-                if (checkExist.length < 1 && partCategoryData.A) {
-                  // let categoryIdResult = await knex("companies")
-                  //   .select("id")
-                  //   .where({
-                  //     orgId: req.orgId,
-                  //     companyId: partCategoryData.B
-                  //   });
-                  // if (categoryIdResult && categoryIdResult.length) {
-                   
-                    let insertData = {
-                      orgId: req.orgId,
-                      categoryName: partCategoryData.A,
-                      isActive: true,
-                      createdBy: req.me.id,
-                      createdAt: currentTime
-                    };
+              let checkExist = await knex("part_category_master")
+                .select("categoryName")
+                .where({
+                  categoryName: partCategoryData.A,
+                  orgId: req.orgId
+                });
+              if (checkExist.length < 1 && partCategoryData.A) {
+                // let categoryIdResult = await knex("companies")
+                //   .select("id")
+                //   .where({
+                //     orgId: req.orgId,
+                //     companyId: partCategoryData.B
+                //   });
+                // if (categoryIdResult && categoryIdResult.length) {
 
-                    resultData = await knex
-                      .insert(insertData)
-                      .returning(["*"])
-                      .into("part_category_master");
-                      
-                      success++;
-                  // } else {
-                  //   fail++;
-                  // }
-                } else {
-                  let values = _.values(partCategoryData)
-                  values.unshift('Part category already exists')
-                  errors.push(values);
-                  fail++;
-                }
+                let insertData = {
+                  orgId: req.orgId,
+                  categoryName: partCategoryData.A,
+                  isActive: true,
+                  createdBy: req.me.id,
+                  createdAt: currentTime
+                };
+
+                resultData = await knex
+                  .insert(insertData)
+                  .returning(["*"])
+                  .into("part_category_master");
+
+                success++;
+                // } else {
+                //   fail++;
+                // }
+              } else {
+                let values = _.values(partCategoryData)
+                values.unshift('Part category already exists')
+                errors.push(values);
+                fail++;
               }
             }
-
-           
-            let message = null;
-            if (totalData == success) {
-              message =
-                "System have processed ( " +
-                totalData +
-                " ) entries and added them successfully!";
-            } else {
-              message =
-                "System have processed ( " +
-                totalData +
-                " ) entries out of which only ( " +
-                success +
-                " ) are added and others are failed ( " +
-                fail +
-                " ) due to validation!";
-            }
-            return res.status(200).json({
-              message:message,
-              errors:errors
-            });
           }
-        } else {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-            ]
+
+
+          let message = null;
+          if (totalData == success) {
+            message =
+              "System have processed ( " +
+              totalData +
+              " ) entries and added them successfully!";
+          } else {
+            message =
+              "System have processed ( " +
+              totalData +
+              " ) entries out of which only ( " +
+              success +
+              " ) are added and others are failed ( " +
+              fail +
+              " ) due to validation!";
+          }
+          return res.status(200).json({
+            message: message,
+            errors: errors
           });
         }
-      
+      } else {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
+      }
+
     } catch (err) {
       console.log(
         "[controllers][propertysetup][importCompanyData] :  Error",

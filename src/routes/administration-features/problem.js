@@ -6,7 +6,7 @@ const problemController = require("../../controllers/administration-features/pro
 const roleMiddleware = require('../../middlewares/role')
 const resourceAccessMiddleware = require('../../middlewares/resourceAccessMiddleware')
 
-router.get('/get-problem-list',
+router.post('/get-problem-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isCMAccessible,

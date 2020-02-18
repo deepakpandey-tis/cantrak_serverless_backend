@@ -288,6 +288,7 @@ const AssetCategoryController = {
       let page = reqData.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
+      let {categoryName} = req.body;
 
       let [total, rows] = await Promise.all([
         knex
@@ -295,6 +296,11 @@ const AssetCategoryController = {
           .from("asset_category_master")
           .leftJoin("users", "users.id", "asset_category_master.createdBy")
           .where({ "asset_category_master.orgId": req.orgId })
+          .where(qb=>{
+            if(categoryName){
+              qb.where('asset_category_master.categoryName','iLIKE',`%${categoryName}%`)
+            }
+          })
           .first(),
         knex
           .from("asset_category_master")
@@ -307,6 +313,11 @@ const AssetCategoryController = {
             "users.name as Created By",
             "asset_category_master.createdAt as Date Created"
           ])
+          .where(qb=>{
+            if(categoryName){
+              qb.where('asset_category_master.categoryName','iLIKE',`%${categoryName}%`)
+            }
+          })
           .orderBy(sortPayload.sortBy,sortPayload.orderBy)
           .offset(offset)
           .limit(per_page)
