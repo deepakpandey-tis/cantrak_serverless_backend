@@ -17,4 +17,7 @@ router.post('/get-survey-order-details',
 // router.post('/get-survey-order-notes-list', authMiddleware.isAuthenticated,  surveyOrderController.getSurveyOrderNoteList)
 // router.post('/delete-survey-order-remark', authMiddleware.isAuthenticated,  surveyOrderController.deleteSurveyRemark);
 
+router.post('/update-survey-status',
+    authMiddleware.isAuthenticated,
+    userMiddleware.customerInfo, surveyOrderController.updateSurveyStatus)
 module.exports = router;

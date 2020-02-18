@@ -1776,7 +1776,7 @@ const quotationsController = {
 
         }
 
-      } else if (updateStatus == 'Cancelled') {
+      } else if (updateStatus == 'Rejected') {
         status = await knex("quotations")
           .update({ quotationStatus: updateStatus, cancelledOn: currentTime, cancelledBy: req.me.id })
           .where({ id: quotationId });

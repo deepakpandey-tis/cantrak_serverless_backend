@@ -1076,7 +1076,30 @@ const surveyOrderController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  updateSurveyStatus: async (req, res) => {
+    try {
+      let surveyOrderId = req.body.data.surveyOrderId;
+      let updateStatus = req.body.data.status;
+      const currentTime = new Date().getTime();
+      console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7', req.body)
+
+      const status = await knex("survey_orders")
+        .update({ surveyOrderStatus: updateStatus, updatedAt: currentTime })
+        .where({ id: surveyOrderId });
+      return res.status(200).json({
+        data: {
+          status: updateStatus
+        },
+        message: "Survey order status updated successfully!"
+      });
+    } catch (err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
+
 };
 
 module.exports = surveyOrderController;
