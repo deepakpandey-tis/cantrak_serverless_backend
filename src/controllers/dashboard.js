@@ -229,7 +229,7 @@ const dashboardController = {
           .where({ "service_requests.orgId": req.orgId })
           .where('service_appointments.appointedDate', '=', currentDate)
           .where({ 'assigned_service_team.userId': id, 'assigned_service_team.entityType': 'service_appointments' })
-          // .orWhere({ 'assigned_service_additional_users.userId': id, 'assigned_service_additional_users.entityType': 'service_appointments' })
+          .orWhere({ 'assigned_service_additional_users.userId': id, 'assigned_service_additional_users.entityType': 'service_appointments' })
           .distinct('service_requests.id')
           .orderBy('service_requests.id', 'desc')
 
@@ -662,8 +662,8 @@ const dashboardController = {
   getMainDataForPieChart:async(req,res) => {
     try {
     
-      let startDate = moment(req.body.startDate).format('L'); // TODO
-      let endDate = moment(req.body.endDate).format('L') // TODO
+      // let startDate = moment(req.body.startDate).format('L'); // TODO
+      // let endDate = moment(req.body.endDate).format('L') // TODO
       let currentDate = moment().format('L')
       let startNewDate = moment(currentDate).startOf('date').format();
       let endNewDate = moment(currentDate).endOf('date', 'day').format();
@@ -747,6 +747,7 @@ const dashboardController = {
           .where({ "service_requests.orgId": req.orgId })
           .where('service_appointments.appointedDate', '=', currentDate)
           .where({ 'assigned_service_team.userId': id, 'assigned_service_team.entityType': 'service_appointments' })
+          .orWhere({ 'assigned_service_additional_users.userId': id, 'assigned_service_additional_users.entityType': 'service_appointments' })
           .distinct('service_requests.id')
           .orderBy('service_requests.id', 'desc')
 
@@ -999,7 +1000,7 @@ const dashboardController = {
 
       return res.status(200).json(
         {
-          data: {todaysServiceAppointments:result.length, todaysSurveyAppointments:_.uniqBy(result2,'id').length,todaysWorkOrders:result3.length}
+          data: {todaysServiceAppointments:_.uniqBy(result,'id').length, todaysSurveyAppointments:_.uniqBy(result2,'id').length,todaysWorkOrders:result3.length}
         }
       )
 
