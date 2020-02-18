@@ -7,7 +7,7 @@ const sourceofRequestController = require('../../controllers/administration-feat
 router.post('/add-source-of-request', authMiddleware.isAuthenticated, sourceofRequestController.addsourceofRequest)
 router.post('/update-source-of-request', authMiddleware.isAuthenticated, sourceofRequestController.updatesourceofRequest)
 router.post('/delete-source-of-request', authMiddleware.isAuthenticated, sourceofRequestController.deletesourceofRequest)
-router.get('/get-source-of-request-list', authMiddleware.isAuthenticated, sourceofRequestController.getsourceofRequestList)
+router.post('/get-source-of-request-list', authMiddleware.isAuthenticated, sourceofRequestController.getsourceofRequestList)
  //Export Source of Request
 router.get('/export-source-of-request', authMiddleware.isAuthenticated, sourceofRequestController.exportSourceOfRequest)
 router.post('/source-of-request-details', authMiddleware.isAuthenticated, sourceofRequestController.sourceofRequestDetails)

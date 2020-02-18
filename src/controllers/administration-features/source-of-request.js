@@ -45,6 +45,27 @@ const sourceofRequestController = {
         });
       }
 
+
+
+      const existCode = await knex("source_of_request")
+      .where({
+        requestCode: payload.requestCode,
+        orgId:req.orgId
+      })
+
+    if (existCode && existCode.length) {
+      return res.status(400).json({
+        errors: [
+          {
+            code: "SOURCE_OF_REQUEST_CODE_EXIST_ERROR",
+            message: "Source of request Code already exist !"
+          }
+        ]
+      });
+    }
+      
+
+
       let currentTime = new Date().getTime();
       let insertData = {
         ...payload,
@@ -110,6 +131,26 @@ const sourceofRequestController = {
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
         });
       }
+
+
+      const existCode = await knex("source_of_request")
+      .where({
+        requestCode: payload.requestCode,
+        orgId:req.orgId
+      })
+      .whereNot({ id: payload.id });
+
+    if (existCode && existCode.length) {
+      return res.status(400).json({
+        errors: [
+          {
+            code: "SOURCE_OF_REQUEST_CODE_EXIST_ERROR",
+            message: "Source of request Code already exist !"
+          }
+        ]
+      });
+    }
+
 
       let currentTime = new Date().getTime();
       let insertData = { ...payload, updatedAt: currentTime };
@@ -201,6 +242,13 @@ const sourceofRequestController = {
   // Get Source of Request List
   getsourceofRequestList: async (req, res) => {
     try {
+
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "source_of_request.requestCode";
+        sortPayload.orderBy = "asc"
+      }
+
       let orgId = req.orgId;
       let userId = req.me.id;
 
@@ -211,6 +259,7 @@ const sourceofRequestController = {
       let page = reqData.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
+      let { searchValue } = req.body;
 
       let [total, rows] = await Promise.all([
         knex
@@ -218,6 +267,13 @@ const sourceofRequestController = {
           .from("source_of_request")
           .leftJoin('users', 'source_of_request.createdBy', 'users.id')
           .where({ 'source_of_request.orgId': orgId })
+          .where(qb => {
+            if (searchValue) {
+              qb.where('source_of_request.requestCode', 'iLIKE', `%${searchValue}%`)
+              qb.orWhere('source_of_request.descriptionEng', 'iLIKE', `%${searchValue}%`)
+              qb.orWhere('source_of_request.descriptionThai', 'iLIKE', `%${searchValue}%`)
+            }
+          })
           .first(),
         knex("source_of_request")
           .leftJoin('users', 'source_of_request.createdBy', 'users.id')
@@ -231,7 +287,14 @@ const sourceofRequestController = {
             "source_of_request.createdAt as Date Created"
           ])
           .where({ 'source_of_request.orgId': orgId })
-          .orderBy('source_of_request.id', 'desc')
+          .where(qb => {
+            if (searchValue) {
+              qb.where('source_of_request.requestCode', 'iLIKE', `%${searchValue}%`)
+              qb.orWhere('source_of_request.descriptionEng', 'iLIKE', `%${searchValue}%`)
+              qb.orWhere('source_of_request.descriptionThai', 'iLIKE', `%${searchValue}%`)
+            }
+          })
+          .orderBy(sortPayload.sortBy, sortPayload.orderBy)
           .offset(offset)
           .limit(per_page)
       ]);
@@ -401,109 +464,106 @@ const sourceofRequestController = {
   // importSourceOfRequest Import Data
   importSourceOfRequest: async (req, res) => {
     try {
-      if (req.file) {
-        console.log(req.file);
-        let tempraryDirectory = null;
-        if (process.env.IS_OFFLINE) {
-          tempraryDirectory = "tmp/";
-        } else {
-          tempraryDirectory = "/tmp/";
-        }
-        let resultData = null;
-        let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: "binary" });
-        let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, {
-          type: "string",
-          header: "A",
-          raw: false
-        });
-        //data         = JSON.stringify(data);
-        console.log("+++++++++++++", data, "=========");
-        let totalData = data.length - 1;
-        let fail = 0;
-        let success = 0;
-        let result = null;
-        let errors = []
-        let header = Object.values(data[0]);
-        header.unshift('Error');
-        errors.push(header)
 
-        if (
-          data[0].A == "SOURCE_CODE" ||
-          (data[0].A == "Ã¯Â»Â¿SOURCE_CODE" &&
-            data[0].B == "DESCRIPTION" &&
-            data[0].C == "ALTERNATE_DESCRIPTION")
-        ) {
-          if (data.length > 0) {
-            let i = 0;
-            for (let requestData of data) {
-              i++;
+      let data = req.body;
+      console.log("+++++++++++++", data, "=========");
+      let totalData = data.length - 1;
+      let fail = 0;
+      let success = 0;
+      let result = null;
+      let errors = []
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
 
-              if (i > 1) {
-                let checkExist = await knex("source_of_request")
-                  .select("requestCode")
-                  .where({ requestCode: requestData.A, orgId: req.orgId });
-                console.log("Check list company: ", checkExist);
-                if (checkExist.length < 1) {
-                  let currentTime = new Date().getTime();
-                  let insertData = {
-                    orgId: req.orgId,
-                    requestCode: requestData.A,
-                    descriptionEng: requestData.B,
-                    descriptionThai: requestData.C,
-                    isActive: true,
-                    createdAt: currentTime,
-                    updatedAt: currentTime,
-                    createdBy: req.me.id
-                  };
 
-                  resultData = await knex
-                    .insert(insertData)
-                    .returning(["*"])
-                    .into("source_of_request");
 
-                  if (resultData && resultData.length) {
-                    success++;
-                  }
-                } else {
-                  fail++;
-                  let values = _.values(requestData)
-                  values.unshift('Request Code already exists.')
-                  errors.push(values);
-                  continue;
+
+      if (
+        data[0].B == "DESCRIPTION" &&
+        data[0].C == "ALTERNATE_DESCRIPTION" &&
+        data[0].A == "SOURCE_CODE" || data[0].A == "Ã¯Â»Â¿SOURCE_CODE"
+      ) {
+        if (data.length > 0) {
+          let i = 0;
+          for (let requestData of data) {
+            i++;
+
+            if (i > 1) {
+
+
+              if (!requestData.A) {
+                let values = _.values(requestData)
+                values.unshift("Source code can not empty")
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
+              if (!requestData.B) {
+                let values = _.values(requestData)
+                values.unshift("Description can not empty")
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
+              let checkExist = await knex("source_of_request")
+                .select("requestCode")
+                .where({ requestCode: requestData.A, orgId: req.orgId });
+              console.log(checkExist);
+              if (checkExist.length < 1) {
+                let currentTime = new Date().getTime();
+                let insertData = {
+                  orgId: req.orgId,
+                  requestCode: requestData.A,
+                  descriptionEng: requestData.B,
+                  descriptionThai: requestData.C,
+                  isActive: true,
+                  createdAt: currentTime,
+                  updatedAt: currentTime,
+                  createdBy: req.me.id
+                };
+
+                resultData = await knex
+                  .insert(insertData)
+                  .returning(["*"])
+                  .into("source_of_request");
+
+                if (resultData && resultData.length) {
+                  success++;
                 }
+              } else {
+                fail++;
+                let values = _.values(requestData)
+                values.unshift('Source Code already exists.')
+                errors.push(values);
+                continue;
               }
             }
-            let message = null;
-            if (totalData == success) {
-              message =
-                "System has processed processed ( " +
-                totalData +
-                " ) entries and added them successfully!";
-            } else {
-              message =
-                "System has processed processed ( " +
-                totalData +
-                " ) entries out of which only ( " +
-                success +
-                " ) are added and others are failed ( " +
-                fail +
-                " ) due to validation!";
-            }
-            let deleteFile = await fs.unlink(file_path, err => {
-              console.log("File Deleting Error " + err);
-            });
-            return res.status(200).json({
-              message: message,
-              errors
-            });
           }
-        } else {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-            ]
+          let message = null;
+          if (totalData == success) {
+            message =
+              "System has processed processed ( " +
+              totalData +
+              " ) entries and added them successfully!";
+          } else {
+            message =
+              "System has processed processed ( " +
+              totalData +
+              " ) entries out of which only ( " +
+              success +
+              " ) are added and others are failed ( " +
+              fail +
+              " ) due to validation!";
+          }
+
+          return res.status(200).json({
+            message: message,
+            errors
           });
         }
       } else {
@@ -513,6 +573,7 @@ const sourceofRequestController = {
           ]
         });
       }
+
     } catch (err) {
       console.log(
         "[controllers][propertysetup][importCompanyData] :  Error",
