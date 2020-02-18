@@ -146,10 +146,19 @@ const dashboardController = {
           )
           .leftJoin(
             "assigned_service_team",
-            "service_requests.id",
+            "service_appointments.id",
             "assigned_service_team.entityId"
           )
-          
+          .leftJoin(
+            'teams',
+            'assigned_service_team.teamId',
+            'teams.teamId'
+          )
+          .leftJoin(
+            'users',
+            'assigned_service_team.userId',
+            'users.id'
+          )
           .select([
             "service_requests.id",
             "service_orders.id as soId",
@@ -157,10 +166,13 @@ const dashboardController = {
             "service_requests.description as description",
             "service_requests.priority",
             "service_requests.serviceStatusCode as status",
+            "service_appointments.status as serviceAppointmentStatus",
+            "service_appointments.appointedDate as appointedDate",
             "service_requests.requestedBy as requestedBy",
             "service_requests.createdAt as dateCreated",
-            "service_appointments.appointedDate as appointedDate"
-
+            "service_appointments.appointedDate as appointedDate",
+            "teams.teamName as teamName",
+            "users.name as user_name"
           ])
           .where({ "service_requests.orgId": req.orgId })
           .where({'service_appointments.appointedDate':currentDate})
@@ -190,6 +202,16 @@ const dashboardController = {
             "service_appointments.id",
             "assigned_service_additional_users.entityId"
           )
+          .leftJoin(
+            'teams',
+            'assigned_service_team.teamId',
+            'teams.teamId'
+          )
+          .leftJoin(
+            'users',
+            'assigned_service_team.userId',
+            'users.id'
+          )
           .select([
             "service_requests.id",
             "service_orders.id as soId",
@@ -197,19 +219,24 @@ const dashboardController = {
             "service_requests.description as description",
             "service_requests.priority",
             "service_requests.serviceStatusCode as status",
+            "service_appointments.status as serviceAppointmentStatus",
+            "service_appointments.appointedDate as appointedDate",
             "service_requests.requestedBy as requestedBy",
             "service_requests.createdAt as dateCreated",
+            "teams.teamName as teamName",
+            "users.name as user_name"
           ])
           .where({ "service_requests.orgId": req.orgId })
           .where('service_appointments.appointedDate', '=', currentDate)
           .where({ 'assigned_service_team.userId': id, 'assigned_service_team.entityType': 'service_appointments' })
+          // .orWhere({ 'assigned_service_additional_users.userId': id, 'assigned_service_additional_users.entityType': 'service_appointments' })
           .distinct('service_requests.id')
           .orderBy('service_requests.id', 'desc')
 
       }
 
       return res.status(200).json({
-        data: result,
+        data: _.uniqBy(result,'id'),
         message: " Today Service appointment List!"
       });
 
