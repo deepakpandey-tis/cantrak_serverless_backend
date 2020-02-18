@@ -50,7 +50,6 @@ router.post('/delete-service-order-remark', authMiddleware.isAuthenticated, role
 
 router.post('/get-service-order-due-date', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isCMAccessible, serviceOrderController.getServiceOrderDueDate)
 
-router.post('/update-appointment-status', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible, serviceOrderController.updateAppointmentStatus)
+router.post('/update-appointment-status', authMiddleware.isAuthenticated, serviceOrderController.updateAppointmentStatus)
 
 module.exports = router;

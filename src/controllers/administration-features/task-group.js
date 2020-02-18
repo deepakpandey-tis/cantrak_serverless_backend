@@ -349,7 +349,7 @@ const taskGroupController = {
         mainUserId: Joi.string().required(),
         additionalUsers: Joi.array().items(Joi.string().required()).strict().required(),
         taskGroupName: Joi.string().required(),
-        tasks: Joi.array().items(Joi.string().required()).strict().required(),
+        // tasks: Joi.array().items(Joi.string().required()).strict().required(),
         startDateTime: Joi.date().required(),
         endDateTime: Joi.date().required(),
         repeatPeriod: Joi.string().required(),
@@ -358,7 +358,7 @@ const taskGroupController = {
 
       });
 
-      const result = Joi.validate(_.omit(payload, 'repeatOn'), schema);
+      const result = Joi.validate(_.omit(payload, ['repeatOn','tasks']), schema);
       if (result && result.hasOwnProperty("error") && result.error) {
         return res.status(400).json({
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
@@ -525,7 +525,9 @@ const taskGroupController = {
 
             // CREATE PM TASK OPEN
             let InsertPmTaskPayload = payload.tasks.map(da => ({
-              taskName: da,
+              taskName: da.taskName,
+              taskNameAlternate:da.taskNameAlternate,
+              taskSerialNumber:da.taskSerialNumber,
               taskGroupId: createPmTaskGroup.id,
               taskGroupScheduleAssignAssetId: assetResult[0].id,
               createdAt: currentTime,
@@ -1068,7 +1070,7 @@ const taskGroupController = {
         pmId: Joi.string().required(),
         assetCategoryId: Joi.string().required(),
         taskTemplateName: Joi.string().required(),
-        tasks: Joi.array().items(Joi.string().required()).strict().required(),
+        // tasks: Joi.array().items(Joi.object()).strict().required(),
         startDateTime: Joi.date().required(),
         endDateTime: Joi.date().required(),
         repeatPeriod: Joi.string().required(),
@@ -1078,7 +1080,7 @@ const taskGroupController = {
         additionalUsers: Joi.array().items(Joi.string().required()).strict().required(),
       });
 
-      const result = Joi.validate(_.omit(payload, 'repeatOn'), schema);
+      const result = Joi.validate(_.omit(payload, ['repeatOn','tasks']), schema);
       if (result && result.hasOwnProperty("error") && result.error) {
         return res.status(400).json({
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
@@ -1103,8 +1105,10 @@ const taskGroupController = {
         // CREATE TASK TEMPLATE CLOSE
 
         // CREATE TASK TEMPLATE OPEN 
-        let tasksInsertPayload = payload.tasks.map(da => ({
-          taskName: da,
+        let tasksInsertPayload = req.body.tasks.map(da => ({
+          taskName: da.taskName,
+          taskNameAlternate: da.taskNameAlternate,
+          taskSerialNumber:da.taskSerialNumber,
           templateId: createTemplate.id,
           createdAt: currentTime,
           updatedAt: currentTime,
