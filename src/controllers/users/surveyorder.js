@@ -766,6 +766,7 @@ const surveyOrderController = {
       const schema = Joi.object().keys({
         id: Joi.string().required()
       });
+
       let result = Joi.validate(req.body, schema);
       console.log(
         "[controllers][surveyOrder][getSurveyOrderDetails]: JOi Result",
@@ -781,17 +782,6 @@ const surveyOrderController = {
       let results = await knex.raw(`select "survey_orders"."id" as "SId","service_requests"."description" as "description","survey_orders"."appointedDate" as "appointedDate","users"."name" as "assignedTo","service_requests"."id" as "SRId","service_requests"."priority" as "priority","survey_orders"."createdBy" as "createdBy", "survey_orders"."surveyOrderStatus" as "status","survey_orders"."createdAt" as "dateCreated" from "survey_orders" inner join "service_requests" on "survey_orders"."serviceRequestId" = "service_requests"."id" left join "assigned_service_team" on "survey_orders"."id" = "assigned_service_team"."entityId" left join "users" on "assigned_service_team"."userId" = "users"."id" where "survey_orders"."orgId" = ${req.orgId} and "survey_orders"."id" = ${surveyOrderid} and "assigned_service_team"."entityType"='survey_orders'`)
 
       console.log("results", results.rows);
-
-      // surveyOrderResult = await knex
-      //   .from("survey_orders")
-      //   .select()
-      //   .where({ id: surveyOrderid });
-      // surveyOrder = surveyOrderResult[0];
-
-      // serviceRequestResult = await knex("service_requests")
-      //   .select()
-      //   .where({ id: surveyOrder.serviceRequestId, orgId: req.orgId });
-      // serviceRequest = serviceRequestResult[0];
 
       let resultData = results.rows;
 
@@ -1086,7 +1076,30 @@ const surveyOrderController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  updateSurveyStatus: async (req, res) => {
+    try {
+      let surveyOrderId = req.body.data.surveyOrderId;
+      let updateStatus = req.body.data.status;
+      const currentTime = new Date().getTime();
+      console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7', req.body)
+
+      const status = await knex("survey_orders")
+        .update({ surveyOrderStatus: updateStatus, updatedAt: currentTime })
+        .where({ id: surveyOrderId });
+      return res.status(200).json({
+        data: {
+          status: updateStatus
+        },
+        message: "Survey order status updated successfully!"
+      });
+    } catch (err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
+
 };
 
 module.exports = surveyOrderController;

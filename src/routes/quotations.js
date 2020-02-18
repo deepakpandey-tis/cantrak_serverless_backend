@@ -48,7 +48,6 @@ router.post('/update-quotations-invoice', authMiddleware.isAuthenticated, roleMi
     resourceAccessMiddleware.isCMAccessible, quotationController.updateQuotationsInvoice);
 router.post('/delete-quotation', authMiddleware.isAuthenticated, quotationController.deleteQuotation)
 
-router.post('/update-quotation-status', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible, quotationController.updateQuotationsStatus);
+router.post('/update-quotation-status', authMiddleware.isAuthenticated, quotationController.updateQuotationsStatus);
 
 module.exports = router;
