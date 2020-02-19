@@ -645,7 +645,7 @@ const dashboardController = {
 
           ])
 
-        final.push({ date: moment(d).format('L'), totalServiceRequest: totalServiceRequest.length, totalServiceOrder: totalServiceOrder.length})
+        final.push({ date: moment(d).format('L'), totalServiceRequest: _.uniqBy(totalServiceRequest, 'id').length, totalServiceOrder: _.uniqBy(totalServiceOrder,'SoId').length})
       }
 
       res.status(200).json({
