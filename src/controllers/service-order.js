@@ -868,7 +868,7 @@ const serviceOrderController = {
             pagination.last_page = Math.ceil(count / per_page);
             pagination.current_page = page;
             pagination.from = offset;
-            pagination.data = rows;
+            pagination.data = _.uniqBy(rows,'So Id');
 
 
 

@@ -645,7 +645,7 @@ const dashboardController = {
 
           ])
 
-        final.push({ date: moment(d).format('L'), totalServiceRequest: totalServiceRequest.length, totalServiceOrder: totalServiceOrder.length})
+        final.push({ date: moment(d).format('L'), totalServiceRequest: _.uniqBy(totalServiceRequest, 'id').length, totalServiceOrder: _.uniqBy(totalServiceOrder,'SoId').length})
       }
 
       res.status(200).json({
@@ -1012,6 +1012,86 @@ const dashboardController = {
         ]
       });
     }
+  },
+  getServiceRequestsByProblemType: async(req,res) => {
+    try {
+      // const problems = await knex('service_problems')
+      // .leftJoin('incident_sub_categories','service_problems.problemId','incident_sub_categories.id')
+      // .leftJoin('incident_categories','incident_sub_categories.incidentCategoryId','incident_categories.id')
+      //   .select(['service_problems.serviceRequestId', 'incident_categories.categoryCode','incident_categories.descriptionEng'])
+      //   .where({'incident_sub_categories.orgId':req.orgId})
+      let problems = null
+      let problemTypeId = req.body.problemTypeId;
+      var getDaysArray = function (start, end) {
+        let dt = start
+        let arr = []
+        for (; dt <= end; dt.setDate(dt.getDate() + 1)) {
+          arr.push(new Date(dt));
+        }
+        return arr;
+      };
+      var dates = getDaysArray(new Date(req.body.startDate), new Date(req.body.endDate));   
+      let final = []
+      for (let d of dates) {
+        let startNewDate = moment(d).startOf('date').format();
+        let endNewDate = moment(d).endOf('date', 'day').format();
+      let currentStartTime = new Date(startNewDate).getTime();
+      let currentEndTime = new Date(endNewDate).getTime();
+       problems = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin(
+          "teams",
+          "assigned_service_team.teamId",
+          "teams.teamId"
+        )
+        .select(['service_problems.serviceRequestId', 'incident_categories.categoryCode', 'incident_categories.descriptionEng'])
+         .where({ "service_requests.orgId": req.orgId,'incident_sub_categories.incidentTypeId':problemTypeId })
+        .whereBetween('service_requests.createdAt', [currentStartTime, currentEndTime])
+        .where({ 'service_requests.isCreatedFromSo': false })
+        .distinct('service_requests.id')
+        .orderBy('service_requests.id', 'desc')
+        // let grouped = _.groupBy(problems, 'categoryCode')
+        // let problemCounts = Object.keys(grouped).map(category => ({totalServiceRequests:grouped[category].length,category}))
+        final.push({ date: moment(d).format('L'), totalServiceRequest:problems.length })
+
+      }
+    
+    return res.status(200).json({
+      data: final
+    })
+      } catch(err) {
+      console.log('[controllers][dashboard][getAssesList] : Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ]
+      });
+    } 
   }
 
 };
