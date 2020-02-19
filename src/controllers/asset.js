@@ -637,7 +637,7 @@ const assetController = {
 
       // Get part data
       let partData = null;
-      if (assetDataResult && assetDataResult.partId && assetDataResult.partId == '') {
+      if (assetDataResult && assetDataResult.partId) {
         partData = await knex('part_master').select('*').where({ id: assetDataResult.partId }).first()
       }
 
