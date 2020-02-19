@@ -235,4 +235,10 @@ router.post("/delete-quotations-assigned-parts/",authMiddleware.isAuthenticated,
   resourceAccessMiddleware.isPartAccessible,partsController.deleteQuotationAssignedParts
 );
 
+router.post('/generate-new-part-id',
+authMiddleware.isAuthenticated,
+roleMiddleware.parseUserPermission,
+resourceAccessMiddleware.isPartAccessible,
+partsController.generateNewPartId)
+
 module.exports = router;
