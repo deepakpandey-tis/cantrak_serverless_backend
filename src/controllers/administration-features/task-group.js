@@ -1523,7 +1523,7 @@ const taskGroupController = {
 
 
       //IMAGES
-      const images = await knex('images').where({ entityId: taskId, entityType: 'pm_task' }).select('s3Url')
+      const images = await knex('images').where({ entityId: taskId, entityType: 'pm_task' }).select(['s3Url','id'])
       // IMAGES CLOSED
 
       return res.status(200).json({

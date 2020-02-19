@@ -168,13 +168,13 @@ const partsController = {
                 let partPayload = req.body;
                 let payload = req.body;
                 console.log('[controllers][part][addParts]', partPayload);
-                partPayload = _.omit(partPayload, ['minimumQuantity'], ['unitOfMeasure'], ['barcode'], ['image_url'], ['file_url'], 'quantity', 'unitCost', ['additionalAttributes'], ['images'], ['files'], ['additionalDescription'], 'partDescription', ['assignedVendors'], ['additionalPartDetails'])
+                partPayload = _.omit(partPayload, ['minimumQuantity'], ['unitOfMeasure'], ['barcode'], ['image_url'], ['file_url'], 'quantity', 'unitCost', ['additionalAttributes'], ['images'], ['files'], ['additionalDescription'], 'partDescription', ['assignedVendors'], ['additionalPartDetails'],['partId'])
                 // validate keys
                 const schema = Joi.object().keys({
                     partName: Joi.string().required(),
                     partCode: Joi.string().required(),
                     partCategory: Joi.string().required(),
-                    companyId: Joi.string().required()
+                    companyId: Joi.string().required(),
                 });
 
                 let result = Joi.validate(partPayload, schema);
@@ -210,7 +210,14 @@ const partsController = {
 
                 console.log('[controllers][part][addParts]: Insert Data', insertData);
 
-                let partResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('part_master');
+                let partResult
+
+                if(req.body.partId){
+                    partResult = await knex.update(insertData).where({id:req.body.partId}).returning(['*']).transacting(trx).into('part_master');
+                } else {
+                    partResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('part_master');
+                }
+
                 part = partResult[0];
 
 
@@ -2043,6 +2050,23 @@ const partsController = {
                 }
             })
         } catch (err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    generateNewPartId:async(req,res) => {
+        try {
+            let currentTime = new Date().getTime()
+            const newPart = await knex('part_master').insert({createdAt:currentTime,updatedAt:currentTime}).returning(['*'])
+
+            return res.status(200).json({
+                data: {
+                    newPart:newPart[0]
+                },
+                message: 'New part id generated successfully!'
+            })
+        } catch(err) {
             return res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
