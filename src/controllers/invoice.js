@@ -45,6 +45,12 @@ const invoiceController = {
                 }).select('invoiceData', 'id').first();
             }
 
+            if (entityType == 'service_requests') {
+                invoiceDetail = await knex("service_orders").where({
+                    serviceRequestId: entityId
+                }).select('invoiceData', 'id').first();               
+            }
+
             res.status(200).json({
                 data: invoiceDetail,
                 message: "Invoice details !"

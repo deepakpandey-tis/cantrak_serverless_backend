@@ -10,7 +10,8 @@ const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const uuid = require('uuid/v4')
 const emailHelper = require('../../helpers/email')
-
+const XLSX = require("xlsx");
+const fs = require('fs');
 
 const customerController = {
   getCustomers: async (req, res) => {
@@ -51,20 +52,25 @@ const customerController = {
             "floor_and_zones.floorZoneCode",
             "property_units.unitNumber",
             "property_units.id as house",
-            "user_house_allocation.status"
+            "user_house_allocation.status",
+            "companies.companyId",
+            "projects.project as projectId",
+            "buildings_and_phases.description as buildingDescription",
+            "floor_and_zones.description as floorDescription",
+
           ])
           .where({ 'users.id': customerId });
 
         // Users property units start
-        units = await knex('user_house_allocation').select(['houseId','id']).where({userId:customerId})
-        for(let u of units){
+        units = await knex('user_house_allocation').select(['houseId', 'id']).where({ userId: customerId })
+        for (let u of units) {
           let a = await knex('property_units').select([
             'companyId',
             'projectId',
             'buildingPhaseId',
             'floorZoneId',
             'id as unit'
-          ]).where({id:u.houseId})
+          ]).where({ id: u.houseId })
           fullLocationDetails.push(a)
 
         }
@@ -242,7 +248,7 @@ const customerController = {
               "application_user_roles.roleId": 4,
               "users.orgId": req.orgId
             })
-            .whereIn('property_units.projectId',resourceProject)
+            .whereIn('property_units.projectId', resourceProject)
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
 
@@ -256,7 +262,8 @@ const customerController = {
                   qb.where('users.orgId', organisation)
                 }
               }
-            }),
+            })
+          ,
           knex("users")
             .leftJoin(
               "application_user_roles",
@@ -285,7 +292,7 @@ const customerController = {
               "application_user_roles.roleId": 4,
               "users.orgId": req.orgId
             })
-            .whereIn('property_units.projectId',resourceProject)
+            .whereIn('property_units.projectId', resourceProject)
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
 
@@ -305,7 +312,7 @@ const customerController = {
         ]);
       }
 
-      let count = total.length;
+      let count = _.unionBy(total, 'email').length;
       pagination.total = count;
       pagination.per_page = per_page;
       pagination.offset = offset;
@@ -313,7 +320,7 @@ const customerController = {
       pagination.last_page = Math.ceil(count / per_page);
       pagination.current_page = page;
       pagination.from = offset;
-      pagination.data = rows;
+      pagination.data = _.unionBy(rows, 'email');
 
       return res.status(200).json({
         data: {
@@ -465,8 +472,10 @@ const customerController = {
         }
         /*CHECK DUPLICATION USERNAME , EMAIL & MOBILE NO. CLOSE */
         let emailVerified = false;
+        let isActive = false;
         if (payload.allowLogin) {
           emailVerified = true;
+          isActive = true;
         }
         let pass = payload.password;
         payload = _.omit(payload, 'allowLogin')
@@ -475,14 +484,14 @@ const customerController = {
         let uuidv4 = uuid()
         let currentTime = new Date().getTime()
         insertedUser = await knex("users")
-          .insert({ ...payload, verifyToken: uuidv4, emailVerified: emailVerified, createdAt: currentTime, updatedAt: currentTime, createdBy: req.me.id, orgId: orgId })
+          .insert({ ...payload, verifyToken: uuidv4, emailVerified: emailVerified, isActive: isActive, createdAt: currentTime, updatedAt: currentTime, createdBy: req.me.id, orgId: orgId })
           .returning(["*"])
           .transacting(trx);
         console.log(payload);
 
         /*INSERT HOUSE ID OPEN */
-        for(let house of req.body.houses){
-         await knex("user_house_allocation")
+        for (let house of req.body.houses) {
+          await knex("user_house_allocation")
             .insert({ houseId: house.unit, userId: insertedUser[0].id, status: 1, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime })
             .returning(["*"])
             .transacting(trx);
@@ -623,12 +632,12 @@ const customerController = {
         console.log(payload);
 
 
-        let dbItems = await knex('user_house_allocation').select(['houseId','userId']).where({userId:payload.id})
-        let items = req.body.houses.map(v => ({houseId:v.unit, userId:payload.id}))
-        console.log('DB Items:********************************************************** ',dbItems)
-        console.log('Items:*********************************************************** ',items)
-        const removedItems = _.differenceWith(dbItems, items, (a,b) => {
-          if(a.houseId == b.houseId && a.userId == b.userId){
+        let dbItems = await knex('user_house_allocation').select(['houseId', 'userId']).where({ userId: payload.id })
+        let items = req.body.houses.map(v => ({ houseId: v.unit, userId: payload.id }))
+        console.log('DB Items:********************************************************** ', dbItems)
+        console.log('Items:*********************************************************** ', items)
+        const removedItems = _.differenceWith(dbItems, items, (a, b) => {
+          if (a.houseId == b.houseId && a.userId == b.userId) {
             return true;
           }
           return false
@@ -646,16 +655,16 @@ const customerController = {
 
         console.log('New Items:********************************************************** ', newItems)
 
-        for(let r of removedItems){
-          await knex('user_house_allocation').del().where({houseId:r.houseId})
+        for (let r of removedItems) {
+          await knex('user_house_allocation').del().where({ houseId: r.houseId })
         }
 
         for (let house of newItems) {
           //let s = await knex('user_house_allocation').select(['houseId']).where({houseId:house.unit,userId:insertedUser[0].id})
-         // if(Array.isArray(s) && !s.length){
-            await knex("user_house_allocation")
-              .insert({ houseId: house.houseId, userId: insertedUser[0].id, status: 1, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime })
-         // }
+          // if(Array.isArray(s) && !s.length){
+          await knex("user_house_allocation")
+            .insert({ houseId: house.houseId, userId: insertedUser[0].id, status: 1, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime })
+          // }
         }
         trx.commit;
       })
@@ -667,6 +676,446 @@ const customerController = {
     } catch (err) {
       console.log(
         "[controllers][customers][createCustome] :  Error",
+        err
+      );
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+
+  /*EXPORT TENANT DATA */
+  exportTenantData: async (req, res) => {
+    try {
+      console.log("Req.orgId: ", req.orgId);
+      let resourceProject = req.userProjectResources[0].projects;
+
+      [rows] = await Promise.all([
+
+        knex.from("users")
+          .leftJoin(
+            "application_user_roles",
+            "users.id",
+            "application_user_roles.userId"
+          )
+          .leftJoin(
+            "user_house_allocation",
+            "users.id",
+            "user_house_allocation.userId"
+          )
+          .leftJoin(
+            "property_units",
+            "user_house_allocation.houseId",
+            "property_units.id"
+          )
+          .leftJoin(
+            "companies",
+            "property_units.companyId",
+            "companies.id"
+          )
+          .leftJoin(
+            "projects",
+            "property_units.projectId",
+            "projects.id"
+          )
+          .leftJoin(
+            "buildings_and_phases",
+            "property_units.buildingPhaseId",
+            "buildings_and_phases.id"
+          )
+          .leftJoin(
+            "floor_and_zones",
+            "property_units.floorZoneId",
+            "floor_and_zones.id"
+          )
+          .select([
+            "users.userType as TENANT_TYPE",
+            "users.name as NAME",
+            "users.userName as USER_NAME",
+            "users.email as EMAIL",
+            "users.mobileNo as MOBILE_NO",
+            "users.phoneNo as PHONE_NO",
+            "users.location as ADDRESS",
+            "users.taxId as TAX_ID",
+            "users.nationalId as NATIONAL_ID",
+            //"companies.companyId as COMPANY_ID",
+            //"projects.project as PROJECT_ID",
+            //"buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
+            //"floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
+            "property_units.unitNumber as UNIT_NUMBER"
+          ])
+          .orderBy('users.id', 'desc')
+          .where({
+            "application_user_roles.roleId": 4,
+            "users.orgId": req.orgId
+          })
+          .whereIn('property_units.projectId', resourceProject)
+
+      ]);
+
+      let tempraryDirectory = null;
+      let bucketName = null;
+      if (process.env.IS_OFFLINE) {
+        bucketName = "sls-app-resources-bucket";
+        tempraryDirectory = "tmp/";
+      } else {
+        tempraryDirectory = "/tmp/";
+        bucketName = process.env.S3_BUCKET_NAME;
+      }
+
+      var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
+      var ws;
+
+      if (rows && rows.length) {
+        let row = _.unionBy(rows,'EMAIL');
+        ws = XLSX.utils.json_to_sheet(row);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          {
+            TENANT_TYPE: "",
+            NAME: "",
+            USER_NAME: "",
+            EMAIL: "",
+            MOBILE_NO: "",
+            PHONE_NO: "",
+            ADDRESS: "",
+            TAX_ID: "",
+            NATIONAL_ID: "",
+            //COMPANY_ID: "",
+            //PROJECT_ID: "",
+            //BUILDING_PHASE_CODE: "",
+            //FLOOR_ZONE_CODE: "",
+            UNIT_NUMBER: ""
+          }
+        ]);
+      }
+
+      XLSX.utils.book_append_sheet(wb, ws, "pres");
+      XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
+      let filename = "TenantData-" + Date.now() + ".csv";
+      let filepath = tempraryDirectory + filename;
+      let check = XLSX.writeFile(wb, filepath);
+
+      const AWS = require("aws-sdk");
+      fs.readFile(filepath, function (err, file_buffer) {
+        var s3 = new AWS.S3();
+        var params = {
+          Bucket: bucketName,
+          Key: "Export/Tenant/" + filename,
+          Body: file_buffer,
+          ACL: "public-read"
+        };
+        s3.putObject(params, function (err, data) {
+          if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            res.status(500).json({
+              errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+            //next(err);
+          } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+            // let deleteFile = fs.unlink(filepath, err => {
+            //   console.log("File Deleting Error " + err);
+            // });
+            let url =
+              "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Tenant/" +
+              filename;
+            return res.status(200).json({
+              data: rows,
+              message: "Tenant Data Export Successfully!",
+              url: url
+            });
+          }
+        });
+      });
+
+    } catch (err) {
+      console.log(
+        "[controllers][customer][exportTenantData] :  Error",
+        err
+      );
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  /*IMPORT TENANT DATA */
+  importTenantData: async (req, res) => {
+    try {
+
+      let data = req.body;
+      console.log("+++++++++++++", data[0], "=========");
+
+      let totalData = data.length - 1;
+      let fail = 0;
+      let success = 0;
+      let result = null;
+      let userId = req.me.id;
+      let errors = []
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
+      //errors.push(header);
+
+
+      if (data[0].B === 'NAME' &&
+        data[0].C === 'USER_NAME' &&
+        data[0].D === 'EMAIL' &&
+        data[0].E === 'MOBILE_NO' &&
+        data[0].F === 'PHONE_NO' &&
+        data[0].G === 'ADDRESS' &&
+        data[0].H === 'TAX_ID' &&
+        data[0].I === 'NATIONAL_ID' &&
+        //data[0].J === 'COMPANY_ID' &&
+        //data[0].K === 'PROJECT_ID' &&
+        //data[0].L === 'BUILDING_PHASE_CODE' &&
+        //data[0].M === 'FLOOR_ZONE_CODE' &&
+        data[0].J === 'UNIT_NUMBER' &&
+        data[0].A === 'TENANT_TYPE' || data[0].A === 'Ã¯Â»Â¿TENANT_TYPE'
+      ) {
+        if (data.length > 0) {
+
+          let i = 0;
+          for (let tenantData of data) {
+            i++;
+
+            if (i > 1) {
+
+              if (!tenantData.A) {
+                let values = _.values(tenantData)
+                values.unshift('Tenant type is required!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!tenantData.B) {
+                let values = _.values(tenantData)
+                values.unshift('Name is required!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!tenantData.C) {
+                let values = _.values(tenantData)
+                values.unshift('User Name is required!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!tenantData.D) {
+                let values = _.values(tenantData)
+                values.unshift('Email is required!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
+              if (!tenantData.J) {
+                let values = _.values(tenantData)
+                values.unshift('Unit number is required!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              const existUser = await knex('users').where({ userName: tenantData.C });
+
+              if (existUser && existUser.length) {
+                let values = _.values(tenantData)
+                values.unshift('User Name already exist!.!')
+                errors.push(values);
+                fail++;
+                continue;
+
+              }
+
+              if (tenantData.E) {
+
+                let mobile = tenantData.E;
+                mobile = mobile.toString();
+
+                if (mobile.length != 10) {
+                  let values = _.values(tenantData)
+                  values.unshift('Enter valid mobile No.!')
+                  errors.push(values);
+                  fail++;
+                  continue;
+                }
+                if (isNaN(mobile)) {
+                  let values = _.values(tenantData)
+                  values.unshift('Enter valid mobile No.')
+                  errors.push(values);
+                  fail++;
+                  continue;
+
+                }
+
+                let checkMobile = await knex('users').select("id")
+                  .where({ mobileNo: tenantData.E })
+
+                if (checkMobile.length) {
+
+                  let values = _.values(tenantData)
+                  values.unshift('Mobile number already exists')
+                  errors.push(values);
+                  fail++;
+                  continue;
+                }
+              }
+
+              let unitId = null;
+
+              if (tenantData.J) {
+                let checkUnit = await knex('property_units').select("id")
+                  .where({ unitNumber: tenantData.J, orgId: req.orgId })
+
+                if (!checkUnit.length) {
+                  let values = _.values(tenantData)
+                  values.unshift('Unit number does not exists')
+                  errors.push(values);
+                  fail++;
+                  continue;
+                }
+
+                if (checkUnit.length) {
+                  unitId = checkUnit[0].id;
+                }
+
+              }
+
+              let checkExist = await knex('users').select("id")
+                .where({ email: tenantData.D })
+              let currentTime = new Date().getTime();
+              if (checkExist.length < 1) {
+
+                let pass = "" + Math.round(Math.random() * 1000000);
+                const hash = await bcrypt.hash(
+                  pass,
+                  saltRounds
+                );
+
+                let mobile = null;
+                if (tenantData.E) {
+                  mobile = tenantData.E
+                }
+
+                let taxId = null;
+                let nationalId = null;
+                if (tenantData.A == 1) {
+
+                  if (tenantData.H) {
+                    taxId = tenantData.H;
+                  }
+
+                } else if (tenantData.A == 2 || tenantData.A == 3) {
+                  if (tenantData.I) {
+                    nationalId = tenantData.I;
+                  }
+
+                }
+
+                let uuidv4 = uuid();
+
+                let insertData = {
+                  orgId: req.orgId,
+                  userType: tenantData.A,
+                  name: tenantData.B,
+                  userName: tenantData.C,
+                  email: tenantData.D,
+                  createdAt: currentTime,
+                  updatedAt: currentTime,
+                  emailVerified: false,
+                  password: hash,
+                  mobileNo: mobile,
+                  phoneNo: tenantData.F,
+                  createdBy: req.me.id,
+                  verifyToken: uuidv4,
+                  taxId: taxId,
+                  nationalId: nationalId,
+                  location: tenantData.G
+                }
+
+
+                console.log("Password=============================", pass, "===========")
+
+                result = await knex("users")
+                  .insert(insertData)
+                  .returning(["*"])
+
+
+                // Insert this users role as customer
+                let roleInserted = await knex('application_user_roles').insert({ userId: result[0].id, roleId: 4, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId })
+                  .returning(['*']);
+
+                let user = result[0]
+                console.log('User: ', result)
+                if (result && result.length) {
+
+                  await emailHelper.sendTemplateEmail({ to: tenantData.D, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: tenantData.B, username: tenantData.C, password: pass, uuid: uuidv4 } });
+
+                }
+
+
+                /*INSERT HOUSE ID OPEN */
+                if (unitId) {
+                  await knex("user_house_allocation")
+                    .insert({ houseId: unitId, userId: result[0].id, status: 1, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime })
+                    .returning(["*"])
+                }
+                /*INSERT HOUSE ID CLOSE */
+
+
+                success++;
+
+
+              } else {
+                let values = _.values(tenantData)
+                values.unshift('Email Id already exists')
+                errors.push(values);
+                fail++;
+              }
+
+
+
+            }
+          }
+          let message = null;
+          if (totalData == success) {
+            message =
+              "System has processed processed ( " +
+              totalData +
+              " ) entries and added them successfully!";
+          } else {
+            message =
+              "System has processed processed ( " +
+              totalData +
+              " ) entries out of which only ( " +
+              success +
+              " ) are added and others are failed ( " +
+              fail +
+              " ) due to validation!";
+          }
+          return res.status(200).json({
+            message: message,
+            errors
+          });
+        }
+      } else {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
+      }
+
+    } catch (err) {
+      console.log(
+        "[controllers][customer][importTenantData] :  Error",
         err
       );
       res.status(500).json({
