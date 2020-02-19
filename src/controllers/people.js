@@ -691,7 +691,7 @@ const peopleController = {
 
               if (!peopleData.A) {
                 let values = _.values(peopleData)
-                values.unshift('Name can not empty')
+                values.unshift('Name is required')
                 errors.push(values);
                 fail++;
                 continue;
@@ -699,7 +699,7 @@ const peopleController = {
 
               if (!peopleData.B) {
                 let values = _.values(peopleData)
-                values.unshift('Email Id can not empty')
+                values.unshift('Email Id is required')
                 errors.push(values);
                 fail++;
                 continue;
