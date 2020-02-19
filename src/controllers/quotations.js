@@ -828,7 +828,7 @@ const quotationsController = {
         }
 
       })
-      pagination.data = rowsWithDays;
+      pagination.data = _.uniqBy(rowsWithDays,'QId');
 
 
       return res.status(200).json({

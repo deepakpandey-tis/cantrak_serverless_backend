@@ -39,6 +39,12 @@ authMiddleware.isAuthenticated,
 roleMiddleware.parseUserPermission, 
 dashboardController.getMainDataForPieChart)
 
+router.post('/get-service-requests-by-problem-type',
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    dashboardController.getServiceRequestsByProblemType
+)
+
 
 module.exports = router;
 

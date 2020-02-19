@@ -10,7 +10,7 @@ const authMiddleware = require('../../middlewares/auth');
 
 router.post('/add-satisfaction', authMiddleware.isAuthenticated,  satisfactionController.addSatisfaction);
 router.post('/update-satisfaction', authMiddleware.isAuthenticated,  satisfactionController.updateSatisfaction);
-router.get('/get-satisfaction-list', authMiddleware.isAuthenticated,  satisfactionController.getSatisfactionList);
+router.post('/get-satisfaction-list', authMiddleware.isAuthenticated,  satisfactionController.getSatisfactionList);
 router.post('/delete-satisfaction', authMiddleware.isAuthenticated,  satisfactionController.deleteSatisfaction);
 // Export Satisfaction Data
 router.get('/export-satisfaction', authMiddleware.isAuthenticated,  satisfactionController.exportSatisfaction);
