@@ -752,6 +752,12 @@ const serviceRequestController = {
               "property_units.id"
             )
             .leftJoin(
+              "requested_by",
+              "service_requests.requestedBy",
+              "requested_by.id"
+            )
+
+            .leftJoin(
               "service_status AS status",
               "service_requests.serviceStatusCode",
               "status.statusCode"
@@ -763,17 +769,19 @@ const serviceRequestController = {
               "service_requests.priority as Priority",
               "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
-              "service_requests.requestedBy as Requested By",
+              "requested_by.name as Requested By",
               "service_requests.createdAt as Date Created"
             ])
             .groupBy([
               "service_requests.id",
               "property_units.id",
-              "status.id"
+              "status.id",
+              "requested_by.id"
             ])
             .where({ "service_requests.orgId": req.orgId })
             .whereIn("service_requests.houseId", houseIds)
-            .orWhere("service_requests.createdBy", req.me.id),
+            .orWhere("service_requests.createdBy", req.me.id)
+            .distinct('service_requests.id'),
 
           knex
             .from("service_requests")
@@ -783,10 +791,16 @@ const serviceRequestController = {
               "property_units.id"
             )
             .leftJoin(
+              "requested_by",
+              "service_requests.requestedBy",
+              "requested_by.id"
+            )
+            .leftJoin(
               "service_status AS status",
               "service_requests.serviceStatusCode",
               "status.statusCode"
             )
+
             .select([
               "service_requests.id as S Id",
               "service_requests.houseId as houseId",
@@ -794,7 +808,7 @@ const serviceRequestController = {
               "service_requests.priority as Priority",
               "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
-              "service_requests.requestedBy as Requested By",
+              "requested_by.name as Requested By",
               "service_requests.createdAt as Date Created"
             ])
             .offset(offset)
@@ -802,6 +816,8 @@ const serviceRequestController = {
             .where({ "service_requests.orgId": req.orgId })
             .whereIn("service_requests.houseId", houseIds)
             .orWhere("service_requests.createdBy", req.me.id)
+            .distinct('service_requests.id')
+
         ]);
 
       } else {
@@ -821,22 +837,32 @@ const serviceRequestController = {
               "service_requests.id",
               "assigned_service_team.entityId"
             )
-
+            .leftJoin(
+              "requested_by",
+              "service_requests.requestedBy",
+              "requested_by.id"
+            )
+            .leftJoin(
+              "service_status AS status",
+              "service_requests.serviceStatusCode",
+              "status.statusCode"
+            )
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
               "service_requests.priority as Priority",
-              "service_requests.serviceStatusCode as Status",
+              "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
-              "service_requests.requestedBy as Requested By",
+              "requested_by.name as Requested By",
               "service_requests.createdAt as Date Created"
             ])
             .where({ "service_requests.orgId": req.orgId })
-            .whereIn("service_requests.houseId", houseIds)
-            .orWhere("service_requests.createdBy", req.me.id)
             .where(qb => {
               if (location) {
                 qb.where('service_requests.location', 'iLIKE', `%${location}%`)
+              }
+              if (priority) {
+                qb.where('service_requests.priority', 'iLIKE', `%${priority}%`)
               }
               if (description) {
                 qb.where('service_requests.description', 'iLIKE', `%${description}%`)
@@ -848,7 +874,7 @@ const serviceRequestController = {
                 ]);
               }
               if (dueDateFrom && dueDateTo) {
-
+                console.log("dsfsdfsdfsdfsdfffffffffffffffffff=========")
                 qb.whereBetween("service_requests.createdAt", [
                   dueFrom,
                   dueTo
@@ -856,15 +882,19 @@ const serviceRequestController = {
                 qb.where({ closedBy: "" })
               }
               qb.where(filters);
-
-
             })
+            .whereIn("service_requests.houseId", houseIds)
+            .orWhere("service_requests.createdBy", req.me.id)
+           
             .groupBy([
               "service_requests.id",
+              "requested_by.id",
+              "status.id",
               // "service_problems.id",
               // "incident_categories.id",
               "property_units.id"
-            ]),
+            ])
+            .distinct('service_requests.id'),
           knex
             .from("service_requests")
             .leftJoin(
@@ -877,21 +907,33 @@ const serviceRequestController = {
               "service_requests.id",
               "assigned_service_team.entityId"
             )
+            .leftJoin(
+              "requested_by",
+              "service_requests.requestedBy",
+              "requested_by.id"
+            )
+            .leftJoin(
+              "service_status AS status",
+              "service_requests.serviceStatusCode",
+              "status.statusCode"
+            )
+
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
               "service_requests.priority as Priority",
-              "service_requests.serviceStatusCode as Status",
+              "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
-              "service_requests.requestedBy as Requested By",
+              "requested_by.name as Requested By",
               "service_requests.createdAt as Date Created"
             ])
             .where({ "service_requests.orgId": req.orgId })
-            .whereIn("service_requests.houseId", houseIds)
-            .orWhere("service_requests.createdBy", req.me.id)
             .where(qb => {
               if (location) {
                 qb.where('service_requests.location', 'iLIKE', `%${location}%`)
+              }
+              if (priority) {
+                qb.where('service_requests.priority', 'iLIKE', `%${priority}%`)
               }
               if (description) {
                 qb.where('service_requests.description', 'iLIKE', `%${description}%`)
@@ -914,8 +956,12 @@ const serviceRequestController = {
               qb.where(filters);
 
             })
+            .whereIn("service_requests.houseId", houseIds)
+            .orWhere("service_requests.createdBy", req.me.id)           
             .offset(offset)
             .limit(per_page)
+            .distinct('service_requests.id')
+
         ]);
       }
 
@@ -2588,7 +2634,27 @@ const serviceRequestController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  /*GET ALL STATUS LIST FOR DROP DOWN */
+  getAllStatus: async (req, res) => {
+    try {
+
+      let orgId = req.orgId;
+      let result = await knex.from('service_status')
+        .select('id', "statusCode", "descriptionEng")
+        .where({ 'isActive': true })
+      return res.status(200).json({
+        data: result,
+        message: "All Status list"
+      });
+
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
+
 
 };
 
