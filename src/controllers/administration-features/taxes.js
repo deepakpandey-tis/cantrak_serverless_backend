@@ -48,7 +48,7 @@ const taxesfactionController = {
         }
 
         const existTaxCode = await knex("taxes").where({
-          taxCode: taxesPayload.taxCode,
+          taxCode: taxesPayload.taxCode.toUpperCase(),
           orgId: req.orgId
         });
 
@@ -61,7 +61,7 @@ const taxesfactionController = {
             errors: [
               {
                 code: "TAX_CODE_EXIST_ERROR",
-                message: "Tax Code already exist !"
+                message: "Vat Code already exist !"
               }
             ]
           });
@@ -97,7 +97,7 @@ const taxesfactionController = {
         data: {
           tax: taxes
         },
-        message: "Tax added successfully!!"
+        message: "Vat added successfully!!"
       });
     } catch (err) {
       console.log("[controllers][tax][addtax] :  Error", err);
@@ -157,7 +157,7 @@ const taxesfactionController = {
             errors: [
               {
                 code: "TAX_CODE_EXIST_ERROR",
-                message: "Tax Code already exist !"
+                message: "Vat Code already exist !"
               }
             ]
           });
@@ -199,7 +199,7 @@ const taxesfactionController = {
         data: {
           tax: updateTaxPayload
         },
-        message: "Tax updated successfully !"
+        message: "Vat updated successfully!"
       });
     } catch (err) {
       console.log("[controllers][tax][updateTax] :  Error", err);
@@ -214,6 +214,13 @@ const taxesfactionController = {
 
   getTaxesList: async (req, res) => {
     try {
+
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "taxes.taxCode";
+        sortPayload.orderBy = "asc"
+      }
+
       let reqData = req.query;
       let total;
       let rows;
@@ -222,6 +229,7 @@ const taxesfactionController = {
       let page = reqData.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
+      let {searchValue}  = req.body;
 
       [total, rows] = await Promise.all([
         knex
@@ -229,6 +237,13 @@ const taxesfactionController = {
           .from("taxes")
           .leftJoin("users", "users.id", "taxes.createdBy")
           .where({ "taxes.orgId": req.orgId })
+          .where(qb=>{
+            if(searchValue){
+            qb.where('taxes.taxCode','iLIKE',`%${searchValue}%`)
+            qb.orWhere('taxes.taxPercentage','iLIKE',`%${searchValue}%`)
+            qb.orWhere('taxes.descriptionEng','iLIKE',`%${searchValue}%`)
+            }
+          })
           //.offset(offset)
           //.limit(per_page)
           .first(),
@@ -246,7 +261,14 @@ const taxesfactionController = {
             "taxes.descriptionEng",
             "taxes.descriptionThai",
           ])
-          .orderBy('taxes.id', 'desc')
+          .where(qb=>{
+            if(searchValue){
+            qb.where('taxes.taxCode','iLIKE',`%${searchValue}%`)
+            qb.orWhere('taxes.taxPercentage','iLIKE',`%${searchValue}%`)
+            qb.orWhere('taxes.descriptionEng','iLIKE',`%${searchValue}%`)
+            }
+          })
+          .orderBy(sortPayload.sortBy, sortPayload.orderBy)
           .offset(offset)
           .limit(per_page)
       ]);
@@ -325,7 +347,7 @@ const taxesfactionController = {
               updateDataResult
             );
             updateTaxPayload = updateDataResult[0];
-           message = "VAT deactivate successfully!"
+            message = "VAT deactivate successfully!"
           } else {
 
             updateDataResult = await knex
@@ -364,7 +386,7 @@ const taxesfactionController = {
         data: {
           taxes: updateTaxPayload
         },
-        message:message
+        message: message
       });
     } catch (err) {
       console.log("[controllers][tax][deletetax] :  Error", err);
@@ -435,8 +457,8 @@ const taxesfactionController = {
           .leftJoin("users", "users.id", "taxes.createdBy")
           .where({ "taxes.orgId": req.orgId })
           .select([
-            "taxes.taxCode as TAX CODE",
-            "taxes.taxPercentage as TAX PERCENTAGE",
+            "taxes.taxCode as VAT_CODE",
+            "taxes.taxPercentage as VAT_PERCENTAGE",
             "taxes.descriptionEng as DESCRIPTION",
             "taxes.descriptionThai as ALTERNATE_LANGUAGE_DESCRIPTION",
             "taxes.glAccountCode as GL_ACCOUNT_CODE",
@@ -461,18 +483,18 @@ const taxesfactionController = {
       } else {
         ws = XLSX.utils.json_to_sheet([
           {
-            "TAX CODE": "",
-            "TAX PERCENTAGE": "",
-            "DESCRIPTION": "",
-            "ALTERNATE_LANGUAGE_DESCRIPTION": "",
-            "GL_ACCOUNT_CODE": ""
+            VAT_CODE: "",
+            VAT_PERCENTAGE: "",
+            DESCRIPTION: "",
+            ALTERNATE_LANGUAGE_DESCRIPTION: "",
+            GL_ACCOUNT_CODE: ""
           }
         ]);
       }
 
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename = "TaxData-" + Date.now() + ".csv";
+      let filename = "VatData-" + Date.now() + ".csv";
       let filepath = tempraryDirectory + filename;
       let check = XLSX.writeFile(wb, filepath);
       const AWS = require("aws-sdk");
@@ -518,116 +540,137 @@ const taxesfactionController = {
   },
   importTaxData: async (req, res) => {
     try {
-      if (req.file) {
-        console.log(req.file);
-        let tempraryDirectory = null;
-        if (process.env.IS_OFFLINE) {
-          tempraryDirectory = "tmp/";
-        } else {
-          tempraryDirectory = "/tmp/";
-        }
-        let resultData = null;
-        let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: "binary" });
-        let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, {
-          type: "string",
-          header: "A",
-          raw: false
-        });
-        //data         = JSON.stringify(data);
-        let result = null;
-        let currentTime = new Date().getTime();
-        let totalData = data.length - 1;
-        let fail = 0;
-        let success = 0;
-        //console.log('DATA: ',data)
-        let errors = []
-        let header = Object.values(data[0]);
-        header.unshift('Error');
-        errors.push(header)
 
-        if (
-          data[0].A == "Ã¯Â»Â¿TAX CODE" ||
-          (data[0].A == "TAX CODE" &&
-            data[0].B == "TAX PERCENTAGE" &&
-            data[0].C == "DESCRIPTION" &&
-            data[0].D == "ALTERNATE_LANGUAGE_DESCRIPTION" &&
-            data[0].E == "GL_ACCOUNT_CODE"
-          )
-        ) {
-          if (data.length > 0) {
-            let i = 0;
-            console.log("Data[0]", data[0]);
-            for (let taxData of data) {
-              i++;
-              if (i > 1) {
-                let checkExist = await knex("taxes")
-                  .select("taxCode")
-                  .where({
-                    taxCode: taxData.A,
-                    orgId: req.orgId
-                  });
-                if (checkExist.length < 1) {
-                  let insertData = {
-                    orgId: req.orgId,
-                    taxCode: taxData.A,
-                    taxPercentage: taxData.B,
-                    isActive: true,
-                    createdBy: req.me.id,
-                    createdAt: currentTime,
-                    descriptionEng: taxData.C,
-                    descriptionThai: taxData.D,
-                    glAccountCode: taxData.E
-                  };
+      let data = req.body;
+      //data         = JSON.stringify(data);
+      let result = null;
+      let currentTime = new Date().getTime();
+      let totalData = data.length - 1;
+      let fail = 0;
+      let success = 0;
+      //console.log('DATA: ',data)
+      let errors = []
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
 
-                  resultData = await knex
-                    .insert(insertData)
-                    .returning(["*"])
-                    .into("taxes");
+      if (
+        data[0].A == "Ã¯Â»Â¿VAT_CODE" ||
+        (data[0].A == "VAT_CODE" &&
+          data[0].B == "VAT_PERCENTAGE" &&
+          data[0].C == "DESCRIPTION" &&
+          data[0].D == "ALTERNATE_LANGUAGE_DESCRIPTION" &&
+          data[0].E == "GL_ACCOUNT_CODE"
+        )
+      ) {
+        if (data.length > 0) {
+          let i = 0;
+          console.log("Data[0]", data[0]);
+          for (let taxData of data) {
+            i++;
+            if (i > 1) {
 
-                  if (resultData && resultData.length) {
-                    success++;
-                  }
-                } else {
+
+
+              if (!taxData.A) {
+                let values = _.values(taxData)
+                values.unshift('Vat code is required!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!taxData.B) {
+                let values = _.values(taxData)
+                values.unshift('Vat Percentage is required!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
+              if (!taxData.C) {
+                let values = _.values(taxData)
+                values.unshift('Description is required!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
+              let percentage;
+              if (taxData.B) {
+
+                percentage = taxData.B;
+                if (isNaN(percentage)) {
+
                   let values = _.values(taxData)
-                  values.unshift('VAT code already exists')
+                  values.unshift('Enter valid vat percentage!')
                   errors.push(values);
                   fail++;
+                  continue;
+
                 }
               }
-            }
 
-            let deleteFile = await fs.unlink(file_path, err => {
-              console.log("File Deleting Error " + err);
-            });
 
-            let message = null;
-            if (totalData == success) {
-              message =
-                "System has processed processed ( " +
-                totalData +
-                " ) entries and added them successfully!";
-            } else {
-              message =
-                "System has processed processed ( " +
-                totalData +
-                " ) entries out of which only ( " +
-                success +
-                " ) are added and others are failed ( " +
-                fail +
-                " ) due to validation!";
+              let checkExist = await knex("taxes")
+                .select("taxCode")
+                .where({
+                  taxCode: taxData.A,
+                  orgId: req.orgId
+                });
+              if (checkExist.length < 1) {
+                let insertData = {
+                  orgId: req.orgId,
+                  taxCode: taxData.A,
+                  taxPercentage: taxData.B,
+                  isActive: true,
+                  createdBy: req.me.id,
+                  createdAt: currentTime,
+                  descriptionEng: taxData.C,
+                  descriptionThai: taxData.D,
+                  glAccountCode: taxData.E
+                };
+
+                resultData = await knex
+                  .insert(insertData)
+                  .returning(["*"])
+                  .into("taxes");
+
+                if (resultData && resultData.length) {
+                  success++;
+                }
+              } else {
+                let values = _.values(taxData)
+                values.unshift('VAT code already exists')
+                errors.push(values);
+                fail++;
+              }
             }
-            return res.status(200).json({
-              message: message,
-              errors: errors
-            });
           }
-        } else {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-            ]
+
+
+
+          let message = null;
+          if (totalData == success) {
+            message =
+              "System has processed processed ( " +
+              totalData +
+              " ) entries and added them successfully!";
+          } else {
+            message =
+              "System has processed processed ( " +
+              totalData +
+              " ) entries out of which only ( " +
+              success +
+              " ) are added and others are failed ( " +
+              fail +
+              " ) due to validation!";
+          }
+          return res.status(200).json({
+            message: message,
+            errors: errors
           });
         }
       } else {
@@ -637,6 +680,7 @@ const taxesfactionController = {
           ]
         });
       }
+
     } catch (err) {
       console.log(
         "[controllers][propertysetup][importCompanyData] :  Error",

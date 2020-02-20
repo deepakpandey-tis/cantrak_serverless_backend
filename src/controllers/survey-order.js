@@ -930,6 +930,214 @@ const surveyOrderController = {
       });
     }
   },
+  getSurveyOrderListNew:async(req,res) => {
+    try {
+      let filterList = req.body;
+      let total
+      let rows
+      const accessibleProjects = req.userProjectResources[0].projects
+      let pagination = {};
+      let per_page = req.query.per_page || 10;
+      let page = req.query.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+      let dueFromDate = filterList.dueDateFrom;
+      console.log("duefromDate", dueFromDate);
+      dueFromDate = new Date(dueFromDate).getTime();
+
+      let dueToDate = filterList.dueDateTo;
+      // console.log("duetoDate", compToDate);
+      dueToDate = new Date(dueToDate).getTime();
+
+      let filters = {}
+      if(filterList.serviceRequestId){
+        filters['s.id'] = filterList.serviceRequestId;
+      }
+      if(filterList.surveyOrderId){
+        filters['o.id'] = filterList.surveyOrderId
+      }
+      if(filterList.status){
+        filters['o.surveyOrderStatus'] = filterList.status;
+      }
+      
+
+        [total,rows] = await Promise.all([
+          knex
+            .count("* as count")
+            .from("survey_orders as o")
+            .where(qb => {
+              qb.where(filters);
+              if (dueFromDate || dueToDate) {
+                qb.whereBetween("o.appointedDate", [dueFromDate, dueToDate]);
+              }
+              qb.where("o.orgId", req.orgId)
+            })
+            .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
+            .leftJoin(
+              "service_status AS status",
+              "s.serviceStatusCode",
+              "status.statusCode"
+            )
+            .leftJoin(
+              "assigned_service_team",
+              "o.id",
+              "assigned_service_team.entityId"
+            )
+            .leftJoin(
+              "teams",
+              "assigned_service_team.teamId",
+              "teams.teamId"
+            )
+            .leftJoin("users", "assigned_service_team.userId", "users.id")
+            .leftJoin("users AS u", "o.createdBy", "u.id")
+            .leftJoin(
+              "property_units",
+              "s.houseId",
+              "property_units.id"
+            )
+            .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
+            .leftJoin(
+              "service_problems",
+              "s.id",
+              "service_problems.serviceRequestId"
+            )
+            .leftJoin(
+              "requested_by",
+              "s.requestedBy",
+              "requested_by.id"
+            )
+            .leftJoin(
+              "incident_categories",
+              "service_problems.categoryId",
+              "incident_categories.id"
+            )
+            .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
+            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+            .select(
+              "o.id AS surveyId",
+              "o.serviceRequestId",
+              "o.surveyOrderStatus as Status",
+              "status.statusCode AS surveyStatusCode",
+              "u.id As createdUserId",
+              "u.name AS appointedBy",
+              "users.name AS assignedTo",
+              "u.name AS createdBy",
+              "o.appointedDate AS appointmentDate",
+              "o.appointedTime AS appointmentTime",
+              "o.createdAt AS createdAt",
+              "teams.teamName as teamName",
+              "assignUser.name  as Tenant Name"
+            )
+            .where({ "assigned_service_team.entityType": "survey_orders" })
+            .whereIn('s.projectId', accessibleProjects)
+            .groupBy([
+              "o.id",
+              "s.id",
+              "status.descriptionEng",
+              "status.statusCode",
+              "u.id",
+              "users.id",
+              "teams.teamId",
+              "assigned_service_team.entityType",
+              "assignUser.id",
+              "user_house_allocation.id"
+            ]), knex
+              .select(
+                "o.id as S Id",
+                "s.description as Description",
+                "o.appointedDate as Appointment Date",
+                "o.appointedTime as Appointment Time",
+                "users.name as Assigned To",
+                "s.id as SR Id",
+                "s.priority as Priority",
+                "u.name as Created By",
+                "o.surveyOrderStatus as Status",
+                "o.createdAt as Date Created",
+                "teams.teamName as teamName",
+                "buildings_and_phases.buildingPhaseCode",
+                "buildings_and_phases.description as buildingDescription",
+                "property_units.unitNumber",
+                "incident_categories.descriptionEng as problemDescription",
+                "requested_by.name as requestedBy",
+                "assignUser.name  as Tenant Name"
+              )
+              .from("survey_orders As o")
+              .where(qb => {
+                qb.where(filters);
+                if (dueFromDate || dueToDate) {
+                  qb.whereBetween("o.appointedDate", [dueFromDate, dueToDate]);
+                }
+                qb.where("o.orgId", req.orgId);
+              }).where({ "assigned_service_team.entityType": "survey_orders" })
+              .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
+              .leftJoin("users AS u", "o.createdBy", "u.id")
+              .leftJoin(
+                "service_status AS status",
+                "s.serviceStatusCode",
+                "status.statusCode"
+              )
+              .leftJoin(
+                "assigned_service_team",
+                "o.id",
+                "assigned_service_team.entityId"
+              )
+              .leftJoin(
+                "teams",
+                "assigned_service_team.teamId",
+                "teams.teamId"
+              )
+              .leftJoin("users", "assigned_service_team.userId", "users.id")
+              .leftJoin(
+                "property_units",
+                "s.houseId",
+                "property_units.id"
+              )
+              .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
+              .leftJoin(
+                "service_problems",
+                "s.id",
+                "service_problems.serviceRequestId"
+              )
+              .leftJoin(
+                "requested_by",
+                "s.requestedBy",
+                "requested_by.id"
+              )
+              .leftJoin(
+                "incident_categories",
+                "service_problems.categoryId",
+                "incident_categories.id"
+              )
+              .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
+              .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+              .whereIn('s.projectId', accessibleProjects)
+              .orderBy('o.id', 'desc')
+              .offset(offset)
+              .limit(per_page)
+              ])
+
+      let count = total.length;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+      return res.status(200).json({
+        data: pagination
+      })
+      
+    } catch(err) {
+      console.log("[controllers][surveyOrder][addSurveyOrder] :  Error", err);
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
   getSurveyOrderDetails: async (req, res) => {
     try {
       let surveyOrder = null;

@@ -337,7 +337,9 @@ const commonAreaController = {
               "property_units.isActive as Status",
               "users.name as Created By",
               "property_units.createdAt as Date Created",
-              "projects.project as projectCode"
+              "projects.project as projectCode",
+              "buildings_and_phases.description as buildingDescription",
+              "floor_and_zones.description as floorDescription",
             ])
             .offset(offset)
             .limit(per_page)
@@ -412,7 +414,9 @@ const commonAreaController = {
               "property_units.isActive as Status",
               "users.name as Created By",
               "property_units.createdAt as Date Created",
-              "projects.project as projectCode"
+              "projects.project as projectCode",
+              "buildings_and_phases.description as buildingDescription",
+              "floor_and_zones.description as floorDescription",
             ])
             .whereIn('property_units.projectId',resourceProject)
             .offset(offset)

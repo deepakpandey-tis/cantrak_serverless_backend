@@ -384,7 +384,8 @@ const floorZoneController = {
               "floor_and_zones.createdAt as Date Created",
               "buildings_and_phases.buildingPhaseCode",
               "projects.projectName",
-              "projects.project as projectId"
+              "projects.project as projectId",
+              "buildings_and_phases.description as buildingDescription",
             ])
             .where({ "buildings_and_phases.isActive": true })
             .where({ "floor_and_zones.orgId": orgId })
@@ -458,7 +459,8 @@ const floorZoneController = {
               "floor_and_zones.createdAt as Date Created",
               "buildings_and_phases.buildingPhaseCode",
               "projects.projectName",
-              "projects.project as projectId"
+              "projects.project as projectId",
+              "buildings_and_phases.description as buildingDescription",
             ])
             .where({ "floor_and_zones.orgId": orgId })
             .where({ "buildings_and_phases.isActive": true })
