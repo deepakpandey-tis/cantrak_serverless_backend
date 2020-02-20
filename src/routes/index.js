@@ -58,6 +58,7 @@ const sharedListingRouter = require('./shared-listing')
 const invoiceRouter = require('./invoice')
 const facilityBookingRouter = require('./facility_booking');
 const serviceUserDetailsRouter = require('./users/servicedetails');
+const userDashboardRouter = require('./users/dashboard');
 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
@@ -124,7 +125,7 @@ router.use('/users/quotations', quotationUserRouter);
 router.use('/shared-listing',sharedListingRouter)
 router.use('/invoice',invoiceRouter)
 router.use('/users/servicedetails', serviceUserDetailsRouter);
-
-router.use('/facility_booking', facilityBookingRouter)
+router.use('/facility_booking', facilityBookingRouter);
+router.use('/users/dashboard', userDashboardRouter);
 
 module.exports = router;

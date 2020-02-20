@@ -23,7 +23,7 @@ router.post('/update-wht',
   resourceAccessMiddleware.isBillingAccessible,
   whtController.updateWht);
 
-router.get('/get-wht-list',
+router.post('/get-wht-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isBillingAccessible,

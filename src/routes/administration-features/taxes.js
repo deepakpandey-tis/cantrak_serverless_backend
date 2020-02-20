@@ -24,7 +24,7 @@ router.post('/update-taxes',
   resourceAccessMiddleware.isBillingAccessible,
   taxesController.updateTaxes);
 
-router.get('/get-taxes-list',
+router.post('/get-taxes-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isBillingAccessible,

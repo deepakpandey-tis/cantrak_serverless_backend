@@ -49,7 +49,7 @@ const whtController = {
         }
 
         const existWhtCode = await knex("wht_master").where({
-          whtCode: whtPayload.whtCode,
+          whtCode: whtPayload.whtCode.toUpperCase(),
           orgId: req.orgId
         });
 
@@ -76,7 +76,7 @@ const whtController = {
           whtCode: whtPayload.whtCode.toUpperCase(),
           createdBy: userId,
           orgId: req.orgId,
-          isActive: "true",
+          isActive: true,
           createdAt: currentTime,
           updatedAt: currentTime
         };
@@ -158,7 +158,7 @@ const whtController = {
             errors: [
               {
                 code: "TAX_CODE_EXIST_ERROR",
-                message: "Tax Code already exist !"
+                message: "Wht Code already exist !"
               }
             ]
           });
@@ -215,6 +215,13 @@ const whtController = {
 
   getWhtList: async (req, res) => {
     try {
+
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "wht_master.whtCode";
+        sortPayload.orderBy = "asc"
+      }
+
       let reqData = req.query;
       let total = null;
       let rows = null;
@@ -223,6 +230,7 @@ const whtController = {
       let page = reqData.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
+      let { searchValue } = req.body;
 
       [total, rows] = await Promise.all([
         knex
@@ -230,8 +238,13 @@ const whtController = {
           .from("wht_master")
           .leftJoin("users", "users.id", "wht_master.createdBy")
           .where({ "wht_master.orgId": req.orgId })
-          .offset(offset)
-          .limit(per_page)
+          .where(qb => {
+            if (searchValue) {
+              qb.where('wht_master.whtCode', 'iLIKE', `%${searchValue}%`)
+              qb.orWhere('wht_master.taxPercentage', 'iLIKE', `%${searchValue}%`)
+              qb.orWhere('wht_master.descriptionEng', 'iLIKE', `%${searchValue}%`)
+            }
+          })
           .first(),
         knex
           .from("wht_master")
@@ -247,7 +260,14 @@ const whtController = {
             "wht_master.descriptionEng",
             "wht_master.descriptionThai",
           ])
-          .orderBy('wht_master.id','desc')
+          .where(qb => {
+            if (searchValue) {
+              qb.where('wht_master.whtCode', 'iLIKE', `%${searchValue}%`)
+              qb.orWhere('wht_master.taxPercentage', 'iLIKE', `%${searchValue}%`)
+              qb.orWhere('wht_master.descriptionEng', 'iLIKE', `%${searchValue}%`)
+            }
+          })
+          .orderBy(sortPayload.sortBy, sortPayload.orderBy)
           .offset(offset)
           .limit(per_page)
       ]);
@@ -306,46 +326,46 @@ const whtController = {
         const currentTime = new Date().getTime();
         if (validTaxesId && validTaxesId.length) {
 
-          if(validTaxesId[0].isActive==true){
+          if (validTaxesId[0].isActive == true) {
 
             const updateDataResult = await knex
-            .update({
-              isActive: false,
-              updatedAt: currentTime
-            })
-            .where({
-              id: taxPaylaod.id
-            })
-            .returning(["*"])
-            .transacting(trx)
-            .into("wht_master");
+              .update({
+                isActive: false,
+                updatedAt: currentTime
+              })
+              .where({
+                id: taxPaylaod.id
+              })
+              .returning(["*"])
+              .transacting(trx)
+              .into("wht_master");
 
-          console.log(
-            "[controllers][tax][deletetax]: Delete Data",
-            updateDataResult
-          );
-          whtResult = updateDataResult[0];
-          message = "WHT deactivate successfully!"
+            console.log(
+              "[controllers][tax][deletetax]: Delete Data",
+              updateDataResult
+            );
+            whtResult = updateDataResult[0];
+            message = "WHT deactivate successfully!"
 
           } else {
 
             const updateDataResult = await knex
-            .update({
-              isActive: true,
-              updatedAt: currentTime
-            })
-            .where({
-              id: taxPaylaod.id
-            })
-            .returning(["*"])
-            .transacting(trx)
-            .into("wht_master");
-          console.log(
-            "[controllers][tax][deletetax]: Delete Data",
-            updateDataResult
-          );
-          whtResult = updateDataResult[0];
-          message = "WHT activate successfully!"
+              .update({
+                isActive: true,
+                updatedAt: currentTime
+              })
+              .where({
+                id: taxPaylaod.id
+              })
+              .returning(["*"])
+              .transacting(trx)
+              .into("wht_master");
+            console.log(
+              "[controllers][tax][deletetax]: Delete Data",
+              updateDataResult
+            );
+            whtResult = updateDataResult[0];
+            message = "WHT activate successfully!"
 
           }
         } else {
@@ -519,117 +539,137 @@ const whtController = {
   },
   importWhtData: async (req, res) => {
     try {
-      if (req.file) {
-        console.log(req.file);
-        let tempraryDirectory = null;
-        if (process.env.IS_OFFLINE) {
-          tempraryDirectory = "tmp/";
-        } else {
-          tempraryDirectory = "/tmp/";
-        }
-        let resultData = null;
-        let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: "binary" });
-        let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, {
-          type: "string",
-          header: "A",
-          raw: false
-        });
-        //data         = JSON.stringify(data);
-        let result = null;
-        let currentTime = new Date().getTime();
 
-        //console.log('DATA: ',data)
-        let totalData = data.length - 1;
-        let fail = 0;
-        let success = 0;
-        let errors = []
-        let header = Object.values(data[0]);
-        header.unshift('Error');
-        errors.push(header)
 
-        if (
-          data[0].A == "Ã¯Â»Â¿WHT_CODE" ||
-          (data[0].A == "WHT_CODE" &&
-            data[0].B == "TAX_PERCENTAGE" &&
-            data[0].C == "DESCRIPTION" &&
-            data[0].D == "ALTERNATE_LANGUAGE_DESCRIPTION" &&
-            data[0].E == "GL_ACCOUNT_CODE"
-          )
-        ) {
-          if (data.length > 0) {
-            let i = 0;
-            console.log("Data[0]", data[0]);
-            for (let whtData of data) {
-              i++;
-              if (i > 1) {
-                let checkExist = await knex("wht_master")
-                  .select("whtCode")
-                  .where({
-                    whtCode: whtData.A,
-                    orgId: req.orgId
-                  });
-                if (checkExist.length < 1) {
-                  let insertData = {
-                    orgId: req.orgId,
-                    whtCode: whtData.A,
-                    taxPercentage: whtData.B,
-                    isActive: true,
-                    createdBy: req.me.id,
-                    createdAt: currentTime,
-                    descriptionEng: whtData.C,
-                    descriptionThai: whtData.D,
-                    glAccountCode: whtData.E,
+      let data = req.body;
+      //data         = JSON.stringify(data);
+      let result = null;
+      let currentTime = new Date().getTime();
+      let resultData;
+      //console.log('DATA: ',data)
+      let totalData = data.length - 1;
+      let fail = 0;
+      let success = 0;
+      let errors = []
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
 
-                  };
+      if (
+        data[0].A == "Ã¯Â»Â¿WHT_CODE" ||
+        (data[0].A == "WHT_CODE" &&
+          data[0].B == "TAX_PERCENTAGE" &&
+          data[0].C == "DESCRIPTION" &&
+          data[0].D == "ALTERNATE_LANGUAGE_DESCRIPTION" &&
+          data[0].E == "GL_ACCOUNT_CODE"
+        )
+      ) {
+        if (data.length > 0) {
+          let i = 0;
+          console.log("Data[0]", data[0]);
+          for (let whtData of data) {
+            i++;
+            if (i > 1) {
 
-                  resultData = await knex
-                    .insert(insertData)
-                    .returning(["*"])
-                    .into("wht_master");
-                  if (resultData && resultData.length) {
-                    success++;
-                  }
-                } else {
+
+              if (!whtData.A) {
+                let values = _.values(whtData)
+                values.unshift('Wht code is required!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
+              if (!whtData.B) {
+                let values = _.values(whtData)
+                values.unshift('Tax percentage is required!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!whtData.C) {
+                let values = _.values(whtData)
+                values.unshift('Description is required!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
+              let percentage;
+              if (whtData.B) {
+
+                percentage = whtData.B;
+                if (isNaN(percentage)) {
+
                   let values = _.values(whtData)
-                  values.unshift('WHT code already exists')
+                  values.unshift('Enter valid wht percentage!')
                   errors.push(values);
                   fail++;
+                  continue;
                 }
+
+              }
+
+
+              let checkExist = await knex("wht_master")
+                .select("whtCode")
+                .where({
+                  whtCode: whtData.A.toUpperCase(),
+                  orgId: req.orgId
+                });
+              if (checkExist.length < 1) {
+                let insertData = {
+                  orgId: req.orgId,
+                  whtCode: whtData.A.toUpperCase(),
+                  taxPercentage: whtData.B,
+                  isActive: true,
+                  createdBy: req.me.id,
+                  createdAt: currentTime,
+                  descriptionEng: whtData.C,
+                  descriptionThai: whtData.D,
+                  glAccountCode: whtData.E,
+
+                };
+
+                resultData = await knex
+                  .insert(insertData)
+                  .returning(["*"])
+                  .into("wht_master");
+                if (resultData && resultData.length) {
+                  success++;
+                }
+              } else {
+                let values = _.values(whtData)
+                values.unshift('WHT code already exists')
+                errors.push(values);
+                fail++;
               }
             }
-
-            let deleteFile = await fs.unlink(file_path, err => {
-              console.log("File Deleting Error " + err);
-            });
-
-            let message = null;
-            if (totalData == success) {
-              message =
-                "System has processed processed ( " +
-                totalData +
-                " ) entries and added them successfully!";
-            } else {
-              message =
-                "System has processed processed ( " +
-                totalData +
-                " ) entries out of which only ( " +
-                success +
-                " ) are added and others are failed ( " +
-                fail +
-                " ) due to validation!";
-            }
-            return res.status(200).json({
-              message: message,
-              errors:errors
-            });
           }
-        } else {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-            ]
+
+
+          let message = null;
+          if (totalData == success) {
+            message =
+              "System has processed processed ( " +
+              totalData +
+              " ) entries and added them successfully!";
+          } else {
+            message =
+              "System has processed processed ( " +
+              totalData +
+              " ) entries out of which only ( " +
+              success +
+              " ) are added and others are failed ( " +
+              fail +
+              " ) due to validation!";
+          }
+          return res.status(200).json({
+            message: message,
+            errors: errors
           });
         }
       } else {
@@ -639,6 +679,7 @@ const whtController = {
           ]
         });
       }
+
     } catch (err) {
       console.log(
         "[controllers][propertysetup][importCompanyData] :  Error",

@@ -133,5 +133,9 @@ router.post('/get-team-by-entity',
     authMiddleware.isAuthenticated, userMiddleware.customerInfo,
     serviceRequestController.getTeamByEntity)
 
+router.get('/get-all-status',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.getAllStatus)
+
 
 module.exports = router;

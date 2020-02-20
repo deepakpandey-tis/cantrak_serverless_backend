@@ -10,10 +10,18 @@ router.post('/add-survey-order', authMiddleware.isAuthenticated, surveyOrderCont
 router.post('/update-survey-order', authMiddleware.isAuthenticated, surveyOrderController.updateSurveyOrder);
 
 // We can also get survey order by serviceRequestId so we support both at same route
+//TODO: REMOVE BELOW API
 router.post('/get-survey-orders', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
     resourceAccessMiddleware.isCMAccessible, surveyOrderController.getSurveyOrderList)
+
+router.post('/get-survey-order-list-new', 
+authMiddleware.isAuthenticated, 
+roleMiddleware.parseUserPermission, 
+resourceAccessMiddleware.isCMAccessible,
+surveyOrderController.getSurveyOrderListNew)
+
 router.post('/get-survey-order-details', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible, surveyOrderController.getSurveyOrderDetails)
+resourceAccessMiddleware.isCMAccessible, surveyOrderController.getSurveyOrderDetails)
 router.post('/update-remarks-notes', authMiddleware.isAuthenticated, surveyOrderController.updateRemarksNotes)
 router.post('/get-remarks-notes-list', authMiddleware.isAuthenticated, surveyOrderController.getRemarksNotesList)
 router.post('/delete-remarks-notes', authMiddleware.isAuthenticated, surveyOrderController.deleteRemarksNotes);
@@ -22,5 +30,6 @@ router.post('/export-survey-order', authMiddleware.isAuthenticated, roleMiddlewa
     resourceAccessMiddleware.isCMAccessible, surveyOrderController.exportSurveyOrder);
 router.post('/update-survey-status', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
     resourceAccessMiddleware.isCMAccessible, surveyOrderController.updateSurveyStatus)
+
 
 module.exports = router;
