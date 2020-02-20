@@ -2530,6 +2530,34 @@ const serviceRequestController = {
       let updateStatus = req.body.data.status;
       const currentTime = new Date().getTime();
       console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7', req.body)
+      let quotationsAtached = await knex('quotations').select('id')
+      .where({serviceRequestId:serviceRequestId,orgId:req.orgId})
+      let assignedPartsResult = []
+      for(let q of quotationsAtached){
+        assignedPartsResultData = await knex('assigned_parts').where({ entityId: q.id, entityType: 'quotations' }).first()
+        assignedPartsResult.push(assignedPartsResultData)
+
+        // Approve all the attached quotations
+        await knex('quotations').update({
+          quotationStatus: 'Approved', updatedAt: currentTime,
+          updatedBy: req.me.id,
+          approvedBy: req.me.id,
+          orgId: req.orgId}).where({id:q.id})
+
+      }
+
+      let assignedParts = assignedPartsResult.map(v => _.omit(v, ['id']))
+      let serviceOrderIdResult = await knex('service_orders').select('id').where({serviceRequestId:serviceRequestId,orgId:req.orgId}).first()
+      let checkIfAlreadyExists = await knex('assigned_parts')
+        .where({ entityType: 'service_orders', entityId: serviceOrderIdResult.id })
+      if (checkIfAlreadyExists && checkIfAlreadyExists.length) {
+
+      } else {
+        for (let p of assignedParts) {
+          await knex('assigned_parts')
+            .insert({ ...p, entityId: serviceOrderIdResult.id, entityType: 'service_orders' })
+        }
+      }
 
       const status = await knex("service_requests")
         .update({ serviceStatusCode: updateStatus, updatedAt: currentTime })

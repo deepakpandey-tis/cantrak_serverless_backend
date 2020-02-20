@@ -626,10 +626,10 @@ const statusController = {
   getAllStatus: async (req, res) => {
     try {
 
-      let orgId = req.orgId;
+      // let orgId = req.orgId;
       let result = await knex.from('service_status')
         .select('id', "statusCode", "descriptionEng")
-        .where({ orgId })
+        // .where({ orgId })
       return res.status(200).json({
         data: result,
         message: "All Status list"

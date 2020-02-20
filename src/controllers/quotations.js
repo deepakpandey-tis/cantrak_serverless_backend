@@ -1382,6 +1382,9 @@ const quotationsController = {
             ]
           });
         }
+
+        
+
         if (quotationPayload.status == 'Approved') {
           // Now approved quotation
           approveQuotation = await knex

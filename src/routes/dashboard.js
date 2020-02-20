@@ -46,5 +46,11 @@ router.post('/get-service-requests-by-problem-type',
 )
 
 
+router.post('/get-pie-chart-for-incident-types',
+authMiddleware.isAuthenticated,
+roleMiddleware.parseUserPermission,
+dashboardController.getPieChartForIncidentTypes
+)
+
 module.exports = router;
 
