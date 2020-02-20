@@ -56,7 +56,7 @@ const chargeController = {
 
         /*CHECK DUPLICATE VALUES OPEN */
         let existValue = await knex('charge_master')
-          .where({ chargeCode: chargePayload.chargeCode, orgId: req.orgId });
+          .where({ chargeCode: chargePayload.chargeCode.toUpperCase(), orgId: req.orgId });
         if (existValue && existValue.length) {
           return res.status(400).json({
             errors: [
@@ -71,6 +71,7 @@ const chargeController = {
         // Insert into charge codes
         let insertData = {
           ...chargePayload,
+          chargeCode: chargePayload.chargeCode.toUpperCase(),
           createdBy: userId,
           orgId: req.orgId,
           updatedAt: currentTime,
@@ -211,6 +212,12 @@ const chargeController = {
   },
   getChargesList: async (req, res) => {
     try {
+
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "charge_master.chargeCode";
+        sortPayload.orderBy = "asc"
+      }
       let reqData = req.query;
       let total = null;
       let rows = null;
@@ -266,7 +273,7 @@ const chargeController = {
               qb.where('charge_master.descriptionEng', 'iLIKE', `%${description}%`)
             }
           })
-          .orderBy('charge_master.id', 'desc')
+          .orderBy(sortPayload.sortBy, sortPayload.orderBy)
           .offset(offset)
           .limit(per_page)
       ]);
@@ -637,7 +644,7 @@ const chargeController = {
       let orgId = req.orgId;
 
       [rows] = await Promise.all([
-        knex("taxes").select(["id as vatId", "taxCode", "taxPercentage"]).where({ orgId: orgId })
+        knex("taxes").select(["id as vatId", "taxCode", "taxPercentage","descriptionEng"]).where({ orgId: orgId })
       ]);
 
       pagination.data = rows;
@@ -663,7 +670,7 @@ const chargeController = {
       let orgId = req.orgId;
 
       [rows] = await Promise.all([
-        knex("wht_master").select(["id as whtId", "whtCode", "taxPercentage"]).where({ orgId: orgId })
+        knex("wht_master").select(["id as whtId", "whtCode", "taxPercentage","descriptionEng"]).where({ orgId: orgId })
       ]);
 
       pagination.data = rows;
@@ -786,9 +793,9 @@ const chargeController = {
             CALCULATION_UNIT: "",
             RATE: "",
             VAT_CODE: "",
-            VAT_PERCENTAGE: "",
+            // VAT_PERCENTAGE: "",
             WHT_CODE: "",
-            WHT_PERCENTAGE: "",
+            // WHT_PERCENTAGE: "",
             GL_ACCOUNT_CODE: "",
           }
         ]);
@@ -847,64 +854,102 @@ const chargeController = {
   },
   importChargeData: async (req, res) => {
     try {
-      if (req.file) {
-        console.log(req.file);
-        let tempraryDirectory = null;
-        if (process.env.IS_OFFLINE) {
-          tempraryDirectory = "tmp/";
-        } else {
-          tempraryDirectory = "/tmp/";
-        }
-        let resultData = null;
-        let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: "binary" });
-        let ws = wb.Sheets[wb.SheetNames[0]];
-        let data = XLSX.utils.sheet_to_json(ws, {
-          type: "string",
-          header: "A",
-          raw: false
-        });
-        //data         = JSON.stringify(data);
-        console.log("============", data, "=============")
-        let result = null;
-        let currentTime = new Date().getTime();
-        //console.log('DATA: ',data)
-        let totalData = data.length - 1;
-        let fail = 0;
-        let success = 0;
-        let errors = []
-        let header = Object.values(data[0]);
-        header.unshift('Error');
-        errors.push(header)
+      let data = req.body;
+      //data         = JSON.stringify(data);
+      console.log("============", data, "=============")
+      let result = null;
+      let currentTime = new Date().getTime();
+      //console.log('DATA: ',data)
+      let totalData = data.length - 1;
+      let fail = 0;
+      let success = 0;
+      let errors = []
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
 
-        if (
-          data[0].A == "Ã¯Â»Â¿CHARGE_CODE" ||
-          (data[0].A == "CHARGE_CODE" &&
-            data[0].B == "DESCRIPTION" &&
-            data[0].C == "ALTERNATE_LANGUAGE_DESCRIPTION" &&
-            data[0].D == "CALCULATION_UNIT" &&
-            data[0].E == "RATE" &&
-            data[0].F == "VAT_CODE" &&
-            data[0].G == "WHT_CODE" &&
-            data[0].H == "GL_ACCOUNT_CODE"
-          )
-        ) {
-          if (data.length > 0) {
-            let i = 0;
-            console.log("Data[0]", data[0]);
-            for (let chargesData of data) {
-              // Find Company primary key
-              let vatId = null;
-              let whtId = null;
-              let vatPercentage = null;
-              let whtPercentage = null;
-              i++;
+      if (
+        data[0].A == "Ã¯Â»Â¿CHARGE_CODE" ||
+        (data[0].A == "CHARGE_CODE" &&
+          data[0].B == "DESCRIPTION" &&
+          data[0].C == "ALTERNATE_LANGUAGE_DESCRIPTION" &&
+          data[0].D == "CALCULATION_UNIT" &&
+          data[0].E == "RATE" &&
+          data[0].F == "VAT_CODE" &&
+          data[0].G == "WHT_CODE" &&
+          data[0].H == "GL_ACCOUNT_CODE"
+        )
+      ) {
+        if (data.length > 0) {
+          let i = 0;
+          console.log("Data[0]", data[0]);
+          for (let chargesData of data) {
+            // Find Company primary key
+            let vatId = null;
+            let whtId = null;
+            let vatPercentage = null;
+            let whtPercentage = null;
+            i++;
 
-              if (i > 1) {
+            if (i > 1) {
+
+
+
+              if (!chargesData.A) {
+                let values = _.values(chargesData)
+                values.unshift('Charge code is required!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
+              if (!chargesData.B) {
+                let values = _.values(chargesData)
+                values.unshift('Description is required!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!chargesData.D) {
+                let values = _.values(chargesData)
+                values.unshift('Calculation unit is required!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!chargesData.E) {
+                let values = _.values(chargesData)
+                values.unshift('Rate is required!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+
+              let rate;
+              if (chargesData.E) {
+
+                rate = chargesData.E;
+                if (isNaN(rate)) {
+
+                  let values = _.values(chargesData)
+                  values.unshift('Enter valid rate!')
+                  errors.push(values);
+                  fail++;
+                  continue;
+
+                }
+              }
+
+
+              if (chargesData.F) {
 
                 let taxesIdResult = await knex("taxes")
                   .select("id", "taxPercentage")
-                  .where({ taxCode: chargesData.F, orgId: req.orgId });
+                  .where({ taxCode: chargesData.F.toUpperCase(), orgId: req.orgId });
                 console.log("TaxIdResult", taxesIdResult);
 
                 if (!taxesIdResult.length) {
@@ -920,10 +965,14 @@ const chargeController = {
                   vatPercentage = taxesIdResult[0].taxPercentage
                   console.log("vat id found: ", vatId);
                 }
+              }
+
+
+              if (chargesData.G) {
 
                 let whtResult = await knex("wht_master")
                   .select("id", "taxPercentage")
-                  .where({ whtCode: chargesData.G, orgId: req.orgId });
+                  .where({ whtCode: chargesData.G.toUpperCase(), orgId: req.orgId });
 
                 if (!whtResult.length) {
                   let values = _.values(chargesData)
@@ -936,75 +985,67 @@ const chargeController = {
                   whtId = whtResult[0].id;
                   whtPercentage = whtResult[0].taxPercentage;
                 }
+              }
 
-                let checkExist = await knex("charge_master")
-                  .select("chargeCode")
-                  .where({
-                    chargeCode: chargesData.A,
-                    orgId: req.orgId
-                  });
-                if (checkExist.length < 1) {
-                  let insertData = {
-                    orgId: req.orgId,
-                    chargeCode: chargesData.A,
-                    descriptionThai: chargesData.C,
-                    descriptionEng: chargesData.B,
-                    vatRate: vatPercentage,
-                    vatId: vatId,
-                    whtRate: whtPercentage,
-                    whtId: whtId,
-                    createdBy: req.me.id,
-                    createdAt: currentTime,
-                    glAccountCode: chargesData.H,
-                    calculationUnit: chargesData.D,
-                    rate: chargesData.E,
-                  };
+              let checkExist = await knex("charge_master")
+                .select("chargeCode")
+                .where({
+                  chargeCode: chargesData.A.toUpperCase(),
+                  orgId: req.orgId
+                });
 
-                  resultData = await knex
-                    .insert(insertData)
-                    .returning(["*"])
-                    .into("charge_master");
-                  if (resultData && resultData.length) {
-                    success++;
-                  }
-                } else {
-                  let values = _.values(chargesData)
-                  values.unshift('Charge code already exists')
-                  errors.push(values);
-                  fail++;
+              if (checkExist.length < 1) {
+                let insertData = {
+                  orgId: req.orgId,
+                  chargeCode: chargesData.A.toUpperCase(),
+                  descriptionThai: chargesData.C,
+                  descriptionEng: chargesData.B,
+                  vatRate: vatPercentage,
+                  vatId: vatId,
+                  whtRate: whtPercentage,
+                  whtId: whtId,
+                  createdBy: req.me.id,
+                  createdAt: currentTime,
+                  glAccountCode: chargesData.H,
+                  calculationUnit: chargesData.D,
+                  rate: chargesData.E,
+                };
+
+                resultData = await knex
+                  .insert(insertData)
+                  .returning(["*"])
+                  .into("charge_master");
+                if (resultData && resultData.length) {
+                  success++;
                 }
+              } else {
+                let values = _.values(chargesData)
+                values.unshift('Charge code already exists')
+                errors.push(values);
+                fail++;
               }
             }
-
-            let deleteFile = await fs.unlink(file_path, err => {
-              console.log("File Deleting Error " + err);
-            });
-            let message = null;
-            if (totalData == success) {
-              message =
-                "System has processed processed ( " +
-                totalData +
-                " ) entries and added them successfully!";
-            } else {
-              message =
-                "System has processed processed ( " +
-                totalData +
-                " ) entries out of which only ( " +
-                success +
-                " ) are added and others are failed ( " +
-                fail +
-                " ) due to validation!";
-            }
-            return res.status(200).json({
-              message: message,
-              errors: errors
-            });
           }
-        } else {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-            ]
+
+          let message = null;
+          if (totalData == success) {
+            message =
+              "System has processed processed ( " +
+              totalData +
+              " ) entries and added them successfully!";
+          } else {
+            message =
+              "System has processed processed ( " +
+              totalData +
+              " ) entries out of which only ( " +
+              success +
+              " ) are added and others are failed ( " +
+              fail +
+              " ) due to validation!";
+          }
+          return res.status(200).json({
+            message: message,
+            errors: errors
           });
         }
       } else {
@@ -1014,6 +1055,7 @@ const chargeController = {
           ]
         });
       }
+
     } catch (err) {
       console.log(
         "[controllers][propertysetup][importCompanyData] :  Error",
