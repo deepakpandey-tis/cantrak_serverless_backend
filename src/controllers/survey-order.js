@@ -1383,7 +1383,7 @@ const surveyOrderController = {
       let entityId = remarksData.entityId;
       let entityType = remarksData.entityType;
 
-      let remarksNotesResult = await knex.raw(`select "remarks_master"."id","remarks_master"."description","remarks_master"."createdAt","remarks_master"."createdBy","images"."s3Url","users"."name" as "createdBy" from "remarks_master"  inner join "users" on "remarks_master"."createdBy" = "users"."id"  left join "images" on "remarks_master"."id" = "images"."entityId" where "remarks_master"."orgId" = ${req.orgId} and "remarks_master"."entityId" = ${entityId} and "remarks_master"."entityType" = '${entityType}' and "remarks_master"."isActive" = 'true' ORDER BY "remarks_master"."id"  DESC LIMIT 15 `)
+      let remarksNotesResult = await knex.raw(`select "remarks_master"."id","remarks_master"."description","remarks_master"."createdAt","remarks_master"."createdBy","images"."s3Url","users"."name" as "createdBy" from "remarks_master"  inner join "users" on "remarks_master"."createdBy" = "users"."id"  left join "images" on "remarks_master"."id" = "images"."entityId" where "remarks_master"."orgId" = ${req.orgId} and "remarks_master"."entityId" = ${entityId} and "remarks_master"."entityType" = '${entityType}' and "remarks_master"."isActive" = 'true' and "images"."entityType" = 'survey_order_notes' ORDER BY "remarks_master"."id"  DESC LIMIT 15 `)
 
       remarksNotesList = remarksNotesResult.rows;
 
