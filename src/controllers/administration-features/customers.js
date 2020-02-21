@@ -57,6 +57,7 @@ const customerController = {
             "projects.project as projectId",
             "buildings_and_phases.description as buildingDescription",
             "floor_and_zones.description as floorDescription",
+            "property_units.description as propertyUnitDescription"
 
           ])
           .where({ 'users.id': customerId });
@@ -127,6 +128,12 @@ const customerController = {
       let teamUser;
       let id = req.me.id;
 
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "users.id";
+        sortPayload.orderBy = "asc"
+      }
+
 
       if (role === "superAdmin" && adminName === "superAdmin") {
 
@@ -194,7 +201,7 @@ const customerController = {
               "users.id as userId",
               "users.isActive"
             ])
-            .orderBy('users.id', 'desc')
+            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .where({
               "application_user_roles.roleId": 4
             })
@@ -287,7 +294,7 @@ const customerController = {
               "users.id as userId",
               "users.isActive"
             ])
-            .orderBy('users.id', 'desc')
+            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .where({
               "application_user_roles.roleId": 4,
               "users.orgId": req.orgId
@@ -346,14 +353,14 @@ const customerController = {
       let subject = "Reset Password"
       updatedCustomer = await knex('users').update({ "verifyToken": uuidv4, "password": "" }).where({ id: id }).returning(['*'])
       let email = updatedCustomer[0].email;
-      await emailHelper.sendTemplateEmail({ to: email, subject: subject, template: 'test-email.ejs', templateData: { fullName: updatedCustomer[0].name, OTP: 'http://localhost:4200/reset-password/' + uuidv4 } })
+      await emailHelper.sendTemplateEmail({ to: email, subject: subject, template: 'test-email.ejs', templateData: { fullName: updatedCustomer[0].name, OTP: 'https://dj47f2ckirq9d.cloudfront.net/reset-password/' + uuidv4 } })
       return res.status(200).json({
         data: updatedCustomer[0],
-        message: "Password Reset request successfully!"
+        message: "Password reset link sent. Please check your email!"
       });
     } catch (err) {
       console.log(
-        "[controllers][survey Orders][getSurveyOrders] :  Error",
+        "[controllers][customers][resetPassword] :  Error",
         err
       );
       res.status(500).json({
@@ -767,7 +774,7 @@ const customerController = {
       var ws;
 
       if (rows && rows.length) {
-        let row = _.unionBy(rows,'EMAIL');
+        let row = _.unionBy(rows, 'EMAIL');
         ws = XLSX.utils.json_to_sheet(row);
       } else {
         ws = XLSX.utils.json_to_sheet([
