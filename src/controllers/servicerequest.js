@@ -2538,14 +2538,14 @@ const serviceRequestController = {
         assignedPartsResultData = await knex('assigned_parts')
         .innerJoin('quotations', 'assigned_parts.entityId', 'quotations.id')
         .select('assigned_parts.*')
-        .where({ entityId: q.id, entityType: 'quotations',quotationStatus:'Approved' }).first()
+        .where({ entityId: q.id, entityType: 'quotations',quotationStatus:'Approved' })//.first()
         assignedPartsResult.push(assignedPartsResultData)
 
 
         assignedChargesResultData = await knex('assigned_service_charges')
           .innerJoin('quotations', 'assigned_service_charges.entityId', 'quotations.id')
           .select('assigned_service_charges.*')
-          .where({ entityId: q.id, entityType: 'quotations', quotationStatus: 'Approved' }).first()
+          .where({ entityId: q.id, entityType: 'quotations', quotationStatus: 'Approved' })//.first()
         assignedChargesResult.push(assignedChargesResultData)
         // Approve all the attached quotations
         // await knex('quotations').update({
@@ -2556,8 +2556,8 @@ const serviceRequestController = {
 
       }
 
-      let assignedParts = _.uniqBy(assignedPartsResult,'id').map(v => _.omit(v, ['id']))
-      let assignedCharges = _.uniqBy(assignedChargesResult,'id').map(v => _.omit(v, ['id']))
+      let assignedParts = _.uniqBy(_.flatten(assignedPartsResult),'id').map(v => _.omit(v, ['id']))
+      let assignedCharges = _.uniqBy(_.flatten(assignedChargesResult),'id').map(v => _.omit(v, ['id']))
       let serviceOrderIdResult = await knex('service_orders').select('id').where({serviceRequestId:serviceRequestId,orgId:req.orgId}).first()
       let checkIfAlreadyExists = await knex('assigned_parts')
         .where({ entityType: 'service_orders', entityId: serviceOrderIdResult.id })
