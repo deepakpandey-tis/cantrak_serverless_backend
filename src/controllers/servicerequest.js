@@ -1058,15 +1058,7 @@ const serviceRequestController = {
               qb.where(filters);
               qb.whereIn('service_requests.projectId', accessibleProjects)
             })
-            // .groupBy([
-            //   "service_requests.id",
-            //   // "service_problems.id",
-            //   // "incident_categories.id",
-            //   // "incident_sub_categories.id",
-            //   "property_units.id",
-            //   "status.id",
-            //   "u.id"
-            // ]),,
+            
             .groupBy([
               "service_requests.id",
               "status.id",
