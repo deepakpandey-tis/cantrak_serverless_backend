@@ -788,11 +788,15 @@ const buildingPhaseController = {
       if (projectId) {
         buildings = await knex("buildings_and_phases")
           .select("*")
-          .where({ projectId, orgId: orgId });
+          .where({ projectId, orgId: orgId ,isActive:true})
+          .orderBy('buildings_and_phases.description','asc');
+
+
       } else {
         buildings = await knex("buildings_and_phases")
           .select("*")
-          .where({ orgId: orgId });
+          .where({ orgId: orgId,isActive:true })
+          .orderBy('buildings_and_phases.description','asc');
       }
       return res
         .status(200)

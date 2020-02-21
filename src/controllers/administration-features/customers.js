@@ -749,7 +749,7 @@ const customerController = {
             //"projects.project as PROJECT_ID",
             //"buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
             //"floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
-            "property_units.unitNumber as UNIT_NUMBER"
+            "property_units.unitNumber as UNIT_NUMBER",
           ])
           .orderBy('users.id', 'desc')
           .where({
@@ -792,7 +792,8 @@ const customerController = {
             //PROJECT_ID: "",
             //BUILDING_PHASE_CODE: "",
             //FLOOR_ZONE_CODE: "",
-            UNIT_NUMBER: ""
+            UNIT_NUMBER: "",
+            ALLOW_LOGIN_SERVICEMIND:"",
           }
         ]);
       }
