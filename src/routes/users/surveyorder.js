@@ -9,10 +9,14 @@ const router = Router();
 // router.post('/update-survey-order', authMiddleware.isAuthenticated,  surveyOrderController.updateSurveyOrder);
 
 // We can also get survey order by serviceRequestId so we support both at same route
-router.post('/get-survey-orders', authMiddleware.isAuthenticated, userMiddleware.customerInfo, surveyOrderController.getSurveyOrderList)
+router.post('/get-survey-orders',
+    authMiddleware.isAuthenticated,
+    userMiddleware.customerInfo, surveyOrderController.getSurveyOrderList)
+
 router.post('/get-survey-order-details',
-    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
-    surveyOrderController.getSurveyOrderDetails)
+    authMiddleware.isAuthenticated,
+    userMiddleware.customerInfo, surveyOrderController.getSurveyOrderDetails)
+
 // router.post('/update-survey-order-notes', authMiddleware.isAuthenticated,  surveyOrderController.updateSurveyOrderNotes)
 // router.post('/get-survey-order-notes-list', authMiddleware.isAuthenticated,  surveyOrderController.getSurveyOrderNoteList)
 // router.post('/delete-survey-order-remark', authMiddleware.isAuthenticated,  surveyOrderController.deleteSurveyRemark);
@@ -20,4 +24,9 @@ router.post('/get-survey-order-details',
 router.post('/update-survey-status',
     authMiddleware.isAuthenticated,
     userMiddleware.customerInfo, surveyOrderController.updateSurveyStatus)
+
+router.post('/get-survey-order-filters',
+    authMiddleware.isAuthenticated,
+    userMiddleware.customerInfo, surveyOrderController.getSurveyOrderListFilter)
+
 module.exports = router;
