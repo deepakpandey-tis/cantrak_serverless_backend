@@ -813,22 +813,22 @@ const quotationsController = {
       pagination.from = offset;
 
       let rowsWithDays = rows.map(q => {
-        if(q['Date Created']){
+        if (q['Date Created']) {
 
-        let creationDate = new Date(+q['Date Created'])
-        let todaysDate = new Date()
-        // console.log(q['Date Created'],creationDate,todaysDate,'***************************************************************************88')
-        
-        let a = moment([creationDate.getFullYear(), creationDate.getMonth(), creationDate.getDate()]);
-        let b = moment([todaysDate.getFullYear(), todaysDate.getMonth(), todaysDate.getDate()]);
-        let diff = b.diff(a, 'days')   // =1
-        return {...q,Status:q['Status']+` (${diff} days)`}
-        }else {
-          return {...q} 
+          let creationDate = new Date(+q['Date Created'])
+          let todaysDate = new Date()
+          // console.log(q['Date Created'],creationDate,todaysDate,'***************************************************************************88')
+
+          let a = moment([creationDate.getFullYear(), creationDate.getMonth(), creationDate.getDate()]);
+          let b = moment([todaysDate.getFullYear(), todaysDate.getMonth(), todaysDate.getDate()]);
+          let diff = b.diff(a, 'days')   // =1
+          return { ...q, Status: q['Status'] + ` (${diff} days)` }
+        } else {
+          return { ...q }
         }
 
       })
-      pagination.data = _.uniqBy(rowsWithDays,'QId');
+      pagination.data = _.uniqBy(rowsWithDays, 'QId');
 
 
       return res.status(200).json({
@@ -1383,7 +1383,7 @@ const quotationsController = {
           });
         }
 
-        
+
 
         if (quotationPayload.status == 'Approved') {
           // Now approved quotation

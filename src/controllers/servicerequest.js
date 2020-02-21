@@ -1058,15 +1058,7 @@ const serviceRequestController = {
               qb.where(filters);
               qb.whereIn('service_requests.projectId', accessibleProjects)
             })
-            // .groupBy([
-            //   "service_requests.id",
-            //   // "service_problems.id",
-            //   // "incident_categories.id",
-            //   // "incident_sub_categories.id",
-            //   "property_units.id",
-            //   "status.id",
-            //   "u.id"
-            // ]),,
+            
             .groupBy([
               "service_requests.id",
               "status.id",
@@ -2533,28 +2525,52 @@ const serviceRequestController = {
       let quotationsAtached = await knex('quotations').select('id')
       .where({serviceRequestId:serviceRequestId,orgId:req.orgId})
       let assignedPartsResult = []
+      let assignedChargesResult = []
       for(let q of quotationsAtached){
-        assignedPartsResultData = await knex('assigned_parts').where({ entityId: q.id, entityType: 'quotations' }).first()
+        assignedPartsResultData = await knex('assigned_parts')
+        .innerJoin('quotations', 'assigned_parts.entityId', 'quotations.id')
+        .select('assigned_parts.*')
+        .where({ entityId: q.id, entityType: 'quotations',quotationStatus:'Approved' })//.first()
         assignedPartsResult.push(assignedPartsResultData)
 
+
+        assignedChargesResultData = await knex('assigned_service_charges')
+          .innerJoin('quotations', 'assigned_service_charges.entityId', 'quotations.id')
+          .select('assigned_service_charges.*')
+          .where({ entityId: q.id, entityType: 'quotations', quotationStatus: 'Approved' })//.first()
+        assignedChargesResult.push(assignedChargesResultData)
         // Approve all the attached quotations
-        await knex('quotations').update({
-          quotationStatus: 'Approved', updatedAt: currentTime,
-          updatedBy: req.me.id,
-          approvedBy: req.me.id,
-          orgId: req.orgId}).where({id:q.id})
+        // await knex('quotations').update({
+        //   quotationStatus: 'Approved', updatedAt: currentTime,
+        //   updatedBy: req.me.id,
+        //   approvedBy: req.me.id,
+        //   orgId: req.orgId}).where({id:q.id})
 
       }
 
-      let assignedParts = assignedPartsResult.map(v => _.omit(v, ['id']))
+      let assignedParts = _.uniqBy(_.flatten(assignedPartsResult),'id').map(v => _.omit(v, ['id']))
+      let assignedCharges = _.uniqBy(_.flatten(assignedChargesResult),'id').map(v => _.omit(v, ['id']))
       let serviceOrderIdResult = await knex('service_orders').select('id').where({serviceRequestId:serviceRequestId,orgId:req.orgId}).first()
       let checkIfAlreadyExists = await knex('assigned_parts')
         .where({ entityType: 'service_orders', entityId: serviceOrderIdResult.id })
+
+      let checkIfAlreadyExistsCharges = await knex('assigned_service_charges')
+        .where({ entityType: 'service_orders', entityId: serviceOrderIdResult.id })
+      
       if (checkIfAlreadyExists && checkIfAlreadyExists.length) {
 
       } else {
         for (let p of assignedParts) {
           await knex('assigned_parts')
+            .insert({ ...p, entityId: serviceOrderIdResult.id, entityType: 'service_orders' })
+        }
+      }
+
+      if (checkIfAlreadyExistsCharges && checkIfAlreadyExistsCharges.length) {
+
+      } else {
+        for (let p of assignedCharges) {
+          await knex('assigned_service_charges')
             .insert({ ...p, entityId: serviceOrderIdResult.id, entityType: 'service_orders' })
         }
       }

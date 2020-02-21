@@ -27,4 +27,9 @@ router.post('/get-quotation-invoice',
     authMiddleware.isAuthenticated,
     userMiddleware.customerInfo, quotationsController.getQuotationInvoice);
 
+
+router.post('/update-quotation-status',
+    authMiddleware.isAuthenticated,
+    userMiddleware.customerInfo, quotationsController.updateQuotationsStatus);
+
 module.exports = router;
