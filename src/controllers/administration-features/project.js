@@ -633,6 +633,7 @@ const ProjectController = {
           "companies.companyId",
           "projects.project as projectId"
         ])
+        .orderBy('projects.projectName','asc')
 
       console.log("rows", rows);
 

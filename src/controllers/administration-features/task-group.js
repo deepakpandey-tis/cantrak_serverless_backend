@@ -151,16 +151,16 @@ const taskGroupController = {
       let taskGroupTemplate = null;
       let insertedTasks = null
       let taskGroupTemplateSchedule = null
-      let payload = _.omit(req.body, ['repeatOn', 'tasks', 'mainUserId', 'additionalUsers'])
+      let payload = _.omit(req.body, ['teamId','repeatFrequency','repeatPeriod','repeatOn', 'tasks', 'mainUserId', 'additionalUsers','startDate','endDate'])
       const schema = Joi.object().keys({
         assetCategoryId: Joi.string().required(),
-        repeatFrequency: Joi.string().required(),
+        // repeatFrequency: Joi.string().required(),
         //repeatOn
-        repeatPeriod: Joi.string().required(),
+        // repeatPeriod: Joi.string().required(),
         taskGroupName: Joi.string().required(),
-        startDate: Joi.string().required(),
-        endDate: Joi.string().required(),
-        teamId: Joi.string().required(),
+        // startDate: Joi.string().required(),
+        // endDate: Joi.string().required(),
+        // teamId: Joi.string().required(),
         orgId: req.orgId
 
         //tasks: []
@@ -177,7 +177,7 @@ const taskGroupController = {
       let tgtInsert = {
         taskGroupName: payload.taskGroupName,
         assetCategoryId: payload.assetCategoryId,
-        createdBy: req.body.mainUserId,
+        createdBy: req.body.mainUserId?req.body.mainUserId:null,
         createdAt: currentTime,
         updatedAt: currentTime,
         orgId: req.orgId
@@ -187,7 +187,10 @@ const taskGroupController = {
 
       // Insert tasks into template_task
       let insertPaylaod = req.body.tasks.map(v => ({
-        taskName: v.taskName, templateId: taskGroupTemplate.id, createdAt: currentTime, createdBy: req.body.mainUserId,
+        taskName: v.taskName, 
+        templateId: taskGroupTemplate.id, 
+        createdAt: currentTime, 
+        createdBy: req.body.mainUserId?req.body.mainUserId:null,
         orgId: req.orgId,
         taskSerialNumber: v.taskSerialNumber,
         taskNameAlternate:v.taskNameAlternate,
@@ -197,11 +200,11 @@ const taskGroupController = {
 
       // Insert into task_group_template_schedule
       let insertTTData = {
-        startDate: payload.startDate,
-        endDate: payload.endDate,
-        repeatFrequency: payload.repeatFrequency,
+        startDate: req.body.startDate?req.body.startDate:null,
+        endDate: req.body.endDate?req.body.endDate:null,
+        repeatFrequency: req.body.repeatFrequency?req.body.repeatFrequency:null,
         repeatOn: req.body.repeatOn.join(","),
-        repeatPeriod: payload.repeatPeriod,
+        repeatPeriod: req.body.repeatPeriod?req.body.repeatPeriod:null,
         taskGroupId: taskGroupTemplate.id,
         createdAt: currentTime,
         updatedAt: currentTime,
@@ -216,23 +219,28 @@ const taskGroupController = {
 
 
       // ASSIGNED ADDITIONAL USER OPEN
-      let insertAssignedAdditionalUserData = req.body.additionalUsers.map(user => ({
-        userId: user,
-        entityId: taskGroupTemplate.id,
-        entityType: "task_group_templates",
-        createdAt: currentTime,
-        updatedAt: currentTime,
-        orgId: req.orgId
-      }))
+      let assignedAdditionalUserResult
+      if(typeof req.body.additionalUsers !== "string" && req.body.additionalUsers.length){
+        let insertAssignedAdditionalUserData = req.body.additionalUsers.map(user => ({
+          userId: user,
+          entityId: taskGroupTemplate.id,
+          entityType: "task_group_templates",
+          createdAt: currentTime,
+          updatedAt: currentTime,
+          orgId: req.orgId
+        }))
 
-      let assignedAdditionalUserResult = await knex('assigned_service_additional_users').insert(insertAssignedAdditionalUserData).returning(['*'])
-      assignedAdditionalUser = assignedAdditionalUserResult;
+        assignedAdditionalUserResult = await knex('assigned_service_additional_users')
+        .insert(insertAssignedAdditionalUserData).returning(['*'])
+        assignedAdditionalUser = assignedAdditionalUserResult;
+      }
+
       // ASSIGNED ADDITIONAL USER CLOSE
 
       // ASSIGNED TEAM OPEN
       let insertAssignedServiceTeamData = {
-        teamId: payload.teamId,
-        userId: req.body.mainUserId,
+        teamId: req.body.teamId?req.body.teamId:null,
+        userId: req.body.mainUserId ? req.body.mainUserId:null,
         entityId: taskGroupTemplate.id,
         entityType: "task_group_templates",
         createdAt: currentTime,
@@ -1775,10 +1783,23 @@ const taskGroupController = {
       for (let task of tasks) {
         if (task.id) {
 
-          updatedTaskResult = await knex('template_task').update({ taskName: task.taskName }).where({ templateId: id, id: task.id, orgId: req.orgId }).returning('*')
+          updatedTaskResult = await knex('template_task')
+          .update({ taskName: task.taskName,
+            taskNameAlternate:task.taskNameAlternate,
+            taskSerialNumber:task.taskSerialNumber })
+            .where({ templateId: id, 
+              id: task.id, 
+              orgId: req.orgId }).returning('*')
           updatedTasks.push(updatedTaskResult[0])
         } else {
-          updatedTaskResult = await knex('template_task').insert({ taskName: task.taskName, templateId: id, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }).returning('*')
+          updatedTaskResult = await knex('template_task')
+          .insert({ taskName: task.taskName,
+            taskNameAlternate:task.taskNameAlternate,
+            taskSerialNumber:task.taskSerialNumber,
+             templateId: id, 
+             createdAt: currentTime, 
+             updatedAt: currentTime, 
+             orgId: req.orgId }).returning('*')
           updatedTasks.push(updatedTaskResult[0])
         }
 
@@ -1789,7 +1810,7 @@ const taskGroupController = {
         updatedUsers.push(updated[0])
       }
 
-      let updatedTeamResult = await knex('assigned_service_team').update({ teamId: req.body.teamId, userId: req.body.mainUserId }).returning('*')
+      let updatedTeamResult = await knex('assigned_service_team').update({ teamId: req.body.teamId ? req.body.teamId:null, userId: req.body.mainUserId?req.body.mainUserId:null }).returning('*')
       updatedTeam = updatedTeamResult[0]
 
       return res.status(200).json({
