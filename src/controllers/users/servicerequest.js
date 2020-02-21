@@ -885,7 +885,7 @@ const serviceRequestController = {
             })
             .whereIn("service_requests.houseId", houseIds)
             .orWhere("service_requests.createdBy", req.me.id)
-           
+
             .groupBy([
               "service_requests.id",
               "requested_by.id",
@@ -957,7 +957,7 @@ const serviceRequestController = {
 
             })
             .whereIn("service_requests.houseId", houseIds)
-            .orWhere("service_requests.createdBy", req.me.id)           
+            .orWhere("service_requests.createdBy", req.me.id)
             .offset(offset)
             .limit(per_page)
             .distinct('service_requests.id')
@@ -2377,6 +2377,12 @@ const serviceRequestController = {
       if (entityType == 'service_orders') {
         invoiceDetail = await knex("service_orders").where({
           id: entityId
+        }).select('invoiceData', 'id').first();
+      }
+
+      if (entityType == 'service_requests') {
+        invoiceDetail = await knex("service_orders").where({
+          serviceRequestId: entityId
         }).select('invoiceData', 'id').first();
       }
 
