@@ -960,6 +960,18 @@ const surveyOrderController = {
       if(filterList.status){
         filters['o.surveyOrderStatus'] = filterList.status;
       }
+
+      // if(filterList.description){
+      //   filters['s.description'] = filterList.description;
+      // }
+
+      // if(filterList.building){
+      //   filters['buildings_and_phases.buildingPhaseCode'] = filterList.building;
+      // }
+
+      // if(filterList.unitNo){
+      //   filters['property_units.unitNo'] = filterList.unitNo;
+      // }
       
 
         [total,rows] = await Promise.all([
@@ -972,6 +984,18 @@ const surveyOrderController = {
                 qb.whereBetween("o.appointedDate", [dueFromDate, dueToDate]);
               }
               qb.where("o.orgId", req.orgId)
+              if(filterList.description){
+                qb.where('s.description','ilike',`%${filterList.description}%`)
+              }
+              if(filterList.building){
+                qb.where('buildings_and_phases.description','ilike',`%${filterList.building}%`)
+              }
+              if(filterList.unitNo){
+                qb.where('property_units.unitNumber', 'ilike', `%${filterList.unitNo}%`)
+              }
+              if(filterList.tenantName){
+                qb.where('assignUser.name','ilike',`%${filterList.tenantName}%`)
+              }
             })
             .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
             .leftJoin(
@@ -1069,6 +1093,18 @@ const surveyOrderController = {
                   qb.whereBetween("o.appointedDate", [dueFromDate, dueToDate]);
                 }
                 qb.where("o.orgId", req.orgId);
+                if (filterList.description) {
+                  qb.where('s.description', 'ilike', `%${filterList.description}%`)
+                }
+                if (filterList.building) {
+                  qb.where('buildings_and_phases.description', 'ilike', `%${filterList.building}%`)
+                }
+                if (filterList.unitNo) {
+                  qb.where('property_units.unitNumber', 'ilike', `%${filterList.unitNo}%`)
+                }
+                if (filterList.tenantName) {
+                  qb.where('assignUser.name', 'ilike', `%${filterList.tenantName}%`)
+                }
               }).where({ "assigned_service_team.entityType": "survey_orders" })
               .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
               .leftJoin("users AS u", "o.createdBy", "u.id")
