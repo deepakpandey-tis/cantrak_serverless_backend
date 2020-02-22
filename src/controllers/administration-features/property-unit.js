@@ -744,6 +744,8 @@ const propertyUnitController = {
           "floor_and_zones.floorZoneCode",
           "users.name as createdBy",
           "property_units.isActive",
+          "buildings_and_phases.description as buildingDescription",
+          "floor_and_zones.description as floorDescription",
         ])
         .where({ "property_units.id": id, "property_units.orgId": orgId });
 

@@ -18,9 +18,11 @@ const singupController = {
       if (orgId) {
         companies = await knex("companies")
           .where({ orgId })
+          .orderBy('companies.companyName', 'asc')
           .returning(["*"]);
       } else {
         companies = await knex("companies")
+          .orderBy('companies.companyName', 'asc')
           .returning(["*"]);
       }
 
@@ -297,17 +299,17 @@ const singupController = {
           .where(qb => {
             qb.where({ orgId: req.orgId })
             if (filters && filters.uuid) {
-              qb.where("uuid", "like", `%${filters.uuid.trim()}%`);
+              qb.where("uuid", "iLIKE", `%${filters.uuid.trim()}%`);
             }
             if (filters && filters.companyName) {
               qb.whereRaw(
-                `"sign_up_urls"."signUpDetails"->>'companyName' like ? `,
+                `"sign_up_urls"."signUpDetails"->>'companyName' iLIKE ? `,
                 [`%${filters.companyName.trim()}%`]
               );
             }
             if (filters && filters.projectName) {
               qb.whereRaw(
-                `"sign_up_urls"."signUpDetails"->>'projectName' like ? `,
+                `"sign_up_urls"."signUpDetails"->>'projectName' iLIKE ? `,
                 [`%${filters.projectName.trim()}%`]
               );
             }
@@ -318,18 +320,18 @@ const singupController = {
           .where(qb => {
             qb.where({ orgId: req.orgId });
             if (filters && filters.uuid) {
-              qb.where("uuid", "like", `%${filters.uuid.trim()}%`);
+              qb.where("uuid", "iLIKE", `%${filters.uuid.trim()}%`);
             }
 
             if (filters && filters.companyName) {
               qb.whereRaw(
-                `"sign_up_urls"."signUpDetails"->>'companyName' like ? `,
+                `"sign_up_urls"."signUpDetails"->>'companyName' iLIKE ? `,
                 [`%${filters.companyName.trim()}%`]
               );
             }
             if (filters && filters.projectName) {
               qb.whereRaw(
-                `"sign_up_urls"."signUpDetails"->>'projectName' like ? `,
+                `"sign_up_urls"."signUpDetails"->>'projectName' iLIKE ? `,
                 [`%${filters.projectName.trim()}%`]
               );
             }
@@ -455,7 +457,7 @@ const singupController = {
         let uuidv4 = uuid()
         let currentTime = new Date().getTime()
         insertedUser = await knex("users")
-          .insert({ ...payload, verifyToken: uuidv4, emailVerified: true ,createdAt: currentTime, updatedAt: currentTime, orgId: orgId })
+          .insert({ ...payload, verifyToken: uuidv4, emailVerified: true, createdAt: currentTime, updatedAt: currentTime, orgId: orgId })
           .returning(["*"])
           .transacting(trx);
         console.log(payload);
@@ -468,7 +470,7 @@ const singupController = {
         /*INSERT HOUSE ID CLOSE */
 
         // Insert this users role as customer
-        roleInserted = await knex('application_user_roles').insert({ userId: insertedUser[0].id, roleId: 4, createdAt: currentTime, updatedAt: currentTime,orgId:orgId})
+        roleInserted = await knex('application_user_roles').insert({ userId: insertedUser[0].id, roleId: 4, createdAt: currentTime, updatedAt: currentTime, orgId: orgId })
           .returning(['*']).transacting(trx)
 
         let user = insertedUser[0]
@@ -579,7 +581,7 @@ const singupController = {
       if (checkResult.length) {
 
         let hash = await bcrypt.hash(payload.newPassword, saltRounds);
-        let resetResult = await knex.from('users').update({ password: hash ,verifyToken:""}).where({ verifyToken: checkResult[0].verifyToken }).returning(['*']);
+        let resetResult = await knex.from('users').update({ password: hash, verifyToken: "" }).where({ verifyToken: checkResult[0].verifyToken }).returning(['*']);
         res.status(200).json({ message: "Password reset successfully!" })
 
       } else {

@@ -621,7 +621,12 @@ const commonAreaController = {
               "property_types.propertyType",
               "buildings_and_phases.buildingPhaseCode",
               "floor_and_zones.floorZoneCode",
-              "property_units.*"
+              "property_units.*",
+              "projects.project as projectId",
+              "buildings_and_phases.description as buildingDescription",
+              "floor_and_zones.description as floorDescription",
+              "property_types.propertyTypeCode",
+
             )
             .where({ "property_units.id": viewcommonAreaPayload.id, "property_units.orgId": orgId,type:2 });
 
