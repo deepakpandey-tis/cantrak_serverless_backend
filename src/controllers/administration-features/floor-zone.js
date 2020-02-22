@@ -217,7 +217,11 @@ const floorZoneController = {
           "projects.projectName",
           "property_types.propertyTypeCode",
           "buildings_and_phases.buildingPhaseCode",
-          "companies.companyId as companyCode"
+          "companies.companyId as companyCode",
+          "property_types.propertyType",
+          "projects.project as projectCode",
+          "buildings_and_phases.description as buildingDescription",
+
         )
         .where({
           "floor_and_zones.id": payload.id,
@@ -661,7 +665,8 @@ const floorZoneController = {
           )
           .select([
             "floor_and_zones.floorZoneCode",
-            "floor_and_zones.id"
+            "floor_and_zones.id",
+            "floor_and_zones.description"
           ])
           //.where({'floor_and_zones.orgId': orgId })
           //.where([{'floor_and_zones.orgId':orgId}])

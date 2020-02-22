@@ -774,8 +774,10 @@ const customerController = {
       var ws;
 
       if (rows && rows.length) {
-        let row = _.unionBy(rows, 'EMAIL');
-        ws = XLSX.utils.json_to_sheet(row);
+        let allow = {"ALLOW_LOGIN_SERVICEMIND":""}
+        rows.push(allow)
+        //let row = _.unionBy(rows, 'EMAIL');
+        ws = XLSX.utils.json_to_sheet(rows);
       } else {
         ws = XLSX.utils.json_to_sheet([
           {
@@ -793,7 +795,7 @@ const customerController = {
             //BUILDING_PHASE_CODE: "",
             //FLOOR_ZONE_CODE: "",
             UNIT_NUMBER: "",
-            ALLOW_LOGIN_SERVICEMIND:"",
+            ALLOW_LOGIN_SERVICEMIND: 1,
           }
         ]);
       }
@@ -931,51 +933,6 @@ const customerController = {
                 continue;
               }
 
-              const existUser = await knex('users').where({ userName: tenantData.C });
-
-              if (existUser && existUser.length) {
-                let values = _.values(tenantData)
-                values.unshift('User Name already exist!.!')
-                errors.push(values);
-                fail++;
-                continue;
-
-              }
-
-              if (tenantData.E) {
-
-                let mobile = tenantData.E;
-                mobile = mobile.toString();
-
-                if (mobile.length != 10) {
-                  let values = _.values(tenantData)
-                  values.unshift('Enter valid mobile No.!')
-                  errors.push(values);
-                  fail++;
-                  continue;
-                }
-                if (isNaN(mobile)) {
-                  let values = _.values(tenantData)
-                  values.unshift('Enter valid mobile No.')
-                  errors.push(values);
-                  fail++;
-                  continue;
-
-                }
-
-                let checkMobile = await knex('users').select("id")
-                  .where({ mobileNo: tenantData.E })
-
-                if (checkMobile.length) {
-
-                  let values = _.values(tenantData)
-                  values.unshift('Mobile number already exists')
-                  errors.push(values);
-                  fail++;
-                  continue;
-                }
-              }
-
               let unitId = null;
 
               if (tenantData.J) {
@@ -998,8 +955,61 @@ const customerController = {
 
               let checkExist = await knex('users').select("id")
                 .where({ email: tenantData.D })
+
               let currentTime = new Date().getTime();
+
               if (checkExist.length < 1) {
+
+
+                /*CHECK USER NAME EXIST OPEN */
+                const existUser = await knex('users').where({ userName: tenantData.C });
+
+                if (existUser && existUser.length) {
+                  let values = _.values(tenantData)
+                  values.unshift('User Name already exist!.!')
+                  errors.push(values);
+                  fail++;
+                  continue;
+                }
+                /*CHECK USER NAME EXIST CLOSE */
+
+                /*CHECK MOBILE NUMBER VALIDATION OPEN */
+
+                if (tenantData.E) {
+
+                  let mobile = tenantData.E;
+                  mobile = mobile.toString();
+
+                  if (mobile.length != 10) {
+                    let values = _.values(tenantData)
+                    values.unshift('Enter valid mobile No.!')
+                    errors.push(values);
+                    fail++;
+                    continue;
+                  }
+                  if (isNaN(mobile)) {
+                    let values = _.values(tenantData)
+                    values.unshift('Enter valid mobile No.')
+                    errors.push(values);
+                    fail++;
+                    continue;
+
+                  }
+
+                  let checkMobile = await knex('users').select("id")
+                    .where({ mobileNo: tenantData.E })
+
+                  if (checkMobile.length) {
+
+                    let values = _.values(tenantData)
+                    values.unshift('Mobile number already exists')
+                    errors.push(values);
+                    fail++;
+                    continue;
+                  }
+                }
+                /*CHECK MOBILE NUMBER VALIDATION CLOSE */
+
 
                 let pass = "" + Math.round(Math.random() * 1000000);
                 const hash = await bcrypt.hash(
@@ -1027,6 +1037,15 @@ const customerController = {
 
                 }
 
+                let emailVerified = false;
+                let isActive = false;
+
+                if (tenantData.K && tenantData.K == 1) {
+
+                  emailVerified = true;
+                  isActive = true;
+                }
+
                 let uuidv4 = uuid();
 
                 let insertData = {
@@ -1037,7 +1056,7 @@ const customerController = {
                   email: tenantData.D,
                   createdAt: currentTime,
                   updatedAt: currentTime,
-                  emailVerified: false,
+                  emailVerified: emailVerified,
                   password: hash,
                   mobileNo: mobile,
                   phoneNo: tenantData.F,
@@ -1045,7 +1064,8 @@ const customerController = {
                   verifyToken: uuidv4,
                   taxId: taxId,
                   nationalId: nationalId,
-                  location: tenantData.G
+                  location: tenantData.G,
+                  isActive: isActive,
                 }
 
 
@@ -1068,7 +1088,6 @@ const customerController = {
 
                 }
 
-
                 /*INSERT HOUSE ID OPEN */
                 if (unitId) {
                   await knex("user_house_allocation")
@@ -1077,18 +1096,42 @@ const customerController = {
                 }
                 /*INSERT HOUSE ID CLOSE */
 
-
                 success++;
 
 
               } else {
-                let values = _.values(tenantData)
-                values.unshift('Email Id already exists')
-                errors.push(values);
-                fail++;
+
+
+                if (unitId) {
+
+                  let checkUserAllocation = await knex.from('user_house_allocation').where({
+                    houseId: unitId, userId: checkExist[0].id, orgId: req.orgId
+                  })
+
+                  if (checkUserAllocation.length) {
+
+                    let values = _.values(tenantData)
+                    values.unshift('User & Unit number already exists')
+                    errors.push(values);
+                    fail++;
+
+
+                  } else {
+
+                    let resultUnitNumber = await knex("user_house_allocation")
+                      .insert({ houseId: unitId, userId: checkExist[0].id, status: 1, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime })
+                      .returning(["*"])
+                    success++;
+                  }
+
+                } else {
+
+                  let values = _.values(tenantData)
+                  values.unshift('Email Id already exists')
+                  errors.push(values);
+                  fail++;
+                }
               }
-
-
 
             }
           }

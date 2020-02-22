@@ -303,6 +303,7 @@ const problemController = {
       let [rows] = await Promise.all([
         knex("incident_sub_categories")
           .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
+          .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
           .select([
             'incident_sub_categories.id',
             'incident_categories.categoryCode as problemCode',
@@ -313,7 +314,9 @@ const problemController = {
             'incident_sub_categories.createdAt as DateCreated',
             'incident_sub_categories.remark',
             "incident_sub_categories.incidentCategoryId",
-            "incident_sub_categories.incidentTypeId"
+            "incident_sub_categories.incidentTypeId",
+            "incident_type.typeCode as problemTypeCode",
+            "incident_type.descriptionEng as problemTypeDescription",
           ]).where('incident_sub_categories.id', problemId)
       ])
       pagination.problems = rows;
