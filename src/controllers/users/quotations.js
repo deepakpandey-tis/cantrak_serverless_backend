@@ -249,6 +249,7 @@ const quotationsController = {
                             .leftJoin("users", "assigned_service_team.userId", "users.id")
                             .leftJoin('user_house_allocation', 'quotations.unitId', 'user_house_allocation.houseId')
                             .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+                            .whereIn("quotations.serviceRequestId", serviceRequestIds)
 
                             .where(qb => {
                                 qb.where(filters);
@@ -293,6 +294,8 @@ const quotationsController = {
                             .leftJoin("users", "quotations.createdBy", "users.id")
                             .leftJoin('user_house_allocation', 'quotations.unitId', 'user_house_allocation.houseId')
                             .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+                            .whereIn("quotations.serviceRequestId", serviceRequestIds)
+
                             .select([
                                 "quotations.id as QId",
                                 "quotations.serviceRequestId as serviceRequestId",

@@ -218,7 +218,9 @@ const buildingPhaseController = {
             "companies.companyId as compId",
             "companies.id as companyId",
             "projects.projectName",
-            "property_types.propertyTypeCode"
+            "property_types.propertyTypeCode",
+            "projects.project as projectCode",
+            "property_types.propertyType",
           )
           .where({
             "buildings_and_phases.id": payload.id,

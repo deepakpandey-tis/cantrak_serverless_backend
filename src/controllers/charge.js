@@ -644,7 +644,7 @@ const chargeController = {
       let orgId = req.orgId;
 
       [rows] = await Promise.all([
-        knex("taxes").select(["id as vatId", "taxCode", "taxPercentage","descriptionEng"]).where({ orgId: orgId })
+        knex("taxes").select(["id as vatId", "taxCode", "taxPercentage", "descriptionEng"]).where({ orgId: orgId })
       ]);
 
       pagination.data = rows;
@@ -670,7 +670,7 @@ const chargeController = {
       let orgId = req.orgId;
 
       [rows] = await Promise.all([
-        knex("wht_master").select(["id as whtId", "whtCode", "taxPercentage","descriptionEng"]).where({ orgId: orgId })
+        knex("wht_master").select(["id as whtId", "whtCode", "taxPercentage", "descriptionEng"]).where({ orgId: orgId })
       ]);
 
       pagination.data = rows;
@@ -715,7 +715,12 @@ const chargeController = {
             "charge_master.id": payload.id,
             "charge_master.orgId": req.orgId
           })
-          .select("charge_master.*", "taxes.taxCode", "wht_master.whtCode");
+          .select("charge_master.*",
+            "taxes.taxCode",
+            "wht_master.whtCode",
+            "taxes.descriptionEng as taxDescription",
+            "wht_master.descriptionEng as whtDescription",
+          );
         chargeDetail = _.omit(chargesResult[0], [
           "charge_master.createdAt",
           "charge_master.updatedAt",
