@@ -150,8 +150,9 @@ const taskGroupController = {
     try {
       let taskGroupTemplate = null;
       let insertedTasks = null
-      let taskGroupTemplateSchedule = null
-      let payload = _.omit(req.body, ['teamId','repeatFrequency','repeatPeriod','repeatOn', 'tasks', 'mainUserId', 'additionalUsers','startDate','endDate'])
+      let taskGroupTemplateSchedule = null;
+      //let assignedAdditionalUser = null;
+      let payload = _.omit(req.body, ['teamId', 'repeatFrequency', 'repeatPeriod', 'repeatOn', 'tasks', 'mainUserId', 'additionalUsers', 'startDate', 'endDate'])
       const schema = Joi.object().keys({
         assetCategoryId: Joi.string().required(),
         // repeatFrequency: Joi.string().required(),
@@ -172,12 +173,39 @@ const taskGroupController = {
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
         });
       }
+
+
+
+
+      // Check duplicate value open
+      const templateExist = await knex("task_group_templates")
+        .where('taskGroupName', 'iLIKE', payload.taskGroupName)
+        .where({ orgId: req.orgId });
+
+      console.log(
+        "[controllers][task-group][createTemplate]: ServiceCode",
+        templateExist
+      );
+
+      if (templateExist && templateExist.length) {
+
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Template already exist!!" }
+          ]
+        });
+      }
+      // Check duplicate value close
+
+
+
+
       let currentTime = new Date().getTime();
       // Insert into task_group_templates
       let tgtInsert = {
         taskGroupName: payload.taskGroupName,
         assetCategoryId: payload.assetCategoryId,
-        createdBy: req.body.mainUserId?req.body.mainUserId:null,
+        createdBy: req.body.mainUserId ? req.body.mainUserId : null,
         createdAt: currentTime,
         updatedAt: currentTime,
         orgId: req.orgId
@@ -187,24 +215,24 @@ const taskGroupController = {
 
       // Insert tasks into template_task
       let insertPaylaod = req.body.tasks.map(v => ({
-        taskName: v.taskName, 
-        templateId: taskGroupTemplate.id, 
-        createdAt: currentTime, 
-        createdBy: req.body.mainUserId?req.body.mainUserId:null,
+        taskName: v.taskName,
+        templateId: taskGroupTemplate.id,
+        createdAt: currentTime,
+        createdBy: req.body.mainUserId ? req.body.mainUserId : null,
         orgId: req.orgId,
         taskSerialNumber: v.taskSerialNumber,
-        taskNameAlternate:v.taskNameAlternate,
+        taskNameAlternate: v.taskNameAlternate,
         updatedAt: currentTime
       }))
       insertedTasks = await knex('template_task').insert(insertPaylaod).returning(['*'])
 
       // Insert into task_group_template_schedule
       let insertTTData = {
-        startDate: req.body.startDate?req.body.startDate:null,
-        endDate: req.body.endDate?req.body.endDate:null,
-        repeatFrequency: req.body.repeatFrequency?req.body.repeatFrequency:null,
+        startDate: req.body.startDate ? req.body.startDate : null,
+        endDate: req.body.endDate ? req.body.endDate : null,
+        repeatFrequency: req.body.repeatFrequency ? req.body.repeatFrequency : null,
         repeatOn: req.body.repeatOn.join(","),
-        repeatPeriod: req.body.repeatPeriod?req.body.repeatPeriod:null,
+        repeatPeriod: req.body.repeatPeriod ? req.body.repeatPeriod : null,
         taskGroupId: taskGroupTemplate.id,
         createdAt: currentTime,
         updatedAt: currentTime,
@@ -220,7 +248,8 @@ const taskGroupController = {
 
       // ASSIGNED ADDITIONAL USER OPEN
       let assignedAdditionalUserResult
-      if(typeof req.body.additionalUsers !== "string" && req.body.additionalUsers.length){
+      let assignedAdditionalUser
+      if (typeof req.body.additionalUsers !== "string" && req.body.additionalUsers.length) {
         let insertAssignedAdditionalUserData = req.body.additionalUsers.map(user => ({
           userId: user,
           entityId: taskGroupTemplate.id,
@@ -231,7 +260,7 @@ const taskGroupController = {
         }))
 
         assignedAdditionalUserResult = await knex('assigned_service_additional_users')
-        .insert(insertAssignedAdditionalUserData).returning(['*'])
+          .insert(insertAssignedAdditionalUserData).returning(['*'])
         assignedAdditionalUser = assignedAdditionalUserResult;
       }
 
@@ -239,8 +268,8 @@ const taskGroupController = {
 
       // ASSIGNED TEAM OPEN
       let insertAssignedServiceTeamData = {
-        teamId: req.body.teamId?req.body.teamId:null,
-        userId: req.body.mainUserId ? req.body.mainUserId:null,
+        teamId: req.body.teamId ? req.body.teamId : null,
+        userId: req.body.mainUserId ? req.body.mainUserId : null,
         entityId: taskGroupTemplate.id,
         entityType: "task_group_templates",
         createdAt: currentTime,
@@ -347,7 +376,7 @@ const taskGroupController = {
       let taskSchedule = null;
       let assignedAdditionalUser = null;
       let assetResults = [];
-      let payload = req.body;
+      let payload = _.omit(req.body, ['additionalUsers']);
       const schema = Joi.object().keys({
         assetCategoryId: Joi.number().required(),
         companyId: Joi.number().required(),
@@ -355,7 +384,7 @@ const taskGroupController = {
         pmId: Joi.string().required(),
         teamId: Joi.string().required(),
         mainUserId: Joi.string().required(),
-        additionalUsers: Joi.array().items(Joi.string().required()).strict().required(),
+        // additionalUsers: Joi.array().items(Joi.string().required()).strict().required(),
         taskGroupName: Joi.string().required(),
         // tasks: Joi.array().items(Joi.string().required()).strict().required(),
         startDateTime: Joi.date().required(),
@@ -366,7 +395,7 @@ const taskGroupController = {
 
       });
 
-      const result = Joi.validate(_.omit(payload, ['repeatOn','tasks']), schema);
+      const result = Joi.validate(_.omit(payload, ['repeatOn', 'tasks']), schema);
       if (result && result.hasOwnProperty("error") && result.error) {
         return res.status(400).json({
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
@@ -396,19 +425,23 @@ const taskGroupController = {
         createPmTaskGroup = insertPmTemplateResult[0];
 
 
-        // ASSIGNED ADDITIONAL USER OPEN
-        let insertAssignedAdditionalUserData = payload.additionalUsers.map(user => ({
-          userId: user,
-          entityId: createPmTaskGroup.id,
-          entityType: "pm_task_groups",
-          createdAt: currentTime,
-          updatedAt: currentTime,
-          orgId: req.orgId
+        if (req.body.additionalUsers && req.body.additionalUsers.length) {
 
-        }))
+          // ASSIGNED ADDITIONAL USER OPEN
+          let insertAssignedAdditionalUserData = req.body.additionalUsers.map(user => ({
+            userId: user,
+            entityId: createPmTaskGroup.id,
+            entityType: "pm_task_groups",
+            createdAt: currentTime,
+            updatedAt: currentTime,
+            orgId: req.orgId
 
-        let assignedAdditionalUserResult = await knex.insert(insertAssignedAdditionalUserData).returning(['*']).transacting(trx).into('assigned_service_additional_users');
-        assignedAdditionalUser = assignedAdditionalUserResult;
+          }))
+
+          let assignedAdditionalUserResult = await knex.insert(insertAssignedAdditionalUserData).returning(['*']).transacting(trx).into('assigned_service_additional_users');
+          assignedAdditionalUser = assignedAdditionalUserResult;
+        }
+
         // ASSIGNED ADDITIONAL USER CLOSE
 
         // ASSIGNED TEAM OPEN
@@ -534,8 +567,8 @@ const taskGroupController = {
             // CREATE PM TASK OPEN
             let InsertPmTaskPayload = payload.tasks.map(da => ({
               taskName: da.taskName,
-              taskNameAlternate:da.taskNameAlternate,
-              taskSerialNumber:da.taskSerialNumber,
+              taskNameAlternate: da.taskNameAlternate,
+              taskSerialNumber: da.taskSerialNumber,
               taskGroupId: createPmTaskGroup.id,
               taskGroupScheduleAssignAssetId: assetResult[0].id,
               createdAt: currentTime,
@@ -1072,7 +1105,7 @@ const taskGroupController = {
       let assignedServiceTeam = null;
       let assignedAdditionalUser = null;
 
-      let payload = req.body;
+      let payload = _.omit(req.body, ['additionalUsers']);
 
       const schema = Joi.object().keys({
         pmId: Joi.string().required(),
@@ -1085,10 +1118,10 @@ const taskGroupController = {
         repeatFrequency: Joi.string().required(),
         teamId: Joi.string().required(),
         mainUserId: Joi.string().required(),
-        additionalUsers: Joi.array().items(Joi.string().required()).strict().required(),
+        // additionalUsers: Joi.array().items(Joi.string().required()).strict().required(),
       });
 
-      const result = Joi.validate(_.omit(payload, ['repeatOn','tasks']), schema);
+      const result = Joi.validate(_.omit(payload, ['repeatOn', 'tasks']), schema);
       if (result && result.hasOwnProperty("error") && result.error) {
         return res.status(400).json({
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
@@ -1116,7 +1149,7 @@ const taskGroupController = {
         let tasksInsertPayload = req.body.tasks.map(da => ({
           taskName: da.taskName,
           taskNameAlternate: da.taskNameAlternate,
-          taskSerialNumber:da.taskSerialNumber,
+          taskSerialNumber: da.taskSerialNumber,
           templateId: createTemplate.id,
           createdAt: currentTime,
           updatedAt: currentTime,
@@ -1146,18 +1179,23 @@ const taskGroupController = {
         taskSchedule = scheduleResult[0];
         // TASK GROUP SCHEDULE CLOSE 
 
-        // ASSIGNED ADDITIONAL USER OPEN
-        let insertAssignedAdditionalUserData = payload.additionalUsers.map(user => ({
-          userId: user,
-          entityId: createTemplate.id,
-          entityType: "task_group_templates",
-          createdAt: currentTime,
-          updatedAt: currentTime,
-          orgId: req.orgId
-        }))
 
-        let assignedAdditionalUserResult = await knex.insert(insertAssignedAdditionalUserData).returning(['*']).transacting(trx).into('assigned_service_additional_users');
-        assignedAdditionalUser = assignedAdditionalUserResult;
+        if (req.body.additionalUsers && req.body.additionalUsers.length) {
+
+          // ASSIGNED ADDITIONAL USER OPEN
+          let insertAssignedAdditionalUserData = req.body.additionalUsers.map(user => ({
+            userId: user,
+            entityId: createTemplate.id,
+            entityType: "task_group_templates",
+            createdAt: currentTime,
+            updatedAt: currentTime,
+            orgId: req.orgId
+          }))
+
+          let assignedAdditionalUserResult = await knex.insert(insertAssignedAdditionalUserData).returning(['*']).transacting(trx).into('assigned_service_additional_users');
+          assignedAdditionalUser = assignedAdditionalUserResult;
+        }
+
         // ASSIGNED ADDITIONAL USER CLOSE
 
         // ASSIGNED TEAM OPEN
@@ -1531,7 +1569,7 @@ const taskGroupController = {
 
 
       //IMAGES
-      const images = await knex('images').where({ entityId: taskId, entityType: 'pm_task' }).select(['s3Url','id'])
+      const images = await knex('images').where({ entityId: taskId, entityType: 'pm_task' }).select(['s3Url', 'id'])
       // IMAGES CLOSED
 
       return res.status(200).json({
@@ -1697,7 +1735,7 @@ const taskGroupController = {
       let taskGroup = taskGroupResult[0]
 
 
-      const tasks = await knex('template_task').where({ templateId: req.body.id, orgId: req.orgId }).select('taskName', 'id','taskNameAlternate','taskSerialNumber')
+      const tasks = await knex('template_task').where({ templateId: req.body.id, orgId: req.orgId }).select('taskName', 'id', 'taskNameAlternate', 'taskSerialNumber')
 
       // Get the team and main user
       let team = await knex('assigned_service_team')
@@ -1768,6 +1806,30 @@ const taskGroupController = {
       // taskGroupName: "Test Template"
       // tasks: ["task 1"]
       // teamId: "3"
+
+
+      // Check duplicate value open
+      const templateExist = await knex("task_group_templates")
+        .where('taskGroupName', 'iLIKE', req.body.taskGroupName)
+        .where({ orgId: req.orgId })
+        .whereNot({id});
+
+      console.log(
+        "[controllers][task-group][createTemplate]: ServiceCode",
+        templateExist
+      );
+
+      if (templateExist && templateExist.length) {
+
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Template already exist!!" }
+          ]
+        });
+      }
+      // Check duplicate value close
+
+
       let updatedTaskGroupTemplate = null
       let resultScheduleData = null
       let updatedTeam = null
@@ -1784,33 +1846,52 @@ const taskGroupController = {
         if (task.id) {
 
           updatedTaskResult = await knex('template_task')
-          .update({ taskName: task.taskName,
-            taskNameAlternate:task.taskNameAlternate,
-            taskSerialNumber:task.taskSerialNumber })
-            .where({ templateId: id, 
-              id: task.id, 
-              orgId: req.orgId }).returning('*')
+            .update({
+              taskName: task.taskName,
+              taskNameAlternate: task.taskNameAlternate,
+              taskSerialNumber: task.taskSerialNumber
+            })
+            .where({
+              templateId: id,
+              id: task.id,
+              orgId: req.orgId
+            }).returning('*')
           updatedTasks.push(updatedTaskResult[0])
         } else {
           updatedTaskResult = await knex('template_task')
-          .insert({ taskName: task.taskName,
-            taskNameAlternate:task.taskNameAlternate,
-            taskSerialNumber:task.taskSerialNumber,
-             templateId: id, 
-             createdAt: currentTime, 
-             updatedAt: currentTime, 
-             orgId: req.orgId }).returning('*')
+            .insert({
+              taskName: task.taskName,
+              taskNameAlternate: task.taskNameAlternate,
+              taskSerialNumber: task.taskSerialNumber,
+              templateId: id,
+              createdAt: currentTime,
+              updatedAt: currentTime,
+              orgId: req.orgId
+            }).returning('*')
           updatedTasks.push(updatedTaskResult[0])
         }
 
       }
 
-      for (let additionalUser of additionalUsers) {
-        let updated = await knex('assigned_service_additional_users').update({ userId: additionalUser }).where({ entityId: id, entityType: 'task_group_templates', orgId: req.orgId })
-        updatedUsers.push(updated[0])
+      // If already exists then upldate otherwise insert
+      let checkExistsAU = await knex('assigned_service_additional_users').select('id').where({ entityId: id, entityType: 'task_group_templates', orgId: req.orgId })
+      if (checkExistsAU && checkExistsAU.length) {
+        for (let i of checkExistsAU) {
+          await knex('assigned_service_additional_users').where({ entityId: id, entityType: 'task_group_templates', orgId: req.orgId, userId: i.id }).del()
+        }
+        for (let additionalUser of additionalUsers) {
+          let updated = await knex('assigned_service_additional_users').insert({ userId: additionalUser, entityId: id, entityType: 'task_group_templates', orgId: req.orgId }).returning(['*'])
+          updatedUsers.push(updated[0])
+        }
+      } else {
+        for (let additionalUser of additionalUsers) {
+          let updated = await knex('assigned_service_additional_users').insert({ userId: additionalUser, entityId: id, entityType: 'task_group_templates', orgId: req.orgId }).returning(['*'])
+          updatedUsers.push(updated[0])
+        }
       }
 
-      let updatedTeamResult = await knex('assigned_service_team').update({ teamId: req.body.teamId ? req.body.teamId:null, userId: req.body.mainUserId?req.body.mainUserId:null }).returning('*')
+
+      let updatedTeamResult = await knex('assigned_service_team').update({ teamId: req.body.teamId ? req.body.teamId : null, userId: req.body.mainUserId ? req.body.mainUserId : null }).returning('*')
       updatedTeam = updatedTeamResult[0]
 
       return res.status(200).json({
@@ -2083,7 +2164,7 @@ const taskGroupController = {
 
 
       })
-     // let deleteFile = await fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
+      // let deleteFile = await fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
 
     } catch (err) {
       console.log('[controllers][task-group][get-pm-task-details] :  Error', err);

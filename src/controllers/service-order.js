@@ -126,122 +126,153 @@ const serviceOrderController = {
                 let assignedServiceTeamSR = assignedServiceTeamResultSR[0]
                 //Service Request Team Management End
 
-
+                if (assignedServiceAdditionalUsers && assignedServiceAdditionalUsers.length) {
+                    for (user of assignedServiceAdditionalUsers) {
+                        await knex
+                            .insert({
+                                userId: user,
+                                entityId: serviceOrder.id,
+                                entityType: "service_orders",
+                                createdAt: currentTime,
+                                updatedAt: currentTime,
+                                orgId: req.orgId
+                            })
+                            .returning(["*"])
+                            .transacting(trx)
+                            .into("assigned_service_additional_users");
+                        await knex
+                            .insert({
+                                userId: user,
+                                entityId: serviceRequestId,
+                                entityType: "service_requests",
+                                createdAt: currentTime,
+                                updatedAt: currentTime,
+                                orgId: req.orgId
+                            })
+                            .returning(["*"])
+                            .transacting(trx)
+                            .into("assigned_service_additional_users");
+                        //additionalUsersResultantArray.push(userResult[0])
+                    }
+                }
 
                 // Service Order Additional users
 
-                let selectedUsers = await knex.select().where({ entityId: serviceOrder.id, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_service_additional_users').map(user => user.userId)
+                // let selectedUsers = await knex.select().where({ entityId: serviceOrder.id, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_service_additional_users').map(user => user.userId)
 
-                let additionalUsersResultantArray = []
+                // let additionalUsersResultantArray = []
 
-                if (_.isEqual(selectedUsers, assignedServiceAdditionalUsers)) {
-                    // trx.commit
-                    trx.commit;
-                    res.status(200).json({
-                        data: { serviceOrder, serviceRequest, assignedServiceTeam },
-                        message: "Service Order added successfully !"
-                    });
-                } else {
+                // if (_.isEqual(selectedUsers, assignedServiceAdditionalUsers)) {
+                //     // trx.commit
+                //     trx.commit;
+                //     res.status(200).json({
+                //         data: { serviceOrder, serviceRequest, assignedServiceTeam },
+                //         message: "Service Order added successfully !"
+                //     });
+                // } else {
 
-                    // Remove old users
+                //     // Remove old users
 
-                    for (user of selectedUsers) {
-                        await knex
-                            .del()
-                            .where({
-                                entityId: serviceOrder.id,
-                                entityType: "service_orders",
-                                orgId: req.orgId
-                            })
-                            .returning(["*"])
-                            .transacting(trx)
-                            .into("assigned_service_additional_users");
-                    }
+                //     for (user of selectedUsers) {
+                //         await knex
+                //             .del()
+                //             .where({
+                //                 entityId: serviceOrder.id,
+                //                 entityType: "service_orders",
+                //                 orgId: req.orgId
+                //             })
+                //             .returning(["*"])
+                //             .transacting(trx)
+                //             .into("assigned_service_additional_users");
+                //     }
 
-                    // Insert New Users
+                //     // Insert New Users
 
-                    for (user of assignedServiceAdditionalUsers) {
-                        let userResult = await knex
-                            .insert({
-                                userId: user,
-                                entityId: serviceOrder.id,
-                                entityType: "service_orders",
-                                createdAt: currentTime,
-                                updatedAt: currentTime,
-                                orgId: req.orgId
-                            })
-                            .returning(["*"])
-                            .transacting(trx)
-                            .into("assigned_service_additional_users");
-                        additionalUsersResultantArray.push(userResult[0])
-                    }
-                    trx.commit;
-                    return res.status(200).json({
-                        data: { serviceOrder, assignedServiceTeam, assignedAdditionalUsers: additionalUsersResultantArray, images: images },
-                        message: "Service Order added successfully!"
-                    });
-                }
+                //     for (user of assignedServiceAdditionalUsers) {
+                //         let userResult = await knex
+                //             .insert({
+                //                 userId: user,
+                //                 entityId: serviceOrder.id,
+                //                 entityType: "service_orders",
+                //                 createdAt: currentTime,
+                //                 updatedAt: currentTime,
+                //                 orgId: req.orgId
+                //             })
+                //             .returning(["*"])
+                //             .transacting(trx)
+                //             .into("assigned_service_additional_users");
+                //         additionalUsersResultantArray.push(userResult[0])
+                //     }
+                //     trx.commit;
+                //     return res.status(200).json({
+                //         data: { serviceOrder, assignedServiceTeam, assignedAdditionalUsers: additionalUsersResultantArray, images: images },
+                //         message: "Service Order added successfully!"
+                //     });
+                // }
 
-                // Service Order Additional users End
-
-
-                // Service Request Additional Users
+                // // Service Order Additional users End
 
 
-                let selectedUsersSR = await knex.select().where({ entityId: serviceRequestId, entityType: 'service_requests' }).returning(['*']).transacting(trx).into('assigned_service_additional_users').map(user => user.userId)
+                // // Service Request Additional Users
 
-                let additionalUsersResultantArraySR = []
 
-                if (_.isEqual(selectedUsers, assignedServiceAdditionalUsers)) {
-                    // trx.commit
-                    trx.commit;
-                    res.status(200).json({
-                        data: { serviceOrder, serviceRequest, assignedServiceTeam },
-                        message: "Service Order added successfully !"
-                    });
-                } else {
+                // let selectedUsersSR = await knex.select().where({ entityId: serviceRequestId, entityType: 'service_requests' }).returning(['*']).transacting(trx).into('assigned_service_additional_users').map(user => user.userId)
 
-                    // Remove old users
+                // let additionalUsersResultantArraySR = []
 
-                    for (user of selectedUsers) {
-                        await knex
-                            .del()
-                            .where({
-                                entityId: serviceRequestId,
-                                entityType: "service_requests",
-                                orgId: req.orgId
-                            })
-                            .returning(["*"])
-                            .transacting(trx)
-                            .into("assigned_service_additional_users");
-                    }
+                // if (_.isEqual(selectedUsers, assignedServiceAdditionalUsers)) {
+                //     // trx.commit
+                //     trx.commit;
+                //     res.status(200).json({
+                //         data: { serviceOrder, serviceRequest, assignedServiceTeam },
+                //         message: "Service Order added successfully !"
+                //     });
+                // } else {
 
-                    // Insert New Users
+                //     // Remove old users
 
-                    for (user of assignedServiceAdditionalUsers) {
-                        let userResult = await knex
-                            .insert({
-                                userId: user,
-                                entityId: serviceRequestId,
-                                entityType: "service_requests",
-                                createdAt: currentTime,
-                                updatedAt: currentTime,
-                                orgId: req.orgId
-                            })
-                            .returning(["*"])
-                            .transacting(trx)
-                            .into("assigned_service_additional_users");
-                        additionalUsersResultantArraySR.push(userResult[0])
-                    }
-                    trx.commit;
-                    return res.status(200).json({
-                        data: { serviceOrder, assignedServiceTeamSR, assignedAdditionalUsers: additionalUsersResultantArraySR, images: images },
-                        message: "Service Order added successfully!"
-                    });
-                }
+                //     for (user of selectedUsers) {
+                //         await knex
+                //             .del()
+                //             .where({
+                //                 entityId: serviceRequestId,
+                //                 entityType: "service_requests",
+                //                 orgId: req.orgId
+                //             })
+                //             .returning(["*"])
+                //             .transacting(trx)
+                //             .into("assigned_service_additional_users");
+                //     }
+
+                //     // Insert New Users
+
+                //     for (user of assignedServiceAdditionalUsers) {
+                //         let userResult = await knex
+                //             .insert({
+                //                 userId: user,
+                //                 entityId: serviceRequestId,
+                //                 entityType: "service_requests",
+                //                 createdAt: currentTime,
+                //                 updatedAt: currentTime,
+                //                 orgId: req.orgId
+                //             })
+                //             .returning(["*"])
+                //             .transacting(trx)
+                //             .into("assigned_service_additional_users");
+                //         additionalUsersResultantArraySR.push(userResult[0])
+                //     }
+                //     trx.commit;
+                //     return res.status(200).json({
+                //         data: { serviceOrder, assignedServiceTeamSR, assignedAdditionalUsers: additionalUsersResultantArraySR, images: images },
+                //         message: "Service Order added successfully!"
+                //     });
+                // }
 
                 // Service Request Additional Users End
-
+                return res.status(200).json({
+                    data: { serviceOrder, assignedServiceTeamSR, assignedAdditionalUsers: assignedServiceAdditionalUsers, images: images },
+                        message: "Service Order added successfully!"
+                    });
 
             })
         } catch (err) {

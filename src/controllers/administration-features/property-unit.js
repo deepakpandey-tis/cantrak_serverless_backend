@@ -58,7 +58,7 @@ const propertyUnitController = {
             //companyId:payload.companyId,
             //projectId:payload.projectId,
             buildingPhaseId: payload.buildingPhaseId,
-            unitNumber: payload.unitNumber,
+            unitNumber: payload.unitNumber.toUpperCase(),
             orgId: orgId
           });
         if (existValue && existValue.length) {
@@ -80,6 +80,7 @@ const propertyUnitController = {
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
+          unitNumber: payload.unitNumber.toUpperCase(),
           createdBy: userId,
           orgId: orgId,
           createdAt: currentTime,
@@ -155,7 +156,7 @@ const propertyUnitController = {
             //companyId:payload.companyId,
             //projectId:payload.projectId,
             buildingPhaseId: payload.buildingPhaseId,
-            unitNumber: payload.unitNumber,
+            unitNumber: payload.unitNumber.toUpperCase(),
             orgId: orgId
           });
         if (existValue && existValue.length) {
@@ -183,6 +184,7 @@ const propertyUnitController = {
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
+          unitNumber: payload.unitNumber.toUpperCase(),
           createdBy: userId,
           updatedAt: currentTime,
           propertyTypeId: propertyType
@@ -924,7 +926,7 @@ const propertyUnitController = {
                 continue;
               }
 
-
+              
 
               // Query from different tables and get data
               let companyId = null;
@@ -935,14 +937,14 @@ const propertyUnitController = {
               console.log({ propertyUnitData });
               let companyIdResult = await knex("companies")
                 .select("id")
-                .where({ companyId: propertyUnitData.A, orgId: req.orgId });
+                .where({ companyId: propertyUnitData.A.toUpperCase(), orgId: req.orgId });
 
               if (companyIdResult && companyIdResult.length) {
                 companyId = companyIdResult[0].id;
 
                 let projectIdResult = await knex("projects")
                   .select("id")
-                  .where({ project: propertyUnitData.C, companyId: companyId, orgId: req.orgId });
+                  .where({ project: propertyUnitData.C.toUpperCase(), companyId: companyId, orgId: req.orgId });
 
                 if (projectIdResult && projectIdResult.length) {
                   projectId = projectIdResult[0].id;
@@ -950,7 +952,7 @@ const propertyUnitController = {
                   let buildingPhaseIdResult = await knex("buildings_and_phases")
                     .select("id")
                     .where({
-                      buildingPhaseCode: propertyUnitData.F,
+                      buildingPhaseCode: propertyUnitData.F.toUpperCase(),
                       projectId: projectId,
                       companyId: companyId,
                       orgId: req.orgId
@@ -962,7 +964,7 @@ const propertyUnitController = {
                     let floorZoneIdResult = await knex("floor_and_zones")
                       .select("id")
                       .where({
-                        floorZoneCode: propertyUnitData.G,
+                        floorZoneCode: propertyUnitData.G.toUpperCase(),
                         buildingPhaseId: buildingPhaseId,
                         orgId: req.orgId,
                         projectId: projectId,
@@ -980,7 +982,7 @@ const propertyUnitController = {
               let propertyTypeIdResult = await knex("property_types")
                 .select("id")
                 .where({
-                  propertyTypeCode: propertyUnitData.E,
+                  propertyTypeCode: propertyUnitData.E.toUpperCase(),
                   orgId: req.orgId
                 });
 
@@ -1064,7 +1066,7 @@ const propertyUnitController = {
                   // floorZoneId: floorZoneId,
                   // propertyTypeId: propertyTypeId,
                   orgId: req.orgId,
-                  unitNumber: propertyUnitData.H
+                  unitNumber: propertyUnitData.H.toUpperCase(),
                 });
               if (checkExist.length < 1) {
                 let insertData = {
@@ -1075,7 +1077,7 @@ const propertyUnitController = {
                   buildingPhaseId,
                   floorZoneId,
                   area: propertyUnitData.J,
-                  unitNumber: propertyUnitData.H,
+                  unitNumber: propertyUnitData.H.toUpperCase(),
                   description: propertyUnitData.I,
                   houseId: propertyUnitData.K,
                   productCode: propertyUnitData.L,

@@ -894,7 +894,7 @@ const serviceRequestController = {
             ])
             .where({ "service_requests.orgId": req.orgId })
             .whereIn('service_requests.projectId', accessibleProjects)
-            .where({'service_requests.isCreatedFromSo':false})
+            // .where({'service_requests.isCreatedFromSo':false})
             .distinct('service_requests.id')
             .orderBy('service_requests.id', 'desc')
             .offset(offset)

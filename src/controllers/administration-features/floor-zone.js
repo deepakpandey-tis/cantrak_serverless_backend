@@ -49,7 +49,7 @@ const floorZoneController = {
 
         /*CHECK DUPLICATE VALUES OPEN */
         let existValue = await knex('floor_and_zones')
-          .where({ floorZoneCode: payload.floorZoneCode, buildingPhaseId: payload.buildingPhaseId, orgId: orgId });
+          .where({ floorZoneCode: payload.floorZoneCode.toUpperCase(), buildingPhaseId: payload.buildingPhaseId, orgId: orgId });
         if (existValue && existValue.length) {
           return res.status(400).json({
             errors: [
@@ -63,6 +63,7 @@ const floorZoneController = {
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
+          floorZoneCode: payload.floorZoneCode.toUpperCase(),
           propertyTypeId: propertyType.propertyTypeId,
           orgId: orgId,
           createdBy: userId,
@@ -130,7 +131,7 @@ const floorZoneController = {
 
         /*CHECK DUPLICATE VALUES OPEN */
         let existValue = await knex('floor_and_zones')
-          .where({ floorZoneCode: payload.floorZoneCode, buildingPhaseId: payload.buildingPhaseId, orgId: orgId });
+          .where({ floorZoneCode: payload.floorZoneCode.toUpperCase(), buildingPhaseId: payload.buildingPhaseId, orgId: orgId });
         if (existValue && existValue.length) {
 
           if (existValue[0].id === payload.id) {
@@ -148,6 +149,7 @@ const floorZoneController = {
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
+          floorZoneCode: payload.floorZoneCode.toUpperCase(),
           createdBy: userId,
           updatedAt: currentTime
         };
@@ -830,7 +832,7 @@ const floorZoneController = {
 
                 let companyData = await knex("companies")
                   .select("id")
-                  .where({ companyId: floorData.A, orgId: req.orgId });
+                  .where({ companyId: floorData.A.toUpperCase(), orgId: req.orgId });
                 let companyId = null;
                 let projectId = null;
                 let buildingId = null;
@@ -850,13 +852,13 @@ const floorZoneController = {
                   companyId = companyData[0].id;
                   let projectData = await knex("projects")
                     .select("id")
-                    .where({ project: floorData.C, companyId: companyId, orgId: req.orgId });
+                    .where({ project: floorData.C.toUpperCase(), companyId: companyId, orgId: req.orgId });
                   if (projectData && projectData.length) {
                     projectId = projectData[0].id;
                     let buildingData = await knex("buildings_and_phases")
                       .select("id")
                       .where({
-                        buildingPhaseCode: floorData.F,
+                        buildingPhaseCode: floorData.F.toUpperCase(),
                         orgId: req.orgId,
                         companyId: companyId,
                         projectId: projectId
@@ -880,7 +882,7 @@ const floorZoneController = {
                 /**GET PROPERTY TYPE ID OPEN */
                 let propertTypeData = await knex("property_types")
                   .select("id")
-                  .where({ propertyTypeCode: floorData.E, orgId: req.orgId });
+                  .where({ propertyTypeCode: floorData.E.toUpperCase(), orgId: req.orgId });
                 let propertyTypeId = null;
                 if (!propertTypeData.length) {
                   fail++;
@@ -913,7 +915,7 @@ const floorZoneController = {
                 let checkExist = await knex("floor_and_zones")
                   .select("floorZoneCode")
                   .where({
-                    floorZoneCode: floorData.G,
+                    floorZoneCode: floorData.G.toUpperCase(),
                     buildingPhaseId: buildingId,
                     orgId: req.orgId
                   });
@@ -925,7 +927,7 @@ const floorZoneController = {
                     projectId: projectId,
                     propertyTypeId: propertyTypeId,
                     buildingPhaseId: buildingId,
-                    floorZoneCode: floorData.G,
+                    floorZoneCode: floorData.G.toUpperCase(),
                     description: floorData.H,
                     totalFloorArea: floorData.I,
                     isActive: true,

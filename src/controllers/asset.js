@@ -256,7 +256,7 @@ const assetController = {
       let {
         assetName,
         assetModel,
-        // area,
+        assetSerial,
         category,
       } = req.body;
       let pagination = {};
@@ -340,6 +340,13 @@ const assetController = {
                   `%${assetName}%`
                 );
               }
+              if(assetSerial) {
+                qb.where(
+                  "asset_master.assetSerial",
+                  "like",
+                  `%${assetSerial}%`
+                )
+              }
               if (assetModel) {
                 qb.where(
                   "asset_master.model",
@@ -384,6 +391,7 @@ const assetController = {
               "location_tags_master.title as Location",
               "asset_master.model as Model",
               "asset_master.barcode as Barcode",
+              "asset_master.assetSerial as assetSerial",
               "asset_master.areaName as Area",
               "asset_category_master.categoryName as Category",
               "asset_master.createdAt as Date Created",
@@ -399,6 +407,13 @@ const assetController = {
                   "like",
                   `%${assetName}%`
                 );
+              }
+              if(assetSerial) {
+                qb.where(
+                  "asset_master.assetSerial",
+                  "like",
+                  `%${assetSerial}%`
+                )
               }
               if (assetModel) {
                 qb.where(
@@ -719,7 +734,7 @@ const assetController = {
           "asset_location.id as assetLocationId",
           "asset_location.houseId as houseId"
         ])
-        .where({ assetId: id, 'asset_location.orgId': req.orgId }).orderBy('asset_location.createdAt','desc');
+        .where({ assetId: id, 'asset_location.orgId': req.orgId }).orderBy('asset_location.startDate','desc');
       //   .where({ orgId: req.orgId });
 
 
@@ -1788,17 +1803,17 @@ const assetController = {
       */
       await knex('asset_location')
         .update({ endDate: currentTime })
-        .where({ assetId: payload.assetId })
+        .where({ assetId: payload.assetId,id: req.body.previousLocationId})
       console.log('***********************ASSET LOCATION:***********************', req.body)
       // Deprecated
       let updatedLastLocationEndDate
-      if (req.body.previousLocationId) {
+      // if (req.body.previousLocationId) {
 
-        updatedLastLocationEndDate = await knex("asset_location")
-          .update({ updatedAt: currentTime })
-          .where({ id: req.body.previousLocationId })
-          .where({ orgId: req.orgId });
-      }
+      //   updatedLastLocationEndDate = await knex("asset_location")
+      //     .update({ updatedAt: currentTime })
+      //     .where({ id: req.body.previousLocationId })
+      //     .where({ orgId: req.orgId });
+      // }
 
       // Deprecation end
 
