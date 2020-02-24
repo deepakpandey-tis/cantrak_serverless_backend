@@ -88,7 +88,7 @@ const companyController = {
 
         /*CHECK DUPLICATE VALUES OPEN */
         let existValue = await knex('companies')
-          .where({ companyId: payload.companyId, orgId: orgId });
+          .where({ companyId: payload.companyId.toUpperCase(), orgId: orgId });
         if (existValue && existValue.length) {
           return res.status(400).json({
             errors: [
@@ -114,6 +114,7 @@ const companyController = {
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
+          companyId:payload.companyId.toUpperCase(),
           createdBy: userId,
           logoFile: logo,
           createdAt: currentTime,
@@ -240,7 +241,7 @@ const companyController = {
 
         /*CHECK DUPLICATE VALUES OPEN */
         let existValue = await knex('companies')
-          .where({ companyId: payload.companyId, orgId: orgId });
+          .where({ companyId: payload.companyId.toUpperCase(), orgId: orgId });
         if (existValue && existValue.length) {
 
           if (existValue[0].id === payload.id) {
@@ -267,9 +268,9 @@ const companyController = {
         taxId = payload.taxId ? payload.taxId : null;
         let insertData;
         if (req.body.logoFile.length) {
-          insertData = { ...payload, orgId, taxId, logoFile: logo, updatedAt: currentTime };
+          insertData = { ...payload,companyId:payload.companyId.toUpperCase(), orgId, taxId, logoFile: logo, updatedAt: currentTime };
         } else {
-          insertData = { ...payload, orgId, taxId, updatedAt: currentTime };
+          insertData = { ...payload,companyId:payload.companyId.toUpperCase(), orgId, taxId, updatedAt: currentTime };
         }
         let insertResult = await knex
           .update(insertData)
@@ -817,7 +818,7 @@ const companyController = {
               }
               let checkExist = await knex("companies")
                 .select("companyName")
-                .where({ companyId: companyData.A, orgId: req.orgId });
+                .where({ companyId: companyData.A.toUpperCase(), orgId: req.orgId });
               console.log("Check list company: ", checkExist);
 
               if (!taxIdExists.length) {
@@ -835,7 +836,7 @@ const companyController = {
                   let currentTime = new Date().getTime();
                   let insertData = {
                     orgId: req.orgId,
-                    companyId: companyData.A,
+                    companyId: companyData.A.toUpperCase(),
                     companyName: companyData.B,
                     description1: companyData.C,
                     companyAddressEng: companyData.D,

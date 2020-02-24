@@ -49,7 +49,7 @@ const propertyTypeController = {
 
         /*CHECK DUPLICATE VALUES OPEN */
         let existValue = await knex('property_types')
-          .where({ propertyTypeCode: payload.propertyTypeCode, orgId: orgId });
+          .where({ propertyTypeCode: payload.propertyTypeCode.toUpperCase(), orgId: orgId });
         if (existValue && existValue.length) {
           return res.status(400).json({
             errors: [
@@ -63,6 +63,7 @@ const propertyTypeController = {
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
+          propertyTypeCode: payload.propertyTypeCode.toUpperCase(),
           orgId: orgId,
           createdBy: userId,
           createdAt: currentTime,
@@ -130,7 +131,7 @@ const propertyTypeController = {
 
         /*CHECK DUPLICATE VALUES OPEN */
         let existValue = await knex('property_types')
-          .where({ propertyTypeCode: payload.propertyTypeCode, orgId: orgId });
+          .where({ propertyTypeCode: payload.propertyTypeCode.toUpperCase(), orgId: orgId });
         if (existValue && existValue.length) {
 
           if (existValue[0].id === payload.id) {
@@ -146,7 +147,7 @@ const propertyTypeController = {
         /*CHECK DUPLICATE VALUES CLOSE */
 
         let currentTime = new Date().getTime();
-        let insertData = { ...payload, createdBy: userId, updatedAt: currentTime };
+        let insertData = { ...payload,propertyTypeCode:payload.propertyTypeCode.toUpperCase(),createdBy: userId, updatedAt: currentTime };
         let insertResult = await knex
           .update(insertData)
           .where({ id: payload.id, orgId: orgId })
@@ -590,13 +591,13 @@ const propertyTypeController = {
 
 
               let checkExist = await knex('property_types').select('id')
-                .where({ propertyTypeCode: propertyData.A, orgId: req.orgId })
+                .where({ propertyTypeCode: propertyData.A.toUpperCase(), orgId: req.orgId })
               if (checkExist.length < 1) {
 
                 let currentTime = new Date().getTime();
                 let insertData = {
                   orgId: req.orgId,
-                  propertyTypeCode: propertyData.A,
+                  propertyTypeCode: propertyData.A.toUpperCase(),
                   propertyType: propertyData.B,
                   descriptionEng: propertyData.C,
                   isActive: true,

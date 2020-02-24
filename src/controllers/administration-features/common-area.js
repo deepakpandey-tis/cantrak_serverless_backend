@@ -46,7 +46,7 @@ const commonAreaController = {
         }
 
         const existunitNumber = await knex("property_units").where({
-          unitNumber: req.body.unitNumber,
+          unitNumber: req.body.unitNumber.toUpperCase(),
           orgId: orgId,
           buildingPhaseId: commonPayload.buildingPhaseId
         });
@@ -79,7 +79,7 @@ const commonAreaController = {
         const insertData = {
           ...commonPayload,
           unitNumber: req.body.unitNumber.toUpperCase(),
-          isActive: "true",
+          isActive: true,
           createdAt: currentTime,
           updatedAt: currentTime,
           createdBy: userId,
@@ -153,7 +153,7 @@ const commonAreaController = {
 
         const existunitNumber = await knex("property_units")
           .where({
-            unitNumber: commonUpdatePaylaod.unitNumber,
+            unitNumber: commonUpdatePaylaod.unitNumber.toUpperCase(),
             orgId: orgId,
             buildingPhaseId: commonUpdatePaylaod.buildingPhaseId,
           })
@@ -622,10 +622,11 @@ const commonAreaController = {
               "buildings_and_phases.buildingPhaseCode",
               "floor_and_zones.floorZoneCode",
               "property_units.*",
-              "projects.project as projectId",
+              "projects.id as projectId",
               "buildings_and_phases.description as buildingDescription",
               "floor_and_zones.description as floorDescription",
               "property_types.propertyTypeCode",
+              "projects.project as projectCode",
 
             )
             .where({ "property_units.id": viewcommonAreaPayload.id, "property_units.orgId": orgId,type:2 });
@@ -905,7 +906,7 @@ const commonAreaController = {
               let buildingPhaseId = null;
               let floorZoneId = null;
 
-              let companyIdResult = await knex('companies').select('id').where({ companyId: commonData.A, orgId: req.orgId })
+              let companyIdResult = await knex('companies').select('id').where({ companyId: commonData.A.toUpperCase(), orgId: req.orgId })
 
               if (companyIdResult && companyIdResult.length) {
                 companyId = companyIdResult[0].id;
@@ -913,7 +914,7 @@ const commonAreaController = {
 
               let projectIdResult = await knex("projects")
                 .select("id")
-                .where({ project: commonData.B, companyId: companyId, orgId: req.orgId });
+                .where({ project: commonData.B.toUpperCase(), companyId: companyId, orgId: req.orgId });
 
               if (projectIdResult && projectIdResult.length) {
                 projectId = projectIdResult[0].id;
@@ -921,12 +922,12 @@ const commonAreaController = {
 
               let propertyTypeIdResult = await knex("property_types")
                 .select("id")
-                .where({ propertyTypeCode: commonData.C, orgId: req.orgId });
+                .where({ propertyTypeCode: commonData.C.toUpperCase(), orgId: req.orgId });
 
               let buildingResult = await knex("buildings_and_phases")
                 .select("id")
                 .where({
-                  buildingPhaseCode: commonData.D,
+                  buildingPhaseCode: commonData.D.toUpperCase(),
                   companyId: companyId,
                   projectId: projectId,
                   orgId: req.orgId
@@ -939,7 +940,7 @@ const commonAreaController = {
               let floorResult = await knex("floor_and_zones")
                 .select("id")
                 .where({
-                  floorZoneCode: commonData.E,
+                  floorZoneCode: commonData.E.toUpperCase(),
                   orgId: req.orgId,
                   buildingPhaseId: buildingPhaseId,
                   companyId: companyId,
@@ -1009,7 +1010,7 @@ const commonAreaController = {
                   // propertyTypeId: propertyTypeId,
                   // buildingPhaseId: buildingPhaseId,
                   floorZoneId: floorZoneId,
-                  unitNumber: commonData.F,
+                  unitNumber: commonData.F.toUpperCase(),
                   orgId: req.orgId
                 });
               if (checkExist.length < 1) {
@@ -1020,7 +1021,7 @@ const commonAreaController = {
                   propertyTypeId: propertyTypeId,
                   buildingPhaseId: buildingPhaseId,
                   floorZoneId: floorZoneId,
-                  unitNumber: commonData.F,
+                  unitNumber: commonData.F.toUpperCase(),
                   description: commonData.G,
                   createdAt: currentTime,
                   updatedAt: currentTime,

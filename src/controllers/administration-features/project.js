@@ -68,11 +68,11 @@ const ProjectController = {
 
         /*CHECK DUPLICATE VALUES OPEN */
         let existValue = await knex('projects')
-          .where({ project: payload.project, companyId: payload.companyId, orgId: orgId });
+          .where({ project: payload.project.toUpperCase(), companyId: payload.companyId, orgId: orgId });
         if (existValue && existValue.length) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: "Project Id already exist!!" }
+              { code: "VALIDATION_ERROR", message: "Project Code already exist!!" }
             ]
           });
         }
@@ -81,6 +81,7 @@ const ProjectController = {
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
+          project:payload.project.toUpperCase(),
           createdBy: userId,
           createdAt: currentTime,
           updatedAt: currentTime,
@@ -165,7 +166,7 @@ const ProjectController = {
 
         /*CHECK DUPLICATE VALUES OPEN */
         let existValue = await knex('projects')
-          .where({ project: payload.project, companyId: payload.companyId, orgId: orgId });
+          .where({ project: payload.project.toUpperCase(), companyId: payload.companyId, orgId: orgId });
         if (existValue && existValue.length) {
 
           if (existValue[0].id === payload.id) {
@@ -173,7 +174,7 @@ const ProjectController = {
           } else {
             return res.status(400).json({
               errors: [
-                { code: "VALIDATION_ERROR", message: "Project Id already exist!!" }
+                { code: "VALIDATION_ERROR", message: "Project Code already exist!!" }
               ]
             });
           }
@@ -182,7 +183,7 @@ const ProjectController = {
 
 
         let currentTime = new Date().getTime();
-        let insertData = { ...payload, orgId: orgId, updatedAt: currentTime };
+        let insertData = { ...payload,project:payload.project.toUpperCase(),orgId: orgId, updatedAt: currentTime };
         let insertResult = await knex
           .update(insertData)
           .where({ id: payload.id })
@@ -756,7 +757,7 @@ const ProjectController = {
 
               let companyData = await knex("companies")
                 .select("id")
-                .where({ companyId: projectData.C, orgId: req.orgId });
+                .where({ companyId: projectData.C.toUpperCase(), orgId: req.orgId });
               let companyId = null;
               if (!companyData.length) {
                 let values = _.values(projectData)
@@ -771,14 +772,14 @@ const ProjectController = {
 
               let checkExist = await knex("projects")
                 .select("projectName")
-                .where({ project: projectData.A, companyId: companyId, orgId: req.orgId });
+                .where({ project: projectData.A.toUpperCase(), companyId: companyId, orgId: req.orgId });
               if (checkExist.length < 1) {
                 let currentTime = new Date().getTime();
                 let insertData = {
                   orgId: req.orgId,
                   companyId: companyId,
                   projectName: projectData.B,
-                  project: projectData.A,
+                  project: projectData.A.toUpperCase(),
                   projectLocationEng: projectData.E,
                   projectLocationThai: projectData.F,
                   currency: projectData.G,

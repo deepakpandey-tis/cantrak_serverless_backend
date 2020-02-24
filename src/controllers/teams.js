@@ -55,11 +55,11 @@ const teamsController = {
 
                 /*CHECK DUPLICATE VALUES OPEN */
                 let existValue = await knex('teams')
-                    .where({ teamCode: payload.teamCode, orgId: orgId });
+                    .where({ teamCode: payload.teamCode.toUpperCase(), orgId: orgId });
                 if (existValue && existValue.length) {
                     return res.status(400).json({
                         errors: [
-                            { code: "VALIDATION_ERROR", message: "Team Id already exist!!" }
+                            { code: "VALIDATION_ERROR", message: "Team Code already exist!!" }
                         ]
                     });
                 }
@@ -67,7 +67,7 @@ const teamsController = {
 
                 const currentTime = new Date().getTime();
                 // Insert into teams table
-                const insertData = { ...payload, createdAt: currentTime, updatedAt: currentTime, createdBy: req.me.id, orgId: orgId };
+                const insertData = { ...payload, teamCode: payload.teamCode.toUpperCase(), createdAt: currentTime, updatedAt: currentTime, createdBy: req.me.id, orgId: orgId };
                 console.log('[controllers][teams][addNewTeams] : Insert Data ', insertData);
 
                 const resultTeams = await knex.insert(insertData).returning(['*']).transacting(trx).into('teams');
@@ -99,7 +99,7 @@ const teamsController = {
                                 roleId: roleProjectData[i].roleId,
                                 projectId: roleProjectData[i].projectId,
                                 orgId: orgId,
-                                createdBy:req.me.id
+                                createdBy: req.me.id
                             });
 
                             if (!checkProject.length) {
@@ -210,9 +210,25 @@ const teamsController = {
                     });
                 }
 
+
+                /*CHECK DUPLICATE VALUES OPEN */
+                let existValue = await knex('teams')
+                    .where({ teamCode: payload.teamCode.toUpperCase(), orgId: req.orgId })
+                    .whereNot({ teamId: upTeamsPayload.teamId })
+                    ;
+                if (existValue && existValue.length) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "VALIDATION_ERROR", message: "Team Code already exist!!" }
+                        ]
+                    });
+                }
+                /*CHECK DUPLICATE VALUES CLOSE */
+
+
                 const currentTime = new Date().getTime();
                 // Update teams table
-                updateTeams = await knex.update({ teamCode: upTeamsPayload.teamCode, teamName: upTeamsPayload.teamName, description: upTeamsPayload.description, updatedAt: currentTime }).where({ teamId: upTeamsPayload.teamId, orgId: req.orgId }).returning(['*']).transacting(trx).into('teams');
+                updateTeams = await knex.update({ teamCode: upTeamsPayload.teamCode.toUpperCase(), teamName: upTeamsPayload.teamName, description: upTeamsPayload.description, updatedAt: currentTime }).where({ teamId: upTeamsPayload.teamId, orgId: req.orgId }).returning(['*']).transacting(trx).into('teams');
                 teamsResponse = updateTeams;
 
 
@@ -821,7 +837,7 @@ const teamsController = {
                             /**GET PROJECT ID OPEN */
                             let projectId = null;
                             if (teamData.D) {
-                                let projectData = await knex('projects').select('id').where({ project: teamData.D, orgId: req.orgId });
+                                let projectData = await knex('projects').select('id').where({ project: teamData.D.toUpperCase(), orgId: req.orgId });
 
                                 if (projectData && projectData.length) {
                                     projectId = projectData[0].id
@@ -842,12 +858,12 @@ const teamsController = {
 
 
                             let checkExist = await knex('teams').select("teamId")
-                                .where({ teamCode: teamData.A, orgId: req.orgId })
+                                .where({ teamCode: teamData.A.toUpperCase(), orgId: req.orgId })
                             if (checkExist.length < 1) {
                                 let insertData = {
                                     orgId: req.orgId,
                                     teamName: teamData.B,
-                                    teamCode: teamData.A,
+                                    teamCode: teamData.A.toUpperCase(),
                                     description: teamData.C,
                                     createdAt: currentTime,
                                     updatedAt: currentTime,
@@ -918,7 +934,7 @@ const teamsController = {
                                     } else {
 
                                         let values = _.values(teamData)
-                                        values.unshift('Team Code already exists')
+                                        values.unshift('Team Code & project role already exists')
                                         errors.push(values);
                                         fail++;
                                     }

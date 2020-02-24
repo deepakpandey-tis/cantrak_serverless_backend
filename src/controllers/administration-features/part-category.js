@@ -39,10 +39,13 @@ const PartCategoryController = {
         }
 
         // Check partCategory already exists
-        const existpartCategory = await knex("part_category_master").where({
-          categoryName: payload.categoryName,
-          orgId: req.orgId
-        });
+        const existpartCategory = await knex("part_category_master")
+          .where('categoryName', 'iLIKE', payload.categoryName)
+          .where({ orgId: req.orgId });
+        // .where({
+        //   categoryName: payload.categoryName,
+        //   orgId: req.orgId
+        // });
 
         console.log(
           "[controllers][generalsetup][addpartCategory]: ServiceCode",
@@ -123,7 +126,9 @@ const PartCategoryController = {
 
         // Check partCategory already exists
         const existpartCategory = await knex("part_category_master")
-          .where({ categoryName: payload.categoryName, orgId: req.orgId })
+          .where('categoryName', 'iLIKE', payload.categoryName)
+          .where({ orgId: req.orgId })
+          //.where({ categoryName: payload.categoryName, orgId: req.orgId })
           .whereNot({ id: payload.id });
 
         console.log(
@@ -289,7 +294,7 @@ const PartCategoryController = {
       let reqData = req.query;
       let pagination = {};
       let orgId = req.orgId;
-      let {categoryName}  = req.body;
+      let { categoryName } = req.body;
 
       let per_page = reqData.per_page || 10;
       let page = reqData.current_page || 1;
@@ -484,10 +489,12 @@ const PartCategoryController = {
 
               let checkExist = await knex("part_category_master")
                 .select("categoryName")
-                .where({
-                  categoryName: partCategoryData.A,
-                  orgId: req.orgId
-                });
+                .where('categoryName', 'iLIKE', partCategoryData.A)
+                .where({ orgId: req.orgId });
+              // .where({
+              //   categoryName: partCategoryData.A,
+              //   orgId: req.orgId
+              // });
               if (checkExist.length < 1 && partCategoryData.A) {
                 // let categoryIdResult = await knex("companies")
                 //   .select("id")
