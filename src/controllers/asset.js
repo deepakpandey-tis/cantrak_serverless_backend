@@ -256,7 +256,7 @@ const assetController = {
       let {
         assetName,
         assetModel,
-        // area,
+        assetSerial,
         category,
       } = req.body;
       let pagination = {};
@@ -340,6 +340,13 @@ const assetController = {
                   `%${assetName}%`
                 );
               }
+              if(assetSerial) {
+                qb.where(
+                  "asset_master.assetSerial",
+                  "like",
+                  `%${assetSerial}%`
+                )
+              }
               if (assetModel) {
                 qb.where(
                   "asset_master.model",
@@ -384,6 +391,7 @@ const assetController = {
               "location_tags_master.title as Location",
               "asset_master.model as Model",
               "asset_master.barcode as Barcode",
+              "asset_master.assetSerial as assetSerial",
               "asset_master.areaName as Area",
               "asset_category_master.categoryName as Category",
               "asset_master.createdAt as Date Created",
@@ -399,6 +407,13 @@ const assetController = {
                   "like",
                   `%${assetName}%`
                 );
+              }
+              if(assetSerial) {
+                qb.where(
+                  "asset_master.assetSerial",
+                  "like",
+                  `%${assetSerial}%`
+                )
               }
               if (assetModel) {
                 qb.where(

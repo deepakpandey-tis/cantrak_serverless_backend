@@ -13,11 +13,11 @@ router.post(
   roleMiddleware.parseUserPermission,
   assetController.addAsset
 );
-router.post('/get-asset-list', 
-authMiddleware.isAuthenticated, 
-roleMiddleware.parseUserPermission,
-resourceAccessMiddleware.isAssetAccessible,
-assetController.getAssetList
+router.post('/get-asset-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  assetController.getAssetList
 )
 router.get(
   "/get-all-asset-list",
@@ -102,7 +102,7 @@ router.post(
   assetController.getAssetListByLocation
 );
 
-router.post('/get-asset-list-by-houseId',authMiddleware.isAuthenticated,roleMiddleware.parseUserPermission,assetController.getAssetListByHouseId);
+router.post('/get-asset-list-by-houseId', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, assetController.getAssetListByHouseId);
 
 
 router.get(
@@ -115,28 +115,28 @@ router.get(
 
 
 /**IMPORT COMPANY DATA */
-const path       = require('path');
+const path = require('path');
 let tempraryDirectory = null;
-        if (process.env.IS_OFFLINE) {
-           tempraryDirectory = 'tmp/';
-         } else {
-           tempraryDirectory = '/tmp/';  
-         }
-var multer  = require('multer');
+if (process.env.IS_OFFLINE) {
+  tempraryDirectory = 'tmp/';
+} else {
+  tempraryDirectory = '/tmp/';
+}
+var multer = require('multer');
 var storage = multer.diskStorage({
-	destination: tempraryDirectory,
-	filename: function ( req, file, cb ) {
-        let ext =  path.extname(file.originalname)
-        if(ext=='.csv'){
-        time = Date.now();
-        cb( null, 'assetData-'+time+ext);
-        }else{
-            return false
-        }
-	}
+  destination: tempraryDirectory,
+  filename: function (req, file, cb) {
+    let ext = path.extname(file.originalname)
+    if (ext == '.csv') {
+      time = Date.now();
+      cb(null, 'assetData-' + time + ext);
+    } else {
+      return false
+    }
+  }
 });
-var upload = multer( { storage: storage } );
-router.post('/import-asset-data',upload.single('file'), authMiddleware.isAuthenticated, assetController.importAssetData)
+var upload = multer({ storage: storage });
+router.post('/import-asset-data', upload.single('file'), authMiddleware.isAuthenticated, assetController.importAssetData)
 
 router.post(
   "/get-service-request-relocated-assets",
@@ -144,9 +144,9 @@ router.post(
   assetController.getServiceRequestRelocatedAssets
 );
 
-router.post('/add-serivce-order-replace-asset', authMiddleware.isAuthenticated,assetController.replaceAsset)
+router.post('/add-serivce-order-replace-asset', authMiddleware.isAuthenticated, assetController.replaceAsset)
 router.post('/get-service-order-replaced-asset', authMiddleware.isAuthenticated, assetController.getReplacedAssetList)
-router.post('/get-asset-list-for-replace',authMiddleware.isAuthenticated,assetController.getAssetListForReplace)
+router.post('/get-asset-list-for-replace', authMiddleware.isAuthenticated, assetController.getAssetListForReplace)
 router.post('/delete-service-assigned-asset/', authMiddleware.isAuthenticated, assetController.deleteServiceAssignedAsset);
 
 
