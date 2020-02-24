@@ -547,10 +547,10 @@ const singupController = {
         await emailHelper.sendTemplateEmail({
           to: emailExistResult[0].email,
           subject: 'Reset Password',
-          template: 'test-email.ejs',
+          template: 'forgot-email.ejs',
           templateData: {
             fullName: emailExistResult[0].name,
-            OTP: 'https://dj47f2ckirq9d.cloudfront.net/reset-password/' + uid
+            URL: 'https://dj47f2ckirq9d.cloudfront.net/reset-password/' + uid
           }
         })
         let result = await knex.from('users').update({ verifyToken: uid }).where({ email: emailExistResult[0].email }).returning(['*']);
