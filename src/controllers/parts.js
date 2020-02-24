@@ -20,9 +20,9 @@ const partsController = {
 
             let { partName,
                 partCode,
-                partCategory } = req.body;
+                partCategory,partId } = req.body;
 
-            if (partName || partCode || partCategory) {
+            if (partName || partCode || partCategory || partId) {
 
                 let per_page = reqData.per_page || 10;
                 let page = reqData.current_page || 1;
@@ -42,6 +42,9 @@ const partsController = {
                             }
                             if (partCategory) {
                                 qb.where('part_master.partCategory', partCategory)
+                            }
+                            if(partId){
+                                qb.where({'part_master.id':partId})
                             }
                         })
                         .groupBy(['part_master.id'])
@@ -73,6 +76,9 @@ const partsController = {
                             }
                             if (partCategory) {
                                 qb.where('part_master.partCategory', partCategory)
+                            }
+                            if (partId) {
+                                qb.where({ 'part_master.id': partId })
                             }
                         })
                         .orderBy('part_master.createdAt', 'desc')
@@ -1677,7 +1683,16 @@ const partsController = {
             let page = reqData.current_page || 1;
             if (page < 1) page = 1;
             let offset = (page - 1) * per_page;
-
+            let filters = {}
+            if(req.body.status){
+                filters['assigned_parts.status'] = req.body.status;
+            }
+            if(req.body.partId){
+                filters['part_master.id'] = req.body.partId
+            }
+            if(req.body.serviceOrderId){
+                filters['assigned_parts.entityId'] = req.body.serviceOrderId
+            }
             [total, rows] = await Promise.all([
                 knex('assigned_parts')
                     .leftJoin('part_master', 'assigned_parts.partId', 'part_master.id')
@@ -1691,7 +1706,17 @@ const partsController = {
                         'assigned_parts.status as approvalStatus',
                         'assigned_parts.entityId'
                     ])
-                    .where({ 'part_master.orgId': req.orgId, 'assigned_parts.entityType': 'service_orders' }),
+                    .where({ 
+                    'part_master.orgId': req.orgId,
+                     'assigned_parts.entityType': 'service_orders' })
+                    .where(qb => {
+                        if(!_.isEmpty(filters)){
+                            qb.where(filters)
+                        }
+                        if(req.body.partName){
+                            qb.where('part_master.partName','ilike',`%${req.body.partName}%`)
+                        }
+                    }),
                 knex('assigned_parts')
                     .leftJoin('part_master', 'assigned_parts.partId', 'part_master.id')
                     .select(['assigned_parts.id as approvalId',
@@ -1705,6 +1730,14 @@ const partsController = {
                         'assigned_parts.entityId'
                     ])
                     .where({ 'part_master.orgId': req.orgId, 'assigned_parts.entityType': 'service_orders' })
+                    .where(qb => {
+                        if (!_.isEmpty(filters)) {
+                            qb.where(filters)
+                        }
+                        if (req.body.partName) {
+                            qb.where('part_master.partName', 'ilike', `%${req.body.partName}%`)
+                        }
+                    })
                     .offset(offset)
                     .limit(per_page)
             ])
