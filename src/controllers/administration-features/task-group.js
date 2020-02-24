@@ -220,6 +220,7 @@ const taskGroupController = {
 
       // ASSIGNED ADDITIONAL USER OPEN
       let assignedAdditionalUserResult
+      let assignedAdditionalUser
       if(typeof req.body.additionalUsers !== "string" && req.body.additionalUsers.length){
         let insertAssignedAdditionalUserData = req.body.additionalUsers.map(user => ({
           userId: user,
@@ -347,7 +348,7 @@ const taskGroupController = {
       let taskSchedule = null;
       let assignedAdditionalUser = null;
       let assetResults = [];
-      let payload = req.body;
+      let payload = _.omit(req.body,['additionalUsers']);
       const schema = Joi.object().keys({
         assetCategoryId: Joi.number().required(),
         companyId: Joi.number().required(),
@@ -355,7 +356,7 @@ const taskGroupController = {
         pmId: Joi.string().required(),
         teamId: Joi.string().required(),
         mainUserId: Joi.string().required(),
-        additionalUsers: Joi.array().items(Joi.string().required()).strict().required(),
+        // additionalUsers: Joi.array().items(Joi.string().required()).strict().required(),
         taskGroupName: Joi.string().required(),
         // tasks: Joi.array().items(Joi.string().required()).strict().required(),
         startDateTime: Joi.date().required(),
@@ -396,8 +397,10 @@ const taskGroupController = {
         createPmTaskGroup = insertPmTemplateResult[0];
 
 
+        if(req.body.additionalUsers && req.body.additionalUsers.length){
+
         // ASSIGNED ADDITIONAL USER OPEN
-        let insertAssignedAdditionalUserData = payload.additionalUsers.map(user => ({
+        let insertAssignedAdditionalUserData = req.body.additionalUsers.map(user => ({
           userId: user,
           entityId: createPmTaskGroup.id,
           entityType: "pm_task_groups",
@@ -409,6 +412,8 @@ const taskGroupController = {
 
         let assignedAdditionalUserResult = await knex.insert(insertAssignedAdditionalUserData).returning(['*']).transacting(trx).into('assigned_service_additional_users');
         assignedAdditionalUser = assignedAdditionalUserResult;
+        }
+
         // ASSIGNED ADDITIONAL USER CLOSE
 
         // ASSIGNED TEAM OPEN
@@ -1072,7 +1077,7 @@ const taskGroupController = {
       let assignedServiceTeam = null;
       let assignedAdditionalUser = null;
 
-      let payload = req.body;
+      let payload = _.omit(req.body, ['additionalUsers']);
 
       const schema = Joi.object().keys({
         pmId: Joi.string().required(),
@@ -1085,7 +1090,7 @@ const taskGroupController = {
         repeatFrequency: Joi.string().required(),
         teamId: Joi.string().required(),
         mainUserId: Joi.string().required(),
-        additionalUsers: Joi.array().items(Joi.string().required()).strict().required(),
+        // additionalUsers: Joi.array().items(Joi.string().required()).strict().required(),
       });
 
       const result = Joi.validate(_.omit(payload, ['repeatOn','tasks']), schema);
@@ -1146,8 +1151,11 @@ const taskGroupController = {
         taskSchedule = scheduleResult[0];
         // TASK GROUP SCHEDULE CLOSE 
 
+
+        if(req.body.additionalUsers && req.body.additionalUsers.length){
+
         // ASSIGNED ADDITIONAL USER OPEN
-        let insertAssignedAdditionalUserData = payload.additionalUsers.map(user => ({
+        let insertAssignedAdditionalUserData = req.body.additionalUsers.map(user => ({
           userId: user,
           entityId: createTemplate.id,
           entityType: "task_group_templates",
@@ -1158,6 +1166,8 @@ const taskGroupController = {
 
         let assignedAdditionalUserResult = await knex.insert(insertAssignedAdditionalUserData).returning(['*']).transacting(trx).into('assigned_service_additional_users');
         assignedAdditionalUser = assignedAdditionalUserResult;
+        }
+
         // ASSIGNED ADDITIONAL USER CLOSE
 
         // ASSIGNED TEAM OPEN
@@ -1805,10 +1815,23 @@ const taskGroupController = {
 
       }
 
-      for (let additionalUser of additionalUsers) {
-        let updated = await knex('assigned_service_additional_users').update({ userId: additionalUser }).where({ entityId: id, entityType: 'task_group_templates', orgId: req.orgId })
+      // If already exists then upldate otherwise insert
+      let checkExistsAU = await knex('assigned_service_additional_users').select('id').where({ entityId: id, entityType: 'task_group_templates', orgId: req.orgId })
+      if(checkExistsAU && checkExistsAU.length){
+        for(let i of checkExistsAU){
+          await knex('assigned_service_additional_users').where({ entityId: id, entityType: 'task_group_templates', orgId: req.orgId,userId:i.id}).del()
+        }
+        for (let additionalUser of additionalUsers) {
+          let updated = await knex('assigned_service_additional_users').insert({ userId: additionalUser, entityId: id, entityType: 'task_group_templates', orgId: req.orgId }).returning(['*'])
+          updatedUsers.push(updated[0])
+        }
+      }else {
+        for (let additionalUser of additionalUsers) {
+          let updated = await knex('assigned_service_additional_users').insert({ userId: additionalUser, entityId: id, entityType: 'task_group_templates', orgId: req.orgId }).returning(['*'])
         updatedUsers.push(updated[0])
       }
+      }
+      
 
       let updatedTeamResult = await knex('assigned_service_team').update({ teamId: req.body.teamId ? req.body.teamId:null, userId: req.body.mainUserId?req.body.mainUserId:null }).returning('*')
       updatedTeam = updatedTeamResult[0]
