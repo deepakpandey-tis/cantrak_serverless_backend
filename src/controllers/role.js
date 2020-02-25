@@ -412,7 +412,7 @@ const roleController = {
   /**GET ORG ROLE ALL LIST */
   getOrgRoleAllList: async (req, res) => {
     try {
-      let result = await knex("organisation_roles").where({ orgId: req.orgId })
+      let result = await knex("organisation_roles").where({ orgId: req.orgId,isActive:true})
 
       return res.status(200).json({
         data: {

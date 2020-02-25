@@ -664,7 +664,7 @@ const ProjectController = {
           "projects.id as id",
           "projects.projectName",
           "projects.project as projectId",
-        ]).where({ orgId: req.orgId })
+        ]).where({ orgId: req.orgId,isActive:true})
 
       return res.status(200).json({
         data: {

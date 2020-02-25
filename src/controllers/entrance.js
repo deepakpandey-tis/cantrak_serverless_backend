@@ -49,10 +49,6 @@ const entranceController = {
                 });
             }
 
-            /*LAST LOGIN UPDATE OPEN */
-            let currentTime = new Date().getTime();
-            let updateLastLogin  =  await knex('users').update({"lastLogin":currentTime}).where({id:loginResult.id});
-            /*LAST LOGIN UPDATE CLOSE */
 
             /*CHECK ORGANISATION ACTIVE/INACTIVE OPEN */
             let checkResult = await knex.from('organisations').where({ id: loginResult.orgId }).first();
@@ -85,7 +81,7 @@ const entranceController = {
             let userTeamResult = await knex.from('team_users').select('teamId').where({ userId: loginResult.id });
             if (userTeamResult.length) {
 
-                console.log("=============team Id=",userTeamResult,"==")
+                console.log("=============team Id=", userTeamResult, "==")
 
                 let teamIds = userTeamResult.map((v) => v.teamId)
 
@@ -127,6 +123,11 @@ const entranceController = {
                         ],
                     });
                 }
+
+                /*LAST LOGIN UPDATE OPEN */
+                let currentTime = new Date().getTime();
+                let updateLastLogin = await knex('users').update({ "lastLogin": currentTime }).where({ id: loginResult.id });
+                /*LAST LOGIN UPDATE CLOSE */
 
                 login.user = _.omit(loginResult, ['password']);
 
