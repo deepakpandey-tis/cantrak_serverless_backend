@@ -36,30 +36,38 @@ const dashboardController = {
 
         knex.from('service_requests')
           .select('service_requests.serviceStatusCode as status')
-          .where({ serviceStatusCode: 'O', orgId })
-          .whereIn('service_requests.projectId', accessibleProjects)
           .distinct('service_requests.id')
-        ,
-        knex.from('service_orders')
-          .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-          .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
-          .select('status.statusCode as status')
-          .distinct('service_orders.id')
-          .where({ "service_requests.serviceStatusCode": 'O', 'service_orders.orgId': orgId })
+          .whereIn('service_requests.projectId', accessibleProjects)
+          .where({ 'serviceStatusCode': 'US', orgId: orgId })
+          .orWhere({ 'serviceStatusCode': 'O', orgId: orgId })
         ,
         knex.from('service_requests')
           .select('service_requests.serviceStatusCode as status')
-          .where({ serviceStatusCode: 'O', orgId, priority: priorityValue })
-          .whereIn('service_requests.projectId', accessibleProjects)
           .distinct('service_requests.id')
+          .whereIn('service_requests.projectId', accessibleProjects)
+          .where({ 'serviceStatusCode': 'A', orgId: orgId })
+          .orWhere({ 'serviceStatusCode': 'IP', orgId: orgId })
+          .orWhere({ 'serviceStatusCode': 'OH', orgId: orgId })
+        ,
+        knex.from('service_requests')
+          .select('service_requests.serviceStatusCode as status')
+          .distinct('service_requests.id')
+          .whereIn('service_requests.projectId', accessibleProjects)
+          .where({ 'serviceStatusCode': 'US', orgId: orgId, priority: priorityValue })
+          .orWhere({ 'serviceStatusCode': 'O', orgId: orgId, priority: priorityValue })
+        //.where({ serviceStatusCode: 'O', orgId, priority: priorityValue })
+        // .whereIn('service_requests.projectId', accessibleProjects)
+        //.distinct('service_requests.id')
         ,
 
-        knex.from('service_orders')
-          .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-          .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
-          .select('status.statusCode as status')
-          .distinct('service_orders.id')
-          .where({ "service_requests.serviceStatusCode": 'O', 'service_orders.orgId': orgId, 'service_requests.priority': priorityValue })
+        knex.from('service_requests')
+          .select('service_requests.serviceStatusCode as status')
+          .distinct('service_requests.id')
+          .whereIn('service_requests.projectId', accessibleProjects)
+          .where({ 'serviceStatusCode': 'A', orgId: orgId, priority: priorityValue })
+          .orWhere({ 'serviceStatusCode': 'IP', orgId: orgId, priority: priorityValue })
+          .orWhere({ 'serviceStatusCode': 'OH', orgId: orgId, priority: priorityValue })
+
 
       ])
 
@@ -75,7 +83,8 @@ const dashboardController = {
           open_service_orders,
           open_service_requests_high_priority,
           open_service_orders_high_priority,
-          priorityValue
+          priorityValue,
+          ooooooooooooooooooooooo: openRequests
 
         },
         message: 'Dashboard data'
@@ -124,10 +133,10 @@ const dashboardController = {
       let roles = usersDetails.roles;
       let id = usersDetails.id;
       let currentDate = moment().format('YYYY-MM-DD');
-      
+
 
       let result;
-      
+
 
       if (roles.includes("superAdmin") || roles.includes("orgAdmin")) {
 
@@ -138,7 +147,7 @@ const dashboardController = {
             'service_orders',
             'service_requests.id',
             'service_orders.serviceRequestId'
-            )
+          )
           .leftJoin(
             'service_appointments',
             'service_orders.id',
@@ -175,9 +184,9 @@ const dashboardController = {
             "users.name as user_name"
           ])
           .where({ "service_requests.orgId": req.orgId })
-          .where({'service_appointments.appointedDate':currentDate})
-          
-        
+          .where({ 'service_appointments.appointedDate': currentDate })
+
+
       } else {
 
         result = await knex
@@ -236,7 +245,7 @@ const dashboardController = {
       }
 
       return res.status(200).json({
-        data: _.uniqBy(result,'id'),
+        data: _.uniqBy(result, 'id'),
         message: " Today Service appointment List!"
       });
 
@@ -338,7 +347,7 @@ const dashboardController = {
             "assignUser.name  as tenantName",
             "teams.teamName as teamCode",
           )
-          .whereBetween('o.appointedDate', [startNewDate,endNewDate])
+          .whereBetween('o.appointedDate', [startNewDate, endNewDate])
           .orderBy('o.id', 'desc')
           .distinct('o.id')
 
@@ -417,7 +426,7 @@ const dashboardController = {
             "assignUser.name  as tenantName",
             "teams.teamName as teamCode",
           )
-          .whereBetween('o.appointedDate',[startNewDate,endNewDate])
+          .whereBetween('o.appointedDate', [startNewDate, endNewDate])
           .where({ 'assigned_service_team.userId': id, 'assigned_service_team.entityType': 'survey_orders' })
           .orWhere({ 'assigned_service_additional_users.userId': id, 'assigned_service_additional_users.entityType': 'survey_orders' })
           .groupBy([
@@ -551,7 +560,7 @@ const dashboardController = {
       // let startDate = moment(reqData.startDate).isValid() ? moment(reqData.startDate).format('YYYY-MM-DD') : competitionStartDate;
       // let endDate = moment(reqData.endDate).isValid() ? moment(reqData.endDate).format('YYYY-MM-DD') : today;
       const accessibleProjects = req.userProjectResources[0].projects
-   
+
       var getDaysArray = function (start, end) {
         let dt = start
         let arr = []
@@ -561,95 +570,95 @@ const dashboardController = {
         return arr;
       };
 
-      var dates = getDaysArray(new Date(reqData.startDate), new Date(reqData.endDate));   
+      var dates = getDaysArray(new Date(reqData.startDate), new Date(reqData.endDate));
       let final = []
-      for(let d of dates){
-            let startNewDate = moment(d).startOf('date').format();
-      let endNewDate = moment(d).endOf('date', 'day').format();
+      for (let d of dates) {
+        let startNewDate = moment(d).startOf('date').format();
+        let endNewDate = moment(d).endOf('date', 'day').format();
 
-          let currentStartTime = new Date(startNewDate).getTime();
-      let currentEndTime = new Date(endNewDate).getTime();
+        let currentStartTime = new Date(startNewDate).getTime();
+        let currentEndTime = new Date(endNewDate).getTime();
 
-              [totalServiceRequest, totalServiceOrder] = await Promise.all([
+        [totalServiceRequest, totalServiceOrder] = await Promise.all([
 
-            knex
-              .from("service_requests")
-              .leftJoin(
-                "service_problems",
-                "service_requests.id",
-                "service_problems.serviceRequestId"
-              )
-              .leftJoin(
-                "incident_categories",
-                "service_problems.categoryId",
-                "incident_categories.id"
-              )
-              .leftJoin(
-                "incident_sub_categories",
-                "incident_categories.id",
-                "incident_sub_categories.incidentCategoryId"
-              )
-              .leftJoin(
-                "property_units",
-                "service_requests.houseId",
-                "property_units.id"
-              )
-              .leftJoin(
-                "assigned_service_team",
-                "service_requests.id",
-                "assigned_service_team.entityId"
-              )
-              .leftJoin(
-                "teams",
-                "assigned_service_team.teamId",
-                "teams.teamId"
-              )
-              .select([
-                "service_requests.id",
-                "service_requests.houseId as houseId",
-                "service_requests.description as description",
-                "incident_categories.descriptionEng as category",
-                "incident_sub_categories.descriptionEng as problem",
-                "service_requests.priority",
-                "service_requests.serviceStatusCode as status",
-                "property_units.unitNumber as unitNo",
-                "service_requests.requestedBy as requestedBy",
-                "service_requests.createdAt as dateCreated",
-                "teams.teamName",
-                "teams.teamCode",
-              ])
-              .where({ "service_requests.orgId": req.orgId })
-              .whereBetween('service_requests.createdAt', [currentStartTime, currentEndTime])
-              .where({ 'service_requests.isCreatedFromSo': false })
-              .distinct('service_requests.id')
-              .orderBy('service_requests.id', 'desc')
-            // .offset(offset).limit(per_page)
-            ,
+          knex
+            .from("service_requests")
+            .leftJoin(
+              "service_problems",
+              "service_requests.id",
+              "service_problems.serviceRequestId"
+            )
+            .leftJoin(
+              "incident_categories",
+              "service_problems.categoryId",
+              "incident_categories.id"
+            )
+            .leftJoin(
+              "incident_sub_categories",
+              "incident_categories.id",
+              "incident_sub_categories.incidentCategoryId"
+            )
+            .leftJoin(
+              "property_units",
+              "service_requests.houseId",
+              "property_units.id"
+            )
+            .leftJoin(
+              "assigned_service_team",
+              "service_requests.id",
+              "assigned_service_team.entityId"
+            )
+            .leftJoin(
+              "teams",
+              "assigned_service_team.teamId",
+              "teams.teamId"
+            )
+            .select([
+              "service_requests.id",
+              "service_requests.houseId as houseId",
+              "service_requests.description as description",
+              "incident_categories.descriptionEng as category",
+              "incident_sub_categories.descriptionEng as problem",
+              "service_requests.priority",
+              "service_requests.serviceStatusCode as status",
+              "property_units.unitNumber as unitNo",
+              "service_requests.requestedBy as requestedBy",
+              "service_requests.createdAt as dateCreated",
+              "teams.teamName",
+              "teams.teamCode",
+            ])
+            .where({ "service_requests.orgId": req.orgId })
+            .whereBetween('service_requests.createdAt', [currentStartTime, currentEndTime])
+            .where({ 'service_requests.isCreatedFromSo': false })
+            .distinct('service_requests.id')
+            .orderBy('service_requests.id', 'desc')
+          // .offset(offset).limit(per_page)
+          ,
 
-            knex
-              .from("service_orders")
-              .leftJoin(
-                "service_requests",
-                "service_orders.serviceRequestId",
-                "service_requests.id"
-              )
-              .select([
-                "service_orders.id as SoId",
-                "service_orders.createdAt as dateCreated",
-              ])
-              .orderBy('service_orders.id', 'desc')
-              .where({ "service_orders.orgId": req.orgId })
-              .whereBetween('service_orders.createdAt', [currentStartTime, currentEndTime])
-              .whereIn('service_requests.projectId', accessibleProjects)
-            ,
+          knex
+            .from("service_orders")
+            .leftJoin(
+              "service_requests",
+              "service_orders.serviceRequestId",
+              "service_requests.id"
+            )
+            .select([
+              "service_orders.id as SoId",
+              "service_orders.createdAt as dateCreated",
+            ])
+            .orderBy('service_orders.id', 'desc')
+            .where({ "service_orders.orgId": req.orgId })
+            .whereBetween('service_orders.createdAt', [currentStartTime, currentEndTime])
+            .whereIn('service_requests.projectId', accessibleProjects)
+          ,
 
-          ])
+        ])
 
-        final.push({ date: moment(d).format('L'), totalServiceRequest: _.uniqBy(totalServiceRequest, 'id').length, totalServiceOrder: _.uniqBy(totalServiceOrder,'SoId').length})
+        final.push({ date: moment(d).format('L'), totalServiceRequest: _.uniqBy(totalServiceRequest, 'id').length, totalServiceOrder: _.uniqBy(totalServiceOrder, 'SoId').length })
       }
 
       res.status(200).json({
-        data: {final },
+        data: { final },
         message: "records"
       });
     } catch (err) {
@@ -659,9 +668,9 @@ const dashboardController = {
     }
   },
 
-  getMainDataForPieChart:async(req,res) => {
+  getMainDataForPieChart: async (req, res) => {
     try {
-    
+
       // let startDate = moment(req.body.startDate).format('L'); // TODO
       // let endDate = moment(req.body.endDate).format('L') // TODO
       let currentDate = moment().format('L')
@@ -1000,11 +1009,11 @@ const dashboardController = {
 
       return res.status(200).json(
         {
-          data: {todaysServiceAppointments:_.uniqBy(result,'id').length, todaysSurveyAppointments:_.uniqBy(result2,'id').length,todaysWorkOrders:result3.length}
+          data: { todaysServiceAppointments: _.uniqBy(result, 'id').length, todaysSurveyAppointments: _.uniqBy(result2, 'id').length, todaysWorkOrders: result3.length }
         }
       )
 
-    } catch(err) {
+    } catch (err) {
       console.log('[controllers][dashboard][getAssesList] : Error', err);
       res.status(500).json({
         errors: [
@@ -1013,7 +1022,7 @@ const dashboardController = {
       });
     }
   },
-  getServiceRequestsByProblemType: async(req,res) => {
+  getServiceRequestsByProblemType: async (req, res) => {
     try {
       // const problems = await knex('service_problems')
       // .leftJoin('incident_sub_categories','service_problems.problemId','incident_sub_categories.id')
@@ -1030,71 +1039,71 @@ const dashboardController = {
         }
         return arr;
       };
-      var dates = getDaysArray(new Date(req.body.startDate), new Date(req.body.endDate));   
+      var dates = getDaysArray(new Date(req.body.startDate), new Date(req.body.endDate));
       let final = []
       for (let d of dates) {
         let startNewDate = moment(d).startOf('date').format();
         let endNewDate = moment(d).endOf('date', 'day').format();
-      let currentStartTime = new Date(startNewDate).getTime();
-      let currentEndTime = new Date(endNewDate).getTime();
-       problems = await knex
-        .from("service_requests")
-        .leftJoin(
-          "service_problems",
-          "service_requests.id",
-          "service_problems.serviceRequestId"
-        )
-        .leftJoin(
-          "incident_categories",
-          "service_problems.categoryId",
-          "incident_categories.id"
-        )
-        .leftJoin(
-          "incident_sub_categories",
-          "incident_categories.id",
-          "incident_sub_categories.incidentCategoryId"
-        )
-        .leftJoin(
-          "property_units",
-          "service_requests.houseId",
-          "property_units.id"
-        )
-        .leftJoin(
-          "assigned_service_team",
-          "service_requests.id",
-          "assigned_service_team.entityId"
-        )
-        .leftJoin(
-          "teams",
-          "assigned_service_team.teamId",
-          "teams.teamId"
-        )
-        .select(['service_problems.serviceRequestId', 'incident_categories.categoryCode', 'incident_categories.descriptionEng'])
-         .where({ "service_requests.orgId": req.orgId,'incident_sub_categories.incidentTypeId':problemTypeId })
-        .whereBetween('service_requests.createdAt', [currentStartTime, currentEndTime])
-        .where({ 'service_requests.isCreatedFromSo': false })
-        .distinct('service_requests.id')
-        .orderBy('service_requests.id', 'desc')
+        let currentStartTime = new Date(startNewDate).getTime();
+        let currentEndTime = new Date(endNewDate).getTime();
+        problems = await knex
+          .from("service_requests")
+          .leftJoin(
+            "service_problems",
+            "service_requests.id",
+            "service_problems.serviceRequestId"
+          )
+          .leftJoin(
+            "incident_categories",
+            "service_problems.categoryId",
+            "incident_categories.id"
+          )
+          .leftJoin(
+            "incident_sub_categories",
+            "incident_categories.id",
+            "incident_sub_categories.incidentCategoryId"
+          )
+          .leftJoin(
+            "property_units",
+            "service_requests.houseId",
+            "property_units.id"
+          )
+          .leftJoin(
+            "assigned_service_team",
+            "service_requests.id",
+            "assigned_service_team.entityId"
+          )
+          .leftJoin(
+            "teams",
+            "assigned_service_team.teamId",
+            "teams.teamId"
+          )
+          .select(['service_problems.serviceRequestId', 'incident_categories.categoryCode', 'incident_categories.descriptionEng'])
+          .where({ "service_requests.orgId": req.orgId, 'incident_sub_categories.incidentTypeId': problemTypeId })
+          .whereBetween('service_requests.createdAt', [currentStartTime, currentEndTime])
+          .where({ 'service_requests.isCreatedFromSo': false })
+          .distinct('service_requests.id')
+          .orderBy('service_requests.id', 'desc')
         // let grouped = _.groupBy(problems, 'categoryCode')
         // let problemCounts = Object.keys(grouped).map(category => ({totalServiceRequests:grouped[category].length,category}))
-        final.push({ date: moment(d).format('L'), totalServiceRequest:problems.length })
+        final.push({ date: moment(d).format('L'), totalServiceRequest: problems.length })
 
       }
-    
-    return res.status(200).json({
-      data: final
-    })
-      } catch(err) {
+
+      return res.status(200).json({
+        data: final
+      })
+    } catch (err) {
       console.log('[controllers][dashboard][getAssesList] : Error', err);
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
         ]
       });
-    } 
+    }
   },
 
-  getPieChartForIncidentTypes:async(req,res) =>  {
+  getPieChartForIncidentTypes: async (req, res) => {
     try {
       let problems = null
       var getDaysArray = function (start, end) {
@@ -1145,7 +1154,7 @@ const dashboardController = {
             "teams.teamId"
           )
           .select(['service_problems.serviceRequestId', 'incident_categories.categoryCode', 'incident_categories.descriptionEng'])
-          .where({ "service_requests.orgId": req.orgId})
+          .where({ "service_requests.orgId": req.orgId })
           .whereBetween('service_requests.createdAt', [currentStartTime, currentEndTime])
           .where({ 'service_requests.isCreatedFromSo': false })
           .distinct('service_requests.id')
@@ -1170,7 +1179,7 @@ const dashboardController = {
       return res.status(200).json({
         data: finalData
       })
-    } catch(err) {
+    } catch (err) {
       console.log('[controllers][dashboard][getAssesList] : Error', err);
       res.status(500).json({
         errors: [

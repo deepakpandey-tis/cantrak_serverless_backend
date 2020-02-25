@@ -424,7 +424,8 @@ const problemController = {
               }
               let checkExist = await knex("incident_sub_categories")
                 .select("id")
-                .where({ incidentCategoryId: categoryId, descriptionEng: problemData.B, orgId: req.orgId, incidentTypeId: problemTypeId });
+                .where('descriptionEng', 'iLIKE',problemData.B)
+                .where({ incidentCategoryId: categoryId, orgId: req.orgId, incidentTypeId: problemTypeId });
               if (checkExist.length < 1) {
                 let currentTime = new Date().getTime();
                 let insertData = {

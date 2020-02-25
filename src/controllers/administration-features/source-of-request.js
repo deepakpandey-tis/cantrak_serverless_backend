@@ -49,7 +49,7 @@ const sourceofRequestController = {
 
       const existCode = await knex("source_of_request")
       .where({
-        requestCode: payload.requestCode,
+        requestCode: payload.requestCode.toUpperCase(),
         orgId:req.orgId
       })
 
@@ -69,6 +69,7 @@ const sourceofRequestController = {
       let currentTime = new Date().getTime();
       let insertData = {
         ...payload,
+        requestCode: payload.requestCode.toUpperCase(),
         createdBy: userId,
         orgId: orgId,
         createdAt: currentTime,
@@ -135,7 +136,7 @@ const sourceofRequestController = {
 
       const existCode = await knex("source_of_request")
       .where({
-        requestCode: payload.requestCode,
+        requestCode: payload.requestCode.toUpperCase(),
         orgId:req.orgId
       })
       .whereNot({ id: payload.id });
@@ -153,7 +154,7 @@ const sourceofRequestController = {
 
 
       let currentTime = new Date().getTime();
-      let insertData = { ...payload, updatedAt: currentTime };
+      let insertData = { ...payload,requestCode: payload.requestCode.toUpperCase(),updatedAt: currentTime };
       let insertResult = await knex("source_of_request")
         .update(insertData)
         .where({ id: payload.id, createdBy: userId, orgId: orgId })
@@ -477,8 +478,6 @@ const sourceofRequestController = {
       errors.push(header)
 
 
-
-
       if (
         data[0].B == "DESCRIPTION" &&
         data[0].C == "ALTERNATE_DESCRIPTION" &&
@@ -512,13 +511,13 @@ const sourceofRequestController = {
 
               let checkExist = await knex("source_of_request")
                 .select("requestCode")
-                .where({ requestCode: requestData.A, orgId: req.orgId });
+                .where({ requestCode: requestData.A.toUpperCase(), orgId: req.orgId });
               console.log(checkExist);
               if (checkExist.length < 1) {
                 let currentTime = new Date().getTime();
                 let insertData = {
                   orgId: req.orgId,
-                  requestCode: requestData.A,
+                  requestCode: requestData.A.toUpperCase(),
                   descriptionEng: requestData.B,
                   descriptionThai: requestData.C,
                   isActive: true,

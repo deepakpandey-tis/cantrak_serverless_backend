@@ -44,20 +44,22 @@ const propertysubCategoryController = {
 
         // Check typeCode already exists
         let existSubCategoryCode = await knex('incident_sub_categories')
-        .where({ incidentCategoryId:subcategoryPayload.incidentCategoryId,
-          incidentTypeId:subcategoryPayload.incidentTypeId ,
-          descriptionEng:subcategoryPayload.descriptionEng,
-          orgId:orgId
-        });
+          .where('descriptionEng', 'iLIKE', subcategoryPayload.descriptionEng)
+          .where({
+            incidentCategoryId: subcategoryPayload.incidentCategoryId,
+            incidentTypeId: subcategoryPayload.incidentTypeId,
+            //descriptionEng:subcategoryPayload.descriptionEng,
+            orgId: orgId
+          });
 
         // console.log('[controllers][category][add]: CategoryCode', existCategoryCode);
 
         if (existSubCategoryCode && existSubCategoryCode.length) {
-            return res.status(400).json({
-                errors: [
-                    { code: 'TYPE_CODE_EXIST_ERROR', message: 'Sub Category already exist !' }
-                ],
-            });
+          return res.status(400).json({
+            errors: [
+              { code: 'TYPE_CODE_EXIST_ERROR', message: 'Sub Category already exist !' }
+            ],
+          });
         }
 
         // Insert in users table,
@@ -138,23 +140,25 @@ const propertysubCategoryController = {
           });
         }
 
-       
+
         let existSubCategoryCode = await knex('incident_sub_categories')
-        .where({ incidentCategoryId:subCategoryPayload.incidentCategoryId,
-          incidentTypeId:subCategoryPayload.incidentTypeId ,
-          descriptionEng:subCategoryPayload.descriptionEng,
-          orgId:orgId
-        })
-        .whereNot({ id: subCategoryPayload.id });
-  
+          .where('descriptionEng', 'iLIKE', subCategoryPayload.descriptionEng)
+          .where({
+            incidentCategoryId: subCategoryPayload.incidentCategoryId,
+            incidentTypeId: subCategoryPayload.incidentTypeId,
+           // descriptionEng: subCategoryPayload.descriptionEng,
+            orgId: orgId
+          })
+          .whereNot({ id: subCategoryPayload.id });
+
 
         if (existSubCategoryCode && existSubCategoryCode.length) {
           return res.status(400).json({
-              errors: [
-                  { code: 'TYPE_CODE_EXIST_ERROR', message: 'Sub Category already exist !' }
-              ],
+            errors: [
+              { code: 'TYPE_CODE_EXIST_ERROR', message: 'Sub Category already exist !' }
+            ],
           });
-      }
+        }
 
 
         // Insert in users table,
@@ -384,7 +388,7 @@ const propertysubCategoryController = {
   getProblemTypeAllList: async (req, res) => {
     try {
       let orgId = req.orgId;
-      let result = await knex.from('incident_type').where({orgId:orgId})
+      let result = await knex.from('incident_type').where({ orgId: orgId })
       return res.status(200).json({
         data: result,
         message: "List of Problem type"
@@ -398,7 +402,7 @@ const propertysubCategoryController = {
       });
     }
   },
-  
+
 };
 
 module.exports = propertysubCategoryController;

@@ -698,12 +698,12 @@ const propertyCategoryController = {
 
               let checkExist = await knex("incident_categories")
                 .select("id")
-                .where({ categoryCode: categoryData.A, orgId: req.orgId });
+                .where({ categoryCode: categoryData.A.toUpperCase(), orgId: req.orgId });
               if (checkExist.length < 1) {
                 let currentTime = new Date().getTime();
                 let insertData = {
                   orgId: req.orgId,
-                  categoryCode: categoryData.A,
+                  categoryCode: categoryData.A.toUpperCase(),
                   descriptionEng: categoryData.B,
                   descriptionThai: categoryData.C,
                   remark: categoryData.D,

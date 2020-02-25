@@ -310,7 +310,7 @@ const assetController = {
       try {
         [total, rows] = await Promise.all([
           knex
-            .count("* as count")
+            //.count("* as count")
             .from("asset_master")
             .leftJoin(
               "location_tags",
@@ -362,7 +362,8 @@ const assetController = {
                 );
               }
             })
-            .first()
+            .distinct('asset_master.id')
+            //.first()
             .where({ 'asset_master.orgId': req.orgId }),
           knex("asset_master")
             .leftJoin(
@@ -430,6 +431,7 @@ const assetController = {
                 );
               }
             })
+            .distinct('asset_master.id')
             .orderBy("asset_master.createdAt", "desc")
             .offset(offset)
             .limit(per_page)
@@ -440,7 +442,7 @@ const assetController = {
       }
       //}
 
-      let count = total.count;
+      let count = total.length;
       pagination.total = count;
       pagination.per_page = per_page;
       pagination.offset = offset;

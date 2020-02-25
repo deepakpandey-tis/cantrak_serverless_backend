@@ -49,6 +49,10 @@ const entranceController = {
                 });
             }
 
+            /*LAST LOGIN UPDATE OPEN */
+            let currentTime = new Date().getTime();
+            let updateLastLogin  =  await knex('users').update({"lastLogin":currentTime}).where({id:loginResult.id});
+            /*LAST LOGIN UPDATE CLOSE */
 
             /*CHECK ORGANISATION ACTIVE/INACTIVE OPEN */
             let checkResult = await knex.from('organisations').where({ id: loginResult.orgId }).first();
@@ -75,6 +79,30 @@ const entranceController = {
                     ],
                 });
             }
+
+
+            /*CHECK TEAM USER DISABLE OR NOT OPEN */
+            let userTeamResult = await knex.from('team_users').select('teamId').where({ userId: loginResult.id });
+            if (userTeamResult.length) {
+
+                console.log("=============team Id=",userTeamResult,"==")
+
+                let teamIds = userTeamResult.map((v) => v.teamId)
+
+                let teamResult = await knex.from('teams').whereIn('teamId', teamIds).where({ disableLogin: true });
+
+                if (teamResult.length) {
+
+                    return res.status(400).json({
+                        errors: [
+                            { code: 'DISABLE_TEAM_ERROR', message: "Login for the user of this team is disabled , Please contact to your administration !" }
+                        ]
+                    })
+
+                }
+
+            }
+            /*CHECK TEAM USER DISABLE OR NOT CLOSE */
 
             // Get organization ID
             let orgId = loginResult.orgId;

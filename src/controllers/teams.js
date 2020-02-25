@@ -1160,6 +1160,59 @@ const teamsController = {
             });
         }
     }
+    ,
+    disableLogin: async (req, res) => {
+        try {
+            let team = null;
+            let message;
+            await knex.transaction(async trx => {
+                let peoplePayload = req.body;
+                let id = req.body.id
+                const schema = Joi.object().keys({
+                    id: Joi.string().required()
+                })
+                const result = Joi.validate(peoplePayload, schema);
+                console.log('[controllers][team][disableLogin]: JOi Result', result);
+
+                if (result && result.hasOwnProperty('error') && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: 'VALIDATION_ERROR', message: result.error.message }
+                        ],
+                    });
+                }
+
+                let currentTime = new Date().getTime();
+                let checkStatus = await knex.from('teams').where({ teamId: id }).returning(['*']);
+
+                if (checkStatus.length) {
+
+                    if (checkStatus[0].disableLogin == true) {
+
+                        let teamData = await knex.update({ disableLogin: false, updatedAt: currentTime }).where({ teamId: id }).returning(['*']).transacting(trx).into('teams');
+                        team = teamData[0];
+                        message = "Disable Login Deactivate Successfully!";
+
+                    } else {
+
+                        let teamData = await knex.update({ disableLogin: true, updatedAt: currentTime }).where({ teamId: id }).returning(['*']).transacting(trx).into('teams');
+                        team = teamData[0];
+                        message = "Disable Login Activate Successfully!";
+                    }
+                }
+
+                trx.commit
+            })
+            res.status(200).json({
+                data: {
+                    team: team
+                },
+                message: message
+            });
+        } catch (err) {
+
+        }
+    }
 
 }
 
