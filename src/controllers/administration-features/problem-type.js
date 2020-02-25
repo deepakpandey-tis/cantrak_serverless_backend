@@ -69,7 +69,7 @@ const problemTypeController = {
           createdBy: userId,
           orgId: orgId,
           typeCode: problemTypePayload.typeCode.toUpperCase(),
-          isActive: "true",
+          isActive: true,
           createdAt: currentTime,
           updatedAt: currentTime
         };
@@ -464,12 +464,12 @@ const problemTypeController = {
 
               let checkExist = await knex("incident_type")
                 .select("id")
-                .where({ typeCode: problemData.A, orgId: req.orgId });
+                .where({ typeCode: problemData.A.toUpperCase(), orgId: req.orgId });
               if (checkExist.length < 1) {
                 let currentTime = new Date().getTime();
                 let insertData = {
                   orgId: req.orgId,
-                  typeCode: problemData.A,
+                  typeCode: problemData.A.toUpperCase(),
                   descriptionEng: problemData.B,
                   descriptionThai: problemData.C,
                   createdAt: currentTime,

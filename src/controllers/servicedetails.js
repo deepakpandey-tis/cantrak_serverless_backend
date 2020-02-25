@@ -46,8 +46,10 @@ const serviceDetailsController = {
           });
         }
 
-        const existCode = await knex("incident_priority").where({
-          incidentPriorityCode: payload.incidentPriorityCode,
+        const existCode = await knex("incident_priority")
+        .where('incidentPriorityCode','iLIKE',payload.incidentPriorityCode)
+        .where({
+          //incidentPriorityCode: payload.incidentPriorityCode,
           orgId:req.orgId
         });
 
@@ -140,8 +142,10 @@ const serviceDetailsController = {
         }
 
 
-        const existCode = await knex("incident_priority").where({
-          incidentPriorityCode: payload.incidentPriorityCode,
+        const existCode = await knex("incident_priority")
+        .where('incidentPriorityCode','iLIKE',payload.incidentPriorityCode)
+        .where({
+          //incidentPriorityCode: payload.incidentPriorityCode,
           orgId:req.orgId
         })
         .whereNot({ id: payload.id });
@@ -273,7 +277,7 @@ const serviceDetailsController = {
 
         const existCode = await knex("location_tags_master")
         .where({
-          title: payload.title,
+          title: payload.title.toUpperCase(),
           orgId:req.orgId
         })
 
@@ -292,6 +296,7 @@ const serviceDetailsController = {
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
+          title: payload.title.toUpperCase(),
           orgId: orgId,
           createdBy: userId,
           createdAt: currentTime,
@@ -354,7 +359,7 @@ const serviceDetailsController = {
 
         const existCode = await knex("location_tags_master")
         .where({
-          title: payload.title,
+          title: payload.title.toUpperCase(),
           orgId:req.orgId
         })
         .whereNot({ id: payload.id });
@@ -372,7 +377,7 @@ const serviceDetailsController = {
 
 
         let currentTime = new Date().getTime();
-        let insertData = { ...payload, updatedAt: currentTime };
+        let insertData = { ...payload, title: payload.title.toUpperCase(),updatedAt: currentTime };
         let insertResult = await knex
           .update(insertData)
           .where({ id: payload.id})
@@ -1344,13 +1349,13 @@ const serviceDetailsController = {
               let checkExist = await knex("location_tags_master")
                 .select("title")
                 .where({
-                  title: locationTagData.A,
+                  title: locationTagData.A.toUpperCase(),
                   orgId: req.orgId
                 });
               if (checkExist.length < 1) {
                 let insertData = {
                   orgId: req.orgId,
-                  title: locationTagData.A,
+                  title: locationTagData.A.toUpperCase(),
                   descriptionEng: locationTagData.B,
                   descriptionThai: locationTagData.C,
                   isActive: true,
