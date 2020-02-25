@@ -499,12 +499,14 @@ const dashboardController = {
             "pm_task_groups.id",
             "assigned_service_additional_users.entityId"
           )
+          .leftJoin('asset_master','task_group_schedule_assign_assets.assetId','asset_master.id')
           .select([
             'task_group_schedule.id as scheduleId',
             'task_group_schedule_assign_assets.*',
             'teams.teamName as teamName',
             'assigned_service_team.userId as mainUserId',
             'users.name as mainUser',
+            'asset_master.assetName as assetName'
           ])
           .where({ 'task_group_schedule_assign_assets.orgId': orgId })
           .whereBetween('task_group_schedule_assign_assets.pmDate', [startDate, endDate])
@@ -523,12 +525,15 @@ const dashboardController = {
             "pm_task_groups.id",
             "assigned_service_additional_users.entityId"
           )
+          .leftJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id')
           .select([
             'task_group_schedule.id as scheduleId',
             'task_group_schedule_assign_assets.*',
             'teams.teamName as teamName',
             'assigned_service_team.userId as mainUserId',
             'users.name as mainUser',
+            'asset_master.assetName as assetName'
+
           ])
           .where({ 'task_group_schedule_assign_assets.orgId': orgId, 'assigned_service_team.userId': id, 'assigned_service_team.entityType': 'pm_task_groups' })
           // .orWhere({ 'assigned_service_additional_users.userId': id, 'assigned_service_additional_users.entityType': 'pm_task_groups' })
@@ -537,7 +542,7 @@ const dashboardController = {
       }
 
       return res.status(200).json({
-        data: result,
+        data:_.uniqBy(result,'id'),
         message: " Today Schedule Work order List!"
       });
 
@@ -1106,6 +1111,7 @@ const dashboardController = {
   getPieChartForIncidentTypes: async (req, res) => {
     try {
       let problems = null
+      let problemTypeId = req.body.problemTypeId
       var getDaysArray = function (start, end) {
         let dt = start
         let arr = []
@@ -1154,7 +1160,8 @@ const dashboardController = {
             "teams.teamId"
           )
           .select(['service_problems.serviceRequestId', 'incident_categories.categoryCode', 'incident_categories.descriptionEng'])
-          .where({ "service_requests.orgId": req.orgId })
+          .where({ "service_requests.orgId": req.orgId, 'incident_sub_categories.incidentTypeId': problemTypeId })
+          .where({ "service_requests.orgId": req.orgId})
           .whereBetween('service_requests.createdAt', [currentStartTime, currentEndTime])
           .where({ 'service_requests.isCreatedFromSo': false })
           .distinct('service_requests.id')

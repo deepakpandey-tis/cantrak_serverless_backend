@@ -1803,9 +1803,16 @@ const assetController = {
         houseId: '9922',
         floorId: '165' }
       */
-      await knex('asset_location')
-        .update({ endDate: currentTime })
-        .where({ assetId: payload.assetId,id: req.body.previousLocationId})
+     if(req.body.previousLocationId){
+       await knex('asset_location')
+         .update({ endDate: currentTime })
+         .where({ assetId: payload.assetId,id: req.body.previousLocationId})
+
+     }else {
+       await knex('asset_location')
+         .update({ endDate: currentTime })
+         .where({ assetId: payload.assetId})
+     }
       console.log('***********************ASSET LOCATION:***********************', req.body)
       // Deprecated
       let updatedLastLocationEndDate
