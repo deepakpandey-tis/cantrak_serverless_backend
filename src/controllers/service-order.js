@@ -309,7 +309,7 @@ const serviceOrderController = {
                 createdFrom,
                 createdTo,
                 unit,
-                serviceType } = req.body
+                serviceType,serviceOrderId,building } = req.body
 
             let reqData = req.query;
             let total, rows
@@ -333,6 +333,9 @@ const serviceOrderController = {
 
             if (serviceOrderStatus) {
                 filters['service_orders.serviceOrderStatus'] = serviceOrderStatus
+            }
+            if(serviceOrderId){
+                filters['service_orders.serviceOrderId'] = serviceOrderId
             }
 
             if (archive) {
@@ -366,9 +369,9 @@ const serviceOrderController = {
                 filters['users.name'] = assignedTo
             }
 
-            if (unit) {
+            // if (unit) {
 
-            }
+            // }
             if (serviceType) {
                 filters['service_requests.serviceType'] = serviceType
             }
@@ -494,6 +497,12 @@ const serviceOrderController = {
                             if (createdFromDate && createdToDate) {
                                 qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
                             }
+                            if(unit){
+                                qb.where('property_units.unitNumber','ilike',`%${unit}%`)
+                            }
+                            if(building){
+                                qb.where('buildings_and_phases.description','ilike',`%${building}%`)
+                            }
 
                         }).groupBy([
                             'buildings_and_phases.id',
@@ -563,6 +572,12 @@ const serviceOrderController = {
                             }
                             if (createdFromDate && createdToDate) {
                                 qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
+                            }
+                            if (unit) {
+                                qb.where('property_units.unitNumber', 'ilike', `%${unit}%`)
+                            }
+                            if (building) {
+                                qb.where('buildings_and_phases.description', 'ilike', `%${building}%`)
                             }
 
                         }).offset(offset).limit(per_page).orderBy('service_orders.id', 'desc')
@@ -784,6 +799,12 @@ const serviceOrderController = {
                                         createdToDate
                                     ]);
                                 }
+                                if (unit) {
+                                    qb.where('property_units.unitNumber', 'ilike', `%${unit}%`)
+                                }
+                                if (building) {
+                                    qb.where('buildings_and_phases.description', 'ilike', `%${building}%`)
+                                }
                             })
                             .groupBy([
                                 "service_requests.id",
@@ -883,6 +904,12 @@ const serviceOrderController = {
                                         createdFromDate,
                                         createdToDate
                                     ]);
+                                }
+                                if (unit) {
+                                    qb.where('property_units.unitNumber', 'ilike', `%${unit}%`)
+                                }
+                                if (building) {
+                                    qb.where('buildings_and_phases.description', 'ilike', `%${building}%`)
                                 }
                             })
                             .offset(offset)
