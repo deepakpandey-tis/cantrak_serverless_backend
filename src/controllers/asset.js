@@ -376,7 +376,6 @@ const assetController = {
                 );
               }
             })
-            .where({'location_tags.entityType':'asset'})
             .distinct('asset_master.id')
             //.first()
             .where({ 'asset_master.orgId': req.orgId }),
@@ -446,7 +445,6 @@ const assetController = {
                 );
               }
             })
-            .where({'location_tags.entityType':'asset'})
             .distinct('asset_master.id')
             .orderBy("asset_master.createdAt", "desc")
             .offset(offset)
@@ -458,7 +456,7 @@ const assetController = {
       }
       //}
 
-      let count =  total.length;
+      let count =  _.unionBy(total,'ID').length;
       pagination.total = count;
       pagination.per_page = per_page;
       pagination.offset = offset;
@@ -466,7 +464,7 @@ const assetController = {
       pagination.last_page = Math.ceil(count / per_page);
       pagination.current_page = page;
       pagination.from = offset;
-      pagination.data = rows;
+      pagination.data = _.unionBy(rows,'ID');
 
       return res.status(200).json({
         data: {
