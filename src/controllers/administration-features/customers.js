@@ -452,7 +452,7 @@ const customerController = {
         /*CHECK DUPLICATION USERNAME , EMAIL & MOBILE NO. OPEN */
         const existUser = await knex('users').where({ userName: payload.userName });
         const existEmail = await knex('users').where({ email: payload.email });
-        const existMobile = await knex('users').where({ mobileNo: payload.mobileNo });
+
 
         if (existUser && existUser.length) {
           return res.status(400).json({
@@ -470,12 +470,21 @@ const customerController = {
           });
         }
 
-        if (existMobile && existMobile.length) {
-          return res.status(400).json({
-            errors: [
-              { code: 'MOBILE_EXIST_ERROR', message: 'MobileNo already exist !' }
-            ],
-          });
+        let mobileNo = null;
+
+        if (payload.mobileNo) {
+
+          mobileNo = payload.mobileNo;
+
+          const existMobile = await knex('users').where({ mobileNo: payload.mobileNo });
+
+          if (existMobile && existMobile.length) {
+            return res.status(400).json({
+              errors: [
+                { code: 'MOBILE_EXIST_ERROR', message: 'MobileNo already exist !' }
+              ],
+            });
+          }
         }
         /*CHECK DUPLICATION USERNAME , EMAIL & MOBILE NO. CLOSE */
         let emailVerified = false;
@@ -491,17 +500,27 @@ const customerController = {
         let uuidv4 = uuid()
         let currentTime = new Date().getTime()
         insertedUser = await knex("users")
-          .insert({ ...payload, verifyToken: uuidv4, emailVerified: emailVerified, isActive: isActive, createdAt: currentTime, updatedAt: currentTime, createdBy: req.me.id, orgId: orgId })
+          .insert({ ...payload, mobileNo: mobileNo, verifyToken: uuidv4, emailVerified: emailVerified, isActive: isActive, createdAt: currentTime, updatedAt: currentTime, createdBy: req.me.id, orgId: orgId })
           .returning(["*"])
           .transacting(trx);
         console.log(payload);
 
         /*INSERT HOUSE ID OPEN */
-        for (let house of req.body.houses) {
-          await knex("user_house_allocation")
-            .insert({ houseId: house.unit, userId: insertedUser[0].id, status: 1, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime })
-            .returning(["*"])
-            .transacting(trx);
+
+        let houses = req.body.houses;
+
+        houses =  _.unionBy(houses,'unit')
+
+        for (let house of houses) {
+
+          let checkHouseAllocation = await knex.from('user_house_allocation')
+            .where({ houseId: house.unit, userId: insertedUser[0].id, orgId: req.orgId });
+                    
+              await knex("user_house_allocation")
+                .insert({ houseId: house.unit, userId: insertedUser[0].id, status: 1, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime })
+                .returning(["*"])
+                .transacting(trx);
+            
         }
         /*INSERT HOUSE ID CLOSE */
 
@@ -584,7 +603,7 @@ const customerController = {
         /*CHECK DUPLICATION USERNAME , EMAIL & MOBILE NO. OPEN */
         const existUser = await knex('users').where({ userName: payload.userName });
         const existEmail = await knex('users').where({ email: payload.email });
-        const existMobile = await knex('users').where({ mobileNo: payload.mobileNo });
+
 
         if (existUser && existUser.length) {
           if (existUser[0].id == payload.id) {
@@ -610,29 +629,37 @@ const customerController = {
             });
           }
         }
+        let mobileNo = null;
 
-        if (existMobile && existMobile.length) {
+        if (payload.mobileNo) {
+          mobileNo = payload.mobileNo;
+          const existMobile = await knex('users').where({ mobileNo: payload.mobileNo });
 
-          if (existMobile[0].id == payload.id) {
+          if (existMobile && existMobile.length) {
 
-          } else {
+            if (existMobile[0].id == payload.id) {
 
-            return res.status(400).json({
-              errors: [
-                { code: 'MOBILE_EXIST_ERROR', message: 'MobileNo already exist !' }
-              ],
-            });
+            } else {
+
+              return res.status(400).json({
+                errors: [
+                  { code: 'MOBILE_EXIST_ERROR', message: 'MobileNo already exist !' }
+                ],
+              });
+            }
           }
         }
         /*CHECK DUPLICATION USERNAME , EMAIL & MOBILE NO. CLOSE */
         let emailVerified = false;
+        let isActive = false;
         if (payload.allowLogin) {
           emailVerified = true;
+          isActive = true;
         }
         payload = _.omit(payload, 'allowLogin')
         let currentTime = new Date().getTime()
         insertedUser = await knex("users")
-          .update({ ...payload, emailVerified: emailVerified, updatedAt: currentTime, orgId: orgId })
+          .update({ ...payload, mobileNo: mobileNo, emailVerified: emailVerified, isActive: isActive, updatedAt: currentTime, orgId: orgId })
           .returning(["*"])
           .transacting(trx)
           .where({ id: payload.id });
@@ -662,8 +689,9 @@ const customerController = {
 
         console.log('New Items:********************************************************** ', newItems)
 
+
         for (let r of removedItems) {
-          await knex('user_house_allocation').del().where({ houseId: r.houseId })
+          await knex('user_house_allocation').del().where({ houseId: r.houseId ,userId:insertedUser[0].id,orgId: req.orgId})
         }
 
         for (let house of newItems) {
@@ -774,7 +802,7 @@ const customerController = {
       var ws;
 
       if (rows && rows.length) {
-        let allow = {"ALLOW_LOGIN_SERVICEMIND":""}
+        let allow = { "ALLOW_LOGIN_SERVICEMIND": "" }
         rows.push(allow)
         //let row = _.unionBy(rows, 'EMAIL');
         ws = XLSX.utils.json_to_sheet(rows);
