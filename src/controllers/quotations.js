@@ -496,6 +496,7 @@ const quotationsController = {
       let {
         quotationId,
         serviceId,
+        description,
         quotationStatus,
         priority,
         archive,
@@ -560,247 +561,278 @@ const quotationsController = {
         filters["users.name"] = assingedTo;
       }
 
-      if (_.isEmpty(filters)) {
-        [total, rows] = await Promise.all([
-          knex
-            .count("* as count")
-            .leftJoin('companies', 'quotations.companyId', 'companies.id')
-            .leftJoin('projects', 'quotations.projectId', 'projects.id')
-            .leftJoin('buildings_and_phases', 'quotations.buildingId', 'buildings_and_phases.id')
-            .leftJoin('floor_and_zones', 'quotations.floorId', 'floor_and_zones.id')
-            .leftJoin('property_units', 'quotations.unitId', 'property_units.id')
-            .from("quotations")
-            .leftJoin(
-              "service_requests",
-              "quotations.serviceRequestId",
-              "service_requests.id"
-            )
-            .leftJoin(
-              "assigned_service_team",
-              "service_requests.id",
-              "assigned_service_team.entityId"
-            )
-            .leftJoin("users", "quotations.createdBy", "users.id")
-            .leftJoin(
-              "service_problems",
-              "service_requests.id",
-              "service_problems.serviceRequestId"
-            )
-            .leftJoin(
-              "requested_by",
-              "service_requests.requestedBy",
-              "requested_by.id"
-            )
-            .leftJoin(
-              "incident_categories",
-              "service_problems.categoryId",
-              "incident_categories.id"
-            )
-            .leftJoin('user_house_allocation', 'quotations.unitId', 'user_house_allocation.houseId')
-            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
-            .where("quotations.orgId", req.orgId)
-            .whereIn('quotations.projectId', accessibleProjects)
-            .havingNotNull('quotations.quotationStatus')
-            .groupBy([
-              "quotations.id",
-              "service_requests.id",
-              "assigned_service_team.id",
-              "users.id",
-              "companies.companyName",
-              "projects.projectName",
-              "buildings_and_phases.buildingPhaseCode",
-              "floor_and_zones.floorZoneCode",
-              "property_units.unitNumber",
-              "requested_by.id",
-              "service_problems.id",
-              "incident_categories.id",
-              "assignUser.id",
-              "user_house_allocation.id"
-            ]),
-          knex
-            .from("quotations")
-            .leftJoin('companies', 'quotations.companyId', 'companies.id')
-            .leftJoin('projects', 'quotations.projectId', 'projects.id')
-            .leftJoin('buildings_and_phases', 'quotations.buildingId', 'buildings_and_phases.id')
-            .leftJoin('floor_and_zones', 'quotations.floorId', 'floor_and_zones.id')
-            .leftJoin('property_units', 'quotations.unitId', 'property_units.id')
-            .leftJoin(
-              "service_requests",
-              "quotations.serviceRequestId",
-              "service_requests.id"
-            )
-            .leftJoin(
-              "assigned_service_team",
-              "service_requests.id",
-              "assigned_service_team.entityId"
-            )
-            .leftJoin("users", "quotations.createdBy", "users.id")
-            .leftJoin(
-              "service_problems",
-              "service_requests.id",
-              "service_problems.serviceRequestId"
-            )
-            .leftJoin(
-              "requested_by",
-              "service_requests.requestedBy",
-              "requested_by.id"
-            )
-            .leftJoin(
-              "incident_categories",
-              "service_problems.categoryId",
-              "incident_categories.id"
-            )
-            .leftJoin('user_house_allocation', 'quotations.unitId', 'user_house_allocation.houseId')
-            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+      //  if (_.isEmpty(filters)) {
+      [total, rows] = await Promise.all([
+        knex
+          .count("* as count")
+          .leftJoin('companies', 'quotations.companyId', 'companies.id')
+          .leftJoin('projects', 'quotations.projectId', 'projects.id')
+          .leftJoin('buildings_and_phases', 'quotations.buildingId', 'buildings_and_phases.id')
+          .leftJoin('floor_and_zones', 'quotations.floorId', 'floor_and_zones.id')
+          .leftJoin('property_units', 'quotations.unitId', 'property_units.id')
+          .from("quotations")
+          .leftJoin(
+            "service_requests",
+            "quotations.serviceRequestId",
+            "service_requests.id"
+          )
+          .leftJoin(
+            "assigned_service_team",
+            "service_requests.id",
+            "assigned_service_team.entityId"
+          )
+          .leftJoin("users", "quotations.createdBy", "users.id")
+          .leftJoin(
+            "service_problems",
+            "service_requests.id",
+            "service_problems.serviceRequestId"
+          )
+          .leftJoin(
+            "requested_by",
+            "service_requests.requestedBy",
+            "requested_by.id"
+          )
+          .leftJoin(
+            "incident_categories",
+            "service_problems.categoryId",
+            "incident_categories.id"
+          )
+          //.leftJoin('user_house_allocation', 'quotations.unitId', 'user_house_allocation.houseId')
+          // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+          .where("quotations.orgId", req.orgId)
+          .where(qb => {
+            if (serviceId) {
+              qb.where('service_requests.id', serviceId)
+            }
+            if (quotationId) {
+              qb.where('quotations.id', quotationId)
+            }
+            if (description) {
+              qb.where('service_requests.description', 'iLIKE', `%${description}%`)
+            }
+          })
+          .whereIn('quotations.projectId', accessibleProjects)
+          .havingNotNull('quotations.quotationStatus')
+          .groupBy([
+            "quotations.id",
+            "service_requests.id",
+            "assigned_service_team.id",
+            "users.id",
+            "companies.companyName",
+            "projects.projectName",
+            "buildings_and_phases.buildingPhaseCode",
+            "floor_and_zones.floorZoneCode",
+            "property_units.unitNumber",
+            "requested_by.id",
+            "service_problems.id",
+            "incident_categories.id",
+            //  "assignUser.id",
+           // "user_house_allocation.id"
+          ])
+          .distinct('quotations.id')
+        ,
+        knex
+          .distinct('quotations.id')
+          .from("quotations")
+          .leftJoin('companies', 'quotations.companyId', 'companies.id')
+          .leftJoin('projects', 'quotations.projectId', 'projects.id')
+          .leftJoin('buildings_and_phases', 'quotations.buildingId', 'buildings_and_phases.id')
+          .leftJoin('floor_and_zones', 'quotations.floorId', 'floor_and_zones.id')
+          .leftJoin('property_units', 'quotations.unitId', 'property_units.id')
+          .leftJoin(
+            "service_requests",
+            "quotations.serviceRequestId",
+            "service_requests.id"
+          )
+          // .leftJoin(
+          //   "assigned_service_team",
+          //   "service_requests.id",
+          //   "assigned_service_team.entityId"
+          // )
+          .leftJoin("users", "quotations.createdBy", "users.id")
+          .leftJoin(
+            "service_problems",
+            "service_requests.id",
+            "service_problems.serviceRequestId"
+          )
+          .leftJoin(
+            "requested_by",
+            "service_requests.requestedBy",
+            "requested_by.id"
+          )
+          .leftJoin(
+            "incident_categories",
+            "service_problems.categoryId",
+            "incident_categories.id"
+          )
+          //.leftJoin('user_house_allocation', 'quotations.unitId', 'user_house_allocation.houseId')
+          //.leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
 
-            .where("quotations.orgId", req.orgId)
-            .whereIn('quotations.projectId', accessibleProjects)
-            .select([
-              "quotations.id as QId",
-              "quotations.serviceRequestId as serviceRequestId",
-              "service_requests.description as Description",
-              "service_requests.id as SRID",
-              "service_requests.priority as Priority",
-              "users.name as Created By",
-              "companies.companyName",
-              "projects.projectName",
-              "buildings_and_phases.buildingPhaseCode",
-              "buildings_and_phases.description as buildingDescription",
-              "floor_and_zones.floorZoneCode",
-              "property_units.unitNumber",
-              "assignUser.name as Tenant Name",
-              "quotations.quotationStatus as Status",
-              "quotations.createdAt as Date Created",
-              "incident_categories.descriptionEng as problemDescription",
-              "requested_by.name as requestedBy",
-            ])
-            .havingNotNull('quotations.quotationStatus')
-            .groupBy(["quotations.id", "service_requests.id", "assigned_service_team.id", "users.id", "companies.companyName",
-              "projects.projectName",
-              "buildings_and_phases.buildingPhaseCode",
-              "floor_and_zones.floorZoneCode",
-              "property_units.unitNumber",
-              "requested_by.id",
-              "service_problems.id",
-              "incident_categories.id",
-              "incident_categories.descriptionEng",
-              "assignUser.id",
-              "user_house_allocation.id",
-              "buildings_and_phases.description",
-            ])
-            .orderBy('quotations.id', 'desc')
-            .offset(offset)
-            .limit(per_page)
-        ]);
-      } else {
-        filters = _.omitBy(filters, val =>
-          val === "" || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val)
-            ? true
-            : false
-        );
-        try {
-          [total, rows] = await Promise.all([
-            knex
-              .count("* as count")
-              .from("quotations")
-              .leftJoin('companies', 'quotations.companyId', 'companies.id')
-              .leftJoin('projects', 'quotations.projectId', 'projects.id')
-              .leftJoin('buildings_and_phases', 'quotations.buildingId', 'buildings_and_phases.id')
-              .leftJoin('floor_and_zones', 'quotations.floorId', 'floor_and_zones.id')
-              .leftJoin('property_units', 'quotations.unitId', 'property_units.id')
-              .leftJoin(
-                "service_requests",
-                "quotations.serviceRequestId",
-                "service_requests.id"
-              )
-              .leftJoin(
-                "assigned_service_team",
-                "service_requests.id",
-                "assigned_service_team.entityId"
-              )
-              .leftJoin("users", "assigned_service_team.userId", "users.id")
-              .leftJoin('user_house_allocation', 'quotations.unitId', 'user_house_allocation.houseId')
-              .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+          .select([
+            "quotations.id as QId",
+            "quotations.serviceRequestId as serviceRequestId",
+            "service_requests.description as Description",
+            "service_requests.id as SRID",
+            "service_requests.priority as Priority",
+            "users.name as Created By",
+            "companies.companyName",
+            "projects.projectName",
+            "buildings_and_phases.buildingPhaseCode",
+            "buildings_and_phases.description as buildingDescription",
+            "floor_and_zones.floorZoneCode",
+            "property_units.unitNumber",
+            //"assignUser.name as Tenant Name",
+            "quotations.quotationStatus as Status",
+            "quotations.createdAt as Date Created",
+            "incident_categories.descriptionEng as problemDescription",
+            "requested_by.name as requestedBy",
+            //"user_house_allocation",
+            "property_units.id as unitId"
 
-              .where(qb => {
-                qb.where(filters);
-                if (quotationFrom && quotationTo) {
-                  qb.whereBetween("quotations.createdAt", [
-                    quotationFrom,
-                    quotationTo
-                  ]);
-                }
-                qb.where("quotations.orgId", req.orgId)
-                qb.whereIn('quotations.projectId', accessibleProjects)
+          ])
+          .where("quotations.orgId", req.orgId)
+          .where(qb => {
+            if (serviceId) {
+              qb.where('service_requests.id', serviceId)
+            }
+            if (quotationId) {
+              qb.where('quotations.id', quotationId)
+            }
+            if (description) {
+              qb.where('service_requests.description', 'iLIKE', `%${description}%`)
+            }
+          })
+          .whereIn('quotations.projectId', accessibleProjects)
+          .havingNotNull('quotations.quotationStatus')
+          .groupBy(["quotations.id", "service_requests.id", "users.id", "companies.companyName",
+            "projects.projectName",
+            "buildings_and_phases.buildingPhaseCode",
+            "floor_and_zones.floorZoneCode",
+            "property_units.unitNumber",
+            "requested_by.id",
+            "service_problems.id",
+            "incident_categories.id",
+            "incident_categories.descriptionEng",
+            //"assignUser.id",
+           // "assignUser.name",
+            //"user_house_allocation.id",
+            "buildings_and_phases.description",
+           // "user_house_allocation.userId",
+           "property_units.id"
+          ])
+          .orderBy('quotations.id', 'desc')
+          .offset(offset)
+          .limit(per_page)
+      ]);
+      // } else {
+      //   filters = _.omitBy(filters, val =>
+      //     val === "" || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val)
+      //       ? true
+      //       : false
+      //   );
+      //   try {
+      //     [total, rows] = await Promise.all([
+      //       knex
+      //         .count("* as count")
+      //         .from("quotations")
+      //         .leftJoin('companies', 'quotations.companyId', 'companies.id')
+      //         .leftJoin('projects', 'quotations.projectId', 'projects.id')
+      //         .leftJoin('buildings_and_phases', 'quotations.buildingId', 'buildings_and_phases.id')
+      //         .leftJoin('floor_and_zones', 'quotations.floorId', 'floor_and_zones.id')
+      //         .leftJoin('property_units', 'quotations.unitId', 'property_units.id')
+      //         .leftJoin(
+      //           "service_requests",
+      //           "quotations.serviceRequestId",
+      //           "service_requests.id"
+      //         )
+      //         .leftJoin(
+      //           "assigned_service_team",
+      //           "service_requests.id",
+      //           "assigned_service_team.entityId"
+      //         )
+      //         .leftJoin("users", "assigned_service_team.userId", "users.id")
+      //         .leftJoin('user_house_allocation', 'quotations.unitId', 'user_house_allocation.houseId')
+      //         .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
 
-              })
-              .havingNotNull('quotations.quotationStatus')
-              .groupBy([
-                "quotations.id",
-                "service_requests.id",
-                "assigned_service_team.id",
-                "users.id", "companies.companyName",
-                "projects.projectName",
-                "buildings_and_phases.buildingPhaseCode",
-                "floor_and_zones.floorZoneCode",
-                "property_units.unitNumber",
-                "assignUser.id",
-                "user_house_allocation.id"
-              ]),
-            knex
-              .from("quotations")
-              .leftJoin('companies', 'quotations.companyId', 'companies.id')
-              .leftJoin('projects', 'quotations.projectId', 'projects.id')
-              .leftJoin('buildings_and_phases', 'quotations.buildingId', 'buildings_and_phases.id')
-              .leftJoin('floor_and_zones', 'quotations.floorId', 'floor_and_zones.id')
-              .leftJoin('property_units', 'quotations.unitId', 'property_units.id')
-              .leftJoin(
-                "service_requests",
-                "quotations.serviceRequestId",
-                "service_requests.id"
-              )
-              .leftJoin(
-                "assigned_service_team",
-                "service_requests.id",
-                "assigned_service_team.entityId"
-              )
-              .leftJoin("users", "quotations.createdBy", "users.id")
-              .leftJoin('user_house_allocation', 'quotations.unitId', 'user_house_allocation.houseId')
-              .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
-              .select([
-                "quotations.id as QId",
-                "quotations.serviceRequestId as serviceRequestId",
-                "service_requests.description as Description",
-                "service_requests.id as SRID",
-                "service_requests.priority as Priority",
-                "users.name as Created By",
-                "companies.companyName",
-                "projects.projectName",
-                "buildings_and_phases.buildingPhaseCode",
-                "floor_and_zones.floorZoneCode",
-                "property_units.unitNumber",
-                "assignUser.name as Tenant Name",
-                "quotations.quotationStatus as Status",
-                "quotations.createdAt as Date Created"
-              ])
-              .where(qb => {
-                qb.where(filters);
-                if (quotationFrom && quotationTo) {
-                  qb.whereBetween("quotations.createdAt", [
-                    quotationFrom,
-                    quotationTo
-                  ]);
-                }
-                qb.where("quotations.orgId", req.orgId)
-                qb.whereIn('quotations.projectId', accessibleProjects)
-              })
-              .offset(offset)
-              .limit(per_page)
-          ]);
-        } catch (e) {
-          // Error
-        }
-      }
+      //         .where(qb => {
+      //           qb.where(filters);
+      //           if (quotationFrom && quotationTo) {
+      //             qb.whereBetween("quotations.createdAt", [
+      //               quotationFrom,
+      //               quotationTo
+      //             ]);
+      //           }
+      //           qb.where("quotations.orgId", req.orgId)
+      //           qb.whereIn('quotations.projectId', accessibleProjects)
+
+      //         })
+      //         .havingNotNull('quotations.quotationStatus')
+      //         .groupBy([
+      //           "quotations.id",
+      //           "service_requests.id",
+      //           "assigned_service_team.id",
+      //           "users.id", "companies.companyName",
+      //           "projects.projectName",
+      //           "buildings_and_phases.buildingPhaseCode",
+      //           "floor_and_zones.floorZoneCode",
+      //           "property_units.unitNumber",
+      //           "assignUser.id",
+      //           "user_house_allocation.id"
+      //         ]),
+      //       knex
+      //         .from("quotations")
+      //         .leftJoin('companies', 'quotations.companyId', 'companies.id')
+      //         .leftJoin('projects', 'quotations.projectId', 'projects.id')
+      //         .leftJoin('buildings_and_phases', 'quotations.buildingId', 'buildings_and_phases.id')
+      //         .leftJoin('floor_and_zones', 'quotations.floorId', 'floor_and_zones.id')
+      //         .leftJoin('property_units', 'quotations.unitId', 'property_units.id')
+      //         .leftJoin(
+      //           "service_requests",
+      //           "quotations.serviceRequestId",
+      //           "service_requests.id"
+      //         )
+      //         .leftJoin(
+      //           "assigned_service_team",
+      //           "service_requests.id",
+      //           "assigned_service_team.entityId"
+      //         )
+      //         .leftJoin("users", "quotations.createdBy", "users.id")
+      //         .leftJoin('user_house_allocation', 'quotations.unitId', 'user_house_allocation.houseId')
+      //         .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+      //         .select([
+      //           "quotations.id as QId",
+      //           "quotations.serviceRequestId as serviceRequestId",
+      //           "service_requests.description as Description",
+      //           "service_requests.id as SRID",
+      //           "service_requests.priority as Priority",
+      //           "users.name as Created By",
+      //           "companies.companyName",
+      //           "projects.projectName",
+      //           "buildings_and_phases.buildingPhaseCode",
+      //           "floor_and_zones.floorZoneCode",
+      //           "property_units.unitNumber",
+      //           "assignUser.name as Tenant Name",
+      //           "quotations.quotationStatus as Status",
+      //           "quotations.createdAt as Date Created"
+      //         ])
+      //         .where(qb => {
+      //           qb.where(filters);
+      //           if (quotationFrom && quotationTo) {
+      //             qb.whereBetween("quotations.createdAt", [
+      //               quotationFrom,
+      //               quotationTo
+      //             ]);
+      //           }
+      //           qb.where("quotations.orgId", req.orgId)
+      //           qb.whereIn('quotations.projectId', accessibleProjects)
+      //         })
+      //         .offset(offset)
+      //         .limit(per_page)
+      //     ]);
+      //   } catch (e) {
+      //     // Error
+      //   }
+      // }
 
       let count = total.length;
 
@@ -828,12 +860,36 @@ const quotationsController = {
         }
 
       })
-      pagination.data = _.uniqBy(rowsWithDays, 'QId');
+   //   pagination.data = rows;//_.uniqBy(rowsWithDays, 'QId');
+
+     let tetantResult;
+     let houseResult;
+      let Parallel = require('async-parallel');
+      pagination.data  = await Parallel.map(rows,async pd=>{
+
+        houseResult  = await knex.from('user_house_allocation').select('userId').where({houseId:pd.unitId}).first().orderBy('id','desc')
+
+        if(houseResult){
+          tetantResult = await knex.from('users').select('name').where({id:houseResult.userId}).first()
+          return {
+            ...pd,
+            "Tenant Name" :tetantResult.name
+          }
+        } else {
+          return {
+            ...pd,
+            "Tenant Name" :''
+          }
+        } 
+
+
+ 
+       })
 
 
       return res.status(200).json({
         data: {
-          quotations: pagination
+          quotations: pagination,
         },
         message: "Quotations List!"
       });
