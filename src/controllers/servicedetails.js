@@ -1791,6 +1791,25 @@ const serviceDetailsController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },  
+  updateSODate: async (req, res) => {
+    try {
+      const { serviceOrderId, orderDueDate } = req.body;
+      newDueDate = new Date(orderDueDate).getTime();
+      let result = await knex('service_orders').update({ orderDueDate: newDueDate }).where({ id: serviceOrderId }).returning(['*'])
+      return res.status(200).json({
+        data: {
+          updated: true,
+          result
+        }
+      })
+    } catch (err) {
+      return res.status(200).json({
+        data: {
+          update: false
+        }
+      })
+    }
   }
 };
 
