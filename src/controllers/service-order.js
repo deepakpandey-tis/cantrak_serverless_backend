@@ -467,8 +467,8 @@ const serviceOrderController = {
                         .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
                         .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
                         .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
-                        .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-                        .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+                        // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+                        // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
 
                         .select([
                             'service_orders.id as So Id',
@@ -487,7 +487,7 @@ const serviceOrderController = {
                             "teams.teamName as Team Name",
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
-                            "assignUser.name as Tenant Name"
+                            // "assignUser.name as Tenant Name"
 
                         ]).where((qb) => {
                             qb.where({ 'service_orders.orgId': req.orgId });
@@ -517,9 +517,9 @@ const serviceOrderController = {
                             if(requestedBy){
                                 qb.where('requested_by.name','ilike',`%${requestedBy}%`)
                             }
-                            if (tenantName) {
-                                qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
-                            }
+                            // if (tenantName) {
+                            //     qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
+                            // }
                             if(priority){
                                 qb.where('service_requests.priority','ilike',`%${priority}%`)
                             }
@@ -535,8 +535,8 @@ const serviceOrderController = {
                             'incident_categories.id',
                             'assigned_service_team.id',
                             'users.id', 'u.id',
-                            "assignUser.id",
-                            "user_house_allocation.id",
+                            // "assignUser.id",
+                            // "user_house_allocation.id",
                             'status.id', 'users.id']),
 
                     knex.from('service_orders')
@@ -555,8 +555,8 @@ const serviceOrderController = {
                         // .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
                         .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
                         .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
-                        .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-                        .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+                        // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+                        // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
 
                         .select([
                             'service_orders.id as So Id',
@@ -576,7 +576,7 @@ const serviceOrderController = {
                             "teams.teamName as Team Name",
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
-                            "assignUser.name as Tenant Name"
+                            // "assignUser.name as Tenant Name"
 
                         ]).where((qb) => {
                             qb.where({ 'service_orders.orgId': req.orgId })
@@ -605,9 +605,9 @@ const serviceOrderController = {
                             if (requestedBy) {
                                 qb.where('requested_by.name', 'ilike', `%${requestedBy}%`)
                             }
-                            if (tenantName) {
-                                qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
-                            }
+                            // if (tenantName) {
+                            //     qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
+                            // }
                             if (priority) {
                                 qb.where('service_requests.priority', 'ilike', `%${priority}%`)
                             }
@@ -652,8 +652,8 @@ const serviceOrderController = {
                         .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
                         .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
                         .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
-                        .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-                        .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+                        // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+                        // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
 
                         .select([
                             "service_orders.id as So Id",
@@ -672,7 +672,7 @@ const serviceOrderController = {
                             "teams.teamName as Team Name",
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
-                            "assignUser.name as Tenant Name"
+                            // "assignUser.name as Tenant Name"
                         ])
                         .where(qb => {
                             qb.where({ "service_orders.orgId": req.orgId });
@@ -710,9 +710,9 @@ const serviceOrderController = {
                                 qb.where('service_requests.description', 'iLIKE', `%${description}%`)
                             }
 
-                            if(tenantName){
-                                qb.where('assignUser.name','ilike',`%${tenantName}%`)
-                            }
+                            // if(tenantName){
+                            //     qb.where('assignUser.name','ilike',`%${tenantName}%`)
+                            // }
                             if (requestedBy) {
                                 qb.where('requested_by.name', 'ilike', `%${requestedBy}%`)
                             }
@@ -734,8 +734,8 @@ const serviceOrderController = {
                             'teams.teamId',
                             'requested_by.id',
                             'property_units.id',
-                            "assignUser.id",
-                            "user_house_allocation.id"
+                            // "assignUser.id",
+                            // "user_house_allocation.id"
 
                         ]),
                     knex
@@ -771,8 +771,8 @@ const serviceOrderController = {
                         .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
                         .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
                         .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
-                        .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-                        .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+                        // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+                        // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
 
                         .select([
                             "service_orders.id as So Id",
@@ -791,7 +791,7 @@ const serviceOrderController = {
                             "teams.teamName as Team Name",
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
-                            "assignUser.name as Tenant Name"
+                            // "assignUser.name as Tenant Name"
 
                         ])
                         .where(qb => {
@@ -829,9 +829,9 @@ const serviceOrderController = {
                             if (description) {
                                 qb.where('service_requests.description', 'iLIKE', `%${description}%`)
                             }
-                            if (tenantName) {
-                                qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
-                            }
+                            // if (tenantName) {
+                            //     qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
+                            // }
                             if (requestedBy) {
                                 qb.where('requested_by.name', 'ilike', `%${requestedBy}%`)
                             }
@@ -1010,8 +1010,8 @@ const serviceOrderController = {
                             .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
                             .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
                             .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
-                            .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-                            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+                            // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+                            // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
 
                             .select([
                                 "service_orders.id as So Id",
@@ -1030,7 +1030,7 @@ const serviceOrderController = {
                                 "teams.teamName as Team Name",
                                 "requested_by.name as Requested By",
                                 "property_units.unitNumber as Unit Number",
-                                "assignUser.name as Tenant Name"
+                                // "assignUser.name as Tenant Name"
                             ])
                             .where(qb => {
                                 qb.where({ "service_orders.orgId": req.orgId });
@@ -1067,9 +1067,9 @@ const serviceOrderController = {
                                 if (description) {
                                     qb.where('service_requests.description', 'iLIKE', `%${description}%`)
                                 }
-                                if (tenantName) {
-                                    qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
-                                }
+                                // if (tenantName) {
+                                //     qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
+                                // }
 
                                 if (requestedBy) {
                                     qb.where('requested_by.name', 'ilike', `%${requestedBy}%`)
@@ -1092,8 +1092,8 @@ const serviceOrderController = {
                                 'teams.teamId',
                                 'requested_by.id',
                                 'property_units.id',
-                                "assignUser.id",
-                                "user_house_allocation.id"
+                                // "assignUser.id",
+                                // "user_house_allocation.id"
 
                             ]),
                         knex
@@ -1129,8 +1129,8 @@ const serviceOrderController = {
                             .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
                             .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
                             .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
-                            .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-                            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+                            // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+                            // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
 
                             .select([
                                 "service_orders.id as So Id",
@@ -1149,7 +1149,7 @@ const serviceOrderController = {
                                 "teams.teamName as Team Name",
                                 "requested_by.name as Requested By",
                                 "property_units.unitNumber as Unit Number",
-                                "assignUser.name as Tenant Name"
+                                // "assignUser.name as Tenant Name"
 
                             ])
                             .where(qb => {
@@ -1187,9 +1187,9 @@ const serviceOrderController = {
                                 if (description) {
                                     qb.where('service_requests.description', 'iLIKE', `%${description}%`)
                                 }
-                                if (tenantName) {
-                                    qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
-                                }
+                                // if (tenantName) {
+                                //     qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
+                                // }
                                 if (requestedBy) {
                                     qb.where('requested_by.name', 'ilike', `%${requestedBy}%`)
                                 }
