@@ -914,7 +914,7 @@ const surveyOrderController = {
       pagination.last_page = Math.ceil(count / per_page);
       pagination.current_page = page;
       pagination.from = offset;
-      pagination.data = rows;
+      pagination.data = _.uniqBy(rows,'S Id');
 
       res.status(200).json({
         data: pagination,
