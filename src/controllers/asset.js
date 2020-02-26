@@ -310,18 +310,18 @@ const assetController = {
       try {
         [total, rows] = await Promise.all([
           knex
-            //.count("* as count")
+            .count("* as count")
             .from("asset_master")
-            .leftJoin(
-              "location_tags",
-              "asset_master.id",
-              "location_tags.entityId"
-            )
-            .leftJoin(
-              "location_tags_master",
-              "location_tags.locationTagId",
-              "location_tags_master.id"
-            )
+            // .leftJoin(
+            //   "location_tags",
+            //   "asset_master.id",
+            //   "location_tags.entityId"
+            // )
+            // .leftJoin(
+            //   "location_tags_master",
+            //   "location_tags.locationTagId",
+            //   "location_tags_master.id"
+            // )
             .leftJoin(
               "asset_category_master",
               "asset_master.assetCategoryId",
@@ -332,20 +332,6 @@ const assetController = {
               "asset_master.companyId",
               "companies.id"
             )
-            .select([
-              "asset_master.assetName as Name",
-              "asset_master.id as ID",
-              "location_tags_master.title as Location",
-              "asset_master.model as Model",
-              "asset_master.barcode as Barcode",
-              "asset_master.assetSerial as assetSerial",
-              "asset_master.areaName as Area",
-              "asset_category_master.categoryName as Category",
-              "asset_master.createdAt as Date Created",
-              "asset_master.unitOfMeasure as Unit Of Measure",
-              "asset_master.price as Price",
-              "companies.companyName"
-            ])
             .where(qb => {
               if (assetName) {
                 qb.where(
@@ -376,20 +362,19 @@ const assetController = {
                 );
               }
             })
-            .distinct('asset_master.id')
-            //.first()
+            .first()
             .where({ 'asset_master.orgId': req.orgId }),
           knex("asset_master")
-            .leftJoin(
-              "location_tags",
-              "asset_master.id",
-              "location_tags.entityId"
-            )
-            .leftJoin(
-              "location_tags_master",
-              "location_tags.locationTagId",
-              "location_tags_master.id"
-            )
+            // .leftJoin(
+            //   "location_tags",
+            //   "asset_master.id",
+            //   "location_tags.entityId"
+            // )
+            // .leftJoin(
+            //   "location_tags_master",
+            //   "location_tags.locationTagId",
+            //   "location_tags_master.id"
+            // )
             .leftJoin(
               "asset_category_master",
               "asset_master.assetCategoryId",
@@ -403,7 +388,7 @@ const assetController = {
             .select([
               "asset_master.assetName as Name",
               "asset_master.id as ID",
-              "location_tags_master.title as Location",
+             // "location_tags_master.title as Location",
               "asset_master.model as Model",
               "asset_master.barcode as Barcode",
               "asset_master.assetSerial as assetSerial",
@@ -445,7 +430,6 @@ const assetController = {
                 );
               }
             })
-            .distinct('asset_master.id')
             .orderBy("asset_master.createdAt", "desc")
             .offset(offset)
             .limit(per_page)
@@ -456,7 +440,7 @@ const assetController = {
       }
       //}
 
-      let count =  _.unionBy(total,'ID').length;
+      let count =  total.count;
       pagination.total = count;
       pagination.per_page = per_page;
       pagination.offset = offset;
@@ -464,7 +448,7 @@ const assetController = {
       pagination.last_page = Math.ceil(count / per_page);
       pagination.current_page = page;
       pagination.from = offset;
-      pagination.data = _.unionBy(rows,'ID');
+      pagination.data = rows;
 
       return res.status(200).json({
         data: {
