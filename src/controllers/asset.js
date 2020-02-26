@@ -310,18 +310,18 @@ const assetController = {
       try {
         [total, rows] = await Promise.all([
           knex
-            //.count("* as count")
+            .count("* as count")
             .from("asset_master")
-            .leftJoin(
-              "location_tags",
-              "asset_master.id",
-              "location_tags.entityId"
-            )
-            .leftJoin(
-              "location_tags_master",
-              "location_tags.locationTagId",
-              "location_tags_master.id"
-            )
+            // .leftJoin(
+            //   "location_tags",
+            //   "asset_master.id",
+            //   "location_tags.entityId"
+            // )
+            // .leftJoin(
+            //   "location_tags_master",
+            //   "location_tags.locationTagId",
+            //   "location_tags_master.id"
+            // )
             .leftJoin(
               "asset_category_master",
               "asset_master.assetCategoryId",
@@ -362,20 +362,19 @@ const assetController = {
                 );
               }
             })
-            .distinct('asset_master.id')
-            //.first()
+            .first()
             .where({ 'asset_master.orgId': req.orgId }),
           knex("asset_master")
-            .leftJoin(
-              "location_tags",
-              "asset_master.id",
-              "location_tags.entityId"
-            )
-            .leftJoin(
-              "location_tags_master",
-              "location_tags.locationTagId",
-              "location_tags_master.id"
-            )
+            // .leftJoin(
+            //   "location_tags",
+            //   "asset_master.id",
+            //   "location_tags.entityId"
+            // )
+            // .leftJoin(
+            //   "location_tags_master",
+            //   "location_tags.locationTagId",
+            //   "location_tags_master.id"
+            // )
             .leftJoin(
               "asset_category_master",
               "asset_master.assetCategoryId",
@@ -389,7 +388,7 @@ const assetController = {
             .select([
               "asset_master.assetName as Name",
               "asset_master.id as ID",
-              "location_tags_master.title as Location",
+             // "location_tags_master.title as Location",
               "asset_master.model as Model",
               "asset_master.barcode as Barcode",
               "asset_master.assetSerial as assetSerial",
@@ -431,7 +430,6 @@ const assetController = {
                 );
               }
             })
-            .distinct('asset_master.id')
             .orderBy("asset_master.createdAt", "desc")
             .offset(offset)
             .limit(per_page)
@@ -442,7 +440,7 @@ const assetController = {
       }
       //}
 
-      let count = total.length;
+      let count =  total.count;
       pagination.total = count;
       pagination.per_page = per_page;
       pagination.offset = offset;
@@ -1803,16 +1801,9 @@ const assetController = {
         houseId: '9922',
         floorId: '165' }
       */
-     if(req.body.previousLocationId){
-       await knex('asset_location')
-         .update({ endDate: currentTime })
-         .where({ assetId: payload.assetId,id: req.body.previousLocationId})
-
-     }else {
-       await knex('asset_location')
-         .update({ endDate: currentTime })
-         .where({ assetId: payload.assetId})
-     }
+      await knex('asset_location')
+        .update({ endDate: currentTime })
+        .where({ assetId: payload.assetId,id: req.body.previousLocationId})
       console.log('***********************ASSET LOCATION:***********************', req.body)
       // Deprecated
       let updatedLastLocationEndDate
