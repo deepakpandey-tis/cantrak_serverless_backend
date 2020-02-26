@@ -791,6 +791,8 @@ const serviceRequestController = {
             )
             .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
             .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+            .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
+
             .select([
               "service_requests.id as S Id",
               "service_requests.houseId as houseId",
@@ -800,7 +802,8 @@ const serviceRequestController = {
               "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
               "u.name as Requested By",
-              "service_requests.createdAt as Date Created"
+              "service_requests.createdAt as Date Created",
+              "service_orders.id as SO Id"
             ])
             .groupBy([
               "service_requests.id",
@@ -815,7 +818,8 @@ const serviceRequestController = {
               "mainUsers.id",
               "incident_categories.id",
               "assignUser.id",
-              "user_house_allocation.id"
+              "user_house_allocation.id",
+              "service_orders.id"
             ])
             .where({ "service_requests.orgId": req.orgId })
             .whereIn('service_requests.projectId', accessibleProjects)
@@ -858,6 +862,7 @@ const serviceRequestController = {
             )
             .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
             .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+            .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
 
             .select([
               "service_requests.id as S Id",
@@ -875,7 +880,9 @@ const serviceRequestController = {
               "requested_by.email as requestedByEmail",
               "teams.teamName",
               "teams.teamCode",
-              "mainUsers.name as mainUser"
+              "mainUsers.name as mainUser",
+              "service_orders.id as SO Id"
+
             ])
             .groupBy([
               "service_requests.id",
@@ -890,7 +897,9 @@ const serviceRequestController = {
               "mainUsers.id",
               "incident_categories.id",
               "assignUser.id",
-              "user_house_allocation.id"
+              "user_house_allocation.id",
+              "service_orders.id"
+
             ])
             .where({ "service_requests.orgId": req.orgId })
             .whereIn('service_requests.projectId', accessibleProjects)
@@ -1015,6 +1024,7 @@ const serviceRequestController = {
             )
             .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
             .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+            .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
 
             .select([
               "service_requests.id as S Id",
@@ -1026,7 +1036,9 @@ const serviceRequestController = {
               "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
               "u.name as Requested By",
-              "service_requests.createdAt as Date Created"
+              "service_requests.createdAt as Date Created",
+              "service_orders.id as SO Id"
+
             ])
             .where({ "service_requests.orgId": req.orgId })
             .where({'service_requests.isCreatedFromSo':false})
@@ -1072,7 +1084,8 @@ const serviceRequestController = {
               "mainUsers.id",
               "incident_categories.id",
               "assignUser.id",
-              "user_house_allocation.id"
+              "user_house_allocation.id",
+              "service_orders.id"
             ])
             .distinct('service_requests.id')
           ,
@@ -1114,6 +1127,7 @@ const serviceRequestController = {
             )
             .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
             .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+            .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
 
             .select([
               "service_requests.id as S Id",
@@ -1130,7 +1144,9 @@ const serviceRequestController = {
               "requested_by.email as requestedByEmail",
               "teams.teamName",
               "teams.teamCode",
-              "mainUsers.name as mainUser"
+              "mainUsers.name as mainUser",
+              "service_orders.id as SO Id"
+
             ])
             .orderBy('service_requests.id', 'desc')
             .where({ "service_requests.orgId": req.orgId })
@@ -1180,7 +1196,8 @@ const serviceRequestController = {
               "mainUsers.id",
               "incident_categories.id",
               "assignUser.id",
-              "user_house_allocation.id"
+              "user_house_allocation.id",
+              "service_orders.id"
             ])
             .distinct('service_requests.id')
         ]);
