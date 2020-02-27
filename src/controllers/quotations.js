@@ -497,6 +497,8 @@ const quotationsController = {
         quotationId,
         serviceId,
         description,
+        dateFrom,
+        dateTo,
         quotationStatus,
         priority,
         archive,
@@ -513,6 +515,20 @@ const quotationsController = {
         completedTo,
         assingedTo
       } = req.body;
+
+      let newDateFrom;
+      let newDateTo;
+      let startTime;
+      let endTime;
+
+      if (dateFrom && dateTo) {
+
+        newDateFrom = moment(dateFrom).startOf('date').format();
+        newDateTo = moment(dateTo).endOf('date', 'days').format();
+        startTime = new Date(newDateFrom).getTime();
+        endTime = new Date(newDateTo).getTime();
+
+      }
 
       if (quotationId) {
         filters["quotations.id"] = quotationId;
@@ -610,6 +626,9 @@ const quotationsController = {
             if (description) {
               qb.where('service_requests.description', 'iLIKE', `%${description}%`)
             }
+            if(dateFrom && dateTo){
+              qb.whereBetween('quotations.createdAt',[startTime,endTime])
+            }
           })
           .whereIn('quotations.projectId', accessibleProjects)
           .havingNotNull('quotations.quotationStatus')
@@ -627,7 +646,7 @@ const quotationsController = {
             "service_problems.id",
             "incident_categories.id",
             //  "assignUser.id",
-           // "user_house_allocation.id"
+            // "user_house_allocation.id"
           ])
           .distinct('quotations.id')
         ,
@@ -701,6 +720,10 @@ const quotationsController = {
             if (description) {
               qb.where('service_requests.description', 'iLIKE', `%${description}%`)
             }
+
+            if(dateFrom && dateTo){
+              qb.whereBetween('quotations.createdAt',[startTime,endTime])
+            }
           })
           .whereIn('quotations.projectId', accessibleProjects)
           .havingNotNull('quotations.quotationStatus')
@@ -714,11 +737,11 @@ const quotationsController = {
             "incident_categories.id",
             "incident_categories.descriptionEng",
             //"assignUser.id",
-           // "assignUser.name",
+            // "assignUser.name",
             //"user_house_allocation.id",
             "buildings_and_phases.description",
-           // "user_house_allocation.userId",
-           "property_units.id"
+            // "user_house_allocation.userId",
+            "property_units.id"
           ])
           .orderBy('quotations.id', 'desc')
           .offset(offset)
@@ -860,31 +883,31 @@ const quotationsController = {
         }
 
       })
-   //   pagination.data = rows;//_.uniqBy(rowsWithDays, 'QId');
+      //   pagination.data = rows;//_.uniqBy(rowsWithDays, 'QId');
 
-     let tetantResult;
-     let houseResult;
+      let tetantResult;
+      let houseResult;
       let Parallel = require('async-parallel');
-      pagination.data  = await Parallel.map(rows,async pd=>{
+      pagination.data = await Parallel.map(rows, async pd => {
 
-        houseResult  = await knex.from('user_house_allocation').select('userId').where({houseId:pd.unitId}).first().orderBy('id','desc')
+        houseResult = await knex.from('user_house_allocation').select('userId').where({ houseId: pd.unitId }).first().orderBy('id', 'desc')
 
-        if(houseResult){
-          tetantResult = await knex.from('users').select('name').where({id:houseResult.userId}).first()
+        if (houseResult) {
+          tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
           return {
             ...pd,
-            "Tenant Name" :tetantResult.name
+            "Tenant Name": tetantResult.name
           }
         } else {
           return {
             ...pd,
-            "Tenant Name" :''
+            "Tenant Name": ''
           }
-        } 
+        }
 
 
- 
-       })
+
+      })
 
 
       return res.status(200).json({
