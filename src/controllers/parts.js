@@ -1378,7 +1378,27 @@ const partsController = {
             }
 
             var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-            var ws = XLSX.utils.json_to_sheet(rows);
+
+
+            var ws;
+            if (rows && rows.length) {
+                ws = XLSX.utils.json_to_sheet(rows);
+            } else {
+                ws = XLSX.utils.json_to_sheet([
+                    {
+                        PART_CODE: "",
+                        PART_NAME: "",
+                        UNIT_OF_MEASURE: "",
+                        PART_CATEGORY_CODE: "",
+                        COMPANY_ID: "",
+                        quantity: "",
+                        unit_cost:"",
+                    }
+                ]);
+            }
+
+
+            //var ws = XLSX.utils.json_to_sheet(rows);
             XLSX.utils.book_append_sheet(wb, ws, "pres");
             XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
             let filename = "PartData-" + Date.now() + ".csv";
