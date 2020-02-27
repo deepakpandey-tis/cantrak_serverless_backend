@@ -742,10 +742,39 @@ const assetController = {
       // Get all service orders
       const service_orders = await knex('assigned_assets')
         .leftJoin('service_requests', 'assigned_assets.entityId', 'service_requests.id')
-        .select(['entityId', 'status'])
+        .leftJoin('service_orders','service_requests.id','service_orders.serviceRequestId')
+        .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+        .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+        .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
+        .leftJoin('users', 'assigned_service_team.userId', 'users.id')
+        .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
+        .leftJoin("users AS u", "service_requests.createdBy", "u.id")
+        .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+        .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+        .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+        .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
+
+        .select([
+          'service_orders.id as So Id',
+          'service_requests.description as Description',
+          'service_requests.location as Location',
+          'service_requests.id as Sr Id',
+          'incident_categories.descriptionEng as Problem',
+          'priority as Priority',
+          'orderDueDate as Due Date',
+          'u.name as Created By',
+          'status.descriptionEng as Status',
+          'service_orders.createdAt as Date Created',
+          'service_requests.houseId as houseId',
+          "buildings_and_phases.description as Building Name",
+          "users.userName as Assigned Main User",
+          "teams.teamName as Team Name",
+          "requested_by.name as Requested By",
+          "property_units.unitNumber as Unit Number",
+        ])
         // .distinct('assigned_assets.assetId')
         .where({
-          entityType: 'service_requests', 'assigned_assets.orgId': req.orgId, 'assigned_assets.assetId': id
+          'assigned_assets.entityType': 'service_requests', 'assigned_assets.orgId': req.orgId, 'assigned_assets.assetId': id
         })
 
       // if(service_orders && service_orders.length){
@@ -2536,6 +2565,21 @@ const assetController = {
         }
       })
     } catch (err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  removePartFromAsset:async(req,res) => {
+    try {
+      const data = req.body;
+      if(data.assetId){
+        await knex('asset_master').update({partId:null}).where({id:data.assetId})
+        return res.status(200).json({message:'Part removed succesfully'})
+      } else {
+        return res.status(200).json({ message: 'Something went wrong while removing part. Make sure you send partId and assetId in the body request.' })
+      }
+    } catch(err) {
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });

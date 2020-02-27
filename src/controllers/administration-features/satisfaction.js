@@ -594,7 +594,6 @@ const satisfactionController = {
             if (i > 1) {
 
 
-
               if (!statusData.A) {
                 let values = _.values(statusData)
                 values.unshift("Satisfaction code can not empty")

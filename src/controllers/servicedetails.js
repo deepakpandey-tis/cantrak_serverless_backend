@@ -554,11 +554,13 @@ const serviceDetailsController = {
             .where({ "entityId": incidentRequestPayload.id, "entityType": "service_requests" })
             .select('s3Url', 'title', 'name');
         }
+
         /*GET UPLOADED IMAGES CLOSE  */
 
         generalDetails = DataResult;
         generalDetails.uploadedImages = imagesResult;
         trx.commit;
+        
       });
 
       res.status(200).json({

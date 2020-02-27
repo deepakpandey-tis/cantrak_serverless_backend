@@ -487,6 +487,8 @@ const serviceOrderController = {
                             "teams.teamName as Team Name",
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
+                                "property_units.id as unitId",
+
                             // "assignUser.name as Tenant Name"
 
                         ]).where((qb) => {
@@ -576,6 +578,8 @@ const serviceOrderController = {
                             "teams.teamName as Team Name",
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
+                                "property_units.id as unitId",
+
                             // "assignUser.name as Tenant Name"
 
                         ]).where((qb) => {
@@ -672,6 +676,8 @@ const serviceOrderController = {
                             "teams.teamName as Team Name",
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
+                                "property_units.id as unitId",
+
                             // "assignUser.name as Tenant Name"
                         ])
                         .where(qb => {
@@ -791,6 +797,8 @@ const serviceOrderController = {
                             "teams.teamName as Team Name",
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
+                                "property_units.id as unitId",
+
                             // "assignUser.name as Tenant Name"
 
                         ])
@@ -1030,6 +1038,8 @@ const serviceOrderController = {
                                 "teams.teamName as Team Name",
                                 "requested_by.name as Requested By",
                                 "property_units.unitNumber as Unit Number",
+                                "property_units.id as unitId",
+
                                 // "assignUser.name as Tenant Name"
                             ])
                             .where(qb => {
@@ -1149,6 +1159,7 @@ const serviceOrderController = {
                                 "teams.teamName as Team Name",
                                 "requested_by.name as Requested By",
                                 "property_units.unitNumber as Unit Number",
+                                "property_units.id as unitId",
                                 // "assignUser.name as Tenant Name"
 
                             ])
@@ -1212,10 +1223,31 @@ const serviceOrderController = {
             pagination.last_page = Math.ceil(count / per_page);
             pagination.current_page = page;
             pagination.from = offset;
-            pagination.data = _.uniqBy(rows,'So Id');
+           // pagination.data = _.uniqBy(rows,'So Id');
 
 
 
+            let Parallel = require('async-parallel');
+            pagination.data = await Parallel.map(rows, async pd => {
+
+                let houseResult = await knex.from('user_house_allocation').select('userId').where({ houseId: pd.unitId }).first().orderBy('id', 'desc')
+
+                if (houseResult) {
+                    let tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
+                    return {
+                        ...pd,
+                        "Tenant Name": tetantResult.name
+                    }
+                } else {
+                    return {
+                        ...pd,
+                        "Tenant Name": ''
+                    }
+                }
+
+
+
+            })
 
 
 

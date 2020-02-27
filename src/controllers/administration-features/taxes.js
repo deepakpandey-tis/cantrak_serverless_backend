@@ -617,13 +617,13 @@ const taxesfactionController = {
               let checkExist = await knex("taxes")
                 .select("taxCode")
                 .where({
-                  taxCode: taxData.A,
+                  taxCode: taxData.A.toUpperCase(),
                   orgId: req.orgId
                 });
               if (checkExist.length < 1) {
                 let insertData = {
                   orgId: req.orgId,
-                  taxCode: taxData.A,
+                  taxCode: taxData.A.toUpperCase(),
                   taxPercentage: taxData.B,
                   isActive: true,
                   createdBy: req.me.id,
