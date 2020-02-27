@@ -108,6 +108,7 @@ const quotationsController = {
           building: Joi.number().required(),
           floor: Joi.number().required(),
           unit: Joi.number().required(),
+          quotationValidityDate: Joi.string().allow('').optional(),
           quotationId: Joi.number().required(),
           checkedBy: Joi.string().required(),
           inspectedBy: Joi.string().required(),
@@ -137,6 +138,15 @@ const quotationsController = {
           serId = quotationPayload.serviceRequestId
         }
 
+        let quotationValidityDate;
+        if (quotationPayload.quotationValidityDate) {
+          let date = new Date(quotationPayload.quotationValidityDate).getTime();
+          console.log("New Date++++++++++",date);
+          quotationValidityDate = date;
+        } else {
+          quotationValidityDate = moment().add('days', 15).valueOf();
+        }
+
         const updateQuotationReq = await knex
           .update({
             serviceRequestId: serId,
@@ -145,6 +155,7 @@ const quotationsController = {
             buildingId: quotationPayload.building,
             floorId: quotationPayload.floor,
             unitId: quotationPayload.unit,
+            quotationValidityDate: quotationValidityDate,
             checkedBy: quotationPayload.checkedBy,
             inspectedBy: quotationPayload.inspectedBy,
             acknowledgeBy: quotationPayload.acknowledgeBy,
@@ -311,7 +322,8 @@ const quotationsController = {
             "astUser.name as assignedMainUsers",
             "authUser.name as createdBy",
             "organisation_roles.name as userRole",
-            "quotations.invoiceData as invoiceData"
+            "quotations.invoiceData as invoiceData",
+            "quotations.quotationValidityDate as validityDate"
           )
           .where({ "quotations.id": quotationRequestId });
         console.log(
@@ -627,7 +639,7 @@ const quotationsController = {
             "service_problems.id",
             "incident_categories.id",
             //  "assignUser.id",
-           // "user_house_allocation.id"
+            // "user_house_allocation.id"
           ])
           .distinct('quotations.id')
         ,
@@ -714,11 +726,11 @@ const quotationsController = {
             "incident_categories.id",
             "incident_categories.descriptionEng",
             //"assignUser.id",
-           // "assignUser.name",
+            // "assignUser.name",
             //"user_house_allocation.id",
             "buildings_and_phases.description",
-           // "user_house_allocation.userId",
-           "property_units.id"
+            // "user_house_allocation.userId",
+            "property_units.id"
           ])
           .orderBy('quotations.id', 'desc')
           .offset(offset)
@@ -860,31 +872,31 @@ const quotationsController = {
         }
 
       })
-   //   pagination.data = rows;//_.uniqBy(rowsWithDays, 'QId');
+      //   pagination.data = rows;//_.uniqBy(rowsWithDays, 'QId');
 
-     let tetantResult;
-     let houseResult;
+      let tetantResult;
+      let houseResult;
       let Parallel = require('async-parallel');
-      pagination.data  = await Parallel.map(rows,async pd=>{
+      pagination.data = await Parallel.map(rows, async pd => {
 
-        houseResult  = await knex.from('user_house_allocation').select('userId').where({houseId:pd.unitId}).first().orderBy('id','desc')
+        houseResult = await knex.from('user_house_allocation').select('userId').where({ houseId: pd.unitId }).first().orderBy('id', 'desc')
 
-        if(houseResult){
-          tetantResult = await knex.from('users').select('name').where({id:houseResult.userId}).first()
+        if (houseResult) {
+          tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
           return {
             ...pd,
-            "Tenant Name" :tetantResult.name
+            "Tenant Name": tetantResult.name
           }
         } else {
           return {
             ...pd,
-            "Tenant Name" :''
+            "Tenant Name": ''
           }
-        } 
+        }
 
 
- 
-       })
+
+      })
 
 
       return res.status(200).json({

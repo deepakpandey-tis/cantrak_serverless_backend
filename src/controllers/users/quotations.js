@@ -514,7 +514,8 @@ const quotationsController = {
                         "astUser.name as assignedMainUsers",
                         "authUser.name as createdBy",
                         "organisation_roles.name as userRole",
-                        "quotations.invoiceData as invoiceData"
+                        "quotations.invoiceData as invoiceData",
+                        "quotations.quotationValidityDate as validityDate"
                     )
                     .where({ "quotations.id": quotationRequestId });
                 console.log(
