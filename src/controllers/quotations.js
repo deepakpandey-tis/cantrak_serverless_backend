@@ -509,6 +509,8 @@ const quotationsController = {
         quotationId,
         serviceId,
         description,
+        dateFrom,
+        dateTo,
         quotationStatus,
         priority,
         archive,
@@ -525,6 +527,20 @@ const quotationsController = {
         completedTo,
         assingedTo
       } = req.body;
+
+      let newDateFrom;
+      let newDateTo;
+      let startTime;
+      let endTime;
+
+      if (dateFrom && dateTo) {
+
+        newDateFrom = moment(dateFrom).startOf('date').format();
+        newDateTo = moment(dateTo).endOf('date', 'days').format();
+        startTime = new Date(newDateFrom).getTime();
+        endTime = new Date(newDateTo).getTime();
+
+      }
 
       if (quotationId) {
         filters["quotations.id"] = quotationId;
@@ -622,6 +638,9 @@ const quotationsController = {
             if (description) {
               qb.where('service_requests.description', 'iLIKE', `%${description}%`)
             }
+            if(dateFrom && dateTo){
+              qb.whereBetween('quotations.createdAt',[startTime,endTime])
+            }
           })
           .whereIn('quotations.projectId', accessibleProjects)
           .havingNotNull('quotations.quotationStatus')
@@ -712,6 +731,10 @@ const quotationsController = {
             }
             if (description) {
               qb.where('service_requests.description', 'iLIKE', `%${description}%`)
+            }
+
+            if(dateFrom && dateTo){
+              qb.whereBetween('quotations.createdAt',[startTime,endTime])
             }
           })
           .whereIn('quotations.projectId', accessibleProjects)

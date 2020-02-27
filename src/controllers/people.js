@@ -759,11 +759,13 @@ const peopleController = {
               let currentTime = new Date().getTime();
               if (checkExist.length < 1) {
 
-                let pass = '123456';
+                let pass = "" + Math.random(Math.random() * 1000000)  //'123456';
                 const hash = await bcrypt.hash(
                   pass,
                   saltRounds
                 );
+
+                let uuidv4 = uuid();
 
                 let mobile = null;
                 if (peopleData.D) {
@@ -780,7 +782,8 @@ const peopleController = {
                   password: hash,
                   mobileNo: mobile,
                   phoneNo: peopleData.E,
-                  createdBy:req.me.id
+                  createdBy:req.me.id,
+                  verifyToken:uuidv4,
                 }
 
                 resultData = await knex.insert(insertData).returning(['*']).into('users');
@@ -816,6 +819,7 @@ const peopleController = {
 
                 if (resultData && resultData.length) {
                   success++;
+                  await emailHelper.sendTemplateEmail({ to: peopleData.B, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: peopleData.A, username: peopleData.B, password: pass, uuid: uuidv4 } });
                 }
               } else {
 

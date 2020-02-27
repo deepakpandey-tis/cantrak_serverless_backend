@@ -20,7 +20,7 @@ const partsController = {
 
             let { partName,
                 partCode,
-                partCategory,partId } = req.body;
+                partCategory, partId } = req.body;
 
             if (partName || partCode || partCategory || partId) {
 
@@ -43,8 +43,8 @@ const partsController = {
                             if (partCategory) {
                                 qb.where('part_master.partCategory', partCategory)
                             }
-                            if(partId){
-                                qb.where({'part_master.id':partId})
+                            if (partId) {
+                                qb.where({ 'part_master.id': partId })
                             }
                         })
                         .groupBy(['part_master.id'])
@@ -64,6 +64,7 @@ const partsController = {
                             'part_category_master.categoryName as Category',
                             'part_master.barcode as Barcode',
                             'part_master.createdAt as Date Added',
+                            'part_master.isActive',
                         ])
                         .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
                         .where(qb => {
@@ -125,6 +126,7 @@ const partsController = {
                             'part_category_master.categoryName as Category',
                             'part_master.barcode as Barcode',
                             'part_master.createdAt as Date Added',
+                            'part_master.isActive',
                         ])
                         .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
                         .orderBy('part_master.createdAt', 'desc')
@@ -174,7 +176,7 @@ const partsController = {
                 let partPayload = req.body;
                 let payload = req.body;
                 console.log('[controllers][part][addParts]', partPayload);
-                partPayload = _.omit(partPayload, ['minimumQuantity'], ['unitOfMeasure'], ['barcode'], ['image_url'], ['file_url'], 'quantity', 'unitCost', ['additionalAttributes'], ['images'], ['files'], ['additionalDescription'], 'partDescription', ['assignedVendors'], ['additionalPartDetails'],['partId'])
+                partPayload = _.omit(partPayload, ['minimumQuantity'], ['unitOfMeasure'], ['barcode'], ['image_url'], ['file_url'], 'quantity', 'unitCost', ['additionalAttributes'], ['images'], ['files'], ['additionalDescription'], 'partDescription', ['assignedVendors'], ['additionalPartDetails'], ['partId'])
                 // validate keys
                 const schema = Joi.object().keys({
                     partName: Joi.string().required(),
@@ -218,8 +220,8 @@ const partsController = {
 
                 let partResult
 
-                if(req.body.partId){
-                    partResult = await knex.update(insertData).where({id:req.body.partId}).returning(['*']).transacting(trx).into('part_master');
+                if (req.body.partId) {
+                    partResult = await knex.update(insertData).where({ id: req.body.partId }).returning(['*']).transacting(trx).into('part_master');
                 } else {
                     partResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('part_master');
                 }
@@ -1101,18 +1103,43 @@ const partsController = {
                     ]
                 });
             }
-            let partResult = await knex
-                .update({ isActive: false })
-                .where({ id: payload.id })
-                .returning(["*"])
-                .into("part_master");
-            part = partResult[0];
+            let partResult;
+            let message;
+            let checkStatus = await knex.from('part_master').where({ id: payload.id }).returning(['*']);
+
+            if (checkStatus.length) {
+
+                if (checkStatus[0].isActive == true) {
+
+                    partResult = await knex
+                        .update({ isActive: false })
+                        .where({ id: payload.id })
+                        .returning(["*"])
+                        .into("part_master");
+                    part = partResult[0];
+
+                    message = "Part Deactivate Successfully!"
+
+                } else {
+
+
+                    partResult = await knex
+                        .update({ isActive: true })
+                        .where({ id: payload.id })
+                        .returning(["*"])
+                        .into("part_master");
+                    part = partResult[0];
+
+                    message = "Part Activate Successfully!"
+
+                }
+            }
 
             return res.status(200).json({
                 data: {
                     part: part
                 },
-                message: "Part Deleted Successfully!"
+                message: message
             });
 
         } catch (err) {
@@ -1351,7 +1378,27 @@ const partsController = {
             }
 
             var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-            var ws = XLSX.utils.json_to_sheet(rows);
+
+
+            var ws;
+            if (rows && rows.length) {
+                ws = XLSX.utils.json_to_sheet(rows);
+            } else {
+                ws = XLSX.utils.json_to_sheet([
+                    {
+                        PART_CODE: "",
+                        PART_NAME: "",
+                        UNIT_OF_MEASURE: "",
+                        PART_CATEGORY_CODE: "",
+                        COMPANY_ID: "",
+                        quantity: "",
+                        unit_cost:"",
+                    }
+                ]);
+            }
+
+
+            //var ws = XLSX.utils.json_to_sheet(rows);
             XLSX.utils.book_append_sheet(wb, ws, "pres");
             XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
             let filename = "PartData-" + Date.now() + ".csv";
@@ -1684,13 +1731,13 @@ const partsController = {
             if (page < 1) page = 1;
             let offset = (page - 1) * per_page;
             let filters = {}
-            if(req.body.status){
+            if (req.body.status) {
                 filters['assigned_parts.status'] = req.body.status;
             }
-            if(req.body.partId){
+            if (req.body.partId) {
                 filters['part_master.id'] = req.body.partId
             }
-            if(req.body.serviceOrderId){
+            if (req.body.serviceOrderId) {
                 filters['assigned_parts.entityId'] = req.body.serviceOrderId
             }
             [total, rows] = await Promise.all([
@@ -1706,15 +1753,16 @@ const partsController = {
                         'assigned_parts.status as approvalStatus',
                         'assigned_parts.entityId'
                     ])
-                    .where({ 
-                    'part_master.orgId': req.orgId,
-                     'assigned_parts.entityType': 'service_orders' })
+                    .where({
+                        'part_master.orgId': req.orgId,
+                        'assigned_parts.entityType': 'service_orders'
+                    })
                     .where(qb => {
-                        if(!_.isEmpty(filters)){
+                        if (!_.isEmpty(filters)) {
                             qb.where(filters)
                         }
-                        if(req.body.partName){
-                            qb.where('part_master.partName','ilike',`%${req.body.partName}%`)
+                        if (req.body.partName) {
+                            qb.where('part_master.partName', 'ilike', `%${req.body.partName}%`)
                         }
                     }),
                 knex('assigned_parts')
@@ -1798,7 +1846,7 @@ const partsController = {
             let partLedger = await knex.insert(ledgerObject).returning(['*']).into('part_ledger');
             return res.status(200).json({
                 data: {
-                    updatedStatus: {...update,partLedger}
+                    updatedStatus: { ...update, partLedger }
                 }
             })
         } catch (err) {
@@ -2088,18 +2136,18 @@ const partsController = {
             });
         }
     },
-    generateNewPartId:async(req,res) => {
+    generateNewPartId: async (req, res) => {
         try {
             let currentTime = new Date().getTime()
-            const newPart = await knex('part_master').insert({createdAt:currentTime,updatedAt:currentTime}).returning(['*'])
+            const newPart = await knex('part_master').insert({ createdAt: currentTime, updatedAt: currentTime }).returning(['*'])
 
             return res.status(200).json({
                 data: {
-                    newPart:newPart[0]
+                    newPart: newPart[0]
                 },
                 message: 'New part id generated successfully!'
             })
-        } catch(err) {
+        } catch (err) {
             return res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
