@@ -184,13 +184,11 @@ const serviceDetailsController = {
             ]
           });
         }
-
-
         /* CHECK DUPLICATE SEQUENCE NO. OPEN */
         if (payload.sequenceNo) {
           let checkSequence = await knex.from('incident_priority')
-          .where({ sequenceNo: payload.sequenceNo, orgId: req.orgId })
-          .whereNot({ id: payload.id });
+            .where({ sequenceNo: payload.sequenceNo, orgId: req.orgId })
+            .whereNot({ id: payload.id });
           if (checkSequence && checkSequence.length) {
 
             return res.status(400).json({
