@@ -137,5 +137,10 @@ router.get('/get-all-status',
     authMiddleware.isAuthenticated, userMiddleware.customerInfo,
     serviceRequestController.getAllStatus)
 
+/*GET ALL PROPERTY UNIT LIST FOR DROP DOWN */
+router.get("/get-all-property-unit",
+    authMiddleware.isAuthenticated,userMiddleware.customerInfo,
+    serviceRequestController.getAllPropertyUnit);
+
 
 module.exports = router;
