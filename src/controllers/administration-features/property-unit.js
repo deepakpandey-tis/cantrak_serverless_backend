@@ -749,7 +749,7 @@ const propertyUnitController = {
           "buildings_and_phases.description as buildingDescription",
           "floor_and_zones.description as floorDescription",
         ])
-        .where({ "property_units.id": id, "property_units.orgId": orgId });
+        .where({ "property_units.id": id});
 
       return res.status(200).json({
         data: {
