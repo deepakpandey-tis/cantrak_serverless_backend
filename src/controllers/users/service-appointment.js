@@ -56,7 +56,7 @@ const serviceAppointmentController = {
                                 qb.where('service_appointments.id', serviceAppointmentId)
                             }
                             if (serviceOrderId) {
-                                qb.where('service_appointments.serviceOrderId',serviceOrderId)
+                                qb.where('service_appointments.serviceOrderId', serviceOrderId)
                             }
                             if (status) {
                                 qb.where('service_appointments.status', status)
@@ -263,8 +263,7 @@ const serviceAppointmentController = {
                 ],
             });
         }
-    },
-
+    },   
     getServiceOrderList: async (req, res) => {
         try {
             //const serviceOrders = await knex('service_orders').select();

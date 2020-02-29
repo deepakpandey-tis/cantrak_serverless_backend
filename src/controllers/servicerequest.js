@@ -789,8 +789,8 @@ const serviceRequestController = {
               "service_problems.categoryId",
               "incident_categories.id"
             )
-            .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+            // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+            // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
             .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
 
             .select([
@@ -798,12 +798,13 @@ const serviceRequestController = {
               "service_requests.houseId as houseId",
               "service_requests.description as Description",
               "service_requests.priority as Priority",
-              "assignUser.name as Tenant Name",
+              // "assignUser.name as Tenant Name",
               "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
               "u.name as Requested By",
               "service_requests.createdAt as Date Created",
-              "service_orders.id as SO Id"
+              "service_orders.id as SO Id",
+              "property_units.id as unitId"
             ])
             .groupBy([
               "service_requests.id",
@@ -817,8 +818,8 @@ const serviceRequestController = {
               "teams.teamId",
               "mainUsers.id",
               "incident_categories.id",
-              "assignUser.id",
-              "user_house_allocation.id",
+              // "assignUser.id",
+              // "user_house_allocation.id",
               "service_orders.id"
             ])
             .where({ "service_requests.orgId": req.orgId })
@@ -860,8 +861,8 @@ const serviceRequestController = {
               "service_problems.categoryId",
               "incident_categories.id"
             )
-            .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+            // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+            // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
             .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
 
             .select([
@@ -869,7 +870,7 @@ const serviceRequestController = {
               "service_requests.houseId as houseId",
               "service_requests.description as Description",
               "service_requests.priority as Priority",
-              "assignUser.name as Tenant Name",
+              // "assignUser.name as Tenant Name",
               "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
               "requested_by.name as Requested By",
@@ -881,7 +882,8 @@ const serviceRequestController = {
               "teams.teamName",
               "teams.teamCode",
               "mainUsers.name as mainUser",
-              "service_orders.id as SO Id"
+              "service_orders.id as SO Id",
+              "property_units.id as unitId"
 
             ])
             .groupBy([
@@ -896,8 +898,8 @@ const serviceRequestController = {
               "teams.teamId",
               "mainUsers.id",
               "incident_categories.id",
-              "assignUser.id",
-              "user_house_allocation.id",
+              // "assignUser.id",
+              // "user_house_allocation.id",
               "service_orders.id"
 
             ])
@@ -1022,8 +1024,8 @@ const serviceRequestController = {
               "service_problems.categoryId",
               "incident_categories.id"
             )
-            .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+            // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+            // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
             .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
 
             .select([
@@ -1032,12 +1034,13 @@ const serviceRequestController = {
               // "incident_categories.descriptionEng as Category",
               // "incident_sub_categories.descriptionEng as Problem",
               "service_requests.priority as Priority",
-              "assignUser.name as Tenant Name",
+              // "assignUser.name as Tenant Name",
               "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
               "u.name as Requested By",
               "service_requests.createdAt as Date Created",
-              "service_orders.id as SO Id"
+              "service_orders.id as SO Id",
+              "property_units.id as unitId"
 
             ])
             .where({ "service_requests.orgId": req.orgId })
@@ -1083,8 +1086,8 @@ const serviceRequestController = {
               "teams.teamId",
               "mainUsers.id",
               "incident_categories.id",
-              "assignUser.id",
-              "user_house_allocation.id",
+              // "assignUser.id",
+              // "user_house_allocation.id",
               "service_orders.id"
             ])
             .distinct('service_requests.id')
@@ -1125,8 +1128,8 @@ const serviceRequestController = {
               "service_problems.categoryId",
               "incident_categories.id"
             )
-            .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+            // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+            // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
             .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
 
             .select([
@@ -1135,7 +1138,7 @@ const serviceRequestController = {
               "service_requests.priority as Priority",
               "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
-              "assignUser.name as Tenant Name",
+              // "assignUser.name as Tenant Name",
               "requested_by.name as Requested By",
               "service_requests.createdAt as Date Created",
               "buildings_and_phases.buildingPhaseCode",
@@ -1145,7 +1148,8 @@ const serviceRequestController = {
               "teams.teamName",
               "teams.teamCode",
               "mainUsers.name as mainUser",
-              "service_orders.id as SO Id"
+              "service_orders.id as SO Id",
+              "property_units.id as unitId"
 
             ])
             .orderBy('service_requests.id', 'desc')
@@ -1195,8 +1199,8 @@ const serviceRequestController = {
               "teams.teamId",
               "mainUsers.id",
               "incident_categories.id",
-              "assignUser.id",
-              "user_house_allocation.id",
+              // "assignUser.id",
+              // "user_house_allocation.id",
               "service_orders.id"
             ])
             .distinct('service_requests.id')
@@ -1228,7 +1232,30 @@ const serviceRequestController = {
 
       // });
 
-      pagination.data = _.uniqBy(rows,'S Id');
+      // let Parallel = require('async-parallel');
+      pagination.data = await Parallel.map(rows, async pd => {
+
+        let houseResult = await knex.from('user_house_allocation').select('userId').where({ houseId: pd.unitId }).first().orderBy('id', 'desc')
+
+        if (houseResult) {
+          let tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
+          return {
+            ...pd,
+            "Tenant Name": tetantResult.name
+          }
+        } else {
+          return {
+            ...pd,
+            "Tenant Name": ''
+          }
+        }
+
+
+
+      })
+
+     // pagination.data = _.uniqBy(rows,'S Id');
+
 
 
       return res.status(200).json({
