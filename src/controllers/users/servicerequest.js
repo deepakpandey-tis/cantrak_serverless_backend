@@ -861,9 +861,7 @@ const serviceRequestController = {
               if (location) {
                 qb.where('service_requests.location', 'iLIKE', `%${location}%`)
               }
-              if (priority) {
-                qb.where('service_requests.priority', 'iLIKE', `%${priority}%`)
-              }
+              
               if (description) {
                 qb.where('service_requests.description', 'iLIKE', `%${description}%`)
               }
@@ -881,11 +879,10 @@ const serviceRequestController = {
                 ]);
                 qb.where({ closedBy: "" })
               }
-              qb.where(filters);
+              qb.where(filters);            
             })
             .whereIn("service_requests.houseId", houseIds)
             .orWhere("service_requests.createdBy", req.me.id)
-
             .groupBy([
               "service_requests.id",
               "requested_by.id",
@@ -931,10 +928,8 @@ const serviceRequestController = {
             .where(qb => {
               if (location) {
                 qb.where('service_requests.location', 'iLIKE', `%${location}%`)
-              }
-              if (priority) {
-                qb.where('service_requests.priority', 'iLIKE', `%${priority}%`)
-              }
+              }             
+
               if (description) {
                 qb.where('service_requests.description', 'iLIKE', `%${description}%`)
               }
@@ -954,7 +949,6 @@ const serviceRequestController = {
                 qb.where({ closedBy: "" })
               }
               qb.where(filters);
-
             })
             .whereIn("service_requests.houseId", houseIds)
             .orWhere("service_requests.createdBy", req.me.id)
@@ -2652,6 +2646,24 @@ const serviceRequestController = {
       return res.status(200).json({
         data: result,
         message: "All Status list"
+      });
+
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  /*GET ALL PROPERTY UNIT LIST FOR DROP DOWN */
+  getAllPropertyUnit: async (req, res) => {
+    try {
+      let orgId = req.orgId;
+      let result = await knex.from('property_units')
+        .select('id', "unitNumber", 'description')
+        .where({ orgId })
+      return res.status(200).json({
+        data: result,
+        message: "All property unit list"
       });
 
     } catch (err) {
