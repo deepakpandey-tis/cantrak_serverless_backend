@@ -22,4 +22,11 @@ router.post('/user-details',
 authMiddleware.isAuthenticated,
 allUsersController.userDetails);
 
+/* LOGIN AS USER */
+router.get('/login-as-user',
+authMiddleware.isAuthenticated,
+authMiddleware.isSuperAdmin,
+allUsersController.loginAsUser);
+
+
 module.exports = router;

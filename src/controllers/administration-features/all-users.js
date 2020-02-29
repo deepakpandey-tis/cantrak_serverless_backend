@@ -190,11 +190,37 @@ const allUsersController = {
             let roleResult = await knex.from('application_user_roles')
                 .leftJoin('application_roles', 'application_user_roles.roleId', 'application_roles.id')
                 .leftJoin('organisations', 'application_user_roles.orgId', 'organisations.id')
-                .where({ 'application_user_roles.userId': payload.id })
+                .select([
+                    'application_roles.name as roleName',
+                    'organisations.organisationName',
+                    'organisations.id as orgId',
+                    'application_roles.id as roleId',
 
+                ])
+                .where({ 'application_user_roles.userId': payload.id });
+
+            let Parallel = require('async-parallel');
+            roleResult = await Parallel.map(roleResult, async item => {
+
+                let houseResult = await knex.from('user_house_allocation').where({ 'userId': payload.id });
+                if (houseResult) {
+
+                    return {
+                        ...item,
+                        houseIds: houseResult,
+                    }
+
+                } else {
+                    return {
+                        ...item,
+                        houseIds: "",
+                    }
+                }
+
+            })
 
             return res.status(200).json({
-                data: {...userResult,roleResult}
+                data: { ...userResult, roleResult }
 
             });
 
@@ -204,6 +230,20 @@ const allUsersController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
+    }
+    ,
+    /* LOGIN AS USER */
+    loginAsUser: async (req, res) => {
+
+        try {
+
+        } catch (err) {
+
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+
     }
 
 }
