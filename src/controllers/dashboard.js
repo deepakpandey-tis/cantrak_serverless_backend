@@ -1315,6 +1315,11 @@ const dashboardController = {
             "incident_sub_categories.incidentCategoryId"
           )
           .leftJoin(
+            "incident_type",
+            "incident_sub_categories.incidentTypeId",
+            "incident_type.id"
+          )
+          .leftJoin(
             "property_units",
             "service_requests.houseId",
             "property_units.id"
@@ -1327,7 +1332,7 @@ const dashboardController = {
           .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
           .select([
             "service_problems.serviceRequestId",
-            "incident_categories.categoryCode",
+            "incident_type.typeCode as categoryCode",
             "incident_categories.descriptionEng"
           ])
           .where({
