@@ -1294,7 +1294,7 @@ const dashboardController = {
       
       
       let final = [];
-      for (let d of dates) {
+     // for (let d of dates) {
         
         
         problems = await knex
@@ -1342,7 +1342,7 @@ const dashboardController = {
 
         // let problemWise = _.keys(grouped).map(category => ({totalServiceRequests:grouped[category].length,category}))
         final.push(grouped); //totalServiceRequest: problems.length })
-      }
+      //}
       let finalData = _.flatten(
         final
           .filter(v => !_.isEmpty(v))
