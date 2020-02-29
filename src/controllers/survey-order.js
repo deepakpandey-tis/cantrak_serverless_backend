@@ -835,7 +835,7 @@ const surveyOrderController = {
             "teams.teamId",
             "assignUser.id",
             "user_house_allocation.id"
-         
+
           ])
           .where({ "survey_orders.orgId": req.orgId, "assigned_service_team.entityType": "survey_orders" })
           .whereIn('service_requests.projectId', accessibleProjects)
@@ -914,7 +914,7 @@ const surveyOrderController = {
       pagination.last_page = Math.ceil(count / per_page);
       pagination.current_page = page;
       pagination.from = offset;
-      pagination.data = _.uniqBy(rows,'S Id');
+      pagination.data = _.uniqBy(rows, 'S Id');
 
       res.status(200).json({
         data: pagination,
@@ -930,7 +930,7 @@ const surveyOrderController = {
       });
     }
   },
-  getSurveyOrderListNew:async(req,res) => {
+  getSurveyOrderListNew: async (req, res) => {
     try {
       let filterList = req.body;
       let total
@@ -951,13 +951,13 @@ const surveyOrderController = {
       dueToDate = new Date(dueToDate).getTime();
 
       let filters = {}
-      if(filterList.serviceRequestId){
+      if (filterList.serviceRequestId) {
         filters['s.id'] = filterList.serviceRequestId;
       }
-      if(filterList.surveyOrderId){
+      if (filterList.surveyOrderId) {
         filters['o.id'] = filterList.surveyOrderId
       }
-      if(filterList.status){
+      if (filterList.status) {
         filters['o.surveyOrderStatus'] = filterList.status;
       }
 
@@ -972,32 +972,142 @@ const surveyOrderController = {
       // if(filterList.unitNo){
       //   filters['property_units.unitNo'] = filterList.unitNo;
       // }
-      
 
-        [total,rows] = await Promise.all([
-          knex
-            .count("* as count")
-            .from("survey_orders as o")
+
+      [total, rows] = await Promise.all([
+        knex
+          .count("* as count")
+          .from("survey_orders as o")
+          .where(qb => {
+            qb.where(filters);
+            if (dueFromDate || dueToDate) {
+              qb.whereBetween("o.appointedDate", [dueFromDate, dueToDate]);
+            }
+            qb.where("o.orgId", req.orgId)
+            if (filterList.description) {
+              qb.where('s.description', 'ilike', `%${filterList.description}%`)
+            }
+            if (filterList.building) {
+              qb.where('buildings_and_phases.description', 'ilike', `%${filterList.building}%`)
+            }
+            if (filterList.unitNo) {
+              qb.where('property_units.unitNumber', 'ilike', `%${filterList.unitNo}%`)
+            }
+            if (filterList.tenantName) {
+              qb.where('assignUser.name', 'ilike', `%${filterList.tenantName}%`)
+            }
+          })
+          .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
+          .leftJoin(
+            "service_status AS status",
+            "s.serviceStatusCode",
+            "status.statusCode"
+          )
+          .leftJoin(
+            "assigned_service_team",
+            "o.id",
+            "assigned_service_team.entityId"
+          )
+          .leftJoin(
+            "teams",
+            "assigned_service_team.teamId",
+            "teams.teamId"
+          )
+          .leftJoin("users", "assigned_service_team.userId", "users.id")
+          .leftJoin("users AS u", "o.createdBy", "u.id")
+          .leftJoin(
+            "property_units",
+            "s.houseId",
+            "property_units.id"
+          )
+          .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
+          .leftJoin(
+            "service_problems",
+            "s.id",
+            "service_problems.serviceRequestId"
+          )
+          .leftJoin(
+            "requested_by",
+            "s.requestedBy",
+            "requested_by.id"
+          )
+          .leftJoin(
+            "incident_categories",
+            "service_problems.categoryId",
+            "incident_categories.id"
+          )
+          .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
+          .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+          .select(
+            "o.id AS surveyId",
+            "o.serviceRequestId",
+            "o.surveyOrderStatus as Status",
+            "status.statusCode AS surveyStatusCode",
+            "u.id As createdUserId",
+            "u.name AS appointedBy",
+            "users.name AS assignedTo",
+            "u.name AS createdBy",
+            "o.appointedDate AS appointmentDate",
+            "o.appointedTime AS appointmentTime",
+            "o.createdAt AS createdAt",
+            "teams.teamName as teamName",
+            "assignUser.name  as Tenant Name"
+          )
+          .where({ "assigned_service_team.entityType": "survey_orders" })
+          .whereIn('s.projectId', accessibleProjects)
+          .groupBy([
+            "o.id",
+            "s.id",
+            "status.descriptionEng",
+            "status.statusCode",
+            "u.id",
+            "users.id",
+            "teams.teamId",
+            "assigned_service_team.entityType",
+            "assignUser.id",
+            "user_house_allocation.id"
+          ]), knex
+            .select(
+              "o.id as S Id",
+              "s.description as Description",
+              "o.appointedDate as Appointment Date",
+              "o.appointedTime as Appointment Time",
+              "users.name as Assigned To",
+              "s.id as SR Id",
+              "s.priority as Priority",
+              "u.name as Created By",
+              "o.surveyOrderStatus as Status",
+              "o.createdAt as Date Created",
+              "teams.teamName as teamName",
+              "buildings_and_phases.buildingPhaseCode",
+              "buildings_and_phases.description as buildingDescription",
+              "property_units.unitNumber",
+              "incident_categories.descriptionEng as problemDescription",
+              "requested_by.name as requestedBy",
+              "assignUser.name  as Tenant Name"
+            )
+            .from("survey_orders As o")
             .where(qb => {
               qb.where(filters);
               if (dueFromDate || dueToDate) {
                 qb.whereBetween("o.appointedDate", [dueFromDate, dueToDate]);
               }
-              qb.where("o.orgId", req.orgId)
-              if(filterList.description){
-                qb.where('s.description','ilike',`%${filterList.description}%`)
+              qb.where("o.orgId", req.orgId);
+              if (filterList.description) {
+                qb.where('s.description', 'ilike', `%${filterList.description}%`)
               }
-              if(filterList.building){
-                qb.where('buildings_and_phases.description','ilike',`%${filterList.building}%`)
+              if (filterList.building) {
+                qb.where('buildings_and_phases.description', 'ilike', `%${filterList.building}%`)
               }
-              if(filterList.unitNo){
+              if (filterList.unitNo) {
                 qb.where('property_units.unitNumber', 'ilike', `%${filterList.unitNo}%`)
               }
-              if(filterList.tenantName){
-                qb.where('assignUser.name','ilike',`%${filterList.tenantName}%`)
+              if (filterList.tenantName) {
+                qb.where('assignUser.name', 'ilike', `%${filterList.tenantName}%`)
               }
-            })
+            }).where({ "assigned_service_team.entityType": "survey_orders" })
             .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
+            .leftJoin("users AS u", "o.createdBy", "u.id")
             .leftJoin(
               "service_status AS status",
               "s.serviceStatusCode",
@@ -1014,7 +1124,6 @@ const surveyOrderController = {
               "teams.teamId"
             )
             .leftJoin("users", "assigned_service_team.userId", "users.id")
-            .leftJoin("users AS u", "o.createdBy", "u.id")
             .leftJoin(
               "property_units",
               "s.houseId",
@@ -1038,120 +1147,11 @@ const surveyOrderController = {
             )
             .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
             .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
-            .select(
-              "o.id AS surveyId",
-              "o.serviceRequestId",
-              "o.surveyOrderStatus as Status",
-              "status.statusCode AS surveyStatusCode",
-              "u.id As createdUserId",
-              "u.name AS appointedBy",
-              "users.name AS assignedTo",
-              "u.name AS createdBy",
-              "o.appointedDate AS appointmentDate",
-              "o.appointedTime AS appointmentTime",
-              "o.createdAt AS createdAt",
-              "teams.teamName as teamName",
-              "assignUser.name  as Tenant Name"
-            )
-            .where({ "assigned_service_team.entityType": "survey_orders" })
             .whereIn('s.projectId', accessibleProjects)
-            .groupBy([
-              "o.id",
-              "s.id",
-              "status.descriptionEng",
-              "status.statusCode",
-              "u.id",
-              "users.id",
-              "teams.teamId",
-              "assigned_service_team.entityType",
-              "assignUser.id",
-              "user_house_allocation.id"
-            ]), knex
-              .select(
-                "o.id as S Id",
-                "s.description as Description",
-                "o.appointedDate as Appointment Date",
-                "o.appointedTime as Appointment Time",
-                "users.name as Assigned To",
-                "s.id as SR Id",
-                "s.priority as Priority",
-                "u.name as Created By",
-                "o.surveyOrderStatus as Status",
-                "o.createdAt as Date Created",
-                "teams.teamName as teamName",
-                "buildings_and_phases.buildingPhaseCode",
-                "buildings_and_phases.description as buildingDescription",
-                "property_units.unitNumber",
-                "incident_categories.descriptionEng as problemDescription",
-                "requested_by.name as requestedBy",
-                "assignUser.name  as Tenant Name"
-              )
-              .from("survey_orders As o")
-              .where(qb => {
-                qb.where(filters);
-                if (dueFromDate || dueToDate) {
-                  qb.whereBetween("o.appointedDate", [dueFromDate, dueToDate]);
-                }
-                qb.where("o.orgId", req.orgId);
-                if (filterList.description) {
-                  qb.where('s.description', 'ilike', `%${filterList.description}%`)
-                }
-                if (filterList.building) {
-                  qb.where('buildings_and_phases.description', 'ilike', `%${filterList.building}%`)
-                }
-                if (filterList.unitNo) {
-                  qb.where('property_units.unitNumber', 'ilike', `%${filterList.unitNo}%`)
-                }
-                if (filterList.tenantName) {
-                  qb.where('assignUser.name', 'ilike', `%${filterList.tenantName}%`)
-                }
-              }).where({ "assigned_service_team.entityType": "survey_orders" })
-              .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
-              .leftJoin("users AS u", "o.createdBy", "u.id")
-              .leftJoin(
-                "service_status AS status",
-                "s.serviceStatusCode",
-                "status.statusCode"
-              )
-              .leftJoin(
-                "assigned_service_team",
-                "o.id",
-                "assigned_service_team.entityId"
-              )
-              .leftJoin(
-                "teams",
-                "assigned_service_team.teamId",
-                "teams.teamId"
-              )
-              .leftJoin("users", "assigned_service_team.userId", "users.id")
-              .leftJoin(
-                "property_units",
-                "s.houseId",
-                "property_units.id"
-              )
-              .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
-              .leftJoin(
-                "service_problems",
-                "s.id",
-                "service_problems.serviceRequestId"
-              )
-              .leftJoin(
-                "requested_by",
-                "s.requestedBy",
-                "requested_by.id"
-              )
-              .leftJoin(
-                "incident_categories",
-                "service_problems.categoryId",
-                "incident_categories.id"
-              )
-              .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
-              .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
-              .whereIn('s.projectId', accessibleProjects)
-              .orderBy('o.id', 'desc')
-              .offset(offset)
-              .limit(per_page)
-              ])
+            .orderBy('o.id', 'desc')
+            .offset(offset)
+            .limit(per_page)
+      ])
 
       let count = total.length;
       pagination.total = count;
@@ -1166,8 +1166,8 @@ const surveyOrderController = {
       return res.status(200).json({
         data: pagination
       })
-      
-    } catch(err) {
+
+    } catch (err) {
       console.log("[controllers][surveyOrder][addSurveyOrder] :  Error", err);
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
@@ -1383,9 +1383,19 @@ const surveyOrderController = {
       let entityId = remarksData.entityId;
       let entityType = remarksData.entityType;
 
-      let remarksNotesResult = await knex.raw(`select "remarks_master"."id","remarks_master"."description","remarks_master"."createdAt","remarks_master"."createdBy","images"."s3Url","users"."name" as "createdBy" from "remarks_master"  inner join "users" on "remarks_master"."createdBy" = "users"."id"  left join "images" on "remarks_master"."id" = "images"."entityId" where "remarks_master"."orgId" = ${req.orgId} and "remarks_master"."entityId" = ${entityId} and "remarks_master"."entityType" = '${entityType}' and "remarks_master"."isActive" = 'true' and "images"."entityType" = 'survey_order_notes' and "images"."orgId" = ${req.orgId} ORDER BY "remarks_master"."id"  DESC LIMIT 15 `)
-
+      let remarksNotesResult = await knex.raw(`select "remarks_master"."id","remarks_master"."description","remarks_master"."createdAt","remarks_master"."createdBy","users"."name" as "createdBy" from "remarks_master"  inner join "users" on "remarks_master"."createdBy" = "users"."id"  where "remarks_master"."orgId" = ${req.orgId} and "remarks_master"."entityId" = ${entityId} and "remarks_master"."entityType" = '${entityType}' and "remarks_master"."isActive" = 'true'  ORDER BY "remarks_master"."id"  DESC LIMIT 15 `)
+      // let remarksNotesResult = await knex.raw(`select "remarks_master"."id","remarks_master"."description","remarks_master"."createdAt","remarks_master"."createdBy","images"."s3Url","users"."name" as "createdBy" from "remarks_master"  inner join "users" on "remarks_master"."createdBy" = "users"."id"  left join "images" on "remarks_master"."id" = "images"."entityId" where "remarks_master"."orgId" = ${req.orgId} and "remarks_master"."entityId" = ${entityId} and "remarks_master"."entityType" = '${entityType}' and "remarks_master"."isActive" = 'true' and "images"."entityType" = 'survey_order_notes' and "images"."orgId" = ${req.orgId} ORDER BY "remarks_master"."id"  DESC LIMIT 15 `)
       remarksNotesList = remarksNotesResult.rows;
+      console.log("remakrs rows", remarksNotesList);
+
+      const Parallel = require('async-parallel');
+      remarksNotesList = await Parallel.map(remarksNotesList, async item => {
+        let images = await knex.raw(`select * from "images" where "images"."entityId"= ${item.id} and "images"."entityType" = '${entityType}' and "images"."orgId" = ${req.orgId} `);
+        item.images = images.rows;
+        return item;
+      });
+
+      console.log("remarksList",remarksNotesList);
 
       return res.status(200).json({
         data: remarksNotesList,

@@ -29,7 +29,6 @@ const serviceDetailsController = {
           descriptionEng: Joi.string().required(),
           sequenceNo: Joi.number().allow("").allow(null).optional(),
 
-
         });
 
         const result = Joi.validate(payload, schema);
@@ -47,11 +46,11 @@ const serviceDetailsController = {
         }
 
         const existCode = await knex("incident_priority")
-        .where('incidentPriorityCode','iLIKE',payload.incidentPriorityCode)
-        .where({
-          //incidentPriorityCode: payload.incidentPriorityCode,
-          orgId:req.orgId
-        });
+          .where('incidentPriorityCode', 'iLIKE', payload.incidentPriorityCode)
+          .where({
+            //incidentPriorityCode: payload.incidentPriorityCode,
+            orgId: req.orgId
+          });
 
         console.log(
           "[controllers][servicdetails][priority]: priority ",
@@ -71,8 +70,25 @@ const serviceDetailsController = {
           });
         }
 
-        let seqNo=1;
-        if(payload.sequenceNo){
+        /* CHECK DUPLICATE SEQUENCE NO. OPEN */
+        if (payload.sequenceNo) {
+          let checkSequence = await knex.from('incident_priority').where({ sequenceNo: payload.sequenceNo, orgId: req.orgId });
+          if (checkSequence && checkSequence.length) {
+
+            return res.status(400).json({
+              errors: [
+                {
+                  code: "SEQUENCE_NO_EXIST_ERROR",
+                  message: "Sequence no already exist!"
+                }
+              ]
+            })
+          }
+        }
+        /* CHECK DUPLICATE SEQUENCE NO. CLOSE */
+
+        let seqNo = null;
+        if (payload.sequenceNo) {
           seqNo = payload.sequenceNo;
         }
 
@@ -80,7 +96,7 @@ const serviceDetailsController = {
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
-          sequenceNo:seqNo,
+          sequenceNo: seqNo,
           orgId: orgId,
           createdBy: userId,
           createdAt: currentTime,
@@ -143,13 +159,13 @@ const serviceDetailsController = {
 
 
         const existCode = await knex("incident_priority")
-        .where('incidentPriorityCode','iLIKE',payload.incidentPriorityCode)
-        .where({
-          //incidentPriorityCode: payload.incidentPriorityCode,
-          orgId:req.orgId
-        })
-        .whereNot({ id: payload.id });
-        
+          .where('incidentPriorityCode', 'iLIKE', payload.incidentPriorityCode)
+          .where({
+            //incidentPriorityCode: payload.incidentPriorityCode,
+            orgId: req.orgId
+          })
+          .whereNot({ id: payload.id });
+
 
         console.log(
           "[controllers][servicdetails][priority]: priority ",
@@ -168,6 +184,24 @@ const serviceDetailsController = {
             ]
           });
         }
+        /* CHECK DUPLICATE SEQUENCE NO. OPEN */
+        if (payload.sequenceNo) {
+          let checkSequence = await knex.from('incident_priority')
+            .where({ sequenceNo: payload.sequenceNo, orgId: req.orgId })
+            .whereNot({ id: payload.id });
+          if (checkSequence && checkSequence.length) {
+
+            return res.status(400).json({
+              errors: [
+                {
+                  code: "SEQUENCE_NO_EXIST_ERROR",
+                  message: "Sequence no already exist!"
+                }
+              ]
+            })
+          }
+        }
+        /* CHECK DUPLICATE SEQUENCE NO. CLOSE */
 
 
 
@@ -175,7 +209,7 @@ const serviceDetailsController = {
         let insertData = { ...payload, updatedAt: currentTime };
         let insertResult = await knex
           .update(insertData)
-          .where({ id: payload.id})
+          .where({ id: payload.id })
           .returning(["*"])
           .transacting(trx)
           .into("incident_priority");
@@ -276,21 +310,21 @@ const serviceDetailsController = {
         }
 
         const existCode = await knex("location_tags_master")
-        .where({
-          title: payload.title.toUpperCase(),
-          orgId:req.orgId
-        })
+          .where({
+            title: payload.title.toUpperCase(),
+            orgId: req.orgId
+          })
 
-      if (existCode && existCode.length) {
-        return res.status(400).json({
-          errors: [
-            {
-              code: "LOCATION_TAG_CODE_EXIST_ERROR",
-              message: "Location tag Code already exist !"
-            }
-          ]
-        });
-      }
+        if (existCode && existCode.length) {
+          return res.status(400).json({
+            errors: [
+              {
+                code: "LOCATION_TAG_CODE_EXIST_ERROR",
+                message: "Location tag Code already exist !"
+              }
+            ]
+          });
+        }
 
 
         let currentTime = new Date().getTime();
@@ -358,29 +392,29 @@ const serviceDetailsController = {
 
 
         const existCode = await knex("location_tags_master")
-        .where({
-          title: payload.title.toUpperCase(),
-          orgId:req.orgId
-        })
-        .whereNot({ id: payload.id });
+          .where({
+            title: payload.title.toUpperCase(),
+            orgId: req.orgId
+          })
+          .whereNot({ id: payload.id });
 
-      if (existCode && existCode.length) {
-        return res.status(400).json({
-          errors: [
-            {
-              code: "LOCATION_TAG_CODE_EXIST_ERROR",
-              message: "Location tag Code already exist !"
-            }
-          ]
-        });
-      }
+        if (existCode && existCode.length) {
+          return res.status(400).json({
+            errors: [
+              {
+                code: "LOCATION_TAG_CODE_EXIST_ERROR",
+                message: "Location tag Code already exist !"
+              }
+            ]
+          });
+        }
 
 
         let currentTime = new Date().getTime();
-        let insertData = { ...payload, title: payload.title.toUpperCase(),updatedAt: currentTime };
+        let insertData = { ...payload, title: payload.title.toUpperCase(), updatedAt: currentTime };
         let insertResult = await knex
           .update(insertData)
-          .where({ id: payload.id})
+          .where({ id: payload.id })
           .returning(["*"])
           .transacting(trx)
           .into("location_tags_master");
@@ -560,7 +594,7 @@ const serviceDetailsController = {
         generalDetails = DataResult;
         generalDetails.uploadedImages = imagesResult;
         trx.commit;
-        
+
       });
 
       res.status(200).json({
@@ -598,7 +632,7 @@ const serviceDetailsController = {
       let page = reqData.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
-      let {searchValue} = req.body;
+      let { searchValue } = req.body;
       // await knex.transaction(async (trx) => {
 
       // Get Location Tag List,
@@ -610,11 +644,11 @@ const serviceDetailsController = {
           .from("location_tags_master")
           .leftJoin("users", "location_tags_master.createdBy", "users.id")
           .where({ "location_tags_master.orgId": orgId })
-          .where(qb=>{
-            if(searchValue){
-              qb.where('location_tags_master.title','iLike',`%${searchValue}%`)
-              qb.orWhere('location_tags_master.descriptionEng','iLike',`%${searchValue}%`)
-              qb.orWhere('location_tags_master.descriptionThai','iLike',`%${searchValue}%`)
+          .where(qb => {
+            if (searchValue) {
+              qb.where('location_tags_master.title', 'iLike', `%${searchValue}%`)
+              qb.orWhere('location_tags_master.descriptionEng', 'iLike', `%${searchValue}%`)
+              qb.orWhere('location_tags_master.descriptionThai', 'iLike', `%${searchValue}%`)
             }
           })
           .first(),
@@ -630,11 +664,11 @@ const serviceDetailsController = {
             "location_tags_master.createdAt as Date Created",
             "users.name as Created By"
           ])
-          .where(qb=>{
-            if(searchValue){
-              qb.where('location_tags_master.title','iLike',`%${searchValue}%`)
-              qb.orWhere('location_tags_master.descriptionEng','iLike',`%${searchValue}%`)
-              qb.orWhere('location_tags_master.descriptionThai','iLike',`%${searchValue}%`)
+          .where(qb => {
+            if (searchValue) {
+              qb.where('location_tags_master.title', 'iLike', `%${searchValue}%`)
+              qb.orWhere('location_tags_master.descriptionEng', 'iLike', `%${searchValue}%`)
+              qb.orWhere('location_tags_master.descriptionThai', 'iLike', `%${searchValue}%`)
             }
           })
           .orderBy(sortPayload.sortBy, sortPayload.orderBy)
@@ -1794,7 +1828,7 @@ const serviceDetailsController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-  },  
+  },
   updateSODate: async (req, res) => {
     try {
       const { serviceOrderId, orderDueDate } = req.body;
