@@ -59,6 +59,7 @@ const invoiceRouter = require('./invoice')
 const facilityBookingRouter = require('./facility_booking');
 const serviceUserDetailsRouter = require('./users/servicedetails');
 const userDashboardRouter = require('./users/dashboard');
+const allUsersRouter = require('./administration-features/all-users');
 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
@@ -87,6 +88,7 @@ router.use('/administration-features/property-unit', propertyUnitRouter)
 router.use('/administration-features/property-type', propertyTypeRouter)
 router.use('/administration-features/source-of-request', sourceofRequestRouter)
 router.use('/administration-features/administraction-users', administractionUsersRouter);
+router.use('/administration-features/all-users',allUsersRouter)
 
 router.use('/teams', teamsRouter);
 router.use('/vendors', vendorRouter);

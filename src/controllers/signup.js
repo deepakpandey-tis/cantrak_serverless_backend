@@ -581,7 +581,7 @@ const singupController = {
       if (checkResult.length) {
 
         let hash = await bcrypt.hash(payload.newPassword, saltRounds);
-        let resetResult = await knex.from('users').update({ password: hash, verifyToken: "" }).where({ verifyToken: checkResult[0].verifyToken }).returning(['*']);
+        let resetResult = await knex.from('users').update({ password: hash, verifyToken: "" ,emailVerified:true}).where({ verifyToken: checkResult[0].verifyToken }).returning(['*']);
         res.status(200).json({ message: "Password reset successfully!" })
 
       } else {
