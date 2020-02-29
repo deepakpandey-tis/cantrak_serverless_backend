@@ -86,8 +86,10 @@ router.post('/update-service-request-project-id',authMiddleware.isAuthenticated,
 
 router.post('/get-assigned-assets-by-entity',authMiddleware.isAuthenticated,roleMiddleware.parseUserPermission,resourceAccessMiddleware.isAssetAccessible,serviceRequestController.getAssignedAssetsByEntity)
 
-router.post('/get-service-order-id-by-service-request-id', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isAssetAccessible, serviceRequestController.getServiceOrderIdByServiceRequestId)
-router.post('/get-service-request-id-by-service-order-id', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isAssetAccessible, serviceRequestController.getServiceRequestIdByServiceOrderId)
+router.post('/get-service-order-id-by-service-request-id', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isCMAccessible, serviceRequestController.getServiceOrderIdByServiceRequestId)
+router.post('/get-service-order-id-by-service-request-id-asset', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isAssetAccessible, serviceRequestController.getServiceOrderIdByServiceRequestId)
+router.post('/get-service-request-id-by-service-order-id', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isCMAccessible, serviceRequestController.getServiceRequestIdByServiceOrderId)
+router.post('/get-service-request-id-by-service-order-id-asset', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isAssetAccessible, serviceRequestController.getServiceRequestIdByServiceOrderId)
 
 
 module.exports = router;
