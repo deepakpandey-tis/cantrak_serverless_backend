@@ -236,6 +236,65 @@ const allUsersController = {
     loginAsUser: async (req, res) => {
 
         try {
+            let login = null;
+            let payload = req.body;
+            let schema = Joi.object().keys({
+                email: Joi.string().required()
+            })
+
+            let result = Joi.validate(payload, schema);
+
+            if (result && result.hasOwnProperty('error') && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: 'VALIDATION_ERROR', message: result.error.message }
+                    ],
+                });
+            }
+
+            let userResult = await knex.from('users').where({ email: payload.email }).first();
+            let orgId = userResult.orgId;
+
+            if (userResult) {
+
+                const loginToken = jwt.sign({ id: userResult.id, orgId }, process.env.JWT_PRIVATE_KEY, { expiresIn: '7h' });
+
+                login = { accessToken: loginToken, refreshToken: "" }
+                login.user = _.omit(userResult,['password']);
+
+
+                let userApplicationRole = await knex('application_user_roles').where({ userId: Number(userResult.id) }).select('roleId', 'orgId').first();
+
+                switch (Number(userApplicationRole.roleId)) {
+                    case 1:
+                        login.user.isSuperAdmin = true;
+                        login.user.roles = ['superAdmin'];
+                        break;
+                    case 2:
+                        login.user.isOrgAdmin = true;
+                        login.user.roles = ['orgAdmin'];
+                        break;
+                    case 3:
+                        login.user.isOrgUser = true;
+                        login.user.roles = ['orgUser'];
+                        break;
+                    case 4:
+                        login.user.isCustomer = true;
+                        login.user.roles = ['customer'];
+                        break;
+                }
+
+               
+
+                res.json(login)
+
+
+
+            }
+
+
+
+
 
         } catch (err) {
 

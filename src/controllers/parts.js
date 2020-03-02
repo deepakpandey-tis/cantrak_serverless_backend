@@ -324,7 +324,8 @@ const partsController = {
         try {
 
             let partDetails = null;
-            let attribs = []
+            let attribs = [];
+            let images = [];
 
             await knex.transaction(async (trx) => {
                 const partDetailsPayload = req.body;

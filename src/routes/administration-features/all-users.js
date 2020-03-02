@@ -23,7 +23,7 @@ authMiddleware.isAuthenticated,
 allUsersController.userDetails);
 
 /* LOGIN AS USER */
-router.get('/login-as-user',
+router.post('/login-as-user',
 authMiddleware.isAuthenticated,
 authMiddleware.isSuperAdmin,
 allUsersController.loginAsUser);
