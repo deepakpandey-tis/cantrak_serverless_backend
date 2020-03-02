@@ -284,9 +284,79 @@ const allUsersController = {
                         break;
                 }
 
-               
 
-                res.json(login)
+                if (login.user.isOrgAdmin) {
+                    console.log("this is orgAdmin");
+                    // get all the projects of this admin
+                    const projects = await knex("projects")
+                        .select("id")
+                        .where({ orgId });
+                    const companies = await knex("companies")
+                        .select("id")
+                        .where({ orgId });
+                    const resources = await knex(
+                        "organisation_resources_master"
+                    )
+                        .select("resourceId as id")
+                        .where({ orgId });
+                    const userProjectResources = _.uniqBy(
+                        resources,
+                        "id"
+                    ).map(v => ({
+                        id: v.id,
+                        projects: projects.map(v => v.id)
+                    }));
+                    const userCompanyResources = _.uniqBy(
+                        resources,
+                        "id"
+                    ).map(v => ({
+                        id: v.id,
+                        companies: companies.map(v => v.id)
+                    }));
+                    //console.log(mappedProjects)
+                    login.user.userCompanyResources = userCompanyResources;
+                    login.user.userProjectResources = userProjectResources;
+                    console.log(userCompanyResources, userProjectResources);
+                }
+
+                if (login.user.isOrgUser) {
+                    const result = await knex("team_users")
+                        .innerJoin(
+                            "team_roles_project_master",
+                            "team_users.teamId",
+                            "team_roles_project_master.teamId"
+                        )
+                        .innerJoin(
+                            "role_resource_master",
+                            "team_roles_project_master.roleId",
+                            "role_resource_master.roleId"
+                        )
+                        .select([
+                            "team_roles_project_master.projectId as projectId",
+                            "role_resource_master.resourceId as resourceId"
+                        ])
+                        .where({
+                            "team_users.userId": userResult.id,
+                            "team_users.orgId": orgId,
+                            "team_roles_project_master.orgId": orgId
+                        });
+
+                    // let userProjectResources = result;
+                    console.log('Result: ', result);
+
+                    let userProjectResources = _.chain(result)
+                        .groupBy("resourceId")
+                        .map((value, key) => ({
+                            id: key,
+                            projects: value.map(a => a.projectId)
+                        }))
+                        .value();
+                    login.user.userProjectResources = userProjectResources;
+
+                }
+
+
+                res.status(200).json(login)
 
 
 

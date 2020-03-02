@@ -760,6 +760,7 @@ const buildingPhaseController = {
             "property_types.propertyType",
             "buildings_and_phases.description",
             "property_types.propertyTypeCode",
+            "property_types.descriptionEng as propertyDescription"
           ])
       ]);
 

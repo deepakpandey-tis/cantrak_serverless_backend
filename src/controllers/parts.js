@@ -510,6 +510,7 @@ const partsController = {
                     const schema = Joi.object().keys({
                         partId: Joi.string().required(),
                         unitCost: Joi.number().allow("").allow(null).optional(),
+                        unitCost: Joi.string().allow("").allow(null).optional(),
                         quantity: Joi.number().required(),
                         adjustType: Joi.string().required(),
                         serviceOrderNo: Joi.string().required(),
@@ -521,6 +522,7 @@ const partsController = {
                     const schema = Joi.object().keys({
                         partId: Joi.string().required(),
                         unitCost: Joi.number().allow("").allow(null).optional(),
+                        unitCost: Joi.string().allow("").allow(null).optional(),
                         quantity: Joi.number().required(),
                         adjustType: Joi.string().required(),
                         workOrderId: Joi.string().required(),
@@ -532,6 +534,7 @@ const partsController = {
                     const schema = Joi.object().keys({
                         partId: Joi.string().required(),
                         unitCost: Joi.number().allow("").allow(null).optional(),
+                        unitCost: Joi.string().allow("").allow(null).optional(),
                         quantity: Joi.number().required(),
                         adjustType: Joi.string().required(),
                         isPartAdded: Joi.string().required()
