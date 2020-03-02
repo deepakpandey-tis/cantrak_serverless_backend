@@ -537,7 +537,8 @@ const serviceDetailsController = {
             "images.title",
             "images.name",
             "property_units.*",
-            "service_requests.requestedBy"
+            "service_requests.requestedBy",
+            "property_types.descriptionEng as propertyDescription"
           )
           .where({
             "property_units.id": houseId,
