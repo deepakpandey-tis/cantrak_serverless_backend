@@ -1065,7 +1065,17 @@ const companyController = {
         // ) and public.companies."orgId" = ${req.orgId}
         // `)
 
-      } else {
+      } else if (req.query.areaName === 'all') {
+        companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true, type: 2 })
+        companyArr1 = companyHavingPU1.map(v => v.companyId)
+        result = await knex("companies")
+          .innerJoin('property_units', 'companies.id', 'property_units.companyId')
+          .select("companies.id", "companies.companyId", "companies.companyName as CompanyName")
+          .where({ 'companies.isActive': true, 'companies.orgId': req.orgId })
+          .whereIn('companies.id', companyArr1)
+          .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
+          .orderBy('companies.companyName', 'asc')
+      }else {
 
         //         result = await knex.raw(`
         //         SELECT public.companies.*
