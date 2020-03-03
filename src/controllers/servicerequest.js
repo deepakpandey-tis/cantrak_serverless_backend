@@ -2794,6 +2794,136 @@ const serviceRequestController = {
         }
       })
     }
+  },
+  getServiceRequestForReport: async(req,res) => {
+    try {
+      const payload = req.body;
+      const accessibleProjects = req.userProjectResources[0].projects
+      let sr = await knex.from("service_requests")
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "service_status AS status",
+          "service_requests.serviceStatusCode",
+          "status.statusCode"
+        )
+        .leftJoin("users as u", "service_requests.requestedBy", "u.id")
+        .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
+        .leftJoin('companies','buildings_and_phases.companyId','companies.id')
+        .leftJoin('projects','buildings_and_phases.projectId','projects.id')
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
+        .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+        .leftJoin('users as mainUsers', 'assigned_service_team.userId', 'mainUsers.id')
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
+
+        .select([
+          "service_requests.id as S Id",
+          "service_requests.houseId as houseId",
+          "service_requests.description as Description",
+          "service_requests.priority as Priority",
+          "service_requests.location as Location",
+          "status.descriptionEng as Status",
+          "property_units.unitNumber as Unit No",
+          // "requested_by.name as Requested By",
+          "service_requests.createdAt as Date Created",
+          "buildings_and_phases.buildingPhaseCode",
+          "buildings_and_phases.description as buildingDescription",
+          "incident_categories.descriptionEng as problemDescription",
+          // "requested_by.email as requestedByEmail",
+          "teams.teamName",
+          "teams.teamCode",
+          "mainUsers.name as mainUser",
+          "service_orders.id as SO Id",
+          "property_units.id as unitId"
+
+        ])
+        .groupBy([
+          "service_requests.id",
+          "status.id",
+          "u.id",
+          "property_units.id",
+          "buildings_and_phases.id",
+          "service_problems.id",
+          // "requested_by.id",
+          "assigned_service_team.id",
+          "teams.teamId",
+          "mainUsers.id",
+          "incident_categories.id",
+          "service_orders.id"
+
+        ])
+        .where(qb => {
+          qb.where({ "service_requests.orgId": req.orgId })
+          if(payload.fromDate && payload.toDate){
+            qb.whereBetween('service_requests.createdAt',[payload.fromDate,payload.toDate])
+          }
+          if(payload.teamId && payload.teamId.length){
+            qb.whereIn('teams.teamId',payload.teamId)
+          }
+          if (payload.buildingId && payload.buildingId.length){
+            qb.whereIn('buildings_and_phases.id',payload.buildingId)
+          }
+          if(payload.companyId){
+            qb.where('companies.id','=', payload.companyId)
+          }
+          if(payload.projectId){
+            qb.where('projects.id','=', payload.projectId)
+          }
+          if(payload.categoryId & payload.categoryId.length){
+            qb.whereIn('incident_categories.id',payload.categoryId)
+          }
+          if(payload.status && payload.status.length){
+            qb.whereIn('status.statusCode',payload.status)
+          }
+        })
+        .whereIn('service_requests.projectId', accessibleProjects)
+        .distinct('service_requests.id')
+        .orderBy('service_requests.id', 'desc')
+
+
+        const Parallel = require('async-parallel')
+      let srWithTenant = await Parallel.map(sr, async pd => {
+
+        let houseResult = await knex.from('user_house_allocation').select('userId').where({ houseId: pd.unitId }).first().orderBy('id', 'desc')
+
+        if (houseResult) {
+          let tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
+          return {
+            ...pd,
+            "Tenant Name": tetantResult.name
+          }
+        } else {
+          return {
+            ...pd,
+            "Tenant Name": ''
+          }
+        }
+
+
+
+      })
+
+      return res.status(200).json({data: {
+        service_requests:srWithTenant
+      }})
+    } catch(err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 

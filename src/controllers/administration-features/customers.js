@@ -434,6 +434,7 @@ const customerController = {
           nationalId: Joi.string().allow("").allow(null).optional(),
           allowLogin: Joi.boolean().allow("").allow(null).optional(),
           password: Joi.string().allow("").allow(null).optional(),
+          fax:Joi.string().allow("").allow(null).optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -586,6 +587,7 @@ const customerController = {
           allowLogin: Joi.boolean().allow("").allow(null).optional(),
           password: Joi.string().allow("").allow(null).optional(),
           id: Joi.string().required(),
+          fax: Joi.string().required(),
         });
 
         const result = Joi.validate(payload, schema);

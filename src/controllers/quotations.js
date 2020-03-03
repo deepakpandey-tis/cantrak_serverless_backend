@@ -11,6 +11,7 @@ const knex = require("../db/knex");
 const bcrypt = require("bcrypt");
 const XLSX = require("xlsx");
 const saltRounds = 10;
+const fs = require('fs');
 
 
 const quotationsController = {
@@ -141,7 +142,7 @@ const quotationsController = {
         let quotationValidityDate;
         if (quotationPayload.quotationValidityDate) {
           let date = new Date(quotationPayload.quotationValidityDate).getTime();
-          console.log("New Date++++++++++",date);
+          console.log("New Date++++++++++", date);
           quotationValidityDate = date;
         } else {
           quotationValidityDate = moment().add('days', 15).valueOf();
@@ -638,8 +639,8 @@ const quotationsController = {
             if (description) {
               qb.where('service_requests.description', 'iLIKE', `%${description}%`)
             }
-            if(dateFrom && dateTo){
-              qb.whereBetween('quotations.createdAt',[startTime,endTime])
+            if (dateFrom && dateTo) {
+              qb.whereBetween('quotations.createdAt', [startTime, endTime])
             }
           })
           .whereIn('quotations.projectId', accessibleProjects)
@@ -733,8 +734,8 @@ const quotationsController = {
               qb.where('service_requests.description', 'iLIKE', `%${description}%`)
             }
 
-            if(dateFrom && dateTo){
-              qb.whereBetween('quotations.createdAt',[startTime,endTime])
+            if (dateFrom && dateTo) {
+              qb.whereBetween('quotations.createdAt', [startTime, endTime])
             }
           })
           .whereIn('quotations.projectId', accessibleProjects)
@@ -936,209 +937,182 @@ const quotationsController = {
     }
   },
   exportQuotation: async (req, res) => {
+
     try {
       let reqData = req.query;
-      //let filters = req.body;
       let total, rows;
-
+      const accessibleProjects = req.userProjectResources[0].projects
       let pagination = {};
-      let per_page = reqData.per_page || 10;
-      let page = reqData.current_page || 1;
-      if (page < 1) page = 1;
-      let offset = (page - 1) * per_page;
-      let filters = {};
-      let {
-        quotationId,
-        serviceId,
-        quotationStatus,
-        priority,
-        archive,
-        location,
-        createdBy,
-        assignedBy,
-        requestedBy,
-        quotationFrom,
-        quotationTo,
-        quotationDueFrom,
-        quotationDueTo,
-        completedBy,
-        completedFrom,
-        completedTo,
-        assingedTo
-      } = req.body;
 
-      if (quotationId) {
-        filters["quotations.id"] = quotationId;
-      }
-      if (serviceId) {
-        filters["service_requests.id"] = serviceId;
-      }
-      if (quotationStatus) {
-        filters["quotations.quotationStatus"] = quotationStatus;
-      }
-      if (priority) {
-        filters["service_requests.priority"] = priority;
-      }
-      if (archive) {
-        filters["service_requests.archive"] = archive;
-      }
-      if (location) {
-        filters["service_requests.location"] = location;
-      }
-      if (createdBy) {
-        filters["quotations.createdBy"] = createdBy;
-      }
-      if (assignedBy) {
-        filters["quotations.createdBy"] = assignedBy;
-      }
+      [rows] = await Promise.all([
 
-      if (requestedBy) {
-        filters["service_requests.requestedBy"] = requestedBy;
-      }
-      if (quotationFrom && quotationTo) {
-        quotationFrom = new Date(quotationFrom).getTime();
-        quotationTo = new Date(quotationTo).getTime();
-      }
-      if (quotationDueFrom && quotationDueTo) {
-        quotationDueFrom = quotationDueFrom;
-        quotationDueTo = quotationDueTo;
-      }
-      if (completedBy) {
-        filters["quotations.completedBy"] = completedBy;
-      }
-      if (completedFrom && completedTo) {
-        completedFrom = completedFrom;
-        completedTo = completedTo;
-      }
-      if (assingedTo) {
-        filters["users.name"] = assingedTo;
-      }
+        knex
+          //.distinct('quotations.id')
+          .from("quotations")
+          .leftJoin('companies', 'quotations.companyId', 'companies.id')
+          .leftJoin('projects', 'quotations.projectId', 'projects.id')
+          .leftJoin('buildings_and_phases', 'quotations.buildingId', 'buildings_and_phases.id')
+          .leftJoin('floor_and_zones', 'quotations.floorId', 'floor_and_zones.id')
+          .leftJoin('property_units', 'quotations.unitId', 'property_units.id')
+          .leftJoin(
+            "service_requests",
+            "quotations.serviceRequestId",
+            "service_requests.id"
+          )
+          .leftJoin("users", "quotations.createdBy", "users.id")
+          .leftJoin(
+            "service_problems",
+            "service_requests.id",
+            "service_problems.serviceRequestId"
+          )
+          .leftJoin(
+            "requested_by",
+            "service_requests.requestedBy",
+            "requested_by.id"
+          )
+          .leftJoin(
+            "incident_categories",
+            "service_problems.categoryId",
+            "incident_categories.id"
+          )
+          .select([
+            "quotations.id as Q_ID",
+            "quotations.serviceRequestId as SERVICE_REQUEST_ID",
+            "service_requests.description as DESCRIPTION",
+            //"service_requests.id as SRID",
+            //"service_requests.priority as PRIORITY",
+            //"companies.companyName",
+            //"projects.projectName",
+            "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
+            "buildings_and_phases.description as BUILDING_NAME",
+            //"floor_and_zones.floorZoneCode",
+            "property_units.unitNumber as UNIT_NUMBER",
+            "property_units.description as UNIT_DESCRIPTION",
+            //"assignUser.name as Tenant Name",
+            //"quotations.quotationStatus as Status",
+            //"quotations.createdAt as Date Created",
+            //"incident_categories.descriptionEng as problemDescription",
+            //"requested_by.name as requestedBy",
+            //"user_house_allocation",
+            //"property_units.id as unitId"
 
-      if (_.isEmpty(filters)) {
-        [total, rows] = await Promise.all([
-          knex
-            .count("* as count")
-            .from("quotations")
-            .innerJoin(
-              "service_requests",
-              "quotations.serviceRequestId",
-              "service_requests.id"
-            )
-            .select(["quotations.id as id"])
-            .groupBy(["quotations.id", "service_requests.id"]),
-          knex
-            .from("quotations")
-            .innerJoin(
-              "service_requests",
-              "quotations.serviceRequestId",
-              "service_requests.id"
-            )
-            .select([
-              "quotations.id as Q Id",
-              "service_requests.description as Description",
-              "service_requests.serviceType as Type",
-              "service_requests.priority as Priority",
-              "quotations.createdBy as Created By",
-              "quotations.quotationStatus as Status",
-              "quotations.createdAt as Date Created"
-            ])
-            .offset(offset)
-            .limit(per_page)
-        ]);
+          ])
+          .where("quotations.orgId", req.orgId)
+          .whereIn('quotations.projectId', accessibleProjects)
+          .havingNotNull('quotations.quotationStatus')
+          .groupBy(["quotations.id", "service_requests.id", "users.id", "companies.companyName",
+            "projects.projectName",
+            "buildings_and_phases.buildingPhaseCode",
+            "floor_and_zones.floorZoneCode",
+            "property_units.unitNumber",
+            "requested_by.id",
+            "service_problems.id",
+            "incident_categories.id",
+            "incident_categories.descriptionEng",
+            //"assignUser.id",
+            // "assignUser.name",
+            //"user_house_allocation.id",
+            "buildings_and_phases.description",
+            // "user_house_allocation.userId",
+            "property_units.id"
+          ])
+          .orderBy('quotations.id', 'desc')
+      ]);
+
+      // let tetantResult;
+      // let houseResult;
+      // let Parallel = require('async-parallel');
+      // pagination.data = await Parallel.map(rows, async pd => {
+
+      //   houseResult = await knex.from('user_house_allocation').select('userId').where({ houseId: pd.unitId }).first().orderBy('id', 'desc')
+
+      //   if (houseResult) {
+      //     tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
+      //     return {
+      //       ...pd,
+      //       "Tenant Name": tetantResult.name
+      //     }
+      //   } else {
+      //     return {
+      //       ...pd,
+      //       "Tenant Name": ''
+      //     }
+      //   }
+      // })
+
+      let tempraryDirectory = null;
+      let bucketName = null;
+      if (process.env.IS_OFFLINE) {
+        bucketName = 'sls-app-resources-bucket';
+        tempraryDirectory = 'tmp/';
       } else {
-        filters = _.omitBy(filters, val =>
-          val === "" || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val)
-            ? true
-            : false
-        );
-        try {
-          [total, rows] = await Promise.all([
-            knex
-              .count("* as count")
-              .from("quotations")
-              .innerJoin(
-                "service_requests",
-                "quotations.serviceRequestId",
-                "service_requests.id"
-              )
-              .innerJoin(
-                "assigned_service_team",
-                "service_requests.id",
-                "assigned_service_team.entityId"
-              )
-              .innerJoin("users", "assigned_service_team.userId", "users.id")
-              .select(["quotations.id as id"])
-              .where(qb => {
-                qb.where(filters);
-                if (quotationFrom && quotationTo) {
-                  qb.whereBetween("quotations.createdAt", [
-                    quotationFrom,
-                    quotationTo
-                  ]);
-                }
-              })
-              .groupBy([
-                "quotations.id",
-                "service_requests.id",
-                "assigned_service_team.id",
-                "users.id"
-              ]),
-            knex
-              .from("quotations")
-              .innerJoin(
-                "service_requests",
-                "quotations.serviceRequestId",
-                "service_requests.id"
-              )
-              .innerJoin(
-                "assigned_service_team",
-                "service_requests.id",
-                "assigned_service_team.entityId"
-              )
-              .innerJoin("users", "assigned_service_team.userId", "users.id")
-
-              .select([
-                "quotations.id as Q Id",
-                "service_requests.description as Description",
-                "service_requests.serviceType as Type",
-                "service_requests.priority as Priority",
-                "quotations.createdBy as Created By",
-                "quotations.quotationStatus as Status",
-                "quotations.createdAt as Date Created"
-              ])
-              .where(qb => {
-                qb.where(filters);
-                if (quotationFrom && quotationTo) {
-                  qb.whereBetween("quotations.createdAt", [
-                    quotationFrom,
-                    quotationTo
-                  ]);
-                }
-              })
-              .offset(offset)
-              .limit(per_page)
-          ]);
-        } catch (e) {
-          // Error
-        }
+        tempraryDirectory = '/tmp/';
+        bucketName = process.env.S3_BUCKET_NAME;
       }
+
+      //res.json(rows)
 
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-      var ws = XLSX.utils.json_to_sheet(rows);
+      var ws;
+      if (rows && rows.length) {
+        ws = XLSX.utils.json_to_sheet(rows);
+      } else {
+        ws = XLSX.utils.json_to_sheet([
+          {
+            Q_ID: "",
+            SERVICE_REQUEST_ID: "",
+            DESCRIPTION: "",
+            BUILDING_PHASE_CODE: "",
+            BUILDING_NAME:"",
+            UNIT_NUMBER: "",
+            UNIT_DESCRIPTION:""
+          }
+        ]);
+      }
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename = "uploads/Quotation-" + Date.now() + ".csv";
-      let check = XLSX.writeFile(wb, filename);
+      let filename = "QuotationData-" + Date.now() + ".csv";
+      let filepath = tempraryDirectory + filename;
+      let check = XLSX.writeFile(wb, filepath);
+      const AWS = require('aws-sdk');
 
-      return res.status(200).json({
-        data: rows,
-        message: "Quotation Data Export Successfully!"
-      });
+      fs.readFile(filepath, function (err, file_buffer) {
+        var s3 = new AWS.S3();
+        var params = {
+          Bucket: bucketName,
+          Key: "Export/Quotation/" + filename,
+          Body: file_buffer,
+          ACL: 'public-read'
+        }
+        s3.putObject(params, function (err, data) {
+          if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            res.status(500).json({
+              errors: [
+                { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+              ],
+            });
+            //next(err);
+          } else {
+            console.log("File uploaded Successfully");
+
+            let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Quotation/" + filename;
+            res.status(200).json({
+              data: rows,
+              message: "Quotation data export successfully!",
+              url: url
+            });
+          }
+        });
+      })
+
     } catch (err) {
+      console.log("[controllers][exportQuotation][list] :  Error", err);
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+
   },
   updateQuotationNotes: async (req, res) => {
     // Define try/catch block
