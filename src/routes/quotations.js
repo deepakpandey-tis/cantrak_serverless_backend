@@ -32,6 +32,7 @@ router.post('/get-quotation-list', authMiddleware.isAuthenticated, roleMiddlewar
 // Quotation Data Export
 router.post('/export-quotation', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
     resourceAccessMiddleware.isCMAccessible, quotationController.exportQuotation)
+    
 router.post('/update-quotation-notes', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
     resourceAccessMiddleware.isCMAccessible, quotationController.updateQuotationNotes)
 router.post('/get-quotation-notes-list', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
