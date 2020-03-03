@@ -60,6 +60,7 @@ const facilityBookingRouter = require('./facility_booking');
 const serviceUserDetailsRouter = require('./users/servicedetails');
 const userDashboardRouter = require('./users/dashboard');
 const allUsersRouter = require('./administration-features/all-users');
+const remarksRouter = require('./remarks');
 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
@@ -129,5 +130,6 @@ router.use('/invoice',invoiceRouter)
 router.use('/users/servicedetails', serviceUserDetailsRouter);
 router.use('/facility_booking', facilityBookingRouter);
 router.use('/users/dashboard', userDashboardRouter);
+router.use('/remarks', remarksRouter);
 
 module.exports = router;
