@@ -69,6 +69,14 @@ const companyController = {
             .optional(),
           orgId: Joi.number()
             .allow("")
+            .optional(),
+            telephone: Joi.number()
+            .allow("")
+            .allow(null)
+            .optional(),
+            fax: Joi.string()
+            .allow("")
+            .allow(null)
             .optional()
         });
 
