@@ -587,7 +587,7 @@ const customerController = {
           allowLogin: Joi.boolean().allow("").allow(null).optional(),
           password: Joi.string().allow("").allow(null).optional(),
           id: Joi.string().required(),
-          fax: Joi.string().required(),
+          fax: Joi.string().allow("").allow(null).optional(),
         });
 
         const result = Joi.validate(payload, schema);
