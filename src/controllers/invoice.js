@@ -1,6 +1,16 @@
 const Joi = require("@hapi/joi");
 const moment = require("moment");
+const uuidv4 = require("uuid/v4");
+var jwt = require("jsonwebtoken");
+const _ = require("lodash");
 const knex = require("../db/knex");
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
+
+const XLSX = require("xlsx");
+const fs = require("fs");
+const path = require("path");
+const request = require("request");
 
 const invoiceController = {
 
@@ -48,7 +58,7 @@ const invoiceController = {
             if (entityType == 'service_requests') {
                 invoiceDetail = await knex("service_orders").where({
                     serviceRequestId: entityId
-                }).select('invoiceData', 'id').first();               
+                }).select('invoiceData', 'id').first();
             }
 
             res.status(200).json({
@@ -269,7 +279,9 @@ const invoiceController = {
                     "users.name",
                     "users.mobileNo",
                     "users.email",
-                    "users.location"
+                    "users.location",
+                    "users.taxId",
+                    "users.fax"
                 )
                 .where({
                     "user_house_allocation.houseId": serviceOrderMaster.houseId
@@ -284,6 +296,13 @@ const invoiceController = {
                 .leftJoin("floor_and_zones", "property_units.floorZoneId", "=", "floor_and_zones.id")
                 .select(
                     "companies.companyName",
+                    "companies.descriptionEng",
+                    "companies.description1",
+                    "companies.companyAddressEng",
+                    "companies.companyAddressThai",
+                    "companies.telephone",
+                    "companies.fax",
+                    "companies.taxId",
                     "projects.project as projectCode",
                     "projects.projectName",
                     "buildings_and_phases.buildingPhaseCode",
@@ -301,7 +320,20 @@ const invoiceController = {
 
             console.log("PropertyInfo", propertyInfo);
 
-            userInfo = { ...tenantInfo, requesterInfo, propertyInfo, serviceMaster: serviceOrderMaster, surveyData: surveyOrderData, surveyOrderNotes: remarkNotes, teams:teamData }
+            let locationResult = await knex("location_tags")
+                .leftJoin("location_tags_master", "location_tags.locationTagId", "location_tags_master.id")
+                .where({
+                    "location_tags.entityType": "service_requests",
+                    "location_tags.entityId": serviceRequestId
+                })
+                .select("location_tags_master.title")
+            let tags = _.uniq(locationResult.map(v => v.title))//[userHouseId.houseId];
+
+            propertyInfo.locationTags = tags;
+            console.log("locationResult", tags);
+
+
+            userInfo = { ...tenantInfo, requesterInfo, propertyInfo, serviceMaster: serviceOrderMaster, surveyData: surveyOrderData, surveyOrderNotes: remarkNotes, teams: teamData }
             pagination.data = rows;
             pagination.tenant = userInfo;
 
