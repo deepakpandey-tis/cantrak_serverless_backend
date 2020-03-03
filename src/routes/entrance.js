@@ -17,4 +17,6 @@ router.post('/verify-user', entranceController.verifyUser);
 
 router.get('/me',  authMiddleware.isAuthenticated, entranceController.me);
 
+router.post('/change-password',  authMiddleware.isAuthenticated, entranceController.changePassword);
+
 module.exports = router;

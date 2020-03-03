@@ -131,6 +131,14 @@ const entranceController = {
 
                 login.user = _.omit(loginResult, ['password']);
 
+                if (checkResult) {
+                    login.user.organisationName = checkResult.organisationName;
+                } else{
+                    login.user.organisationName = "";
+                }
+
+
+
                 // An user can have atmost one application role
                 let userApplicationRole = await knex('application_user_roles').where({ userId: Number(loginResult.id) }).select('roleId', 'orgId').first();
                 switch (Number(userApplicationRole.roleId)) {
@@ -445,6 +453,67 @@ const entranceController = {
             message: "Login successfull"
         });
     },
+
+    changePassword: async (req, res) => {
+
+        try {
+
+            let payload = req.body;
+
+            const schema = Joi.object().keys({
+                newPassword: Joi.string().required(),
+                confirmPassword: Joi.string().required(),
+                id: Joi.string().required(),
+            })
+            const result = Joi.validate(payload, schema);
+
+            if (result && result.hasOwnProperty('error') && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: 'VALIDATION_ERROR', message: result.error.message }
+                    ],
+                });
+            }
+
+            if (payload.newPassword == payload.confirmPassword) {
+
+                let userResult = await knex.from('users').where({ id: payload.id }).first();
+                if (userResult) {
+
+                    let pass = await bcrypt.hash(payload.newPassword, saltRounds);
+
+                    let updateResult = await knex('users').update({ "password": pass }).where({ id: payload.id });
+
+                    res.status(200).json({
+                        data: {
+                            updateResult
+                        },
+                        message: "Password Change successfully!", pass
+                    });
+
+                }
+
+            } else {
+
+                return res.status(400).json({
+                    errors: [
+                        { code: 'PASSWORD_MATCH', message: "New password & confirm password does not match" }
+                    ],
+                });
+
+            }
+
+        } catch (err) {
+
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+
+        }
+
+    }
 };
 
 module.exports = entranceController;
