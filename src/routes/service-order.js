@@ -52,4 +52,6 @@ router.post('/get-service-order-due-date', authMiddleware.isAuthenticated, roleM
 
 router.post('/update-appointment-status', authMiddleware.isAuthenticated, serviceOrderController.updateAppointmentStatus)
 
+router.post('/get-service-order-for-report', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isCMAccessible, serviceOrderController.getServiceOrderForReport)
+
 module.exports = router;
