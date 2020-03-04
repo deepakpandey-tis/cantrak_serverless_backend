@@ -6,6 +6,7 @@ const XLSX = require('xlsx');
 const fs = require("fs")
 const QRCode = require('qrcode')
 const uuid = require('uuid/v4')
+const moment = require('moment');
 
 
 const partsController = {
@@ -1396,7 +1397,7 @@ const partsController = {
                         PART_CATEGORY_CODE: "",
                         COMPANY_ID: "",
                         quantity: "",
-                        unit_cost:"",
+                        unit_cost: "",
                     }
                 ]);
             }
@@ -2151,6 +2152,96 @@ const partsController = {
                 },
                 message: 'New part id generated successfully!'
             })
+        } catch (err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    /* STOCK REPORT*/
+    stockReport: async (req, res) => {
+        try {
+
+            let payload = req.body;
+            let fromDate = payload.fromDate;
+            let toDate = payload.toDate;
+            let fromNewDate = moment(fromDate).startOf('date').format();
+            let toNewDate = moment(toDate).endOf('date', 'days').format();
+            let fromTime = new Date(fromNewDate).getTime();
+            let toTime = new Date(toNewDate).getTime();
+
+
+            let stockResult = await knex.from('part_ledger')
+                .leftJoin('part_master', 'part_ledger.partId', 'part_master.id')
+                .select([
+                    'part_ledger.*',
+                    'part_master.partName',
+                    'part_master.partCode',
+                ])
+                .where({ 'part_ledger.orgId': req.orgId })
+                .whereBetween('part_ledger.createdAt', [fromTime, toTime])
+                .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
+
+
+
+            const Parallel = require('async-parallel')
+            const final = await Parallel.map(_.uniqBy(stockResult, 'partId'), async (st) => {
+                let balance = await knex.from('part_ledger')
+                    .sum('quantity as totalQuantity')
+                    .where({ partId: st.partId, orgId: req.orgId })
+                    .whereBetween('part_ledger.createdAt', [fromTime, toTime]).first()
+
+                let stockData = await knex.from('part_ledger')
+                    .where({ 'part_ledger.orgId': req.orgId, partId: st.partId })
+                    .whereBetween('part_ledger.createdAt', [fromTime, toTime])
+                    .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
+
+                    let openignBalance  = balance.totalQuantity;
+                
+
+                let updatedStockDataWithInAndOut = [];
+               
+                for(let d of stockData){
+                    let i = 0;
+                    let o = 0;
+                    let bal = 0
+                    if( d.quantity && d.quantity.includes('-') ){
+                        o =  Number(d.quantity)
+                    //    balance.totalQuantity = Number(balance.totalQuantity) + o
+                        bal = Number(balance.totalQuantity) + o
+                    } else {
+
+                        i =  Number(d.quantity)
+                    //    balance.totalQuantity = Number(balance.totalQuantity) + i
+                        bal = Number(balance.totalQuantity) + i
+                       
+                    }
+                    updatedStockDataWithInAndOut.push({...d,in:i,out:o,balance:bal})
+                }   
+
+                
+
+                return {
+                    partId: st.partId,
+                    partCode: st.partCode,
+                    partName: st.partName,
+                    openingBalance: openignBalance,
+                    stockData:updatedStockDataWithInAndOut
+                }
+            })
+
+
+            res.status(200).json({
+                data: {
+                    stockReport: final,
+                    fromNewDate,
+                    toNewDate,
+                    fromTime,
+                    toTime,
+                },
+                message: "Stock report Successfully!"
+            })
+
         } catch (err) {
             return res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]

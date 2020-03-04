@@ -732,7 +732,9 @@ const assetController = {
           "asset_location.startDate as startDate",
           "asset_location.endDate as endDate",
           "asset_location.id as assetLocationId",
-          "asset_location.houseId as houseId"
+          "asset_location.houseId as houseId",
+          "companies.companyId as companyCode",
+          "projects.project as projectCode",
         ])
         .where({ assetId: id, 'asset_location.orgId': req.orgId }).orderBy('asset_location.startDate','desc');
       //   .where({ orgId: req.orgId });

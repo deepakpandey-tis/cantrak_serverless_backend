@@ -241,4 +241,10 @@ roleMiddleware.parseUserPermission,
 resourceAccessMiddleware.isPartAccessible,
 partsController.generateNewPartId)
 
+router.post('/stock-report',
+authMiddleware.isAuthenticated,
+roleMiddleware.parseUserPermission,
+resourceAccessMiddleware.isPartAccessible,
+partsController.stockReport)
+
 module.exports = router;
