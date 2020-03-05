@@ -1046,7 +1046,12 @@ const companyController = {
         companyArr1 = companyHavingPU1.map(v => v.companyId)
         result = await knex("companies")
           .innerJoin('property_units', 'companies.id', 'property_units.companyId')
-          .select("companies.id", "companies.companyId", "companies.companyName as CompanyName")
+          .select("companies.id", 
+          "companies.companyId",
+           "companies.companyName as CompanyName", 
+           "companies.logoFile as logoFile",
+           "companies.description1"
+           )
           .where({ 'companies.isActive': true, 'companies.orgId': req.orgId,'property_units.type':2 })
           .whereIn('companies.id', companyArr1)
           .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
@@ -1070,7 +1075,12 @@ const companyController = {
         companyArr1 = companyHavingPU1.map(v => v.companyId)
         result = await knex("companies")
           .innerJoin('property_units', 'companies.id', 'property_units.companyId')
-          .select("companies.id", "companies.companyId", "companies.companyName as CompanyName")
+          .select("companies.id", 
+          "companies.companyId",
+           "companies.companyName as CompanyName", 
+           "companies.logoFile as logoFile",
+            "companies.description1"
+           )
           .where({ 'companies.isActive': true, 'companies.orgId': req.orgId })
           .whereIn('companies.id', companyArr1)
           .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
@@ -1090,7 +1100,12 @@ const companyController = {
         companyArr1 = companyHavingPU1.map(v => v.companyId)
           result =await knex("companies")
             .innerJoin('property_units','companies.id','property_units.companyId')
-              .select("companies.id", "companies.companyId", "companies.companyName as CompanyName")
+            .select("companies.id", 
+            "companies.companyId",
+             "companies.companyName as CompanyName", 
+             "companies.logoFile as logoFile",
+              "companies.description1"
+             )
             .where({ 'companies.isActive': true, 'companies.orgId': req.orgId,'property_units.type':1 })
               .whereIn('companies.id',companyArr1)
             .groupBy(['companies.id', 'companies.companyName','companies.companyId'])
