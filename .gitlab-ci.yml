@@ -1,0 +1,26 @@
+image: trion/ng-cli-karma
+
+stages:
+  - deploy
+
+cache:
+  key: "21112019"
+  paths:
+    - node_modules/
+
+
+deploy_master:
+  stage: deploy
+  environment: Production
+  only:
+    - master
+  
+
+  script:
+    - node -v
+    - rm ./package-lock.json
+    - npm install -g serverless
+    - npm install
+    - sls config credentials --profile tis-dev --provider aws --key $AWS_KEY --secret $AWS_SECRET
+    - NODE_ENV=dev sls deploy --stage dev --aws-profile tis-dev --config serverless.prod.yml
+    - echo 'Success'

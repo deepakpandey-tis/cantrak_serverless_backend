@@ -1,14 +1,5 @@
-// var pg = require('pg');
-// var user = "alcanzar";
-// var password = "alcanzar123";
-// var database = "tisdatabse";
-// // var host = "tisdbinstance.cqqiam9knhtw.us-east-2.rds.amazonaws.com";
-// var host = '192.168.1.44';
-// var port = "5432";
 
-
-
-const knex = require('knex')({
+module.exports = require('knex')({
     client: 'pg',
     connection: {
         host: process.env.DB_HOST,
@@ -18,25 +9,32 @@ const knex = require('knex')({
     },
     debug: process.env.NODE_ENV === 'local' ? true : false,
     pool: {
-        min: 2,
-        max: 10,
-        afterCreate: function (conn, done) {
-            // in this example we use pg driver's connection API
-            conn.query('SET timezone="UTC";', function (err) {
-                if (err) {
-                    // first query failed, return error and don't try to make next query
-                    console.error('DB Connection Failed');
-                    done(err, conn);
-                } else {
-                    console.log('DB Connection Successfull');
-                    // conn.query('SELECT set_limit(0.01);', function (err) {
-                    //     // if err is not falsy, connection is discarded from pool
-                    //     // if connection aquire was triggered by a query the error is passed to query promise
-                    //     done(err, conn);
-                    // });
-                    done(err, conn);
-                }
-            });
+        min: 1,
+        max: 5,
+        afterCreate: async (conn, done) => {
+            // await conn.query('SET timezone="UTC";');
+            if (process.env.NODE_ENV === 'local') {
+            const oldConnections = await conn.query(`WITH inactive_connections AS (
+                SELECT
+                    pid,
+                    rank() over (partition by client_addr order by backend_start ASC) as rank
+                FROM 
+                    pg_stat_activity
+                WHERE
+                    pid <> pg_backend_pid( )
+                AND
+                    application_name !~ '()(?:psql)|(?:pgAdmin.+)|(?:DBeaver.+)'
+                AND
+                    datname = current_database() 
+                AND
+                    state in ('idle', 'idle in transaction', 'idle in transaction (aborted)', 'disabled') 
+                AND
+                    current_timestamp - state_change > interval '1 seconds' 
+            )
+            select pg_terminate_backend(pid) from inactive_connections where rank > 1;`);
+                console.log('[Knex][Init][Pool] After Create, Closed Old Connections', oldConnections.rows);
+            }
+            done(null, conn);
         }
     },
     migrations: {
@@ -47,6 +45,4 @@ const knex = require('knex')({
         directory: __dirname + '/src/db/seeds'
     }
 });
-
-module.exports = knex;
 
