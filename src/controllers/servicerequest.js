@@ -2891,7 +2891,8 @@ const serviceRequestController = {
         })
         .whereIn('service_requests.projectId', accessibleProjects)
         .distinct('service_requests.id')
-        .orderBy('service_requests.id', 'desc')
+        .orderBy('incident_categories.descriptionEng', 'asc')
+        .orderBy('service_requests.createdAt', 'desc')
 
 
         const Parallel = require('async-parallel')
