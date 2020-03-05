@@ -2757,6 +2757,7 @@ const serviceOrderController = {
                     "satisfaction.descriptionEng as descriptionEnglish",
                     "satisfaction.descriptionThai as descriptionThai"
                 ])
+                .orderBy('satisfaction.id', 'ASC')
 
             pagination = rows;
 
