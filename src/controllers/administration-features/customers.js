@@ -319,7 +319,7 @@ const customerController = {
         ]);
       }
 
-      let count = _.unionBy(total, 'email').length;
+      let count = total.length;
       pagination.total = count;
       pagination.per_page = per_page;
       pagination.offset = offset;
@@ -327,7 +327,7 @@ const customerController = {
       pagination.last_page = Math.ceil(count / per_page);
       pagination.current_page = page;
       pagination.from = offset;
-      pagination.data = _.unionBy(rows, 'email');
+      pagination.data = rows;
 
       return res.status(200).json({
         data: {
