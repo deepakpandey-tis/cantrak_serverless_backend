@@ -312,7 +312,9 @@ const quotationsController = {
             "companies.companyName",
             "projects.projectName",
             "buildings_and_phases.buildingPhaseCode",
+            "buildings_and_phases.description as buildingPhaseDescription",
             "floor_and_zones.floorZoneCode",
+            "floor_and_zones.description as floorZoneDescription",
             "property_units.unitNumber",
             "companies.id as companyId",
             "projects.id as projectId",
@@ -324,7 +326,8 @@ const quotationsController = {
             "authUser.name as createdBy",
             "organisation_roles.name as userRole",
             "quotations.invoiceData as invoiceData",
-            "quotations.quotationValidityDate as validityDate"
+            "quotations.quotationValidityDate as validityDate",
+            "property_units.description as propertyUnitDescription"
           )
           .where({ "quotations.id": quotationRequestId });
         console.log(
@@ -549,9 +552,9 @@ const quotationsController = {
       if (serviceId) {
         filters["service_requests.id"] = serviceId;
       }
-      if (quotationStatus) {
-        filters["quotations.quotationStatus"] = quotationStatus;
-      }
+      // if (quotationStatus) {
+      //   filters["quotations.quotationStatus"] = quotationStatus;
+      // }
       if (priority) {
         filters["service_requests.priority"] = priority;
       }
@@ -636,6 +639,9 @@ const quotationsController = {
             if (quotationId) {
               qb.where('quotations.id', quotationId)
             }
+            if (quotationStatus) {
+              qb.where('quotations.quotationStatus', quotationStatus)
+            }
             if (description) {
               qb.where('service_requests.description', 'iLIKE', `%${description}%`)
             }
@@ -644,7 +650,7 @@ const quotationsController = {
             }
           })
           .whereIn('quotations.projectId', accessibleProjects)
-          .havingNotNull('quotations.quotationStatus')
+          // .havingNotNull('quotations.quotationStatus')
           .groupBy([
             "quotations.id",
             "service_requests.id",
@@ -727,6 +733,10 @@ const quotationsController = {
             if (serviceId) {
               qb.where('service_requests.id', serviceId)
             }
+            if (quotationStatus) {
+              qb.where('quotations.quotationStatus', quotationStatus)
+            }
+
             if (quotationId) {
               qb.where('quotations.id', quotationId)
             }
@@ -739,7 +749,7 @@ const quotationsController = {
             }
           })
           .whereIn('quotations.projectId', accessibleProjects)
-          .havingNotNull('quotations.quotationStatus')
+          // .havingNotNull('quotations.quotationStatus')
           .groupBy(["quotations.id", "service_requests.id", "users.id", "companies.companyName",
             "projects.projectName",
             "buildings_and_phases.buildingPhaseCode",
@@ -1468,7 +1478,7 @@ const quotationsController = {
             .into("quotations");
 
           message = "Quotation approved successfully !";
-        } else if (quotationPayload.status == 'Canceled') {
+        } else if (quotationPayload.status == 'Cancelled') {
           // Now canceled quotation
           approveQuotation = await knex
             .update({

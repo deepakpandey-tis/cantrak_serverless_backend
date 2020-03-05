@@ -2743,6 +2743,36 @@ const serviceOrderController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
+    },
+    // Get List of Satisfaction
+
+    getSatisfactionList: async (req, res) => {
+        try {
+            let pagination = {};
+            let rows = await knex("satisfaction")
+                .where({ "satisfaction.orgId": req.orgId })
+                .select([
+                    "satisfaction.id",
+                    "satisfaction.satisfactionCode as satisfactionCode",
+                    "satisfaction.descriptionEng as descriptionEnglish",
+                    "satisfaction.descriptionThai as descriptionThai"
+                ])
+
+            pagination = rows;
+
+            res.status(200).json({
+                data: {
+                    satisfaction: pagination
+                },
+                message: "Satisfaction list successfully!"
+            });
+        } catch (err) {
+            console.log("[controllers][satisfaction][getSatisfactionList] :  Error", err);
+            //trx.rollback
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
     }
 
 }
