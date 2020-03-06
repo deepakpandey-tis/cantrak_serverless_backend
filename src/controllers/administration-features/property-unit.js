@@ -572,7 +572,7 @@ const propertyUnitController = {
               "property_units.productCode as PRODUCT_CODE"
 
             ])
-            .where({ "property_units.orgId": orgId })
+            .where({ "property_units.orgId": orgId ,type:1})
             .where({ "floor_and_zones.isActive": true })
         ]);
       } else {
@@ -613,7 +613,8 @@ const propertyUnitController = {
             ])
             .where({
               "property_units.companyId": companyId,
-              "property_units.orgId": orgId
+              "property_units.orgId": orgId,
+              type:1
             })
             .where({ "floor_and_zones.isActive": true })
         ]);
