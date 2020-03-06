@@ -69,7 +69,7 @@ const serviceRequestController = {
         //console.log('[controllers][entrance][signup]: Expiry Time', tokenExpiryTime);
 
         const insertData = {
-          moderationStatus: 0,
+          moderationStatus: false,
           isActive: "true",
           createdAt: currentTime,
           updatedAt: currentTime,
@@ -208,139 +208,139 @@ const serviceRequestController = {
       });
     }
   },
-  updateServiceRequest: async (req, res) => {
-    try {
-      let serviceRequest = null;
-      let images = null;
+  // updateServiceRequest: async (req, res) => {
+  //   try {
+  //     let serviceRequest = null;
+  //     let images = null;
 
-      await knex.transaction(async trx => {
-        const serviceRequestPayload = _.omit(req.body, ["images"]);
-        images = req.body.images;
-        console.log("[controllers][service][request]", serviceRequestPayload);
+  //     await knex.transaction(async trx => {
+  //       const serviceRequestPayload = _.omit(req.body, ["images"]);
+  //       images = req.body.images;
+  //       console.log("[controllers][service][request]", serviceRequestPayload);
 
-        // validate keys
-        const schema = Joi.object().keys({
-          id: Joi.number().required(),
-          description: Joi.string().required(),
-          requestFor: Joi.string().required(),
-          houseId: Joi.string().required(),
-          commonId: Joi.string().required(),
-          serviceType: Joi.string().required(),
-          requestedBy: Joi.string().required(),
-          priority: Joi.string().required(),
-          location: Joi.string().required(),
-          recurrenceType: Joi.string().required(),
-          serviceDate: Joi.array().required()
-        });
+  //       // validate keys
+  //       const schema = Joi.object().keys({
+  //         id: Joi.number().required(),
+  //         description: Joi.string().required(),
+  //         requestFor: Joi.string().required(),
+  //         houseId: Joi.string().required(),
+  //         commonId: Joi.string().required(),
+  //         serviceType: Joi.string().required(),
+  //         requestedBy: Joi.string().required(),
+  //         priority: Joi.string().required(),
+  //         location: Joi.string().required(),
+  //         recurrenceType: Joi.string().required(),
+  //         serviceDate: Joi.array().required()
+  //       });
 
-        const result = Joi.validate(serviceRequestPayload, schema);
-        console.log("[controllers][service][request]: JOi Result", result);
+  //       const result = Joi.validate(serviceRequestPayload, schema);
+  //       console.log("[controllers][service][request]: JOi Result", result);
 
-        if (result && result.hasOwnProperty("error") && result.error) {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
-          });
-        }
+  //       if (result && result.hasOwnProperty("error") && result.error) {
+  //         return res.status(400).json({
+  //           errors: [
+  //             { code: "VALIDATION_ERROR", message: result.error.message }
+  //           ]
+  //         });
+  //       }
 
-        // Insert in service request table,
-        const currentTime = new Date().getTime();
+  //       // Insert in service request table,
+  //       const currentTime = new Date().getTime();
 
-        const updateServiceReq = await knex
-          .update({
-            description: serviceRequestPayload.description,
-            requestFor: serviceRequestPayload.requestFor,
-            houseId: serviceRequestPayload.houseId,
-            commonId: serviceRequestPayload.commonId,
-            serviceType: serviceRequestPayload.serviceType,
-            requestedBy: serviceRequestPayload.requestedBy,
-            priority: serviceRequestPayload.priority,
-            location: serviceRequestPayload.location,
-            updatedAt: currentTime,
-            createdBy: req.me.id,
-            isActive: true,
-            moderationStatus: true,
-            serviceStatusCode: "O"
-          })
-          .where({ id: serviceRequestPayload.id })
-          .returning(["*"])
-          .transacting(trx)
-          .into("service_requests");
+  //       const updateServiceReq = await knex
+  //         .update({
+  //           description: serviceRequestPayload.description,
+  //           requestFor: serviceRequestPayload.requestFor,
+  //           houseId: serviceRequestPayload.houseId,
+  //           commonId: serviceRequestPayload.commonId,
+  //           serviceType: serviceRequestPayload.serviceType,
+  //           requestedBy: serviceRequestPayload.requestedBy,
+  //           priority: serviceRequestPayload.priority,
+  //           location: serviceRequestPayload.location,
+  //           updatedAt: currentTime,
+  //           createdBy: req.me.id,
+  //           isActive: true,
+  //           moderationStatus: true,
+  //           serviceStatusCode: "O"
+  //         })
+  //         .where({ id: serviceRequestPayload.id })
+  //         .returning(["*"])
+  //         .transacting(trx)
+  //         .into("service_requests");
 
-        console.log(
-          "[controllers][service][request]: Update Data",
-          updateServiceReq
-        );
+  //       console.log(
+  //         "[controllers][service][request]: Update Data",
+  //         updateServiceReq
+  //       );
 
-        serviceRequest = updateServiceReq[0];
-        serviceOrders = [];
+  //       serviceRequest = updateServiceReq[0];
+  //       serviceOrders = [];
 
-        //
-        if (images && images.length) {
-          images = req.body.images.map(image => ({
-            ...image,
-            createdAt: currentTime,
-            updatedAt: currentTime,
-            entityId: serviceRequestPayload.id,
-            entityType: "service_requests"
-          }));
-          let addedImages = await knex
-            .insert(images)
-            .returning(["*"])
-            .transacting(trx)
-            .into("images");
-          images = addedImages;
-        }
+  //       //
+  //       if (images && images.length) {
+  //         images = req.body.images.map(image => ({
+  //           ...image,
+  //           createdAt: currentTime,
+  //           updatedAt: currentTime,
+  //           entityId: serviceRequestPayload.id,
+  //           entityType: "service_requests"
+  //         }));
+  //         let addedImages = await knex
+  //           .insert(images)
+  //           .returning(["*"])
+  //           .transacting(trx)
+  //           .into("images");
+  //         images = addedImages;
+  //       }
 
-        // Insert into service orders table with selected recrence date
-        let dates = serviceRequestPayload.serviceDate;
-        console.log("dates", dates);
-        let countDates = dates.length;
-        console.log("countDates", countDates);
+  //       // Insert into service orders table with selected recrence date
+  //       let dates = serviceRequestPayload.serviceDate;
+  //       console.log("dates", dates);
+  //       let countDates = dates.length;
+  //       console.log("countDates", countDates);
 
-        for (i = 0; i < countDates; i++) {
-          let newdate = dates[i]
-            .split("-")
-            .reverse()
-            .join("-");
-          let serviceDateExist = await knex("service_orders").where({
-            orderDueDate: newdate
-          });
-          if (serviceDateExist <= 0) {
-            let serviceOrderResult = await knex
-              .insert({
-                serviceRequestId: serviceRequestPayload.id,
-                recurrenceType: serviceRequestPayload.recurrenceType,
-                orderDueDate: newdate,
-                createdAt: currentTime,
-                updatedAt: currentTime
-              })
-              .returning(["*"])
-              .transacting(trx)
-              .into("service_orders");
-            serviceOrders.push(serviceOrderResult[0]);
-          }
-        }
-        trx.commit;
-      });
+  //       for (i = 0; i < countDates; i++) {
+  //         let newdate = dates[i]
+  //           .split("-")
+  //           .reverse()
+  //           .join("-");
+  //         let serviceDateExist = await knex("service_orders").where({
+  //           orderDueDate: newdate
+  //         });
+  //         if (serviceDateExist <= 0) {
+  //           let serviceOrderResult = await knex
+  //             .insert({
+  //               serviceRequestId: serviceRequestPayload.id,
+  //               recurrenceType: serviceRequestPayload.recurrenceType,
+  //               orderDueDate: newdate,
+  //               createdAt: currentTime,
+  //               updatedAt: currentTime
+  //             })
+  //             .returning(["*"])
+  //             .transacting(trx)
+  //             .into("service_orders");
+  //           serviceOrders.push(serviceOrderResult[0]);
+  //         }
+  //       }
+  //       trx.commit;
+  //     });
 
-      let returnResponse = { serviceRequest, serviceOrder: serviceOrders };
+  //     let returnResponse = { serviceRequest, serviceOrder: serviceOrders };
 
-      res.status(200).json({
-        data: {
-          response: { ...returnResponse, serviceRequestImages: images }
-        },
-        message: "Service request updated successfully !"
-      });
-    } catch (err) {
-      console.log("[controllers][service][request] :  Error", err);
-      //trx.rollback
-      res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-      });
-    }
-  },
+  //     res.status(200).json({
+  //       data: {
+  //         response: { ...returnResponse, serviceRequestImages: images }
+  //       },
+  //       message: "Service request updated successfully !"
+  //     });
+  //   } catch (err) {
+  //     console.log("[controllers][service][request] :  Error", err);
+  //     //trx.rollback
+  //     res.status(500).json({
+  //       errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+  //     });
+  //   }
+  // },
   updateImages: async (req, res) => {
     try {
       let serviceRequest = null;
@@ -1999,6 +1999,7 @@ const serviceRequestController = {
             priority: priority,
             serviceStatusCode: payload.serviceStatusCode,
             orgId: orgId,
+            moderationStatus:true,
             createdAt: currentTime,
             updatedAt: currentTime,
             isCreatedFromSo: req.body.isSo ? true : false,
@@ -2017,6 +2018,7 @@ const serviceRequestController = {
             priority: priority,
             serviceStatusCode: payload.serviceStatusCode,
             orgId: orgId,
+            moderationStatus:true,
             createdAt: currentTime,
             updatedAt: currentTime,
             isCreatedFromSo: req.body.isSo ? true : false,
@@ -2566,6 +2568,10 @@ const serviceRequestController = {
       let updateStatus = req.body.data.status;
       const currentTime = new Date().getTime();
       console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7', req.body)
+
+      if(updateStatus === 'A'){
+
+
       let quotationsAtached = await knex('quotations').select('id')
       .where({serviceRequestId:serviceRequestId,orgId:req.orgId})
       let assignedPartsResult = []
@@ -2619,9 +2625,32 @@ const serviceRequestController = {
         }
       }
 
-      const status = await knex("service_requests")
-        .update({ serviceStatusCode: updateStatus, updatedAt: currentTime })
+      await knex("service_requests")
+        .update({ serviceStatusCode: updateStatus, updatedAt: currentTime,approvedBy:req.me.id,approvedOn:currentTime })
         .where({ id: serviceRequestId });
+
+      }
+
+      if(updateStatus === 'COM'){
+        await knex("service_requests")
+          .update({ serviceStatusCode: updateStatus, updatedAt: currentTime, completedBy:req.me.id,completedOn:currentTime })
+          .where({ id: serviceRequestId });
+      }
+      if(updateStatus === 'C'){
+        await knex("service_requests")
+          .update({ serviceStatusCode: updateStatus, updatedAt: currentTime, cancelledBy:req.me.id,cancelledOn:currentTime })
+          .where({ id: serviceRequestId });
+      }
+      if(updateStatus === 'IP' || updateStatus === 'OH'){
+        await knex("service_requests")
+          .update({ serviceStatusCode: updateStatus, updatedAt: currentTime})
+          .where({ id: serviceRequestId });
+      }
+
+      // await knex("service_requests")
+      //   .update({ serviceStatusCode: updateStatus, updatedAt: currentTime })
+      //   .where({ id: serviceRequestId });
+
       return res.status(200).json({
         data: {
           status: updateStatus
