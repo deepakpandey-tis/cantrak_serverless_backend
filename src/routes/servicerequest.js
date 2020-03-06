@@ -16,8 +16,8 @@ router.post('/post-service-request', authMiddleware.isAuthenticated, roleMiddlew
 router.post('/add-service-problems', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
 	resourceAccessMiddleware.isCMAccessible,  serviceRequestController.addServiceProblems);
 
-router.post('/update-service-request', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-	resourceAccessMiddleware.isCMAccessible, serviceRequestController.updateServiceRequest);
+// router.post('/update-service-request', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
+// 	resourceAccessMiddleware.isCMAccessible, serviceRequestController.updateServiceRequest);
 
 router.post('/get-service-request-list', 
 			authMiddleware.isAuthenticated, 
