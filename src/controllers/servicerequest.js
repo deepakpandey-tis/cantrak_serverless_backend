@@ -72,7 +72,7 @@ const serviceRequestController = {
           moderationStatus: 0,
           orgId: req.orgId,
           isActive: "true",
-          createdAt: currentTime,
+          createdAt: currentTime, 
           updatedAt: currentTime,
           serviceStatusCode: 'O'
         };
