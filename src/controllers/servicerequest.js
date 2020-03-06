@@ -2566,6 +2566,7 @@ const serviceRequestController = {
     try {
       let serviceRequestId = req.body.data.serviceRequestId;
       let updateStatus = req.body.data.status;
+      let cancelReason = req.body.data.cancelReason;
       const currentTime = new Date().getTime();
       console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7', req.body)
 
@@ -2638,7 +2639,7 @@ const serviceRequestController = {
       }
       if(updateStatus === 'C'){
         await knex("service_requests")
-          .update({ serviceStatusCode: updateStatus, updatedAt: currentTime, cancelledBy:req.me.id,cancelledOn:currentTime })
+          .update({ serviceStatusCode: updateStatus, cancellationReason: cancelReason,  updatedAt: currentTime, cancelledBy:req.me.id,cancelledOn:currentTime })
           .where({ id: serviceRequestId });
       }
       if(updateStatus === 'IP' || updateStatus === 'OH'){
