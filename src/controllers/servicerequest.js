@@ -70,6 +70,7 @@ const serviceRequestController = {
 
         const insertData = {
           moderationStatus: 0,
+          orgId: req.orgId,
           isActive: "true",
           createdAt: currentTime,
           updatedAt: currentTime,
