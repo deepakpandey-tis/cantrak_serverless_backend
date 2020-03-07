@@ -824,7 +824,7 @@ const serviceRequestController = {
             ])
             .where({ "service_requests.orgId": req.orgId })
             .whereIn('service_requests.projectId', accessibleProjects)
-            .where({'service_requests.isCreatedFromSo':false})
+            .where({ 'service_requests.isCreatedFromSo': false })
             .distinct('service_requests.id')
           ,
 
@@ -1044,7 +1044,7 @@ const serviceRequestController = {
 
             ])
             .where({ "service_requests.orgId": req.orgId })
-            .where({'service_requests.isCreatedFromSo':false})
+            .where({ 'service_requests.isCreatedFromSo': false })
             .where(qb => {
               if (location) {
                 qb.where('service_requests.location', 'iLIKE', `%${location}%`)
@@ -1073,7 +1073,7 @@ const serviceRequestController = {
               qb.where(filters);
               qb.whereIn('service_requests.projectId', accessibleProjects)
             })
-            
+
             .groupBy([
               "service_requests.id",
               "status.id",
@@ -1154,7 +1154,7 @@ const serviceRequestController = {
             ])
             .orderBy('service_requests.id', 'desc')
             .where({ "service_requests.orgId": req.orgId })
-            .where({'service_requests.isCreatedFromSo':false})
+            .where({ 'service_requests.isCreatedFromSo': false })
             .where(qb => {
               if (location) {
                 qb.where('service_requests.location', 'iLIKE', `%${location}%`)
@@ -1254,7 +1254,7 @@ const serviceRequestController = {
 
       })
 
-     // pagination.data = _.uniqBy(rows,'S Id');
+      // pagination.data = _.uniqBy(rows,'S Id');
 
 
 
@@ -2566,6 +2566,7 @@ const serviceRequestController = {
     try {
       let serviceRequestId = req.body.data.serviceRequestId;
       let updateStatus = req.body.data.status;
+      let cancelReason = req.body.data.cancelReason;
       const currentTime = new Date().getTime();
       console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7', req.body)
 
@@ -2573,14 +2574,14 @@ const serviceRequestController = {
 
 
       let quotationsAtached = await knex('quotations').select('id')
-      .where({serviceRequestId:serviceRequestId,orgId:req.orgId})
+        .where({ serviceRequestId: serviceRequestId, orgId: req.orgId })
       let assignedPartsResult = []
       let assignedChargesResult = []
-      for(let q of quotationsAtached){
+      for (let q of quotationsAtached) {
         assignedPartsResultData = await knex('assigned_parts')
-        .innerJoin('quotations', 'assigned_parts.entityId', 'quotations.id')
-        .select('assigned_parts.*')
-        .where({ entityId: q.id, entityType: 'quotations',quotationStatus:'Approved' })//.first()
+          .innerJoin('quotations', 'assigned_parts.entityId', 'quotations.id')
+          .select('assigned_parts.*')
+          .where({ entityId: q.id, entityType: 'quotations', quotationStatus: 'Approved' }) //.first()
         assignedPartsResult.push(assignedPartsResultData)
 
 
@@ -2598,15 +2599,15 @@ const serviceRequestController = {
 
       }
 
-      let assignedParts = _.uniqBy(_.flatten(assignedPartsResult),'id').map(v => _.omit(v, ['id']))
-      let assignedCharges = _.uniqBy(_.flatten(assignedChargesResult),'id').map(v => _.omit(v, ['id']))
-      let serviceOrderIdResult = await knex('service_orders').select('id').where({serviceRequestId:serviceRequestId,orgId:req.orgId}).first()
+      let assignedParts = _.uniqBy(_.flatten(assignedPartsResult), 'id').map(v => _.omit(v, ['id']))
+      let assignedCharges = _.uniqBy(_.flatten(assignedChargesResult), 'id').map(v => _.omit(v, ['id']))
+      let serviceOrderIdResult = await knex('service_orders').select('id').where({ serviceRequestId: serviceRequestId, orgId: req.orgId }).first()
       let checkIfAlreadyExists = await knex('assigned_parts')
         .where({ entityType: 'service_orders', entityId: serviceOrderIdResult.id })
 
       let checkIfAlreadyExistsCharges = await knex('assigned_service_charges')
         .where({ entityType: 'service_orders', entityId: serviceOrderIdResult.id })
-      
+
       if (checkIfAlreadyExists && checkIfAlreadyExists.length) {
 
       } else {
@@ -2638,7 +2639,7 @@ const serviceRequestController = {
       }
       if(updateStatus === 'C'){
         await knex("service_requests")
-          .update({ serviceStatusCode: updateStatus, updatedAt: currentTime, cancelledBy:req.me.id,cancelledOn:currentTime })
+          .update({ serviceStatusCode: updateStatus, cancellationReason: cancelReason,  updatedAt: currentTime, cancelledBy:req.me.id,cancelledOn:currentTime })
           .where({ id: serviceRequestId });
       }
       if(updateStatus === 'IP' || updateStatus === 'OH'){
@@ -2657,6 +2658,7 @@ const serviceRequestController = {
         },
         message: "Service status updated successfully!"
       });
+
     } catch (err) {
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
@@ -2824,7 +2826,7 @@ const serviceRequestController = {
       })
     }
   },
-  getServiceRequestForReport: async(req,res) => {
+  getServiceRequestForReport: async (req, res) => {
     try {
       const payload = req.body;
       const accessibleProjects = req.userProjectResources[0].projects
@@ -2841,8 +2843,8 @@ const serviceRequestController = {
         )
         .leftJoin("users as u", "service_requests.requestedBy", "u.id")
         .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
-        .leftJoin('companies','buildings_and_phases.companyId','companies.id')
-        .leftJoin('projects','buildings_and_phases.projectId','projects.id')
+        .leftJoin('companies', 'buildings_and_phases.companyId', 'companies.id')
+        .leftJoin('projects', 'buildings_and_phases.projectId', 'projects.id')
         .leftJoin(
           "service_problems",
           "service_requests.id",
@@ -2896,26 +2898,26 @@ const serviceRequestController = {
         ])
         .where(qb => {
           qb.where({ "service_requests.orgId": req.orgId })
-          if(payload.fromDate && payload.toDate){
-            qb.whereBetween('service_requests.createdAt',[payload.fromDate,payload.toDate])
+          if (payload.fromDate && payload.toDate) {
+            qb.whereBetween('service_requests.createdAt', [payload.fromDate, payload.toDate])
           }
-          if(payload.teamId && payload.teamId.length){
-            qb.whereIn('teams.teamId',payload.teamId)
+          if (payload.teamId && payload.teamId.length) {
+            qb.whereIn('teams.teamId', payload.teamId)
           }
-          if (payload.buildingId && payload.buildingId.length){
-            qb.whereIn('buildings_and_phases.id',payload.buildingId)
+          if (payload.buildingId && payload.buildingId.length) {
+            qb.whereIn('buildings_and_phases.id', payload.buildingId)
           }
-          if(payload.companyId){
-            qb.where('companies.id','=', payload.companyId)
+          if (payload.companyId) {
+            qb.where('companies.id', '=', payload.companyId)
           }
-          if(payload.projectId){
-            qb.where('projects.id','=', payload.projectId)
+          if (payload.projectId) {
+            qb.where('projects.id', '=', payload.projectId)
           }
-          if(payload.categoryId & payload.categoryId.length){
-            qb.whereIn('incident_categories.id',payload.categoryId)
+          if (payload.categoryId & payload.categoryId.length) {
+            qb.whereIn('incident_categories.id', payload.categoryId)
           }
-          if(payload.status && payload.status.length){
-            qb.whereIn('status.statusCode',payload.status)
+          if (payload.status && payload.status.length) {
+            qb.whereIn('status.statusCode', payload.status)
           }
         })
         .whereIn('service_requests.projectId', accessibleProjects)
@@ -2924,7 +2926,7 @@ const serviceRequestController = {
         .orderBy('service_requests.createdAt', 'desc')
 
 
-        const Parallel = require('async-parallel')
+      const Parallel = require('async-parallel')
       let srWithTenant = await Parallel.map(sr, async pd => {
 
         let houseResult = await knex.from('user_house_allocation').select('userId').where({ houseId: pd.unitId }).first().orderBy('id', 'desc')
@@ -2946,10 +2948,12 @@ const serviceRequestController = {
 
       })
 
-      return res.status(200).json({data: {
-        service_requests:srWithTenant
-      }})
-    } catch(err) {
+      return res.status(200).json({
+        data: {
+          service_requests: srWithTenant
+        }
+      })
+    } catch (err) {
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
