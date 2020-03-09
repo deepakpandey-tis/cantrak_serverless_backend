@@ -517,6 +517,7 @@ const serviceDetailsController = {
           .leftJoin("source_of_request", "service_requests.serviceType", "source_of_request.id")
           .leftJoin("images", "service_requests.id", "images.entityId")
           .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
+          .leftJoin('users as u', 'service_requests.cancelledBy', 'users.id')
 
           .select(
             "companies.companyName",
@@ -527,6 +528,9 @@ const serviceDetailsController = {
             "floor_and_zones.floorZoneCode",
             "floor_and_zones.description as floorZoneDescription",
             "service_requests.description as descriptions",
+            "service_requests.cancellationReason as cancellationReason",
+            "service_requests.cancelledOn as sCancelledOn",
+            "u.name as cancelledBy",
             "service_requests.location",
             "service_requests.serviceStatusCode as serviceStatusCode",
             "service_requests.updatedAt as sRUpdatedAt",
@@ -542,7 +546,8 @@ const serviceDetailsController = {
             "service_requests.requestedBy",
             "property_types.descriptionEng as propertyDescription",
             'status.descriptionEng as Status',
-
+            "service_requests.displayId as SR Serial No",
+             
           )
           .where({
             "property_units.id": houseId,

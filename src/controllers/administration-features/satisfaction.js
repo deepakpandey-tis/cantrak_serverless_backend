@@ -22,7 +22,7 @@ const satisfactionController = {
       let orgId = req.orgId;
 
       await knex.transaction(async trx => {
-        let satisfactionPayload = req.body;
+        let satisfactionPayload = _.omit(req.body,'editMode');
 
         const schema = Joi.object().keys({
           satisfactionCode: Joi.string().required(),
@@ -33,7 +33,16 @@ const satisfactionController = {
             .optional(),
           defaultFlag: Joi.string()
             .allow("")
-            .optional()
+            .optional(),
+            editMode: Joi.boolean()
+            .allow("")
+            .optional(null)
+            .optional(),
+            sequenceNo: Joi.number()
+            .allow("")
+            .optional(null)
+            .optional(),
+            
         });
 
         const result = Joi.validate(satisfactionPayload, schema);
@@ -100,7 +109,8 @@ const satisfactionController = {
       res.status(200).json({
         data: {
           satisfaction: satisfactionData
-        }
+        },
+        message:"Satisfaction Add Successfully!"
       });
     } catch (err) {
       console.log("[controllers][satisfaction][addsatisfaction] :  Error", err);
@@ -121,7 +131,7 @@ const satisfactionController = {
       let updateSatisfactionPayload = null;
 
       await knex.transaction(async trx => {
-        let satisfactionPaylaod = req.body;
+        let satisfactionPaylaod = _.omit(req.body,['editMode','createdBy','dateCreated','isActive']);
 
         const schema = Joi.object().keys({
           id: Joi.number().required(),
@@ -135,7 +145,15 @@ const satisfactionController = {
           defaultFlag: Joi.string()
             .allow("")
             .allow(null)
-            .optional()
+            .optional(),
+            editMode: Joi.boolean()
+            .allow("")
+            .optional(null)
+            .optional(),
+            sequenceNo: Joi.number()
+            .allow("")
+            .optional(null)
+            .optional(),
         });
 
         const result = Joi.validate(satisfactionPaylaod, schema);
@@ -182,7 +200,8 @@ const satisfactionController = {
             descriptionThai: satisfactionPaylaod.descriptionThai,
             remark: satisfactionPaylaod.remark,
             defaultFlag: satisfactionPaylaod.defaultFlag,
-            updatedAt: currentTime
+            updatedAt: currentTime,
+            sequenceNo:satisfactionPaylaod.sequenceNo
           })
           .where({
             id: satisfactionPaylaod.id,
@@ -232,7 +251,7 @@ const satisfactionController = {
 
       let sortPayload = req.body;
       if (!sortPayload.sortBy && !sortPayload.orderBy) {
-        sortPayload.sortBy = "satisfaction.satisfactionCode";
+        sortPayload.sortBy = "satisfaction.sequenceNo";
         sortPayload.orderBy = "asc"
       }
 
@@ -270,12 +289,15 @@ const satisfactionController = {
           .where({ "satisfaction.orgId": orgId })
           .select([
             "satisfaction.id",
-            "satisfaction.satisfactionCode as Satisfaction Code",
-            "satisfaction.descriptionEng as Description English",
-            "satisfaction.descriptionThai as Description Thai",
-            "satisfaction.isActive as Status",
-            "users.name as Created By",
-            "satisfaction.createdAt as Date Created"
+            "satisfaction.satisfactionCode",
+            "satisfaction.descriptionEng",
+            "satisfaction.descriptionThai",
+            "satisfaction.isActive",
+            "users.name as createdBy",
+            "satisfaction.createdAt as dateCreated",
+            "satisfaction.defaultFlag",
+            "satisfaction.sequenceNo",
+            "satisfaction.remark",
           ])
           .where(qb=>{
             if(searchValue){
