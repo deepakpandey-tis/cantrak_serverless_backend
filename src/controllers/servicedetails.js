@@ -546,6 +546,8 @@ const serviceDetailsController = {
             "service_requests.requestedBy",
             "property_types.descriptionEng as propertyDescription",
             'status.descriptionEng as Status',
+            "service_requests.displayId as SR Serial No",
+             
           )
           .where({
             "property_units.id": houseId,

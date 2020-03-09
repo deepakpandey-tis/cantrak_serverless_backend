@@ -488,6 +488,8 @@ const serviceOrderController = {
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
                             "property_units.id as unitId",
+                            "service_orders.displayId as SO Serial No",
+                            "service_requests.displayId as SR Serial No",
 
                             // "assignUser.name as Tenant Name"
 
@@ -579,6 +581,8 @@ const serviceOrderController = {
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
                             "property_units.id as unitId",
+                            "service_orders.displayId as SO Serial No",
+                            "service_requests.displayId as SR Serial No",
 
                             // "assignUser.name as Tenant Name"
 
@@ -677,6 +681,8 @@ const serviceOrderController = {
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
                             "property_units.id as unitId",
+                            "service_orders.displayId as SO Serial No",
+                            "service_requests.displayId as SR Serial No",
 
                             // "assignUser.name as Tenant Name"
                         ])
@@ -798,6 +804,8 @@ const serviceOrderController = {
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
                             "property_units.id as unitId",
+                            "service_orders.displayId as SO Serial No",
+                            "service_requests.displayId as SR Serial No",
 
                             // "assignUser.name as Tenant Name"
 
@@ -1039,6 +1047,8 @@ const serviceOrderController = {
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
                             "property_units.id as unitId",
+                            "service_orders.displayId as SO Serial No",
+                            "service_requests.displayId as SR Serial No",
 
                             // "assignUser.name as Tenant Name"
                         ])
@@ -1160,6 +1170,8 @@ const serviceOrderController = {
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
                             "property_units.id as unitId",
+                            "service_orders.displayId as SO Serial No",
+                            "service_requests.displayId as SR Serial No",
                             // "assignUser.name as Tenant Name"
 
                         ])
