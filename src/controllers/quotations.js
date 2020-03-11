@@ -327,7 +327,8 @@ const quotationsController = {
             "organisation_roles.name as userRole",
             "quotations.invoiceData as invoiceData",
             "quotations.quotationValidityDate as validityDate",
-            "property_units.description as propertyUnitDescription"
+            "property_units.description as propertyUnitDescription",
+            "quotations.displayId as displayId"
           )
           .where({ "quotations.id": quotationRequestId });
         console.log(
@@ -726,8 +727,8 @@ const quotationsController = {
             "requested_by.name as requestedBy",
             //"user_house_allocation",
             "property_units.id as unitId",
-            "quotations.displayId as QSerial No",
-            "service_requests.displayId as SR Serial No",
+            "quotations.displayId as Q#",
+            "service_requests.displayId as SR#",
 
           ])
           .where("quotations.orgId", req.orgId)

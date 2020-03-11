@@ -1,5 +1,5 @@
 const Joi = require("@hapi/joi");
-const _   = require("lodash");
+const _ = require("lodash");
 const moment = require("moment");
 require("moment-recur");
 
@@ -22,7 +22,7 @@ const pmController = {
       await knex.transaction(async trx => {
         let payload = req.body;
         let repeatType = payload.repeatType;
-        let repeatOn = payload.repeatOn && payload.repeatOn.length ? payload.repeatOn.join(','):[];
+        let repeatOn = payload.repeatOn && payload.repeatOn.length ? payload.repeatOn.join(',') : [];
         let repeatNumber = Number(payload.repeatNumber);
         let start = new Date(payload.pmStartDateTime);
         let startYear = start.getFullYear();
@@ -84,18 +84,18 @@ const pmController = {
           repeatNumber: Joi.number().required(),
           assets: Joi.array().items(Joi.string().required()).strict().required(),
           tasks: Joi.array().items(Joi.string().required()).strict().required(),
-      });
+        });
 
-      const result = Joi.validate(_.omit(payload,'repeatOn'), schema);
-      console.log('[controllers][preventive-maintaince][createpmtask]: JOi Result', result);
+        const result = Joi.validate(_.omit(payload, 'repeatOn'), schema);
+        console.log('[controllers][preventive-maintaince][createpmtask]: JOi Result', result);
 
-      if (result && result.hasOwnProperty('error') && result.error) {
+        if (result && result.hasOwnProperty('error') && result.error) {
           return res.status(400).json({
-              errors: [
-                  { code: 'VALIDATION_ERROR', message: result.error.message }
-              ],
+            errors: [
+              { code: 'VALIDATION_ERROR', message: result.error.message }
+            ],
           });
-      }
+        }
 
 
 
@@ -410,27 +410,27 @@ const pmController = {
             .into("pm_feedbacks");
 
           let imagesResult = []
-            if(images){
-              imagesResult = await Parallel.map(images, async image => {
-                let { s3Url, title, name } = image;
-                let insertPayload = {
-                  entityType: "pm_feedbacks",
-                  entityId: feedBackInsertResult[0].id,
-                  createdAt: currentTime,
-                  updatedAt: currentTime,
-                  s3Url,
-                  title,
-                  name
-                };
-                let imageInsertResult = await knex
-                  .insert(insertPayload)
-                  .returning(["*"])
-                  .transacting(trx)
-                  .into("images");
-                return imageInsertResult;
-              });
+          if (images) {
+            imagesResult = await Parallel.map(images, async image => {
+              let { s3Url, title, name } = image;
+              let insertPayload = {
+                entityType: "pm_feedbacks",
+                entityId: feedBackInsertResult[0].id,
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                s3Url,
+                title,
+                name
+              };
+              let imageInsertResult = await knex
+                .insert(insertPayload)
+                .returning(["*"])
+                .transacting(trx)
+                .into("images");
+              return imageInsertResult;
+            });
 
-            }
+          }
           return { feedback: feedBackInsertResult[0], images: imagesResult };
         });
 
@@ -482,16 +482,16 @@ const pmController = {
       });
     }
   },
-  getPmById:async(req,res) => {
+  getPmById: async (req, res) => {
     try {
       const pmMasterId = req.body.pmMasterId;
-      const pm = await knex('pm_master').select('pmStartDate','pmStopDate','repeatType','repeatOn','repeatNumber').where({id:pmMasterId})
+      const pm = await knex('pm_master').select('pmStartDate', 'pmStopDate', 'repeatType', 'repeatOn', 'repeatNumber').where({ id: pmMasterId })
       return res.status(200).json({
         data: {
           pm: pm[0]
         }
       })
-    }catch(err){
+    } catch (err) {
       console.log("[controllers][people][UpdatePeople] :  Error", err);
       //trx.rollback
       res.status(500).json({
@@ -499,7 +499,7 @@ const pmController = {
       });
     }
   },
-  getPmByName:async(req,res) => {
+  getPmByName: async (req, res) => {
     try {
       let name = req.body.pmNameSearchTerm;
       const pm = await knex('pm_master2').select().where((qb) => {
@@ -510,9 +510,9 @@ const pmController = {
         data: {
           pm
         },
-        message:'Search Results'
+        message: 'Search Results'
       })
-    } catch(err){
+    } catch (err) {
       console.log("[controllers][people][UpdatePeople] :  Error", err);
       //trx.rollback
       res.status(500).json({
@@ -520,7 +520,7 @@ const pmController = {
       });
     }
   },
-  getPmListByAssetId: async(req,res) => {
+  getPmListByAssetId: async (req, res) => {
     try {
       // here i need to get pms by assetId
       let assetId = req.body.assetId;
@@ -564,13 +564,13 @@ const pmController = {
       pagination.from = offset;
       pagination.data = rows;
 
-        res.status(200).json({
-          data: {
-            pms:pagination
-          }
-        })
+      res.status(200).json({
+        data: {
+          pms: pagination
+        }
+      })
 
-    } catch(err) {
+    } catch (err) {
       console.log("[controllers][people][UpdatePeople] :  Error", err);
       //trx.rollback
       res.status(500).json({
@@ -578,26 +578,26 @@ const pmController = {
       });
     }
   },
-  getPMList: async (req,res) => {
+  getPMList: async (req, res) => {
     try {
       let pagination = {};
       let per_page = req.query.per_page || 10;
       let page = req.query.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
-      
+
       //const pms = await knex('pm_master').select()
 
-      let [total,rows] = await Promise.all([
+      let [total, rows] = await Promise.all([
         knex.from('pm_master')
-       // .innerJoin('asset_category_master','pm_master.assetCategoryId','asset_category_master.id')
+        // .innerJoin('asset_category_master','pm_master.assetCategoryId','asset_category_master.id')
         ///.offset(offset).limit(per_page)
-        
+
         ,
         knex.from('pm_master')
-        //.innerJoin('asset_category_master','pm_master.assetCategoryId','asset_category_master.id')
-        .offset(offset).limit(per_page)
-        
+          //.innerJoin('asset_category_master','pm_master.assetCategoryId','asset_category_master.id')
+          .offset(offset).limit(per_page)
+
       ])
 
       // let [total, rows] = await Promise.all([
@@ -613,7 +613,7 @@ const pmController = {
       //     .limit(per_page)
       //   ])
 
-       // console.log(JSON.stringify(total,null,2))
+      // console.log(JSON.stringify(total,null,2))
 
       let count = total.length;
       pagination.total = count;
@@ -631,7 +631,7 @@ const pmController = {
         },
         message: 'PM List'
       })
-    } catch(err) {
+    } catch (err) {
       console.log("[controllers][people][UpdatePeople] :  Error", err);
       //trx.rollback
       res.status(500).json({
@@ -639,43 +639,43 @@ const pmController = {
       });
     }
   },
-  getSingleAssetPmScheduleList: async (req,res) => {
+  getSingleAssetPmScheduleList: async (req, res) => {
     try {
       // Get whole pm schedule list of an asset
       let pmMasterId = req.body.pmMasterId;
       const assetSerialOrBarcode = req.body.assetSerialOrBarcode
       // need to find assetId by assetSerial or assetBarcode
       //let assetId = req.body.asset
-      let pmSchedule = await knex('pm_master').select().where({id:pmMasterId})
+      let pmSchedule = await knex('pm_master').select().where({ id: pmMasterId })
       let assetResult = await knex('asset_master').select('id').where(qb => {
-        qb.where({'barcode':`${assetSerialOrBarcode}`}).orWhere({'assetSerial':`${assetSerialOrBarcode}`})
+        qb.where({ 'barcode': `${assetSerialOrBarcode}` }).orWhere({ 'assetSerial': `${assetSerialOrBarcode}` })
       })
       console.log(assetResult)
-      let assetId = assetResult && assetResult.length  ? assetResult[0].id : null;
+      let assetId = assetResult && assetResult.length ? assetResult[0].id : null;
 
-      if(!assetId){
+      if (!assetId) {
         return res.status(200).json({
           data: {
             pmSchedule: pmSchedule[0],
             assets: []
-          }  
+          }
         })
       }
-      let assets = await knex('pm_assign_assets').select().where({assetId,pmMasterId});
+      let assets = await knex('pm_assign_assets').select().where({ assetId, pmMasterId });
       return res.status(200).json({
         data: {
           pmSchedule: pmSchedule[0],
           assets: assets
         }
       })
-        } catch(err) {
+    } catch (err) {
       console.log("[controllers][people][UpdatePeople] :  Error", err);
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
-  getAssetListOfPm: async (req,res) => {
+  getAssetListOfPm: async (req, res) => {
     try {
       const pmMasterId = req.body.pmMasterId;
       const assetId = req.body.assetId
@@ -685,13 +685,13 @@ const pmController = {
       let page = req.query.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
-      
-      if(assetId){
+
+      if (assetId) {
         [total, rows] = await Promise.all([
           knex
             .from("pm_assign_assets")
             .innerJoin('asset_master', 'pm_assign_assets.assetId', 'asset_master.id')
-            .where({ pmMasterId,'asset_master.id':assetId })
+            .where({ pmMasterId, 'asset_master.id': assetId })
             .whereNull('pm_assign_assets.endDateTime')
           ,
           knex
@@ -710,14 +710,14 @@ const pmController = {
           knex
             .from("pm_assign_assets")
             .innerJoin('asset_master', 'pm_assign_assets.assetId', 'asset_master.id')
-            .where({pmMasterId})
+            .where({ pmMasterId })
             .whereNull('pm_assign_assets.endDateTime')
-            ,
+          ,
           knex
             .from("pm_assign_assets")
             .innerJoin('asset_master', 'pm_assign_assets.assetId', 'asset_master.id')
             .groupBy('pm_assign_assets.id', 'asset_master.id')
-            .where({pmMasterId})
+            .where({ pmMasterId })
             .whereNull('pm_assign_assets.endDateTime')
             .offset(offset)
             .limit(per_page)
@@ -735,18 +735,18 @@ const pmController = {
       pagination.data = rows;
       return res.status(200).json({
         data: {
-          assets:pagination
+          assets: pagination
         },
         message: 'Asset list of a PM'
       })
-    } catch(err) {
+    } catch (err) {
       console.log("[controllers][people][UpdatePeople] :  Error", err);
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
-  getAssetListWithCompletedPm: async (req,res) => {
+  getAssetListWithCompletedPm: async (req, res) => {
     try {
       const pmMasterId = req.body.pmMasterId;
       let pagination = {};
@@ -788,39 +788,39 @@ const pmController = {
         },
         message: 'Asset list of a PM'
       })
-    } catch(err) {
+    } catch (err) {
       console.log("[controllers][people][UpdatePeople] :  Error", err);
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
-  getAssetIdByAssetSerialOrBarcode:async(req,res) => {
+  getAssetIdByAssetSerialOrBarcode: async (req, res) => {
     try {
       const assetSerialOrBarcode = req.body.assetSerialOrBarcode;
-      if(!assetSerialOrBarcode){
+      if (!assetSerialOrBarcode) {
         return res.status(200).json({
           data: {
             assetId: ''
           }
         })
       }
-      let asset = await knex('asset_master').select('id').where({assetSerial:assetSerialOrBarcode}).orWhere({barcode:assetSerialOrBarcode})
-      if (asset && asset.length){
+      let asset = await knex('asset_master').select('id').where({ assetSerial: assetSerialOrBarcode }).orWhere({ barcode: assetSerialOrBarcode })
+      if (asset && asset.length) {
         asset = asset[0].id
-          return res.status(200).json({
-            data: {
-              assetId:asset
-            }
-          })
+        return res.status(200).json({
+          data: {
+            assetId: asset
+          }
+        })
       }
       return res.status(200).json({
         data: {
-          assetId:''
+          assetId: ''
         }
       })
 
-    } catch(err) {
+    } catch (err) {
       console.log("[controllers][people][UpdatePeople] :  Error", err);
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
@@ -1116,69 +1116,69 @@ const pmController = {
       });
     }
     // Get Task List By PM Master ID
-  },getTaskListByPmId: async(req,res)=>{
+  }, getTaskListByPmId: async (req, res) => {
 
     try {
       let reqData = req.query;
       let pagination = {};
 
-        const {
-          pmMasterId
-        } = req.body;
+      const {
+        pmMasterId
+      } = req.body;
 
-        let filters = {};
-        if (pmMasterId) {
-          filters["pm_task_master.pmMasterId"] = pmMasterId;
-        }
-        
+      let filters = {};
+      if (pmMasterId) {
+        filters["pm_task_master.pmMasterId"] = pmMasterId;
+      }
 
-        let per_page = reqData.per_page || 10;
-        let page = reqData.current_page || 1;
-        if (page < 1) page = 1;
-        let offset = (page - 1) * per_page;
-        let total, rows;
-        if (_.isEmpty(filters)) {
-          [total, rows] = await Promise.all([
-            knex
-              .count("* as count")
-              .from("pm_task_master"),
-            knex
-              .from("pm_task_master")     
-              .select('*')
-              .offset(offset)
-              .limit(per_page)
-          ]);
-        } else {
-          [total, rows] = await Promise.all([
-            knex
-              .count("* as count")
-              .from("pm_task_master")
-              .where(qb => {
-                qb.where(filters);
-              }),
-              
-            knex
-              .from("pm_task_master")
-              .select('*')
-              .where(qb => {
-                qb.where(filters);
-              })
-              .offset(offset)
-              .limit(per_page)
-          ]);
-        }
 
-        let count = total.length;
-        pagination.total = count;
-        pagination.per_page = per_page;
-        pagination.offset = offset;
-        pagination.to = offset + rows.length;
-        pagination.last_page = Math.ceil(count / per_page);
-        pagination.current_page = page;
-        pagination.from = offset;
-        pagination.data = rows;
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+      let total, rows;
+      if (_.isEmpty(filters)) {
+        [total, rows] = await Promise.all([
+          knex
+            .count("* as count")
+            .from("pm_task_master"),
+          knex
+            .from("pm_task_master")
+            .select('*')
+            .offset(offset)
+            .limit(per_page)
+        ]);
+      } else {
+        [total, rows] = await Promise.all([
+          knex
+            .count("* as count")
+            .from("pm_task_master")
+            .where(qb => {
+              qb.where(filters);
+            }),
 
-        
+          knex
+            .from("pm_task_master")
+            .select('*')
+            .where(qb => {
+              qb.where(filters);
+            })
+            .offset(offset)
+            .limit(per_page)
+        ]);
+      }
+
+      let count = total.length;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+
       return res.status(200).json({
         data: {
           pagination
@@ -1194,18 +1194,18 @@ const pmController = {
     }
   },
   // Update Asset PM EndDate
-  updateAssetPm: async (req,res)=>{
+  updateAssetPm: async (req, res) => {
 
-    try{
-      let   assetData = null;
-      const payload  = req.body;
+    try {
+      let assetData = null;
+      const payload = req.body;
 
       const schema = Joi.object().keys({
         pmMasterId: Joi.number().required(),
         assetId: Joi.number().required(),
-        pmDate:Joi.date().required(),
-        startDateTime:Joi.date().required(),
-        endDateTime:Joi.date().required(),
+        pmDate: Joi.date().required(),
+        startDateTime: Joi.date().required(),
+        endDateTime: Joi.date().required(),
       })
 
       const result = Joi.validate(payload, schema)
@@ -1219,21 +1219,21 @@ const pmController = {
         });
       }
 
-          let currentTime  = new Date().getTime()
-          let updateData   = { ...payload, updatedAt: currentTime };
-          let updateResult = await knex('pm_assign_assets').update(updateData)
-          .where({pmMasterId:payload.pmMasterId,assetId:payload.assetId,pmDate:payload.pmDate}).returning(['*'])
-          assetData        = updateResult[0]
+      let currentTime = new Date().getTime()
+      let updateData = { ...payload, updatedAt: currentTime };
+      let updateResult = await knex('pm_assign_assets').update(updateData)
+        .where({ pmMasterId: payload.pmMasterId, assetId: payload.assetId, pmDate: payload.pmDate }).returning(['*'])
+      assetData = updateResult[0]
 
-          return res.status(200).json({
-            data: {
-              assetPmUpdateData: assetData
-            },
-            message: 'Asset Pm EndDate Updated Successfully!'
-          })
-          
+      return res.status(200).json({
+        data: {
+          assetPmUpdateData: assetData
+        },
+        message: 'Asset Pm EndDate Updated Successfully!'
+      })
 
-    }catch(err){
+
+    } catch (err) {
       res.status(500).json({
         errors: [
           { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -1241,17 +1241,17 @@ const pmController = {
       });
     }
     // Get PM Report
-  },getPmReport:async (req,res)=>{
+  }, getPmReport: async (req, res) => {
 
-    try{
+    try {
 
-      let   reportData = null;
-      const payload  = req.body;
+      let reportData = null;
+      const payload = req.body;
 
       const schema = Joi.object().keys({
         pmMasterId: Joi.number().required(),
         assetId: Joi.number().required(),
-        pmDate:Joi.date().required(),
+        pmDate: Joi.date().required(),
       })
 
       const result = Joi.validate(payload, schema)
@@ -1266,18 +1266,18 @@ const pmController = {
       }
 
       let reportResult = await knex('pm_assign_assets')
-      .innerJoin('pm_feedbacks','pm_assign_assets.pmMasterId','pm_feedbacks.pmMasterId')
-      .innerJoin('pm_task_master','pm_assign_assets.pmMasterId','pm_task_master.pmMasterId')
-      .leftJoin('images','pm_feedbacks.id','images.entityId')
-      .select([
-        'pm_assign_assets.id as id',
-        'pm_task_master.taskName as Task Name',
-        'pm_feedbacks.description as Feedback Description',
-        'pm_assign_assets.startDateTime as startDate',
-        'pm_assign_assets.startDateTime as endDate',
-        'images.s3Url as image_url'
-      ])
-      .where({'pm_assign_assets.pmMasterId':payload.pmMasterId,'pm_assign_assets.assetId':payload.assetId,'pm_assign_assets.pmDate':payload.pmDate})
+        .innerJoin('pm_feedbacks', 'pm_assign_assets.pmMasterId', 'pm_feedbacks.pmMasterId')
+        .innerJoin('pm_task_master', 'pm_assign_assets.pmMasterId', 'pm_task_master.pmMasterId')
+        .leftJoin('images', 'pm_feedbacks.id', 'images.entityId')
+        .select([
+          'pm_assign_assets.id as id',
+          'pm_task_master.taskName as Task Name',
+          'pm_feedbacks.description as Feedback Description',
+          'pm_assign_assets.startDateTime as startDate',
+          'pm_assign_assets.startDateTime as endDate',
+          'images.s3Url as image_url'
+        ])
+        .where({ 'pm_assign_assets.pmMasterId': payload.pmMasterId, 'pm_assign_assets.assetId': payload.assetId, 'pm_assign_assets.pmDate': payload.pmDate })
 
       return res.status(200).json({
         data: {
@@ -1296,16 +1296,16 @@ const pmController = {
       });
     }
   },
-  savePMTemplate: async (req,res) => {
+  savePMTemplate: async (req, res) => {
     try {
-      const {name,templateData} = req.body;
-      const result = await knex('pm_templates').insert({name,templateData})
+      const { name, templateData } = req.body;
+      const result = await knex('pm_templates').insert({ name, templateData })
       return res.status(200).json({
         data: {
           template: result[0]
         }
       })
-    } catch(err) {
+    } catch (err) {
       console.log('[controllers][preventive-maintainece][pmreport] :  Error', err);
       //trx.rollback
       res.status(500).json({
@@ -1315,18 +1315,18 @@ const pmController = {
       });
     }
   },
-  searchPMTemplate: async (req,res) => {
+  searchPMTemplate: async (req, res) => {
     try {
-      let {taskGroupSearchTerm} = req.body;
+      let { taskGroupSearchTerm } = req.body;
       let found = await knex('pm_templates').select().where(qb => {
-        qb.where('pm_templates.name','like',`%${taskGroupSearchTerm}`)
+        qb.where('pm_templates.name', 'like', `%${taskGroupSearchTerm}`)
       })
 
-      if(found && found.length){
+      if (found && found.length) {
 
         return res.status(200).json({
           data: {
-            search_result:found
+            search_result: found
           },
           message: 'Result found'
         })
@@ -1338,7 +1338,7 @@ const pmController = {
         message: 'Not found'
       })
 
-    } catch(err) {
+    } catch (err) {
       console.log('[controllers][preventive-maintainece][pmreport] :  Error', err);
       //trx.rollback
       res.status(500).json({
@@ -1350,11 +1350,11 @@ const pmController = {
   },
 
   //pm dashboard
-  getPMDashboardData: async(req,res) => {
+  getPMDashboardData: async (req, res) => {
     try {
       //calculate number of pms pending
-      
-    } catch(err) {
+
+    } catch (err) {
 
     }
   }
