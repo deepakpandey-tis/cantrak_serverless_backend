@@ -1191,6 +1191,7 @@ const partsController = {
                 data[0].E == "COMPANY_ID" &&
                 data[0].F == "quantity" &&
                 data[0].G == "unit_cost"
+               // data[0].H == "MINIMUM_QUANTITY"
             ) {
 
                 if (data.length > 0) {
@@ -1250,6 +1251,11 @@ const partsController = {
                                 });
                             if (checkExist.length < 1) {
 
+                                let min = null;
+                                if(partData.H){
+                                    min = partData.H;
+                                }
+
                                 let insertData = {
                                     orgId: req.orgId,
                                     partCode: partData.A,
@@ -1258,7 +1264,8 @@ const partsController = {
                                     partCategory: partCategoryId,
                                     companyId: companyId,
                                     createdAt: currentTime,
-                                    updatedAt: currentTime
+                                    updatedAt: currentTime,
+                                    minimumQuantity:min,
                                 }
 
                                 resultData = await knex.insert(insertData).returning(['*']).into('part_master');
@@ -1365,6 +1372,7 @@ const partsController = {
                         "companies.companyId as COMPANY_ID",
                         knex.raw('SUM("part_ledger"."quantity") as QUANTITY'),
                         knex.raw('MAX("part_ledger"."unitCost") as UNIT_COST'),
+                        "part_master.minimumQuantity as MINIMUM_QUANTITY"
 
                     ])
                     .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
@@ -1398,6 +1406,7 @@ const partsController = {
                         COMPANY_ID: "",
                         quantity: "",
                         unit_cost: "",
+                        MINIMUM_QUANTITY:"",
                     }
                 ]);
             }
