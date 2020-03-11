@@ -761,10 +761,10 @@ const taskGroupController = {
           .innerJoin('asset_category_master', 'pm_master2.assetCategoryId', 'asset_category_master.id')
           .innerJoin('task_group_schedule', 'pm_master2.id', 'task_group_schedule.pmId')
           .select([
-
             'asset_category_master.*',
             'pm_master2.*',
-            'pm_master2.id as id'
+            'pm_master2.id as id',
+            'pm_master2.displayId as PM'
           ]).where(qb => {
             qb.where(filters)
             qb.whereIn("pm_master2.projectId", projects);

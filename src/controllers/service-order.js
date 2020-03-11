@@ -488,8 +488,8 @@ const serviceOrderController = {
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
                             "property_units.id as unitId",
-                            "service_orders.displayId as SO Serial No",
-                            "service_requests.displayId as SR Serial No",
+                            "service_orders.displayId as SO#",
+                            "service_requests.displayId as SR#",
 
                             // "assignUser.name as Tenant Name"
 
@@ -581,8 +581,8 @@ const serviceOrderController = {
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
                             "property_units.id as unitId",
-                            "service_orders.displayId as SO Serial No",
-                            "service_requests.displayId as SR Serial No",
+                            "service_orders.displayId as SO#",
+                            "service_requests.displayId as SR#",
 
                             // "assignUser.name as Tenant Name"
 
@@ -681,8 +681,8 @@ const serviceOrderController = {
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
                             "property_units.id as unitId",
-                            "service_orders.displayId as SO Serial No",
-                            "service_requests.displayId as SR Serial No",
+                            "service_orders.displayId as SO#",
+                            "service_requests.displayId as SR#",
 
                             // "assignUser.name as Tenant Name"
                         ])
@@ -804,8 +804,8 @@ const serviceOrderController = {
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
                             "property_units.id as unitId",
-                            "service_orders.displayId as SO Serial No",
-                            "service_requests.displayId as SR Serial No",
+                            "service_orders.displayId as SO#",
+                            "service_requests.displayId as SR#",
 
                             // "assignUser.name as Tenant Name"
 
@@ -1047,8 +1047,8 @@ const serviceOrderController = {
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
                             "property_units.id as unitId",
-                            "service_orders.displayId as SO Serial No",
-                            "service_requests.displayId as SR Serial No",
+                            "service_orders.displayId as SO#",
+                            "service_requests.displayId as SR#",
 
                             // "assignUser.name as Tenant Name"
                         ])
@@ -1170,8 +1170,8 @@ const serviceOrderController = {
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
                             "property_units.id as unitId",
-                            "service_orders.displayId as SO Serial No",
-                            "service_requests.displayId as SR Serial No",
+                            "service_orders.displayId as SO#",
+                            "service_requests.displayId as SR#",
                             // "assignUser.name as Tenant Name"
 
                         ])
@@ -2576,11 +2576,12 @@ const serviceOrderController = {
     getServiceOrderDueDate: async (req, res) => {
         try {
             const soId = req.body.soId;
-            const so = await knex('service_orders').select('orderDueDate').where({ id: soId }).first();
+            const so = await knex('service_orders').select('orderDueDate','displayId').where({ id: soId }).first();
             if (so) {
                 return res.status(200).json({
                     data: {
-                        orderDueDate: so.orderDueDate
+                        orderDueDate: so.orderDueDate,
+                        displayId: so.displayId
                     }
                 })
             }

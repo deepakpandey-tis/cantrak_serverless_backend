@@ -805,8 +805,8 @@ const serviceRequestController = {
               "service_requests.createdAt as Date Created",
               "service_orders.id as SO Id",
               "property_units.id as unitId",
-              "service_orders.displayId as SO Serial No",
-              "service_requests.displayId as SR Serial No",
+              "service_orders.displayId as SO#",
+              "service_requests.displayId as SR#",
              
             ])
             .groupBy([
@@ -887,8 +887,8 @@ const serviceRequestController = {
               "mainUsers.name as mainUser",
               "service_orders.id as SO Id",
               "property_units.id as unitId",
-              "service_orders.displayId as SO Serial No",
-              "service_requests.displayId as SR Serial No",
+              "service_orders.displayId as SO#",
+              "service_requests.displayId as SR#",
              
 
             ])
@@ -1047,8 +1047,8 @@ const serviceRequestController = {
               "service_requests.createdAt as Date Created",
               "service_orders.id as SO Id",
               "property_units.id as unitId",
-              "service_orders.displayId as SO Serial No",
-              "service_requests.displayId as SR Serial No",
+              "service_orders.displayId as SO#",
+              "service_requests.displayId as SR#",
              
 
             ])
@@ -1159,8 +1159,8 @@ const serviceRequestController = {
               "mainUsers.name as mainUser",
               "service_orders.id as SO Id",
               "property_units.id as unitId",
-              "service_orders.displayId as SO Serial No",
-              "service_requests.displayId as SR Serial No",
+              "service_orders.displayId as SO#",
+              "service_requests.displayId as SR#",
              
 
             ])
