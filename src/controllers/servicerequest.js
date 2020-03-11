@@ -804,7 +804,10 @@ const serviceRequestController = {
               "u.name as Requested By",
               "service_requests.createdAt as Date Created",
               "service_orders.id as SO Id",
-              "property_units.id as unitId"
+              "property_units.id as unitId",
+              "service_orders.displayId as SO Serial No",
+              "service_requests.displayId as SR Serial No",
+             
             ])
             .groupBy([
               "service_requests.id",
@@ -883,7 +886,10 @@ const serviceRequestController = {
               "teams.teamCode",
               "mainUsers.name as mainUser",
               "service_orders.id as SO Id",
-              "property_units.id as unitId"
+              "property_units.id as unitId",
+              "service_orders.displayId as SO Serial No",
+              "service_requests.displayId as SR Serial No",
+             
 
             ])
             .groupBy([
@@ -1040,7 +1046,10 @@ const serviceRequestController = {
               "u.name as Requested By",
               "service_requests.createdAt as Date Created",
               "service_orders.id as SO Id",
-              "property_units.id as unitId"
+              "property_units.id as unitId",
+              "service_orders.displayId as SO Serial No",
+              "service_requests.displayId as SR Serial No",
+             
 
             ])
             .where({ "service_requests.orgId": req.orgId })
@@ -1149,7 +1158,10 @@ const serviceRequestController = {
               "teams.teamCode",
               "mainUsers.name as mainUser",
               "service_orders.id as SO Id",
-              "property_units.id as unitId"
+              "property_units.id as unitId",
+              "service_orders.displayId as SO Serial No",
+              "service_requests.displayId as SR Serial No",
+             
 
             ])
             .orderBy('service_requests.id', 'desc')

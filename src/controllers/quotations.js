@@ -725,7 +725,9 @@ const quotationsController = {
             "incident_categories.descriptionEng as problemDescription",
             "requested_by.name as requestedBy",
             //"user_house_allocation",
-            "property_units.id as unitId"
+            "property_units.id as unitId",
+            "quotations.displayId as QSerial No",
+            "service_requests.displayId as SR Serial No",
 
           ])
           .where("quotations.orgId", req.orgId)

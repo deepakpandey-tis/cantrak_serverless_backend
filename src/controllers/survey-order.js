@@ -582,7 +582,8 @@ const surveyOrderController = {
             "o.appointedTime AS appointmentTime",
             "o.createdAt AS createdAt",
             "teams.teamName as teamName",
-            "assignUser.name  as Tenant Name"
+            "assignUser.name  as Tenant Name",
+            "o.displayId as displayId"
           )
           .where({ "assigned_service_team.entityType": "survey_orders" })
           .whereIn('s.projectId', accessibleProjects)
@@ -619,7 +620,9 @@ const surveyOrderController = {
             "property_units.unitNumber",
             "incident_categories.descriptionEng as problemDescription",
             "requested_by.name as requestedBy",
-            "assignUser.name  as Tenant Name"
+            "assignUser.name  as Tenant Name",
+            "o.displayId as displayId"
+
           )
           .from("survey_orders As o")
           .where(qb => {
@@ -741,7 +744,8 @@ const surveyOrderController = {
             "survey_orders.surveyOrderStatus as Status",
             "survey_orders.createdAt as Date Created",
             "teams.teamName as teamName",
-            "assignUser.name  as Tenant Name"
+            "assignUser.name  as Tenant Name",
+            "survey_orders.displayId as displayId"
           ])
           .whereIn('service_requests.projectId', accessibleProjects)
 
@@ -788,7 +792,9 @@ const surveyOrderController = {
             "survey_orders.surveyOrderStatus as Status",
             "survey_orders.createdAt as Date Created",
             "teams.teamName as teamName",
-            "assignUser.name  as Tenant Name"
+            "assignUser.name  as Tenant Name",
+            "survey_orders.displayId as displayId"
+
           ])
           .offset(offset)
           .whereIn('service_requests.projectId', accessibleProjects)
@@ -853,7 +859,9 @@ const surveyOrderController = {
             // "status.descriptionEng AS Status",
             "survey_orders.createdAt as Date Created",
             "teams.teamName as teamName",
-            "assignUser.name  as Tenant Name"
+            "assignUser.name  as Tenant Name",
+            "survey_orders.displayId as SU Serial No",
+            "service_requests.displayId as SR Serial No",
           ]);
 
         // For get the rows With pagination
@@ -897,7 +905,10 @@ const surveyOrderController = {
             // "status.descriptionEng AS Status",
             "survey_orders.createdAt as Date Created",
             "teams.teamName as teamName",
-            "assignUser.name  as Tenant Name"
+            "assignUser.name  as Tenant Name",
+            "survey_orders.displayId as SU Serial No",
+            "service_requests.displayId as SR Serial No",
+             
           ])
           .where({ "survey_orders.orgId": req.orgId, "assigned_service_team.entityType": "survey_orders" })
           .whereIn('service_requests.projectId', accessibleProjects)
@@ -1051,7 +1062,9 @@ const surveyOrderController = {
             "o.appointedTime AS appointmentTime",
             "o.createdAt AS createdAt",
             "teams.teamName as teamName",
-            "assignUser.name  as Tenant Name"
+            "assignUser.name  as Tenant Name",
+            "o.displayId as SU Serial No",
+            "s.displayId as SR Serial No",
           )
           .where({ "assigned_service_team.entityType": "survey_orders" })
           .whereIn('s.projectId', accessibleProjects)
@@ -1084,7 +1097,9 @@ const surveyOrderController = {
               "property_units.unitNumber",
               "incident_categories.descriptionEng as problemDescription",
               "requested_by.name as requestedBy",
-              "assignUser.name  as Tenant Name"
+              "assignUser.name  as Tenant Name",
+              "o.displayId as SU Serial No",
+              "s.displayId as SR Serial No",
             )
             .from("survey_orders As o")
             .where(qb => {
