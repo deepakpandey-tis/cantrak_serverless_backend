@@ -172,6 +172,9 @@ const facilityBookingController = {
                 addedBookingCriteriaResult = await knex('entity_booking_criteria')
                     .insert({
                         ...bookingCriteriaPayload,
+                        criteriaType: Boolean(req.body.statuses.alwaysAllow) ? '1' : '2',
+                        bookingType: req.body.statuses.bookingType,
+                        slotDuration: req.body.statuses.slotDuration,
                         entityId: addedFacilityResult.id,
                         entityType: 'facility_master',
                         updatedAt: currentTime,
@@ -265,6 +268,9 @@ const facilityBookingController = {
                         'facility_master.name',
                         'facility_master.description',
                         'facility_master.descriptionAlternateLang',
+                        'facility_master.bookingStatus',
+                        'facility_master.multipleSeatsLimit',
+                        'facility_master.moderationStatus',
                         'companies.companyId',
                         'companies.id as cid',
                         'projects.id as pid',
