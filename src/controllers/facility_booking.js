@@ -28,7 +28,8 @@ const facilityBookingController = {
                 'booking_frequency',
                 'booking_criteria',
                 'facilityId',
-                'descriptionAlternateLang'
+                'descriptionAlternateLang',
+                'statuses'
             ]);
 
             const schema = Joi.object().keys({
@@ -55,7 +56,15 @@ const facilityBookingController = {
             let descriptionAlternateLang = req.body.descriptionAlternateLang ? req.body.descriptionAlternateLang : ''
             // Insert Facility
             let addedFacilityResultData = await knex('facility_master')
-            .update({...payload,descriptionAlternateLang,updatedAt:currentTime,createdAt:currentTime,orgId:req.orgId,createdBy:req.me.id}).where({id:req.body.facilityId}).returning(['*'])
+            .update({...payload,
+                descriptionAlternateLang,
+                updatedAt:currentTime,
+                createdAt:currentTime,
+                orgId:req.orgId,
+                createdBy:req.me.id,
+                bookingStatus:req.body.statuses.bookingStatus,
+                multipleSeatsLimit: req.body.statuses.multipleSeatsLimit
+            }).where({id:req.body.facilityId}).returning(['*'])
              addedFacilityResult = addedFacilityResultData[0]
 
 
@@ -161,6 +170,9 @@ const facilityBookingController = {
             addedBookingCriteriaResult = await knex('entity_booking_criteria')
                 .insert({
                     ...bookingCriteriaPayload,
+                    criteriaType:Boolean(req.body.statuses.alwaysAllow) ? '1' : '2',
+                    bookingType: req.body.statuses.bookingType,
+                    slotDuration: req.body.statuses.slotDuration,
                     entityId: addedFacilityResult.id,
                     entityType: 'facility_master',
                     updatedAt: currentTime,
