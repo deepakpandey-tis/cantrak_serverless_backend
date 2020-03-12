@@ -825,7 +825,7 @@ const serviceRequestController = {
               // "user_house_allocation.id",
               "service_orders.id"
             ])
-            .where({ "service_requests.orgId": req.orgId })
+            .where({ "service_requests.orgId": req.orgId,'service_requests.moderationStatus':true })
             .whereIn('service_requests.projectId', accessibleProjects)
             .where({ 'service_requests.isCreatedFromSo': false })
             .distinct('service_requests.id')
@@ -909,7 +909,7 @@ const serviceRequestController = {
               "service_orders.id"
 
             ])
-            .where({ "service_requests.orgId": req.orgId })
+            .where({ "service_requests.orgId": req.orgId, 'service_requests.moderationStatus': true })
             .whereIn('service_requests.projectId', accessibleProjects)
             // .where({'service_requests.isCreatedFromSo':false})
             .distinct('service_requests.id')
@@ -1052,7 +1052,7 @@ const serviceRequestController = {
              
 
             ])
-            .where({ "service_requests.orgId": req.orgId })
+            .where({ "service_requests.orgId": req.orgId, 'service_requests.moderationStatus': true })
             .where({ 'service_requests.isCreatedFromSo': false })
             .where(qb => {
               if (location) {
@@ -1165,7 +1165,7 @@ const serviceRequestController = {
 
             ])
             .orderBy('service_requests.id', 'desc')
-            .where({ "service_requests.orgId": req.orgId })
+            .where({ "service_requests.orgId": req.orgId, 'service_requests.moderationStatus': true })
             .where({ 'service_requests.isCreatedFromSo': false })
             .where(qb => {
               if (location) {
