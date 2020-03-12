@@ -1941,8 +1941,10 @@ const serviceRequestController = {
     try {
       let result;
       let orgId = req.orgId;
+      let payload = _.omit(req.body, ["images", "isSo", "mobile", "email", "name"]);
+
       await knex.transaction(async trx => {
-        let payload = _.omit(req.body, ["images", "isSo", "mobile", "email", "name"]);
+        
         const schema = Joi.object().keys({
           serviceRequestId: Joi.number().required(),
           areaName: Joi.string().allow("").optional(),
@@ -1998,10 +2000,18 @@ const serviceRequestController = {
           priority = "HIGH";
         }
         let insertData;
+
+        let propertyUnit =  await knex
+        .select(['companyId'])
+        .where({ id: payload.house })
+        .into("property_units").first();
+
+
         if (payload.commonArea) {
           insertData = {
             description: payload.description,
             projectId: payload.project,
+            companyId: propertyUnit.companyId,
             houseId: payload.house,
             commonId: payload.commonArea,
             // requestedBy: payload.userId,
@@ -2022,6 +2032,7 @@ const serviceRequestController = {
           insertData = {
             description: payload.description,
             projectId: payload.project,
+            companyId: propertyUnit.companyId,
             houseId: payload.house,
             requestedBy: requestedByResult[0].id,
             // requestedBy: payload.userId,
@@ -2113,6 +2124,13 @@ const serviceRequestController = {
 
         trx.commit;
       });
+
+
+      await knex
+      .update({moderationStatus: true})
+      .where({ id: payload.serviceRequestId })
+      .into("service_requests");
+
       return res.status(200).json({
         //data:result,
         message: "Service Request created successfully"
