@@ -52,13 +52,7 @@ const facilityBookingController = {
                 }
 
 
-                let currentTime = new Date().getTime()
-                let descriptionAlternateLang = req.body.descriptionAlternateLang ? req.body.descriptionAlternateLang : ''
-                // Insert Facility
-                let addedFacilityResultData = await knex('facility_master')
-                    .update({ ...payload, descriptionAlternateLang, updatedAt: currentTime, createdAt: currentTime, orgId: req.orgId, createdBy: req.me.id, moderationStatus: true }).where({ id: req.body.facilityId }).returning(['*'])
-                addedFacilityResult = addedFacilityResultData[0]
-
+               
             let currentTime = new Date().getTime()
             let descriptionAlternateLang = req.body.descriptionAlternateLang ? req.body.descriptionAlternateLang : ''
             // Insert Facility
@@ -70,6 +64,7 @@ const facilityBookingController = {
                 orgId:req.orgId,
                 createdBy:req.me.id,
                 bookingStatus:req.body.statuses.bookingStatus,
+                moderationStatus:true,
                 multipleSeatsLimit: req.body.statuses.multipleSeatsLimit
             }).where({id:req.body.facilityId}).returning(['*'])
              addedFacilityResult = addedFacilityResultData[0]
@@ -140,52 +135,6 @@ const facilityBookingController = {
 
             }).returning(['*'])
 
-
-            // Booking Frequency limit
-            const booking_frequency = req.body.booking_frequency;
-            /*
-                "limitType" 
-                "limitValue"
-            */
-             bookingFrequencyResult = []
-           for(let b of booking_frequency){
-            let bookingFrequencyResultData = await knex('entity_booking_limit')
-                   .insert({
-                       ...b,
-                       entityType: 'facility_master',
-                       entityId: addedFacilityResult.id,
-                       updatedAt: currentTime,
-                       createdAt: currentTime,
-                       orgId: req.orgId,
-   
-                   }).returning(['*'])
-            bookingFrequencyResult.push(bookingFrequencyResultData)
-           }
-
-            // Booking Criteria
-            /**
-             * {"bookingAllowedAdvanceTime"
-                "bookingCloseAdvanceTime"
-                "allowConcurrentBooking"
-                "concurrentBookingLimit"
-                "minBookingPeriod"
-                "maxBookingPeriod"}
-             */
-
-            const bookingCriteriaPayload = req.body.booking_criteria;
-            addedBookingCriteriaResult = await knex('entity_booking_criteria')
-                .insert({
-                    ...bookingCriteriaPayload,
-                    criteriaType:Boolean(req.body.statuses.alwaysAllow) ? '1' : '2',
-                    bookingType: req.body.statuses.bookingType,
-                    slotDuration: req.body.statuses.slotDuration,
-                    entityId: addedFacilityResult.id,
-                    entityType: 'facility_master',
-                    updatedAt: currentTime,
-                    createdAt: currentTime,
-                    orgId: req.orgId,
-
-                }).returning(['*'])
 
 
                 // Booking Frequency limit
