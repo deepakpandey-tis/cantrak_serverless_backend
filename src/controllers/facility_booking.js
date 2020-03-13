@@ -825,6 +825,70 @@ const facilityBookingController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
             })
         }
+    },
+    /*FACILITY BOOK NOW */
+    facilityBookNow: async (req, res) => {
+
+        try {
+            let id = req.me.id;
+            let payload = req.body;
+            let resultData;
+            const schema = Joi.object().keys({
+                facilityId: Joi.string().required(),
+                bookingStartDateTime: Joi.date().required(),
+                bookingEndDateTime: Joi.date().required(),
+                noOfSeats: Joi.number().required(),
+                
+            })
+
+            const result = Joi.validate(payload, schema);
+
+            if (result && result.hasOwnProperty("error") && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "VALIDATION_ERROR", message: result.error.message }
+                    ]
+                });
+            }
+
+
+            let facilityData = await knex.from('facility_master').where({id:payload.facilityId}).first();
+
+
+            let startTime = new Date(payload.bookingStartDateTime).getTime();
+            let endTime = new Date(payload.bookingEndDateTime).getTime();
+
+            let currentTime = new Date().getTime();
+
+            let insertData = {
+                entityId: payload.facilityId,
+                entityType: "facility_master",
+                bookedAt: currentTime,
+                bookedBy: id,
+                noOfSeats: payload.noOfSeats,
+                feesPaid: 0,
+                bookingStartDateTime: startTime,
+                bookingEndDateTime: endTime,
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                orgId:req.orgId
+            }
+
+            let insertResult = await knex('entity_bookings').insert(insertData).returning(['*']);
+            resultData = insertResult[0];
+
+            res.status(200).json({
+                result: resultData,
+                message: "Your facility booked successfully!"
+            })
+
+
+        } catch (err) {
+
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
+            })
+        }
     }
 }
 
