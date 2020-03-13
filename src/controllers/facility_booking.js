@@ -541,9 +541,9 @@ const facilityBookingController = {
             if (id || fromDate && toDate) {
 
                 result = await knex.from('entity_bookings')
-                    .where({ orgId })
+                    .where({ orgId,isBookingCancelled:false })
                     .where(qb => {
-
+                        
 
                         if (fromDate && toDate) {
 
@@ -565,7 +565,7 @@ const facilityBookingController = {
 
             } else {
                 result = await knex.from('entity_bookings')
-                    .where({ orgId })
+                    .where({ orgId,isBookingCancelled:false })
 
             }
 
@@ -888,6 +888,18 @@ const facilityBookingController = {
 
         } catch (err) {
 
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
+            })
+        }
+    },
+    cancelBooking: async(req,res) => {
+        try {
+            const {bookingId,cancellationReason} = req.body;
+            const currentTime = new Date().getTime()
+            const cancelled = await knex('entity_bookings').update({cancellationReason,cancelledAt:currentTime,cancelledBy:req.me.id,isBookingCancelled:true}).where({id:bookingId})
+            return res.status(200).json({message: 'cancelled!',data:cancelled})
+        } catch(err) {
             res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
             })
