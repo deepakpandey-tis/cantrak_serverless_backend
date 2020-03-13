@@ -837,10 +837,11 @@ const facilityBookingController = {
             let payload = req.body;
             let resultData;
             const schema = Joi.object().keys({
+                facilityId: Joi.string().required(),
                 bookingStartDateTime: Joi.date().required(),
                 bookingEndDateTime: Joi.date().required(),
                 noOfSeats: Joi.number().required(),
-                facilityId: string().required()
+                
             })
 
             const result = Joi.validate(payload, schema);
@@ -853,6 +854,10 @@ const facilityBookingController = {
                 });
             }
 
+
+            let facilityData = await knex.from('facility_master').where({id:payload.facilityId}).first();
+
+
             let startTime = new Date(payload.bookingStartDateTime).getTime();
             let endTime = new Date(payload.bookingEndDateTime).getTime();
 
@@ -864,11 +869,12 @@ const facilityBookingController = {
                 bookedAt: currentTime,
                 bookedBy: id,
                 noOfSeats: payload.noOfSeats,
-                feesPaid: "",
+                feesPaid: 0,
                 bookingStartDateTime: startTime,
                 bookingEndDateTime: endTime,
                 createdAt: currentTime,
-                updatedAt: currentTime
+                updatedAt: currentTime,
+                orgId:req.orgId
             }
 
             let insertResult = await knex('entity_bookings').insert(insertData).returning(['*']);
