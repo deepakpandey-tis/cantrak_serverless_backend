@@ -289,7 +289,10 @@ const facilityBookingController = {
                     ])
                     .where({ 'facility_master.id': payload.id }).first()
                 ,
-                knex.from('entity_open_close_times').where({ entityId: payload.id, entityType: 'facility_master' })
+                knex.from('entity_open_close_times').where({ entityId: payload.id, entityType: 'facility_master' }).where(qb => {
+                    qb.whereNotNull('openTime')
+                    qb.whereNotNull('closeTime')
+                })
                 ,
                 knex.from('rules_and_regulations').where({ entityId: payload.id, entityType: 'facility_master' })
                 ,
@@ -301,7 +304,7 @@ const facilityBookingController = {
             ])
 
             return res.status(200).json({
-                facilityDetails: { ...facilityDetails, openingCloseingDetail, ruleRegulationDetail, bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits },
+                facilityDetails: { ...facilityDetails, openingCloseingDetail:_.uniqBy(openingCloseingDetail,'day'), ruleRegulationDetail:_.uniqBy(ruleRegulationDetail,'rules'), bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits:_.uniqBy(bookingLimits,'limitType') },
                 message: "Facility Details!"
             });
 
