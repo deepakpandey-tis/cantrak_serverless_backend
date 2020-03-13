@@ -14,12 +14,10 @@ router.post('/get-user-facility-list', authMiddleware.isAuthenticated,
 
 /* FACILITY DETAILS */
 router.post('/user-facility-details', authMiddleware.isAuthenticated,
-    
     facilityBookingController.userFacilityDetails);
 
 /* YOUR  FACILITY BOOKING LIST */
 router.post('/your-facility-booking-list', authMiddleware.isAuthenticated,
-    
     facilityBookingController.yourFacilityBookingList);
 
 
