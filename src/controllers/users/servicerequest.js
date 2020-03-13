@@ -208,138 +208,8 @@ const serviceRequestController = {
       });
     }
   },
-  updateServiceRequest: async (req, res) => {
-    try {
-      let serviceRequest = null;
-      let images = null;
 
-      await knex.transaction(async trx => {
-        const serviceRequestPayload = _.omit(req.body, ["images"]);
-        images = req.body.images;
-        console.log("[controllers][service][request]", serviceRequestPayload);
 
-        // validate keys
-        const schema = Joi.object().keys({
-          id: Joi.number().required(),
-          description: Joi.string().required(),
-          requestFor: Joi.string().required(),
-          houseId: Joi.string().required(),
-          commonId: Joi.string().required(),
-          serviceType: Joi.string().required(),
-          requestedBy: Joi.string().required(),
-          priority: Joi.string().required(),
-          location: Joi.string().required(),
-          recurrenceType: Joi.string().required(),
-          serviceDate: Joi.array().required()
-        });
-
-        const result = Joi.validate(serviceRequestPayload, schema);
-        console.log("[controllers][service][request]: JOi Result", result);
-
-        if (result && result.hasOwnProperty("error") && result.error) {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
-          });
-        }
-
-        // Insert in service request table,
-        const currentTime = new Date().getTime();
-
-        const updateServiceReq = await knex
-          .update({
-            description: serviceRequestPayload.description,
-            requestFor: serviceRequestPayload.requestFor,
-            houseId: serviceRequestPayload.houseId,
-            commonId: serviceRequestPayload.commonId,
-            serviceType: serviceRequestPayload.serviceType,
-            requestedBy: serviceRequestPayload.requestedBy,
-            priority: serviceRequestPayload.priority,
-            location: serviceRequestPayload.location,
-            updatedAt: currentTime,
-            isActive: true,
-            moderationStatus: true,
-            serviceStatusCode: "O"
-          })
-          .where({ id: serviceRequestPayload.id })
-          .returning(["*"])
-          .transacting(trx)
-          .into("service_requests");
-
-        console.log(
-          "[controllers][service][request]: Update Data",
-          updateServiceReq
-        );
-
-        serviceRequest = updateServiceReq[0];
-        serviceOrders = [];
-
-        //
-        if (images && images.length) {
-          images = req.body.images.map(image => ({
-            ...image,
-            createdAt: currentTime,
-            updatedAt: currentTime,
-            entityId: serviceRequestPayload.id,
-            entityType: "service_requests"
-          }));
-          let addedImages = await knex
-            .insert(images)
-            .returning(["*"])
-            .transacting(trx)
-            .into("images");
-          images = addedImages;
-        }
-
-        // Insert into service orders table with selected recrence date
-        let dates = serviceRequestPayload.serviceDate;
-        console.log("dates", dates);
-        let countDates = dates.length;
-        console.log("countDates", countDates);
-
-        for (i = 0; i < countDates; i++) {
-          let newdate = dates[i]
-            .split("-")
-            .reverse()
-            .join("-");
-          let serviceDateExist = await knex("service_orders").where({
-            orderDueDate: newdate
-          });
-          if (serviceDateExist <= 0) {
-            let serviceOrderResult = await knex
-              .insert({
-                serviceRequestId: serviceRequestPayload.id,
-                recurrenceType: serviceRequestPayload.recurrenceType,
-                orderDueDate: newdate,
-                createdAt: currentTime,
-                updatedAt: currentTime
-              })
-              .returning(["*"])
-              .transacting(trx)
-              .into("service_orders");
-            serviceOrders.push(serviceOrderResult[0]);
-          }
-        }
-        trx.commit;
-      });
-
-      let returnResponse = { serviceRequest, serviceOrder: serviceOrders };
-
-      res.status(200).json({
-        data: {
-          response: { ...returnResponse, serviceRequestImages: images }
-        },
-        message: "Service request updated successfully !"
-      });
-    } catch (err) {
-      console.log("[controllers][service][request] :  Error", err);
-      //trx.rollback
-      res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-      });
-    }
-  },
   updateImages: async (req, res) => {
     try {
       let serviceRequest = null;
@@ -377,6 +247,8 @@ const serviceRequestController = {
       });
     }
   },
+
+
   addServiceRequestPart: async (req, res) => {
     try {
       let assignedPart = null;
@@ -438,6 +310,8 @@ const serviceRequestController = {
       });
     }
   },
+
+
   addServiceRequestAsset: async (req, res) => {
     try {
       let assignedAsset = null;
@@ -499,6 +373,8 @@ const serviceRequestController = {
       });
     }
   },
+
+
   deleteServiceRequestPart: async (req, res) => {
     try {
       let serviceRequest = null;
@@ -569,6 +445,8 @@ const serviceRequestController = {
       });
     }
   },
+
+
   deleteServiceRequestAsset: async (req, res) => {
     try {
       let serviceOrder = null;
@@ -639,6 +517,8 @@ const serviceRequestController = {
       });
     }
   },
+
+
   getServiceRequestList: async (req, res) => {
     // We will get service request list
     try {
@@ -861,7 +741,7 @@ const serviceRequestController = {
               if (location) {
                 qb.where('service_requests.location', 'iLIKE', `%${location}%`)
               }
-              
+
               if (description) {
                 qb.where('service_requests.description', 'iLIKE', `%${description}%`)
               }
@@ -879,7 +759,7 @@ const serviceRequestController = {
                 ]);
                 qb.where({ closedBy: "" })
               }
-              qb.where(filters);            
+              qb.where(filters);
             })
             .whereIn("service_requests.houseId", houseIds)
             .orWhere("service_requests.createdBy", req.me.id)
@@ -928,7 +808,7 @@ const serviceRequestController = {
             .where(qb => {
               if (location) {
                 qb.where('service_requests.location', 'iLIKE', `%${location}%`)
-              }             
+              }
 
               if (description) {
                 qb.where('service_requests.description', 'iLIKE', `%${description}%`)
@@ -982,6 +862,8 @@ const serviceRequestController = {
       });
     }
   },
+
+
   getPropertyUnits: async (req, res) => {
     try {
       let ids = req.body;
@@ -1126,8 +1008,14 @@ const serviceRequestController = {
       });
     }
   },
+
+
   getServiceRequestByMonth: async (req, res) => { },
+
+
   getUrl: getUploadURL,
+
+
   getServiceRequestAssignedAssets: async (req, res) => {
     try {
       let { serviceRequestId } = req.body;
@@ -1239,8 +1127,10 @@ const serviceRequestController = {
     try {
       let result;
       let orgId = req.orgId;
+      let payload = _.omit(req.body, ["images", "isSo", "mobile", "email", "name"]);
+
       await knex.transaction(async trx => {
-        let payload = _.omit(req.body, ["images", "isSo", "mobile", "email", "name"]);
+
         const schema = Joi.object().keys({
           serviceRequestId: Joi.number().required(),
           areaName: Joi.string().allow("").optional(),
@@ -1307,11 +1197,20 @@ const serviceRequestController = {
         } else {
           priority = "HIGH";
         }
+
+
+        let propertyUnit = await knex
+          .select(['companyId', 'projectId'])
+          .where({ id: payload.house })
+          .into("property_units").first();
+
+
         let insertData;
         if (payload.commonArea) {
           insertData = {
             description: payload.description,
             projectId: payload.project,
+            companyId: propertyUnit.companyId,
             houseId: payload.house,
             commonId: payload.commonArea,
             // requestedBy: payload.userId,
@@ -1331,6 +1230,7 @@ const serviceRequestController = {
           insertData = {
             description: payload.description,
             projectId: payload.project,
+            companyId: propertyUnit.companyId,
             houseId: payload.house,
             requestedBy: requestedByResult[0].id,
             // requestedBy: payload.userId,
@@ -1421,6 +1321,13 @@ const serviceRequestController = {
 
         trx.commit;
       });
+
+      await knex
+        .update({ moderationStatus: true })
+        .where({ id: payload.serviceRequestId })
+        .into("service_requests");
+
+
       return res.status(200).json({
         //data:result,
         message: "Service Request created successfully"
@@ -1431,6 +1338,156 @@ const serviceRequestController = {
       });
     }
   },
+
+
+  updateServiceRequest: async (req, res) => {
+    try {
+      let serviceRequest = null;
+      let images = null;
+      const serviceRequestPayload = _.omit(req.body, ["images"]);
+
+
+      await knex.transaction(async trx => {
+        images = req.body.images;
+        console.log("[controllers][service][request]", serviceRequestPayload);
+
+        // validate keys
+        const schema = Joi.object().keys({
+          id: Joi.number().required(),
+          description: Joi.string().required(),
+          requestFor: Joi.string().required(),
+          houseId: Joi.string().required(),
+          commonId: Joi.string().required(),
+          serviceType: Joi.string().required(),
+          requestedBy: Joi.string().required(),
+          priority: Joi.string().required(),
+          location: Joi.string().required(),
+          recurrenceType: Joi.string().required(),
+          serviceDate: Joi.array().required()
+        });
+
+        const result = Joi.validate(serviceRequestPayload, schema);
+        console.log("[controllers][service][request]: JOi Result", result);
+
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message }
+            ]
+          });
+        }
+
+        // Insert in service request table,
+        const currentTime = new Date().getTime();
+
+
+        let propertyUnit = await knex
+          .select(['companyId', 'projectId'])
+          .where({ id: serviceRequestPayload.houseId })
+          .into("property_units").first();
+
+        const updateServiceReq = await knex
+          .update({
+            description: serviceRequestPayload.description,
+            requestFor: serviceRequestPayload.requestFor,
+            houseId: serviceRequestPayload.houseId,
+            projectId: propertyUnit.projectId,
+            companyId: propertyUnit.companyId,
+            commonId: serviceRequestPayload.commonId,
+            serviceType: serviceRequestPayload.serviceType,
+            requestedBy: serviceRequestPayload.requestedBy,
+            priority: serviceRequestPayload.priority,
+            location: serviceRequestPayload.location,
+            updatedAt: currentTime,
+            isActive: true,
+            moderationStatus: true,
+            serviceStatusCode: "O"
+          })
+          .where({ id: serviceRequestPayload.id })
+          .returning(["*"])
+          .transacting(trx)
+          .into("service_requests");
+
+        console.log(
+          "[controllers][service][request]: Update Data",
+          updateServiceReq
+        );
+
+        serviceRequest = updateServiceReq[0];
+        serviceOrders = [];
+
+        //
+        if (images && images.length) {
+          images = req.body.images.map(image => ({
+            ...image,
+            createdAt: currentTime,
+            updatedAt: currentTime,
+            entityId: serviceRequestPayload.id,
+            entityType: "service_requests"
+          }));
+          let addedImages = await knex
+            .insert(images)
+            .returning(["*"])
+            .transacting(trx)
+            .into("images");
+          images = addedImages;
+        }
+
+        // Insert into service orders table with selected recrence date
+        let dates = serviceRequestPayload.serviceDate;
+        console.log("dates", dates);
+        let countDates = dates.length;
+        console.log("countDates", countDates);
+
+        for (i = 0; i < countDates; i++) {
+          let newdate = dates[i]
+            .split("-")
+            .reverse()
+            .join("-");
+          let serviceDateExist = await knex("service_orders").where({
+            orderDueDate: newdate
+          });
+          if (serviceDateExist <= 0) {
+            let serviceOrderResult = await knex
+              .insert({
+                serviceRequestId: serviceRequestPayload.id,
+                recurrenceType: serviceRequestPayload.recurrenceType,
+                orderDueDate: newdate,
+                createdAt: currentTime,
+                updatedAt: currentTime
+              })
+              .returning(["*"])
+              .transacting(trx)
+              .into("service_orders");
+            serviceOrders.push(serviceOrderResult[0]);
+          }
+        }
+        trx.commit;
+      });
+
+      await knex
+        .update({ moderationStatus: true })
+        .where({ id: serviceRequestPayload.id })
+        .into("service_requests");
+
+      let returnResponse = { serviceRequest, serviceOrder: serviceOrders };
+
+      res.status(200).json({
+        data: {
+          response: { ...returnResponse, serviceRequestImages: images }
+        },
+        message: "Service request updated successfully !"
+      });
+    } catch (err) {
+      console.log("[controllers][service][request] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+
+
   /**GET COMPANY ,PROJECT , BUILDING ,FLOOR BY HOUSE ID */
   getHouseDetailData: async (req, res) => {
     try {

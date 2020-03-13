@@ -61,48 +61,67 @@ const getUploadURL = async (mimeType, filename, type = "") => {
 
 
 const surveyOrderController = {
+
   addSurveyOrder: async (req, res) => {
+
     try {
+
       let surveyOrder = null;
       let additionalUsers = [];
       let userId = req.me.id;
+      let surveyOrderPayload = req.body;
+      let surveyOrderId;
+      let assignedServiceTeam;
+
+      let initialSurveyOrderPayload = _.omit(surveyOrderPayload, [
+        "additionalUsers",
+        "teamId",
+        "mainUserId"
+      ]);
+
+      const schema = Joi.object().keys({
+        serviceRequestId: Joi.string().required(),
+        appointedDate: Joi.string().required(),
+        appointedTime: Joi.string().required()
+      });
+
+      let result = Joi.validate(initialSurveyOrderPayload, schema);
+      console.log(
+        "[controllers][surveyOrder][addSurveyOrder]: JOi Result",
+        result
+      );
+
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message }
+          ]
+        });
+      }
+
+      let currentTime = new Date().getTime();
+
 
       await knex.transaction(async trx => {
-        let surveyOrderPayload = req.body;
-        let initialSurveyOrderPayload = _.omit(surveyOrderPayload, [
-          "additionalUsers",
-          "teamId",
-          "mainUserId"
-        ]);
-        const schema = Joi.object().keys({
-          serviceRequestId: Joi.string().required(),
-          appointedDate: Joi.string().required(),
-          appointedTime: Joi.string().required()
-        });
-        let result = Joi.validate(initialSurveyOrderPayload, schema);
-        console.log(
-          "[controllers][surveyOrder][addSurveyOrder]: JOi Result",
-          result
-        );
 
-        if (result && result.hasOwnProperty("error") && result.error) {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
-          });
-        }
+        let propertyUnit = await knex
+          .select(['companyId'])
+          .where({ id: surveyOrderPayload.serviceRequestId })
+          .into("service_requests").first();
 
-        let currentTime = new Date().getTime();
         let insertSurveyOrderData = {
           ...initialSurveyOrderPayload,
           orgId: req.orgId,
+          companyId: propertyUnit.companyId,
           createdBy: userId,
           createdAt: currentTime,
           updatedAt: currentTime,
           isActive: true,
           surveyOrderStatus: 'Pending'
         };
+
+
+
         // Insert into survey_orders table
         let surveyOrderResult = await knex
           .insert(insertSurveyOrderData)
@@ -110,6 +129,8 @@ const surveyOrderController = {
           .transacting(trx)
           .into("survey_orders");
         surveyOrder = surveyOrderResult[0];
+
+        surveyOrderId = surveyOrder.id;
 
         // Insert into assigned_service_team table
 
@@ -122,6 +143,7 @@ const surveyOrderController = {
           createdAt: currentTime,
           updatedAt: currentTime
         };
+
         const assignedServiceTeamResult = await knex
           .insert(assignedServiceTeamPayload)
           .returning(["*"])
@@ -132,6 +154,7 @@ const surveyOrderController = {
         // Insert into assigned_service_additional_users
 
         let assignedServiceAdditionalUsers = surveyOrderPayload.additionalUsers;
+
         for (user of assignedServiceAdditionalUsers) {
           let userResult = await knex
             .insert({
@@ -148,24 +171,27 @@ const surveyOrderController = {
           additionalUsers.push(userResult[0]);
         }
 
-
         await knex('service_requests')
           .update({ serviceStatusCode: 'US' })
           .where({ id: surveyOrderPayload.serviceRequestId })
           .returning(['*'])
 
-
-
         trx.commit;
-        res.status(200).json({
-          data: {
-            surveyOrder,
-            assignedServiceTeam,
-            assignedAdditionalUsers: additionalUsers
-          },
-          message: "Survey Order added successfully !"
-        });
       });
+
+      await knex('survey_orders')
+        .update({ surveyInProcess: null })
+        .where({ id: surveyOrderId })
+
+      res.status(200).json({
+        data: {
+          surveyOrder,
+          assignedServiceTeam,
+          assignedAdditionalUsers: additionalUsers
+        },
+        message: "Survey Order added successfully !"
+      });
+
     } catch (err) {
       console.log("[controllers][surveyOrder][addSurveyOrder] :  Error", err);
       //trx.rollback
@@ -908,7 +934,7 @@ const surveyOrderController = {
             "assignUser.name  as Tenant Name",
             "survey_orders.displayId as SU#",
             "service_requests.displayId as SR#",
-             
+
           ])
           .where({ "survey_orders.orgId": req.orgId, "assigned_service_team.entityType": "survey_orders" })
           .whereIn('service_requests.projectId', accessibleProjects)
@@ -1410,7 +1436,7 @@ const surveyOrderController = {
         return item;
       });
 
-      console.log("remarksList",remarksNotesList);
+      console.log("remarksList", remarksNotesList);
 
       return res.status(200).json({
         data: remarksNotesList,
