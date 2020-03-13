@@ -268,7 +268,6 @@ const facilityBookingController = {
                 });
             }
 
-
             let facilityData = await knex.from('facility_master').where({id:payload.facilityId}).first();
 
 
