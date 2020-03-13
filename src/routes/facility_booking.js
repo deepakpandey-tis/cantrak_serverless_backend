@@ -17,15 +17,27 @@ router.post('/get-facility-list', authMiddleware.isAuthenticated,
 // roleMiddleware.parseUserPermission,
 // facilityBookingController.test)
 
-router.post('/add-facility', authMiddleware.isAuthenticated,facilityBookingController.addFacility)
+router.post('/add-facility', authMiddleware.isAuthenticated, facilityBookingController.addFacility)
 
-router.post('/facility-details',authMiddleware.isAuthenticated,facilityBookingController.facilityDetails)
+router.post('/facility-details', authMiddleware.isAuthenticated, facilityBookingController.facilityDetails)
 
-router.post('/get-facility-booking-list',authMiddleware.isAuthenticated,facilityBookingController.getFacilityBookingList)
-router.get('/generate-facility-id',authMiddleware.isAuthenticated,facilityBookingController.generateFacilityId)
-/*USER FACILITY LIST */
-router.post('/get-user-facility-list',authMiddleware.isAuthenticated,
-roleMiddleware.parseUserPermission,
-facilityBookingController.getUserFacilityList)
+router.post('/get-facility-booking-list', authMiddleware.isAuthenticated, facilityBookingController.getFacilityBookingList)
+router.get('/generate-facility-id', authMiddleware.isAuthenticated, facilityBookingController.generateFacilityId)
+
+/* USER FACILITY LIST */
+router.post('/get-user-facility-list', authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    facilityBookingController.getUserFacilityList)
+
+/* FACILITY DETAILS */
+router.post('/user-facility-details', authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    facilityBookingController.userFacilityDetails)
+
+/* YOUR  FACILITY BOOKING LIST */
+router.post('/your-facility-booking-list', authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    facilityBookingController.yourFacilityBookingList)
+
 
 module.exports = router;
