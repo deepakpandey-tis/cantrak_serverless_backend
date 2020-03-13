@@ -825,7 +825,7 @@ const serviceRequestController = {
               // "user_house_allocation.id",
               "service_orders.id"
             ])
-            .where({ "service_requests.orgId": req.orgId })
+            .where({ "service_requests.orgId": req.orgId,'service_requests.moderationStatus':true })
             .whereIn('service_requests.projectId', accessibleProjects)
             .where({ 'service_requests.isCreatedFromSo': false })
             .distinct('service_requests.id')
@@ -909,7 +909,7 @@ const serviceRequestController = {
               "service_orders.id"
 
             ])
-            .where({ "service_requests.orgId": req.orgId })
+            .where({ "service_requests.orgId": req.orgId, 'service_requests.moderationStatus': true })
             .whereIn('service_requests.projectId', accessibleProjects)
             // .where({'service_requests.isCreatedFromSo':false})
             .distinct('service_requests.id')
@@ -1052,7 +1052,7 @@ const serviceRequestController = {
              
 
             ])
-            .where({ "service_requests.orgId": req.orgId })
+            .where({ "service_requests.orgId": req.orgId, 'service_requests.moderationStatus': true })
             .where({ 'service_requests.isCreatedFromSo': false })
             .where(qb => {
               if (location) {
@@ -1165,7 +1165,7 @@ const serviceRequestController = {
 
             ])
             .orderBy('service_requests.id', 'desc')
-            .where({ "service_requests.orgId": req.orgId })
+            .where({ "service_requests.orgId": req.orgId, 'service_requests.moderationStatus': true })
             .where({ 'service_requests.isCreatedFromSo': false })
             .where(qb => {
               if (location) {
@@ -1941,8 +1941,10 @@ const serviceRequestController = {
     try {
       let result;
       let orgId = req.orgId;
+      let payload = _.omit(req.body, ["images", "isSo", "mobile", "email", "name"]);
+
       await knex.transaction(async trx => {
-        let payload = _.omit(req.body, ["images", "isSo", "mobile", "email", "name"]);
+        
         const schema = Joi.object().keys({
           serviceRequestId: Joi.number().required(),
           areaName: Joi.string().allow("").optional(),
@@ -1998,10 +2000,18 @@ const serviceRequestController = {
           priority = "HIGH";
         }
         let insertData;
+
+        let propertyUnit =  await knex
+        .select(['companyId'])
+        .where({ id: payload.house })
+        .into("property_units").first();
+
+
         if (payload.commonArea) {
           insertData = {
             description: payload.description,
             projectId: payload.project,
+            companyId: propertyUnit.companyId,
             houseId: payload.house,
             commonId: payload.commonArea,
             // requestedBy: payload.userId,
@@ -2022,6 +2032,7 @@ const serviceRequestController = {
           insertData = {
             description: payload.description,
             projectId: payload.project,
+            companyId: propertyUnit.companyId,
             houseId: payload.house,
             requestedBy: requestedByResult[0].id,
             // requestedBy: payload.userId,
@@ -2113,6 +2124,13 @@ const serviceRequestController = {
 
         trx.commit;
       });
+
+
+      await knex
+      .update({moderationStatus: true})
+      .where({ id: payload.serviceRequestId })
+      .into("service_requests");
+
       return res.status(200).json({
         //data:result,
         message: "Service Request created successfully"
