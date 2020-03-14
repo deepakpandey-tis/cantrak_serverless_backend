@@ -900,9 +900,9 @@ const facilityBookingController = {
             const {bookingId,cancellationReason} = req.body;
             const currentTime = new Date().getTime()
             const cancelled = await knex('entity_bookings').update({cancellationReason,cancelledAt:currentTime,cancelledBy:req.me.id,isBookingCancelled:true}).where({id:bookingId}).returning(['*'])
-            const bookedByUser = await knex('entity_bookings').select('bookedBy').where({id:bookingId}).first()
+            const bookedByUser = await knex('entity_bookings').select('*').where({id:bookingId}).first()
             const user = await knex('users').select('email').where({id:bookedByUser.bookedBy}).first()
-            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName:user.name,reason:cancellationReason} })
+            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName:user.name,reason:cancellationReason,bookingStartDateTime: moment(bookedByUser.bookingStartDateTime).format('YYYY-MM-DD HH:MM:SS'),bookingEndDateTime: moment(bookedByUser.bookingEndDateTime).format('YYYY-MM-DD HH:MM:SS'),noOfSeats: moment(bookedByUser.noOfSeats).format('YYYY-MM-DD HH:MM:SS')} })
             return res.status(200).json({message: 'cancelled!',data:cancelled})
         } catch(err) {
             res.status(500).json({
