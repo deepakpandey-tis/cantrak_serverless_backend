@@ -42,7 +42,7 @@ const dashboardController = {
           .select("service_requests.serviceStatusCode as status")
           .distinct("service_requests.id")
           .whereIn("service_requests.projectId", accessibleProjects)
-          .where({ serviceStatusCode: "US", orgId: orgId,"moderationStatus":true})
+          .where({ serviceStatusCode: "US", orgId: orgId, "moderationStatus":true})
           .orWhere({ serviceStatusCode: "O", orgId: orgId,"moderationStatus":true }),
         knex
           .from("service_requests")
