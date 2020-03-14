@@ -312,7 +312,7 @@ const facilityBookingController = {
 
             const user = await knex('users').select(['email','name']).where({id:id}).first()
 
-            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Confirmed', template: 'booking-confirmed.ejs', templateData: { fullName:user.name,bookingStartDateTime: moment(Number(bookedByUser.bookingStartDateTime)).format('YYYY-MM-DD HH:MM A'),bookingEndDateTime: moment(+bookedByUser.bookingEndDateTime).format('YYYY-MM-DD HH:MM A'),noOfSeats: bookedByUser.noOfSeats} })
+            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Confirmed', template: 'booking-confirmed.ejs', templateData: { fullName:user.name,bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD HH:MM A'),bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD HH:MM A'),noOfSeats: resultData.noOfSeats} })
 
 
             res.status(200).json({
