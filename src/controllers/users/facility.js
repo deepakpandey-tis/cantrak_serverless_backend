@@ -182,20 +182,20 @@ const facilityBookingController = {
                         'floor_and_zones.description as floorName',
                     ])
                     .where({ 'facility_master.id': payload.id }).first(),
-                knex.from('entity_open_close_times').where({ entityId: payload.id, entityType: 'facility_master' })
+                knex.from('entity_open_close_times').where({ entityId: payload.id, entityType: 'facility_master',orgId:req.orgId})
                 ,
-                knex.from('rules_and_regulations').where({ entityId: payload.id, entityType: 'facility_master' })
+                knex.from('rules_and_regulations').where({ entityId: payload.id, entityType: 'facility_master',orgId:req.orgId})
                 ,
-                knex.from('entity_booking_criteria').where({ entityId: payload.id, entityType: 'facility_master' }).first()
+                knex.from('entity_booking_criteria').where({ entityId: payload.id, entityType: 'facility_master',orgId:req.orgId}).first()
                 ,
-                knex.from('images').where({ entityId: payload.id, entityType: 'facility_master' }),
+                knex.from('images').where({ entityId: payload.id, entityType: 'facility_master',orgId:req.orgId}),
                 knex('entity_fees_master').select(['feesType', 'feesAmount', 'duration']).where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId }),
                 knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId })
 
             ])
 
             return res.status(200).json({
-
+                
                 facilityDetails: {
                     ...facilityDetails, openingClosingDetail, ruleRegulationDetail,
                     bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits
