@@ -3,6 +3,7 @@ const Joi = require("@hapi/joi");
 const moment = require("moment");
 const uuidv4 = require("uuid/v4");
 const _ = require("lodash");
+const emailHelper = require('../../helpers/email')
 
 const facilityBookingController = {
 
@@ -308,6 +309,11 @@ const facilityBookingController = {
 
             let insertResult = await knex('entity_bookings').insert(insertData).returning(['*']);
             resultData = insertResult[0];
+
+            const user = await knex('users').select(['email','name']).where({id:id}).first()
+
+            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Confirmed', template: 'booking-confirmed.ejs', templateData: { fullName:user.name,bookingStartDateTime: moment(Number(bookedByUser.bookingStartDateTime)).format('YYYY-MM-DD HH:MM A'),bookingEndDateTime: moment(+bookedByUser.bookingEndDateTime).format('YYYY-MM-DD HH:MM A'),noOfSeats: bookedByUser.noOfSeats} })
+
 
             res.status(200).json({
                 result: resultData,
