@@ -157,7 +157,7 @@ const facilityBookingController = {
             }
 
             let [facilityDetails,
-                openingCloseingDetail,
+                openingClosingDetail,
                 ruleRegulationDetail,
                 bookingCriteriaDetail,
                 facilityImages,
@@ -194,10 +194,10 @@ const facilityBookingController = {
 
             ])
 
-            res.status(200).json({
+            return res.status(200).json({
 
                 facilityDetails: {
-                    ...facilityDetails, openingCloseingDetail, ruleRegulationDetail,
+                    ...facilityDetails, openingClosingDetail, ruleRegulationDetail,
                     bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits
                 },
                 message: "Facility Details Successfully!"
@@ -272,7 +272,7 @@ const facilityBookingController = {
 
 
 
-            res.status(200).json({
+            return res.status(200).json({
                 bookingData: resultData,
                 message: "Your booking list successfully!"
 
@@ -335,9 +335,9 @@ const facilityBookingController = {
             let insertResult = await knex('entity_bookings').insert(insertData).returning(['*']);
             resultData = insertResult[0];
 
-            const user = await knex('users').select(['email','name']).where({id:id}).first()
+            const user = await knex('users').select(['email', 'name']).where({ id: id }).first()
 
-            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Confirmed', template: 'booking-confirmed.ejs', templateData: { fullName:user.name,bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD HH:MM A'),bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD HH:MM A'),noOfSeats: resultData.noOfSeats} })
+            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Confirmed', template: 'booking-confirmed.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD HH:MM A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD HH:MM A'), noOfSeats: resultData.noOfSeats } })
 
 
             res.status(200).json({
@@ -379,7 +379,6 @@ const facilityBookingController = {
 
             let startTime = new Date(payload.bookingStartDateTime).getTime();
             let endTime = new Date(payload.bookingEndDateTime).getTime();
-            let resultData;
             let availableSeats = 0;
 
             let bookingData = await knex('entity_bookings').sum('noOfSeats as totalBookedSeats')
