@@ -6,6 +6,8 @@ const moment = require("moment");
 
 const uuidv4 = require("uuid/v4");
 var jwt = require("jsonwebtoken");
+const emailHelper = require('../helpers/email')
+
 const _ = require("lodash");
 
 const facilityBookingController = {
@@ -897,7 +899,10 @@ const facilityBookingController = {
         try {
             const {bookingId,cancellationReason} = req.body;
             const currentTime = new Date().getTime()
-            const cancelled = await knex('entity_bookings').update({cancellationReason,cancelledAt:currentTime,cancelledBy:req.me.id,isBookingCancelled:true}).where({id:bookingId})
+            const cancelled = await knex('entity_bookings').update({cancellationReason,cancelledAt:currentTime,cancelledBy:req.me.id,isBookingCancelled:true}).where({id:bookingId}).returning(['*'])
+            const bookedByUser = await knex('entity_bookings').select('bookedBy').where({id:bookingId}).first()
+            const user = await knex('users').select('email').where({id:bookedByUser.bookedBy}).first()
+            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName:user.name,reason:cancellationReason} })
             return res.status(200).json({message: 'cancelled!',data:cancelled})
         } catch(err) {
             res.status(500).json({
