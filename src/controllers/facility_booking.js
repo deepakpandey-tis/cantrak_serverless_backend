@@ -901,7 +901,7 @@ const facilityBookingController = {
             const currentTime = new Date().getTime()
             const cancelled = await knex('entity_bookings').update({cancellationReason,cancelledAt:currentTime,cancelledBy:req.me.id,isBookingCancelled:true}).where({id:bookingId}).returning(['*'])
             const bookedByUser = await knex('entity_bookings').select('*').where({id:bookingId}).first()
-            const user = await knex('users').select('email').where({id:bookedByUser.bookedBy}).first()
+            const user = await knex('users').select(['email','name']).where({id:bookedByUser.bookedBy}).first()
             await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName:user.name,reason:cancellationReason,bookingStartDateTime: moment(Number(bookedByUser.bookingStartDateTime)).format('YYYY-MM-DD HH:MM A'),bookingEndDateTime: moment(+bookedByUser.bookingEndDateTime).format('YYYY-MM-DD HH:MM A'),noOfSeats: bookedByUser.noOfSeats} })
             return res.status(200).json({message: 'cancelled!',data:cancelled})
         } catch(err) {
