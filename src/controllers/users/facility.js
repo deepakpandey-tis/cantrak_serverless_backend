@@ -1,15 +1,11 @@
 const knex = require("../../db/knex");
 const Joi = require("@hapi/joi");
-const bcrypt = require("bcrypt");
-const saltRounds = 10;
 const moment = require("moment");
-
 const uuidv4 = require("uuid/v4");
-var jwt = require("jsonwebtoken");
 const _ = require("lodash");
 
 const facilityBookingController = {
-  
+
     /*GET USER FACILITY LIST */
     getUserFacilityList: async (req, res) => {
 
@@ -30,7 +26,7 @@ const facilityBookingController = {
 
             userHouseResult = await knex.from('user_house_allocation')
                 .where({ userId: id, orgId: req.orgId })
-                //.whereIn('houseId', propertyUnitArray);
+            //.whereIn('houseId', propertyUnitArray);
             let houseIdArray = userHouseResult.map(v => v.houseId)
 
             propertyUnitFinalResult = await knex.from('property_units')
@@ -56,6 +52,7 @@ const facilityBookingController = {
                     'buildings_and_phases.description as buildingName',
                     'floor_and_zones.floorZoneCode',
                     'floor_and_zones.description as floorName',
+
                 ])
                 .where(qb => {
                     if (projectId) {
@@ -100,10 +97,22 @@ const facilityBookingController = {
                     todayTotalBooking = bookingResult.length;
                 }
 
+
+                let feeResult = await knex.from('entity_fees_master').select("feesType", "feesAmount", "duration", 'id as feeId')
+                    .where({ "entityId": pd.id, "entityType": 'facility_master', orgId: req.orgId }).first();
+
+                let charges;
+
+                if (feeResult) {
+                    charges = feeResult;
+                }
+
+
                 return {
                     ...pd,
                     uploadedImages: imageResult,
-                    todayTotalBooking
+                    todayTotalBooking,
+                    charges
                 }
 
             })
@@ -230,6 +239,13 @@ const facilityBookingController = {
                 .where({ 'entity_bookings.entityType': 'facility_master', 'entity_bookings.orgId': req.orgId })
                 .where({ 'entity_bookings.bookedBy': id })
 
+
+            const Parallel = require('async-parallel');
+
+
+
+
+
             res.status(200).json({
                 bookingData: resultData,
                 message: "Your booking list successfully!"
@@ -255,7 +271,7 @@ const facilityBookingController = {
                 bookingStartDateTime: Joi.date().required(),
                 bookingEndDateTime: Joi.date().required(),
                 noOfSeats: Joi.number().required(),
-                
+
             })
 
             const result = Joi.validate(payload, schema);
@@ -268,7 +284,7 @@ const facilityBookingController = {
                 });
             }
 
-            let facilityData = await knex.from('facility_master').where({id:payload.facilityId}).first();
+            let facilityData = await knex.from('facility_master').where({ id: payload.facilityId }).first();
 
 
             let startTime = new Date(payload.bookingStartDateTime).getTime();
@@ -287,7 +303,7 @@ const facilityBookingController = {
                 bookingEndDateTime: endTime,
                 createdAt: currentTime,
                 updatedAt: currentTime,
-                orgId:req.orgId
+                orgId: req.orgId
             }
 
             let insertResult = await knex('entity_bookings').insert(insertData).returning(['*']);
