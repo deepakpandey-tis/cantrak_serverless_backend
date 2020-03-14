@@ -216,6 +216,10 @@ const facilityBookingController = {
 
             let resultData;
             let id = req.me.id;
+            let { listType } = req.query;
+            let endTime = new Date().getTime();
+
+
 
             resultData = await knex.from('entity_bookings')
                 .leftJoin('facility_master', 'entity_bookings.entityId', 'facility_master.id')
@@ -236,13 +240,34 @@ const facilityBookingController = {
                     'floor_and_zones.floorZoneCode',
                     'floor_and_zones.description as floorName',
                 ])
+                .where(qb => {
+                    if (listType) {
+
+                        if (listType == "upcoming") {
+                            qb.where('entity_bookings.bookingEndDateTime', '>=', endTime)
+                        }
+
+                        if (listType == "expired") {
+                            qb.where('entity_bookings.bookingEndDateTime', '<=', endTime)
+                        }
+                    }
+                })
                 .where({ 'entity_bookings.entityType': 'facility_master', 'entity_bookings.orgId': req.orgId })
                 .where({ 'entity_bookings.bookedBy': id })
 
 
             const Parallel = require('async-parallel');
 
+            resultData = await Parallel.map(resultData, async pd => {
 
+                let imageResult = await knex.from('images').select('s3Url', 'title', 'name')
+                    .where({ "entityId": pd.facilityId, "entityType": 'facility_master', orgId: req.orgId })
+
+                return {
+                    ...pd,
+                    uploadedImages: imageResult
+                }
+            })
 
 
 
@@ -320,6 +345,73 @@ const facilityBookingController = {
             res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
             })
+        }
+    },
+    /* GET FACILITY AVAILABLE SEATS */
+    getFacilityAvailableSeats: async (req, res) => {
+
+        try {
+
+            let id = req.me.id;
+            let payload = req.body;
+
+            const schema = Joi.object().keys({
+                facilityId: Joi.string().required(),
+                bookingStartDateTime: Joi.date().required(),
+                bookingEndDateTime: Joi.date().required()
+            })
+
+            const result = Joi.validate(payload, schema);
+
+            if (result && result.hasOwnProperty("error") && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "VALIDATION_ERROR", message: result.error.message }
+                    ]
+                });
+            }
+
+            let startTime = new Date(payload.bookingStartDateTime).getTime();
+            let endTime = new Date(payload.bookingEndDateTime).getTime();
+            let resultData;
+            let availableSeats = 0;
+
+            let bookingData = await knex('entity_bookings').sum('noOfSeats as totalBookedSeats')
+                .where('entity_bookings.bookingStartDateTime', '>=', startTime)
+                .where('entity_bookings.bookingStartDateTime', '<=', endTime)
+                .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', 'orgId': req.orgId }).first();
+
+            let facilityData = await knex.from('facility_master')
+                .leftJoin('entity_booking_criteria', 'facility_master.id', 'entity_booking_criteria.entityId')
+                .select([
+                    'facility_master.id',
+                    'facility_master.name',
+                    'facility_master.multipleSeatsLimit',
+                    'entity_booking_criteria.allowConcurrentBooking',
+                ])
+                .where({ 'facility_master.id': payload.facilityId, 'facility_master.orgId': req.orgId })
+                .first();
+
+            availableSeats = Number(facilityData.multipleSeatsLimit) - Number(bookingData.totalBookedSeats);
+
+            let QuotaData = await knex('entity_booking_limit')
+                .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', orgId: req.orgId });
+
+
+            return res.status(200).json({
+                data: {
+                    facility: { ...facilityData, availableSeats, userQuota: QuotaData }
+                },
+                message: "Facility Data successfully!"
+            })
+
+
+        } catch (err) {
+
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
+            })
+
         }
     }
 }
