@@ -182,20 +182,20 @@ const facilityBookingController = {
                         'floor_and_zones.description as floorName',
                     ])
                     .where({ 'facility_master.id': payload.id }).first(),
-                knex.from('entity_open_close_times').where({ entityId: payload.id, entityType: 'facility_master',orgId:req.orgId})
+                knex.from('entity_open_close_times').where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId })
                 ,
-                knex.from('rules_and_regulations').where({ entityId: payload.id, entityType: 'facility_master',orgId:req.orgId})
+                knex.from('rules_and_regulations').where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId })
                 ,
-                knex.from('entity_booking_criteria').where({ entityId: payload.id, entityType: 'facility_master',orgId:req.orgId}).first()
+                knex.from('entity_booking_criteria').where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId }).first()
                 ,
-                knex.from('images').where({ entityId: payload.id, entityType: 'facility_master',orgId:req.orgId}),
+                knex.from('images').where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId }),
                 knex('entity_fees_master').select(['feesType', 'feesAmount', 'duration']).where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId }),
                 knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId })
 
             ])
 
             return res.status(200).json({
-                
+
                 facilityDetails: {
                     ...facilityDetails, openingClosingDetail, ruleRegulationDetail,
                     bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits
@@ -219,8 +219,6 @@ const facilityBookingController = {
             let id = req.me.id;
             let { listType } = req.query;
             let endTime = new Date().getTime();
-
-
 
             resultData = await knex.from('entity_bookings')
                 .leftJoin('facility_master', 'entity_bookings.entityId', 'facility_master.id')
@@ -269,8 +267,6 @@ const facilityBookingController = {
                     uploadedImages: imageResult
                 }
             })
-
-
 
             return res.status(200).json({
                 bookingData: resultData,
