@@ -405,7 +405,7 @@ const facilityBookingController = {
 
             return res.status(200).json({
                 data: {
-                    facility: { ...facilityData, availableSeats, userQuota: QuotaData }
+                    facility: { ...facilityData, availableSeats, userQuota: _.uniqBy(QuotaData,'facilityId') }
                 },
                 message: "Facility Data successfully!"
             })
