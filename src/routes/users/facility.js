@@ -29,5 +29,8 @@ router.post('/facility-book-now', authMiddleware.isAuthenticated,
 router.post('/get-facility-available-seats', authMiddleware.isAuthenticated,
     facilityBookingController.getFacilityAvailableSeats);
 
+router.post('/cancel-booking', authMiddleware.isAuthenticated, facilityBookingController.cancelBooking)
+
+
 
 module.exports = router;
