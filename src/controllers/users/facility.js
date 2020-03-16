@@ -197,8 +197,8 @@ const facilityBookingController = {
             return res.status(200).json({
 
                 facilityDetails: {
-                    ...facilityDetails, openingClosingDetail: _.uniqBy(openingClosingDetail, 'day'), ruleRegulationDetail: _.uniqBy(ruleRegulationDetail,'rules'),
-                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits,'limitType')
+                    ...facilityDetails, openingClosingDetail: _.uniqBy(openingClosingDetail, 'day'), ruleRegulationDetail: _.uniqBy(ruleRegulationDetail, 'rules'),
+                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType')
                 },
                 message: "Facility Details Successfully!"
             })
@@ -217,51 +217,99 @@ const facilityBookingController = {
 
             let resultData;
             let id = req.me.id;
-            let { listType } = req.query;
+            let { listType } = req.body;
             let endTime = new Date().getTime();
 
-            resultData = await knex.from('entity_bookings')
-                .leftJoin('facility_master', 'entity_bookings.entityId', 'facility_master.id')
-                .leftJoin('companies', 'facility_master.companyId', 'companies.id')
-                .leftJoin('projects', 'facility_master.projectId', 'projects.id')
-                .leftJoin('buildings_and_phases', 'facility_master.buildingPhaseId', 'buildings_and_phases.id')
-                .leftJoin('floor_and_zones', 'facility_master.floorZoneId', 'floor_and_zones.id')
-                .select([
-                    'entity_bookings.*',
-                    'facility_master.id as facilityId',
-                    'facility_master.name as facilityName',
-                    'companies.companyId as companyCode',
-                    'companies.companyName',
-                    'projects.project as projectCode',
-                    'projects.projectName',
-                    'buildings_and_phases.buildingPhaseCode',
-                    'buildings_and_phases.description as buildingName',
-                    'floor_and_zones.floorZoneCode',
-                    'floor_and_zones.description as floorName',
-                ])
-                .where(qb => {
-                    if (listType) {
+            console.log("listType+++++++",listType);
 
-                        if (listType == "upcoming") {
-                            qb.where('entity_bookings.bookingEndDateTime', '>=', endTime)
-                        }
+            if (listType == "upcoming") {
 
-                        if (listType == "expired") {
-                            qb.where('entity_bookings.bookingEndDateTime', '<=', endTime)
-                        }
-                    }
-                })
-                .where({ 'entity_bookings.entityType': 'facility_master', 'entity_bookings.orgId': req.orgId })
-                .where({ 'entity_bookings.bookedBy': id })
+                console.log("upcoming++++++++++++++++++++");
 
+                resultData = await knex.from('entity_bookings')
+                    .leftJoin('facility_master', 'entity_bookings.entityId', 'facility_master.id')
+                    .leftJoin('companies', 'facility_master.companyId', 'companies.id')
+                    .leftJoin('projects', 'facility_master.projectId', 'projects.id')
+                    .leftJoin('buildings_and_phases', 'facility_master.buildingPhaseId', 'buildings_and_phases.id')
+                    .leftJoin('floor_and_zones', 'facility_master.floorZoneId', 'floor_and_zones.id')
+                    .select([
+                        'entity_bookings.*',
+                        'facility_master.id as facilityId',
+                        'facility_master.name as facilityName',
+                        'companies.companyId as companyCode',
+                        'companies.companyName',
+                        'projects.project as projectCode',
+                        'projects.projectName',
+                        'buildings_and_phases.buildingPhaseCode',
+                        'buildings_and_phases.description as buildingName',
+                        'floor_and_zones.floorZoneCode',
+                        'floor_and_zones.description as floorName',
+                    ])
+                    // .where(qb => {
+                    //     if (listType) {
+
+                    //         if (listType == "upcoming") {
+                    //             qb.where('entity_bookings.bookingEndDateTime', '>=', endTime)
+                    //         }
+
+                    //         if (listType == "expired") {
+                    //             qb.where('entity_bookings.bookingEndDateTime', '<=', endTime)
+                    //         }
+                    //     }
+                    // })
+                    .where('entity_bookings.bookingStartDateTime', '>=', endTime)
+                    .where({ 'entity_bookings.entityType': 'facility_master', 'entity_bookings.orgId': req.orgId })
+                    .where({ 'entity_bookings.bookedBy': id })
+                    .orderBy('entity_bookings.bookingStartDateTime', 'asc')
+            }
+
+            if (listType == "expired") {
+
+                console.log("expired++++++++++++++++++++");
+
+                resultData = await knex.from('entity_bookings')
+                    .leftJoin('facility_master', 'entity_bookings.entityId', 'facility_master.id')
+                    .leftJoin('companies', 'facility_master.companyId', 'companies.id')
+                    .leftJoin('projects', 'facility_master.projectId', 'projects.id')
+                    .leftJoin('buildings_and_phases', 'facility_master.buildingPhaseId', 'buildings_and_phases.id')
+                    .leftJoin('floor_and_zones', 'facility_master.floorZoneId', 'floor_and_zones.id')
+                    .select([
+                        'entity_bookings.*',
+                        'facility_master.id as facilityId',
+                        'facility_master.name as facilityName',
+                        'companies.companyId as companyCode',
+                        'companies.companyName',
+                        'projects.project as projectCode',
+                        'projects.projectName',
+                        'buildings_and_phases.buildingPhaseCode',
+                        'buildings_and_phases.description as buildingName',
+                        'floor_and_zones.floorZoneCode',
+                        'floor_and_zones.description as floorName',
+                    ])
+                    // .where(qb => {
+                    //     if (listType) {
+
+                    //         if (listType == "upcoming") {
+                    //             qb.where('entity_bookings.bookingEndDateTime', '>=', endTime)
+                    //         }
+
+                    //         if (listType == "expired") {
+                    //             qb.where('entity_bookings.bookingEndDateTime', '<=', endTime)
+                    //         }
+                    //     }
+                    // })
+                    .where('entity_bookings.bookingEndDateTime', '<=', endTime)
+                    .where({ 'entity_bookings.entityType': 'facility_master', 'entity_bookings.orgId': req.orgId })
+                    .where({ 'entity_bookings.bookedBy': id })
+                    .orderBy('entity_bookings.bookingEndDateTime', 'desc')
+
+            }
 
             const Parallel = require('async-parallel');
 
             resultData = await Parallel.map(resultData, async pd => {
-
                 let imageResult = await knex.from('images').select('s3Url', 'title', 'name')
                     .where({ "entityId": pd.facilityId, "entityType": 'facility_master', orgId: req.orgId })
-
                 return {
                     ...pd,
                     uploadedImages: imageResult
@@ -413,6 +461,23 @@ const facilityBookingController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
             })
 
+        }
+    },
+
+    /* User Can Cancel booking facility */
+    cancelBooking: async (req, res) => {
+        try {
+            const { bookingId, cancellationReason } = req.body;
+            const currentTime = new Date().getTime()
+            const cancelled = await knex('entity_bookings').update({ cancellationReason, cancelledAt: currentTime, cancelledBy: req.me.id, isBookingCancelled: true }).where({ id: bookingId }).returning(['*'])
+            const bookedByUser = await knex('entity_bookings').select('*').where({ id: bookingId }).first()
+            const user = await knex('users').select(['email', 'name']).where({ id: bookedByUser.bookedBy }).first()
+            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName: user.name, reason: cancellationReason, bookingStartDateTime: moment(Number(bookedByUser.bookingStartDateTime)).format('YYYY-MM-DD HH:MM A'), bookingEndDateTime: moment(+bookedByUser.bookingEndDateTime).format('YYYY-MM-DD HH:MM A'), noOfSeats: bookedByUser.noOfSeats } })
+            return res.status(200).json({ message: 'cancelled!', data: cancelled })
+        } catch (err) {
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
+            })
         }
     }
 }
