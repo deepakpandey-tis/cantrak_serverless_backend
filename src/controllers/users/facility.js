@@ -360,8 +360,22 @@ const facilityBookingController = {
             let endTime = new Date(payload.bookingEndDateTime).getTime();
 
             let currentTime = new Date().getTime();
+
             let price = await knex.from('entity_fees_master').where({ entityId: payload.facilityId }).first();
-            let totalFees = price.feesAmount * payload.noOfSeats;
+
+            let facilitySlot = await knex.from('entity_booking_criteria').where({ entityId: payload.facilityId }).first();
+
+            let totalFees = 0;
+
+            if (price.feesType == '1') {
+                totalFees = price.feesAmount * payload.noOfSeats;
+            } else if (price.feesType == '2') {
+                let calDuration = facilitySlot.slotDuration * price.feesAmount / price.duration;
+                totalFees = calDuration * payload.noOfSeats;
+            } else {
+                totalFees = 0;
+            }
+
             let insertData = {
                 entityId: payload.facilityId,
                 entityType: "facility_master",

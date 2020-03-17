@@ -74,7 +74,10 @@ const facilityBookingController = {
 
                 // Insert Rules
 
-                let rulesPayload = req.body.rules_and_regulations
+                let rulesPayload = req.body.rules_and_regulations;
+
+                let delRule = await knex('rules_and_regulations').where({ entityId: addedFacilityResult.id, entityType: 'facility_master' }).del();
+
                 addedRules = []
                 for (let rule of rulesPayload) {
                     /*
@@ -93,7 +96,8 @@ const facilityBookingController = {
                 "closeTime"
                 */
 
-                const open_close_times = req.body.open_close_times
+                const open_close_times = req.body.open_close_times;
+                let delOpeing = await knex('entity_open_close_times').where({ entityId: addedFacilityResult.id, entityType: 'facility_master' }).del();
                 addedOpenCloseTimeResult = []
                 for (let a of open_close_times) {
                     if (a.day && a.openTime && a.closeTime) {
@@ -130,6 +134,9 @@ const facilityBookingController = {
                     "feesAmount"
                     duration
                  */
+
+                let delFee = await knex('entity_fees_master').where({ entityId: addedFacilityResult.id, entityType: 'facility_master' }).del();
+
                 feesResult = await knex('entity_fees_master').insert({
                     ...fees_payload,
                     entityId: addedFacilityResult.id,
@@ -148,6 +155,7 @@ const facilityBookingController = {
                     "limitType" 
                     "limitValue"
                 */
+               let delLimit = await knex('entity_booking_limit').where({ entityId: addedFacilityResult.id, entityType: 'facility_master' }).del();
                 bookingFrequencyResult = []
                 for (let b of booking_frequency) {
                     let bookingFrequencyResultData = await knex('entity_booking_limit')
@@ -174,6 +182,9 @@ const facilityBookingController = {
                  */
 
                 const bookingCriteriaPayload = req.body.booking_criteria;
+
+                let delCriteria = await knex('entity_booking_criteria').where({ entityId: addedFacilityResult.id, entityType: 'facility_master' }).del();
+
                 addedBookingCriteriaResult = await knex('entity_booking_criteria')
                     .insert({
                         ...bookingCriteriaPayload,
@@ -306,7 +317,7 @@ const facilityBookingController = {
             ])
 
             return res.status(200).json({
-                facilityDetails: { ...facilityDetails, openingCloseingDetail:_.uniqBy(openingCloseingDetail,'day'), ruleRegulationDetail:_.uniqBy(ruleRegulationDetail,'rules'), bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits:_.uniqBy(bookingLimits,'limitType') },
+                facilityDetails: { ...facilityDetails, openingCloseingDetail: _.uniqBy(openingCloseingDetail, 'day'), ruleRegulationDetail: _.uniqBy(ruleRegulationDetail, 'rules'), bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType') },
                 message: "Facility Details!"
             });
 
@@ -543,9 +554,9 @@ const facilityBookingController = {
             if (id || fromDate && toDate) {
 
                 result = await knex.from('entity_bookings')
-                    .where({ orgId,isBookingCancelled:false })
+                    .where({ orgId, isBookingCancelled: false })
                     .where(qb => {
-                        
+
 
                         if (fromDate && toDate) {
 
@@ -567,7 +578,7 @@ const facilityBookingController = {
 
             } else {
                 result = await knex.from('entity_bookings')
-                    .where({ orgId,isBookingCancelled:false })
+                    .where({ orgId, isBookingCancelled: false })
 
             }
 
@@ -843,7 +854,7 @@ const facilityBookingController = {
                 bookingStartDateTime: Joi.date().required(),
                 bookingEndDateTime: Joi.date().required(),
                 noOfSeats: Joi.number().required(),
-                
+
             })
 
             const result = Joi.validate(payload, schema);
@@ -857,7 +868,7 @@ const facilityBookingController = {
             }
 
 
-            let facilityData = await knex.from('facility_master').where({id:payload.facilityId}).first();
+            let facilityData = await knex.from('facility_master').where({ id: payload.facilityId }).first();
 
 
             let startTime = new Date(payload.bookingStartDateTime).getTime();
@@ -876,7 +887,7 @@ const facilityBookingController = {
                 bookingEndDateTime: endTime,
                 createdAt: currentTime,
                 updatedAt: currentTime,
-                orgId:req.orgId
+                orgId: req.orgId
             }
 
             let insertResult = await knex('entity_bookings').insert(insertData).returning(['*']);
@@ -895,16 +906,16 @@ const facilityBookingController = {
             })
         }
     },
-    cancelBooking: async(req,res) => {
+    cancelBooking: async (req, res) => {
         try {
-            const {bookingId,cancellationReason} = req.body;
+            const { bookingId, cancellationReason } = req.body;
             const currentTime = new Date().getTime()
-            const cancelled = await knex('entity_bookings').update({cancellationReason,cancelledAt:currentTime,cancelledBy:req.me.id,isBookingCancelled:true}).where({id:bookingId}).returning(['*'])
-            const bookedByUser = await knex('entity_bookings').select('*').where({id:bookingId}).first()
-            const user = await knex('users').select(['email','name']).where({id:bookedByUser.bookedBy}).first()
-            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName:user.name,reason:cancellationReason,bookingStartDateTime: moment(Number(bookedByUser.bookingStartDateTime)).format('YYYY-MM-DD HH:MM A'),bookingEndDateTime: moment(+bookedByUser.bookingEndDateTime).format('YYYY-MM-DD HH:MM A'),noOfSeats: bookedByUser.noOfSeats} })
-            return res.status(200).json({message: 'cancelled!',data:cancelled})
-        } catch(err) {
+            const cancelled = await knex('entity_bookings').update({ cancellationReason, cancelledAt: currentTime, cancelledBy: req.me.id, isBookingCancelled: true }).where({ id: bookingId }).returning(['*'])
+            const bookedByUser = await knex('entity_bookings').select('*').where({ id: bookingId }).first()
+            const user = await knex('users').select(['email', 'name']).where({ id: bookedByUser.bookedBy }).first()
+            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName: user.name, reason: cancellationReason, bookingStartDateTime: moment(Number(bookedByUser.bookingStartDateTime)).format('YYYY-MM-DD HH:MM A'), bookingEndDateTime: moment(+bookedByUser.bookingEndDateTime).format('YYYY-MM-DD HH:MM A'), noOfSeats: bookedByUser.noOfSeats } })
+            return res.status(200).json({ message: 'cancelled!', data: cancelled })
+        } catch (err) {
             res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
             })
