@@ -435,8 +435,8 @@ const facilityBookingController = {
                 });
             }
 
-            let startTime = new Date(payload.bookingStartDateTime).getTime();
-            let endTime = new Date(payload.bookingEndDateTime).getTime();
+            let startTime = new Date(+payload.bookingStartDateTime).getTime();
+            let endTime = new Date(+payload.bookingEndDateTime).getTime();
             let availableSeats = 0;
 
             let bookingData = await knex('entity_bookings').sum('noOfSeats as totalBookedSeats')
@@ -451,11 +451,12 @@ const facilityBookingController = {
                     'facility_master.name',
                     'facility_master.multipleSeatsLimit',
                     'entity_booking_criteria.allowConcurrentBooking',
+                    'entity_booking_criteria.concurrentBookingLimit',
                 ])
                 .where({ 'facility_master.id': payload.facilityId, 'facility_master.orgId': req.orgId })
                 .first();
 
-            availableSeats = Number(facilityData.multipleSeatsLimit) - Number(bookingData.totalBookedSeats);
+            availableSeats = Number(facilityData.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
 
             let QuotaData = await knex('entity_booking_limit')
                 .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', orgId: req.orgId });
