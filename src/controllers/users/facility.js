@@ -220,7 +220,7 @@ const facilityBookingController = {
             let { listType } = req.body;
             let endTime = new Date().getTime();
 
-            console.log("listType+++++++",listType);
+            console.log("listType+++++++", listType);
 
             if (listType == "upcoming") {
 
@@ -319,7 +319,6 @@ const facilityBookingController = {
             return res.status(200).json({
                 bookingData: resultData,
                 message: "Your booking list successfully!"
-
             })
 
 
@@ -361,14 +360,15 @@ const facilityBookingController = {
             let endTime = new Date(payload.bookingEndDateTime).getTime();
 
             let currentTime = new Date().getTime();
-
+            let price = await knex.from('entity_fees_master').where({ entityId: payload.facilityId }).first();
+            let totalFees = price.feesAmount * payload.noOfSeats;
             let insertData = {
                 entityId: payload.facilityId,
                 entityType: "facility_master",
                 bookedAt: currentTime,
                 bookedBy: id,
                 noOfSeats: payload.noOfSeats,
-                feesPaid: 0,
+                feesPaid: totalFees,
                 bookingStartDateTime: startTime,
                 bookingEndDateTime: endTime,
                 createdAt: currentTime,
@@ -449,7 +449,7 @@ const facilityBookingController = {
 
             return res.status(200).json({
                 data: {
-                    facility: { ...facilityData, availableSeats, userQuota: _.uniqBy(QuotaData,'facilityId') }
+                    facility: { ...facilityData, availableSeats, userQuota: _.uniqBy(QuotaData, 'facilityId') }
                 },
                 message: "Facility Data successfully!"
             })
