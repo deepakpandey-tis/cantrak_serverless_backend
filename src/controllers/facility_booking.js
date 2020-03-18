@@ -98,10 +98,14 @@ const facilityBookingController = {
 
                 const open_close_times = req.body.open_close_times;
                 let delOpeing = await knex('entity_open_close_times').where({ entityId: addedFacilityResult.id, entityType: 'facility_master' }).del();
-                addedOpenCloseTimeResult = []
+                addedOpenCloseTimeResult = [];
+                let sr = 0;
                 for (let a of open_close_times) {
+                    sr++;
                     if (a.day && a.openTime && a.closeTime) {
+
                         addedOpenCloseTimeResultData = await knex('entity_open_close_times').insert({ entityId: addedFacilityResult.id, entityType: 'facility_master', ...a, updatedAt: currentTime, createdAt: currentTime, orgId: req.orgId }).returning(['*'])
+
                         addedOpenCloseTimeResult.push(addedOpenCloseTimeResultData[0])
                     }
                 }
@@ -155,7 +159,7 @@ const facilityBookingController = {
                     "limitType" 
                     "limitValue"
                 */
-               let delLimit = await knex('entity_booking_limit').where({ entityId: addedFacilityResult.id, entityType: 'facility_master' }).del();
+                let delLimit = await knex('entity_booking_limit').where({ entityId: addedFacilityResult.id, entityType: 'facility_master' }).del();
                 bookingFrequencyResult = []
                 for (let b of booking_frequency) {
                     let bookingFrequencyResultData = await knex('entity_booking_limit')
@@ -317,7 +321,7 @@ const facilityBookingController = {
             ])
 
             return res.status(200).json({
-                facilityDetails: { ...facilityDetails, openingCloseingDetail: _.uniqBy(openingCloseingDetail, 'day'), ruleRegulationDetail: _.uniqBy(ruleRegulationDetail, 'rules'), bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType') },
+                facilityDetails: { ...facilityDetails, openingCloseingDetail: openingCloseingDetail, ruleRegulationDetail: _.uniqBy(ruleRegulationDetail, 'rules'), bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType') },
                 message: "Facility Details!"
             });
 
@@ -403,7 +407,11 @@ const facilityBookingController = {
                                 "projects.projectName",
                                 "buildings_and_phases.buildingPhaseCode",
                                 "buildings_and_phases.description as buildingDescription",
-                                "floor_and_zones.floorZoneCode"
+                                "floor_and_zones.floorZoneCode",
+                                "companies.companyId",
+                                "projects.project as projectId",
+                                "floor_and_zones.description as floorName",
+
                             ])
                             .where(qb => {
                                 if (facilityName) {
@@ -475,7 +483,10 @@ const facilityBookingController = {
                             "projects.projectName",
                             "buildings_and_phases.buildingPhaseCode",
                             "buildings_and_phases.description as buildingDescription",
-                            "floor_and_zones.floorZoneCode"
+                            "floor_and_zones.floorZoneCode",
+                            "companies.companyId",
+                            "projects.project as projectId",
+                            "floor_and_zones.description as floorName",
                         ])
                         .groupBy([
                             "facility_master.id",
