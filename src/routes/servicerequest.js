@@ -92,4 +92,7 @@ router.post('/get-service-request-id-by-service-order-id', authMiddleware.isAuth
 router.post('/get-service-request-id-by-service-order-id-asset', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isAssetAccessible, serviceRequestController.getServiceRequestIdByServiceOrderId)
 
 router.post('/get-service-request-for-report', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isCMAccessible, serviceRequestController.getServiceRequestForReport)
+
+router.get('/get-all-requested-by-list',authMiddleware.isAuthenticated, serviceRequestController.getAllRequestedByList)
+
 module.exports = router;

@@ -430,7 +430,7 @@ const assetController = {
                 );
               }
             })
-            .orderBy("asset_master.createdAt", "desc")
+            .orderBy("asset_master.id", "desc")
             .offset(offset)
             .limit(per_page)
         ]);
