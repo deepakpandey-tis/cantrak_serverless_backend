@@ -1,9 +1,19 @@
 const knex = require("../../db/knex");
 const Joi = require("@hapi/joi");
 const moment = require("moment");
-const uuidv4 = require("uuid/v4");
 const _ = require("lodash");
 const emailHelper = require('../../helpers/email')
+
+
+const SUNDAY = 'Sun';
+const MONDAY = 'Mon';
+const TUESDAY = 'Tue';
+const WEDNESDAY = 'Wed';
+const THURSDAY = 'Thu';
+const FRIDAY = 'Fri';
+const SATURDAY = 'Sat';
+
+const WEEK_DAYS = [SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY];
 
 const facilityBookingController = {
 
@@ -435,8 +445,108 @@ const facilityBookingController = {
                 });
             }
 
+            let bookingDay = new Date(+payload.bookingStartDateTime).getDay();
+            bookingDay = WEEK_DAYS[bookingDay];
+            console.log('Checking Booking Availblity of Day: ', bookingDay);
+
+            let openCloseTimes = await knex.from('entity_open_close_times').where({
+                entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId,
+                day: bookingDay
+            }).first();
+
+            if (!openCloseTimes) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "BOOKING_CLOSED_FOR_THE_DAY", message: `Booking is not opened for ${bookingDay}` }
+                    ]
+                });
+            }
+            console.log('openCloseTimes:', openCloseTimes);
+
+
             let startTime = new Date(+payload.bookingStartDateTime).getTime();
             let endTime = new Date(+payload.bookingEndDateTime).getTime();
+
+            if (moment(endTime).subtract(1, 'minutes').valueOf() < startTime) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "INVALID_DATE_TIME_SELECTION", message: `Booking end time should be greater than start time. Please correct!` }
+                    ]
+                });
+            }
+
+            let bookingDay1 = moment(+payload.bookingStartDateTime).startOf('day').valueOf();
+
+            let h1 = new Date(+openCloseTimes.openTime).getHours();
+            let m1 = new Date(+openCloseTimes.openTime).getMinutes();
+            let openingTimeOnBookingDay = moment(bookingDay1).add(h1, 'hours').add(m1, 'minutes');
+
+            h2 = new Date(+openCloseTimes.closeTime).getHours();
+            m2 = new Date(+openCloseTimes.closeTime).getMinutes();
+            let closingTimeOnBookingDay = moment(bookingDay1).add(h2, 'hours').add(m2, 'minutes');
+
+            console.log(h1, m1, h2, m2, bookingDay1, openingTimeOnBookingDay, closingTimeOnBookingDay);
+
+
+            console.log('Start/ End   Time of the Day: ', openingTimeOnBookingDay.format('HH:mm'), closingTimeOnBookingDay.format('HH:mm'));
+            console.log('User Selected Start/End Time: ', moment(startTime).format('HH:mm'), moment(endTime).format('HH:mm'));
+            console.log('First : ', openingTimeOnBookingDay.valueOf() > moment(startTime).valueOf());
+            console.log('Second: ', closingTimeOnBookingDay.valueOf() < moment(endTime).valueOf());
+
+
+            if (openingTimeOnBookingDay.valueOf() > moment(startTime).valueOf()) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "INVALID_DATE_TIME_SELECTION", message: `Please select booking start and end time b/w opening and closing hours for the day. Open Time: ${openingTimeOnBookingDay.format('HH:mm')}, Closing Time: ${closingTimeOnBookingDay.format('HH:mm')}` }
+                    ]
+                });
+            }
+
+
+            if (closingTimeOnBookingDay.valueOf() < moment(endTime).valueOf()) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "INVALID_DATE_TIME_SELECTION", message: `Please select booking start and end time b/w opening and closing hours for the day. Open Time: ${openingTimeOnBookingDay.format('HH:mm')}, Closing Time: ${closingTimeOnBookingDay.format('HH:mm')}` }
+                    ]
+                });
+            }
+
+            // If flexible booking is opened, please validate min duration, max duration
+
+            // Validate Daily Quota Limit, Weekly Quota Limit, And Monthly Quota Limit
+            let dailyQuota = await knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.facilityId, limitType: 1, entityType: 'facility_master', orgId: req.orgId }).first();
+            if (dailyQuota) {
+                let startOfDay = moment(+payload.bookingStartDateTime).startOf('day').valueOf();
+                let endOfDay = moment(+payload.bookingStartDateTime).endOf('day').valueOf();
+
+
+            }
+
+            let weeklyQuota = await knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.facilityId, limitType: 2, entityType: 'facility_master', orgId: req.orgId }).first();
+            if (weeklyQuota) {
+                let startOfWeek = moment(+payload.bookingStartDateTime).startOf('week').valueOf();
+                let endOfWeek = moment(+payload.bookingStartDateTime).endOf('week').valueOf();
+
+
+            }
+
+            let monthlyQuota = await knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.facilityId, limitType: 3, entityType: 'facility_master', orgId: req.orgId }).first();
+            if (monthlyQuota) {
+                let startOfMonth = moment(+payload.bookingStartDateTime).startOf('month').valueOf();
+                let endOfMonth = moment(+payload.bookingStartDateTime).endOf('month').valueOf();
+
+
+            
+            }
+
+            // console.log('Quota: ', dailyQuota, weeklyQuota, monthlyQuota);
+
+
+
+
+
+
+
             let availableSeats = 0;
 
             let bookingData = await knex('entity_bookings').sum('noOfSeats as totalBookedSeats')
