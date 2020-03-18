@@ -103,9 +103,9 @@ const facilityBookingController = {
                 for (let a of open_close_times) {
                     sr++;
                     if (a.day && a.openTime && a.closeTime) {
-                        
-                            addedOpenCloseTimeResultData = await knex('entity_open_close_times').insert({ entityId: addedFacilityResult.id, entityType: 'facility_master', ...a, updatedAt: currentTime, createdAt: currentTime, orgId: req.orgId }).returning(['*'])
-                        
+
+                        addedOpenCloseTimeResultData = await knex('entity_open_close_times').insert({ entityId: addedFacilityResult.id, entityType: 'facility_master', ...a, updatedAt: currentTime, createdAt: currentTime, orgId: req.orgId }).returning(['*'])
+
                         addedOpenCloseTimeResult.push(addedOpenCloseTimeResultData[0])
                     }
                 }
@@ -407,7 +407,11 @@ const facilityBookingController = {
                                 "projects.projectName",
                                 "buildings_and_phases.buildingPhaseCode",
                                 "buildings_and_phases.description as buildingDescription",
-                                "floor_and_zones.floorZoneCode"
+                                "floor_and_zones.floorZoneCode",
+                                "companies.companyId",
+                                "projects.project as projectId",
+                                "floor_and_zones.description as floorName",
+
                             ])
                             .where(qb => {
                                 if (facilityName) {
@@ -479,7 +483,10 @@ const facilityBookingController = {
                             "projects.projectName",
                             "buildings_and_phases.buildingPhaseCode",
                             "buildings_and_phases.description as buildingDescription",
-                            "floor_and_zones.floorZoneCode"
+                            "floor_and_zones.floorZoneCode",
+                            "companies.companyId",
+                            "projects.project as projectId",
+                            "floor_and_zones.description as floorName",
                         ])
                         .groupBy([
                             "facility_master.id",
