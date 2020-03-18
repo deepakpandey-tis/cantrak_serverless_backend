@@ -518,23 +518,62 @@ const facilityBookingController = {
             if (dailyQuota) {
                 let startOfDay = moment(+payload.bookingStartDateTime).startOf('day').valueOf();
                 let endOfDay = moment(+payload.bookingStartDateTime).endOf('day').valueOf();
+                console.log("startOfDay", startOfDay, endOfDay);
 
+                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfDay}  and "bookingEndDateTime"  <= ${endOfDay} and "isBookingConfirmed" = true`);
+                let totalBookedSeatForADay = rawQuery.rows[0].totalseats;               
+                console.log("total Bookings Done for a day",totalBookedSeatForADay);
 
+                // Checking Daily Booking Quota Limit Is Completed
+                if(dailyQuota.limitValue <= totalBookedSeatForADay ){
+                    return res.status(400).json({
+                        errors: [
+                            { code: "DAILY_QUOTA_EXCEEDED", message: `Your daily quota of ${dailyQuota.limitValue} seat bookings is full. You can not book any more seats today.` }
+                        ]
+                    });
+                }  
             }
 
             let weeklyQuota = await knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.facilityId, limitType: 2, entityType: 'facility_master', orgId: req.orgId }).first();
+            
             if (weeklyQuota) {
+                
                 let startOfWeek = moment(+payload.bookingStartDateTime).startOf('week').valueOf();
                 let endOfWeek = moment(+payload.bookingStartDateTime).endOf('week').valueOf();
+                console.log("startOfWeek", startOfWeek, endOfWeek);
 
+                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfWeek}  and "bookingEndDateTime"  <= ${endOfWeek} and "isBookingConfirmed" = true`);
+                let totalBookedSeatForAWeek = rawQuery.rows[0].totalseats;               
+                console.log("total Bookings Done for a week",totalBookedSeatForAWeek);
 
+                // Checking Weekly Booking Quota Limit Is Completed
+                if(weeklyQuota.limitValue <= totalBookedSeatForAWeek ){
+                    return res.status(400).json({
+                        errors: [
+                            { code: "WEEKLY_QUOTA_EXCEEDED", message: `Your weekly quota of ${weeklyQuota.limitValue} seat bookings is full. You can not book any more seats in this week.` }
+                        ]
+                    });
+                }
             }
 
             let monthlyQuota = await knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.facilityId, limitType: 3, entityType: 'facility_master', orgId: req.orgId }).first();
             if (monthlyQuota) {
                 let startOfMonth = moment(+payload.bookingStartDateTime).startOf('month').valueOf();
                 let endOfMonth = moment(+payload.bookingStartDateTime).endOf('month').valueOf();
+                console.log("startOfMonth", startOfMonth, endOfMonth);
 
+                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfMonth}  and "bookingEndDateTime"  <= ${endOfMonth} and "isBookingConfirmed" = true`);
+                let totalBookedSeatForAMonth = rawQuery.rows[0].totalseats;               
+                console.log("total Bookings Done for a month",totalBookedSeatForAMonth);
+
+                // Checking Monthly Booking Quota Limit Is Completed
+                if(monthlyQuota.limitValue <= totalBookedSeatForAMonth ){
+                    return res.status(400).json({
+                        errors: [
+                            { code: "MONTHLY_QUOTA_EXCEEDED", message: `Your monthly quota of ${monthlyQuota.limitValue} seat bookings is full. You can not book any more seats in this month.` }
+                        ]
+                    });
+                }
 
             
             }
