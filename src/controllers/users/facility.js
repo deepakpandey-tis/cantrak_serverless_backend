@@ -27,18 +27,10 @@ const facilityBookingController = {
             let propertyUnitFinalResult = null;
             //let resourceProject = req.userProjectResources[0].projects;
             let { startDateTime, endDateTime, projectId, buildingId } = req.body;
-            let resultData;
-
-            // propertUnitresult = await knex.from('property_units')
-            //     .where({ orgId: req.orgId })
-            //     .whereIn('projectId', resourceProject);
-
-            //let propertyUnitArray = propertUnitresult.map(v => v.id);
-
-            userHouseResult = await knex.from('user_house_allocation')
-                .where({ userId: id, orgId: req.orgId })
-            //.whereIn('houseId', propertyUnitArray);
-            let houseIdArray = userHouseResult.map(v => v.houseId)
+            let resultData;         
+          
+            console.log("customerHouseInfo", req.me.houseIds);
+            let houseIdArray = req.me.houseIds;
 
             propertyUnitFinalResult = await knex.from('property_units')
                 .where({ orgId: req.orgId })
@@ -73,10 +65,8 @@ const facilityBookingController = {
                         qb.where('facility_master.buildingPhaseId', buildingId)
                     }
                     if (startDateTime && endDateTime) {
-
                         qb.where('entity_open_close_times.openTime', '>=', startDateTime)
                         qb.where('entity_open_close_times.closeTime', '<=', endDateTime)
-
                     }
                 })
                 .where({ 'facility_master.orgId': req.orgId, 'facility_master.moderationStatus': true })
@@ -364,7 +354,8 @@ const facilityBookingController = {
             }
 
             let facilityData = await knex.from('facility_master').where({ id: payload.facilityId }).first();
-
+            console.log("customerHouseInfo", req.me.houseIds);
+            let unitId = req.me.houseIds[0];
 
             let startTime = new Date(payload.bookingStartDateTime).getTime();
             let endTime = new Date(payload.bookingEndDateTime).getTime();
@@ -386,6 +377,8 @@ const facilityBookingController = {
                 totalFees = 0;
             }
 
+
+
             let insertData = {
                 entityId: payload.facilityId,
                 entityType: "facility_master",
@@ -397,7 +390,9 @@ const facilityBookingController = {
                 bookingEndDateTime: endTime,
                 createdAt: currentTime,
                 updatedAt: currentTime,
-                orgId: req.orgId
+                orgId: req.orgId,
+                unitId: unitId,
+                companyId: facilityData.companyId
             }
 
             let insertResult = await knex('entity_bookings').insert(insertData).returning(['*']);
@@ -407,6 +402,7 @@ const facilityBookingController = {
 
             await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Confirmed', template: 'booking-confirmed.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD HH:MM A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD HH:MM A'), noOfSeats: resultData.noOfSeats } })
 
+            let updateDisplayId = await knex('entity_bookings').update({ isActive: true }).where({ isActive: true });
 
             res.status(200).json({
                 result: resultData,
@@ -521,33 +517,33 @@ const facilityBookingController = {
                 console.log("startOfDay", startOfDay, endOfDay);
 
                 let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfDay}  and "bookingEndDateTime"  <= ${endOfDay} and "isBookingConfirmed" = true`);
-                let totalBookedSeatForADay = rawQuery.rows[0].totalseats;               
-                console.log("total Bookings Done for a day",totalBookedSeatForADay);
+                let totalBookedSeatForADay = rawQuery.rows[0].totalseats;
+                console.log("total Bookings Done for a day", totalBookedSeatForADay);
 
                 // Checking Daily Booking Quota Limit Is Completed
-                if(dailyQuota.limitValue <= totalBookedSeatForADay ){
+                if (dailyQuota.limitValue <= totalBookedSeatForADay) {
                     return res.status(400).json({
                         errors: [
                             { code: "DAILY_QUOTA_EXCEEDED", message: `Your daily quota of ${dailyQuota.limitValue} seat bookings is full. You can not book any more seats today.` }
                         ]
                     });
-                }  
+                }
             }
 
             let weeklyQuota = await knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.facilityId, limitType: 2, entityType: 'facility_master', orgId: req.orgId }).first();
-            
+
             if (weeklyQuota) {
-                
+
                 let startOfWeek = moment(+payload.bookingStartDateTime).startOf('week').valueOf();
                 let endOfWeek = moment(+payload.bookingStartDateTime).endOf('week').valueOf();
                 console.log("startOfWeek", startOfWeek, endOfWeek);
 
                 let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfWeek}  and "bookingEndDateTime"  <= ${endOfWeek} and "isBookingConfirmed" = true`);
-                let totalBookedSeatForAWeek = rawQuery.rows[0].totalseats;               
-                console.log("total Bookings Done for a week",totalBookedSeatForAWeek);
+                let totalBookedSeatForAWeek = rawQuery.rows[0].totalseats;
+                console.log("total Bookings Done for a week", totalBookedSeatForAWeek);
 
                 // Checking Weekly Booking Quota Limit Is Completed
-                if(weeklyQuota.limitValue <= totalBookedSeatForAWeek ){
+                if (weeklyQuota.limitValue <= totalBookedSeatForAWeek) {
                     return res.status(400).json({
                         errors: [
                             { code: "WEEKLY_QUOTA_EXCEEDED", message: `Your weekly quota of ${weeklyQuota.limitValue} seat bookings is full. You can not book any more seats in this week.` }
@@ -563,11 +559,11 @@ const facilityBookingController = {
                 console.log("startOfMonth", startOfMonth, endOfMonth);
 
                 let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfMonth}  and "bookingEndDateTime"  <= ${endOfMonth} and "isBookingConfirmed" = true`);
-                let totalBookedSeatForAMonth = rawQuery.rows[0].totalseats;               
-                console.log("total Bookings Done for a month",totalBookedSeatForAMonth);
+                let totalBookedSeatForAMonth = rawQuery.rows[0].totalseats;
+                console.log("total Bookings Done for a month", totalBookedSeatForAMonth);
 
                 // Checking Monthly Booking Quota Limit Is Completed
-                if(monthlyQuota.limitValue <= totalBookedSeatForAMonth ){
+                if (monthlyQuota.limitValue <= totalBookedSeatForAMonth) {
                     return res.status(400).json({
                         errors: [
                             { code: "MONTHLY_QUOTA_EXCEEDED", message: `Your monthly quota of ${monthlyQuota.limitValue} seat bookings is full. You can not book any more seats in this month.` }
@@ -575,7 +571,7 @@ const facilityBookingController = {
                     });
                 }
 
-            
+
             }
 
             // console.log('Quota: ', dailyQuota, weeklyQuota, monthlyQuota);
