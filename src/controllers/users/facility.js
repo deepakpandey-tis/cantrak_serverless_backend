@@ -27,8 +27,8 @@ const facilityBookingController = {
             let propertyUnitFinalResult = null;
             //let resourceProject = req.userProjectResources[0].projects;
             let { startDateTime, endDateTime, projectId, buildingId } = req.body;
-            let resultData;         
-          
+            let resultData;
+
             console.log("customerHouseInfo", req.me.houseIds);
             let houseIdArray = req.me.houseIds;
 
@@ -424,6 +424,8 @@ const facilityBookingController = {
 
             let id = req.me.id;
             let payload = req.body;
+            console.log("customerHouseInfo", req.me.houseIds);
+            let unitIds = req.me.houseIds[0];
 
             const schema = Joi.object().keys({
                 facilityId: Joi.string().required(),
@@ -443,7 +445,7 @@ const facilityBookingController = {
 
             let bookingDay = new Date(+payload.bookingStartDateTime).getDay();
             bookingDay = WEEK_DAYS[bookingDay];
-            console.log('Checking Booking Availblity of Day: ', bookingDay);
+            console.log('Checking Booking Availability of Day: ', bookingDay);
 
             let openCloseTimes = await knex.from('entity_open_close_times').where({
                 entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId,
@@ -457,8 +459,8 @@ const facilityBookingController = {
                     ]
                 });
             }
-            console.log('openCloseTimes:', openCloseTimes);
 
+            console.log('openCloseTimes:', openCloseTimes);
 
             let startTime = new Date(+payload.bookingStartDateTime).getTime();
             let endTime = new Date(+payload.bookingEndDateTime).getTime();
@@ -510,13 +512,15 @@ const facilityBookingController = {
             // If flexible booking is opened, please validate min duration, max duration
 
             // Validate Daily Quota Limit, Weekly Quota Limit, And Monthly Quota Limit
+
             let dailyQuota = await knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.facilityId, limitType: 1, entityType: 'facility_master', orgId: req.orgId }).first();
+
             if (dailyQuota) {
                 let startOfDay = moment(+payload.bookingStartDateTime).startOf('day').valueOf();
                 let endOfDay = moment(+payload.bookingStartDateTime).endOf('day').valueOf();
                 console.log("startOfDay", startOfDay, endOfDay);
 
-                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfDay}  and "bookingEndDateTime"  <= ${endOfDay} and "isBookingConfirmed" = true`);
+                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfDay}  and "bookingEndDateTime"  <= ${endOfDay} and "isBookingConfirmed" = true and "unitId" = ${unitIds}`);
                 let totalBookedSeatForADay = rawQuery.rows[0].totalseats;
                 console.log("total Bookings Done for a day", totalBookedSeatForADay);
 
@@ -538,7 +542,7 @@ const facilityBookingController = {
                 let endOfWeek = moment(+payload.bookingStartDateTime).endOf('week').valueOf();
                 console.log("startOfWeek", startOfWeek, endOfWeek);
 
-                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfWeek}  and "bookingEndDateTime"  <= ${endOfWeek} and "isBookingConfirmed" = true`);
+                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfWeek}  and "bookingEndDateTime"  <= ${endOfWeek} and "isBookingConfirmed" = true  and "unitId" = ${unitIds}`);
                 let totalBookedSeatForAWeek = rawQuery.rows[0].totalseats;
                 console.log("total Bookings Done for a week", totalBookedSeatForAWeek);
 
@@ -553,12 +557,13 @@ const facilityBookingController = {
             }
 
             let monthlyQuota = await knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.facilityId, limitType: 3, entityType: 'facility_master', orgId: req.orgId }).first();
+
             if (monthlyQuota) {
                 let startOfMonth = moment(+payload.bookingStartDateTime).startOf('month').valueOf();
                 let endOfMonth = moment(+payload.bookingStartDateTime).endOf('month').valueOf();
                 console.log("startOfMonth", startOfMonth, endOfMonth);
 
-                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfMonth}  and "bookingEndDateTime"  <= ${endOfMonth} and "isBookingConfirmed" = true`);
+                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfMonth}  and "bookingEndDateTime"  <= ${endOfMonth} and "isBookingConfirmed" = true  and "unitId" = ${unitIds}`);
                 let totalBookedSeatForAMonth = rawQuery.rows[0].totalseats;
                 console.log("total Bookings Done for a month", totalBookedSeatForAMonth);
 
@@ -575,11 +580,6 @@ const facilityBookingController = {
             }
 
             // console.log('Quota: ', dailyQuota, weeklyQuota, monthlyQuota);
-
-
-
-
-
 
 
             let availableSeats = 0;
@@ -604,12 +604,53 @@ const facilityBookingController = {
             availableSeats = Number(facilityData.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
 
             let QuotaData = await knex('entity_booking_limit')
-                .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', orgId: req.orgId });
+                .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', orgId: req.orgId })
+                .orderBy('limitType');
+
+
+            const Parallel = require('async-parallel');
+            let startOf;
+            let endOf;
+            QuotaData = await Parallel.map(QuotaData, async item => {
+
+                if(item.limitType == 1){
+                   startOf = moment(+payload.bookingStartDateTime).startOf('day').valueOf();
+                   endOf = moment(+payload.bookingStartDateTime).endOf('day').valueOf();
+                }
+
+                if(item.limitType == 2){
+                    startOf = moment(+payload.bookingStartDateTime).startOf('week').valueOf();
+                    endOf = moment(+payload.bookingStartDateTime).endOf('week').valueOf();
+                 }
+
+                 if(item.limitType == 3){
+                    startOf = moment(+payload.bookingStartDateTime).startOf('month').valueOf();
+                    endOf = moment(+payload.bookingStartDateTime).endOf('month').valueOf();
+                 }
+               
+
+                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOf}  and "bookingEndDateTime"  <= ${endOf} and "isBookingConfirmed" = true and "unitId" = ${unitIds}`);
+                console.log("totalBookedSeats", rawQuery.rows);      
+                let totalBookedSeat = rawQuery.rows[0].totalseats;   
+                
+                console.log("totalSeats", item.limitValue);
+               
+                let id = item.limitType;
+
+                let remainingLimit = item.limitValue - totalBookedSeat;
+                let bookedSeat = totalBookedSeat;
+
+                return {
+                    ...item,
+                    remaining: Number(remainingLimit),
+                    bookedSeats : Number(bookedSeat)
+                };
+            })
 
 
             return res.status(200).json({
                 data: {
-                    facility: { ...facilityData, availableSeats, userQuota: _.uniqBy(QuotaData, 'facilityId') }
+                    facility: { ...facilityData, availableSeats, userQuota: QuotaData }
                 },
                 message: "Facility Data successfully!"
             })
