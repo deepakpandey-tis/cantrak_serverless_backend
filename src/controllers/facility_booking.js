@@ -20,7 +20,7 @@ const facilityBookingController = {
             let feesResult = []
             let bookingFrequencyResult = []
             let addedBookingCriteriaResult = []
-            await knex.transaction(async () => {
+            await knex.transaction(async trx => {
 
 
                 const payload = _.omit(req.body, [
@@ -202,7 +202,15 @@ const facilityBookingController = {
                         orgId: req.orgId,
 
                     }).returning(['*'])
+
+                trx.commit;
+
             })
+
+
+            //update facility_master set "isActive" = true  where "isActive"  = true; 
+            let updateDisplayId = await knex('facility_master').update({ isActive: true }).where({ isActive: true });
+
             return res.status(200).json({
                 data: {
                     addedFacility: addedFacilityResult,
@@ -214,8 +222,6 @@ const facilityBookingController = {
                     addedBookingCriteria: addedBookingCriteriaResult
                 }
             })
-
-            trx.commit
 
 
         } catch (err) {
@@ -402,6 +408,7 @@ const facilityBookingController = {
                             .leftJoin('floor_and_zones', 'facility_master.floorZoneId', 'floor_and_zones.id')
 
                             .select([
+                                "facility_master.displayId as F",
                                 "facility_master.id",
                                 "facility_master.name",
                                 "companies.companyName",
@@ -478,6 +485,7 @@ const facilityBookingController = {
                         .leftJoin('floor_and_zones', 'facility_master.floorZoneId', 'floor_and_zones.id')
                         .where("facility_master.orgId", req.orgId)
                         .select([
+                            "facility_master.displayId as F",
                             "facility_master.id",
                             "facility_master.name",
                             "companies.companyName",
@@ -513,9 +521,7 @@ const facilityBookingController = {
                 pagination.from = offset;
                 pagination.data = rows;
             }
-
-
-
+            
             return res.status(200).json({
                 data: {
                     facilities: pagination
