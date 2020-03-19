@@ -575,7 +575,16 @@ const partsController = {
 
 
                 // Insert in part_ledger table,
-                let currentTime = new Date().getTime();
+
+                let currentTime;
+                if (req.body.date) {
+                    currentTime = new Date(req.body.date).getTime();
+
+                } else {
+
+                    currentTime = new Date().getTime();
+                }
+
 
                 let insertData = {
                     ...partStockPayload, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId, unitCost: unitCost,
@@ -1191,7 +1200,7 @@ const partsController = {
                 data[0].E == "COMPANY_ID" &&
                 data[0].F == "quantity" &&
                 data[0].G == "unit_cost"
-               // data[0].H == "MINIMUM_QUANTITY"
+                // data[0].H == "MINIMUM_QUANTITY"
             ) {
 
                 if (data.length > 0) {
@@ -1252,7 +1261,7 @@ const partsController = {
                             if (checkExist.length < 1) {
 
                                 let min = null;
-                                if(partData.H){
+                                if (partData.H) {
                                     min = partData.H;
                                 }
 
@@ -1265,7 +1274,7 @@ const partsController = {
                                     companyId: companyId,
                                     createdAt: currentTime,
                                     updatedAt: currentTime,
-                                    minimumQuantity:min,
+                                    minimumQuantity: min,
                                 }
 
                                 resultData = await knex.insert(insertData).returning(['*']).into('part_master');
@@ -1406,7 +1415,7 @@ const partsController = {
                         COMPANY_ID: "",
                         quantity: "",
                         unit_cost: "",
-                        MINIMUM_QUANTITY:"",
+                        MINIMUM_QUANTITY: "",
                     }
                 ]);
             }
@@ -2195,16 +2204,21 @@ const partsController = {
                     .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
 
 
+                    let fromDateEnd  = moment(fromTime).endOf('date').format();
+                    let fromTimeEnd  = new Date(fromDateEnd).getTime();
+
 
                 const Parallel = require('async-parallel')
                 const final = await Parallel.map(_.uniqBy(stockResult, 'partId'), async (st) => {
                     let balance = await knex.from('part_ledger')
-                        //.sum('quantity as totalQuantity')
-                        .where({ partId: st.partId, orgId: req.orgId })
-                        .whereBetween('part_ledger.createdAt', [fromTime, toTime]).first()
+                        .sum('quantity as quantity')
+                        .where('part_ledger.createdAt', '<=', fromTimeEnd)
+                        .where({ partId: st.partId, orgId: req.orgId }).first();
+
+                    //.whereBetween('part_ledger.createdAt', [fromTime, toTime]).first()
 
                     let stockData = await knex.from('part_ledger')
-                        .leftJoin('adjust_type','part_ledger.adjustType','adjust_type.id')
+                        .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
                         .select([
                             'part_ledger.*',
                             'adjust_type.adjustType as adjustTypeName'
@@ -2213,7 +2227,11 @@ const partsController = {
                         .whereBetween('part_ledger.createdAt', [fromTime, toTime])
                         .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
 
-                    let openignBalance = balance.quantity;
+                    let openingBalance = 0;
+                    if (balance.quantity) {
+                        openingBalance = balance.quantity;
+                    }
+
 
 
                     let updatedStockDataWithInAndOut = [];
@@ -2231,21 +2249,21 @@ const partsController = {
                         if (d.quantity && d.quantity.includes('-')) {
                             o = Number(d.quantity)
                             //    balance.totalQuantity = Number(balance.totalQuantity) + o
-                            if (s > 1) {
+                            //if (s > 1) {
                                 bal = Number(newBal) + o;
-                            } else {
-                                bal = Number(balance.quantity);
-                            }
+                            //} else {
+                             //   bal = Number(balance.quantity);
+                            //}
 
                         } else {
 
                             i = Number(d.quantity)
                             //    balance.totalQuantity = Number(balance.totalQuantity) + i
-                            if (s > 1) {
+                            //if (s > 1) {
                                 bal = Number(newBal) + i;
-                            } else {
-                                bal = Number(balance.quantity);
-                            }
+                            //} else {
+                             //   bal = Number(balance.quantity);
+                            //}
 
 
                         }
@@ -2262,7 +2280,7 @@ const partsController = {
                         partId: st.partId,
                         partCode: st.partCode,
                         partName: st.partName,
-                        openingBalance: openignBalance,
+                        openingBalance: openingBalance,
                         stockData: updatedStockDataWithInAndOut
                     }
                 })
