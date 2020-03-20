@@ -13,6 +13,7 @@ const path = require('path');
 const AssetCategoryController = {
   addAssetCategory: async (req, res) => {
     try {
+      let ab;
       let assetCategory = null;
       let userId = req.me.id;
 

@@ -773,6 +773,8 @@ const assetController = {
           "teams.teamName as Team Name",
           "requested_by.name as Requested By",
           "property_units.unitNumber as Unit Number",
+          'service_requests.displayId as srDisplayId',
+          'service_orders.displayId as soDisplayId'
         ])
         // .distinct('assigned_assets.assetId')
         .where({
@@ -782,7 +784,7 @@ const assetController = {
       // if(service_orders && service_orders.length){
       //   for(let serviceOrder of service_orders){
 
-      //   }
+      //   }serviceOrders
       // }
 
       res.status(200).json({
