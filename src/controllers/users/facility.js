@@ -340,7 +340,6 @@ const facilityBookingController = {
                 bookingStartDateTime: Joi.date().required(),
                 bookingEndDateTime: Joi.date().required(),
                 noOfSeats: Joi.number().required(),
-
             })
 
             const result = Joi.validate(payload, schema);
@@ -378,6 +377,12 @@ const facilityBookingController = {
             }
 
 
+            // Confirmed Status (1=>Auto Confirmed, 2=>Manually Confirmed)
+            if(facilityData.bookingStatus == 1){
+                confirmedStatus = true;
+            }else{
+                confirmedStatus = false;
+            }
 
             let insertData = {
                 entityId: payload.facilityId,
@@ -392,13 +397,15 @@ const facilityBookingController = {
                 updatedAt: currentTime,
                 orgId: req.orgId,
                 unitId: unitId,
-                companyId: facilityData.companyId
+                companyId: facilityData.companyId,
+                isBookingConfirmed:confirmedStatus 
             }
+
 
             let insertResult = await knex('entity_bookings').insert(insertData).returning(['*']);
             resultData = insertResult[0];
 
-            const user = await knex('users').select(['email', 'name']).where({ id: id }).first()
+            const user = await knex('users').select(['email', 'name']).where({ id: id }).first();
 
             await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Confirmed', template: 'booking-confirmed.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD HH:MM A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD HH:MM A'), noOfSeats: resultData.noOfSeats } })
 
