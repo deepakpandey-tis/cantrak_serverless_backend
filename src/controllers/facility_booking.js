@@ -575,7 +575,6 @@ const facilityBookingController = {
                     .where({ orgId, isBookingCancelled: false })
                     .where(qb => {
 
-
                         if (fromDate && toDate) {
 
                             qb.where('bookingStartDateTime', '>=', newFromDate)

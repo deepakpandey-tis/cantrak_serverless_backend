@@ -561,10 +561,13 @@ const organisationsController = {
       let orgId = req.orgId;
       let result;
       if (role === "superAdmin" && name === "superAdmin") {
-        result = await knex("organisations").select(['id', 'organisationName']).returning(['*']);
+        result = await knex("organisations").select(['id', 'organisationName']).returning(['*'])
+          .orderBy('organisationName','asc');
       } else {
         result = await knex("organisations").select(['id', 'organisationName']).returning(['*'])
-          .where({ id: orgId });
+          .where({ id: orgId })
+          .orderBy('organisationName', 'asc');
+          ;
       }
       return res.status(200).json({
         data: result,
