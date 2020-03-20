@@ -558,7 +558,7 @@ const facilityBookingController = {
 
             let bookingPeriodAllow = await knex('entity_booking_criteria').select(['maxBookingPeriod', 'minBookingPeriod']).where({ entityId: payload.facilityId, bookingType: 1, entityType: 'facility_master', orgId: req.orgId }).first();
             
-            if(bookingPeriodAllow.maxBookingPeriod){                
+            if(bookingPeriodAllow && bookingPeriodAllow.maxBookingPeriod){                
                 let maxDuration = moment(+payload.bookingEndDateTime) - moment(+payload.bookingStartDateTime);  
                 let maxDurationInMinutes = maxDuration/1000/60;              
                 console.log("maxDuration", maxDurationInMinutes);
@@ -575,7 +575,7 @@ const facilityBookingController = {
                 console.log("maxBookingPeriodAllow", bookingPeriodAllow);
             }
 
-            if(bookingPeriodAllow.minBookingPeriod){                
+            if(bookingPeriodAllow && bookingPeriodAllow.minBookingPeriod){                
                 let minDuration = moment(+payload.bookingEndDateTime) - moment(+payload.bookingStartDateTime);  
                 let minDurationInMinutes = minDuration/1000/60;              
                 console.log("minDuration", minDurationInMinutes);
