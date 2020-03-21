@@ -42,8 +42,8 @@ const dashboardController = {
           .select("service_requests.serviceStatusCode as status")
           .distinct("service_requests.id")
           .whereIn("service_requests.projectId", accessibleProjects)
-          .where({ serviceStatusCode: "US", orgId: orgId })
-          .orWhere({ serviceStatusCode: "O", orgId: orgId }),
+          .where({ serviceStatusCode: "US", orgId: orgId, "moderationStatus":true})
+          .orWhere({ serviceStatusCode: "O", orgId: orgId,"moderationStatus":true }),
         knex
           .from("service_requests")
           .select("service_requests.serviceStatusCode as status")
@@ -60,12 +60,14 @@ const dashboardController = {
           .where({
             serviceStatusCode: "US",
             orgId: orgId,
-            priority: priorityValue
+            priority: priorityValue,
+            "moderationStatus":true
           })
           .orWhere({
             serviceStatusCode: "O",
             orgId: orgId,
-            priority: priorityValue
+            priority: priorityValue,
+            "moderationStatus":true
           }),
         //.where({ serviceStatusCode: 'O', orgId, priority: priorityValue })
         // .whereIn('service_requests.projectId', accessibleProjects)

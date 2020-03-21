@@ -157,7 +157,7 @@ const customerController = {
             .select([
               "users.name as name",
               "users.email as email",
-              "user_house_allocation.houseId as houseId",
+             // "user_house_allocation.houseId as houseId",
               "users.id as userId",
               "users.isActive"
             ])
@@ -177,7 +177,10 @@ const customerController = {
                   qb.where('users.orgId', organisation)
                 }
               }
-            }),
+            })
+            .groupBy(['users.id'])
+            .distinct(['users.id'])
+            ,
           knex("users")
             .leftJoin(
               "application_user_roles",
@@ -197,7 +200,7 @@ const customerController = {
             .select([
               "users.name as name",
               "users.email as email",
-              "user_house_allocation.houseId as houseId",
+              //"user_house_allocation.houseId as houseId",
               "users.id as userId",
               "users.isActive"
             ])
@@ -219,6 +222,8 @@ const customerController = {
                 }
               }
             })
+            .groupBy(['users.id'])
+            .distinct(['users.id'])
             .offset(offset)
             .limit(per_page)
         ]);
@@ -247,7 +252,7 @@ const customerController = {
             .select([
               "users.name as name",
               "users.email as email",
-              "user_house_allocation.houseId as houseId",
+              //"user_house_allocation.houseId as houseId",
               "users.id as userId",
               "users.isActive"
             ])
@@ -255,6 +260,8 @@ const customerController = {
               "application_user_roles.roleId": 4,
               "users.orgId": req.orgId
             })
+            .groupBy(['users.id'])
+            .distinct(['users.id'])
             .whereIn('property_units.projectId', resourceProject)
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
@@ -270,6 +277,7 @@ const customerController = {
                 }
               }
             })
+
           ,
           knex("users")
             .leftJoin(
@@ -290,7 +298,8 @@ const customerController = {
             .select([
               "users.name as name",
               "users.email as email",
-              "user_house_allocation.houseId as houseId",
+              //"property_units.id as houseId",
+              //"user_house_allocation.houseId as houseId",
               "users.id as userId",
               "users.isActive"
             ])
@@ -314,6 +323,8 @@ const customerController = {
                 }
               }
             })
+            .groupBy(['users.id'])
+            .distinct(['users.id'])
             .offset(offset)
             .limit(per_page)
         ]);
@@ -327,7 +338,28 @@ const customerController = {
       pagination.last_page = Math.ceil(count / per_page);
       pagination.current_page = page;
       pagination.from = offset;
-      pagination.data = rows;
+//      pagination.data = rows;
+
+
+
+      let Parallel = require('async-parallel');
+      pagination.data = await Parallel.map(rows, async pd=>{
+
+        let houseData = await knex.from('user_house_allocation').where({userId:pd.userId}).first();
+
+        if(houseData){
+          return {
+            ...pd,
+            houseId :houseData.houseId
+          }
+        } else {
+          return {
+            ...pd,
+            houseId :""
+          }
+        }
+      })
+
 
       return res.status(200).json({
         data: {
@@ -434,7 +466,7 @@ const customerController = {
           nationalId: Joi.string().allow("").allow(null).optional(),
           allowLogin: Joi.boolean().allow("").allow(null).optional(),
           password: Joi.string().allow("").allow(null).optional(),
-          fax:Joi.string().allow("").allow(null).optional(),
+          fax: Joi.string().allow("").allow(null).optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -510,18 +542,18 @@ const customerController = {
 
         let houses = req.body.houses;
 
-        houses =  _.unionBy(houses,'unit')
+        houses = _.unionBy(houses, 'unit')
 
         for (let house of houses) {
 
           let checkHouseAllocation = await knex.from('user_house_allocation')
             .where({ houseId: house.unit, userId: insertedUser[0].id, orgId: req.orgId });
-                    
-              await knex("user_house_allocation")
-                .insert({ houseId: house.unit, userId: insertedUser[0].id, status: 1, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime })
-                .returning(["*"])
-                .transacting(trx);
-            
+
+          await knex("user_house_allocation")
+            .insert({ houseId: house.unit, userId: insertedUser[0].id, status: 1, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime })
+            .returning(["*"])
+            .transacting(trx);
+
         }
         /*INSERT HOUSE ID CLOSE */
 
@@ -532,7 +564,7 @@ const customerController = {
         let user = insertedUser[0]
         console.log('User: ', insertedUser)
         if (insertedUser && insertedUser.length) {
-          
+
 
           await emailHelper.sendTemplateEmail({ to: payload.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, uuid: uuidv4 } })
 
@@ -694,7 +726,7 @@ const customerController = {
 
 
         for (let r of removedItems) {
-          await knex('user_house_allocation').del().where({ houseId: r.houseId ,userId:insertedUser[0].id,orgId: req.orgId})
+          await knex('user_house_allocation').del().where({ houseId: r.houseId, userId: insertedUser[0].id, orgId: req.orgId })
         }
 
         for (let house of newItems) {

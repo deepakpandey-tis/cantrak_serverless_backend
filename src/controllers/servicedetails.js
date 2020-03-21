@@ -546,6 +546,8 @@ const serviceDetailsController = {
             "service_requests.requestedBy",
             "property_types.descriptionEng as propertyDescription",
             'status.descriptionEng as Status',
+            "service_requests.displayId as SRS",
+             
           )
           .where({
             "property_units.id": houseId,
@@ -1579,7 +1581,8 @@ const serviceDetailsController = {
             "service_requests.description",
             "service_requests.createdAt",
             "service_requests.priority",
-            "service_requests.serviceStatusCode"
+            "service_requests.serviceStatusCode",
+            "service_requests.displayId"
           )
 
         console.log(

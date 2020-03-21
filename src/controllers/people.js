@@ -20,7 +20,7 @@ const peopleController = {
           userName: Joi.string().required(),
           email: Joi.string().required(),
           password: Joi.string().allow(null).allow("").optional(),
-          mobileNo: Joi.string().required()
+          mobileNo: Joi.string().allow(null).allow("").optional()
         })
         let result = Joi.validate(payload, schema);
         console.log('[controllers][people][addPeople]: JOi Result', result);
@@ -35,7 +35,7 @@ const peopleController = {
 
         const existEmail = await knex('users').where({ email: payload.email });
         const existUser = await knex('users').where({ userName: payload.userName });
-        const existMobile = await knex('users').where({ mobileNo: payload.mobileNo });
+
 
         if (existEmail && existEmail.length) {
           return res.status(400).json({
@@ -53,12 +53,22 @@ const peopleController = {
           });
         }
 
-        if (existMobile && existMobile.length) {
-          return res.status(400).json({
-            errors: [
-              { code: 'MOBILE_EXIST_ERROR', message: 'MobileNo already exist !' }
-            ],
-          });
+        let mobile;
+        if (payload.mobileNo) {
+
+          const existMobile = await knex('users').where({ mobileNo: payload.mobileNo });
+
+          if (existMobile && existMobile.length) {
+            return res.status(400).json({
+              errors: [
+                { code: 'MOBILE_EXIST_ERROR', message: 'MobileNo already exist !' }
+              ],
+            });
+          }
+        } else {
+
+          mobile = payload.mobileNo;
+
         }
 
         let random = Math.floor((Math.random() * 1000000) + 1);
@@ -78,7 +88,7 @@ const peopleController = {
         let uid = uuid();
         payload.verifyToken = uid;
         let currentTime = new Date().getTime();
-        const people = await knex('users').insert({ ...payload, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime,createdBy:req.me.id}).returning(['*'])
+        const people = await knex('users').insert({ ...payload,mobileNo:mobile ,orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime, createdBy: req.me.id }).returning(['*'])
 
         //Insert Application Role
         let applicationUserRole = await knex(
@@ -782,8 +792,8 @@ const peopleController = {
                   password: hash,
                   mobileNo: mobile,
                   phoneNo: peopleData.E,
-                  createdBy:req.me.id,
-                  verifyToken:uuidv4,
+                  createdBy: req.me.id,
+                  verifyToken: uuidv4,
                 }
 
                 resultData = await knex.insert(insertData).returning(['*']).into('users');

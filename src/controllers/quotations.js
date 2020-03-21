@@ -15,39 +15,34 @@ const fs = require('fs');
 
 
 const quotationsController = {
+
   generateQuotationId: async (req, res) => {
     try {
       let quotationId = null;
 
-      await knex.transaction(async trx => {
-        // Insert in users table,
-        const currentTime = new Date().getTime();
-        //console.log('[controllers][entrance][signup]: Expiry Time', tokenExpiryTime);
-        let orgId = req.orgId;
+      const currentTime = new Date().getTime();
 
-        const insertData = {
-          moderationStatus: 0,
-          isActive: "true",
-          orgId: orgId,
-          createdAt: currentTime,
-          updatedAt: currentTime
-        };
+      let orgId = req.orgId;
 
-        console.log(
-          "[controllers][quotation][generateQuotation]: Insert Data",
-          insertData
-        );
+      const insertData = {
+        moderationStatus: 0,
+        isActive: "true",
+        orgId: orgId,
+        createdAt: currentTime,
+        updatedAt: currentTime
+      };
 
-        const quotationResult = await knex
-          .insert(insertData)
-          .returning(["*"])
-          .transacting(trx)
-          .into("quotations");
+      console.log(
+        "[controllers][quotation][generateQuotation]: Insert Data",
+        insertData
+      );
 
-        quotationId = quotationResult[0];
+      const quotationResult = await knex
+        .insert(insertData)
+        .returning(["*"])
+        .into("quotations");
 
-        trx.commit;
-      });
+      quotationId = quotationResult[0];
 
       res.status(200).json({
         data: {
@@ -55,6 +50,8 @@ const quotationsController = {
         },
         message: "Quotation Id generated successfully !"
       });
+
+
     } catch (err) {
       console.log("[controllers][quotation][generateQuotation] :  Error", err);
       //trx.rollback
@@ -71,82 +68,63 @@ const quotationsController = {
       let orgId = req.orgId;
       let userId = req.me.id;
 
-      await knex.transaction(async trx => {
-        let images = [];
+      let quotationPayload = _.omit(req.body, ["images"]);
 
-        let quotationPayload = _.omit(req.body, ["images"]);
-        images = req.body.images;
+      let images = req.body.images;
 
-        console.log(
-          "[controllers][quotations][updateQuotation] : Quotation Body", quotationPayload
-        );
+      console.log(
+        "[controllers][quotations][updateQuotation] : Quotation Body", quotationPayload
+      );
 
+      // validate keys
+      const schema = Joi.object().keys({
+        serviceRequestId: Joi.string().allow('').optional(),
+        company: Joi.number().required(),
+        project: Joi.number().required(),
+        building: Joi.number().required(),
+        floor: Joi.number().required(),
+        unit: Joi.number().required(),
+        quotationValidityDate: Joi.string().allow('').optional(),
+        quotationId: Joi.number().required(),
+        checkedBy: Joi.string().required(),
+        inspectedBy: Joi.string().required(),
+        acknowledgeBy: Joi.string().required()
+        // quotationData: Joi.array().required()
+      });
 
-        // // validate keys for part
-        // const quotationSinglePart = Joi.object().keys({
-        //   partName: Joi.string().required(),
-        //   id: Joi.string().required(),
-        //   partCode: Joi.string().required(),
-        //   quantity: Joi.string().required(),
-        //   unitCost: Joi.number().required(),
-        // })
-        // // validate keys for charges
-        // const quotationSingleCharge = Joi.object().keys({
-        //   chargeCode: Joi.string().required(),
-        //   id: Joi.string().required(),
-        //   calculationUnit: Joi.string().required(),
-        //   rate: Joi.number().required(),
-        //   totalHours: Joi.string().required(),
-        // })
+      const result = Joi.validate(quotationPayload, schema);
+      console.log(
+        "[controllers][quotations][updateQuotation]: JOi Result",
+        result
+      );
 
-
-
-        // validate keys
-        const schema = Joi.object().keys({
-          serviceRequestId: Joi.string().allow('').optional(),
-          company: Joi.number().required(),
-          project: Joi.number().required(),
-          building: Joi.number().required(),
-          floor: Joi.number().required(),
-          unit: Joi.number().required(),
-          quotationValidityDate: Joi.string().allow('').optional(),
-          quotationId: Joi.number().required(),
-          checkedBy: Joi.string().required(),
-          inspectedBy: Joi.string().required(),
-          acknowledgeBy: Joi.string().required()
-          // quotationData: Joi.array().required()
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message }
+          ]
         });
+      }
 
-        const result = Joi.validate(quotationPayload, schema);
-        console.log(
-          "[controllers][quotations][updateQuotation]: JOi Result",
-          result
-        );
+      // Insert in quotation table,
+      const currentTime = new Date().getTime();
+      let serId = 0
 
-        if (result && result.hasOwnProperty("error") && result.error) {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
-          });
-        }
+      if (quotationPayload.serviceRequestId) {
+        serId = quotationPayload.serviceRequestId
+      }
 
-        // Insert in quotation table,
-        const currentTime = new Date().getTime();
-        let serId = 0
+      let quotationValidityDate;
+      if (quotationPayload.quotationValidityDate) {
+        let date = new Date(quotationPayload.quotationValidityDate).getTime();
+        console.log("New Date++++++++++", date);
+        quotationValidityDate = date;
+      } else {
+        quotationValidityDate = moment().add('days', 15).valueOf();
+      }
 
-        if (quotationPayload.serviceRequestId) {
-          serId = quotationPayload.serviceRequestId
-        }
 
-        let quotationValidityDate;
-        if (quotationPayload.quotationValidityDate) {
-          let date = new Date(quotationPayload.quotationValidityDate).getTime();
-          console.log("New Date++++++++++", date);
-          quotationValidityDate = date;
-        } else {
-          quotationValidityDate = moment().add('days', 15).valueOf();
-        }
+      await knex.transaction(async trx => {
 
         const updateQuotationReq = await knex
           .update({
@@ -160,7 +138,6 @@ const quotationsController = {
             checkedBy: quotationPayload.checkedBy,
             inspectedBy: quotationPayload.inspectedBy,
             acknowledgeBy: quotationPayload.acknowledgeBy,
-            // invoiceData: JSON.stringify(quotationPayload.quotationData),
             updatedAt: currentTime,
             isActive: true,
             moderationStatus: 1,
@@ -173,72 +150,23 @@ const quotationsController = {
           .into("quotations");
 
 
-        // Start Update Assigned Parts In Quotations
-
-        // let partsLength = quotationPayload.quotationData[0].parts.length;
-        // console.log("parts length", partsLength);
-
-        // let partsData;
-        // for (let i = 0; i < partsLength; i++) {
-        //   console.log("partsArray", quotationPayload.quotationData[0].parts[i]);
-        //   partsData = quotationPayload.quotationData[0].parts[i];
-        //   updateAssignedParts = await knex
-        //     .update({
-        //       unitCost: partsData.unitCost,
-        //       quantity: partsData.quantity,
-        //       updatedAt: currentTime
-        //     })
-        //     .where({
-        //       entityId: quotationPayload.quotationId,
-        //       entityType: "quotations",
-        //       partId: partsData.id
-        //     })
-        //     .returning(["*"])
-        //     .transacting(trx)
-        //     .into("assigned_parts");
-        // }
-
-
-        // Start Update Assigned Charges In Quotations
-
-        // let chargesLength = quotationPayload.quotationData[0].charges.length;
-        // console.log("charges length", chargesLength);
-
-        // let chargesData;
-        // for (let j = 0; j < chargesLength; j++) {
-        //   console.log("chargesArray", quotationPayload.quotationData[0].charges[j]);
-        //   chargesData = quotationPayload.quotationData[0].charges[j];
-        //   updateAssignedCharges = await knex
-        //     .update({
-        //       chargeId: chargesData.id,
-        //       totalHours: chargesData.totalHours,
-        //       rate: chargesData.rate,
-        //       updatedAt: currentTime
-        //     })
-        //     .where({
-        //       entityId: quotationPayload.quotationId,
-        //       entityType: "quotations",
-        //       chargeId: chargesData.id
-        //     })
-        //     .returning(["*"])
-        //     .transacting(trx)
-        //     .into("assigned_service_charges");
-        // }
-
-        // console.log(
-        //   "[controllers][quotations][updateQuotation]: Update Data",
-        //   updateQuotationReq
-        // );
         quotationsResponse = updateQuotationReq[0];
         trx.commit;
-
-        return res.status(200).json({
-          data: {
-            quotationsResponse
-          },
-          message: "Quotations updated successfully !"
-        });
       });
+
+      await knex
+        .update({ moderationStatus: 1 })
+        .where({ id: quotationPayload.quotationId })
+        .into("quotations");
+
+      return res.status(200).json({
+        data: {
+          quotationsResponse
+        },
+        message: "Quotations updated successfully !"
+      });
+
+
     } catch (err) {
       console.log("[controllers][quotation][updateQuotation] :  Error", err);
       //trx.rollback
@@ -327,7 +255,9 @@ const quotationsController = {
             "organisation_roles.name as userRole",
             "quotations.invoiceData as invoiceData",
             "quotations.quotationValidityDate as validityDate",
-            "property_units.description as propertyUnitDescription"
+            "property_units.description as propertyUnitDescription",
+            "quotations.displayId as displayId",
+            "property_units.type",
           )
           .where({ "quotations.id": quotationRequestId });
         console.log(
@@ -381,7 +311,7 @@ const quotationsController = {
         const schema = Joi.object().keys({
           quotationId: Joi.string().required(),
           partId: Joi.string().required(),
-          unitCost: Joi.string().required(),
+          unitCost: Joi.required(),
           quantity: Joi.number().required(),
           status: Joi.string().required()
         });
@@ -725,7 +655,9 @@ const quotationsController = {
             "incident_categories.descriptionEng as problemDescription",
             "requested_by.name as requestedBy",
             //"user_house_allocation",
-            "property_units.id as unitId"
+            "property_units.id as unitId",
+            "quotations.displayId as Q#",
+            "service_requests.displayId as SR#",
 
           ])
           .where("quotations.orgId", req.orgId)
@@ -1835,6 +1767,8 @@ const quotationsController = {
       });
     }
   },
+
+
   updateQuotationsStatus: async (req, res) => {
     try {
       let quotationId = req.body.data.quotationId;
