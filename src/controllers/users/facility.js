@@ -662,7 +662,7 @@ const facilityBookingController = {
             }
 
             // console.log('Quota: ', dailyQuota, weeklyQuota, monthlyQuota);
-
+            let maxDuration;
             if(bookingPeriodAllow && bookingPeriodAllow.maxBookingPeriod){                
                 let maxDuration = moment(+payload.bookingEndDateTime) - moment(+payload.bookingStartDateTime);  
                 let maxDurationInMinutes = maxDuration/1000/60;              
