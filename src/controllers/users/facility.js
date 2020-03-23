@@ -472,50 +472,55 @@ const facilityBookingController = {
             let startTime = new Date(+payload.bookingStartDateTime).getTime();
             let endTime = new Date(+payload.bookingEndDateTime).getTime();
 
-            if (moment(endTime).subtract(1, 'minutes').valueOf() < startTime) {
-                return res.status(400).json({
-                    errors: [
-                        { code: "INVALID_DATE_TIME_SELECTION", message: `Booking end time should be greater than start time. Please correct!` }
-                    ]
-                });
+             let bookingCriteria = await knex('entity_booking_criteria').select('*').where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId }).first();
+             console.log("bookingCriteria", bookingCriteria);
+
+            if(bookingCriteria && bookingCriteria.bookingType == '1'){           
+
+                if (moment(endTime).subtract(1, 'minutes').valueOf() < startTime) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "INVALID_DATE_TIME_SELECTION", message: `Booking end time should be greater than start time. Please correct!` }
+                        ]
+                    });
+                }
+
+                let bookingDay1 = moment(+payload.bookingStartDateTime).startOf('day').valueOf();
+
+                let h1 = new Date(+openCloseTimes.openTime).getHours();
+                let m1 = new Date(+openCloseTimes.openTime).getMinutes();
+                let openingTimeOnBookingDay = moment(bookingDay1).add(h1, 'hours').add(m1, 'minutes');
+
+                h2 = new Date(+openCloseTimes.closeTime).getHours();
+                m2 = new Date(+openCloseTimes.closeTime).getMinutes();
+                let closingTimeOnBookingDay = moment(bookingDay1).add(h2, 'hours').add(m2, 'minutes');
+
+                console.log(h1, m1, h2, m2, bookingDay1, openingTimeOnBookingDay, closingTimeOnBookingDay);
+
+
+                console.log('Start/ End   Time of the Day: ', openingTimeOnBookingDay.format('HH:mm'), closingTimeOnBookingDay.format('HH:mm'));
+                console.log('User Selected Start/End Time: ', moment(startTime).format('HH:mm'), moment(endTime).format('HH:mm'));
+                console.log('First : ', openingTimeOnBookingDay.valueOf() > moment(startTime).valueOf());
+                console.log('Second: ', closingTimeOnBookingDay.valueOf() < moment(endTime).valueOf());
+
+
+                if (openingTimeOnBookingDay.valueOf() > moment(startTime).valueOf()) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "INVALID_DATE_TIME_SELECTION", message: `Please select booking start and end time b/w opening and closing hours for the day. Open Time: ${openingTimeOnBookingDay.format('HH:mm')}, Closing Time: ${closingTimeOnBookingDay.format('HH:mm')}` }
+                        ]
+                    });
+                }
+
+
+                if (closingTimeOnBookingDay.valueOf() < moment(endTime).valueOf()) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "INVALID_DATE_TIME_SELECTION", message: `Please select booking start and end time b/w opening and closing hours for the day. Open Time: ${openingTimeOnBookingDay.format('HH:mm')}, Closing Time: ${closingTimeOnBookingDay.format('HH:mm')}` }
+                        ]
+                    });
+                }
             }
-
-            let bookingDay1 = moment(+payload.bookingStartDateTime).startOf('day').valueOf();
-
-            let h1 = new Date(+openCloseTimes.openTime).getHours();
-            let m1 = new Date(+openCloseTimes.openTime).getMinutes();
-            let openingTimeOnBookingDay = moment(bookingDay1).add(h1, 'hours').add(m1, 'minutes');
-
-            h2 = new Date(+openCloseTimes.closeTime).getHours();
-            m2 = new Date(+openCloseTimes.closeTime).getMinutes();
-            let closingTimeOnBookingDay = moment(bookingDay1).add(h2, 'hours').add(m2, 'minutes');
-
-            console.log(h1, m1, h2, m2, bookingDay1, openingTimeOnBookingDay, closingTimeOnBookingDay);
-
-
-            console.log('Start/ End   Time of the Day: ', openingTimeOnBookingDay.format('HH:mm'), closingTimeOnBookingDay.format('HH:mm'));
-            console.log('User Selected Start/End Time: ', moment(startTime).format('HH:mm'), moment(endTime).format('HH:mm'));
-            console.log('First : ', openingTimeOnBookingDay.valueOf() > moment(startTime).valueOf());
-            console.log('Second: ', closingTimeOnBookingDay.valueOf() < moment(endTime).valueOf());
-
-
-            if (openingTimeOnBookingDay.valueOf() > moment(startTime).valueOf()) {
-                return res.status(400).json({
-                    errors: [
-                        { code: "INVALID_DATE_TIME_SELECTION", message: `Please select booking start and end time b/w opening and closing hours for the day. Open Time: ${openingTimeOnBookingDay.format('HH:mm')}, Closing Time: ${closingTimeOnBookingDay.format('HH:mm')}` }
-                    ]
-                });
-            }
-
-
-            if (closingTimeOnBookingDay.valueOf() < moment(endTime).valueOf()) {
-                return res.status(400).json({
-                    errors: [
-                        { code: "INVALID_DATE_TIME_SELECTION", message: `Please select booking start and end time b/w opening and closing hours for the day. Open Time: ${openingTimeOnBookingDay.format('HH:mm')}, Closing Time: ${closingTimeOnBookingDay.format('HH:mm')}` }
-                    ]
-                });
-            }
-
 
             // Allow Booking Time less then and  Stop Booking Time less then
 
@@ -613,10 +618,10 @@ const facilityBookingController = {
                     return res.status(400).json({
                         errors: [
                             { code: "DAILY_QUOTA_EXCEEDED", message: `Your daily quota of ${dailyQuota.limitValue} seat bookings is full. You can not book any more seats today.` }
-                        ]
+                        ] 
                     });
                 }
-            }
+            } 
 
             let weeklyQuota = await knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.facilityId, limitType: 2, entityType: 'facility_master', orgId: req.orgId }).first();
 
@@ -662,37 +667,42 @@ const facilityBookingController = {
             }
 
             // console.log('Quota: ', dailyQuota, weeklyQuota, monthlyQuota);
+           
             let maxDuration;
-            if(bookingPeriodAllow && bookingPeriodAllow.maxBookingPeriod){                
-                let maxDuration = moment(+payload.bookingEndDateTime) - moment(+payload.bookingStartDateTime);  
-                let maxDurationInMinutes = maxDuration/1000/60;              
-                console.log("maxDuration", maxDurationInMinutes);
+            let minDuration;
+            if(bookingCriteria && bookingCriteria.bookingType == '1'){
+           
+                if(bookingPeriodAllow && bookingPeriodAllow.maxBookingPeriod){                
+                    maxDuration = moment(+payload.bookingEndDateTime) - moment(+payload.bookingStartDateTime);  
+                    let maxDurationInMinutes = maxDuration/1000/60;              
+                    console.log("maxDuration", maxDurationInMinutes);
 
-                if(maxDurationInMinutes > bookingPeriodAllow.maxBookingPeriod){
-                    console.log("you can not booked more then minutes");
-                    return res.status(400).json({
-                        errors: [
-                            { code: "MAX_BOOKING_DURATION", message: `Maximum booking duration allowed is ${bookingPeriodAllow.maxBookingPeriod} minutes. You can not book more then max duration.` }
-                        ]
-                    });
+                    if(maxDurationInMinutes > bookingPeriodAllow.maxBookingPeriod){
+                        console.log("you can not booked more then minutes");
+                        return res.status(400).json({
+                            errors: [
+                                { code: "MAX_BOOKING_DURATION", message: `Maximum booking duration allowed is ${bookingPeriodAllow.maxBookingPeriod} minutes. You can not book more then max duration.` }
+                            ]
+                        });
+                    }
+                    
+                    console.log("maxBookingPeriodAllow", bookingPeriodAllow);
                 }
                 
-                console.log("maxBookingPeriodAllow", bookingPeriodAllow);
-            }
+                if(bookingPeriodAllow && bookingPeriodAllow.minBookingPeriod){                
+                    minDuration = moment(+payload.bookingEndDateTime) - moment(+payload.bookingStartDateTime);  
+                    let minDurationInMinutes = minDuration/1000/60;              
+                    console.log("minDuration", minDurationInMinutes);
 
-            if(bookingPeriodAllow && bookingPeriodAllow.minBookingPeriod){                
-                let minDuration = moment(+payload.bookingEndDateTime) - moment(+payload.bookingStartDateTime);  
-                let minDurationInMinutes = minDuration/1000/60;              
-                console.log("minDuration", minDurationInMinutes);
-
-                if(minDurationInMinutes < bookingPeriodAllow.minBookingPeriod){
-                    return res.status(400).json({
-                        errors: [
-                            { code: "MIN_BOOKING_DURATION", message: `Minimum booking duration allowed is ${bookingPeriodAllow.minBookingPeriod} minutes. You can not book less then min duration.` }
-                        ]
-                    });
-                }               
-                console.log("minBookingPeriodAllow", bookingPeriodAllow);
+                    if(minDurationInMinutes < bookingPeriodAllow.minBookingPeriod){
+                        return res.status(400).json({
+                            errors: [
+                                { code: "MIN_BOOKING_DURATION", message: `Minimum booking duration allowed is ${bookingPeriodAllow.minBookingPeriod} minutes. You can not book less then min duration.` }
+                            ]
+                        });
+                    }               
+                    console.log("minBookingPeriodAllow", bookingPeriodAllow);
+                }
             }
             
 
