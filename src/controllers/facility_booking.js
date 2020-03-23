@@ -19,7 +19,8 @@ const facilityBookingController = {
             let insertedImages = []
             let feesResult = []
             let bookingFrequencyResult = []
-            let addedBookingCriteriaResult = []
+            let addedBookingCriteriaResult = [];
+            let message;
             await knex.transaction(async trx => {
 
 
@@ -54,6 +55,16 @@ const facilityBookingController = {
                 }
 
 
+                let checkUpdate = await knex('facility_master').where({ id: req.body.facilityId }).first();
+
+                if (checkUpdate && checkUpdate.moderationStatus == true) {
+
+                    message = "Facility updated successfully!";
+
+                } else {
+
+                    message = "Facility added successfully!"
+                }
 
                 let currentTime = new Date().getTime()
                 let descriptionAlternateLang = req.body.descriptionAlternateLang ? req.body.descriptionAlternateLang : ''
@@ -220,7 +231,8 @@ const facilityBookingController = {
                     addedFees: feesResult,
                     addedBookingFrequency: bookingFrequencyResult,
                     addedBookingCriteria: addedBookingCriteriaResult
-                }
+                },
+                message :message
             })
 
 
@@ -237,13 +249,27 @@ const facilityBookingController = {
     deleteFacility: async (req, res) => {
         try {
             const id = req.body.id;
+            let message;
+            let deactivatedFacility;
+            let checkStatus = await knex('facility_master').where({ id: id }).first();
 
-            const deactivatedFacility = await knex('facility_master').update({ isActive: false }).where({ id: id }).returning(['*'])
+            if (checkStatus && checkStatus.isActive == true) {
+
+                deactivatedFacility = await knex('facility_master').update({ isActive: false }).where({ id: id }).returning(['*']);
+                message = "Facility Deactivate successfully!"
+
+            } else {
+
+                deactivatedFacility = await knex('facility_master').update({ isActive: true }).where({ id: id }).returning(['*']);
+                message = "Facility Activate successfully!"
+
+            }
+
             return res.status(200).json({
                 data: {
                     deactivatedFacility
                 },
-                message: 'Facility deactivated Successfully!'
+                message: message
             })
         } catch (err) {
             console.log('DELETE FACILITY ERROR: ', err)
@@ -419,6 +445,7 @@ const facilityBookingController = {
                                 "companies.companyId",
                                 "projects.project as projectId",
                                 "floor_and_zones.description as floorName",
+                                "facility_master.isActive",
 
                             ])
                             .where(qb => {
@@ -441,6 +468,7 @@ const facilityBookingController = {
                                 qb.where("facility_master.orgId", req.orgId)
 
                             })
+                            .orderBy('facility_master.name', 'asc')
                             .offset(offset)
                             .limit(per_page)
                     ]);
@@ -496,6 +524,7 @@ const facilityBookingController = {
                             "companies.companyId",
                             "projects.project as projectId",
                             "floor_and_zones.description as floorName",
+                            "facility_master.isActive",
                         ])
                         .groupBy([
                             "facility_master.id",
@@ -504,7 +533,7 @@ const facilityBookingController = {
                             "buildings_and_phases.id",
                             "floor_and_zones.id"
                         ])
-                        .orderBy('facility_master.id', 'desc')
+                        .orderBy('facility_master.name', 'asc')
                         .offset(offset)
                         .limit(per_page)
                 ]);
@@ -521,7 +550,7 @@ const facilityBookingController = {
                 pagination.from = offset;
                 pagination.data = rows;
             }
-            
+
             return res.status(200).json({
                 data: {
                     facilities: pagination
