@@ -475,7 +475,7 @@ const facilityBookingController = {
              let bookingCriteria = await knex('entity_booking_criteria').select('*').where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId }).first();
              console.log("bookingCriteria", bookingCriteria);
 
-            if(bookingCriteria.bookingType == '1'){           
+            if(bookingCriteria && bookingCriteria.bookingType == '1'){           
 
                 if (moment(endTime).subtract(1, 'minutes').valueOf() < startTime) {
                     return res.status(400).json({
@@ -618,10 +618,10 @@ const facilityBookingController = {
                     return res.status(400).json({
                         errors: [
                             { code: "DAILY_QUOTA_EXCEEDED", message: `Your daily quota of ${dailyQuota.limitValue} seat bookings is full. You can not book any more seats today.` }
-                        ]
+                        ] 
                     });
                 }
-            }
+            } 
 
             let weeklyQuota = await knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.facilityId, limitType: 2, entityType: 'facility_master', orgId: req.orgId }).first();
 
@@ -670,7 +670,7 @@ const facilityBookingController = {
            
             let maxDuration;
             let minDuration;
-            if(bookingCriteria.bookingType == '1'){
+            if(bookingCriteria && bookingCriteria.bookingType == '1'){
            
                 if(bookingPeriodAllow && bookingPeriodAllow.maxBookingPeriod){                
                     maxDuration = moment(+payload.bookingEndDateTime) - moment(+payload.bookingStartDateTime);  
