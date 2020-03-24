@@ -46,7 +46,7 @@ const assetController = {
       await knex.transaction(async (trx) => {
         let assetPayload = req.body;
         console.log('[controllers][asset][payload]: Asset Payload', assetPayload);
-        assetPayload = _.omit(assetPayload, ['additionalAttributes', 'multiple', 'images', 'files', 'assetCategory'])
+        assetPayload = _.omit(assetPayload, ['additionalAttributes', 'multiple', 'images', 'files', 'assetCategory', 'vendorId', 'additionalVendorId'])
         // validate keys
         const schema = Joi.object().keys({
           //parentAssetId: Joi.string(),
@@ -201,6 +201,50 @@ const assetController = {
           }
         }
 
+
+        // Insert Vendors in Assigned vendors table
+        let vendorsPData = req.body.vendorId;
+        let vendorsADData = req.body.additionalVendorId;
+        if (vendorsPData || vendorsADData) {
+         
+          // Insert Primary Vendor Data
+          if (vendorsPData) {
+            let finalVendors = {
+              entityId: asset.id,
+              entityType: 'assets',
+              isPrimaryVendor: true,
+              userId: vendorsPData,
+              createdAt: currentTime,
+              updatedAt: currentTime,
+              orgId: req.orgId
+            };
+            let d = await knex
+              .insert(finalVendors)
+              .returning(["*"])
+              .transacting(trx)
+              .into("assigned_vendors")
+            //.where({ orgId: req.orgId });            
+          }
+           // Insert Secondry Vendor Data
+          if (vendorsADData) {
+            let finalADVendors = {
+              entityId: asset.id,
+              userId: vendorsADData,
+              entityType: 'assets',
+              isPrimaryVendor: false,
+              createdAt: currentTime,
+              updatedAt: currentTime,
+              orgId: req.orgId
+            };
+            let d = await knex
+              .insert(finalADVendors)
+              .returning(["*"])
+              .transacting(trx)
+              .into("assigned_vendors")
+            //.where({ orgId: req.orgId });           
+          }
+        }
+
         trx.commit;
 
       });
@@ -340,7 +384,7 @@ const assetController = {
                   `%${assetName}%`
                 );
               }
-              if(assetSerial) {
+              if (assetSerial) {
                 qb.where(
                   "asset_master.assetSerial",
                   "like",
@@ -388,7 +432,7 @@ const assetController = {
             .select([
               "asset_master.assetName as Name",
               "asset_master.id as ID",
-             // "location_tags_master.title as Location",
+              // "location_tags_master.title as Location",
               "asset_master.model as Model",
               "asset_master.barcode as Barcode",
               "asset_master.assetSerial as assetSerial",
@@ -408,7 +452,7 @@ const assetController = {
                   `%${assetName}%`
                 );
               }
-              if(assetSerial) {
+              if (assetSerial) {
                 qb.where(
                   "asset_master.assetSerial",
                   "like",
@@ -440,7 +484,7 @@ const assetController = {
       }
       //}
 
-      let count =  total.count;
+      let count = total.count;
       pagination.total = count;
       pagination.per_page = per_page;
       pagination.offset = offset;
@@ -736,7 +780,7 @@ const assetController = {
           "companies.companyId as companyCode",
           "projects.project as projectCode",
         ])
-        .where({ assetId: id, 'asset_location.orgId': req.orgId }).orderBy('asset_location.startDate','desc');
+        .where({ assetId: id, 'asset_location.orgId': req.orgId }).orderBy('asset_location.startDate', 'desc');
       //   .where({ orgId: req.orgId });
 
 
@@ -744,7 +788,7 @@ const assetController = {
       // Get all service orders
       const service_orders = await knex('assigned_assets')
         .leftJoin('service_requests', 'assigned_assets.entityId', 'service_requests.id')
-        .leftJoin('service_orders','service_requests.id','service_orders.serviceRequestId')
+        .leftJoin('service_orders', 'service_requests.id', 'service_orders.serviceRequestId')
         .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
         .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
         .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
@@ -1834,11 +1878,11 @@ const assetController = {
         houseId: '9922',
         floorId: '165' }
       */
-     if(req.body.previousLocationId){
-       await knex('asset_location')
-        .update({ endDate: currentTime })
-        .where({ assetId: payload.assetId,id: req.body.previousLocationId})
-     } 
+      if (req.body.previousLocationId) {
+        await knex('asset_location')
+          .update({ endDate: currentTime })
+          .where({ assetId: payload.assetId, id: req.body.previousLocationId })
+      }
       console.log('***********************ASSET LOCATION:***********************', req.body)
       // Deprecated
       let updatedLastLocationEndDate
@@ -2574,16 +2618,16 @@ const assetController = {
       });
     }
   },
-  removePartFromAsset:async(req,res) => {
+  removePartFromAsset: async (req, res) => {
     try {
       const data = req.body;
-      if(data.assetId){
-        await knex('asset_master').update({partId:null}).where({id:data.assetId})
-        return res.status(200).json({message:'Part removed succesfully'})
+      if (data.assetId) {
+        await knex('asset_master').update({ partId: null }).where({ id: data.assetId })
+        return res.status(200).json({ message: 'Part removed succesfully' })
       } else {
         return res.status(200).json({ message: 'Something went wrong while removing part. Make sure you send partId and assetId in the body request.' })
       }
-    } catch(err) {
+    } catch (err) {
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
