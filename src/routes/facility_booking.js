@@ -49,5 +49,7 @@ router.post('/facility-book-now', authMiddleware.isAuthenticated,
 
 router.post('/cancel-booking', authMiddleware.isAuthenticated,roleMiddleware.parseUserPermission,facilityBookingController.cancelBooking)
 
+router.post('/facility-delete',authMiddleware.isAuthenticated,facilityBookingController.deleteFacility)
+
 
 module.exports = router;
