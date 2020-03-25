@@ -232,7 +232,7 @@ const facilityBookingController = {
                     addedBookingFrequency: bookingFrequencyResult,
                     addedBookingCriteria: addedBookingCriteriaResult
                 },
-                message :message
+                message: message
             })
 
 
@@ -468,7 +468,7 @@ const facilityBookingController = {
                                 qb.where("facility_master.orgId", req.orgId)
 
                             })
-                            .orderBy('facility_master.name', 'asc')
+                            .orderBy('facility_master.displayId', 'asc')
                             .offset(offset)
                             .limit(per_page)
                     ]);
@@ -533,7 +533,7 @@ const facilityBookingController = {
                             "buildings_and_phases.id",
                             "floor_and_zones.id"
                         ])
-                        .orderBy('facility_master.name', 'asc')
+                        .orderBy('facility_master.displayId', 'asc')
                         .offset(offset)
                         .limit(per_page)
                 ]);
@@ -966,6 +966,48 @@ const facilityBookingController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
             })
         }
+    },
+
+    /*APPROVE FACILITY */
+    approveFacility: async (req, res) => {
+
+        try {
+
+            let payload = req.body;
+            const schema = Joi.object().keys({
+                id: Joi.number().required(),
+            })
+
+            const result = Joi.validate(payload, schema);
+
+            if (result && result.hasOwnProperty("error") && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "VALIDATION_ERROR", message: result.error.message }
+                    ]
+                });
+            }
+
+            const currentTime = new Date().getTime()
+
+            let updateData = {
+                isBookingConfirmed: true,
+                confirmedBy: req.me.id,
+                confirmedAt: currentTime
+            }
+            let resultData = await knex('entity_bookings').update(updateData).where({ id: payload.id }).returning(['*']);
+
+
+            return res.status(200).json({ message: 'Booking Confirmed!', data: resultData })
+
+        } catch (err) {
+
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
+            })
+
+        }
+
     }
 }
 

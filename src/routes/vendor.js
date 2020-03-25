@@ -13,5 +13,6 @@ router.get('/get-vendors-details', authController.isAuthenticated, vendorControl
 
 router.post('/update-vendor', authController.isAuthenticated, vendorController.updateVendor);
 
+router.get('/get-vendors-data-list', authController.isAuthenticated, vendorController.getVendorsData);
 
 module.exports = router;
