@@ -51,5 +51,7 @@ router.post('/cancel-booking', authMiddleware.isAuthenticated,roleMiddleware.par
 
 router.post('/facility-delete',authMiddleware.isAuthenticated,facilityBookingController.deleteFacility)
 
+router.post('/approve-facility',authMiddleware.isAuthenticated,facilityBookingController.approveFacility)
+
 
 module.exports = router;

@@ -28,9 +28,10 @@ const teamsController = {
             let userAddTeam = null;
             let orgId = req.orgId;
             let roleProjectData = req.body.roleProjectData;
+            let vendorTeam;
             await knex.transaction(async (trx) => {
                 const teamsPayload = req.body;
-                const payload = _.omit(req.body, ['roleProjectData'], ['roleId'], 'projectId', ['userIds'])
+                const payload = _.omit(req.body, ['roleProjectData'], ['roleId'], 'projectId', ['userIds'], ['vendorIds'])
 
                 console.log('[controllers][teams][addNewTeam]', teamsPayload);
 
@@ -127,10 +128,16 @@ const teamsController = {
                     let userAddTeamResult = await knex('team_users').insert({ userId: user, teamId: teamsData.teamId, createdAt: currentTime, updatedAt: currentTime, orgId: orgId }).returning(['*']);
                     userAddTeam = userAddTeamResult
 
-
-
                 }
                 /**ADD TEAM USERS CLOSE*/
+
+
+                /*ADD VENDOR TO TEAM OPEN */
+                for (let vendor of teamsPayload.vendorIds) {
+                    let vendorAddTeam = await knex('assigned_vendors').insert({ userId: vendor, entityId: teamsData.teamId, entityType: 'teams', createdAt: currentTime, updatedAt: currentTime, orgId: orgId }).returning(['*']);
+                    vendorTeam = vendorAddTeam;
+                }
+                /*ADD VENDOR TO TEAM CLOSE */
 
 
                 /* Send email to users open */
@@ -186,9 +193,10 @@ const teamsController = {
             let userAddTeam = null;
             let orgId = req.orgId;
             let roleProjectData = req.body.roleProjectData;
+            let vendorTeam;
             await knex.transaction(async (trx) => {
                 const upTeamsPayload = req.body;
-                const payload = _.omit(req.body, ['roleId'], 'projectId', ['userIds'], ['roleProjectData'])
+                const payload = _.omit(req.body, ['roleId'], 'projectId', ['userIds'], ['roleProjectData'], ['vendorIds'])
                 console.log('[controllers][teams][updateTeams] : Request Body', upTeams);
 
                 // validate keys
@@ -205,7 +213,7 @@ const teamsController = {
                 if (result && result.hasOwnProperty('error') && result.error) {
                     res.status(400).json({
                         errors: [
-                            { code: "VALIDATON ERRORS", message: result.message.error }
+                            { code: "VALIDATON ERRORS", message: result.error.message }
                         ]
                     });
                 }
@@ -290,6 +298,15 @@ const teamsController = {
                 }
                 /**ADD TEAM USERS CLOSE*/
 
+
+                let deletedTeam = await knex('assigned_vendors').where({ entityId: upTeamsPayload.teamId, entityType: 'teams' }).del();
+                /*ADD VENDOR TO TEAM OPEN */
+                for (let vendor of upTeamsPayload.vendorIds) {
+                    let vendorAddTeam = await knex('assigned_vendors').insert({ userId: vendor, entityId: upTeamsPayload.teamId, entityType: 'teams', createdAt: currentTime, updatedAt: currentTime, orgId: orgId }).returning(['*']);
+                    vendorTeam = vendorAddTeam;
+                }
+                /*ADD VENDOR TO TEAM CLOSE */
+
                 trx.commit;
             });
 
@@ -297,7 +314,8 @@ const teamsController = {
                 data: {
                     teamsResponse: teamsResponse,
                     teamRoleProjectData: teamRoleProject,
-                    userAddTeamData: userAddTeam
+                    userAddTeamData: userAddTeam,
+                    vendorTeam: vendorTeam,
                 },
                 message: "Teams updated successfully !"
             });
@@ -688,10 +706,11 @@ const teamsController = {
             let teamResult = null;
             let userResult = null;
             let projectResult = null;
+            let vendorResult = null;
 
 
 
-            [teamResult, userResult, projectResult] = await Promise.all([
+            [teamResult, userResult, projectResult, vendorResult] = await Promise.all([
 
                 knex('teams').select([
                     'teams.teamId',
@@ -723,16 +742,21 @@ const teamsController = {
                         'projects.project as projectCode'
                     ])
                     .where({ 'team_roles_project_master.teamId': teamId }).returning('*')
+                ,
+                knex('assigned_vendors')
+                    .where({ 'entityId': teamId, 'entityType': 'teams' }).returning('*'),
             ])
 
 
             let projectUpdateDetails = _.compact(projectResult.map((value, key) => ({ roleId: value.roleId, projectId: value.projectId })))
 
+            let vendorIds = vendorResult.map(v => v.userId)
+
             //            let projectUpdateDetails = _.chain(projectResult).groupBy("projectId").map((value, key) => ({ roleId: value.map(a => a.roleId), projectId: key })).value();
 
             res.status(200).json({
                 data: {
-                    teamDetails: { ...teamResult[0], usersData: userResult, projectData: projectResult, projectUpdateDetails: projectUpdateDetails },
+                    teamDetails: { ...teamResult[0], usersData: userResult, projectData: projectResult, projectUpdateDetails: projectUpdateDetails, vendorIds: vendorIds },
                 },
                 message: "Team Details Successfully"
             })
@@ -1212,7 +1236,7 @@ const teamsController = {
         } catch (err) {
 
         }
-    },   
+    },
 
 }
 
