@@ -5,13 +5,13 @@ const _ = require("lodash");
 const emailHelper = require('../../helpers/email')
 
 
-const SUNDAY = 'Sun';
-const MONDAY = 'Mon';
-const TUESDAY = 'Tue';
-const WEDNESDAY = 'Wed';
-const THURSDAY = 'Thu';
-const FRIDAY = 'Fri';
-const SATURDAY = 'Sat';
+const SUNDAY = 'Sunday';
+const MONDAY = 'Monday';
+const TUESDAY = 'Tuesday';
+const WEDNESDAY = 'Wednesday';
+const THURSDAY = 'Thursday';
+const FRIDAY = 'Friday';
+const SATURDAY = 'Saturday';
 
 const WEEK_DAYS = [SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY];
 
@@ -522,61 +522,29 @@ const facilityBookingController = {
                 }
             }
 
-            // Allow Booking Time less then and  Stop Booking Time less then
-
-            // let bookingAllowingTiming = await knex('entity_booking_criteria').select(['bookingAllowedAdvanceTime', 'bookingCloseAdvanceTime']).where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId }).first();
-           
-            // if(bookingAllowingTiming &&  bookingAllowingTiming.bookingAllowedAdvanceTime){                
-            //     let allowBookingTime = moment(+payload.bookingEndDateTime) - moment(+payload.bookingStartDateTime);  
-            //     let maxDurationInMinutes = maxDuration/1000/60;              
-            //     console.log("maxDuration", maxDurationInMinutes);
-
-            //     if(maxDurationInMinutes > bookingPeriodAllow.maxBookingPeriod){
-            //         console.log("you can not booked more then minutes");
-            //         return res.status(400).json({
-            //             errors: [
-            //                 { code: "MAX_BOOKING_DURATION", message: `Maximum booking duration allowed is ${bookingPeriodAllow.maxBookingPeriod} minutes. You can not book more then max duration.` }
-            //             ]
-            //         });
-            //     }
-                
-            //     console.log("maxBookingPeriodAllow", bookingPeriodAllow);
-            // }
-
-            // if(bookingAllowingTiming && bookingAllowingTiming.bookingCloseAdvanceTime){                
-            //     let stopBookingLessTime = moment(+payload.bookingEndDateTime) - moment(+payload.bookingStartDateTime);  
-            //     let minDurationInMinutes = minDuration/1000/60;              
-            //     console.log("minDuration", minDurationInMinutes);
-
-            //     if(minDurationInMinutes < bookingPeriodAllow.minBookingPeriod){
-            //         return res.status(400).json({
-            //             errors: [
-            //                 { code: "MIN_BOOKING_DURATION", message: `Minimum booking duration allowed is ${bookingPeriodAllow.minBookingPeriod} minutes. You can not book less then min duration.` }
-            //             ]
-            //         });
-            //     }               
-            //     console.log("minBookingPeriodAllow", bookingPeriodAllow);
-            // }
-
-
             // If flexible booking is opened, please validate min duration, max duration
 
             let bookingPeriodAllow = await knex('entity_booking_criteria').select(['maxBookingPeriod', 'minBookingPeriod']).where({ entityId: payload.facilityId, bookingType: 1, entityType: 'facility_master', orgId: req.orgId }).first();
             let bookingAllowingTiming = await knex('entity_booking_criteria').select(['bookingAllowedAdvanceTime', 'bookingCloseAdvanceTime']).where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId }).first();
            
-            // if(bookingAllowingTiming &&  bookingAllowingTiming.bookingAllowedAdvanceTime){                
-            //     let allowBookingTime = moment(+payload.bookingEndDateTime) - moment(+payload.bookingStartDateTime);  
-            //     let maxDurationInMinutes = maxDuration/1000/60;              
-            //     console.log("maxDuration", maxDurationInMinutes);
+            // let allowMaxDuration;
+            // let allowLessDuration;
 
-            //     if(maxDurationInMinutes > bookingPeriodAllow.maxBookingPeriod){
-            //         console.log("you can not booked more then minutes");
-            //         return res.status(400).json({
-            //             errors: [
-            //                 { code: "MAX_BOOKING_DURATION", message: `Maximum booking duration allowed is ${bookingPeriodAllow.maxBookingPeriod} minutes. You can not book more then max duration.` }
-            //             ]
-            //         });
-            //     }
+            // if(bookingAllowingTiming &&  bookingAllowingTiming.bookingAllowedAdvanceTime){                
+            //     let maxAllowDuration = moment().valueOf();            
+            //     let allowBookingTime = moment(+maxAllowDuration) + moment().add(bookingAllowingTiming.bookingAllowedAdvanceTime,'minutes');  
+               
+            //     console.log("maxDuration Allow", moment(+payload.bookingStartDateTime).valueOf(), moment(allowBookingTime).valueOf());
+                
+                
+            //     // if(maxDurationInMinutes > bookingPeriodAllow.maxBookingPeriod){
+            //     //     console.log("you can not booked more then minutes");
+            //     //     return res.status(400).json({
+            //     //         errors: [
+            //     //             { code: "MAX_BOOKING_DURATION", message: `Maximum booking duration allowed is ${bookingPeriodAllow.maxBookingPeriod} minutes. You can not book more then max duration.` }
+            //     //         ]
+            //     //     });
+            //     // }
                 
             //     console.log("maxBookingPeriodAllow", bookingPeriodAllow);
             // }
@@ -594,10 +562,7 @@ const facilityBookingController = {
             //         });
             //     }               
             //     console.log("minBookingPeriodAllow", bookingPeriodAllow);
-            // }
-
-
-          
+            // }          
 
 
             // Validate Daily Quota Limit, Weekly Quota Limit, And Monthly Quota Limit
