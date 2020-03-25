@@ -5,13 +5,13 @@ const _ = require("lodash");
 const emailHelper = require('../../helpers/email')
 
 
-const SUNDAY = 'Sunday';
-const MONDAY = 'Monday';
-const TUESDAY = 'Tuesday';
-const WEDNESDAY = 'Wednesday';
-const THURSDAY = 'Thursday';
-const FRIDAY = 'Friday';
-const SATURDAY = 'Saturday';
+const SUNDAY = 'Sun';
+const MONDAY = 'Mon';
+const TUESDAY = 'Tue';
+const WEDNESDAY = 'Wed';
+const THURSDAY = 'Thu';
+const FRIDAY = 'Fri';
+const SATURDAY = 'Sat';
 
 const WEEK_DAYS = [SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY];
 
@@ -384,7 +384,7 @@ const facilityBookingController = {
                 confirmedStatus = false;
             }
 
-            let insertData = {
+            let openCloseTimesinsertData = {
                 entityId: payload.facilityId,
                 entityType: "facility_master",
                 bookedAt: currentTime,
@@ -400,7 +400,7 @@ const facilityBookingController = {
                 companyId: facilityData.companyId,
                 isBookingConfirmed:confirmedStatus 
             }
-
+            openCloseTimes
 
             let insertResult = await knex('entity_bookings').insert(insertData).returning(['*']);
             resultData = insertResult[0];
@@ -451,6 +451,7 @@ const facilityBookingController = {
             }
 
             let bookingDay = new Date(+payload.bookingStartDateTime).getDay();
+            console.log("fullday", bookingDay);
             bookingDay = WEEK_DAYS[bookingDay];
             console.log('Checking Booking Availability of Day: ', bookingDay);
 
@@ -458,11 +459,13 @@ const facilityBookingController = {
                 entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId,
                 day: bookingDay
             }).first();
-
+          
+            let bookingFullDay  = moment(+payload.bookingStartDateTime).format('dddd');
+              
             if (!openCloseTimes) {
-                return res.status(400).json({
+                 return res.status(400).json({
                     errors: [
-                        { code: "BOOKING_CLOSED_FOR_THE_DAY", message: `Booking is not opened for ${bookingDay}` }
+                        { code: "BOOKING_CLOSED_FOR_THE_DAY", message: `Booking is not opened for ${bookingFullDay}` }
                     ]
                 });
             }
