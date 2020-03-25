@@ -312,123 +312,156 @@ const vendorController = {
     },
     updateVendor: async (req, res) => {
         try {
-          let insertedUser;
-          await knex.transaction(async trx => {
-            let orgId = req.orgId;
-    
-            console.log("======================", orgId)
-            let payload = req.body;
-            //let payload = req.body;
-    
-            const schema = Joi.object().keys({
-              
-              name: Joi.string().required(),
-              userName: Joi.string().required(),
-              email: Joi.string().required(),
-              mobileNo: Joi.string().allow("").allow(null).optional(),
-              phoneNo: Joi.string().allow("").allow(null).optional(),
-              location: Joi.string().allow("").allow(null).optional(),
-              allowLogin: Joi.boolean().allow("").allow(null).optional(),
-              password: Joi.string().allow("").allow(null).optional(),
-              id: Joi.string().required(),
-            });
-    
-            const result = Joi.validate(payload, schema);
-            console.log(
-              "[controllers][administrationFeatures][addfloorZone]: JOi Result",
-              result
-            );
-            if (result && result.hasOwnProperty("error") && result.error) {
-              return res.status(400).json({
-                errors: [
-                  { code: "VALIDATION_ERROR", message: result.error.message }
-                ]
-              });
-            }
-    
-            /*CHECK DUPLICATION USERNAME , EMAIL & MOBILE NO. OPEN */
-            const existUser = await knex('users').where({ userName: payload.userName });
-            const existEmail = await knex('users').where({ email: payload.email });
-    
-    
-            if (existUser && existUser.length) {
-              if (existUser[0].id == payload.id) {
-    
-              } else {
-                return res.status(400).json({
-                  errors: [
-                    { code: 'USER_EXIST_ERROR', message: 'Username already exist !' }
-                  ],
+            let insertedUser;
+            await knex.transaction(async trx => {
+                let orgId = req.orgId;
+
+                console.log("======================", orgId)
+                let payload = req.body;
+                //let payload = req.body;
+
+                const schema = Joi.object().keys({
+
+                    name: Joi.string().required(),
+                    userName: Joi.string().required(),
+                    email: Joi.string().required(),
+                    mobileNo: Joi.string().allow("").allow(null).optional(),
+                    phoneNo: Joi.string().allow("").allow(null).optional(),
+                    location: Joi.string().allow("").allow(null).optional(),
+                    allowLogin: Joi.boolean().allow("").allow(null).optional(),
+                    password: Joi.string().allow("").allow(null).optional(),
+                    id: Joi.string().required(),
                 });
-              }
-            }
-    
-            if (existEmail && existEmail.length) {
-    
-              if (existEmail[0].id == payload.id) {
-    
-              } else {
-                return res.status(400).json({
-                  errors: [
-                    { code: 'EMAIL_EXIST_ERROR', message: 'Email already exist !' }
-                  ],
-                });
-              }
-            }
-            let mobileNo = null;
-    
-            if (payload.mobileNo) {
-              mobileNo = payload.mobileNo;
-              const existMobile = await knex('users').where({ mobileNo: payload.mobileNo });
-    
-              if (existMobile && existMobile.length) {
-    
-                if (existMobile[0].id == payload.id) {
-    
-                } else {
-    
-                  return res.status(400).json({
-                    errors: [
-                      { code: 'MOBILE_EXIST_ERROR', message: 'MobileNo already exist !' }
-                    ],
-                  });
+
+                const result = Joi.validate(payload, schema);
+                console.log(
+                    "[controllers][administrationFeatures][addfloorZone]: JOi Result",
+                    result
+                );
+                if (result && result.hasOwnProperty("error") && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "VALIDATION_ERROR", message: result.error.message }
+                        ]
+                    });
                 }
-              }
-            }
-            /*CHECK DUPLICATION USERNAME , EMAIL & MOBILE NO. CLOSE */
-            let emailVerified = false;
-            let isActive = false;
-            if (payload.allowLogin) {
-              emailVerified = true;
-              isActive = true;
-            }
-            payload = _.omit(payload, 'allowLogin')
-            let currentTime = new Date().getTime()
-            insertedUser = await knex("users")
-              .update({ ...payload, mobileNo: mobileNo, emailVerified: emailVerified, isActive: isActive, updatedAt: currentTime, orgId: orgId })
-              .returning(["*"])
-              .transacting(trx)
-              .where({ id: payload.id });
-            console.log(payload);
-    
-    
-            trx.commit;
-          })
-          return res.status(200).json({
-            insertedUser,
-            message: "Vendor updated successfully!"
-    
-          });
+
+                /*CHECK DUPLICATION USERNAME , EMAIL & MOBILE NO. OPEN */
+                const existUser = await knex('users').where({ userName: payload.userName });
+                const existEmail = await knex('users').where({ email: payload.email });
+
+
+                if (existUser && existUser.length) {
+                    if (existUser[0].id == payload.id) {
+
+                    } else {
+                        return res.status(400).json({
+                            errors: [
+                                { code: 'USER_EXIST_ERROR', message: 'Username already exist !' }
+                            ],
+                        });
+                    }
+                }
+
+                if (existEmail && existEmail.length) {
+
+                    if (existEmail[0].id == payload.id) {
+
+                    } else {
+                        return res.status(400).json({
+                            errors: [
+                                { code: 'EMAIL_EXIST_ERROR', message: 'Email already exist !' }
+                            ],
+                        });
+                    }
+                }
+                let mobileNo = null;
+
+                if (payload.mobileNo) {
+                    mobileNo = payload.mobileNo;
+                    const existMobile = await knex('users').where({ mobileNo: payload.mobileNo });
+
+                    if (existMobile && existMobile.length) {
+
+                        if (existMobile[0].id == payload.id) {
+
+                        } else {
+
+                            return res.status(400).json({
+                                errors: [
+                                    { code: 'MOBILE_EXIST_ERROR', message: 'MobileNo already exist !' }
+                                ],
+                            });
+                        }
+                    }
+                }
+                /*CHECK DUPLICATION USERNAME , EMAIL & MOBILE NO. CLOSE */
+                let emailVerified = false;
+                let isActive = false;
+                if (payload.allowLogin) {
+                    emailVerified = true;
+                    isActive = true;
+                }
+                payload = _.omit(payload, 'allowLogin')
+                let currentTime = new Date().getTime()
+                insertedUser = await knex("users")
+                    .update({ ...payload, mobileNo: mobileNo, emailVerified: emailVerified, isActive: isActive, updatedAt: currentTime, orgId: orgId })
+                    .returning(["*"])
+                    .transacting(trx)
+                    .where({ id: payload.id });
+                console.log(payload);
+
+
+                trx.commit;
+            })
+            return res.status(200).json({
+                insertedUser,
+                message: "Vendor updated successfully!"
+
+            });
         } catch (err) {
-          console.log(
-            "[controllers][customers][createCustome] :  Error",
-            err
-          );
-          res.status(500).json({
-            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-          });
+            console.log(
+                "[controllers][customers][createCustome] :  Error",
+                err
+            );
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
         }
-      },
+    },
+    getVendorsData: async (req, res) => {
+        try {
+            vendorsResult = await knex('application_user_roles')
+                .leftJoin('users', 'application_user_roles.userId', 'users.id')
+                .select([
+                    'users.name',
+                    'users.id as userId'
+                ])
+                .where({ 'application_user_roles.roleId': 5, 'application_user_roles.orgId': req.orgId })
+                .returning('*')
+
+            console.log("vendorsList", vendorsResult);
+
+            res.status(200).json({
+                data: {
+                    vendors: vendorsResult
+                },
+                message: "Vendors list successfully !"
+            })
+
+        } catch (err) {
+
+            console.log('[controllers][teams][getTeamList] : Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ]
+            });
+
+        }
+
+
+    }
 };
 
 module.exports = vendorController;

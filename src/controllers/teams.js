@@ -1212,41 +1212,7 @@ const teamsController = {
         } catch (err) {
 
         }
-    },
-
-    getVendors: async (req, res) => {
-        try {
-            vendorsResult = await knex('application_user_roles')
-                .leftJoin('users', 'application_user_roles.userId', 'users.id')
-                .select([
-                    'users.name',
-                    'users.id as userId'
-                ])
-                .where({ 'application_user_roles.roleId':5, 'application_user_roles.orgId': req.orgId })
-                .returning('*')
-
-                console.log("vendorsList", vendorsResult);
-
-            res.status(200).json({
-                data: {
-                    vendors: vendorsResult
-                },
-                message: "Vendors list successfully !"
-            })
-
-        } catch (err) {
-
-            console.log('[controllers][teams][getTeamList] : Error', err);
-            res.status(500).json({
-                errors: [
-                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
-                ]
-            });
-
-        }
-
-
-    }
+    },   
 
 }
 
