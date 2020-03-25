@@ -435,9 +435,11 @@ const vendorController = {
                 .leftJoin('users', 'application_user_roles.userId', 'users.id')
                 .select([
                     'users.name',
-                    'users.id as userId'
+                    'users.id as userId',
+                    'users.email'
                 ])
-                .where({ 'application_user_roles.roleId': 5, 'application_user_roles.orgId': req.orgId })
+                .where({ 'application_user_roles.roleId': 5, 'application_user_roles.orgId': req.orgId ,'users.isActive':true})
+                .orderBy('users.name','asc')
                 .returning('*')
 
             console.log("vendorsList", vendorsResult);
