@@ -530,8 +530,8 @@ const facilityBookingController = {
             let bookingPeriodAllow = await knex('entity_booking_criteria').select(['maxBookingPeriod', 'minBookingPeriod']).where({ entityId: payload.facilityId, bookingType: 1, entityType: 'facility_master', orgId: req.orgId }).first();
             let bookingAllowingTiming = await knex('entity_booking_criteria').select(['bookingAllowedAdvanceTime', 'bookingCloseAdvanceTime']).where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId }).first();
            
-            // let allowMaxDuration;
-            // let allowLessDuration;
+            let allowMaxDuration;
+            let allowLessDuration;
 
             // if(bookingAllowingTiming &&  bookingAllowingTiming.bookingAllowedAdvanceTime){                
             //     let maxAllowDuration = moment().valueOf();            
@@ -552,20 +552,36 @@ const facilityBookingController = {
             //     console.log("maxBookingPeriodAllow", bookingPeriodAllow);
             // }
 
-            // if(bookingAllowingTiming && bookingAllowingTiming.bookingCloseAdvanceTime){                
-            //     let stopBookingLessTime = moment(+payload.bookingEndDateTime) - moment(+payload.bookingStartDateTime);  
-            //     let minDurationInMinutes = minDuration/1000/60;              
-            //     console.log("minDuration", minDurationInMinutes);
+            if(bookingAllowingTiming && bookingAllowingTiming.bookingCloseAdvanceTime){                
+                let currentTime = moment().utcOffset('+0700').format('YYYY-MM-DD HH:mm');
+                console.log("currentTime", currentTime);
+                let currentTime1 = moment().utcOffset('+0700').valueOf();
+                console.log("currentTime1", currentTime1);
 
-            //     if(minDurationInMinutes < bookingPeriodAllow.minBookingPeriod){
-            //         return res.status(400).json({
-            //             errors: [
-            //                 { code: "MIN_BOOKING_DURATION", message: `Minimum booking duration allowed is ${bookingPeriodAllow.minBookingPeriod} minutes. You can not book less then min duration.` }
-            //             ]
-            //         });
-            //     }               
-            //     console.log("minBookingPeriodAllow", bookingPeriodAllow);
-            // }          
+                let currentTime2 = moment().utcOffset('+0700').valueOf();
+                console.log("currentTime12", currentTime1,currentTime2);
+
+                
+               
+               
+                let allowBookingTime = moment(+maxAllowDuration) + moment().add(bookingAllowingTiming.bookingAllowedAdvanceTime,'minutes');  
+               
+                console.log("maxDuration Allow", moment(+payload.bookingStartDateTime).valueOf(), moment(allowBookingTime).valueOf());
+                    
+                    
+                let stopBookingLessTime = moment(+payload.bookingEndDateTime) - moment(+payload.bookingStartDateTime);  
+                let minDurationInMinutes = minDuration/1000/60;              
+                console.log("minDuration", minDurationInMinutes);
+
+                if(minDurationInMinutes < bookingPeriodAllow.minBookingPeriod){
+                    return res.status(400).json({
+                        errors: [
+                            { code: "MIN_BOOKING_DURATION", message: `Minimum booking duration allowed is ${bookingPeriodAllow.minBookingPeriod} minutes. You can not book less then min duration.` }
+                        ]
+                    });
+                }               
+                console.log("minBookingPeriodAllow", bookingPeriodAllow);
+            }          
 
 
             // Validate Daily Quota Limit, Weekly Quota Limit, And Monthly Quota Limit
@@ -638,6 +654,7 @@ const facilityBookingController = {
            
             let maxDuration;
             let minDuration;
+            
             if(bookingCriteria && bookingCriteria.bookingType == '1'){
            
                 if(bookingPeriodAllow && bookingPeriodAllow.maxBookingPeriod){                
