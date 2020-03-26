@@ -858,7 +858,7 @@ const assetController = {
         let assetPayload = req.body;
         let id = req.body.id
         console.log('[controllers][asset][payload]: Update Asset Payload', assetPayload);
-        assetPayload = _.omit(assetPayload, ['additionalAttributes', 'id', 'assetCategory', 'images', 'files'])
+        assetPayload = _.omit(assetPayload, ['additionalAttributes', 'id', 'assetCategory', 'images', 'files', 'vendorId', 'additionalVendorId'])
         // validate keys
         const schema = Joi.object().keys({
           // parentAssetId: Joi.string(),

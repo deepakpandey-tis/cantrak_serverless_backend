@@ -438,8 +438,8 @@ const vendorController = {
                     'users.id as userId',
                     'users.email'
                 ])
-                .where({ 'application_user_roles.roleId': 5, 'application_user_roles.orgId': req.orgId ,'users.isActive':true})
-                .orderBy('users.name','asc')
+                .where({ 'application_user_roles.roleId': 5, 'application_user_roles.orgId': req.orgId, 'users.isActive': true })
+                .orderBy('users.name', 'asc')
                 .returning('*')
 
             console.log("vendorsList", vendorsResult);
@@ -463,7 +463,32 @@ const vendorController = {
         }
 
 
-    }
+    },
+    getAssignedVendors: async (req, res) => {
+        try {
+            const entityId = req.body.entityId;
+            const entityType = req.body.entityType;
+
+            console.log('entityId:', entityId, 'entityType:', entityType);
+
+            const primaryVendors = await knex('assigned_vendors').select(['entityId', 'userId as primaryVendorId']).where({ entityId: entityId, entityType: entityType, isPrimaryVendor: true }).first();
+
+            const additionalVendors = await knex('assigned_vendors').select(['entityId', 'userId as additionalVendorId']).where({ entityId: entityId, entityType: entityType, isPrimaryVendor: false }).first();
+
+            return res.status(200).json({
+                data: {
+                    primaryVendors,
+                    additionalVendors
+                }
+            })
+
+        } catch (err) {
+            console.error('Error:', err);
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
 };
 
 module.exports = vendorController;
