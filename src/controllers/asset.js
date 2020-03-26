@@ -206,7 +206,7 @@ const assetController = {
         let vendorsPData = req.body.vendorId;
         let vendorsADData = req.body.additionalVendorId;
         if (vendorsPData || vendorsADData) {
-         
+
           // Insert Primary Vendor Data
           if (vendorsPData) {
             let finalVendors = {
@@ -225,7 +225,7 @@ const assetController = {
               .into("assigned_vendors")
             //.where({ orgId: req.orgId });            
           }
-           // Insert Secondry Vendor Data
+          // Insert Secondry Vendor Data
           if (vendorsADData) {
             let finalADVendors = {
               entityId: asset.id,
@@ -858,7 +858,7 @@ const assetController = {
         let assetPayload = req.body;
         let id = req.body.id
         console.log('[controllers][asset][payload]: Update Asset Payload', assetPayload);
-        assetPayload = _.omit(assetPayload, ['additionalAttributes', 'id', 'assetCategory', 'images', 'files'])
+        assetPayload = _.omit(assetPayload, ['additionalAttributes', 'id', 'assetCategory', 'images', 'files', 'vendorId', 'additionalVendorId'])
         // validate keys
         const schema = Joi.object().keys({
           // parentAssetId: Joi.string(),
@@ -1007,6 +1007,130 @@ const assetController = {
             }
           }
         }
+
+
+        // Insert Vendors in Assigned vendors table
+        let vendorsPData = req.body.vendorId;
+        let vendorsADData = req.body.additionalVendorId;
+
+        if (vendorsPData || vendorsADData) {
+
+          // Insert Primary Vendor Data
+          if (vendorsPData) {
+            getPrimaryVendorExist = await knex("assigned_vendors")
+              .where({
+                entityId: asset.id,
+                entityType: "assets",
+                orgId: req.orgId,
+                isPrimaryVendor: true,
+              })
+              .select('*');
+              console.log("assignedVendors",getPrimaryVendorExist);
+
+            if (getPrimaryVendorExist) {
+
+              let finalVendors = {
+                entityId: asset.id,
+                entityType: 'assets',
+                isPrimaryVendor: true,
+                userId: vendorsPData,
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                orgId: req.orgId
+              };
+
+              let d = await knex
+                .update(finalVendors)
+                .where({
+                  entityId: asset.id,
+                  entityType: "assets",
+                  orgId: req.orgId,
+                  isPrimaryVendor: true,
+                })
+                .returning(["*"])
+                .transacting(trx)
+                .into("assigned_vendors")
+            }
+            else {
+
+              let finalVendors = {
+                entityId: asset.id,
+                entityType: 'assets',
+                isPrimaryVendor: true,
+                userId: vendorsPData,
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                orgId: req.orgId
+              };
+
+              let d = await knex
+                .insert(finalVendors)
+                .returning(["*"])
+                .transacting(trx)
+                .into("assigned_vendors")
+              //.where({ orgId: req.orgId });            
+            }
+          }
+
+
+          // Insert Secondary Vendor Data
+          if (vendorsADData) {
+
+            getAdditionalVendorExist = await knex("assigned_vendors")
+              .where({
+                entityId: asset.id,
+                entityType: "assets",
+                orgId: req.orgId,
+                isPrimaryVendor: false,
+              })
+              .select('*');
+
+            if (getAdditionalVendorExist) {
+
+              let finalADVendors = {
+                entityId: asset.id,
+                entityType: 'assets',
+                isPrimaryVendor: false,
+                userId: vendorsADData,
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                orgId: req.orgId
+              };
+
+              let d = await knex
+                .update(finalADVendors)
+                .where({
+                  entityId: asset.id,
+                  entityType: "assets",
+                  orgId: req.orgId,
+                  isPrimaryVendor: false,
+                })
+                .returning(["*"])
+                .transacting(trx)
+                .into("assigned_vendors")
+
+            } else {
+
+              let finalADVendors = {
+                entityId: asset.id,
+                userId: vendorsADData,
+                entityType: 'assets',
+                isPrimaryVendor: false,
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                orgId: req.orgId
+              };
+              let d = await knex
+                .insert(finalADVendors)
+                .returning(["*"])
+                .transacting(trx)
+                .into("assigned_vendors")
+              //.where({ orgId: req.orgId });  
+            }
+
+          }
+        }
+
         trx.commit;
 
       });
