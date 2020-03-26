@@ -2187,11 +2187,13 @@ const serviceRequestController = {
   getPropertyUnitListByFloor: async (req, res) => {
     try {
       let orgId = req.orgId;
+      let houseId = req.me.houseIds[0];
+
 
       const { floorZoneId, type } = req.body;
       const unit = await knex("property_units")
         .select("*")
-        .where({ floorZoneId, orgId: orgId, isActive: true, type: type });
+        .where({ floorZoneId, orgId: orgId, isActive: true, type: type, id: houseId });
       return res.status(200).json({
         data: {
           unit

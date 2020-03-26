@@ -1736,6 +1736,7 @@ const taskGroupController = {
 
 
       const tasks = await knex('template_task').where({ templateId: req.body.id, orgId: req.orgId }).select('taskName', 'id', 'taskNameAlternate', 'taskSerialNumber')
+        .orderBy('taskSerialNumber','asc');
 
       // Get the team and main user
       let team = await knex('assigned_service_team')

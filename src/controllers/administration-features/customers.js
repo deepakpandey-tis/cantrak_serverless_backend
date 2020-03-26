@@ -345,7 +345,7 @@ const customerController = {
       let Parallel = require('async-parallel');
       pagination.data = await Parallel.map(rows, async pd=>{
 
-        let houseData = await knex.from('user_house_allocation').where({userId:pd.userId,orgId:req.orgId}).first();
+        let houseData = await knex.from('user_house_allocation').where({userId:pd.userId}).first();
 
         if(houseData){
           return {

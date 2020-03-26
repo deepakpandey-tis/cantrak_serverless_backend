@@ -26,6 +26,7 @@ const assetController = {
         assetModel,
         assetSerial,
         category,
+        assetCode,
       } = req.body;
       let pagination = {};
       let per_page = reqData.per_page || 10;
@@ -33,7 +34,7 @@ const assetController = {
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
 
-     try {
+      try {
         [total, rows] = await Promise.all([
           knex
             .count("* as count")
@@ -56,7 +57,7 @@ const assetController = {
                   `%${assetName}%`
                 );
               }
-              if(assetSerial) {
+              if (assetSerial) {
                 qb.where(
                   "asset_master.assetSerial",
                   "like",
@@ -75,6 +76,13 @@ const assetController = {
                   "asset_category_master.categoryName",
                   "like",
                   `%${category}%`
+                );
+              }
+              if (assetCode) {
+                qb.where(
+                  "asset_master.assetCode",
+                  "iLIKE",
+                  `%${assetCode}%`
                 );
               }
             })
@@ -102,7 +110,8 @@ const assetController = {
               "asset_master.createdAt as Date Created",
               "asset_master.unitOfMeasure as Unit Of Measure",
               "asset_master.price as Price",
-              "companies.companyName"
+              "companies.companyName",
+              "asset_master.assetCode",
             ])
             .where({ 'asset_master.orgId': req.orgId })
             .where(qb => {
@@ -120,7 +129,7 @@ const assetController = {
                   `%${assetModel}%`
                 );
               }
-              if(assetSerial) {
+              if (assetSerial) {
                 qb.where(
                   "asset_master.assetSerial",
                   "like",
@@ -134,8 +143,16 @@ const assetController = {
                   `%${category}%`
                 );
               }
+
+              if (assetCode) {
+                qb.where(
+                  "asset_master.assetCode",
+                  "iLIKE",
+                  `%${assetCode}%`
+                );
+              }
             })
-            .orderBy("asset_master.createdAt", "desc")
+            .orderBy("asset_master.id", "desc")
             .offset(offset)
             .limit(per_page)
         ]);
@@ -178,11 +195,11 @@ const assetController = {
       let reqData = req.query;
       let total, rows
       let pagination = {};
- 
 
-      let { partName,partCode,partCategory } = req.body;
 
-      if (partName || partCode || partCategory) { 
+      let { partName, partCode, partCategory } = req.body;
+
+      if (partName || partCode || partCategory) {
 
         let per_page = reqData.per_page || 10;
         let page = reqData.current_page || 1;

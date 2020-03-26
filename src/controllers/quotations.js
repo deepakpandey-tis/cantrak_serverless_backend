@@ -256,7 +256,8 @@ const quotationsController = {
             "quotations.invoiceData as invoiceData",
             "quotations.quotationValidityDate as validityDate",
             "property_units.description as propertyUnitDescription",
-            "quotations.displayId as displayId"
+            "quotations.displayId as displayId",
+            "property_units.type",
           )
           .where({ "quotations.id": quotationRequestId });
         console.log(
