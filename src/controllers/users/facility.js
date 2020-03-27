@@ -533,7 +533,7 @@ const facilityBookingController = {
                 if (openingTimeOnBookingDay.valueOf() > moment(startTime).valueOf()) {
                     return res.status(400).json({
                         errors: [
-                            { code: "INVALID_DATE_TIME_SELECTION", message: `Please select booking start and end time b/w opening and closing hours for the day. Open Time: ${openingTimeOnBookingDay.format('HH:mm')}, Closing Time: ${closingTimeOnBookingDay.format('HH:mm')}` }
+                            { code: "INVALID_DATE_TIME_SELECTION", message: `Please select booking start and end time b/w opening and closing hours for the day.` }
                         ]
                     });
                 }
@@ -542,7 +542,7 @@ const facilityBookingController = {
                 if (closingTimeOnBookingDay.valueOf() < moment(endTime).valueOf()) {
                     return res.status(400).json({
                         errors: [
-                            { code: "INVALID_DATE_TIME_SELECTION", message: `Please select booking start and end time b/w opening and closing hours for the day. Open Time: ${openingTimeOnBookingDay.format('HH:mm')}, Closing Time: ${closingTimeOnBookingDay.format('HH:mm')}` }
+                            { code: "INVALID_DATE_TIME_SELECTION", message: `Please select booking start and end time b/w opening and closing hours for the day.` }
                         ]
                     });
                 }
