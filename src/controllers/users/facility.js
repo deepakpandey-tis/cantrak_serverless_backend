@@ -233,6 +233,7 @@ const facilityBookingController = {
                     .leftJoin('projects', 'facility_master.projectId', 'projects.id')
                     .leftJoin('buildings_and_phases', 'facility_master.buildingPhaseId', 'buildings_and_phases.id')
                     .leftJoin('floor_and_zones', 'facility_master.floorZoneId', 'floor_and_zones.id')
+                    .leftJoin('entity_fees_master', 'facility_master.id', 'entity_fees_master.entityId')
                     .select([
                         'entity_bookings.*',
                         'facility_master.id as facilityId',
@@ -245,7 +246,8 @@ const facilityBookingController = {
                         'buildings_and_phases.description as buildingName',
                         'floor_and_zones.floorZoneCode',
                         'floor_and_zones.description as floorName',
-                        'facility_master.isActive'
+                        'facility_master.isActive',
+                        'entity_fees_master.currency as currency'
                     ])
                     // .where(qb => {
                     //     if (listType) {
@@ -275,6 +277,7 @@ const facilityBookingController = {
                     .leftJoin('projects', 'facility_master.projectId', 'projects.id')
                     .leftJoin('buildings_and_phases', 'facility_master.buildingPhaseId', 'buildings_and_phases.id')
                     .leftJoin('floor_and_zones', 'facility_master.floorZoneId', 'floor_and_zones.id')
+                    .leftJoin('entity_fees_master', 'facility_master.id', 'entity_fees_master.entityId')
                     .select([
                         'entity_bookings.*',
                         'facility_master.id as facilityId',
@@ -287,7 +290,8 @@ const facilityBookingController = {
                         'buildings_and_phases.description as buildingName',
                         'floor_and_zones.floorZoneCode',
                         'floor_and_zones.description as floorName',
-                        'facility_master.isActive'
+                        'facility_master.isActive',
+                        'entity_fees_master.currency as currency'
                     ])
                     // .where(qb => {
                     //     if (listType) {

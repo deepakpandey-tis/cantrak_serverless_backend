@@ -177,7 +177,7 @@ const partsController = {
                 let partPayload = req.body;
                 let payload = req.body;
                 console.log('[controllers][part][addParts]', partPayload);
-                partPayload = _.omit(partPayload, ['minimumQuantity'], ['unitOfMeasure'], ['barcode'], ['image_url'], ['file_url'], 'quantity', 'unitCost', ['additionalAttributes'], ['images'], ['files'], ['additionalDescription'], 'partDescription', ['assignedVendors'], ['additionalPartDetails'], ['partId'], 'vendorId', 'additionalVendorId')
+                partPayload = _.omit(partPayload, ['minimumQuantity'], ['unitOfMeasure'], ['barcode'], ['image_url'], ['file_url'], 'quantity', 'unitCost', ['additionalAttributes'], ['images'], ['files'], ['additionalDescription'], 'partDescription', ['assignedVendors'], ['additionalPartDetails'], ['partId'], 'vendorId', 'additionalVendorId','teamId','mainUserId','additionalUsers')
                 // validate keys
                 const schema = Joi.object().keys({
                     partName: Joi.string().required(),
@@ -345,6 +345,33 @@ const partsController = {
                     }
                 }
 
+                // Insert Parts in Assigned Teams table
+                
+                // Insert into assigned_service_team table
+                let { teamId, mainUserId, additionalUsers } = req.body;
+                assignedServiceAdditionalUsers = additionalUsers
+               
+                const assignedServiceTeamPayload = { teamId, userId: mainUserId, entityId: part.id, entityType: 'parts', createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }
+                let assignedServiceTeamResult = await knex.insert(assignedServiceTeamPayload).returning(['*']).transacting(trx).into('assigned_service_team')
+                let assignedServiceTeam = assignedServiceTeamResult[0]
+
+                if (assignedServiceAdditionalUsers && assignedServiceAdditionalUsers.length) {
+                    for (user of assignedServiceAdditionalUsers) {
+                        await knex
+                            .insert({
+                                userId: user,
+                                entityId: part.id,
+                                entityType: "parts",
+                                createdAt: currentTime,
+                                updatedAt: currentTime,
+                                orgId: req.orgId
+                            })
+                            .returning(["*"])
+                            .transacting(trx)
+                            .into("assigned_service_additional_users");                        
+                    }
+                }
+
 
                 trx.commit;
             });
@@ -376,7 +403,7 @@ const partsController = {
             await knex.transaction(async (trx) => {
                 const partDetailsPayload = req.body;
                 console.log('[controllers][part][updatePartDetails]', partDetailsPayload);
-                partPayload = _.omit(partDetailsPayload, ['images'], ['files'], ['minimumQuantity'], ['unitOfMeasure'], ['barcode'], ['image_url'], ['file_url'], ['additionalPartDetails'], ['assignedVendors'], ['partDescription'], ['id'], ['quantity'], ['unitCost'], ['additionalAttributes'])
+                partPayload = _.omit(partDetailsPayload, ['images'], ['files'], ['minimumQuantity'], ['unitOfMeasure'], ['barcode'], ['image_url'], ['file_url'], ['additionalPartDetails'], ['assignedVendors'], ['partDescription'], ['id'], ['quantity'], ['unitCost'], ['additionalAttributes'], 'vendorId', 'additionalVendorId')
 
                 // validate keys
                 const schema = Joi.object().keys({
@@ -455,6 +482,129 @@ const partsController = {
                         files.push(d[0])
                     }
 
+                }
+                //
+
+                // Insert Vendors in Assigned vendors table
+                let vendorsPData = req.body.vendorId;
+                let vendorsADData = req.body.additionalVendorId;
+
+                if (vendorsPData || vendorsADData) {
+
+                    // Insert Primary Vendor Data
+                    if (vendorsPData) {
+                        getPrimaryVendorExist = await knex("assigned_vendors")
+                            .where({
+                                entityId: partDetailsPayload.id,
+                                entityType: "parts",
+                                orgId: req.orgId,
+                                isPrimaryVendor: true,
+                            })
+                            .select('*');
+                        console.log("assignedVendors", getPrimaryVendorExist);
+
+                        if (getPrimaryVendorExist) {
+
+                            let finalVendors = {
+                                entityId: partDetailsPayload.id,
+                                entityType: 'parts',
+                                isPrimaryVendor: true,
+                                userId: vendorsPData,
+                                createdAt: currentTime,
+                                updatedAt: currentTime,
+                                orgId: req.orgId
+                            };
+
+                            let d = await knex
+                                .update(finalVendors)
+                                .where({
+                                    entityId: partDetailsPayload.id,
+                                    entityType: "parts",
+                                    orgId: req.orgId,
+                                    isPrimaryVendor: true,
+                                })
+                                .returning(["*"])
+                                .transacting(trx)
+                                .into("assigned_vendors")
+                        }
+                        else {
+
+                            let finalVendors = {
+                                entityId: partDetailsPayload.id,
+                                entityType: 'parts',
+                                isPrimaryVendor: true,
+                                userId: vendorsPData,
+                                createdAt: currentTime,
+                                updatedAt: currentTime,
+                                orgId: req.orgId
+                            };
+
+                            let d = await knex
+                                .insert(finalVendors)
+                                .returning(["*"])
+                                .transacting(trx)
+                                .into("assigned_vendors")
+                            //.where({ orgId: req.orgId });            
+                        }
+                    }
+
+
+                    // Insert Secondary Vendor Data
+                    if (vendorsADData) {
+
+                        getAdditionalVendorExist = await knex("assigned_vendors")
+                            .where({
+                                entityId: partDetailsPayload.id,
+                                entityType: "parts",
+                                orgId: req.orgId,
+                                isPrimaryVendor: false,
+                            })
+                            .select('*');
+
+                        if (getAdditionalVendorExist) {
+
+                            let finalADVendors = {
+                                entityId: partDetailsPayload.id,
+                                entityType: 'parts',
+                                isPrimaryVendor: false,
+                                userId: vendorsADData,
+                                createdAt: currentTime,
+                                updatedAt: currentTime,
+                                orgId: req.orgId
+                            };
+
+                            let d = await knex
+                                .update(finalADVendors)
+                                .where({
+                                    entityId: partDetailsPayload.id,
+                                    entityType: "parts",
+                                    orgId: req.orgId,
+                                    isPrimaryVendor: false,
+                                })
+                                .returning(["*"])
+                                .transacting(trx)
+                                .into("assigned_vendors")
+
+                        } else {
+
+                            let finalADVendors = {
+                                entityId: partDetailsPayload.id,
+                                userId: vendorsADData,
+                                entityType: 'parts',
+                                isPrimaryVendor: false,
+                                createdAt: currentTime,
+                                updatedAt: currentTime,
+                                orgId: req.orgId
+                            };
+
+                            let d = await knex
+                                .insert(finalADVendors)
+                                .returning(["*"])
+                                .transacting(trx)
+                                .into("assigned_vendors")
+                            //.where({ orgId: req.orgId });  
+                        }
+                    }
                 }
                 //
                 trx.commit;
