@@ -1,6 +1,7 @@
 const knex = require("../../db/knex");
 const Joi = require("@hapi/joi");
-const moment = require("moment");
+const moment = require("moment-timezone");
+// const momentWithTZ = require("moment");
 const _ = require("lodash");
 const emailHelper = require('../../helpers/email')
 
@@ -441,6 +442,8 @@ const facilityBookingController = {
                 bookingStartDateTime: Joi.date().required(),
                 bookingEndDateTime: Joi.date().required(),
                 offset: Joi.number().required(),
+                currentTime: Joi.date().required(),
+                timezone: Joi.string().required(),
             })
 
             const result = Joi.validate(payload, schema);
@@ -453,22 +456,24 @@ const facilityBookingController = {
                 });
             }
 
+            // Set timezone for moment
+            moment.tz.setDefault(payload.timezone);
+            let currentTime = moment();
+            console.log('Current Time:', currentTime.format('MMMM Do YYYY, h:mm:ss a'));
+
             let bookingStartTime = Number(payload.bookingStartDateTime);
             let bookingEndTime = Number(payload.bookingEndDateTime);
-            let clientOffsetInMins = payload.offset * -1;
 
-            let serverOffsetInMins = new Date().getTimezoneOffset();
-            serverOffsetInMins = serverOffsetInMins * -1;
+            // let clientOffsetInMins = payload.offset * -1;
+            // console.log('Client Offset:', clientOffsetInMins);
+            // let serverOffsetInMins = new Date().getTimezoneOffset();
+            // serverOffsetInMins = serverOffsetInMins * -1;
+            // console.log('Client Offset:', serverOffsetInMins);
 
-            let netOffset = serverOffsetInMins - clientOffsetInMins;
-            console.log('Net Offset:', netOffset);
+            // let netOffset = serverOffsetInMins - clientOffsetInMins;
+            // console.log('Net Offset:', netOffset);
 
-            let currentTime = moment().add(netOffset, 'minutes');
-
-            // let bookingDay = new Date(bookingStartTime).getDay();
-            // console.log("Booking day", bookingDay);
-            // bookingDay = WEEK_DAYS[bookingDay];
-            let bookingDay = moment(bookingStartTime).add(netOffset, 'minutes').format('ddd');
+            let bookingDay = moment(bookingStartTime).format('ddd');
             console.log('Checking Booking Availability of Day: ', bookingDay);
 
             let openCloseTimes = await knex.from('entity_open_close_times').where({
@@ -476,7 +481,7 @@ const facilityBookingController = {
                 day: bookingDay
             }).first();
 
-            let bookingFullDay = moment(bookingStartTime).add(netOffset, 'minutes').format('dddd');
+            let bookingFullDay = moment(bookingStartTime).format('dddd');
 
             if (!openCloseTimes) {
                 return res.status(400).json({
@@ -488,8 +493,8 @@ const facilityBookingController = {
 
             console.log('openCloseTimes:', openCloseTimes);
 
-            let startTime = new Date(+payload.bookingStartDateTime).getTime();
-            let endTime = new Date(+payload.bookingEndDateTime).getTime();
+            let startTime = moment(+payload.bookingStartDateTime).valueOf();
+            let endTime = moment(+payload.bookingEndDateTime).valueOf();
 
             let bookingCriteria = await knex('entity_booking_criteria').select('*').where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId }).first();
             console.log("bookingCriteria", bookingCriteria);
