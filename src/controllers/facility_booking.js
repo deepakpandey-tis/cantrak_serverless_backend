@@ -357,6 +357,7 @@ const facilityBookingController = {
                 knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId })
             ])
 
+            
             return res.status(200).json({
                 facilityDetails: { ...facilityDetails, openingCloseingDetail: openingCloseingDetail, ruleRegulationDetail: _.uniqBy(ruleRegulationDetail, 'rules'), 
                 bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'),qrCode },
