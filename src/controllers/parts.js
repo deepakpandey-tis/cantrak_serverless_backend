@@ -177,7 +177,7 @@ const partsController = {
                 let partPayload = req.body;
                 let payload = req.body;
                 console.log('[controllers][part][addParts]', partPayload);
-                partPayload = _.omit(partPayload, ['minimumQuantity'], ['unitOfMeasure'], ['barcode'], ['image_url'], ['file_url'], 'quantity', 'unitCost', ['additionalAttributes'], ['images'], ['files'], ['additionalDescription'], 'partDescription', ['assignedVendors'], ['additionalPartDetails'], ['partId'])
+                partPayload = _.omit(partPayload, ['minimumQuantity'], ['unitOfMeasure'], ['barcode'], ['image_url'], ['file_url'], 'quantity', 'unitCost', ['additionalAttributes'], ['images'], ['files'], ['additionalDescription'], 'partDescription', ['assignedVendors'], ['additionalPartDetails'], ['partId'], 'vendorId', 'additionalVendorId')
                 // validate keys
                 const schema = Joi.object().keys({
                     partName: Joi.string().required(),
@@ -300,6 +300,51 @@ const partsController = {
                     }
 
                 }
+
+
+                // Insert Vendors in Assigned vendors table
+                let vendorsPData = req.body.vendorId;
+                let vendorsADData = req.body.additionalVendorId;
+                if (vendorsPData || vendorsADData) {
+
+                    // Insert Primary Vendor Data
+                    if (vendorsPData) {
+                        let finalVendors = {
+                            entityId: part.id,
+                            entityType: 'parts',
+                            isPrimaryVendor: true,
+                            userId: vendorsPData,
+                            createdAt: currentTime,
+                            updatedAt: currentTime,
+                            orgId: req.orgId
+                        };
+                        let d = await knex
+                            .insert(finalVendors)
+                            .returning(["*"])
+                            .transacting(trx)
+                            .into("assigned_vendors")
+                        //.where({ orgId: req.orgId });            
+                    }
+                    // Insert Secondary Vendor Data
+                    if (vendorsADData) {
+                        let finalADVendors = {
+                            entityId: part.id,
+                            userId: vendorsADData,
+                            entityType: 'parts',
+                            isPrimaryVendor: false,
+                            createdAt: currentTime,
+                            updatedAt: currentTime,
+                            orgId: req.orgId
+                        };
+                        let d = await knex
+                            .insert(finalADVendors)
+                            .returning(["*"])
+                            .transacting(trx)
+                            .into("assigned_vendors")
+                        //.where({ orgId: req.orgId });           
+                    }
+                }
+
 
                 trx.commit;
             });
@@ -2204,8 +2249,8 @@ const partsController = {
                     .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
 
 
-                    let fromDateEnd  = moment(fromTime).endOf('date').format();
-                    let fromTimeEnd  = new Date(fromDateEnd).getTime();
+                let fromDateEnd = moment(fromTime).endOf('date').format();
+                let fromTimeEnd = new Date(fromDateEnd).getTime();
 
 
                 const Parallel = require('async-parallel')
@@ -2250,9 +2295,9 @@ const partsController = {
                             o = Number(d.quantity)
                             //    balance.totalQuantity = Number(balance.totalQuantity) + o
                             //if (s > 1) {
-                                bal = Number(newBal) + o;
+                            bal = Number(newBal) + o;
                             //} else {
-                             //   bal = Number(balance.quantity);
+                            //   bal = Number(balance.quantity);
                             //}
 
                         } else {
@@ -2260,9 +2305,9 @@ const partsController = {
                             i = Number(d.quantity)
                             //    balance.totalQuantity = Number(balance.totalQuantity) + i
                             //if (s > 1) {
-                                bal = Number(newBal) + i;
+                            bal = Number(newBal) + i;
                             //} else {
-                             //   bal = Number(balance.quantity);
+                            //   bal = Number(balance.quantity);
                             //}
 
 
