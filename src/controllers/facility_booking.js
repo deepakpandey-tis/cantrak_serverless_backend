@@ -3,7 +3,7 @@ const Joi = require("@hapi/joi");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const moment = require("moment");
-
+const QRCODE = require('qrcode');
 const uuidv4 = require("uuid/v4");
 var jwt = require("jsonwebtoken");
 const emailHelper = require('../helpers/email')
@@ -301,6 +301,10 @@ const facilityBookingController = {
                 });
             }
 
+            let qrCode = '';
+            qrCode = await QRCODE.toDataURL('org-' + req.orgId + '-facility-' + payload.id);
+
+
             let [facilityDetails,
                 openingCloseingDetail,
                 ruleRegulationDetail,
@@ -354,7 +358,8 @@ const facilityBookingController = {
             ])
 
             return res.status(200).json({
-                facilityDetails: { ...facilityDetails, openingCloseingDetail: openingCloseingDetail, ruleRegulationDetail: _.uniqBy(ruleRegulationDetail, 'rules'), bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType') },
+                facilityDetails: { ...facilityDetails, openingCloseingDetail: openingCloseingDetail, ruleRegulationDetail: _.uniqBy(ruleRegulationDetail, 'rules'), 
+                bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'),qrCode },
                 message: "Facility Details!"
             });
 

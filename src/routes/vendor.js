@@ -15,4 +15,6 @@ router.post('/update-vendor', authController.isAuthenticated, vendorController.u
 
 router.get('/get-vendors-data-list', authController.isAuthenticated, vendorController.getVendorsData);
 
+router.post('/get-assigned-vendors', authController.isAuthenticated, vendorController.getAssignedVendors);
+
 module.exports = router;
