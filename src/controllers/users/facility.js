@@ -70,7 +70,7 @@ const facilityBookingController = {
                         qb.where('entity_open_close_times.closeTime', '<=', endDateTime)
                     }
                 })
-                .where({ 'facility_master.orgId': req.orgId, 'facility_master.moderationStatus': true, 'facility_master.isActive': true })
+                .where({ 'facility_master.orgId': req.orgId, 'facility_master.moderationStatus': true})
                 .whereIn('facility_master.projectId', projectArray)
                 .orderBy('facility_master.id', 'desc')
                 .groupBy('facility_master.id', 'companies.id', 'projects.id', 'buildings_and_phases.id', 'floor_and_zones.id')
@@ -245,6 +245,7 @@ const facilityBookingController = {
                         'buildings_and_phases.description as buildingName',
                         'floor_and_zones.floorZoneCode',
                         'floor_and_zones.description as floorName',
+                        'facility_master.isActive'
                     ])
                     // .where(qb => {
                     //     if (listType) {
@@ -286,6 +287,7 @@ const facilityBookingController = {
                         'buildings_and_phases.description as buildingName',
                         'floor_and_zones.floorZoneCode',
                         'floor_and_zones.description as floorName',
+                        'facility_master.isActive'
                     ])
                     // .where(qb => {
                     //     if (listType) {
@@ -531,7 +533,7 @@ const facilityBookingController = {
                 if (openingTimeOnBookingDay.valueOf() > moment(startTime).valueOf()) {
                     return res.status(400).json({
                         errors: [
-                            { code: "INVALID_DATE_TIME_SELECTION", message: `Please select booking start and end time b/w opening and closing hours for the day. Open Time: ${openingTimeOnBookingDay.format('HH:mm')}, Closing Time: ${closingTimeOnBookingDay.format('HH:mm')}` }
+                            { code: "INVALID_DATE_TIME_SELECTION", message: `Please select booking start and end time b/w opening and closing hours for the day.` }
                         ]
                     });
                 }
@@ -540,7 +542,7 @@ const facilityBookingController = {
                 if (closingTimeOnBookingDay.valueOf() < moment(endTime).valueOf()) {
                     return res.status(400).json({
                         errors: [
-                            { code: "INVALID_DATE_TIME_SELECTION", message: `Please select booking start and end time b/w opening and closing hours for the day. Open Time: ${openingTimeOnBookingDay.format('HH:mm')}, Closing Time: ${closingTimeOnBookingDay.format('HH:mm')}` }
+                            { code: "INVALID_DATE_TIME_SELECTION", message: `Please select booking start and end time b/w opening and closing hours for the day.` }
                         ]
                     });
                 }
