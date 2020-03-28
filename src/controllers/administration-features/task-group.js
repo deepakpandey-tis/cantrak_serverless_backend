@@ -318,7 +318,7 @@ const taskGroupController = {
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
         });
       }
-      let templateResult = await knex('task_group_templates').returning('*').where({ "assetCategoryId": payload.assetCategoryId, orgId: req.orgId });
+      let templateResult = await knex('task_group_templates').returning('*').where({ "assetCategoryId": payload.assetCategoryId, orgId: req.orgId, isActive: true });
 
       return res.status(200).json({
 
@@ -482,7 +482,7 @@ const taskGroupController = {
         // create recurring pm of this task group open
 
         let repeatPeriod = payload.repeatPeriod;
-        let repeatOn = payload.repeatOn && payload.repeatOn.length ? payload.repeatOn.join(',') : [];
+        let repeatOn = payload.repeatOn ? payload.repeatOn : ""; //&& payload.repeatOn.length ? payload.repeatOn.join(',') : [];
         let repeatFrequency = Number(payload.repeatFrequency);
         let start = new Date(payload.startDateTime);
         let startYear = start.getFullYear();
@@ -1112,12 +1112,12 @@ const taskGroupController = {
         assetCategoryId: Joi.string().required(),
         taskTemplateName: Joi.string().required(),
         // tasks: Joi.array().items(Joi.object()).strict().required(),
-        startDateTime: Joi.date().required(),
-        endDateTime: Joi.date().required(),
-        repeatPeriod: Joi.string().required(),
-        repeatFrequency: Joi.string().required(),
-        teamId: Joi.string().required(),
-        mainUserId: Joi.string().required(),
+        startDateTime: Joi.date().allow("").allow(null).optional(),
+        endDateTime: Joi.date().allow("").allow(null).optional(),
+        repeatPeriod: Joi.string().allow("").allow(null).optional(),
+        repeatFrequency: Joi.string().allow("").allow(null).optional(),
+        teamId: Joi.string().allow("").allow(null).optional(),
+        mainUserId: Joi.string().allow("").allow(null).optional(),
         // additionalUsers: Joi.array().items(Joi.string().required()).strict().required(),
       });
 
@@ -1149,7 +1149,7 @@ const taskGroupController = {
         let tasksInsertPayload = req.body.tasks.map(da => ({
           taskName: da.taskName,
           taskNameAlternate: da.taskNameAlternate,
-          taskSerialNumber: da.taskSerialNumber,
+          taskSerialNumber: da.taskSerialNumber ? da.taskSerialNumber :"",
           templateId: createTemplate.id,
           createdAt: currentTime,
           updatedAt: currentTime,
@@ -1162,21 +1162,25 @@ const taskGroupController = {
 
 
         // TASK GROUP SCHEDULE OPEN
-        let insertScheduleData = {
-          taskGroupId: createTemplate.id,
-          pmId: payload.pmId,
-          startDate: payload.startDateTime,
-          endDate: payload.endDateTime,
-          repeatPeriod: payload.repeatPeriod,
-          repeatOn: payload.repeatOn ? payload.repeatOn.join(',') : '',
-          repeatFrequency: payload.repeatFrequency,
-          createdAt: currentTime,
-          updatedAt: currentTime,
-          orgId: req.orgId
-        }
 
-        let scheduleResult = await knex.insert(insertScheduleData).returning(['*']).transacting(trx).into('task_group_template_schedule');
-        taskSchedule = scheduleResult[0];
+        if (payload.startDateTime && payload.endDateTime && payload.repeatPeriod && payload.repeatOn) {
+
+          let insertScheduleData = {
+            taskGroupId: createTemplate.id,
+            pmId: payload.pmId,
+            startDate: payload.startDateTime,
+            endDate: payload.endDateTime,
+            repeatPeriod: payload.repeatPeriod,
+            repeatOn: payload.repeatOn ? payload.repeatOn : "",
+            repeatFrequency: payload.repeatFrequency,
+            createdAt: currentTime,
+            updatedAt: currentTime,
+            orgId: req.orgId
+          }
+
+          let scheduleResult = await knex.insert(insertScheduleData).returning(['*']).transacting(trx).into('task_group_template_schedule');
+          taskSchedule = scheduleResult[0];
+        }
         // TASK GROUP SCHEDULE CLOSE 
 
 
@@ -1199,18 +1203,22 @@ const taskGroupController = {
         // ASSIGNED ADDITIONAL USER CLOSE
 
         // ASSIGNED TEAM OPEN
-        let insertAssignedServiceTeamData = {
-          teamId: payload.teamId,
-          userId: payload.mainUserId,
-          entityId: createTemplate.id,
-          entityType: "task_group_templates",
-          createdAt: currentTime,
-          updatedAt: currentTime,
-          orgId: req.orgId
-        }
 
-        let assignedServiceTeamResult = await knex.insert(insertAssignedServiceTeamData).returning(['*']).transacting(trx).into('assigned_service_team');
-        assignedServiceTeam = assignedServiceTeamResult[0];
+        if (payload.teamId && payload.mainUserId && createTemplate.id) {
+
+          let insertAssignedServiceTeamData = {
+            teamId: payload.teamId,
+            userId: payload.mainUserId,
+            entityId: createTemplate.id,
+            entityType: "task_group_templates",
+            createdAt: currentTime,
+            updatedAt: currentTime,
+            orgId: req.orgId
+          }
+
+          let assignedServiceTeamResult = await knex.insert(insertAssignedServiceTeamData).returning(['*']).transacting(trx).into('assigned_service_team');
+          assignedServiceTeam = assignedServiceTeamResult[0];
+        }
 
         // ASSIGNED TEAM CLOSE
 
@@ -1736,7 +1744,7 @@ const taskGroupController = {
 
 
       const tasks = await knex('template_task').where({ templateId: req.body.id, orgId: req.orgId }).select('taskName', 'id', 'taskNameAlternate', 'taskSerialNumber')
-        .orderBy('taskSerialNumber','asc');
+        .orderBy('taskSerialNumber', 'asc');
 
       // Get the team and main user
       let team = await knex('assigned_service_team')
@@ -1813,7 +1821,7 @@ const taskGroupController = {
       const templateExist = await knex("task_group_templates")
         .where('taskGroupName', 'iLIKE', req.body.taskGroupName)
         .where({ orgId: req.orgId })
-        .whereNot({id});
+        .whereNot({ id });
 
       console.log(
         "[controllers][task-group][createTemplate]: ServiceCode",
