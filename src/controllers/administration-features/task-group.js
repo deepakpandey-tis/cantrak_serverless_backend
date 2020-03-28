@@ -812,6 +812,11 @@ const taskGroupController = {
       let insertPmData = { "name": payload.pmName, 'assetCategoryId': payload.assetCategoryId, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId };
       let insertPmResult = await knex('pm_master2').insert(insertPmData).returning(['*'])
       createPM = insertPmResult[0];
+
+      await knex('pm_master2')
+      .update({ isActive: true })
+      .where({ id: createPM.id })
+
       return res.status(200).json({
         data: {
           pm: createPM,
@@ -881,7 +886,8 @@ const taskGroupController = {
 
           .select([
             "task_group_schedule_assign_assets.id as workOrderId",
-            "task_group_schedule_assign_assets.status as status",
+            // "task_group_schedule_assign_assets.status as status",
+            "task_group_schedule_assign_assets.isActive as status",
             "task_group_schedule.id as id",
             "asset_master.assetName as assetName",
             "asset_master.model as model",
@@ -1054,7 +1060,7 @@ const taskGroupController = {
             "task_group_schedule_assign_assets.pmDate as pmDate",
             "task_group_schedule.repeatPeriod as repeatPeriod",
             "task_group_schedule.repeatOn as repeatOn",
-            "task_group_schedule.repeatFrequency as repeatFrequency"
+            "task_group_schedule.repeatFrequency as repeatFrequency",
           ])
           .where({
             "task_group_schedule.pmId": payload.pmId,
@@ -1473,6 +1479,7 @@ const taskGroupController = {
           'pm_task.taskGroupScheduleAssignAssetId': payload.taskGroupScheduleAssignAssetId,
           'pm_task.orgId': req.orgId
         })
+
       let statuses = tasks.filter(t => t.status !== "CMTD")
       if (statuses.length === 0) {
         status = 'complete'
@@ -1736,7 +1743,7 @@ const taskGroupController = {
 
 
       const tasks = await knex('template_task').where({ templateId: req.body.id, orgId: req.orgId }).select('taskName', 'id', 'taskNameAlternate', 'taskSerialNumber')
-        .orderBy('taskSerialNumber','asc');
+        .orderBy('taskSerialNumber', 'asc');
 
       // Get the team and main user
       let team = await knex('assigned_service_team')
@@ -1813,7 +1820,7 @@ const taskGroupController = {
       const templateExist = await knex("task_group_templates")
         .where('taskGroupName', 'iLIKE', req.body.taskGroupName)
         .where({ orgId: req.orgId })
-        .whereNot({id});
+        .whereNot({ id });
 
       console.log(
         "[controllers][task-group][createTemplate]: ServiceCode",
@@ -2267,6 +2274,40 @@ const taskGroupController = {
         data: deletedWorkOrder,
         message: 'Deleted Work order successfully!'
       })
+    } catch (err) {
+    }
+  },
+
+  cancelWorkOrder: async (req, res) => {
+    try {
+      const id = req.body.workOrderId;
+      const cancelReason = req.body.cancelReason;
+      let currentTime = new Date().getTime();
+
+      const insertData = {
+        entityId: id,
+        entityType: 'work-orders',
+        description: cancelReason,
+        orgId: req.orgId,
+        createdBy: req.me.id,
+        createdAt: currentTime,
+        updatedAt: currentTime
+      };
+
+      const resultRemarksNotes = await knex
+        .insert(insertData)
+        .returning(["*"])
+        .into("remarks_master");
+
+      const updatedWorkOrder = await knex('task_group_schedule_assign_assets')
+        .update({ isActive: false })
+        .where({ id: id })
+
+      return res.status(200).json({
+        data: resultRemarksNotes,
+        message: 'Work order cancelled successfully!'
+      })
+
     } catch (err) {
 
     }

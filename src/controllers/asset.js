@@ -580,15 +580,49 @@ const assetController = {
           .where({ orgId: req.orgId })
       ]);
 
+
+
+      const Parallel = require('async-parallel')
+      const rowsWithLocations = await Parallel.map(rows, async row => {
+        const location = await knex('asset_location')
+          .innerJoin('companies', 'asset_location.companyId', 'companies.id')
+          .innerJoin('projects', 'asset_location.projectId', 'projects.id')
+          .innerJoin(
+            "buildings_and_phases",
+            "asset_location.buildingId",
+            "buildings_and_phases.id"
+          )
+          .innerJoin(
+            "floor_and_zones",
+            "asset_location.floorId",
+            "floor_and_zones.id"
+          )
+          .innerJoin(
+            "property_units",
+            "asset_location.unitId",
+            "property_units.id"
+          )
+          .select([
+            'companies.companyName',
+            'projects.projectName',
+            'buildings_and_phases.buildingPhaseCode',
+            'floor_and_zones.floorZoneCode',
+            'property_units.unitNumber'
+          ]).where(knex.raw('"asset_location"."updatedAt" = (select max("updatedAt") from asset_location)')).first()
+        // ]).max('asset_location.updatedAt').first()
+        return { ...row, ...location }
+      })
+
+
       let count = total.count;
       pagination.total = count;
       pagination.per_page = per_page;
       pagination.offset = offset;
-      pagination.to = offset + rows.length;
+      pagination.to = offset + rowsWithLocations.length;
       pagination.last_page = Math.ceil(count / per_page);
       pagination.current_page = page;
       pagination.from = offset;
-      pagination.data = rows;
+      pagination.data = rowsWithLocations;
 
       return res.status(200).json({
         data: {
@@ -1025,7 +1059,7 @@ const assetController = {
                 isPrimaryVendor: true,
               })
               .select('*');
-              console.log("assignedVendors",getPrimaryVendorExist);
+            console.log("assignedVendors", getPrimaryVendorExist);
 
             if (getPrimaryVendorExist) {
 
