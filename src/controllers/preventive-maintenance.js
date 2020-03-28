@@ -162,6 +162,11 @@ const pmController = {
         trx.commit;
       });
 
+
+      await knex('survey_orders')
+      .update({ surveyInProcess: null })
+      .where({ id: surveyOrderId })
+
       return res.status(200).json({
         data: {
           pm_task: pm_task,
