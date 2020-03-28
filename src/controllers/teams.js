@@ -744,6 +744,8 @@ const teamsController = {
                     .where({ 'team_roles_project_master.teamId': teamId }).returning('*')
                 ,
                 knex('assigned_vendors')
+                    .leftJoin('users','assigned_vendors.userId','users.id')
+                    .select('assigned_vendors.userId','users.name','users.email')
                     .where({ 'entityId': teamId, 'entityType': 'teams' }).returning('*'),
             ])
 
@@ -756,7 +758,7 @@ const teamsController = {
 
             res.status(200).json({
                 data: {
-                    teamDetails: { ...teamResult[0], usersData: userResult, projectData: projectResult, projectUpdateDetails: projectUpdateDetails, vendorIds: vendorIds },
+                    teamDetails: { ...teamResult[0], usersData: userResult, projectData: projectResult, projectUpdateDetails: projectUpdateDetails, vendorIds: vendorIds,vendorData:vendorResult },
                 },
                 message: "Team Details Successfully"
             })
