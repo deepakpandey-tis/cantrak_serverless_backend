@@ -70,7 +70,7 @@ const facilityBookingController = {
                         qb.where('entity_open_close_times.closeTime', '<=', endDateTime)
                     }
                 })
-                .where({ 'facility_master.orgId': req.orgId, 'facility_master.moderationStatus': true})
+                .where({ 'facility_master.orgId': req.orgId, 'facility_master.moderationStatus': true })
                 .whereIn('facility_master.projectId', projectArray)
                 .orderBy('facility_master.id', 'desc')
                 .groupBy('facility_master.id', 'companies.id', 'projects.id', 'buildings_and_phases.id', 'floor_and_zones.id')
@@ -81,7 +81,7 @@ const facilityBookingController = {
             resultData = await Parallel.map(resultData, async pd => {
 
                 let imageResult = await knex.from('images').select('s3Url', 'title', 'name')
-                    .where({ "entityId": pd.id, "entityType": 'facility_master', orgId: req.orgId })
+                    .where({ "entityId": pd.id, "entityType": 'facility_master' })
 
 
                 let currentTime = new Date().getTime();
@@ -189,7 +189,7 @@ const facilityBookingController = {
                 ,
                 knex.from('entity_booking_criteria').where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId }).first()
                 ,
-                knex.from('images').where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId }),
+                knex.from('images').where({ entityId: payload.id, entityType: 'facility_master' }),
                 knex('entity_fees_master').select(['feesType', 'feesAmount', 'duration']).where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId }),
                 knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId })
 
@@ -233,6 +233,7 @@ const facilityBookingController = {
                     .leftJoin('projects', 'facility_master.projectId', 'projects.id')
                     .leftJoin('buildings_and_phases', 'facility_master.buildingPhaseId', 'buildings_and_phases.id')
                     .leftJoin('floor_and_zones', 'facility_master.floorZoneId', 'floor_and_zones.id')
+                    .leftJoin('entity_fees_master', 'facility_master.id', 'entity_fees_master.entityId')
                     .select([
                         'entity_bookings.*',
                         'facility_master.id as facilityId',
@@ -245,7 +246,8 @@ const facilityBookingController = {
                         'buildings_and_phases.description as buildingName',
                         'floor_and_zones.floorZoneCode',
                         'floor_and_zones.description as floorName',
-                        'facility_master.isActive'
+                        'facility_master.isActive',
+                        'entity_fees_master.currency as currency'
                     ])
                     // .where(qb => {
                     //     if (listType) {
@@ -275,6 +277,7 @@ const facilityBookingController = {
                     .leftJoin('projects', 'facility_master.projectId', 'projects.id')
                     .leftJoin('buildings_and_phases', 'facility_master.buildingPhaseId', 'buildings_and_phases.id')
                     .leftJoin('floor_and_zones', 'facility_master.floorZoneId', 'floor_and_zones.id')
+                    .leftJoin('entity_fees_master', 'facility_master.id', 'entity_fees_master.entityId')
                     .select([
                         'entity_bookings.*',
                         'facility_master.id as facilityId',
@@ -287,7 +290,8 @@ const facilityBookingController = {
                         'buildings_and_phases.description as buildingName',
                         'floor_and_zones.floorZoneCode',
                         'floor_and_zones.description as floorName',
-                        'facility_master.isActive'
+                        'facility_master.isActive',
+                        'entity_fees_master.currency as currency'
                     ])
                     // .where(qb => {
                     //     if (listType) {
@@ -463,17 +467,10 @@ const facilityBookingController = {
             let currentTime = moment();
             console.log('Current Time:', currentTime.format('MMMM Do YYYY, h:mm:ss a'));
 
-            let bookingStartTime = Number(payload.bookingStartDateTime);
-            let bookingEndTime = Number(payload.bookingEndDateTime);
 
-            // let clientOffsetInMins = payload.offset * -1;
-            // console.log('Client Offset:', clientOffsetInMins);
-            // let serverOffsetInMins = new Date().getTimezoneOffset();
-            // serverOffsetInMins = serverOffsetInMins * -1;
-            // console.log('Client Offset:', serverOffsetInMins);
-
-            // let netOffset = serverOffsetInMins - clientOffsetInMins;
-            // console.log('Net Offset:', netOffset);
+            let bookingStartTime = moment(+payload.bookingStartDateTime).seconds(0).milliseconds(0).valueOf();
+            let bookingEndTime = moment(+payload.bookingEndDateTime).seconds(0).milliseconds(0).valueOf();
+            console.log('User Selected Booking Start/End Time: ', moment(bookingStartTime).format('YYYY-MM-DD HH:mm'), moment(bookingEndTime).format('YYYY-MM-DD HH:mm'));
 
             let bookingDay = moment(bookingStartTime).format('ddd');
             console.log('Checking Booking Availability of Day: ', bookingDay);
@@ -482,28 +479,24 @@ const facilityBookingController = {
                 entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId,
                 day: bookingDay
             }).first();
+            console.log('openCloseTimes:', openCloseTimes);
 
             let bookingFullDay = moment(bookingStartTime).format('dddd');
 
             if (!openCloseTimes) {
                 return res.status(400).json({
                     errors: [
-                        { code: "BOOKING_CLOSED_FOR_THE_DAY", message: `Booking is not opened for ${bookingFullDay}` }
+                        { code: "BOOKING_CLOSED_FOR_THE_DAY", message: `Booking is not opened for selected day (${bookingFullDay}).` }
                     ]
                 });
             }
 
-            console.log('openCloseTimes:', openCloseTimes);
-
-            let startTime = moment(+payload.bookingStartDateTime).valueOf();
-            let endTime = moment(+payload.bookingEndDateTime).valueOf();
-
             let bookingCriteria = await knex('entity_booking_criteria').select('*').where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId }).first();
             console.log("bookingCriteria", bookingCriteria);
 
-            if (bookingCriteria && bookingCriteria.bookingType == '1') {
+            if (bookingCriteria && bookingCriteria.bookingType == '1') {   // Flexible Booking
 
-                if (moment(bookingEndTime).subtract(1, 'minutes').valueOf() < bookingStartTime) {
+                if (bookingEndTime <= bookingStartTime) {
                     return res.status(400).json({
                         errors: [
                             { code: "INVALID_DATE_TIME_SELECTION", message: `Booking end time should be greater than start time. Please correct!` }
@@ -511,26 +504,18 @@ const facilityBookingController = {
                     });
                 }
 
-                let bookingDay1 = moment(bookingStartTime).startOf('day').valueOf();
-
-                let h1 = new Date(+openCloseTimes.openTime).getHours();
-                let m1 = new Date(+openCloseTimes.openTime).getMinutes();
-                let openingTimeOnBookingDay = moment(bookingDay1).add(h1, 'hours').add(m1, 'minutes');
-
-                h2 = new Date(+openCloseTimes.closeTime).getHours();
-                m2 = new Date(+openCloseTimes.closeTime).getMinutes();
-                let closingTimeOnBookingDay = moment(bookingDay1).add(h2, 'hours').add(m2, 'minutes');
-
-                console.log(h1, m1, h2, m2, bookingDay1, openingTimeOnBookingDay, closingTimeOnBookingDay);
+                let openingTimeOnBookingDay = moment(bookingStartTime).hours(moment(+openCloseTimes.openTime).hours())
+                    .minutes(moment(+openCloseTimes.openTime).minutes()).seconds(0).milliseconds(0);
 
 
-                console.log('Start/ End   Time of the Day: ', openingTimeOnBookingDay.format('HH:mm'), closingTimeOnBookingDay.format('HH:mm'));
-                console.log('User Selected Start/End Time: ', moment(startTime).format('HH:mm'), moment(endTime).format('HH:mm'));
-                console.log('First : ', openingTimeOnBookingDay.valueOf() > moment(startTime).valueOf());
-                console.log('Second: ', closingTimeOnBookingDay.valueOf() < moment(endTime).valueOf());
+                let closingTimeOnBookingDay = moment(bookingStartTime).hours(moment(+openCloseTimes.closeTime).hours())
+                    .minutes(moment(+openCloseTimes.closeTime).minutes()).seconds(0).milliseconds(0);
+
+                console.log('openingTimeOnBookingDay:', openingTimeOnBookingDay.format('YYYY-MM-DD HH:mm:ss'));    
+                console.log('closingTimeOnBookingDay:', closingTimeOnBookingDay.format('YYYY-MM-DD HH:mm:ss'));    
 
 
-                if (openingTimeOnBookingDay.valueOf() > moment(startTime).valueOf()) {
+                if (openingTimeOnBookingDay.valueOf() > moment(bookingStartTime).valueOf()) {
                     return res.status(400).json({
                         errors: [
                             { code: "INVALID_DATE_TIME_SELECTION", message: `Please select booking start and end time b/w opening and closing hours for the day.` }
@@ -539,20 +524,52 @@ const facilityBookingController = {
                 }
 
 
-                if (closingTimeOnBookingDay.valueOf() < moment(endTime).valueOf()) {
+                if (closingTimeOnBookingDay.valueOf() < moment(bookingEndTime).valueOf()) {
                     return res.status(400).json({
                         errors: [
                             { code: "INVALID_DATE_TIME_SELECTION", message: `Please select booking start and end time b/w opening and closing hours for the day.` }
                         ]
                     });
                 }
+
+                let bookingPeriodAllow = await knex('entity_booking_criteria').select(['maxBookingPeriod', 'minBookingPeriod']).where({ entityId: payload.facilityId, bookingType: 1, entityType: 'facility_master', orgId: req.orgId }).first();
+                console.log("maxBookingPeriodAllow", bookingPeriodAllow);
+                let maxDuration;
+                let minDuration;
+
+                if (bookingPeriodAllow && bookingPeriodAllow.maxBookingPeriod) {
+                    maxDuration = moment(+payload.bookingEndDateTime) - moment(+payload.bookingStartDateTime);
+                    let maxDurationInMinutes = maxDuration / 1000 / 60;
+                    console.log("maxDuration", maxDurationInMinutes);
+
+                    if (maxDurationInMinutes > bookingPeriodAllow.maxBookingPeriod) {
+                        return res.status(400).json({
+                            errors: [
+                                { code: "MAX_BOOKING_DURATION", message: `Maximum booking duration allowed is ${bookingPeriodAllow.maxBookingPeriod} minutes. You can not book more then max duration.` }
+                            ]
+                        });
+                    }
+                }
+
+                if (bookingPeriodAllow && bookingPeriodAllow.minBookingPeriod) {
+                    minDuration = moment(+payload.bookingEndDateTime) - moment(+payload.bookingStartDateTime);
+                    let minDurationInMinutes = minDuration / 1000 / 60;
+                    console.log("minDuration", minDurationInMinutes);
+
+                    if (minDurationInMinutes < bookingPeriodAllow.minBookingPeriod) {
+                        return res.status(400).json({
+                            errors: [
+                                { code: "MIN_BOOKING_DURATION", message: `Minimum booking duration allowed is ${bookingPeriodAllow.minBookingPeriod} minutes. You can not book less then min duration.` }
+                            ]
+                        });
+                    }
+                }
+
             }
 
-            // If flexible booking is opened, please validate min duration, max duration
 
             let bookingAllowingTiming = await knex('entity_booking_criteria').select(['bookingAllowedAdvanceTime', 'bookingCloseAdvanceTime']).where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId }).first();
 
-            console.log('Current Time:', currentTime.format('MMMM Do YYYY, h:mm:ss a'));
             console.log('Booking Start Time:', moment(bookingStartTime).format('MMMM Do YYYY, h:mm:ss a'));
             console.log('bookingAllowingTiming', bookingAllowingTiming);
 
@@ -603,10 +620,7 @@ const facilityBookingController = {
             }
 
 
-
-
             // Validate Daily Quota Limit, Weekly Quota Limit, And Monthly Quota Limit
-
             let dailyQuota = await knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.facilityId, limitType: 1, entityType: 'facility_master', orgId: req.orgId }).first();
 
             if (dailyQuota) {
@@ -671,54 +685,12 @@ const facilityBookingController = {
                 }
             }
 
-            // console.log('Quota: ', dailyQuota, weeklyQuota, monthlyQuota);
-
-            let bookingPeriodAllow = await knex('entity_booking_criteria').select(['maxBookingPeriod', 'minBookingPeriod']).where({ entityId: payload.facilityId, bookingType: 1, entityType: 'facility_master', orgId: req.orgId }).first();
-            let maxDuration;
-            let minDuration;
-
-            if (bookingCriteria && bookingCriteria.bookingType == '1') {
-
-                if (bookingPeriodAllow && bookingPeriodAllow.maxBookingPeriod) {
-                    maxDuration = moment(+payload.bookingEndDateTime) - moment(+payload.bookingStartDateTime);
-                    let maxDurationInMinutes = maxDuration / 1000 / 60;
-                    console.log("maxDuration", maxDurationInMinutes);
-
-                    if (maxDurationInMinutes > bookingPeriodAllow.maxBookingPeriod) {
-                        console.log("you can not booked more then minutes");
-                        return res.status(400).json({
-                            errors: [
-                                { code: "MAX_BOOKING_DURATION", message: `Maximum booking duration allowed is ${bookingPeriodAllow.maxBookingPeriod} minutes. You can not book more then max duration.` }
-                            ]
-                        });
-                    }
-
-                    console.log("maxBookingPeriodAllow", bookingPeriodAllow);
-                }
-
-                if (bookingPeriodAllow && bookingPeriodAllow.minBookingPeriod) {
-                    minDuration = moment(+payload.bookingEndDateTime) - moment(+payload.bookingStartDateTime);
-                    let minDurationInMinutes = minDuration / 1000 / 60;
-                    console.log("minDuration", minDurationInMinutes);
-
-                    if (minDurationInMinutes < bookingPeriodAllow.minBookingPeriod) {
-                        return res.status(400).json({
-                            errors: [
-                                { code: "MIN_BOOKING_DURATION", message: `Minimum booking duration allowed is ${bookingPeriodAllow.minBookingPeriod} minutes. You can not book less then min duration.` }
-                            ]
-                        });
-                    }
-                    console.log("minBookingPeriodAllow", bookingPeriodAllow);
-                }
-            }
-
-
 
             let availableSeats = 0;
 
             let bookingData = await knex('entity_bookings').sum('noOfSeats as totalBookedSeats')
-                .where('entity_bookings.bookingStartDateTime', '>=', startTime)
-                .where('entity_bookings.bookingStartDateTime', '<=', endTime)
+                .where('entity_bookings.bookingStartDateTime', '>=', bookingStartTime)
+                .where('entity_bookings.bookingStartDateTime', '<=', bookingEndTime)
                 .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', 'orgId': req.orgId }).first();
 
             let facilityData = await knex.from('facility_master')
@@ -795,7 +767,7 @@ const facilityBookingController = {
         } catch (err) {
 
             res.status(500).json({
-                errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             })
 
         }
@@ -815,7 +787,7 @@ const facilityBookingController = {
             return res.status(200).json({ message: 'cancelled!', data: cancelled })
         } catch (err) {
             res.status(500).json({
-                errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             })
         }
     }

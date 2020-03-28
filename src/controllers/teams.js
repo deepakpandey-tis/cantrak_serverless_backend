@@ -566,6 +566,42 @@ const teamsController = {
         }
     },
 
+    getAssignedTeamAndUsersForOther: async (req, res) => {
+        try {
+          const entityId = req.body.entityId;
+          const entityType = req.body.entityType;
+    
+          console.log('entityId:', entityId, 'entityType:', entityType);
+    
+          const team = await knex('assigned_service_team')
+            .select(['assigned_service_team.teamId', 'teams.teamName as Team', 'users.name as MainUser', 'assigned_service_team.userId as mainUserId'])
+            .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+            .leftJoin("users", "assigned_service_team.userId", "users.id")
+            .where({ entityId: entityId, entityType: entityType })
+    
+    
+          // let additionalUsers = await knex('assigned_service_additional_users')
+          //   .select(['userId']).where({ entityId: entityId, entityType: entityType })
+    
+          let othersUserData = await knex.raw(`select "assigned_service_additional_users"."userId" as "userId","users"."name" as "addUsers","users"."email" as "email", "users"."mobileNo" as "mobileNo" from "assigned_service_additional_users" left join "users" on "assigned_service_additional_users"."userId" = "users"."id" where "assigned_service_additional_users"."orgId" = ${req.orgId} and "assigned_service_additional_users"."entityId" = ${entityId} and "assigned_service_additional_users"."entityType"='${entityType}'`)
+          let additionalUsers = othersUserData.rows;
+    
+    
+          return res.status(200).json({
+            data: {
+              team,
+              additionalUsers
+            }
+          })
+    
+        } catch (err) {
+          console.error('Error:', err);
+          return res.status(500).json({
+            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+          });
+        }
+      },
+
 
     exportTeams: async (req, res) => {
 
@@ -744,6 +780,8 @@ const teamsController = {
                     .where({ 'team_roles_project_master.teamId': teamId }).returning('*')
                 ,
                 knex('assigned_vendors')
+                    .leftJoin('users','assigned_vendors.userId','users.id')
+                    .select('assigned_vendors.userId','users.name','users.email')
                     .where({ 'entityId': teamId, 'entityType': 'teams' }).returning('*'),
             ])
 
@@ -756,7 +794,7 @@ const teamsController = {
 
             res.status(200).json({
                 data: {
-                    teamDetails: { ...teamResult[0], usersData: userResult, projectData: projectResult, projectUpdateDetails: projectUpdateDetails, vendorIds: vendorIds },
+                    teamDetails: { ...teamResult[0], usersData: userResult, projectData: projectResult, projectUpdateDetails: projectUpdateDetails, vendorIds: vendorIds,vendorData:vendorResult },
                 },
                 message: "Team Details Successfully"
             })

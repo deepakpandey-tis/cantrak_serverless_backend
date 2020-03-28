@@ -16,7 +16,7 @@ const userMiddleware = {
 
             req.me = currentUser;
 
-            console.log('[middleware][user]: Current User:', currentUser);
+            console.log('[middleware][user]: Current User:', currentUser.id, currentUser.email);
             return next();
 
         } catch (err) {
