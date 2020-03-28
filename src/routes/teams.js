@@ -49,5 +49,7 @@ router.post('/import-team-data',upload.single('file'), authMiddleware.isAuthenti
 router.post('/get-team-list-by-projectid', authMiddleware.isAuthenticated, teamsController.getTeamListByProject);
 router.post('/get-team-by-entity', authMiddleware.isAuthenticated, teamsController.getTeamByEntity)
 router.post('/disable-login', authMiddleware.isAuthenticated, teamsController.disableLogin);
+router.post('/get-assigned-teams-and-users-others', authMiddleware.isAuthenticated, teamsController.getAssignedTeamAndUsersForOther);
+
 
 module.exports = router;

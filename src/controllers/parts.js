@@ -177,7 +177,7 @@ const partsController = {
                 let partPayload = req.body;
                 let payload = req.body;
                 console.log('[controllers][part][addParts]', partPayload);
-                partPayload = _.omit(partPayload, ['minimumQuantity'], ['unitOfMeasure'], ['barcode'], ['image_url'], ['file_url'], 'quantity', 'unitCost', ['additionalAttributes'], ['images'], ['files'], ['additionalDescription'], 'partDescription', ['assignedVendors'], ['additionalPartDetails'], ['partId'], 'vendorId', 'additionalVendorId','teamId','mainUserId','additionalUsers')
+                partPayload = _.omit(partPayload, ['minimumQuantity'], ['unitOfMeasure'], ['barcode'], ['image_url'], ['file_url'], 'quantity', 'unitCost', ['additionalAttributes'], ['images'], ['files'], ['additionalDescription'], 'partDescription', ['assignedVendors'], ['additionalPartDetails'], ['partId'], 'vendorId', 'additionalVendorId', 'teamId', 'mainUserId', 'additionalUsers')
                 // validate keys
                 const schema = Joi.object().keys({
                     partName: Joi.string().required(),
@@ -346,11 +346,11 @@ const partsController = {
                 }
 
                 // Insert Parts in Assigned Teams table
-                
+
                 // Insert into assigned_service_team table
                 let { teamId, mainUserId, additionalUsers } = req.body;
                 assignedServiceAdditionalUsers = additionalUsers
-               
+
                 const assignedServiceTeamPayload = { teamId, userId: mainUserId, entityId: part.id, entityType: 'parts', createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }
                 let assignedServiceTeamResult = await knex.insert(assignedServiceTeamPayload).returning(['*']).transacting(trx).into('assigned_service_team')
                 let assignedServiceTeam = assignedServiceTeamResult[0]
@@ -368,7 +368,7 @@ const partsController = {
                             })
                             .returning(["*"])
                             .transacting(trx)
-                            .into("assigned_service_additional_users");                        
+                            .into("assigned_service_additional_users");
                     }
                 }
 
@@ -399,11 +399,13 @@ const partsController = {
             let partDetails = null;
             let attribs = [];
             let images = [];
+            let additionalUsers = [];
+
 
             await knex.transaction(async (trx) => {
                 const partDetailsPayload = req.body;
                 console.log('[controllers][part][updatePartDetails]', partDetailsPayload);
-                partPayload = _.omit(partDetailsPayload, ['images'], ['files'], ['minimumQuantity'], ['unitOfMeasure'], ['barcode'], ['image_url'], ['file_url'], ['additionalPartDetails'], ['assignedVendors'], ['partDescription'], ['id'], ['quantity'], ['unitCost'], ['additionalAttributes'], 'vendorId', 'additionalVendorId')
+                partPayload = _.omit(partDetailsPayload, ['images'], ['files'], ['minimumQuantity'], ['unitOfMeasure'], ['barcode'], ['image_url'], ['file_url'], ['additionalPartDetails'], ['assignedVendors'], ['partDescription'], ['id'], ['quantity'], ['unitCost'], ['additionalAttributes'], 'vendorId', 'additionalVendorId', 'teamId', 'mainUserId', 'additionalUsers')
 
                 // validate keys
                 const schema = Joi.object().keys({
@@ -607,6 +609,95 @@ const partsController = {
                     }
                 }
                 //
+
+
+                // Insert Parts in Assigned Teams table
+
+                // Insert into assigned_service_team table
+                let { teamId, mainUserId, additionalUsers } = req.body;
+                assignedServiceAdditionalUsers = additionalUsers
+
+
+                const assignedServiceTeamPayload = { teamId, userId: mainUserId, entityId: partDetailsPayload.id, entityType: 'parts', createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }
+
+                let checkPartTeamExist = await knex("assigned_service_team")
+                    .where({
+                        entityId: partDetailsPayload.id,
+                        entityType: "parts",
+                        orgId: req.orgId,
+                    })
+                    .select('*');
+
+                if (checkPartTeamExist) {
+                    let updateTeam = await knex
+                        .update(assignedServiceTeamPayload)
+                        .where({
+                            entityId: partDetailsPayload.id,
+                            entityType: "parts",
+                            orgId: req.orgId,
+                        })
+                        .returning(["*"])
+                        .transacting(trx)
+                        .into("assigned_service_team")
+                } else {
+                    let assignedServiceTeamResult = await knex.insert(assignedServiceTeamPayload).returning(['*']).transacting(trx).into('assigned_service_team')
+                    let assignedServiceTeam = assignedServiceTeamResult[0]
+                }
+
+
+                let selectedUsers = await knex
+                    .select('*')
+                    .where({
+                        entityId: partDetailsPayload.id,
+                        entityType: "parts",
+                        orgId: req.orgId
+                    })
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into("assigned_service_additional_users")
+                    
+
+                    console.log("selectedUser",selectedUsers);
+
+
+                if (_.isEqual(selectedUsers, assignedServiceAdditionalUsers)) {
+                } else {
+                    if (assignedServiceAdditionalUsers && assignedServiceAdditionalUsers.length) {
+
+                        // Remove old users
+
+                        for (user of selectedUsers) {
+                            await knex
+                                .del()
+                                .where({
+                                    entityId: partDetailsPayload.id,
+                                    entityType: "parts",
+                                    orgId: req.orgId
+                                })
+                                .returning(["*"])
+                                .transacting(trx)
+                                .into("assigned_service_additional_users");
+                        }
+
+                        // Insert New Users  
+
+                        for (user of assignedServiceAdditionalUsers) {
+                            await knex
+                                .insert({
+                                    userId: user,
+                                    entityId: partDetailsPayload.id,
+                                    entityType: "parts",
+                                    createdAt: currentTime,
+                                    updatedAt: currentTime,
+                                    orgId: req.orgId
+                                })
+                                .returning(["*"])
+                                .transacting(trx)
+                                .into("assigned_service_additional_users");
+                        }
+                    }
+                }
+
                 trx.commit;
             });
 
