@@ -64,7 +64,7 @@ const authMiddleware = {
 
                     req.me = currentUser;
                     
-                    console.log('[middleware][auth]: Current User:', currentUser);
+                    console.log('[middleware][auth]: Current User:', currentUser.id, currentUser.email, currentUser.orgId);
                     return next();
                 }
 
