@@ -725,8 +725,8 @@ const taskGroupController = {
         filters['asset_category_master.id'] = assetCategoryId;
       }
 
-      startDate = startDate ? moment(startDate).format("YYYY-MM-DD HH:mm:ss") : ''
-      endDate = endDate ? moment(endDate).format("YYYY-MM-DD HH:mm:ss") : ''
+      startDate = startDate ? moment(startDate).startOf('date').format("YYYY-MM-DD HH:mm:ss") : ''
+      endDate = endDate ? moment(endDate).endOf('date').format("YYYY-MM-DD HH:mm:ss") : ''
 
       let pagination = {};
       let per_page = reqData.per_page || 10;
@@ -748,7 +748,7 @@ const taskGroupController = {
             qb.whereIn("pm_master2.projectId", projects);
             //qb.where({'pm_master2.projectId':})
             if (pmPlanName) {
-              qb.where('pm_master2.name', 'like', `%${pmPlanName}%`)
+              qb.where('pm_master2.name', 'iLIKE', `%${pmPlanName}%`)
             }
             if (startDate) {
               qb.where({ 'task_group_schedule.startDate': startDate })
@@ -772,7 +772,7 @@ const taskGroupController = {
             qb.where({ "pm_master2.orgId": req.orgId });
 
             if (pmPlanName) {
-              qb.where('pm_master2.name', 'like', `%${pmPlanName}%`)
+              qb.where('pm_master2.name', 'iLIKE', `%${pmPlanName}%`)
             }
             if (startDate) {
               qb.where({ 'task_group_schedule.startDate': startDate })
@@ -780,7 +780,9 @@ const taskGroupController = {
             if (endDate) {
               qb.where({ 'task_group_schedule.endDate': endDate })
             }
-          }).offset(offset).limit(per_page)
+          })
+          .orderBy("pm_master2.createdAt",'desc')
+          .offset(offset).limit(per_page)
       ])
 
       console.log(JSON.stringify(total, 2, null))
@@ -2334,7 +2336,7 @@ module.exports = taskGroupController
 
 function getRecurringDates({ repeatPeriod, repeatOn, repeatFrequency, startDateTime, endDateTime }) {
   repeatPeriod = repeatPeriod;
-  repeatOn = repeatOn && repeatOn.length ? repeatOn.join(',') : [];
+  repeatOn = repeatOn ? repeatOn :""; //&& repeatOn.length ? repeatOn.join(',') : [];
   repeatFrequency = Number(repeatFrequency);
   let start = new Date(startDateTime);
   let startYear = start.getFullYear();
