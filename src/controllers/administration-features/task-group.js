@@ -605,6 +605,10 @@ const taskGroupController = {
 
       })
 
+      await knex('pm_master2')
+        .update({ isActive: true })
+        .where({ id: payload.pmId })
+
       return res.status(200).json({
         data: {
           templateData: createTemplate,
@@ -812,10 +816,6 @@ const taskGroupController = {
       let insertPmData = { "name": payload.pmName, 'assetCategoryId': payload.assetCategoryId, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId };
       let insertPmResult = await knex('pm_master2').insert(insertPmData).returning(['*'])
       createPM = insertPmResult[0];
-
-      await knex('pm_master2')
-      .update({ isActive: true })
-      .where({ id: createPM.id })
 
       return res.status(200).json({
         data: {
@@ -1155,7 +1155,7 @@ const taskGroupController = {
         let tasksInsertPayload = req.body.tasks.map(da => ({
           taskName: da.taskName,
           taskNameAlternate: da.taskNameAlternate,
-          taskSerialNumber: da.taskSerialNumber ? da.taskSerialNumber :"",
+          taskSerialNumber: da.taskSerialNumber ? da.taskSerialNumber : "",
           templateId: createTemplate.id,
           createdAt: currentTime,
           updatedAt: currentTime,
