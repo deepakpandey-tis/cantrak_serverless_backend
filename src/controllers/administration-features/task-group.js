@@ -1231,7 +1231,7 @@ const taskGroupController = {
 
       })
 
-      return res.status(200).json({
+      return res.status(200).json({ 
         data: {
           templateData: createTemplate,
           taskTemplateData: createTemplateTask,
