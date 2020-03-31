@@ -785,7 +785,7 @@ const taskGroupController = {
               qb.where({ 'task_group_schedule.endDate': endDate })
             }
           })
-          .orderBy("pm_master2.createdAt",'desc')
+          .orderBy("pm_master2.createdAt", 'desc')
           .offset(offset).limit(per_page)
       ])
 
@@ -1233,7 +1233,7 @@ const taskGroupController = {
 
       })
 
-      return res.status(200).json({ 
+      return res.status(200).json({
         data: {
           templateData: createTemplate,
           taskTemplateData: createTemplateTask,
@@ -1478,10 +1478,11 @@ const taskGroupController = {
 
       // TASK OPEN
       tasks = await knex('pm_task')
+        .leftJoin("service_status AS status", "pm_task.status", "status.statusCode")
         .select([
           'pm_task.id as taskId',
           'pm_task.taskName as taskName',
-          'pm_task.status as status',
+          'status.descriptionEng as status',
           'pm_task.taskNameAlternate',
           'pm_task.taskSerialNumber'
         ])
@@ -1490,19 +1491,18 @@ const taskGroupController = {
           'pm_task.orgId': req.orgId
         })
 
-      let statuses = tasks.filter(t => t.status !== "CMTD")
-      if (statuses.length === 0) {
-        status = 'complete'
-      } else {
-        status = 'incomplete'
-      }
+      // let statuses = tasks.filter(t => t.status !== "CMTD")
+      // if (statuses.length === 0) {
+      //   status = 'complete'
+      // } else {
+      //   status = 'incomplete'
+      // }
       // TASK CLOSE
       return res.status(200).json({
         data: {
           taskGroupPmAssetDatails: _.uniqBy(pmResult, 'id'),
           additionalUsers: additionalUsers,
-          tasks: tasks,
-          status: status
+          tasks: _.uniqBy(tasks, 'taskId')
         },
         message: 'Task Group Asset PM Details Successfully!'
       })
@@ -2336,7 +2336,7 @@ module.exports = taskGroupController
 
 function getRecurringDates({ repeatPeriod, repeatOn, repeatFrequency, startDateTime, endDateTime }) {
   repeatPeriod = repeatPeriod;
-  repeatOn = repeatOn ? repeatOn :""; //&& repeatOn.length ? repeatOn.join(',') : [];
+  repeatOn = repeatOn ? repeatOn : ""; //&& repeatOn.length ? repeatOn.join(',') : [];
   repeatFrequency = Number(repeatFrequency);
   let start = new Date(startDateTime);
   let startYear = start.getFullYear();
