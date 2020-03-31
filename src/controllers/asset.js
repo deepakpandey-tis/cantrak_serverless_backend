@@ -586,18 +586,18 @@ const assetController = {
       const rowsWithLocations = await Parallel.map(rows, async row => {
         const location = await knex('asset_location')
           .innerJoin('companies', 'asset_location.companyId', 'companies.id')
-          .innerJoin('projects', 'asset_location.projectId', 'projects.id')
-          .innerJoin(
+          .leftJoin('projects', 'asset_location.projectId', 'projects.id')
+          .leftJoin(
             "buildings_and_phases",
             "asset_location.buildingId",
             "buildings_and_phases.id"
           )
-          .innerJoin(
+          .leftJoin(
             "floor_and_zones",
             "asset_location.floorId",
             "floor_and_zones.id"
           )
-          .innerJoin(
+          .leftJoin(
             "property_units",
             "asset_location.unitId",
             "property_units.id"
@@ -608,7 +608,7 @@ const assetController = {
             'buildings_and_phases.buildingPhaseCode',
             'floor_and_zones.floorZoneCode',
             'property_units.unitNumber'
-          ]).where(knex.raw('"asset_location"."updatedAt" = (select max("updatedAt") from asset_location)')).first()
+          ]).where({'asset_location.assetId':row.id}).first()
         // ]).max('asset_location.updatedAt').first()
         return { ...row, ...location }
       })
