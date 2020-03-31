@@ -1629,7 +1629,7 @@ const taskGroupController = {
       let currentTime = new Date().getTime()
       // We need to check whther all the tasks have been updated or not
       let taskUpdated
-      if (payload.status === 'CMTD') {
+      if (payload.status === 'COM') {
         // check id completedAt i.e current date is greater than pmDate then update completedAt and completedBy
         taskUpdated = await knex('pm_task').update({ status: payload.status, completedAt: currentTime, completedBy: payload.userId }).where({ taskGroupId: payload.taskGroupId, id: payload.taskId, orgId: req.orgId }).returning(['*'])
       } else {
@@ -1654,6 +1654,8 @@ const taskGroupController = {
   sendFeedbackForTask: async (req, res) => {
     try {
       const payload = req.body;
+      console.log("Payload Data", payload);
+      
       const schema = Joi.object().keys({
         taskId: Joi.string().required(),
         taskGroupScheduleId: Joi.string().required(),
