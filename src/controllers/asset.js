@@ -608,7 +608,7 @@ const assetController = {
             'buildings_and_phases.buildingPhaseCode',
             'floor_and_zones.floorZoneCode',
             'property_units.unitNumber'
-          ]).where({'asset_location.assetId':row.id}).first()
+          ]).where({ 'asset_location.assetId': row.id }).first()
         // ]).max('asset_location.updatedAt').first()
         return { ...row, ...location }
       })
@@ -2027,19 +2027,34 @@ const assetController = {
     try {
       const payload = _.omit(req.body, ['previousLocationId', 'houseNo']);
       let currentTime = new Date().getTime()
+
       /*
-      { assetId: '1655',
-        companyId: '112',
-        buildingId: '156',
-        projectId: '48',
-        unitId: '11',
-        houseId: '9922',
-        floorId: '165' }
-      */
+        { assetId: '1655',
+          companyId: '112',
+          buildingId: '156',
+          projectId: '48',
+          unitId: '11',
+          houseId: '9922',
+          floorId: '165' }
+        */
       if (req.body.previousLocationId) {
+
+        // Check Current Location is Exits
+
+        let currentLocation = await knex('asset_location').select('*').where({ assetId: payload.assetId, unitId: payload.unitId });
+       console.log("currentLocation", currentLocation);
+        if (currentLocation.length > 0) {
+          return res.status(400).json({
+            data:{},
+            message: 'Asset location already exist'
+          })
+        }
+
         await knex('asset_location')
           .update({ endDate: currentTime })
           .where({ assetId: payload.assetId, id: req.body.previousLocationId })
+
+
       }
       console.log('***********************ASSET LOCATION:***********************', req.body)
       // Deprecated
