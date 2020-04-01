@@ -376,6 +376,7 @@ const taskGroupController = {
       let taskSchedule = null;
       let assignedAdditionalUser = null;
       let assetResults = [];
+      let createPmTask;
       let payload = _.omit(req.body, ['additionalUsers']);
       const schema = Joi.object().keys({
         assetCategoryId: Joi.number().required(),
@@ -485,10 +486,16 @@ const taskGroupController = {
         let repeatOn = payload.repeatOn ? payload.repeatOn : ""; //&& payload.repeatOn.length ? payload.repeatOn.join(',') : [];
         let repeatFrequency = Number(payload.repeatFrequency);
         let start = new Date(payload.startDateTime);
+
+        console.log("=============sss",start,"==========================")
         let startYear = start.getFullYear();
         let startMonth = start.getMonth();
         let startDate = start.getDate();
         let end = new Date(payload.endDateTime);
+
+        console.log("=============sss",end,"==========================")
+
+        
         let endYear = end.getFullYear();
         let endMonth = end.getMonth();
         let endDate = end.getDate();
@@ -498,7 +505,7 @@ const taskGroupController = {
           interval: repeatFrequency,
           dtstart: new Date(
             Date.UTC(
-              startYear, startMonth, startDate - 1
+              startYear, startMonth, startDate
             )
           ),
           until: new Date(
@@ -545,7 +552,12 @@ const taskGroupController = {
         performingDates = rule.all();
 
 
+        let tot = Number(performingDates.length);
 
+        console.log("====================",tot,"================================")
+
+        //www = "dddddd";
+        
         for (let i = 0; i < payload.assets.length; i++) {
           const assetId = payload.assets[i];
 
@@ -618,7 +630,7 @@ const taskGroupController = {
           assignedServiceTeamData: assignedServiceTeam,
           taskScheduleData: taskSchedule,
           assetResultData: assetResults,
-          createdPmTasks: createPmTask
+          createdPmTasks: createPmTask,              
         },
         message: "Create Pm Task Group Schedule Successfully!"
       });
