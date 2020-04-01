@@ -352,8 +352,11 @@ const partsController = {
                 assignedServiceAdditionalUsers = additionalUsers
 
                 const assignedServiceTeamPayload = { teamId, userId: mainUserId, entityId: part.id, entityType: 'parts', createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }
-                let assignedServiceTeamResult = await knex.insert(assignedServiceTeamPayload).returning(['*']).transacting(trx).into('assigned_service_team')
-                let assignedServiceTeam = assignedServiceTeamResult[0]
+                let assignedServiceTeamResult;
+                if (assignedServiceTeamPayload.teamId) {
+                    assignedServiceTeamResult = await knex.insert(assignedServiceTeamPayload).returning(['*']).transacting(trx).into('assigned_service_team')
+                    let assignedServiceTeam = assignedServiceTeamResult[0]
+                }
 
                 if (assignedServiceAdditionalUsers && assignedServiceAdditionalUsers.length) {
                     for (user of assignedServiceAdditionalUsers) {
@@ -628,7 +631,7 @@ const partsController = {
                     })
                     .select('*');
 
-                if (checkPartTeamExist) {
+                if (checkPartTeamExist && assignedServiceTeamPayload.teamId) {
                     let updateTeam = await knex
                         .update(assignedServiceTeamPayload)
                         .where({
@@ -640,8 +643,11 @@ const partsController = {
                         .transacting(trx)
                         .into("assigned_service_team")
                 } else {
-                    let assignedServiceTeamResult = await knex.insert(assignedServiceTeamPayload).returning(['*']).transacting(trx).into('assigned_service_team')
-                    let assignedServiceTeam = assignedServiceTeamResult[0]
+
+                    if (assignedServiceTeamPayload.teamId) {
+                        let assignedServiceTeamResult = await knex.insert(assignedServiceTeamPayload).returning(['*']).transacting(trx).into('assigned_service_team')
+                        let assignedServiceTeam = assignedServiceTeamResult[0]
+                    }
                 }
 
 
@@ -655,9 +661,9 @@ const partsController = {
                     .returning(["*"])
                     .transacting(trx)
                     .into("assigned_service_additional_users")
-                    
 
-                    console.log("selectedUser",selectedUsers);
+
+                console.log("selectedUser", selectedUsers);
 
 
                 if (_.isEqual(selectedUsers, assignedServiceAdditionalUsers)) {
