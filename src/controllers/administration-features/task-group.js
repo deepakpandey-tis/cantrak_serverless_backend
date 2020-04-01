@@ -839,7 +839,9 @@ const taskGroupController = {
       let payload = req.body
 
       const schema = Joi.object().keys({
-        taskGroupId: Joi.string().required()
+        taskGroupId: Joi.string().required(),
+        category: Joi.string().allow("").allow(null).optional(),
+        workOrderId: Joi.string().allow("").allow(null).optional()
       });
 
       const result = Joi.validate(payload, schema);
@@ -872,7 +874,16 @@ const taskGroupController = {
           .where({
             "task_group_schedule.taskGroupId": payload.taskGroupId,
             "task_group_schedule.orgId": req.orgId
-          }),
+          })
+          .where(qb=>{
+            if(payload.workOrderId){
+              qb.where('task_group_schedule_assign_assets.id',payload.workOrderId)
+            }
+            if(payload.category){
+              qb.where('task_group_schedule_assign_assets.assetId',payload.category)
+            }
+          })
+          ,
         //.offset(offset).limit(per_page),
         knex("task_group_schedule")
           .innerJoin(
@@ -912,6 +923,14 @@ const taskGroupController = {
           .where({
             "task_group_schedule.taskGroupId": payload.taskGroupId,
             "task_group_schedule.orgId": req.orgId
+          })
+          .where(qb=>{
+            if(payload.workOrderId){
+              qb.where('task_group_schedule_assign_assets.id',payload.workOrderId)
+            }
+            if(payload.category){
+              qb.where('task_group_schedule_assign_assets.assetId',payload.category)
+            }
           })
           .offset(offset)
           .limit(per_page)
@@ -1629,7 +1648,7 @@ const taskGroupController = {
       let currentTime = new Date().getTime()
       // We need to check whther all the tasks have been updated or not
       let taskUpdated
-      if (payload.status === 'CMTD') {
+      if (payload.status === 'COM') {
         // check id completedAt i.e current date is greater than pmDate then update completedAt and completedBy
         taskUpdated = await knex('pm_task').update({ status: payload.status, completedAt: currentTime, completedBy: payload.userId }).where({ taskGroupId: payload.taskGroupId, id: payload.taskId, orgId: req.orgId }).returning(['*'])
       } else {
@@ -1654,6 +1673,8 @@ const taskGroupController = {
   sendFeedbackForTask: async (req, res) => {
     try {
       const payload = req.body;
+      console.log("Payload Data", payload);
+      
       const schema = Joi.object().keys({
         taskId: Joi.string().required(),
         taskGroupScheduleId: Joi.string().required(),
