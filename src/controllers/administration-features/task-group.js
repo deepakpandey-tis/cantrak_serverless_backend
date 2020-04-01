@@ -231,7 +231,7 @@ const taskGroupController = {
         startDate: req.body.startDate ? req.body.startDate : null,
         endDate: req.body.endDate ? req.body.endDate : null,
         repeatFrequency: req.body.repeatFrequency ? req.body.repeatFrequency : null,
-        repeatOn: req.body.repeatOn.join(","),
+        repeatOn: req.body.repeatOn,
         repeatPeriod: req.body.repeatPeriod ? req.body.repeatPeriod : null,
         taskGroupId: taskGroupTemplate.id,
         createdAt: currentTime,
@@ -493,7 +493,7 @@ const taskGroupController = {
         let startDate = start.getDate();
         let end = new Date(payload.endDateTime);
 
-        console.log("=============sss",end,"==========================")
+        console.log("=============sss",end,"==========================",payload.repeatPeriod,payload.repeatOn,repeatFrequency,"=================")
 
         
         let endYear = end.getFullYear();
@@ -561,8 +561,14 @@ const taskGroupController = {
         for (let i = 0; i < payload.assets.length; i++) {
           const assetId = payload.assets[i];
 
+
+          console.log("assssssssssssssssssssss=============",assetId)
+
           for (let j = 0; j < performingDates.length; j++) {
             const date = performingDates[j];
+
+            console.log("pmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm",date,"========================")
+
             let assetResult = await knex
               .insert({
                 pmDate: date,
@@ -1202,7 +1208,7 @@ const taskGroupController = {
 
         // TASK GROUP SCHEDULE OPEN
 
-        if (payload.startDateTime && payload.endDateTime && payload.repeatPeriod && payload.repeatOn) {
+        if (payload.startDateTime && payload.endDateTime && payload.repeatPeriod) {
 
           let insertScheduleData = {
             taskGroupId: createTemplate.id,
@@ -1771,7 +1777,7 @@ const taskGroupController = {
     try {
 
       let taskGroupResult = await knex('task_group_templates')
-        .innerJoin('task_group_template_schedule', 'task_group_templates.id', 'task_group_template_schedule.taskGroupId')
+        .leftJoin('task_group_template_schedule', 'task_group_templates.id', 'task_group_template_schedule.taskGroupId')
         .select([
           'task_group_templates.taskGroupName as taskGroupName',
           'task_group_templates.assetCategoryId as assetCategoryId',
@@ -1790,8 +1796,8 @@ const taskGroupController = {
 
       // Get the team and main user
       let team = await knex('assigned_service_team')
-        .innerJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
-        .innerJoin('users', 'assigned_service_team.userId', 'users.id')
+        .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+        .leftJoin('users', 'assigned_service_team.userId', 'users.id')
         .where({
           'assigned_service_team.entityId': req.body.id, 'assigned_service_team.entityType': 'task_group_templates'
         })
@@ -1802,7 +1808,7 @@ const taskGroupController = {
 
 
       const additionalUsers = await knex('assigned_service_additional_users')
-        .innerJoin('users', 'assigned_service_additional_users.userId', 'users.id')
+        .leftJoin('users', 'assigned_service_additional_users.userId', 'users.id')
         .where({
           'assigned_service_additional_users.entityId': req.body.id,
           'assigned_service_additional_users.entityType': 'task_group_templates',
@@ -1887,7 +1893,7 @@ const taskGroupController = {
       let result = await knex('task_group_templates').update({ updatedAt: currentTime, taskGroupName: req.body.taskGroupName, assetCategoryId: req.body.assetCategoryId, orgId: req.orgId }).where({ id }).returning('*')
       updatedTaskGroupTemplate = result[0]
 
-      let resultSchedule = await knex('task_group_template_schedule').update({ ...payload, repeatOn: payload.repeatOn.length ? payload.repeatOn.join(',') : '' })
+      let resultSchedule = await knex('task_group_template_schedule').update({ ...payload, repeatOn: payload.repeatOn}).where({"taskGroupId":id})
       resultScheduleData = resultSchedule[0]
 
       let updatedTasks = []
