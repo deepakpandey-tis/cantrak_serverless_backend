@@ -596,15 +596,17 @@ const taskGroupController = {
 
             console.log("pmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm", date, "========================")
 
-            let assetResult = await knex
-              .insert({
+            let insertDataGroup = {
                 pmDate: date,
                 scheduleId: taskSchedule.id,
                 assetId,
                 createdAt: currentTime,
                 updatedAt: currentTime,
                 orgId: req.orgId
-              })
+            }
+
+            let assetResult = await knex
+              .insert(insertDataGroup)
               .returning(["*"])
               .transacting(trx)
               .into("task_group_schedule_assign_assets");
