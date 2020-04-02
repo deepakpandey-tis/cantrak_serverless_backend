@@ -591,7 +591,8 @@ const taskGroupController = {
               taskGroupScheduleAssignAssetId: assetResult[0].id,
               createdAt: currentTime,
               updatedAt: currentTime,
-              orgId: req.orgId
+              orgId: req.orgId,
+              status: 'O',
             }))
 
             let insertPmTaskResult = await knex.insert(InsertPmTaskPayload).returning(['*']).transacting(trx).into('pm_task');
