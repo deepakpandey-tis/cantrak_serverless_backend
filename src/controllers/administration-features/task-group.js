@@ -383,15 +383,16 @@ const taskGroupController = {
         companyId: Joi.number().required(),
         projectId: Joi.number().required(),
         pmId: Joi.string().required(),
+        startDateTime: Joi.date().required(),
+        endDateTime: Joi.date().required(),
+        repeatPeriod: Joi.string().required(),
+        repeatFrequency: Joi.number().required(),
         teamId: Joi.string().required(),
         mainUserId: Joi.string().required(),
         // additionalUsers: Joi.array().items(Joi.string().required()).strict().required(),
         taskGroupName: Joi.string().required(),
         // tasks: Joi.array().items(Joi.string().required()).strict().required(),
-        startDateTime: Joi.date().required(),
-        endDateTime: Joi.date().required(),
-        repeatPeriod: Joi.string().required(),
-        repeatFrequency: Joi.number().required(),
+
         assets: Joi.array().items(Joi.string().required()).strict().required(),
 
       });
@@ -403,7 +404,33 @@ const taskGroupController = {
         });
       }
 
+
+
       await knex.transaction(async trx => {
+
+
+        let currentDate = moment().format("YYYY-MM-DD");
+        //return res.json(currentDate)  
+
+
+        if (!(payload.startDateTime >= currentDate)) {
+
+          console.log(currentDate, "currreeeetttttttttttttt")
+          return res.status(400).json({
+            errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid start date" }]
+          })
+
+        }
+
+        if (!(payload.endDateTime >= currentDate)) {
+
+          console.log(currentDate, "currreeeetttttttttttttt")
+          return res.status(400).json({
+            errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid end date" }]
+          })
+
+        }
+
 
         // Update PM Company and Project
         await knex('pm_master2').update({ companyId: payload.companyId, projectId: payload.projectId }).where({ id: payload.pmId, orgId: req.orgId })
@@ -487,15 +514,15 @@ const taskGroupController = {
         let repeatFrequency = Number(payload.repeatFrequency);
         let start = new Date(payload.startDateTime);
 
-        console.log("=============sss",start,"==========================")
+        console.log("=============sss", start, "==========================")
         let startYear = start.getFullYear();
         let startMonth = start.getMonth();
         let startDate = start.getDate();
         let end = new Date(payload.endDateTime);
 
-        console.log("=============sss",end,"==========================",payload.repeatPeriod,payload.repeatOn,repeatFrequency,"=================")
+        console.log("=============sss", end, "==========================", payload.repeatPeriod, payload.repeatOn, repeatFrequency, "=================")
 
-        
+
         let endYear = end.getFullYear();
         let endMonth = end.getMonth();
         let endDate = end.getDate();
@@ -554,30 +581,32 @@ const taskGroupController = {
 
         let tot = Number(performingDates.length);
 
-        console.log("====================",tot,"================================")
+        console.log("====================", tot, "================================")
 
         //www = "dddddd";
-        
+
         for (let i = 0; i < payload.assets.length; i++) {
           const assetId = payload.assets[i];
 
 
-          console.log("assssssssssssssssssssss=============",assetId)
+          console.log("assssssssssssssssssssss=============", assetId)
 
           for (let j = 0; j < performingDates.length; j++) {
             const date = performingDates[j];
 
-            console.log("pmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm",date,"========================")
+            console.log("pmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm", date, "========================")
 
-            let assetResult = await knex
-              .insert({
+            let insertDataGroup = {
                 pmDate: date,
                 scheduleId: taskSchedule.id,
                 assetId,
                 createdAt: currentTime,
                 updatedAt: currentTime,
                 orgId: req.orgId
-              })
+            }
+
+            let assetResult = await knex
+              .insert(insertDataGroup)
               .returning(["*"])
               .transacting(trx)
               .into("task_group_schedule_assign_assets");
@@ -637,7 +666,7 @@ const taskGroupController = {
           assignedServiceTeamData: assignedServiceTeam,
           taskScheduleData: taskSchedule,
           assetResultData: assetResults,
-          createdPmTasks: createPmTask,              
+          createdPmTasks: createPmTask,
         },
         message: "Create Pm Task Group Schedule Successfully!"
       });
@@ -894,15 +923,15 @@ const taskGroupController = {
             "task_group_schedule.taskGroupId": payload.taskGroupId,
             "task_group_schedule.orgId": req.orgId
           })
-          .where(qb=>{
-            if(payload.workOrderId){
-              qb.where('task_group_schedule_assign_assets.id',payload.workOrderId)
+          .where(qb => {
+            if (payload.workOrderId) {
+              qb.where('task_group_schedule_assign_assets.id', payload.workOrderId)
             }
-            if(payload.category){
-              qb.where('task_group_schedule_assign_assets.assetId',payload.category)
+            if (payload.category) {
+              qb.where('task_group_schedule_assign_assets.assetId', payload.category)
             }
           })
-          ,
+        ,
         //.offset(offset).limit(per_page),
         knex("task_group_schedule")
           .innerJoin(
@@ -943,12 +972,12 @@ const taskGroupController = {
             "task_group_schedule.taskGroupId": payload.taskGroupId,
             "task_group_schedule.orgId": req.orgId
           })
-          .where(qb=>{
-            if(payload.workOrderId){
-              qb.where('task_group_schedule_assign_assets.id',payload.workOrderId)
+          .where(qb => {
+            if (payload.workOrderId) {
+              qb.where('task_group_schedule_assign_assets.id', payload.workOrderId)
             }
-            if(payload.category){
-              qb.where('task_group_schedule_assign_assets.assetId',payload.category)
+            if (payload.category) {
+              qb.where('task_group_schedule_assign_assets.assetId', payload.category)
             }
           })
           .offset(offset)
@@ -1693,7 +1722,7 @@ const taskGroupController = {
     try {
       const payload = req.body;
       console.log("Payload Data", payload);
-      
+
       const schema = Joi.object().keys({
         taskId: Joi.string().required(),
         taskGroupScheduleId: Joi.string().required(),
@@ -1894,7 +1923,7 @@ const taskGroupController = {
       let result = await knex('task_group_templates').update({ updatedAt: currentTime, taskGroupName: req.body.taskGroupName, assetCategoryId: req.body.assetCategoryId, orgId: req.orgId }).where({ id }).returning('*')
       updatedTaskGroupTemplate = result[0]
 
-      let resultSchedule = await knex('task_group_template_schedule').update({ ...payload, repeatOn: payload.repeatOn}).where({"taskGroupId":id})
+      let resultSchedule = await knex('task_group_template_schedule').update({ ...payload, repeatOn: payload.repeatOn }).where({ "taskGroupId": id })
       resultScheduleData = resultSchedule[0]
 
       let updatedTasks = []
