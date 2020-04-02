@@ -608,7 +608,10 @@ const assetController = {
             'buildings_and_phases.buildingPhaseCode',
             'floor_and_zones.floorZoneCode',
             'property_units.unitNumber'
-          ]).where({ 'asset_location.assetId': row.id }).first()
+          ]).where({ 'asset_location.assetId': row.id })
+          .orderBy("asset_location.id", "desc")
+          .limit(1)
+          .first()
         // ]).max('asset_location.updatedAt').first()
         return { ...row, ...location }
       })
