@@ -378,6 +378,30 @@ const taskGroupController = {
       let assetResults = [];
       let createPmTask;
       let payload = _.omit(req.body, ['additionalUsers']);
+
+
+      let currentDate = moment().format("YYYY-MM-DD");
+      //return res.json(currentDate)  
+
+
+      if (!(payload.startDateTime >= currentDate)) {
+
+        console.log(currentDate, "currreeeetttttttttttttt")
+        return res.status(400).json({
+          errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid start date" }]
+        })
+
+      }
+
+      if (!(payload.endDateTime >= currentDate)) {
+
+        console.log(currentDate, "currreeeetttttttttttttt")
+        return res.status(400).json({
+          errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid end date" }]
+        })
+
+      }
+
       const schema = Joi.object().keys({
         assetCategoryId: Joi.number().required(),
         companyId: Joi.number().required(),
@@ -407,29 +431,6 @@ const taskGroupController = {
 
 
       await knex.transaction(async trx => {
-
-
-        let currentDate = moment().format("YYYY-MM-DD");
-        //return res.json(currentDate)  
-
-
-        if (!(payload.startDateTime >= currentDate)) {
-
-          console.log(currentDate, "currreeeetttttttttttttt")
-          return res.status(400).json({
-            errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid start date" }]
-          })
-
-        }
-
-        if (!(payload.endDateTime >= currentDate)) {
-
-          console.log(currentDate, "currreeeetttttttttttttt")
-          return res.status(400).json({
-            errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid end date" }]
-          })
-
-        }
 
 
         // Update PM Company and Project
@@ -597,12 +598,12 @@ const taskGroupController = {
             console.log("pmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm", date, "========================")
 
             let insertDataGroup = {
-                pmDate: date,
-                scheduleId: taskSchedule.id,
-                assetId,
-                createdAt: currentTime,
-                updatedAt: currentTime,
-                orgId: req.orgId
+              pmDate: date,
+              scheduleId: taskSchedule.id,
+              assetId,
+              createdAt: currentTime,
+              updatedAt: currentTime,
+              orgId: req.orgId
             }
 
             let assetResult = await knex
@@ -1557,6 +1558,7 @@ const taskGroupController = {
           'pm_task.taskGroupScheduleAssignAssetId': payload.taskGroupScheduleAssignAssetId,
           'pm_task.orgId': req.orgId
         })
+        .orderBy('pm_task.taskSerialNumber', 'asc')
 
       // let statuses = tasks.filter(t => t.status !== "CMTD")
       // if (statuses.length === 0) {
@@ -2141,7 +2143,7 @@ const taskGroupController = {
             createdAt: currentTime,
             updatedAt: currentTime,
             orgId: req.orgId,
-            status:'O'
+            status: 'O'
           }))
 
           let insertPmTaskResult = await knex('pm_task').insert(InsertPmTaskPayload).returning(['*']);
