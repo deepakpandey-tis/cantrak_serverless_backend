@@ -987,6 +987,9 @@ const taskGroupController = {
 
       const Parallel = require('async-parallel')
       const rowsWithLocations = await Parallel.map(rows, async row => {
+
+        console.log("rows", row);
+
         const location = await knex('asset_location')
           .innerJoin('companies', 'asset_location.companyId', 'companies.id')
           .innerJoin('projects', 'asset_location.projectId', 'projects.id')
@@ -1011,7 +1014,10 @@ const taskGroupController = {
             'buildings_and_phases.buildingPhaseCode',
             'floor_and_zones.floorZoneCode',
             'property_units.unitNumber'
-          ]).where(knex.raw('"asset_location"."updatedAt" = (select max("updatedAt") from asset_location)')).first()
+          ]).where({"asset_location.assetId": row.assetId})
+          .orderBy("asset_location",'desc')
+          .limit('1')
+          .first()
         // ]).max('asset_location.updatedAt').first()
         return { ...row, ...location }
       })
@@ -1455,7 +1461,7 @@ const taskGroupController = {
         });
       }
 
-      const pmResult = await knex("task_group_schedule")
+      const pmResult2 = await knex("task_group_schedule")
         .leftJoin('task_group_schedule_assign_assets', 'task_group_schedule.id', 'task_group_schedule_assign_assets.scheduleId')
         .leftJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id')
         .leftJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
@@ -1482,11 +1488,11 @@ const taskGroupController = {
           'asset_master.barcode as barCode',
           'asset_master.areaName as areaName',
           'asset_master.model as modelNo',
-          'companies.companyName',
-          'projects.projectName',
-          'buildings_and_phases.buildingPhaseCode',
-          'floor_and_zones.floorZoneCode',
-          'property_units.unitNumber',
+          // 'companies.companyName',
+          // 'projects.projectName',
+          // 'buildings_and_phases.buildingPhaseCode',
+          // 'floor_and_zones.floorZoneCode',
+          // 'property_units.unitNumber',
           'task_group_schedule.startDate as startDate',
           'task_group_schedule.endDate as endDate',
           'task_group_schedule.repeatFrequency as repeatFrequency',
@@ -1502,8 +1508,52 @@ const taskGroupController = {
           //'task_group_schedule.taskGroupId':payload.taskGroupId,
           'assigned_service_team.entityType': 'pm_task_groups',
           'task_group_schedule.orgId': req.orgId,
-        }).where(knex.raw('"asset_location"."updatedAt" = (select max("updatedAt") from asset_location)'))
-      //Where()
+        })
+        // .where(knex.raw('"asset_location"."updatedAt" = (select max("updatedAt") from asset_location)'))
+     
+
+
+        /// Update by Deepak Tiwari
+
+        const Parallel = require('async-parallel')
+        const pmResult = await Parallel.map(pmResult2, async row => {
+  
+          console.log("rows", row);
+  
+          const location = await knex('asset_location')
+            .innerJoin('companies', 'asset_location.companyId', 'companies.id')
+            .innerJoin('projects', 'asset_location.projectId', 'projects.id')
+            .innerJoin(
+              "buildings_and_phases",
+              "asset_location.buildingId",
+              "buildings_and_phases.id"
+            )
+            .innerJoin(
+              "floor_and_zones",
+              "asset_location.floorId",
+              "floor_and_zones.id"
+            )
+            .innerJoin(
+              "property_units",
+              "asset_location.unitId",
+              "property_units.id"
+            )
+            .select([
+              'companies.companyName',
+              'projects.projectName',
+              'buildings_and_phases.buildingPhaseCode',
+              'floor_and_zones.floorZoneCode',
+              'property_units.unitNumber'
+            ]).where({"asset_location.assetId": row.assetId})
+            .orderBy("asset_location",'desc')
+            .limit('1')
+            .first()
+          // ]).max('asset_location.updatedAt').first()
+          return { ...row, ...location }
+        })
+     
+     
+        //Where()
 
       // let assetLocation = await knex('asset_location')
       // .innerJoin('companies','asset_location.companyId','companies.id')
