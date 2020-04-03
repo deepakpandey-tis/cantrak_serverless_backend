@@ -1015,8 +1015,8 @@ const taskGroupController = {
             'buildings_and_phases.buildingPhaseCode',
             'floor_and_zones.floorZoneCode',
             'property_units.unitNumber'
-          ]).where({"asset_location.assetId": row.assetId})
-          .orderBy("asset_location",'desc')
+          ]).where({ "asset_location.assetId": row.assetId })
+          .orderBy("asset_location", 'desc')
           .limit('1')
           .first()
         // ]).max('asset_location.updatedAt').first()
@@ -1512,51 +1512,51 @@ const taskGroupController = {
           'assigned_service_team.entityType': 'pm_task_groups',
           'task_group_schedule.orgId': req.orgId,
         })
-        // .where(knex.raw('"asset_location"."updatedAt" = (select max("updatedAt") from asset_location)'))
-     
+      // .where(knex.raw('"asset_location"."updatedAt" = (select max("updatedAt") from asset_location)'))
 
 
-        /// Update by Deepak Tiwari
 
-        const Parallel = require('async-parallel')
-        const pmResult = await Parallel.map(pmResult2, async row => {
-  
-          console.log("rows", row);
-  
-          const location = await knex('asset_location')
-            .innerJoin('companies', 'asset_location.companyId', 'companies.id')
-            .innerJoin('projects', 'asset_location.projectId', 'projects.id')
-            .innerJoin(
-              "buildings_and_phases",
-              "asset_location.buildingId",
-              "buildings_and_phases.id"
-            )
-            .innerJoin(
-              "floor_and_zones",
-              "asset_location.floorId",
-              "floor_and_zones.id"
-            )
-            .innerJoin(
-              "property_units",
-              "asset_location.unitId",
-              "property_units.id"
-            )
-            .select([
-              'companies.companyName',
-              'projects.projectName',
-              'buildings_and_phases.buildingPhaseCode',
-              'floor_and_zones.floorZoneCode',
-              'property_units.unitNumber'
-            ]).where({"asset_location.assetId": row.assetId})
-            .orderBy("asset_location",'desc')
-            .limit('1')
-            .first()
-          // ]).max('asset_location.updatedAt').first()
-          return { ...row, ...location }
-        })
-     
-     
-        //Where()
+      /// Update by Deepak Tiwari
+
+      const Parallel = require('async-parallel')
+      const pmResult = await Parallel.map(pmResult2, async row => {
+
+        console.log("rows", row);
+
+        const location = await knex('asset_location')
+          .innerJoin('companies', 'asset_location.companyId', 'companies.id')
+          .innerJoin('projects', 'asset_location.projectId', 'projects.id')
+          .innerJoin(
+            "buildings_and_phases",
+            "asset_location.buildingId",
+            "buildings_and_phases.id"
+          )
+          .innerJoin(
+            "floor_and_zones",
+            "asset_location.floorId",
+            "floor_and_zones.id"
+          )
+          .innerJoin(
+            "property_units",
+            "asset_location.unitId",
+            "property_units.id"
+          )
+          .select([
+            'companies.companyName',
+            'projects.projectName',
+            'buildings_and_phases.buildingPhaseCode',
+            'floor_and_zones.floorZoneCode',
+            'property_units.unitNumber'
+          ]).where({ "asset_location.assetId": row.assetId })
+          .orderBy("asset_location", 'desc')
+          .limit('1')
+          .first()
+        // ]).max('asset_location.updatedAt').first()
+        return { ...row, ...location }
+      })
+
+
+      //Where()
 
       // let assetLocation = await knex('asset_location')
       // .innerJoin('companies','asset_location.companyId','companies.id')
@@ -1736,7 +1736,8 @@ const taskGroupController = {
         taskGroupId: Joi.string().required(),
         taskId: Joi.string().required(),
         status: Joi.string().required(),
-        userId: Joi.string().required()
+        userId: Joi.string().required(),
+        cancelReason: Joi.string().allow("").allow(null).optional()
       })
       const result = Joi.validate(payload, schema);
       if (result && result.hasOwnProperty("error") && result.error) {
@@ -1755,8 +1756,14 @@ const taskGroupController = {
         taskUpdated = await knex('pm_task').update({ status: payload.status, completedAt: currentTime, completedBy: payload.userId }).where({ taskGroupId: payload.taskGroupId, id: payload.taskId, orgId: req.orgId }).returning(['*'])
       } else {
 
-        taskUpdated = await knex('pm_task').update({ status: payload.status }).where({ taskGroupId: payload.taskGroupId, id: payload.taskId, orgId: req.orgId }).returning(['*'])
+        if (payload.status === 'C') {
+          taskUpdated = await knex('pm_task').update({ status: payload.status, cancelReason: payload.status }).where({ taskGroupId: payload.taskGroupId, id: payload.taskId, orgId: req.orgId }).returning(['*'])
+        } else {
+          taskUpdated = await knex('pm_task').update({ status: payload.status }).where({ taskGroupId: payload.taskGroupId, id: payload.taskId, orgId: req.orgId }).returning(['*'])
+        }
+
       }
+
       return res.status(200).json({
         data: {
           taskUpdated
@@ -1785,6 +1792,14 @@ const taskGroupController = {
         description: Joi.string().required()
       })
       const result = Joi.validate(payload[0], schema);
+
+      if (payload[0].description.length == '') {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: 'Add Atleast one feedback to save!' }]
+        });
+      }
+
+
       if (result && result.hasOwnProperty("error") && result.error) {
         return res.status(400).json({
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
