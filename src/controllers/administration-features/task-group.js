@@ -988,6 +988,9 @@ const taskGroupController = {
 
       const Parallel = require('async-parallel')
       const rowsWithLocations = await Parallel.map(rows, async row => {
+
+        console.log("rows", row);
+
         const location = await knex('asset_location')
           .innerJoin('companies', 'asset_location.companyId', 'companies.id')
           .innerJoin('projects', 'asset_location.projectId', 'projects.id')
@@ -1012,7 +1015,10 @@ const taskGroupController = {
             'buildings_and_phases.buildingPhaseCode',
             'floor_and_zones.floorZoneCode',
             'property_units.unitNumber'
-          ]).where(knex.raw('"asset_location"."updatedAt" = (select max("updatedAt") from asset_location)')).first()
+          ]).where({"asset_location.assetId": row.assetId})
+          .orderBy("asset_location",'desc')
+          .limit('1')
+          .first()
         // ]).max('asset_location.updatedAt').first()
         return { ...row, ...location }
       })
@@ -1233,7 +1239,8 @@ const taskGroupController = {
         }))
 
         let insertTemplateTaskResult = await knex.insert(tasksInsertPayload).returning(['*']).transacting(trx).into('template_task');
-        createTemplateTask = insertTemplateTaskResult;
+        createTemplateTask = _.orderBy(insertTemplateTaskResult,"taskSerialNumber","asc");
+        
         // CREATE TASK TEMPLATE CLOSE
 
 
@@ -1304,7 +1311,7 @@ const taskGroupController = {
       return res.status(200).json({
         data: {
           templateData: createTemplate,
-          taskTemplateData: createTemplateTask,
+          taskTemplateData:createTemplateTask,
           taskScheduleData: taskSchedule,
           assignedAdditionalUserData: assignedAdditionalUser,
           assignedServiceTeamData: assignedServiceTeam
@@ -1389,17 +1396,17 @@ const taskGroupController = {
 
       let [total, rows] = await Promise.all([
         knex.count('* as count').from("task_group_templates")
-          .innerJoin('template_task', 'task_group_templates.id', 'template_task.templateId')
-          .innerJoin('task_group_template_schedule', 'task_group_templates.id', 'task_group_template_schedule.taskGroupId')
-          .innerJoin('assigned_service_team', 'task_group_templates.id', 'assigned_service_team.entityId')
-          .innerJoin('assigned_service_additional_users', 'task_group_templates.id', 'assigned_service_additional_users.entityId')
+          .leftJoin('template_task', 'task_group_templates.id', 'template_task.templateId')
+          .leftJoin('task_group_template_schedule', 'task_group_templates.id', 'task_group_template_schedule.taskGroupId')
+          .leftJoin('assigned_service_team', 'task_group_templates.id', 'assigned_service_team.entityId')
+          .leftJoin('assigned_service_additional_users', 'task_group_templates.id', 'assigned_service_additional_users.entityId')
           .where({ "task_group_templates.id": payload.templateId, 'assigned_service_team.entityType': 'task_group_templates', 'assigned_service_additional_users.entityType': 'task_group_templates', 'task_group_templates.orgId': req.orgId }),
         //.offset(offset).limit(per_page),
         knex("task_group_templates")
-          .innerJoin('template_task', 'task_group_templates.id', 'template_task.templateId')
-          .innerJoin('task_group_template_schedule', 'task_group_templates.id', 'task_group_template_schedule.taskGroupId')
-          .innerJoin('assigned_service_team', 'task_group_templates.id', 'assigned_service_team.entityId')
-          .innerJoin('assigned_service_additional_users', 'task_group_templates.id', 'assigned_service_additional_users.entityId')
+          .leftJoin('template_task', 'task_group_templates.id', 'template_task.templateId')
+          .leftJoin('task_group_template_schedule', 'task_group_templates.id', 'task_group_template_schedule.taskGroupId')
+          .leftJoin('assigned_service_team', 'task_group_templates.id', 'assigned_service_team.entityId')
+          .leftJoin('assigned_service_additional_users', 'task_group_templates.id', 'assigned_service_additional_users.entityId')
           .select([
             'assigned_service_additional_users.userId as additional_user',
             'task_group_templates.*',
@@ -1408,6 +1415,7 @@ const taskGroupController = {
             'assigned_service_team.*'
           ])
           .where({ "task_group_templates.id": payload.templateId, 'assigned_service_team.entityType': 'task_group_templates', 'assigned_service_additional_users.entityType': 'task_group_templates', "task_group_templates.orgId": req.orgId })
+          .orderBy('template_task.taskSerialNumber','asc')
           .offset(offset).limit(per_page)
       ])
 
@@ -1456,7 +1464,7 @@ const taskGroupController = {
         });
       }
 
-      const pmResult = await knex("task_group_schedule")
+      const pmResult2 = await knex("task_group_schedule")
         .leftJoin('task_group_schedule_assign_assets', 'task_group_schedule.id', 'task_group_schedule_assign_assets.scheduleId')
         .leftJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id')
         .leftJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
@@ -1483,11 +1491,11 @@ const taskGroupController = {
           'asset_master.barcode as barCode',
           'asset_master.areaName as areaName',
           'asset_master.model as modelNo',
-          'companies.companyName',
-          'projects.projectName',
-          'buildings_and_phases.buildingPhaseCode',
-          'floor_and_zones.floorZoneCode',
-          'property_units.unitNumber',
+          // 'companies.companyName',
+          // 'projects.projectName',
+          // 'buildings_and_phases.buildingPhaseCode',
+          // 'floor_and_zones.floorZoneCode',
+          // 'property_units.unitNumber',
           'task_group_schedule.startDate as startDate',
           'task_group_schedule.endDate as endDate',
           'task_group_schedule.repeatFrequency as repeatFrequency',
@@ -1503,8 +1511,52 @@ const taskGroupController = {
           //'task_group_schedule.taskGroupId':payload.taskGroupId,
           'assigned_service_team.entityType': 'pm_task_groups',
           'task_group_schedule.orgId': req.orgId,
-        }).where(knex.raw('"asset_location"."updatedAt" = (select max("updatedAt") from asset_location)'))
-      //Where()
+        })
+        // .where(knex.raw('"asset_location"."updatedAt" = (select max("updatedAt") from asset_location)'))
+     
+
+
+        /// Update by Deepak Tiwari
+
+        const Parallel = require('async-parallel')
+        const pmResult = await Parallel.map(pmResult2, async row => {
+  
+          console.log("rows", row);
+  
+          const location = await knex('asset_location')
+            .innerJoin('companies', 'asset_location.companyId', 'companies.id')
+            .innerJoin('projects', 'asset_location.projectId', 'projects.id')
+            .innerJoin(
+              "buildings_and_phases",
+              "asset_location.buildingId",
+              "buildings_and_phases.id"
+            )
+            .innerJoin(
+              "floor_and_zones",
+              "asset_location.floorId",
+              "floor_and_zones.id"
+            )
+            .innerJoin(
+              "property_units",
+              "asset_location.unitId",
+              "property_units.id"
+            )
+            .select([
+              'companies.companyName',
+              'projects.projectName',
+              'buildings_and_phases.buildingPhaseCode',
+              'floor_and_zones.floorZoneCode',
+              'property_units.unitNumber'
+            ]).where({"asset_location.assetId": row.assetId})
+            .orderBy("asset_location",'desc')
+            .limit('1')
+            .first()
+          // ]).max('asset_location.updatedAt').first()
+          return { ...row, ...location }
+        })
+     
+     
+        //Where()
 
       // let assetLocation = await knex('asset_location')
       // .innerJoin('companies','asset_location.companyId','companies.id')
