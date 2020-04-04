@@ -1,5 +1,5 @@
 const Joi = require('@hapi/joi');
-const moment = require('moment');
+//const moment = require('moment');
 const uuidv4 = require('uuid/v4');
 var jwt = require('jsonwebtoken');
 const _ = require('lodash');
@@ -8,6 +8,8 @@ const { RRule, RRuleSet, rrulestr } = require("rrule");
 const XLSX = require("xlsx");
 const fs = require('fs');
 const path = require('path');
+const moment = require("moment-timezone");
+
 
 const emailHelper = require('../../helpers/email')
 
@@ -884,7 +886,7 @@ const taskGroupController = {
 
     try {
       let reqData = req.query;
-      let payload = req.body
+      let payload = req.body;
 
       const schema = Joi.object().keys({
         taskGroupId: Joi.string().required(),
@@ -898,6 +900,7 @@ const taskGroupController = {
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
         });
       }
+
       let pagination = {};
       let per_page = reqData.per_page || 10;
       let page = reqData.current_page || 1;
@@ -947,6 +950,7 @@ const taskGroupController = {
 
           .select([
             "task_group_schedule_assign_assets.id as workOrderId",
+            "task_group_schedule_assign_assets.displayId as TGAA",
             // "task_group_schedule_assign_assets.status as status",
             "task_group_schedule_assign_assets.isActive as status",
             "task_group_schedule.id as id",
@@ -1087,6 +1091,7 @@ const taskGroupController = {
           )
           .select([
             "task_group_schedule_assign_assets.id as workOrderId",
+            "task_group_schedule_assign_assets.displayId as TGAA",
             "task_group_schedule_assign_assets.status as status",
             "task_group_schedule.id as id",
             "asset_master.assetName as assetName",
@@ -1125,6 +1130,7 @@ const taskGroupController = {
           )
           .select([
             "task_group_schedule_assign_assets.id as workOrderId",
+            "task_group_schedule_assign_assets.displayId as TGAA",
             "task_group_schedule.id as id",
             "asset_master.assetName as assetName",
             "asset_master.model as model",
@@ -2393,7 +2399,41 @@ const taskGroupController = {
   },
   editWorkOrderDate: async (req, res) => {
     try {
+      const payload = req.body;
+      moment.tz.setDefault(payload.timezone);
+      payload.newPmDate = moment(payload.newPmDate);
+      payload.newPmDate = new Date(payload.newPmDate);
+
+      const updatedWorkOrder = await knex('task_group_schedule_assign_assets')
+        .update({ pmDate: payload.newPmDate })
+        .where({ id: payload.workOrderId })
+      return res.status(200).json({
+        data: {
+          updatedWorkOrder
+        },
+        message: 'Work order date updated!'
+      })
+    } catch (err) {
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
+  editWorkOrderDate22: async (req, res) => {
+    try {
       const payload = req.body
+      console.log("payloadData", payload);
+
+      
+      moment.tz.setDefault(payload.timezone);
+      payload.newPmDate = moment(payload.newPmDate);
+      console.log('payload.newPmDate Time:', payload.newPmDate.format('MMMM Do YYYY, h:mm:ss a'));
+      console.log('payload.newPmDate Time2:', payload.newPmDate.format('YYYY-MM-DD HH:mm'));
+
+      payload.newPmDate = new Date(payload.newPmDate);
+
       const updatedWorkOrder = await knex('task_group_schedule_assign_assets')
         .update({ pmDate: payload.newPmDate })
         .where({ id: payload.workOrderId })
