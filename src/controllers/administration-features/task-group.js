@@ -1,5 +1,5 @@
 const Joi = require('@hapi/joi');
-const moment = require('moment');
+//const moment = require('moment');
 const uuidv4 = require('uuid/v4');
 var jwt = require('jsonwebtoken');
 const _ = require('lodash');
@@ -8,6 +8,8 @@ const { RRule, RRuleSet, rrulestr } = require("rrule");
 const XLSX = require("xlsx");
 const fs = require('fs');
 const path = require('path');
+const moment = require("moment-timezone");
+
 
 const emailHelper = require('../../helpers/email')
 
@@ -885,7 +887,7 @@ const taskGroupController = {
 
     try {
       let reqData = req.query;
-      let payload = req.body
+      let payload = req.body;
 
       const schema = Joi.object().keys({
         taskGroupId: Joi.string().required(),
@@ -899,6 +901,7 @@ const taskGroupController = {
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
         });
       }
+
       let pagination = {};
       let per_page = reqData.per_page || 10;
       let page = reqData.current_page || 1;
@@ -948,6 +951,7 @@ const taskGroupController = {
 
           .select([
             "task_group_schedule_assign_assets.id as workOrderId",
+            "task_group_schedule_assign_assets.displayId as TGAA",
             // "task_group_schedule_assign_assets.status as status",
             "task_group_schedule_assign_assets.isActive as status",
             "task_group_schedule.id as id",
@@ -1088,6 +1092,7 @@ const taskGroupController = {
           )
           .select([
             "task_group_schedule_assign_assets.id as workOrderId",
+            "task_group_schedule_assign_assets.displayId as TGAA",
             "task_group_schedule_assign_assets.status as status",
             "task_group_schedule.id as id",
             "asset_master.assetName as assetName",
@@ -1126,6 +1131,7 @@ const taskGroupController = {
           )
           .select([
             "task_group_schedule_assign_assets.id as workOrderId",
+            "task_group_schedule_assign_assets.displayId as TGAA",
             "task_group_schedule.id as id",
             "asset_master.assetName as assetName",
             "asset_master.model as model",
@@ -1239,8 +1245,8 @@ const taskGroupController = {
         }))
 
         let insertTemplateTaskResult = await knex.insert(tasksInsertPayload).returning(['*']).transacting(trx).into('template_task');
-        createTemplateTask = _.orderBy(insertTemplateTaskResult,"taskSerialNumber","asc");
-        
+        createTemplateTask = _.orderBy(insertTemplateTaskResult, "taskSerialNumber", "asc");
+
         // CREATE TASK TEMPLATE CLOSE
 
 
@@ -1311,7 +1317,7 @@ const taskGroupController = {
       return res.status(200).json({
         data: {
           templateData: createTemplate,
-          taskTemplateData:createTemplateTask,
+          taskTemplateData: createTemplateTask,
           taskScheduleData: taskSchedule,
           assignedAdditionalUserData: assignedAdditionalUser,
           assignedServiceTeamData: assignedServiceTeam
@@ -1398,24 +1404,26 @@ const taskGroupController = {
         knex.count('* as count').from("task_group_templates")
           .leftJoin('template_task', 'task_group_templates.id', 'template_task.templateId')
           .leftJoin('task_group_template_schedule', 'task_group_templates.id', 'task_group_template_schedule.taskGroupId')
-          .leftJoin('assigned_service_team', 'task_group_templates.id', 'assigned_service_team.entityId')
-          .leftJoin('assigned_service_additional_users', 'task_group_templates.id', 'assigned_service_additional_users.entityId')
-          .where({ "task_group_templates.id": payload.templateId, 'assigned_service_team.entityType': 'task_group_templates', 'assigned_service_additional_users.entityType': 'task_group_templates', 'task_group_templates.orgId': req.orgId }),
+          //.leftJoin('assigned_service_team', 'task_group_templates.id', 'assigned_service_team.entityId')
+          //.leftJoin('assigned_service_additional_users', 'task_group_templates.id', 'assigned_service_additional_users.entityId')
+          .where({ "task_group_templates.id": payload.templateId, "task_group_templates.orgId": req.orgId }),
+        //.where({ "task_group_templates.id": payload.templateId, 'assigned_service_team.entityType': 'task_group_templates', 'assigned_service_additional_users.entityType': 'task_group_templates', 'task_group_templates.orgId': req.orgId }),
         //.offset(offset).limit(per_page),
         knex("task_group_templates")
           .leftJoin('template_task', 'task_group_templates.id', 'template_task.templateId')
           .leftJoin('task_group_template_schedule', 'task_group_templates.id', 'task_group_template_schedule.taskGroupId')
-          .leftJoin('assigned_service_team', 'task_group_templates.id', 'assigned_service_team.entityId')
-          .leftJoin('assigned_service_additional_users', 'task_group_templates.id', 'assigned_service_additional_users.entityId')
+          //.leftJoin('assigned_service_team', 'task_group_templates.id', 'assigned_service_team.entityId')
+          //.leftJoin('assigned_service_additional_users', 'task_group_templates.id', 'assigned_service_additional_users.entityId')
           .select([
-            'assigned_service_additional_users.userId as additional_user',
+            //'assigned_service_additional_users.userId as additional_user',
             'task_group_templates.*',
             'template_task.*',
             'task_group_template_schedule.*',
-            'assigned_service_team.*'
+            //'assigned_service_team.*'
           ])
-          .where({ "task_group_templates.id": payload.templateId, 'assigned_service_team.entityType': 'task_group_templates', 'assigned_service_additional_users.entityType': 'task_group_templates', "task_group_templates.orgId": req.orgId })
-          .orderBy('template_task.taskSerialNumber','asc')
+          .where({ "task_group_templates.id": payload.templateId, "task_group_templates.orgId": req.orgId })
+          //.where({ "task_group_templates.id": payload.templateId, 'assigned_service_team.entityType': 'task_group_templates', 'assigned_service_additional_users.entityType': 'task_group_templates', "task_group_templates.orgId": req.orgId })
+          .orderBy('template_task.taskSerialNumber', 'asc')
           .offset(offset).limit(per_page)
       ])
 
@@ -1428,6 +1436,49 @@ const taskGroupController = {
       pagination.current_page = page;
       pagination.from = offset;
       pagination.data = _.uniqBy(rows, 'taskName');
+
+
+      const Parallel = require('async-parallel');
+      pagination.data = await Parallel.map(_.uniqBy(rows, 'taskName'), async row => {
+
+
+        //return row;
+
+        let teamResult = await knex('assigned_service_team')
+          .where({ 'assigned_service_team.entityId': payload.templateId, 'assigned_service_team.entityType': 'task_group_templates' }).first()
+        let addUser = await knex('assigned_service_additional_users')
+          .select('assigned_service_additional_users.userId as additional_user')
+          .where({ 'assigned_service_additional_users.entityId': payload.templateId, 'assigned_service_additional_users.entityType': 'task_group_templates' })
+          .first();
+
+        let id;
+        let teamId=null;
+        let userId=null;
+        let entityId=null;
+        let entityType=null;
+        let additional_user=null;
+        if (teamResult) {
+          id = teamResult.id;
+          teamId = teamResult.teamId;
+          userId = teamResult.userId;
+          entityId = teamResult.entityId;
+          entityType = teamResult.entityType;
+        }
+        if (addUser) {
+          additional_user = addUser.additional_user;
+        }
+
+        return {
+          ...row,
+          id,
+          teamId,
+          userId,
+          entityId,
+          entityType,
+          additional_user,
+        }
+      })
+
 
       return res.status(200).json({
         data: {
@@ -2397,7 +2448,41 @@ const taskGroupController = {
   },
   editWorkOrderDate: async (req, res) => {
     try {
+      const payload = req.body;
+      moment.tz.setDefault(payload.timezone);
+      payload.newPmDate = moment(payload.newPmDate);
+      payload.newPmDate = new Date(payload.newPmDate);
+
+      const updatedWorkOrder = await knex('task_group_schedule_assign_assets')
+        .update({ pmDate: payload.newPmDate })
+        .where({ id: payload.workOrderId })
+      return res.status(200).json({
+        data: {
+          updatedWorkOrder
+        },
+        message: 'Work order date updated!'
+      })
+    } catch (err) {
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
+  editWorkOrderDate22: async (req, res) => {
+    try {
       const payload = req.body
+      console.log("payloadData", payload);
+
+      
+      moment.tz.setDefault(payload.timezone);
+      payload.newPmDate = moment(payload.newPmDate);
+      console.log('payload.newPmDate Time:', payload.newPmDate.format('MMMM Do YYYY, h:mm:ss a'));
+      console.log('payload.newPmDate Time2:', payload.newPmDate.format('YYYY-MM-DD HH:mm'));
+
+      payload.newPmDate = new Date(payload.newPmDate);
+
       const updatedWorkOrder = await knex('task_group_schedule_assign_assets')
         .update({ pmDate: payload.newPmDate })
         .where({ id: payload.workOrderId })

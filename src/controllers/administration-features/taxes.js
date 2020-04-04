@@ -146,6 +146,7 @@ const taxesfactionController = {
 
         const existTaxesCode = await knex("taxes")
           .where({ taxCode: taxesPaylode.taxCode.toUpperCase() })
+          .where({orgId:req.orgId})
           .whereNot({ id: taxesPaylode.id });
 
         console.log("[controllers][tax][updateTax]: Tax Code", existTaxesCode);

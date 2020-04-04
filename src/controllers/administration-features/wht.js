@@ -147,6 +147,7 @@ const whtController = {
 
         const existTaxesCode = await knex("wht_master")
           .where({ whtCode: taxesPaylode.whtCode.toUpperCase() })
+          .where({orgId:req.orgId})
           .whereNot({ id: taxesPaylode.id });
 
         console.log("[controllers][tax][updateTax]: Tax Code", existTaxesCode);
