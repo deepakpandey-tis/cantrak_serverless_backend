@@ -380,6 +380,30 @@ const taskGroupController = {
       let assetResults = [];
       let createPmTask;
       let payload = _.omit(req.body, ['additionalUsers']);
+
+
+      let currentDate = moment().format("YYYY-MM-DD");
+      //return res.json(currentDate)  
+
+
+      if (!(payload.startDateTime >= currentDate)) {
+
+        console.log(currentDate, "currreeeetttttttttttttt")
+        return res.status(400).json({
+          errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid start date" }]
+        })
+
+      }
+
+      if (!(payload.endDateTime >= currentDate)) {
+
+        console.log(currentDate, "currreeeetttttttttttttt")
+        return res.status(400).json({
+          errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid end date" }]
+        })
+
+      }
+
       const schema = Joi.object().keys({
         assetCategoryId: Joi.number().required(),
         companyId: Joi.number().required(),
@@ -409,29 +433,6 @@ const taskGroupController = {
 
 
       await knex.transaction(async trx => {
-
-
-        let currentDate = moment().format("YYYY-MM-DD");
-        //return res.json(currentDate)  
-
-
-        if (!(payload.startDateTime >= currentDate)) {
-
-          console.log(currentDate, "currreeeetttttttttttttt")
-          return res.status(400).json({
-            errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid start date" }]
-          })
-
-        }
-
-        if (!(payload.endDateTime >= currentDate)) {
-
-          console.log(currentDate, "currreeeetttttttttttttt")
-          return res.status(400).json({
-            errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid end date" }]
-          })
-
-        }
 
 
         // Update PM Company and Project
@@ -1244,7 +1245,8 @@ const taskGroupController = {
         }))
 
         let insertTemplateTaskResult = await knex.insert(tasksInsertPayload).returning(['*']).transacting(trx).into('template_task');
-        createTemplateTask = insertTemplateTaskResult;
+        createTemplateTask = _.orderBy(insertTemplateTaskResult, "taskSerialNumber", "asc");
+
         // CREATE TASK TEMPLATE CLOSE
 
 
@@ -1400,25 +1402,28 @@ const taskGroupController = {
 
       let [total, rows] = await Promise.all([
         knex.count('* as count').from("task_group_templates")
-          .innerJoin('template_task', 'task_group_templates.id', 'template_task.templateId')
-          .innerJoin('task_group_template_schedule', 'task_group_templates.id', 'task_group_template_schedule.taskGroupId')
-          .innerJoin('assigned_service_team', 'task_group_templates.id', 'assigned_service_team.entityId')
-          .innerJoin('assigned_service_additional_users', 'task_group_templates.id', 'assigned_service_additional_users.entityId')
-          .where({ "task_group_templates.id": payload.templateId, 'assigned_service_team.entityType': 'task_group_templates', 'assigned_service_additional_users.entityType': 'task_group_templates', 'task_group_templates.orgId': req.orgId }),
+          .leftJoin('template_task', 'task_group_templates.id', 'template_task.templateId')
+          .leftJoin('task_group_template_schedule', 'task_group_templates.id', 'task_group_template_schedule.taskGroupId')
+          //.leftJoin('assigned_service_team', 'task_group_templates.id', 'assigned_service_team.entityId')
+          //.leftJoin('assigned_service_additional_users', 'task_group_templates.id', 'assigned_service_additional_users.entityId')
+          .where({ "task_group_templates.id": payload.templateId, "task_group_templates.orgId": req.orgId }),
+        //.where({ "task_group_templates.id": payload.templateId, 'assigned_service_team.entityType': 'task_group_templates', 'assigned_service_additional_users.entityType': 'task_group_templates', 'task_group_templates.orgId': req.orgId }),
         //.offset(offset).limit(per_page),
         knex("task_group_templates")
-          .innerJoin('template_task', 'task_group_templates.id', 'template_task.templateId')
-          .innerJoin('task_group_template_schedule', 'task_group_templates.id', 'task_group_template_schedule.taskGroupId')
-          .innerJoin('assigned_service_team', 'task_group_templates.id', 'assigned_service_team.entityId')
-          .innerJoin('assigned_service_additional_users', 'task_group_templates.id', 'assigned_service_additional_users.entityId')
+          .leftJoin('template_task', 'task_group_templates.id', 'template_task.templateId')
+          .leftJoin('task_group_template_schedule', 'task_group_templates.id', 'task_group_template_schedule.taskGroupId')
+          //.leftJoin('assigned_service_team', 'task_group_templates.id', 'assigned_service_team.entityId')
+          //.leftJoin('assigned_service_additional_users', 'task_group_templates.id', 'assigned_service_additional_users.entityId')
           .select([
-            'assigned_service_additional_users.userId as additional_user',
+            //'assigned_service_additional_users.userId as additional_user',
             'task_group_templates.*',
             'template_task.*',
             'task_group_template_schedule.*',
-            'assigned_service_team.*'
+            //'assigned_service_team.*'
           ])
-          .where({ "task_group_templates.id": payload.templateId, 'assigned_service_team.entityType': 'task_group_templates', 'assigned_service_additional_users.entityType': 'task_group_templates', "task_group_templates.orgId": req.orgId })
+          .where({ "task_group_templates.id": payload.templateId, "task_group_templates.orgId": req.orgId })
+          //.where({ "task_group_templates.id": payload.templateId, 'assigned_service_team.entityType': 'task_group_templates', 'assigned_service_additional_users.entityType': 'task_group_templates', "task_group_templates.orgId": req.orgId })
+          .orderBy('template_task.taskSerialNumber', 'asc')
           .offset(offset).limit(per_page)
       ])
 
@@ -1431,6 +1436,49 @@ const taskGroupController = {
       pagination.current_page = page;
       pagination.from = offset;
       pagination.data = _.uniqBy(rows, 'taskName');
+
+
+      const Parallel = require('async-parallel');
+      pagination.data = await Parallel.map(_.uniqBy(rows, 'taskName'), async row => {
+
+
+        //return row;
+
+        let teamResult = await knex('assigned_service_team')
+          .where({ 'assigned_service_team.entityId': payload.templateId, 'assigned_service_team.entityType': 'task_group_templates' }).first()
+        let addUser = await knex('assigned_service_additional_users')
+          .select('assigned_service_additional_users.userId as additional_user')
+          .where({ 'assigned_service_additional_users.entityId': payload.templateId, 'assigned_service_additional_users.entityType': 'task_group_templates' })
+          .first();
+
+        let id;
+        let teamId=null;
+        let userId=null;
+        let entityId=null;
+        let entityType=null;
+        let additional_user=null;
+        if (teamResult) {
+          id = teamResult.id;
+          teamId = teamResult.teamId;
+          userId = teamResult.userId;
+          entityId = teamResult.entityId;
+          entityType = teamResult.entityType;
+        }
+        if (addUser) {
+          additional_user = addUser.additional_user;
+        }
+
+        return {
+          ...row,
+          id,
+          teamId,
+          userId,
+          entityId,
+          entityType,
+          additional_user,
+        }
+      })
+
 
       return res.status(200).json({
         data: {
@@ -1613,6 +1661,7 @@ const taskGroupController = {
           'pm_task.taskGroupScheduleAssignAssetId': payload.taskGroupScheduleAssignAssetId,
           'pm_task.orgId': req.orgId
         })
+        .orderBy('pm_task.taskSerialNumber', 'asc')
 
       // let statuses = tasks.filter(t => t.status !== "CMTD")
       // if (statuses.length === 0) {
