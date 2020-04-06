@@ -1901,7 +1901,7 @@ const taskGroupController = {
       let updatedTasks = []
       if (tasks && tasks.length) {
         for (let task of tasks) {
-          updatedTask = await knex('pm_task').update({ taskName: task.taskName }).where({ taskGroupScheduleAssignAssetId: workOrderId, id: task.id, orgId: req.orgId }).returning(['*'])
+          updatedTask = await knex('pm_task').update({ taskName: task.taskName,taskSerialNumber:task.taskSerialNumber}).where({ taskGroupScheduleAssignAssetId: workOrderId, id: task.id, orgId: req.orgId }).returning(['*'])
           updatedTasks.push(updatedTask[0]);
         }
       }
@@ -1999,7 +1999,7 @@ const taskGroupController = {
       // Delete Tasks
       if (deletedTasks && deletedTasks.length) {
         for (let task of deletedTasks) {
-          await knex('template_task').where({ id: task.id }).del()
+          let delTask = await knex('template_task').where({ id: task.id }).del();
         }
       }
       // additionalUsers: ["59", "60"]
