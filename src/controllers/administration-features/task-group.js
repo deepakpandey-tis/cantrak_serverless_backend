@@ -2451,8 +2451,12 @@ const taskGroupController = {
       const payload = req.body;
       moment.tz.setDefault(payload.timezone);
       payload.newPmDate = moment(payload.newPmDate);
-      payload.newPmDate = new Date(payload.newPmDate);
+      payload.newPmDate = payload.newPmDate.format("YYYY-MM-DDTHH:mm:ss.SSSZ");
+      console.log('payload.newPmDate Time:', payload.newPmDate);
 
+      //payload.newPmDate = new Date(payload.newPmDate);
+      
+      
       const updatedWorkOrder = await knex('task_group_schedule_assign_assets')
         .update({ pmDate: payload.newPmDate })
         .where({ id: payload.workOrderId })
