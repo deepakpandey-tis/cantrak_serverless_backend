@@ -1945,7 +1945,8 @@ const taskGroupController = {
       let updatedTasks = []
       if (tasks && tasks.length) {
         for (let task of tasks) {
-          updatedTask = await knex('pm_task').update({ taskName: task.taskName, taskSerialNumber: task.taskSerialNumber }).where({ taskGroupScheduleAssignAssetId: workOrderId, id: task.id, orgId: req.orgId }).returning(['*'])
+          updatedTask = await knex('pm_task').update({ taskName: task.taskName, taskSerialNumber: task.taskSerialNumber,taskNameAlternate: task.taskNameAlternate})
+          .where({ taskGroupScheduleAssignAssetId: workOrderId, id: task.id, orgId: req.orgId }).returning(['*'])
           updatedTasks.push(updatedTask[0]);
         }
       }
