@@ -1723,7 +1723,8 @@ const taskGroupController = {
           'pm_master2.name as pmName',
           'pm_task_groups.taskGroupName as taskGroupName',
           'pm_task_groups.id as taskGroupId',
-          'task_group_schedule_assign_assets.pmDate as pmDate'
+          'task_group_schedule_assign_assets.pmDate as pmDate',
+          'pm_task.taskNameAlternate as taskAlternateName'
         ])
         .where({
           'pm_task.id': taskId,
@@ -2223,7 +2224,7 @@ const taskGroupController = {
       // Generate New Work Orders for the same schedule but from the date which are coming next
       // Previous date should be discarded
       let generatedDates = getRecurringDates({ startDateTime, endDateTime, repeatFrequency, repeatOn, repeatPeriod })
-
+      
       // Delete work orders which are not yet completed
       await knex('task_group_schedule_assign_assets').where({ scheduleId, orgId: req.orgId }).whereRaw(knex.raw(`DATE("task_group_schedule_assign_assets"."pmDate") > now()`)).select('*').del()
 
@@ -2279,6 +2280,7 @@ const taskGroupController = {
         let updatedAdditionalUserResult = await knex('assigned_service_additional_users').update({ userId: id }).where({ entityType: 'pm_task_groups', entityId: taskGroupId, orgId: req.orgId })
         updatedAdditionalUsers.push(updatedAdditionalUserResult[0])
       }
+
       return res.status(200).json({
         data: {
           //deletedWorkOrders
