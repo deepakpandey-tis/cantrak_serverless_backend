@@ -223,4 +223,6 @@ router.post('/cancel-work-order',authMiddleware.isAuthenticated,taskGroupControl
 
 router.post('/pm-location-detail', authMiddleware.isAuthenticated, taskGroupController.pmLocationDetail)
 
+router.post('/generate-work-date', authMiddleware.isAuthenticated, taskGroupController.generateWorkDate)
+
 module.exports = router

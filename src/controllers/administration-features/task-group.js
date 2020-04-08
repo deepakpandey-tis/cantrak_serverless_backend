@@ -1945,8 +1945,8 @@ const taskGroupController = {
       let updatedTasks = []
       if (tasks && tasks.length) {
         for (let task of tasks) {
-          updatedTask = await knex('pm_task').update({ taskName: task.taskName, taskSerialNumber: task.taskSerialNumber,taskNameAlternate: task.taskNameAlternate})
-          .where({ taskGroupScheduleAssignAssetId: workOrderId, id: task.id, orgId: req.orgId }).returning(['*'])
+          updatedTask = await knex('pm_task').update({ taskName: task.taskName, taskSerialNumber: task.taskSerialNumber, taskNameAlternate: task.taskNameAlternate })
+            .where({ taskGroupScheduleAssignAssetId: workOrderId, id: task.id, orgId: req.orgId }).returning(['*'])
           updatedTasks.push(updatedTask[0]);
         }
       }
@@ -2042,7 +2042,7 @@ const taskGroupController = {
       let currentTime = new Date().getTime()
 
       // Delete Tasks
-      if (deletedTasks && deletedTasks.length) {
+      if (deletedTasks.length) {
         for (let task of deletedTasks) {
           let delTask = await knex('template_task').where({ id: task.id }).del();
         }
@@ -2268,7 +2268,7 @@ const taskGroupController = {
       // Generate New Work Orders for the same schedule but from the date which are coming next
       // Previous date should be discarded
       let generatedDates = getRecurringDates({ startDateTime, endDateTime, repeatFrequency, repeatOn, repeatPeriod })
-      
+
       // Delete work orders which are not yet completed
       await knex('task_group_schedule_assign_assets').where({ scheduleId, orgId: req.orgId }).whereRaw(knex.raw(`DATE("task_group_schedule_assign_assets"."pmDate") > now()`)).select('*').del()
 
@@ -2595,6 +2595,28 @@ const taskGroupController = {
     } catch (err) {
 
     }
+  },
+  generateWorkDate: async (req, res) => {
+
+    try {
+
+      const { startDateTime, endDateTime, repeatFrequency, repeatOn, repeatPeriod } = req.body;
+      let generatedDates = genrateWork(req.body);
+
+
+      return res.status(200).json({
+        data: generatedDates,
+        message: 'Work order generate successfully!'
+      })
+
+    } catch (err) {
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+
   }
 }
 
@@ -2674,7 +2696,82 @@ function getRecurringDates({ repeatPeriod, repeatOn, repeatFrequency, startDateT
   return performingDates.map(v => new Date(v).getTime()).filter(v => v > new Date().getTime()).map(v => new Date(v).toISOString())
 }
 
+function genrateWork(payload) {
 
+
+  let repeatPeriod = payload.repeatPeriod;
+  let repeatOn = payload.repeatOn ? payload.repeatOn : ""; //&& payload.repeatOn.length ? payload.repeatOn.join(',') : [];
+  let repeatFrequency = Number(payload.repeatFrequency);
+  let start = new Date(payload.startDateTime);
+
+  console.log("=============sss", start, "==========================")
+  let startYear = start.getFullYear();
+  let startMonth = start.getMonth();
+  let startDate = start.getDate();
+  let end = new Date(payload.endDateTime);
+
+  console.log("=============sss", end, "==========================", payload.repeatPeriod, payload.repeatOn, repeatFrequency, "=================")
+
+
+  let endYear = end.getFullYear();
+  let endMonth = end.getMonth();
+  let endDate = end.getDate();
+  let performingDates;
+
+  let config = {
+    interval: repeatFrequency,
+    dtstart: new Date(
+      Date.UTC(
+        startYear, startMonth, startDate
+      )
+    ),
+    until: new Date(
+      Date.UTC(
+        endYear, endMonth, endDate
+      )
+    ) // year, month, date
+  };
+  if (repeatPeriod === "YEAR") {
+    config["freq"] = RRule.YEARLY;
+  } else if (repeatPeriod === "MONTH") {
+    config["freq"] = RRule.MONTHLY;
+  } else if (repeatPeriod === "WEEK") {
+    config["freq"] = RRule.WEEKLY;
+    let array = [];
+
+    if (repeatOn.includes("MO")) {
+      array.push(RRule.MO);
+    }
+    if (repeatOn.includes("TU")) {
+      array.push(RRule.TU);
+    }
+    if (repeatOn.includes("WE")) {
+      array.push(RRule.WE);
+    }
+    if (repeatOn.includes("TH")) {
+      array.push(RRule.TH);
+    }
+    if (repeatOn.includes("FR")) {
+      array.push(RRule.FR);
+    }
+    if (repeatOn.includes("SA")) {
+      array.push(RRule.SA);
+    }
+    if (repeatOn.includes("SU")) {
+      array.push(RRule.SU);
+    }
+    config["byweekday"] = array;
+  } else if (repeatPeriod === "DAY") {
+    config["freq"] = RRule.DAILY;
+  }
+
+  const rule = new RRule(config);
+  performingDates = rule.all();
+
+  return performingDates;
+
+
+}
 
 
 
