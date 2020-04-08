@@ -660,6 +660,18 @@ const taskGroupController = {
         .update({ isActive: true })
         .where({ id: payload.pmId })
 
+        await knex('pm_task_groups')
+        .update({ isActive: true })
+        .where({ id: payload.pmId })
+
+        await knex('task_group_schedule')
+        .update({ isActive: true })
+        .where({ isActive: true })
+
+        await knex('task_group_schedule_assign_assets')
+        .update({ isActive: true })
+        .where({ isActive: true })
+
       return res.status(200).json({
         data: {
           templateData: createTemplate,
