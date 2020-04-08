@@ -423,6 +423,49 @@ const taskGroupController = {
 
       });
 
+      if (_.isEmpty(payload.repeatFrequency)) {
+
+        return res.status(400).json({
+          errors: [{ code: "LESS_THAN_ERROR", message: "Repeat Frequency is required!" }]
+        })
+
+      }
+
+      if (_.isEmpty(payload.repeatPeriod)) {
+
+        return res.status(400).json({
+          errors: [{ code: "LESS_THAN_ERROR", message: "Repeat Period is required!" }]
+        })
+
+      }
+
+      if (payload.repeatPeriod == "WEEK") {
+
+        if (_.isEmpty(payload.repeatOn)) {
+
+          return res.status(400).json({
+            errors: [{ code: "LESS_THAN_ERROR", message: "Day is required!" }]
+          })
+        }
+      }
+
+
+      if (_.isEmpty(payload.teamId)) {
+
+        return res.status(400).json({
+          errors: [{ code: "LESS_THAN_ERROR", message: "Team is required!" }]
+        })
+
+      }
+
+      if (_.isEmpty(payload.mainUserId)) {
+
+        return res.status(400).json({
+          errors: [{ code: "LESS_THAN_ERROR", message: "Main user is required!" }]
+        })
+
+      }
+
       const result = Joi.validate(_.omit(payload, ['repeatOn', 'tasks']), schema);
       if (result && result.hasOwnProperty("error") && result.error) {
         return res.status(400).json({
@@ -1452,11 +1495,11 @@ const taskGroupController = {
           .first();
 
         let id;
-        let teamId=null;
-        let userId=null;
-        let entityId=null;
-        let entityType=null;
-        let additional_user=null;
+        let teamId = null;
+        let userId = null;
+        let entityId = null;
+        let entityType = null;
+        let additional_user = null;
         if (teamResult) {
           id = teamResult.id;
           teamId = teamResult.teamId;
@@ -1902,7 +1945,8 @@ const taskGroupController = {
       let updatedTasks = []
       if (tasks && tasks.length) {
         for (let task of tasks) {
-          updatedTask = await knex('pm_task').update({ taskName: task.taskName,taskSerialNumber:task.taskSerialNumber}).where({ taskGroupScheduleAssignAssetId: workOrderId, id: task.id, orgId: req.orgId }).returning(['*'])
+          updatedTask = await knex('pm_task').update({ taskName: task.taskName, taskSerialNumber: task.taskSerialNumber,taskNameAlternate: task.taskNameAlternate})
+          .where({ taskGroupScheduleAssignAssetId: workOrderId, id: task.id, orgId: req.orgId }).returning(['*'])
           updatedTasks.push(updatedTask[0]);
         }
       }
@@ -2457,8 +2501,8 @@ const taskGroupController = {
       console.log('payload.newPmDate Time:', payload.newPmDate);
 
       //payload.newPmDate = new Date(payload.newPmDate);
-      
-      
+
+
       const updatedWorkOrder = await knex('task_group_schedule_assign_assets')
         .update({ pmDate: payload.newPmDate })
         .where({ id: payload.workOrderId })
@@ -2481,7 +2525,7 @@ const taskGroupController = {
       const payload = req.body
       console.log("payloadData", payload);
 
-      
+
       moment.tz.setDefault(payload.timezone);
       payload.newPmDate = moment(payload.newPmDate);
       console.log('payload.newPmDate Time:', payload.newPmDate.format('MMMM Do YYYY, h:mm:ss a'));
