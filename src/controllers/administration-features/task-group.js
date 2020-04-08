@@ -139,6 +139,10 @@ const taskGroupController = {
         });
       })
 
+      await knex('pm_task_groups')
+        .update({ isActive: true })
+        .where({ isActive: true })
+
     } catch (err) {
       console.log("[controllers][task-group][createTaskGroupTemplate] :  Error", err);
 
@@ -499,6 +503,14 @@ const taskGroupController = {
         createPmTaskGroup = insertPmTemplateResult[0];
 
 
+        // update pm_task_group
+
+        await knex('pm_task_groups')
+          .update({ isActive: true })
+          .where({ isActive: true })
+
+
+
         if (req.body.additionalUsers && req.body.additionalUsers.length) {
 
           // ASSIGNED ADDITIONAL USER OPEN
@@ -550,6 +562,10 @@ const taskGroupController = {
 
         let scheduleResult = await knex.insert(insertScheduleData).returning(['*']).transacting(trx).into('task_group_schedule');
         taskSchedule = scheduleResult[0];
+
+        await knex('task_group_schedule')
+          .update({ isActive: true })
+          .where({ isActive: true })
         // TASK GROUP SCHEDULE CLOSE 
 
 
@@ -703,15 +719,15 @@ const taskGroupController = {
         .update({ isActive: true })
         .where({ id: payload.pmId })
 
-        await knex('pm_task_groups')
-        .update({ isActive: true })
-        .where({ id: payload.pmId })
-
-        await knex('task_group_schedule')
+      await knex('pm_task_groups')
         .update({ isActive: true })
         .where({ isActive: true })
 
-        await knex('task_group_schedule_assign_assets')
+      await knex('task_group_schedule')
+        .update({ isActive: true })
+        .where({ isActive: true })
+
+      await knex('task_group_schedule_assign_assets')
         .update({ isActive: true })
         .where({ isActive: true })
 
@@ -760,6 +776,13 @@ const taskGroupController = {
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
 
+      await knex('task_group_schedule')
+        .update({ isActive: true })
+        .where({ isActive: true })
+
+        await knex('task_group_schedule')
+        .update({ isActive: true })
+        .where({ isActive: true })
 
 
       let [total, rows] = await Promise.all([
@@ -963,6 +986,10 @@ const taskGroupController = {
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
 
+      await knex('task_group_schedule_assign_assets')
+      .update({ isActive: true })
+      .where({ isActive: true })
+
       let [total, rows] = await Promise.all([
         knex
           .count("* as count")
@@ -1133,6 +1160,11 @@ const taskGroupController = {
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
 
+      await knex('task_group_schedule_assign_assets')
+        .update({ isActive: true })
+        .where({ isActive: true })
+
+
       let [total, rows] = await Promise.all([
         knex("task_group_schedule")
           .innerJoin(
@@ -1171,7 +1203,7 @@ const taskGroupController = {
         // knex.count('* as count').from("task_group_schedule")
         //   .innerJoin('task_group_schedule_assign_assets', 'task_group_schedule.id', 'task_group_schedule_assign_assets.scheduleId')
         //   .innerJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id'),
-        // .where({ "task_group_schedule.taskGroupId": payload.taskGroupId }),
+        // .where({ "task_group_stask_group_schedule_assign_assetschedule.taskGroupId": payload.taskGroupId }),
         //.offset(offset).limit(per_page),
         knex("task_group_schedule")
           .innerJoin(
@@ -1443,7 +1475,7 @@ const taskGroupController = {
         templateId: Joi.string().required()
       });
 
-      const result = Joi.validate(payload, schema);
+      const result = Joi.validate(ptask_group_schedule_assign_assetsayload, schema);
       if (result && result.hasOwnProperty("error") && result.error) {
         return res.status(400).json({
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
@@ -1957,8 +1989,8 @@ const taskGroupController = {
       let updatedTasks = []
       if (tasks && tasks.length) {
         for (let task of tasks) {
-          updatedTask = await knex('pm_task').update({ taskName: task.taskName, taskSerialNumber: task.taskSerialNumber,taskNameAlternate: task.taskNameAlternate})
-          .where({ taskGroupScheduleAssignAssetId: workOrderId, id: task.id, orgId: req.orgId }).returning(['*'])
+          updatedTask = await knex('pm_task').update({ taskName: task.taskName, taskSerialNumber: task.taskSerialNumber, taskNameAlternate: task.taskNameAlternate })
+            .where({ taskGroupScheduleAssignAssetId: workOrderId, id: task.id, orgId: req.orgId }).returning(['*'])
           updatedTasks.push(updatedTask[0]);
         }
       }
@@ -2280,7 +2312,7 @@ const taskGroupController = {
       // Generate New Work Orders for the same schedule but from the date which are coming next
       // Previous date should be discarded
       let generatedDates = getRecurringDates({ startDateTime, endDateTime, repeatFrequency, repeatOn, repeatPeriod })
-      
+
       // Delete work orders which are not yet completed
       await knex('task_group_schedule_assign_assets').where({ scheduleId, orgId: req.orgId }).whereRaw(knex.raw(`DATE("task_group_schedule_assign_assets"."pmDate") > now()`)).select('*').del()
 
@@ -2336,6 +2368,14 @@ const taskGroupController = {
         let updatedAdditionalUserResult = await knex('assigned_service_additional_users').update({ userId: id }).where({ entityType: 'pm_task_groups', entityId: taskGroupId, orgId: req.orgId })
         updatedAdditionalUsers.push(updatedAdditionalUserResult[0])
       }
+
+      await knex('task_group_schedule')
+      .update({ isActive: true })
+      .where({ isActive: true })
+
+      await knex('task_group_schedule_assign_assets')
+      .update({ isActive: true })
+      .where({ isActive: true })
 
       return res.status(200).json({
         data: {
