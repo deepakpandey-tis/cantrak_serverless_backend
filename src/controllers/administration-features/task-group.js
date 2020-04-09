@@ -780,7 +780,7 @@ const taskGroupController = {
         .update({ isActive: true })
         .where({ isActive: true })
 
-        await knex('task_group_schedule')
+      await knex('task_group_schedule')
         .update({ isActive: true })
         .where({ isActive: true })
 
@@ -987,8 +987,8 @@ const taskGroupController = {
       let offset = (page - 1) * per_page;
 
       await knex('task_group_schedule_assign_assets')
-      .update({ isActive: true })
-      .where({ isActive: true })
+        .update({ isActive: true })
+        .where({ isActive: true })
 
       let [total, rows] = await Promise.all([
         knex
@@ -2309,9 +2309,35 @@ const taskGroupController = {
       const { startDateTime, endDateTime, repeatFrequency, repeatOn, repeatPeriod } = newData;
       const { teamId, mainUserId, additionalUsers } = newData;
 
+      let currentDate = moment().format("YYYY-MM-DD");
+      //return res.json(currentDate)  
+
+
+      if (!(startDateTime >= currentDate)) {
+
+        console.log(currentDate, "currreeeetttttttttttttt")
+        return res.status(400).json({
+          errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid start date" }]
+        })
+      }
+
+      if (!(endDateTime >= currentDate)) {
+
+        console.log(currentDate, "currreeeetttttttttttttt")
+        return res.status(400).json({
+          errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid start date" }]
+        })
+      }
+
+
       // Generate New Work Orders for the same schedule but from the date which are coming next
       // Previous date should be discarded
       let generatedDates = getRecurringDates({ startDateTime, endDateTime, repeatFrequency, repeatOn, repeatPeriod })
+
+
+
+
+
 
       // Delete work orders which are not yet completed
       await knex('task_group_schedule_assign_assets').where({ scheduleId, orgId: req.orgId }).whereRaw(knex.raw(`DATE("task_group_schedule_assign_assets"."pmDate") > now()`)).select('*').del()
@@ -2370,12 +2396,12 @@ const taskGroupController = {
       }
 
       await knex('task_group_schedule')
-      .update({ isActive: true })
-      .where({ isActive: true })
+        .update({ isActive: true })
+        .where({ isActive: true })
 
       await knex('task_group_schedule_assign_assets')
-      .update({ isActive: true })
-      .where({ isActive: true })
+        .update({ isActive: true })
+        .where({ isActive: true })
 
       return res.status(200).json({
         data: {
