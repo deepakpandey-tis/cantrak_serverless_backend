@@ -353,14 +353,16 @@ const facilityBookingController = {
                 knex.from('entity_booking_criteria').where({ entityId: payload.id, entityType: 'facility_master' }).first()
                 ,
                 knex.from('images').where({ entityId: payload.id, entityType: 'facility_master' }),
-                knex('entity_fees_master').select(['feesType', 'feesAmount', 'duration','currency']).where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId }),
+                knex('entity_fees_master').select(['feesType', 'feesAmount', 'duration', 'currency']).where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId }),
                 knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId })
             ])
 
-            
+
             return res.status(200).json({
-                facilityDetails: { ...facilityDetails, openingCloseingDetail: openingCloseingDetail, ruleRegulationDetail: ruleRegulationDetail, 
-                bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'),qrCode },
+                facilityDetails: {
+                    ...facilityDetails, openingCloseingDetail: openingCloseingDetail, ruleRegulationDetail: ruleRegulationDetail,
+                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'), qrCode
+                },
                 message: "Facility Details!"
             });
 
@@ -1005,6 +1007,32 @@ const facilityBookingController = {
 
 
             return res.status(200).json({ message: 'Booking Confirmed!', data: resultData })
+
+        } catch (err) {
+
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
+            })
+
+        }
+
+    },
+    /*FACILITY BOOKING LIST */
+    facilityBookingList: async (req, res) => {
+
+        try {
+        
+            let reqData = req.query;
+            let total ,rows;
+            let pagination = {};
+            let per_page = reqData.current_page || 10;
+            let page    = reqData.page || 1 ;
+            if(page<1) page =1;
+
+
+
+
+
 
         } catch (err) {
 
