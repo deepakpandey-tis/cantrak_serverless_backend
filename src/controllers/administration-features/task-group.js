@@ -1475,7 +1475,7 @@ const taskGroupController = {
         templateId: Joi.string().required()
       });
 
-      const result = Joi.validate(ptask_group_schedule_assign_assetsayload, schema);
+      const result = Joi.validate(payload, schema);
       if (result && result.hasOwnProperty("error") && result.error) {
         return res.status(400).json({
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
