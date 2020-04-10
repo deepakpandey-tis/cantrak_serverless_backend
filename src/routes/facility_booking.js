@@ -53,5 +53,7 @@ router.post('/facility-delete',authMiddleware.isAuthenticated,facilityBookingCon
 
 router.post('/approve-facility',authMiddleware.isAuthenticated,facilityBookingController.approveFacility)
 
+router.post('/facility-booking-list',authMiddleware.isAuthenticated,facilityBookingController.facilityBookingList)
+
 
 module.exports = router;
