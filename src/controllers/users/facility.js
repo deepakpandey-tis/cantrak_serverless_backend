@@ -198,7 +198,7 @@ const facilityBookingController = {
             return res.status(200).json({
 
                 facilityDetails: {
-                    ...facilityDetails, openingClosingDetail: _.uniqBy(openingClosingDetail, 'day'), ruleRegulationDetail: _.uniqBy(ruleRegulationDetail, 'rules'),
+                    ...facilityDetails, openingClosingDetail: _.uniqBy(openingClosingDetail, 'day'), ruleRegulationDetail: ruleRegulationDetail,
                     bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType')
                 },
                 message: "Facility Details Successfully!"
