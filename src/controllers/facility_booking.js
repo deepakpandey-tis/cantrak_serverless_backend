@@ -359,7 +359,7 @@ const facilityBookingController = {
 
             
             return res.status(200).json({
-                facilityDetails: { ...facilityDetails, openingCloseingDetail: openingCloseingDetail, ruleRegulationDetail: _.uniqBy(ruleRegulationDetail, 'rules'), 
+                facilityDetails: { ...facilityDetails, openingCloseingDetail: openingCloseingDetail, ruleRegulationDetail: ruleRegulationDetail, 
                 bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'),qrCode },
                 message: "Facility Details!"
             });
