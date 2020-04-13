@@ -390,7 +390,7 @@ const facilityBookingController = {
             } else {
                 confirmedStatus = false;
             }
-
+ 
             let insertData = {
                 entityId: payload.facilityId,
                 entityType: "facility_master",
@@ -409,7 +409,8 @@ const facilityBookingController = {
             }
 
             let insertResult = await knex('entity_bookings').insert(insertData).returning(['*']);
-            resultData = insertResult[0];
+            resultData = insertResult[0]; 
+            
 
             const user = await knex('users').select(['email', 'name']).where({ id: id }).first();
 
