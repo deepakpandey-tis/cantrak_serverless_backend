@@ -54,6 +54,10 @@ router.post('/facility-delete',authMiddleware.isAuthenticated,facilityBookingCon
 router.post('/approve-facility',authMiddleware.isAuthenticated,facilityBookingController.approveFacility)
 
 router.post('/facility-booking-list',authMiddleware.isAuthenticated,facilityBookingController.facilityBookingList)
+/*ADD FACILTIY CLOSE DATE */
+router.post('/add-facility-close-date',authMiddleware.isAuthenticated,facilityBookingController.addFacilityCloseDate)
+
+router.post('/facility-close-date-list',authMiddleware.isAuthenticated,facilityBookingController.facilityCloseDateList)
 
 
 module.exports = router;
