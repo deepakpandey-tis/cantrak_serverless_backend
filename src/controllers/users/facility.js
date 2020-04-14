@@ -359,6 +359,35 @@ const facilityBookingController = {
                 });
             }
 
+
+
+            // Check concurrent booking for only flexible booking
+            let bookingCriteria1 = await knex('entity_booking_criteria').select('*').where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId }).first();
+            console.log("bookingCriteria", bookingCriteria1);
+            let totalConcurrentLimit = bookingCriteria1.concurrentBookingLimit;
+            let allowBookingSeat = 0;
+            if (bookingCriteria1 && bookingCriteria1.bookingType == '1') {   // Flexible Booking
+
+                let bookingData = await knex('entity_bookings').sum('noOfSeats as totalBookedSeats')
+                    .where('entity_bookings.bookingEndDateTime', '>', payload.bookingStartDateTime)
+                    .where('entity_bookings.bookingStartDateTime', '<', payload.bookingEndDateTime)
+                    .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', 'orgId': req.orgId }).first();
+                console.log("totalBookingSeats", bookingData);
+                allowBookingSeat = Number(payload.noOfSeats) + Number(bookingData.totalBookedSeats);
+                console.log("allowBookingSeat", allowBookingSeat);
+
+                if (allowBookingSeat > totalConcurrentLimit) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "ALREADY_SLOT_BOOKED", message: `You slot booking is overlapping, please try other timing slot.` }
+                        ]
+                    });
+                }
+
+            }
+
+            // exit
+
             let facilityData = await knex.from('facility_master').where({ id: payload.facilityId }).first();
             console.log("customerHouseInfo", req.me.houseIds);
             let unitId = req.me.houseIds[0];
@@ -390,7 +419,7 @@ const facilityBookingController = {
             } else {
                 confirmedStatus = false;
             }
- 
+
             let insertData = {
                 entityId: payload.facilityId,
                 entityType: "facility_master",
@@ -409,8 +438,8 @@ const facilityBookingController = {
             }
 
             let insertResult = await knex('entity_bookings').insert(insertData).returning(['*']);
-            resultData = insertResult[0]; 
-            
+            resultData = insertResult[0];
+
 
             const user = await knex('users').select(['email', 'name']).where({ id: id }).first();
 
@@ -512,8 +541,8 @@ const facilityBookingController = {
                 let closingTimeOnBookingDay = moment(bookingStartTime).hours(moment(+openCloseTimes.closeTime).hours())
                     .minutes(moment(+openCloseTimes.closeTime).minutes()).seconds(0).milliseconds(0);
 
-                console.log('openingTimeOnBookingDay:', openingTimeOnBookingDay.format('YYYY-MM-DD HH:mm:ss'));    
-                console.log('closingTimeOnBookingDay:', closingTimeOnBookingDay.format('YYYY-MM-DD HH:mm:ss'));    
+                console.log('openingTimeOnBookingDay:', openingTimeOnBookingDay.format('YYYY-MM-DD HH:mm:ss'));
+                console.log('closingTimeOnBookingDay:', closingTimeOnBookingDay.format('YYYY-MM-DD HH:mm:ss'));
 
 
                 if (openingTimeOnBookingDay.valueOf() > moment(bookingStartTime).valueOf()) {
@@ -748,7 +777,7 @@ const facilityBookingController = {
 
                 let remainingLimit = item.limitValue - totalBookedSeat;
                 let bookedSeat = totalBookedSeat;
-
+             
                 return {
                     ...item,
                     remaining: Number(remainingLimit),
