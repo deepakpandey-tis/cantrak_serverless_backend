@@ -36,6 +36,7 @@ const propertyUnitController = {
           description: Joi.string().allow("").optional(),
           productCode: Joi.string().allow("").optional(),
           area: Joi.string().allow("").optional(),
+          propertyUnitType: Joi.string().allow("").optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -132,7 +133,7 @@ const propertyUnitController = {
           description: Joi.string().allow("").allow(null).optional(),
           productCode: Joi.string().allow("").allow(null).optional(),
           area: Joi.string().allow("").allow(null).optional(),
-          //createdBy:Joi.string().allow("").optional(),
+          propertyUnitType: Joi.string().allow("").allow(null).optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -557,6 +558,11 @@ const propertyUnitController = {
               "floor_and_zones.id"
             )
             .innerJoin("users", "property_units.createdBy", "users.id")
+            .leftJoin(
+              "property_unit_type_master",
+              "property_units.propertyUnitType",
+              "property_unit_type_master.id"
+            )
             .select([
               "companies.companyId as COMPANY",
               "companies.companyName as COMPANY_NAME",
@@ -569,7 +575,8 @@ const propertyUnitController = {
               "property_units.description as DESCRIPTION",
               "property_units.area as ACTUAL_SALE_AREA",
               "property_units.houseId as HOUSE_ID",
-              "property_units.productCode as PRODUCT_CODE"
+              "property_units.productCode as PRODUCT_CODE",
+              "property_unit_type_master.propertyUnitTypeCode as PROPERTY_UNIT_TYPE_CODE",
 
             ])
             .where({ "property_units.orgId": orgId ,type:1})
@@ -597,6 +604,11 @@ const propertyUnitController = {
               "floor_and_zones.id"
             )
             .innerJoin("users", "property_units.createdBy", "users.id")
+            .leftJoin(
+              "property_unit_type_master",
+              "property_units.propertyUnitType",
+              "property_unit_type_master.id"
+            )
             .select([
               "companies.companyId as COMPANY",
               "companies.companyName as COMPANY_NAME",
@@ -609,7 +621,8 @@ const propertyUnitController = {
               "property_units.description as DESCRIPTION",
               "property_units.area as ACTUAL_SALE_AREA",
               "property_units.houseId as HOUSE_ID",
-              "property_units.productCode as PRODUCT_CODE"
+              "property_units.productCode as PRODUCT_CODE",
+              "property_unit_type_master.propertyUnitTypeCode as PROPERTY_UNIT_TYPE_CODE",
             ])
             .where({
               "property_units.companyId": companyId,
@@ -648,7 +661,8 @@ const propertyUnitController = {
             DESCRIPTION: "",
             "ACTUAL_SALE_AREA": "",
             "HOUSE_ID": "",
-            "PRODUCT_CODE": ""
+            "PRODUCT_CODE": "",
+            "PROPERTY_UNIT_TYPE_CODE":"",
           }
         ]);
       }
@@ -729,6 +743,11 @@ const propertyUnitController = {
           "property_units.floorZoneId",
           "floor_and_zones.id"
         )
+        .leftJoin(
+          "property_unit_type_master",
+          "property_units.propertyUnitType",
+          "property_unit_type_master.id"
+        )
         .leftJoin("users", "property_units.createdBy", "users.id")
         .select([
           "property_units.id as id",
@@ -749,6 +768,9 @@ const propertyUnitController = {
           "property_units.isActive",
           "buildings_and_phases.description as buildingDescription",
           "floor_and_zones.description as floorDescription",
+          "property_unit_type_master.propertyUnitTypeCode",
+          "property_unit_type_master.descriptionEng as propertyUnitTypeDescription",
+
         ])
         .where({ "property_units.id": id});
 
@@ -935,6 +957,7 @@ const propertyUnitController = {
               let propertyTypeId = null;
               let buildingPhaseId = null;
               let floorZoneId = null;
+              let unitTypeId = null;
               console.log({ propertyUnitData });
               let companyIdResult = await knex("companies")
                 .select("id")
@@ -986,6 +1009,7 @@ const propertyUnitController = {
                   propertyTypeCode: propertyUnitData.E.toUpperCase(),
                   orgId: req.orgId
                 });
+                
 
               // console.log({ buildingPhaseIdResult, floorZoneIdResult });
 
@@ -996,6 +1020,33 @@ const propertyUnitController = {
 
 
 
+              if (propertyUnitData.M) {
+
+                let propertyUnitTypeResult = await knex("property_unit_type_master")
+                  .select("id")
+                  .where({
+                    propertyUnitTypeCode: propertyUnitData.M.toUpperCase(),
+                    orgId: req.orgId
+                  }).first();
+
+
+                if (propertyUnitTypeResult) {
+                  unitTypeId = propertyUnitTypeResult.id;
+                }
+
+                if (!unitTypeId) {
+                  fail++;
+                  let values = _.values(propertyUnitData)
+                  values.unshift('Property Unit Type does not exists')
+  
+                  //errors.push(header);
+                  errors.push(values);
+                  continue;
+                }
+
+              }
+
+
               console.log(
                 "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
                 {
@@ -1003,7 +1054,8 @@ const propertyUnitController = {
                   buildingPhaseId,
                   floorZoneId,
                   companyId,
-                  projectId
+                  projectId,
+                  unitTypeId
                 }
               );
 
@@ -1055,6 +1107,8 @@ const propertyUnitController = {
               }
 
 
+             
+
 
 
               console.log()
@@ -1085,7 +1139,8 @@ const propertyUnitController = {
                   isActive: true,
                   createdBy: req.me.id,
                   createdAt: new Date().getTime(),
-                  updatedAt: new Date().getTime()
+                  updatedAt: new Date().getTime(),
+                  propertyUnitType:unitTypeId,
                 };
 
                 resultData = await knex

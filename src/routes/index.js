@@ -61,7 +61,8 @@ const serviceUserDetailsRouter = require('./users/servicedetails');
 const userDashboardRouter = require('./users/dashboard');
 const allUsersRouter = require('./administration-features/all-users');
 const remarksRouter = require('./remarks');
-const userFacilityRouter = require("./users/facility"); 
+const userFacilityRouter = require("./users/facility");
+const propertyUnitTypeRouter = require('./administration-features/property-unit-type') 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
   res.json({ app: 'Serverless Express App' });
@@ -132,5 +133,6 @@ router.use('/facility_booking', facilityBookingRouter);
 router.use('/users/dashboard', userDashboardRouter);
 router.use('/remarks', remarksRouter);
 router.use('/users/facility',userFacilityRouter);
+router.use('/administration-features/property-unit-type',propertyUnitTypeRouter)
 
 module.exports = router;

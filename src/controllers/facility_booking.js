@@ -248,6 +248,7 @@ const facilityBookingController = {
 
     deleteFacility: async (req, res) => {
         try {
+            let payload = req.body;
             const id = req.body.id;
             let message;
             let deactivatedFacility;
@@ -255,7 +256,7 @@ const facilityBookingController = {
 
             if (checkStatus && checkStatus.isActive == true) {
 
-                deactivatedFacility = await knex('facility_master').update({ isActive: false }).where({ id: id }).returning(['*']);
+                deactivatedFacility = await knex('facility_master').update({ isActive: false, inActiveReason: payload.deactivatedReason }).where({ id: id }).returning(['*']);
                 message = "Facility Deactivate successfully!"
 
             } else {
@@ -339,7 +340,9 @@ const facilityBookingController = {
                         'buildings_and_phases.description as buildingName',
                         'floor_and_zones.floorZoneCode',
                         'floor_and_zones.description as floorName',
-                        'facility_master.bookingStatus'
+                        'facility_master.bookingStatus',
+                        'facility_master.inActiveReason',
+                        'facility_master.isActive',
                     ])
                     .where({ 'facility_master.id': payload.id }).first()
                 ,
@@ -1021,13 +1024,13 @@ const facilityBookingController = {
     facilityBookingList: async (req, res) => {
 
         try {
-        
+
             let reqData = req.query;
-            let total ,rows;
+            let total, rows;
             let pagination = {};
             let per_page = reqData.current_page || 10;
-            let page    = reqData.page || 1 ;
-            if(page<1) page =1;
+            let page = reqData.page || 1;
+            if (page < 1) page = 1;
 
 
 
@@ -1040,6 +1043,94 @@ const facilityBookingController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
             })
 
+        }
+
+    },
+    addFacilityCloseDate: async (req, res) => {
+
+        try {
+
+            let payload = req.body;
+            let currentTime = new Date().getTime();
+            let resultData = [];
+            if (payload.facilityData.length > 0) {
+
+
+                for (let data of payload.facilityData) {
+
+                    if (data.startDate && data.endDate) {
+
+                        let startDate = new Date(data.startDate).getTime();
+                        let endDate = new Date(data.endDate).getTime();
+                        let closeReason = data.closeReason;
+
+                        let checkData = await knex('facility_close_date')
+                            .where({ startDate: startDate, endDate: endDate, entityId: payload.facilityId, orgId: req.orgId });
+
+                        if (!checkData.length) {
+
+                            let insertData = {
+
+                                entityId: payload.facilityId,
+                                entityType: "facility_master",
+                                startDate: startDate,
+                                endDate: endDate,
+                                closeReason: closeReason,
+                                createdAt: currentTime,
+                                updatedAt: currentTime,
+                                orgId: req.orgId
+                            }
+
+                            let result = await knex('facility_close_date').insert(insertData).returning(['*']);
+
+                            resultData.push(result[0]);
+                        }
+                    }
+
+                }
+
+            }
+
+            return res.status(200).json({ message: 'Close Date Added successfully!', data: resultData })
+
+        } catch (err) {
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
+            })
+        }
+
+    },
+    /*CLOSE DATE FACILITY LIST */
+    facilityCloseDateList: async (req, res) => {
+
+        try {
+
+            let payload = req.body;
+            const schema = Joi.object().keys({
+                facilityId: Joi.string().required()
+            })
+
+            const result = Joi.validate(payload, schema);
+            if (result && result.hasOwnProperty("error") && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "VALIDATION_ERROR", message: result.error.message }
+                    ]
+                });
+            }
+
+            let resultData = await knex('facility_close_date')
+            .where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId })
+            .orderBy("createdAt",'desc');
+            return res.status(200).json({ message: 'Close Date list successfully!',
+             data: resultData })
+
+
+        } catch (err) {
+
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
+            })
         }
 
     }
