@@ -659,7 +659,7 @@ const facilityBookingController = {
                 let endOfDay = moment(+payload.bookingStartDateTime).endOf('day').valueOf();
                 console.log("startOfDay", startOfDay, endOfDay);
 
-                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfDay}  and "bookingEndDateTime"  <= ${endOfDay} and "isBookingConfirmed" = true and "unitId" = ${unitIds}`);
+                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfDay}  and "bookingEndDateTime"  <= ${endOfDay} and "isBookingConfirmed" = true and "isBookingCancelled" = false and "unitId" = ${unitIds}`);
                 let totalBookedSeatForADay = rawQuery.rows[0].totalseats;
                 console.log("total Bookings Done for a day", totalBookedSeatForADay);
 
@@ -681,7 +681,7 @@ const facilityBookingController = {
                 let endOfWeek = moment(+payload.bookingStartDateTime).endOf('week').valueOf();
                 console.log("startOfWeek", startOfWeek, endOfWeek);
 
-                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfWeek}  and "bookingEndDateTime"  <= ${endOfWeek} and "isBookingConfirmed" = true  and "unitId" = ${unitIds}`);
+                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfWeek}  and "bookingEndDateTime"  <= ${endOfWeek} and "isBookingConfirmed" = true and "isBookingCancelled" = false  and "unitId" = ${unitIds}`);
                 let totalBookedSeatForAWeek = rawQuery.rows[0].totalseats;
                 console.log("total Bookings Done for a week", totalBookedSeatForAWeek);
 
@@ -702,7 +702,7 @@ const facilityBookingController = {
                 let endOfMonth = moment(+payload.bookingStartDateTime).endOf('month').valueOf();
                 console.log("startOfMonth", startOfMonth, endOfMonth);
 
-                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfMonth}  and "bookingEndDateTime"  <= ${endOfMonth} and "isBookingConfirmed" = true  and "unitId" = ${unitIds}`);
+                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfMonth}  and "bookingEndDateTime"  <= ${endOfMonth} and "isBookingConfirmed" = true and "isBookingCancelled" = false and "unitId" = ${unitIds}`);
                 let totalBookedSeatForAMonth = rawQuery.rows[0].totalseats;
                 console.log("total Bookings Done for a month", totalBookedSeatForAMonth);
 
@@ -741,6 +741,8 @@ const facilityBookingController = {
                 .first();
 
             availableSeats = Number(facilityData.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
+            console.log("totalSeatAvailable",facilityData.concurrentBookingLimit, bookingData.totalBookedSeats)    
+            console.log("availableSeats", availableSeats);
 
             let QuotaData = await knex('entity_booking_limit')
                 .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', orgId: req.orgId })
@@ -768,7 +770,7 @@ const facilityBookingController = {
                 }
 
 
-                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOf}  and "bookingEndDateTime"  <= ${endOf} and "isBookingConfirmed" = true and "unitId" = ${unitIds}`);
+                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOf}  and "bookingEndDateTime"  <= ${endOf} and "isBookingConfirmed" = true and "isBookingCancelled" = false and "unitId" = ${unitIds}`);
                 console.log("totalBookedSeats", rawQuery.rows);
                 let totalBookedSeat = rawQuery.rows[0].totalseats;
 
