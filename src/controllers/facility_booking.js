@@ -1120,14 +1120,50 @@ const facilityBookingController = {
             }
 
             let resultData = await knex('facility_close_date')
-            .where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId })
-            .orderBy("createdAt",'desc');
-            return res.status(200).json({ message: 'Close Date list successfully!',
-             data: resultData })
+                .where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId })
+                .orderBy("createdAt", 'desc');
+            return res.status(200).json({
+                message: 'Close Date list successfully!',
+                data: resultData
+            })
 
 
         } catch (err) {
 
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
+            })
+        }
+
+    },
+    /*DELETE FACILITY CLOSE DATE */
+    deleteFacilityCloseDate: async (req, res) => {
+
+        try {
+
+            let payload = req.body;
+
+            const schema = Joi.object().keys({
+                id: Joi.string().required()
+            })
+
+            const result = Joi.validate(payload, schema);
+            if (result && result.hasOwnProperty("error") && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "VALIDATION_ERROR", message: result.error.message }
+                    ]
+                });
+            }
+
+            let delResult = await knex('facility_close_date').where({ id: payload.id }).del();
+
+            return res.status(200).json({
+                message: 'Facility Close Date deleted successfully!',
+                data: delResult
+            })
+
+        } catch (err) {
             res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
             })
