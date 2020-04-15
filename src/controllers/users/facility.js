@@ -56,6 +56,7 @@ const facilityBookingController = {
                     'buildings_and_phases.description as buildingName',
                     'floor_and_zones.floorZoneCode',
                     'floor_and_zones.description as floorName',
+                    'facility_master.inActiveReason'
 
                 ])
                 .where(qb => {
