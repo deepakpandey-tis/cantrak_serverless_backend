@@ -360,6 +360,53 @@ const facilityBookingController = {
             }
 
 
+            // check facility is closed
+
+            let closeFacility = await knex('facility_master')
+                .select('inActiveReason')
+                .where({ id: payload.facilityId, orgId: req.orgId, isActive: false })
+                .first();
+
+            console.log("closedFacility", closeFacility);
+            if (closeFacility) {
+
+                let closeReasonMessage = closeFacility.inActiveReason;
+
+                return res.status(400).json({
+                    errors: [
+                        { code: "FACILITY_CLOSED", message: `Facility is closed due to this reason ${closeReasonMessage}.` }
+                    ]
+                });
+            }
+
+
+            // check facility timing is closed
+
+            let closeFacilityTiming = await knex('facility_close_date')
+                .select('*')
+                .where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId })
+                .where('facility_close_date.endDate', '>', payload.bookingStartDateTime)
+                .where('facility_close_date.startDate', '<', payload.bookingEndDateTime)
+                .first();
+
+            console.log("closeFacilityTiming", closeFacilityTiming);
+            if (closeFacilityTiming) {
+
+                let closeReason = await knex('facility_close_date')
+                    .select('closeReason')
+                    .where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId })
+                    .first();
+
+                let closeReasonMessage = closeReason.closeReason;
+
+                return res.status(400).json({
+                    errors: [
+                        { code: "FACILITY_CLOSED", message: `Facility is closed for this timing slot due to this reason ${closeReasonMessage}.` }
+                    ]
+                });
+            }
+
+
 
             // Check concurrent booking for only flexible booking
             let bookingCriteria1 = await knex('entity_booking_criteria').select('*').where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId }).first();
@@ -521,6 +568,53 @@ const facilityBookingController = {
                 });
             }
 
+
+            // check facility is closed
+
+            let closeFacility = await knex('facility_master')
+                .select('inActiveReason')
+                .where({ id: payload.facilityId, orgId: req.orgId, isActive: false })
+                .first();
+
+            console.log("closedFacility", closeFacility);
+            if (closeFacility) {
+
+                let closeReasonMessage = closeFacility.inActiveReason;
+
+                return res.status(400).json({
+                    errors: [
+                        { code: "FACILITY_CLOSED", message: `Facility is closed due to this reason ${closeReasonMessage}.` }
+                    ]
+                });
+            }
+
+            // check facility is closed
+
+            let closeFacilityTiming = await knex('facility_close_date')
+                .select('*')
+                .where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId })
+                .where('facility_close_date.endDate', '>', bookingStartTime)
+                .where('facility_close_date.startDate', '<', bookingEndTime)
+                .first();
+
+            console.log("closeFacilityTiming", closeFacilityTiming);
+            if (closeFacilityTiming) {
+
+                let closeReason = await knex('facility_close_date')
+                    .select('closeReason')
+                    .where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId })
+                    .first();
+
+                let closeReasonMessage = closeReason.closeReason;
+
+                return res.status(400).json({
+                    errors: [
+                        { code: "FACILITY_CLOSED", message: `Facility is closed for this timing slot due to this reason ${closeReasonMessage}.` }
+                    ]
+                });
+            }
+
+
             let bookingCriteria = await knex('entity_booking_criteria').select('*').where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId }).first();
             console.log("bookingCriteria", bookingCriteria);
 
@@ -658,7 +752,7 @@ const facilityBookingController = {
                 let endOfDay = moment(+payload.bookingStartDateTime).endOf('day').valueOf();
                 console.log("startOfDay", startOfDay, endOfDay);
 
-                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfDay}  and "bookingEndDateTime"  <= ${endOfDay} and "isBookingConfirmed" = true and "unitId" = ${unitIds}`);
+                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfDay}  and "bookingEndDateTime"  <= ${endOfDay} and "isBookingConfirmed" = true and "isBookingCancelled" = false and "unitId" = ${unitIds}`);
                 let totalBookedSeatForADay = rawQuery.rows[0].totalseats;
                 console.log("total Bookings Done for a day", totalBookedSeatForADay);
 
@@ -680,7 +774,7 @@ const facilityBookingController = {
                 let endOfWeek = moment(+payload.bookingStartDateTime).endOf('week').valueOf();
                 console.log("startOfWeek", startOfWeek, endOfWeek);
 
-                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfWeek}  and "bookingEndDateTime"  <= ${endOfWeek} and "isBookingConfirmed" = true  and "unitId" = ${unitIds}`);
+                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfWeek}  and "bookingEndDateTime"  <= ${endOfWeek} and "isBookingConfirmed" = true and "isBookingCancelled" = false  and "unitId" = ${unitIds}`);
                 let totalBookedSeatForAWeek = rawQuery.rows[0].totalseats;
                 console.log("total Bookings Done for a week", totalBookedSeatForAWeek);
 
@@ -701,7 +795,7 @@ const facilityBookingController = {
                 let endOfMonth = moment(+payload.bookingStartDateTime).endOf('month').valueOf();
                 console.log("startOfMonth", startOfMonth, endOfMonth);
 
-                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfMonth}  and "bookingEndDateTime"  <= ${endOfMonth} and "isBookingConfirmed" = true  and "unitId" = ${unitIds}`);
+                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfMonth}  and "bookingEndDateTime"  <= ${endOfMonth} and "isBookingConfirmed" = true and "isBookingCancelled" = false and "unitId" = ${unitIds}`);
                 let totalBookedSeatForAMonth = rawQuery.rows[0].totalseats;
                 console.log("total Bookings Done for a month", totalBookedSeatForAMonth);
 
@@ -723,6 +817,7 @@ const facilityBookingController = {
                 .where('entity_bookings.bookingStartDateTime', '<=', bookingEndTime)
                 .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', 'orgId': req.orgId }).first();
 
+
             let facilityData = await knex.from('facility_master')
                 .leftJoin('entity_booking_criteria', 'facility_master.id', 'entity_booking_criteria.entityId')
                 .select([
@@ -740,6 +835,8 @@ const facilityBookingController = {
                 .first();
 
             availableSeats = Number(facilityData.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
+            console.log("totalSeatAvailable", facilityData.concurrentBookingLimit, bookingData.totalBookedSeats)
+            console.log("availableSeats", availableSeats);
 
             let QuotaData = await knex('entity_booking_limit')
                 .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', orgId: req.orgId })
@@ -767,7 +864,7 @@ const facilityBookingController = {
                 }
 
 
-                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOf}  and "bookingEndDateTime"  <= ${endOf} and "isBookingConfirmed" = true and "unitId" = ${unitIds}`);
+                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOf}  and "bookingEndDateTime"  <= ${endOf} and "isBookingConfirmed" = true and "isBookingCancelled" = false and "unitId" = ${unitIds}`);
                 console.log("totalBookedSeats", rawQuery.rows);
                 let totalBookedSeat = rawQuery.rows[0].totalseats;
 
@@ -777,7 +874,7 @@ const facilityBookingController = {
 
                 let remainingLimit = item.limitValue - totalBookedSeat;
                 let bookedSeat = totalBookedSeat;
-             
+
                 return {
                     ...item,
                     remaining: Number(remainingLimit),
