@@ -261,7 +261,7 @@ const facilityBookingController = {
 
             } else {
 
-                deactivatedFacility = await knex('facility_master').update({ isActive: true }).where({ id: id }).returning(['*']);
+                deactivatedFacility = await knex('facility_master').update({ isActive: true,inActiveReason:"" }).where({ id: id }).returning(['*']);
                 message = "Facility Activate successfully!"
 
             }
@@ -1050,48 +1050,88 @@ const facilityBookingController = {
 
         try {
 
-            let payload = req.body;
-            let currentTime = new Date().getTime();
+
             let resultData = [];
-            if (payload.facilityData.length > 0) {
+            let cancelResultData = [];
+            await knex.transaction(async trx => {
+                let payload = req.body;
+                let currentTime = new Date().getTime();
+                if (payload.facilityData.length > 0) {
 
 
-                for (let data of payload.facilityData) {
+                    for (let data of payload.facilityData) {
 
-                    if (data.startDate && data.endDate) {
+                        if (data.startDate && data.endDate) {
 
-                        let startDate = new Date(data.startDate).getTime();
-                        let endDate = new Date(data.endDate).getTime();
-                        let closeReason = data.closeReason;
+                            let startDate = new Date(data.startDate).getTime();
+                            let endDate = new Date(data.endDate).getTime();
+                            let closeReason = data.closeReason;
 
-                        let checkData = await knex('facility_close_date')
-                            .where({ startDate: startDate, endDate: endDate, entityId: payload.facilityId, orgId: req.orgId });
+                            let checkData = await knex('facility_close_date')
+                                .where({ startDate: startDate, endDate: endDate, entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId });
 
-                        if (!checkData.length) {
+                            if (!checkData.length) {
 
-                            let insertData = {
+                                let insertData = {
 
-                                entityId: payload.facilityId,
-                                entityType: "facility_master",
-                                startDate: startDate,
-                                endDate: endDate,
-                                closeReason: closeReason,
-                                createdAt: currentTime,
-                                updatedAt: currentTime,
-                                orgId: req.orgId
+                                    entityId: payload.facilityId,
+                                    entityType: "facility_master",
+                                    startDate: startDate,
+                                    endDate: endDate,
+                                    closeReason: closeReason,
+                                    createdAt: currentTime,
+                                    updatedAt: currentTime,
+                                    orgId: req.orgId
+                                }
+                                let result = await knex('facility_close_date').insert(insertData).returning(['*']);
+
+                                resultData.push(result);
+
+                                let checkBooking = await knex('entity_bookings')
+                                    .where('entity_bookings.bookingStartDateTime', '>=', startDate)
+                                    .where('entity_bookings.bookingEndDateTime', '<=', endDate)
+                                    .where({ entityId: payload.facilityId, entityType: "facility_master", orgId: req.orgId });
+
+                                if (checkBooking.length) {
+
+                                    for (booked of checkBooking) {
+
+
+                                        let cancelData = {
+                                            isBookingCancelled: true,
+                                            cancelledBy: req.me.id,
+                                            cancelledAt: currentTime,
+                                            cancellationReason: closeReason
+                                        }
+
+
+                                        let cancelResult = await knex('entity_bookings').update(cancelData).returning(['*'])
+                                            .where({ id: booked.id, orgId: req.orgId })
+
+                                        cancelResultData.push(cancelResult)
+
+                                        const user = await knex('users').select(['email', 'name']).where({ id: booked.bookedBy }).first()
+
+                                        await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName: user.name, reason: closeReason, bookingStartDateTime: moment(Number(booked.bookingStartDateTime)).format('YYYY-MM-DD HH:MM A'), bookingEndDateTime: moment(+booked.bookingEndDateTime).format('YYYY-MM-DD HH:MM A'), noOfSeats: booked.noOfSeats } })
+
+
+                                    }
+
+                                }
+
                             }
-
-                            let result = await knex('facility_close_date').insert(insertData).returning(['*']);
-
-                            resultData.push(result[0]);
                         }
+
                     }
-
                 }
+                trx.commit
+            })
 
-            }
-
-            return res.status(200).json({ message: 'Close Date Added successfully!', data: resultData })
+            return res.status(200).json({
+                message: 'Close Date Added successfully!',
+                data: resultData,
+                bookingCancelData: cancelResultData
+            })
 
         } catch (err) {
             res.status(500).json({
