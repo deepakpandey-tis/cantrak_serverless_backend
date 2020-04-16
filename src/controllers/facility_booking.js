@@ -21,6 +21,7 @@ const facilityBookingController = {
             let bookingFrequencyResult = []
             let addedBookingCriteriaResult = [];
             let message;
+            let bookingQuotaResult = [];
             await knex.transaction(async trx => {
 
 
@@ -32,7 +33,8 @@ const facilityBookingController = {
                     'booking_criteria',
                     'facilityId',
                     'descriptionAlternateLang',
-                    'statuses'
+                    'statuses',
+                    'bookingQuota'
                 ]);
 
                 const schema = Joi.object().keys({
@@ -186,6 +188,51 @@ const facilityBookingController = {
                     bookingFrequencyResult.push(bookingFrequencyResultData)
                 }
 
+
+                const bookingQuota = req.body.bookingQuota;
+
+                let delQuota = await knex('facility_property_unit_type_quota_limit').where({ entityId: addedFacilityResult.id, entityType: 'facility_master' }).del();
+
+                bookingQuotaResult = [];
+
+
+                for (let q of bookingQuota) {
+
+                    let checkQuota = await knex('facility_property_unit_type_quota_limit')
+                        .where({
+                            entityType: 'facility_master',
+                            entityId: addedFacilityResult.id,
+                            orgId: req.orgId,
+                            propertyUnitTypeId: q.propertyUnitTypeId
+
+                        })
+
+                    if (!checkQuota.length) {
+
+
+                        if (q.propertyUnitTypeId && q.daily || q.weekly || q.monthly) {
+
+                            let quotaResult = await knex('facility_property_unit_type_quota_limit')
+                                .insert({
+                                    
+                                    propertyUnitTypeId:q.propertyUnitTypeId,
+                                    daily:q.daily?q.daily:0,
+                                    weekly:q.weekly?q.weekly:0,
+                                    monthly:q.monthly?q.monthly:0,
+                                    entityType: 'facility_master',
+                                    entityId: addedFacilityResult.id,
+                                    updatedAt: currentTime,
+                                    createdAt: currentTime,
+                                    orgId: req.orgId,
+
+                                }).returning(['*'])
+
+                            bookingQuotaResult.push(quotaResult)
+                        }
+                    }
+                }
+
+
                 // Booking Criteria
                 /**
                  * {"bookingAllowedAdvanceTime"
@@ -230,7 +277,8 @@ const facilityBookingController = {
                     addedImages: insertedImages,
                     addedFees: feesResult,
                     addedBookingFrequency: bookingFrequencyResult,
-                    addedBookingCriteria: addedBookingCriteriaResult
+                    addedBookingCriteria: addedBookingCriteriaResult,
+                    bookingQuotaResult
                 },
                 message: message
             })
@@ -261,7 +309,7 @@ const facilityBookingController = {
 
             } else {
 
-                deactivatedFacility = await knex('facility_master').update({ isActive: true,inActiveReason:"" }).where({ id: id }).returning(['*']);
+                deactivatedFacility = await knex('facility_master').update({ isActive: true, inActiveReason: "" }).where({ id: id }).returning(['*']);
                 message = "Facility Activate successfully!"
 
             }
@@ -312,7 +360,8 @@ const facilityBookingController = {
                 bookingCriteriaDetail,
                 facilityImages,
                 feeDetails,
-                bookingLimits
+                bookingLimits,
+                bookingQuota
             ] = await Promise.all([
 
                 knex.from('facility_master')
@@ -357,14 +406,28 @@ const facilityBookingController = {
                 ,
                 knex.from('images').where({ entityId: payload.id, entityType: 'facility_master' }),
                 knex('entity_fees_master').select(['feesType', 'feesAmount', 'duration', 'currency']).where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId }),
-                knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId })
+                knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId }),
+                knex('facility_property_unit_type_quota_limit')
+                    .leftJoin('property_unit_type_master', 'facility_property_unit_type_quota_limit.propertyUnitTypeId', 'property_unit_type_master.id')
+                    .select([
+                        'facility_property_unit_type_quota_limit.*',
+                        'property_unit_type_master.propertyUnitTypeCode',
+                        'property_unit_type_master.descriptionEng',
+                        'property_unit_type_master.descriptionThai',
+                    ])
+                    .where({
+                        'facility_property_unit_type_quota_limit.entityId': payload.id, 'facility_property_unit_type_quota_limit.entityType': 'facility_master',
+                        'facility_property_unit_type_quota_limit.orgId': req.orgId
+                    })
+
             ])
 
 
             return res.status(200).json({
                 facilityDetails: {
                     ...facilityDetails, openingCloseingDetail: openingCloseingDetail, ruleRegulationDetail: ruleRegulationDetail,
-                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'), qrCode
+                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'), qrCode,
+                    bookingQuota
                 },
                 message: "Facility Details!"
             });
