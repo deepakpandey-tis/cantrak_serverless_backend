@@ -110,18 +110,27 @@ const facilityBookingController = {
                 }
 
 
+                let checkMaxBooking = await knex('entity_bookings').where({ "entityId": pd.id, "entityType": 'facility_master', orgId: req.orgId })
+                let sortBy=0;
+                if(checkMaxBooking.length){
+                    sortBy = checkMaxBooking.length;
+                }
+
+
+
                 return {
                     ...pd,
                     uploadedImages: imageResult,
                     todayTotalBooking,
-                    charges
+                    charges,
+                    sortBy
                 }
 
             })
 
             res.status(200).json({
                 data: {
-                    facilityData: resultData
+                    facilityData: _.orderBy(resultData, 'sortBy', 'desc')
                 },
                 message: "Facility list successfully!"
             })
