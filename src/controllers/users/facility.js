@@ -374,7 +374,7 @@ const facilityBookingController = {
 
                 return res.status(400).json({
                     errors: [
-                        { code: "FACILITY_CLOSED", message: `Facility is closed due to this reason ${closeReasonMessage}.` }
+                        { code: "FACILITY_CLOSED_STATUS", message: `Facility is closed due to this reason ${closeReasonMessage}.` }
                     ]
                 });
             }
@@ -593,7 +593,7 @@ const facilityBookingController = {
 
                 return res.status(400).json({
                     errors: [
-                        { code: "FACILITY_CLOSED", message: `Facility is closed due to this reason ${closeReasonMessage}.` }
+                        { code: "FACILITY_CLOSED_STATUS", message: `Facility is closed due to this reason ${closeReasonMessage}.` }
                     ]
                 });
             }
