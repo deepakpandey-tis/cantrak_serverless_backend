@@ -214,11 +214,11 @@ const facilityBookingController = {
 
                             let quotaResult = await knex('facility_property_unit_type_quota_limit')
                                 .insert({
-                                    
-                                    propertyUnitTypeId:q.propertyUnitTypeId,
-                                    daily:q.daily?q.daily:0,
-                                    weekly:q.weekly?q.weekly:0,
-                                    monthly:q.monthly?q.monthly:0,
+
+                                    propertyUnitTypeId: q.propertyUnitTypeId,
+                                    daily: q.daily ? q.daily : 0,
+                                    weekly: q.weekly ? q.weekly : 0,
+                                    monthly: q.monthly ? q.monthly : 0,
                                     entityType: 'facility_master',
                                     entityId: addedFacilityResult.id,
                                     updatedAt: currentTime,
@@ -1084,20 +1084,106 @@ const facilityBookingController = {
 
     },
     /*FACILITY BOOKING LIST */
-    facilityBookingList: async (req, res) => {
+    getfacilityBookedList: async (req, res) => {
 
         try {
+
+            let { startDate, endDate, facilityName } = req.body;
+            let startTime;
+            let endTime;
+
+
+            if (startDate && endDate) {
+
+                startNewDate = moment(startDate).startOf('date').format()
+                endNewDate = moment(endDate).endOf('date').format();
+                startTime = new Date(startNewDate).getTime();
+                endTime = new Date(endNewDate).getTime();
+            }
+
+
+
 
             let reqData = req.query;
             let total, rows;
             let pagination = {};
-            let per_page = reqData.current_page || 10;
-            let page = reqData.page || 1;
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
             if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
+
+            [total, rows] = await Promise.all([
+
+                knex
+                    .count("* as count")
+                    .from("entity_bookings")
+                    .leftJoin('facility_master', 'entity_bookings.entityId', 'facility_master.id')
+                    .leftJoin('users', 'entity_bookings.bookedBy', 'users.id')
+
+                    .where(qb => {
+
+                        if (startDate && endDate) {
+
+                            qb.where('entity_bookings.bookingStartDateTime', '>=', startTime)
+                            qb.where('entity_bookings.bookingStartDateTime', '<=', endTime)
+
+                        }
+                        if (facilityName) {
+
+                            qb.where('facility_master.name', 'iLIKE', `%${facilityName}%`)
+                        }
+
+                        qb.where("entity_bookings.orgId", req.orgId)
+
+                    }).first(),
+                knex
+                    .from("entity_bookings")
+                    .leftJoin('facility_master', 'entity_bookings.entityId', 'facility_master.id')
+                    .leftJoin('users', 'entity_bookings.bookedBy', 'users.id')
+                    .select([
+                        'entity_bookings.*',
+                        "facility_master.name",
+                        "users.name as bookedUser"
+                    ])
+                    .where(qb => {
+
+                        if (startDate && endDate) {
+
+                            qb.where('entity_bookings.bookingStartDateTime', '>=', startTime)
+                            qb.where('entity_bookings.bookingStartDateTime', '<=', endTime)
+
+                        }
+                        if (facilityName) {
+
+                            qb.where('facility_master.name', 'iLIKE', `%${facilityName}%`)
+                        }
+
+                        qb.where("entity_bookings.orgId", req.orgId)
+
+                    })
+                    .orderBy('entity_bookings.createdAt', 'desc')
+                    .offset(offset)
+                    .limit(per_page)
+
+            ])
+
+            let count = total.count;
+            pagination.total = count;
+            pagination.per_page = per_page;
+            pagination.offset = offset;
+            pagination.to = offset + rows.length;
+            pagination.last_page = Math.ceil(count / per_page);
+            pagination.current_page = page;
+            pagination.from = offset;
+            pagination.data = rows;
 
 
-
-
+            return res.status(200).json({
+                data: {
+                    booking: pagination
+                },
+                message: "Facility booked List!"
+            });
 
 
         } catch (err) {
@@ -1272,6 +1358,41 @@ const facilityBookingController = {
             })
         }
 
+    }
+    ,
+    updateFacilityCloseDate: async (req, res) => {
+
+        try {
+
+
+            let payload = req.body;
+            let currentTime = new Date().getTime();
+            let startDate = new Date(payload.startDate).getTime();
+            let endDate = new Date(payload.endDate).getTime();
+            let closeReason = payload.closeReason;
+
+
+            let insertData = {
+                startDate: startDate,
+                endDate: endDate,
+                closeReason: closeReason,
+                updatedAt: currentTime,
+            }
+            let result = await knex('facility_close_date').update(insertData).returning(['*'])
+                .where({ id: payload.id });
+
+
+            return res.status(200).json({
+                message: 'Facility Close Date updated successfully!',
+                data: result
+            })
+
+
+        } catch (err) {
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
+            })
+        }
     }
 }
 
