@@ -76,6 +76,7 @@ const facilityBookingController = {
                 .groupBy('facility_master.id', 'companies.id', 'projects.id', 'buildings_and_phases.id', 'floor_and_zones.id')
                 .distinct('facility_master.id')
 
+                
 
             const Parallel = require('async-parallel');
             resultData = await Parallel.map(resultData, async pd => {
