@@ -386,7 +386,7 @@ const facilityBookingController = {
 
                 return res.status(400).json({
                     errors: [
-                        { code: "FACILITY_CLOSED_STATUS", message: `Facility is closed due to this reason ${closeReasonMessage}.` }
+                        { code: "FACILITY_CLOSED_STATUS", message: `Facility is closed : Reason- ${closeReasonMessage}.` }
                     ]
                 });
             }
@@ -413,7 +413,7 @@ const facilityBookingController = {
 
                 return res.status(400).json({
                     errors: [
-                        { code: "FACILITY_CLOSED", message: `Facility is closed for this timing slot due to this reason ${closeReasonMessage}.` }
+                        { code: "FACILITY_CLOSED", message: `Facility is closed for selected time slot : Reason- ${closeReasonMessage}.` }
                     ]
                 });
             }
@@ -665,7 +665,7 @@ const facilityBookingController = {
 
                 return res.status(400).json({
                     errors: [
-                        { code: "FACILITY_CLOSED_STATUS", message: `Facility is closed due to this reason ${closeReasonMessage}.` }
+                        { code: "FACILITY_CLOSED_STATUS", message: `Facility is closed : Reason- ${closeReasonMessage}.` }
                     ]
                 });
             }
@@ -691,7 +691,7 @@ const facilityBookingController = {
 
                 return res.status(400).json({
                     errors: [
-                        { code: "FACILITY_CLOSED", message: `Facility is closed for this timing slot due to this reason ${closeReasonMessage}.` }
+                        { code: "FACILITY_CLOSED", message: `Facility is closed for selected time slot : Reason- ${closeReasonMessage}.` }
                     ]
                 });
             }
