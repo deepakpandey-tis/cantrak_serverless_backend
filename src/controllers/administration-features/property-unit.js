@@ -1026,6 +1026,7 @@ const propertyUnitController = {
                   .select("id")
                   .where({
                     propertyUnitTypeCode: propertyUnitData.M.toUpperCase(),
+                    isActive:true,
                     orgId: req.orgId
                   }).first();
 
@@ -1037,7 +1038,7 @@ const propertyUnitController = {
                 if (!unitTypeId) {
                   fail++;
                   let values = _.values(propertyUnitData)
-                  values.unshift('Property Unit Type does not exists')
+                  values.unshift('Property Unit Type does not exists or Inactive')
   
                   //errors.push(header);
                   errors.push(values);
