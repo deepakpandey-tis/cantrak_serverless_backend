@@ -535,7 +535,7 @@ const facilityBookingController = {
             let getFirstUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds1, orgId: req.orgId }).first();
             let checkQuotaByUnit;
             let unitIds;
-            if (getFirstUnit) {
+            if (getFirstUnit.propertyUnitType != '') {
                 checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds1, orgId: req.orgId }).first();
                 unitIds = unitIds1;
             } else {
@@ -902,6 +902,17 @@ const facilityBookingController = {
 
             let AllQuotaData = await knex('facility_property_unit_type_quota_limit')
                 .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', propertyUnitTypeId: checkQuotaByUnit.propertyUnitType, orgId: req.orgId }).first();
+
+            if (!AllQuotaData) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "QUOTA_NOT_DEFINED", message: `This facility's property unit  has missing property unit type , Please contact admin for further assistance.` }
+                    ]
+                });
+            }
+
+
+
             let startOf;
             let endOf;
             let dailyLimit;
