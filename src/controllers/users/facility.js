@@ -892,6 +892,13 @@ const facilityBookingController = {
             let dailyLimit;
             let weeklyLimit;
             let monthlyLimit;
+            let dailyRemainingLimit;
+            let dailyBookedSeat;
+            let weeklyRemainingLimit;
+            let weeklyBookedSeat;
+            let monthlyRemainingLimit;
+            let monthlyBookedSeat;
+
 
             if (AllQuotaData && AllQuotaData.daily) {
                 startOf = moment(+payload.bookingStartDateTime).startOf('day').valueOf();
