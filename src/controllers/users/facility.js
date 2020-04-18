@@ -76,6 +76,7 @@ const facilityBookingController = {
                 .groupBy('facility_master.id', 'companies.id', 'projects.id', 'buildings_and_phases.id', 'floor_and_zones.id')
                 .distinct('facility_master.id')
 
+                
 
             const Parallel = require('async-parallel');
             resultData = await Parallel.map(resultData, async pd => {
@@ -892,6 +893,13 @@ const facilityBookingController = {
             let dailyLimit;
             let weeklyLimit;
             let monthlyLimit;
+            let dailyRemainingLimit;
+            let dailyBookedSeat;
+            let weeklyRemainingLimit;
+            let weeklyBookedSeat;
+            let monthlyRemainingLimit;
+            let monthlyBookedSeat;
+
 
             if (AllQuotaData && AllQuotaData.daily) {
                 startOf = moment(+payload.bookingStartDateTime).startOf('day').valueOf();
