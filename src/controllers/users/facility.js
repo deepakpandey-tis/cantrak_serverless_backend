@@ -76,7 +76,7 @@ const facilityBookingController = {
                 .groupBy('facility_master.id', 'companies.id', 'projects.id', 'buildings_and_phases.id', 'floor_and_zones.id')
                 .distinct('facility_master.id')
 
-                
+
 
             const Parallel = require('async-parallel');
             resultData = await Parallel.map(resultData, async pd => {
@@ -112,8 +112,8 @@ const facilityBookingController = {
 
 
                 let checkMaxBooking = await knex('entity_bookings').where({ "entityId": pd.id, "entityType": 'facility_master', orgId: req.orgId })
-                let sortBy=0;
-                if(checkMaxBooking.length){
+                let sortBy = 0;
+                if (checkMaxBooking.length) {
                     sortBy = checkMaxBooking.length;
                 }
 
@@ -173,7 +173,8 @@ const facilityBookingController = {
                 bookingCriteriaDetail,
                 facilityImages,
                 feeDetails,
-                bookingLimits
+                bookingLimits,
+                bookingQuota
             ] = await Promise.all([
 
                 await knex.from('facility_master')
@@ -202,6 +203,19 @@ const facilityBookingController = {
                 knex.from('images').where({ entityId: payload.id, entityType: 'facility_master' }),
                 knex('entity_fees_master').select(['feesType', 'feesAmount', 'duration']).where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId }),
                 knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId })
+                ,
+                knex('facility_property_unit_type_quota_limit')
+                    .leftJoin('property_unit_type_master', 'facility_property_unit_type_quota_limit.propertyUnitTypeId', 'property_unit_type_master.id')
+                    .select([
+                        'facility_property_unit_type_quota_limit.*',
+                        'property_unit_type_master.propertyUnitTypeCode',
+                        'property_unit_type_master.descriptionEng',
+                        'property_unit_type_master.descriptionThai',
+                    ])
+                    .where({
+                        'facility_property_unit_type_quota_limit.entityId': payload.id, 'facility_property_unit_type_quota_limit.entityType': 'facility_master',
+                        'facility_property_unit_type_quota_limit.orgId': req.orgId
+                    })
 
             ])
 
@@ -209,7 +223,7 @@ const facilityBookingController = {
 
                 facilityDetails: {
                     ...facilityDetails, openingClosingDetail: _.uniqBy(openingClosingDetail, 'day'), ruleRegulationDetail: ruleRegulationDetail,
-                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType')
+                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'),bookingQuota
                 },
                 message: "Facility Details Successfully!"
             })
