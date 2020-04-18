@@ -76,7 +76,7 @@ const facilityBookingController = {
                 .groupBy('facility_master.id', 'companies.id', 'projects.id', 'buildings_and_phases.id', 'floor_and_zones.id')
                 .distinct('facility_master.id')
 
-                
+
 
             const Parallel = require('async-parallel');
             resultData = await Parallel.map(resultData, async pd => {
@@ -112,8 +112,8 @@ const facilityBookingController = {
 
 
                 let checkMaxBooking = await knex('entity_bookings').where({ "entityId": pd.id, "entityType": 'facility_master', orgId: req.orgId })
-                let sortBy=0;
-                if(checkMaxBooking.length){
+                let sortBy = 0;
+                if (checkMaxBooking.length) {
                     sortBy = checkMaxBooking.length;
                 }
 
@@ -528,17 +528,25 @@ const facilityBookingController = {
             let id = req.me.id;
             let payload = req.body;
             console.log("customerHouseInfo", req.me.houseIds);
-            let unitIds = req.me.houseIds;
+            let unitIds1 = req.me.houseIds[0];
+            let unitIds2 = req.me.houseIds[1];
 
-            let checkQuotaByUnit = await knex('property_units')
-            .select('propertyUnitType')
-            .where({ orgId: req.orgId })
-            .whereIn('id', unitIds)           
-        
+            // 
+            let getFirstUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds1, orgId: req.orgId }).first();
+            let checkQuotaByUnit;
+            let unitIds;
+            if (getFirstUnit) {
+                checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds1, orgId: req.orgId }).first();
+                unitIds = unitIds1;
+            } else {
+                checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds2, orgId: req.orgId }).first();
+                unitIds = unitIds2;
+            }
+
+
+
             console.log("BookingQuotaByUnit", checkQuotaByUnit);
-            let propertyUnitType = _.uniqBy(checkQuotaByUnit, 'propertyUnitType').map(v => v.propertyUnitType)
 
-            console.log("propertyUnitType", propertyUnitType);
 
             const schema = Joi.object().keys({
                 facilityId: Joi.string().required(),
@@ -590,11 +598,7 @@ const facilityBookingController = {
 
 
             // Get Booking Daily,Monthly,Weekly Quota By UNIT
-            let getFacilityQuotaUnitWise = await knex('facility_property_unit_type_quota_limit')
-            .select('*')
-            .where({ entityId: payload.facilityId, entityType: 'facility_master',orgId: req.orgId })
-            .whereIn('propertyUnitTypeId', propertyUnitType)
-            .first();
+            let getFacilityQuotaUnitWise = await knex('facility_property_unit_type_quota_limit').select('*').where({ entityId: payload.facilityId, entityType: 'facility_master', propertyUnitTypeId: checkQuotaByUnit.propertyUnitType, orgId: req.orgId }).first();
             console.log("FacilityQuotaUnitWise", getFacilityQuotaUnitWise);
 
 
