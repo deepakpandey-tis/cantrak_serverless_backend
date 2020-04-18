@@ -528,11 +528,17 @@ const facilityBookingController = {
             let id = req.me.id;
             let payload = req.body;
             console.log("customerHouseInfo", req.me.houseIds);
-            let unitIds = req.me.houseIds[0];
+            let unitIds = req.me.houseIds;
 
-            let checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds, orgId: req.orgId }).first();
+            let checkQuotaByUnit = await knex('property_units')
+            .select('propertyUnitType')
+            .where({ orgId: req.orgId })
+            .whereIn('id', unitIds)           
+        
             console.log("BookingQuotaByUnit", checkQuotaByUnit);
+            let propertyUnitType = _.uniqBy(checkQuotaByUnit, 'propertyUnitType').map(v => v.propertyUnitType)
 
+            console.log("propertyUnitType", propertyUnitType);
 
             const schema = Joi.object().keys({
                 facilityId: Joi.string().required(),
@@ -584,7 +590,11 @@ const facilityBookingController = {
 
 
             // Get Booking Daily,Monthly,Weekly Quota By UNIT
-            let getFacilityQuotaUnitWise = await knex('facility_property_unit_type_quota_limit').select('*').where({ entityId: payload.facilityId, entityType: 'facility_master', propertyUnitTypeId: checkQuotaByUnit.propertyUnitType, orgId: req.orgId }).first();
+            let getFacilityQuotaUnitWise = await knex('facility_property_unit_type_quota_limit')
+            .select('*')
+            .where({ entityId: payload.facilityId, entityType: 'facility_master',orgId: req.orgId })
+            .whereIn('propertyUnitTypeId', propertyUnitType)
+            .first();
             console.log("FacilityQuotaUnitWise", getFacilityQuotaUnitWise);
 
 
