@@ -5,6 +5,8 @@ const moment = require("moment-timezone");
 const _ = require("lodash");
 const emailHelper = require('../../helpers/email')
 
+var arrayCompare = require("array-compare");
+
 
 const SUNDAY = 'Sun';
 const MONDAY = 'Mon';
@@ -528,21 +530,31 @@ const facilityBookingController = {
             let id = req.me.id;
             let payload = req.body;
             console.log("customerHouseInfo", req.me.houseIds);
-            let unitIds1 = req.me.houseIds[0];
-            let unitIds2 = req.me.houseIds[1];
-
-            // 
-            let getFirstUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds1, orgId: req.orgId }).first();
-            let checkQuotaByUnit;
             let unitIds;
-            if (getFirstUnit.propertyUnitType != '') {
-                checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds1, orgId: req.orgId }).first();
-                unitIds = unitIds1;
-            } else {
-                checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds2, orgId: req.orgId }).first();
-                unitIds = unitIds2;
-            }
+            let checkQuotaByUnit;
+            // let unitIds1 = req.me.houseIds[0];
+            // let unitIds2 = req.me.houseIds[1];
 
+            // // 
+            // let getFirstUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds1, orgId: req.orgId }).first();
+            
+            // let unitIds;
+            // console.log("firstCheck", getFirstUnit);
+            // if (getFirstUnit.propertyUnitType != null) {
+            //     checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds1, orgId: req.orgId }).first();
+            //     unitIds = unitIds1;
+            // } else {
+            //     checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds2, orgId: req.orgId }).first();
+            //     unitIds = unitIds2;
+            // }
+
+            // if (checkQuotaByUnit.propertyUnitType == null) {
+            //     return res.status(400).json({
+            //         errors: [
+            //             { code: "PROPERTY_UNIT_TYPE_NOT_FOUND", message: `This facility's property unit  has missing property unit type , Please contact admin for further assistance.` }
+            //         ]
+            //     });
+            // }
 
 
             console.log("BookingQuotaByUnit", checkQuotaByUnit);
@@ -565,6 +577,42 @@ const facilityBookingController = {
                         { code: "VALIDATION_ERROR", message: result.error.message }
                     ]
                 });
+            }
+
+            // Get Facility Quota By Facility Id
+            let properUnitTypeMaster;
+            let getFacilityQuotaData = await knex('facility_property_unit_type_quota_limit').select('propertyUnitTypeId').where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId });
+            console.log("FacilityQuotaUnitWise", getFacilityQuotaData);
+
+            properUnitTypeMaster = getFacilityQuotaData.map(v => v.propertyUnitTypeId)//;
+
+            let getPropertyUnitMaster = await knex('property_units').select('id')
+                .where({ orgId: req.orgId })
+                .whereIn('propertyUnitType', properUnitTypeMaster);
+
+            let allProperUnitMaster = getPropertyUnitMaster.map(v => v.id)//;
+
+            console.log("allProperUnitMaster", allProperUnitMaster);
+
+            const compareData = arrayCompare(allProperUnitMaster, req.me.houseIds);
+
+            console.log("compare Property list", compareData);
+
+            compareData.found = compareData.found.map(a => a.a);
+            console.log("compare found", compareData.found);
+
+            let properUnitTypeIdFound = compareData.found.toString();
+            console.log("found property unit id", properUnitTypeIdFound);
+
+            if (!properUnitTypeIdFound) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "PROPERTY_UNIT_TYPE_STATUS", message: `This facility's property unit  has missing property unit type , Please contact admin for further assistance.` }
+                    ]
+                });
+            }else{
+                unitIds = properUnitTypeIdFound;
+                checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds, orgId: req.orgId }).first();
             }
 
             // Set timezone for moment
@@ -903,16 +951,7 @@ const facilityBookingController = {
             let AllQuotaData = await knex('facility_property_unit_type_quota_limit')
                 .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', propertyUnitTypeId: checkQuotaByUnit.propertyUnitType, orgId: req.orgId }).first();
 
-            // if (AllQuotaData) {
-            //     return res.status(400).json({
-            //         errors: [
-            //             { code: "QUOTA_NOT_DEFINED", message: `This facility's property unit  has missing property unit type , Please contact admin for further assistance.` }
-            //         ]
-            //     });
-            // }
-
-
-
+          
             let startOf;
             let endOf;
             let dailyLimit;
