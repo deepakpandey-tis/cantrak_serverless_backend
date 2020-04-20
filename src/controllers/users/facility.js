@@ -841,7 +841,7 @@ const facilityBookingController = {
             //let dailyQuota = await knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.facilityId, limitType: 1, entityType: 'facility_master', orgId: req.orgId }).first();
 
 
-            if (getFacilityQuotaUnitWise && getFacilityQuotaUnitWise.daily) {
+            if (getFacilityQuotaUnitWise && getFacilityQuotaUnitWise.daily && getFacilityQuotaUnitWise.daily > 0) {
                 let dailyQuota = Number(getFacilityQuotaUnitWise.daily);
                 console.log("dailyQuota", dailyQuota);
                 let startOfDay = moment(+payload.bookingStartDateTime).startOf('day').valueOf();
@@ -871,7 +871,7 @@ const facilityBookingController = {
             }
 
             //let weeklyQuota = await knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.facilityId, limitType: 2, entityType: 'facility_master', orgId: req.orgId }).first();
-            if (getFacilityQuotaUnitWise && getFacilityQuotaUnitWise.weekly) {
+            if (getFacilityQuotaUnitWise && getFacilityQuotaUnitWise.weekly && getFacilityQuotaUnitWise.weekly > 0) {
                 let weeklyQuota = Number(getFacilityQuotaUnitWise.weekly);
                 let startOfWeek = moment(+payload.bookingStartDateTime).startOf('week').valueOf();
                 let endOfWeek = moment(+payload.bookingStartDateTime).endOf('week').valueOf();
@@ -901,7 +901,7 @@ const facilityBookingController = {
 
             // let monthlyQuota = await knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.facilityId, limitType: 3, entityType: 'facility_master', orgId: req.orgId }).first();
 
-            if (getFacilityQuotaUnitWise && getFacilityQuotaUnitWise.monthly) {
+            if (getFacilityQuotaUnitWise && getFacilityQuotaUnitWise.monthly && getFacilityQuotaUnitWise.monthly > 0) {
                 let monthlyQuota = Number(getFacilityQuotaUnitWise.monthly);
                 console.log("monthlyQuota", monthlyQuota);
 
@@ -976,7 +976,7 @@ const facilityBookingController = {
             let monthlyBookedSeat;
 
 
-            if (AllQuotaData && AllQuotaData.daily) {
+            if (AllQuotaData && AllQuotaData.daily && AllQuotaData.daily > 0) {
                 startOf = moment(+payload.bookingStartDateTime).startOf('day').valueOf();
                 endOf = moment(+payload.bookingStartDateTime).endOf('day').valueOf();
 
@@ -989,7 +989,7 @@ const facilityBookingController = {
                 dailyBookedSeat = totalBookedSeat;
             }
 
-            if (AllQuotaData && AllQuotaData.weekly) {
+            if (AllQuotaData && AllQuotaData.weekly && AllQuotaData.weekly > 0) {
                 startOf = moment(+payload.bookingStartDateTime).startOf('week').valueOf();
                 endOf = moment(+payload.bookingStartDateTime).endOf('week').valueOf();
 
@@ -1002,7 +1002,7 @@ const facilityBookingController = {
                 weeklyBookedSeat = totalBookedSeat;
             }
 
-            if (AllQuotaData && AllQuotaData.monthly) {
+            if (AllQuotaData && AllQuotaData.monthly && AllQuotaData.monthly > 0) {
                 startOf = moment(+payload.bookingStartDateTime).startOf('month').valueOf();
                 endOf = moment(+payload.bookingStartDateTime).endOf('month').valueOf();
 
