@@ -1064,15 +1064,30 @@ const facilityBookingController = {
 
             const currentTime = new Date().getTime()
 
-            let updateData = {
-                isBookingConfirmed: true,
-                confirmedBy: req.me.id,
-                confirmedAt: currentTime
+
+            let checkExpire = await knex('entity_bookings').where({ id: payload.id }).first();
+
+            if (checkExpire.bookingStartDateTime >= currentTime) {
+
+
+                let updateData = {
+                    isBookingConfirmed: true,
+                    confirmedBy: req.me.id,
+                    confirmedAt: currentTime
+                }
+                let resultData = await knex('entity_bookings').update(updateData).where({ id: payload.id }).returning(['*']);
+
+
+                return res.status(200).json({ message: 'Booking Confirmed!', data: resultData })
+            } else{
+
+                return res.status(400).json({
+                    errors: [
+                        { code: "VALIDATION_ERROR", message: "This Booking has been expired!" }
+                    ]
+                });
+
             }
-            let resultData = await knex('entity_bookings').update(updateData).where({ id: payload.id }).returning(['*']);
-
-
-            return res.status(200).json({ message: 'Booking Confirmed!', data: resultData })
 
         } catch (err) {
 
@@ -1088,7 +1103,7 @@ const facilityBookingController = {
 
         try {
 
-            let { startDate, endDate, facilityName } = req.body;
+            let { startDate, endDate, facilityName, status } = req.body;
             let startTime;
             let endTime;
 
@@ -1128,6 +1143,22 @@ const facilityBookingController = {
                             qb.where('entity_bookings.bookingStartDateTime', '<=', endTime)
 
                         }
+
+                        if (status) {
+
+                            if (status == "Pending") {
+                                qb.where('entity_bookings.isBookingConfirmed', false)
+                            }
+
+                            if (status == "Approved") {
+                                qb.where('entity_bookings.isBookingConfirmed', true)
+                            }
+
+                            if (status == "Cancelled") {
+                                qb.where('entity_bookings.isBookingCancelled', true)
+                            }
+                        }
+
                         if (facilityName) {
 
                             qb.where('facility_master.name', 'iLIKE', `%${facilityName}%`)
@@ -1153,6 +1184,22 @@ const facilityBookingController = {
                             qb.where('entity_bookings.bookingStartDateTime', '<=', endTime)
 
                         }
+
+                        if (status) {
+
+                            if (status == "Pending") {
+                                qb.where('entity_bookings.isBookingConfirmed', false)
+                            }
+
+                            if (status == "Approved") {
+                                qb.where('entity_bookings.isBookingConfirmed', true)
+                            }
+
+                            if (status == "Cancelled") {
+                                qb.where('entity_bookings.isBookingCancelled', true)
+                            }
+                        }
+
                         if (facilityName) {
 
                             qb.where('facility_master.name', 'iLIKE', `%${facilityName}%`)
@@ -1393,6 +1440,31 @@ const facilityBookingController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
             })
         }
+    },
+
+    /*GET TOTAL APPROVAL REQUIRED BOOKING */
+    getTotalApprovalRequiredBooking: async (req, res) => {
+
+        try {
+
+
+            let result = await knex('entity_bookings').where({ "isBookingConfirmed": false, "isBookingCancelled": false, orgId: req.orgId });
+
+            let totalBooking = result.length;
+
+            return res.status(200).json({
+                message: 'Total Approvel ',
+                data: result
+            })
+
+
+        } catch (err) {
+
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
+            })
+        }
+
     }
 }
 

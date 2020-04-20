@@ -175,7 +175,8 @@ const facilityBookingController = {
                 bookingCriteriaDetail,
                 facilityImages,
                 feeDetails,
-                bookingLimits
+                bookingLimits,
+                bookingQuota
             ] = await Promise.all([
 
                 await knex.from('facility_master')
@@ -204,6 +205,19 @@ const facilityBookingController = {
                 knex.from('images').where({ entityId: payload.id, entityType: 'facility_master' }),
                 knex('entity_fees_master').select(['feesType', 'feesAmount', 'duration']).where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId }),
                 knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId })
+                ,
+                knex('facility_property_unit_type_quota_limit')
+                    .leftJoin('property_unit_type_master', 'facility_property_unit_type_quota_limit.propertyUnitTypeId', 'property_unit_type_master.id')
+                    .select([
+                        'facility_property_unit_type_quota_limit.*',
+                        'property_unit_type_master.propertyUnitTypeCode',
+                        'property_unit_type_master.descriptionEng',
+                        'property_unit_type_master.descriptionThai',
+                    ])
+                    .where({
+                        'facility_property_unit_type_quota_limit.entityId': payload.id, 'facility_property_unit_type_quota_limit.entityType': 'facility_master',
+                        'facility_property_unit_type_quota_limit.orgId': req.orgId
+                    })
 
             ])
 
@@ -211,7 +225,7 @@ const facilityBookingController = {
 
                 facilityDetails: {
                     ...facilityDetails, openingClosingDetail: _.uniqBy(openingClosingDetail, 'day'), ruleRegulationDetail: ruleRegulationDetail,
-                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType')
+                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'), bookingQuota
                 },
                 message: "Facility Details Successfully!"
             })
@@ -386,7 +400,7 @@ const facilityBookingController = {
 
                 return res.status(400).json({
                     errors: [
-                        { code: "FACILITY_CLOSED_STATUS", message: `Facility is closed due to this reason ${closeReasonMessage}.` }
+                        { code: "FACILITY_CLOSED_STATUS", message: `Facility is closed : Reason- ${closeReasonMessage}.` }
                     ]
                 });
             }
@@ -413,7 +427,7 @@ const facilityBookingController = {
 
                 return res.status(400).json({
                     errors: [
-                        { code: "FACILITY_CLOSED", message: `Facility is closed for this timing slot due to this reason ${closeReasonMessage}.` }
+                        { code: "FACILITY_CLOSED", message: `Facility is closed for selected time slot : Reason- ${closeReasonMessage}.` }
                     ]
                 });
             }
@@ -502,7 +516,30 @@ const facilityBookingController = {
 
             const user = await knex('users').select(['email', 'name']).where({ id: id }).first();
 
-            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Confirmed', template: 'booking-confirmed.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD HH:MM A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD HH:MM A'), noOfSeats: resultData.noOfSeats } })
+
+            if (facilityData.bookingStatus == "2") {
+
+                let orgAdminResult = await knex('organisations').select('organisationAdminId').where({ id: req.orgId }).first();
+
+                let adminEmail;
+                if (orgAdminResult) {
+
+                    let adminUser = await knex('users').select('email').where({ id: orgAdminResult.organisationAdminId }).first();
+                    adminEmail = adminUser.email;
+
+                }
+
+
+                await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Approval Required', template: 'booking-confirmed-required.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD HH:mm'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD HH:mm'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
+
+                await emailHelper.sendTemplateEmail({ to: adminEmail, subject: 'Booking Approval Required ', template: 'booking-confirmed-admin.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD HH:mm'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD HH:mm'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
+
+
+            }
+
+
+
+            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Confirmed', template: 'booking-confirmed.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD HH:mm'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD HH:mm'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
 
             let updateDisplayId = await knex('entity_bookings').update({ isActive: true }).where({ isActive: true });
 
@@ -665,7 +702,7 @@ const facilityBookingController = {
 
                 return res.status(400).json({
                     errors: [
-                        { code: "FACILITY_CLOSED_STATUS", message: `Facility is closed due to this reason ${closeReasonMessage}.` }
+                        { code: "FACILITY_CLOSED_STATUS", message: `Facility is closed : Reason- ${closeReasonMessage}.` }
                     ]
                 });
             }
@@ -691,7 +728,7 @@ const facilityBookingController = {
 
                 return res.status(400).json({
                     errors: [
-                        { code: "FACILITY_CLOSED", message: `Facility is closed for this timing slot due to this reason ${closeReasonMessage}.` }
+                        { code: "FACILITY_CLOSED", message: `Facility is closed for selected time slot : Reason- ${closeReasonMessage}.` }
                     ]
                 });
             }
