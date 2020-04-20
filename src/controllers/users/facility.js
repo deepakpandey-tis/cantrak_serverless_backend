@@ -569,34 +569,8 @@ const facilityBookingController = {
             console.log("customerHouseInfo", req.me.houseIds);
             let unitIds;
             let checkQuotaByUnit;
-            // let unitIds1 = req.me.houseIds[0];
-            // let unitIds2 = req.me.houseIds[1];
-
-            // // 
-            // let getFirstUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds1, orgId: req.orgId }).first();
             
-            // let unitIds;
-            // console.log("firstCheck", getFirstUnit);
-            // if (getFirstUnit.propertyUnitType != null) {
-            //     checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds1, orgId: req.orgId }).first();
-            //     unitIds = unitIds1;
-            // } else {
-            //     checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds2, orgId: req.orgId }).first();
-            //     unitIds = unitIds2;
-            // }
-
-            // if (checkQuotaByUnit.propertyUnitType == null) {
-            //     return res.status(400).json({
-            //         errors: [
-            //             { code: "PROPERTY_UNIT_TYPE_NOT_FOUND", message: `This facility's property unit  has missing property unit type , Please contact admin for further assistance.` }
-            //         ]
-            //     });
-            // }
-
-
-            console.log("BookingQuotaByUnit", checkQuotaByUnit);
-
-
+           
             const schema = Joi.object().keys({
                 facilityId: Joi.string().required(),
                 bookingStartDateTime: Joi.date().required(),
@@ -638,7 +612,7 @@ const facilityBookingController = {
             compareData.found = compareData.found.map(a => a.a);
             console.log("compare found", compareData.found);
 
-            let properUnitTypeIdFound = compareData.found.toString();
+            let properUnitTypeIdFound = compareData.found[0].toString();
             console.log("found property unit id", properUnitTypeIdFound);
 
             if (!properUnitTypeIdFound) {
