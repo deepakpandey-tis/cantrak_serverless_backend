@@ -1,7 +1,8 @@
 const Joi = require('@hapi/joi');
 const _ = require('lodash');
 const AWS = require('aws-sdk');
-const nodemailer = require("nodemailer");
+const knex = require("../db/knex");
+
 
 
 AWS.config.update({
@@ -13,152 +14,61 @@ const SHOULD_QUEUE = false;
 
 
 
-const sendSQSMessage = async (messageBody) => {
-
-    AWS.config.update({ region: process.env.REGION || 'us-east-2' });
-    const createdAt = new Date().toISOString();
-
-    let params = {
-        DelaySeconds: 10,
-        MessageAttributes: {
-            "title": {
-                DataType: "String",
-                StringValue: "Email Message Body"
-            },
-            "createdAt": {
-                DataType: "String",
-                StringValue: createdAt
-            },
-            // "WeeksOn": {
-            //     DataType: "Number",
-            //     StringValue: "6"
-            // }
-        },
-        MessageBody: messageBody,
-        // MessageDeduplicationId: "TheWhistler",  // Required for FIFO queues
-        // MessageId: "Group1",  // Required for FIFO queues
-        QueueUrl: process.env.SQS_MAIL_QUEUE_URL || 'https://sqs.us-east-2.amazonaws.com/525317543069/email-messages-queue'
-    };
-
-    return new Promise(async (resolve, reject) => {
-        const sqs = new AWS.SQS();
-        sqs.sendMessage(params, (err, data) => {
-            if (err) {
-                console.log("SQS Message POST Error", err);
-                reject(err)
-            } else {
-                console.log("SQS Message POST Success", data.MessageId);
-                resolve(data);
-            }
-        });
-    })
-};
-
-
-const emailHelper = {
-    sendTemplateEmail: async ({ to, subject, template, templateData }) => {
+const facilityHelper = {
+    getFacilityBookingCapacity: async ({ facilityId, propertyUnitTypeId, orgId }) => {
         try {
 
-            console.log('[helpers][email][sendTemplateEmail] To:', to);
-            console.log('[helpers][email][sendTemplateEmail] Template Data:', templateData);
+            // console.log('[helpers][facility][getFacilityBookingCapacity] To:', to);
+            // console.log('[helpers][facility][getFacilityBookingCapacity] Template Data:', templateData);
 
             const schema = Joi.object().keys({
-                to: Joi.string().email().required(),
-                subject: Joi.string().required(),
-                template: Joi.string().required(),
-                templateData: Joi.object().optional(),
-                layout: Joi.string().optional(),
+                facilityId: Joi.string().required(),
+                propertyUnitTypeId: Joi.string().required(),
+                orgId: Joi.string().required(),
             });
 
-            const result = Joi.validate({ to, subject, template, templateData, layout }, schema);
-            console.log('[helpers][email][sendTemplateEmail]: Joi Validate Params:', result);
+            const result = Joi.validate({ facilityId, propertyUnitTypeId, orgId }, schema);
+            console.log('[helpers][facility][getFacilityBookingCapacity]: Joi Validate Params:', result);
 
             if (result && result.hasOwnProperty('error') && result.error) {
-                return { code: 'PARAMS_VALIDATION_ERROR', message: + result.error.message, error: new Error('Could Not Send Mail due to params Validations Failed.') };
+                return { code: 'PARAMS_VALIDATION_ERROR', message: + result.error.message, error: new Error('Could Not Get Facility Quota to params Validations Failed.') };
             }
 
-            // CODE FOR COMPILING EMAIL TEMPLATES
-            const path = require('path');
-            const url = require('url');
-            const util = require('util');
-            const ejs = require('ejs');
-            const fs = require("fs");
-            // const readFile = util.promisify(fs.readFile);
+            // Get Facility Quota By Facility Id           
 
+            let AllQuotaData = await knex('facility_property_unit_type_quota_limit')
+                .where({ 'entityId': facilityId, 'entityType': 'facility_master', propertyUnitTypeId: propertyUnitTypeId, orgId: orgId }).first();
+           
+            let dailyLimit;
+            let weeklyLimit;
+            let monthlyLimit;
+           
 
-            var emailTemplatePath = path.join(__dirname, '..', 'emails/', template);
-            var layout;
-            if (layout) {
-                layout = path.join(path.dirname(emailTemplatePath), path.resolve('layouts/', layout));
-            } else {
-                layout = path.join(path.dirname(emailTemplatePath), 'layouts/default-layout.ejs');
+            if (AllQuotaData && AllQuotaData.daily && AllQuotaData.daily > 0) {
+                dailyLimit = AllQuotaData.daily;               
             }
 
-            console.log('[helpers][email][sendTemplateEmail]: emailTemplatePath:', emailTemplatePath);
-            console.log('[helpers][email][sendTemplateEmail]: Email layout:', layout);
+            if (AllQuotaData && AllQuotaData.weekly && AllQuotaData.weekly > 0) {
+                weeklyLimit = AllQuotaData.weekly;               
+            }
 
-            let htmlEmailContents = await ejs.renderFile(emailTemplatePath, { url, ...templateData });
-            htmlEmailContents = await ejs.renderFile(layout, { url: url, body: htmlEmailContents });
+            if (AllQuotaData && AllQuotaData.monthly && AllQuotaData.monthly > 0) {
+                monthlyLimit = AllQuotaData.monthly;               
+            }
 
-            console.log('[helpers][email][sendTemplateEmail]: htmlEmailContents :', htmlEmailContents);
-
-            let from = process.env.FROM_EMAIL_ADDRESS || 'no-reply@servicemind.asia';
-
-            let mailOptions = {
-                from: from,
-                to: to,
-                subject: subject,
-                // text: `Verification Link: ${emailMessageData.verficationLink}`,
-                html: htmlEmailContents
+            let bookingQuota = {
+                'daily': Number(dailyLimit),
+                'weekly': Number(weeklyLimit),
+                'monthly': Number(monthlyLimit)
             };
 
-
-            if (SHOULD_QUEUE) {
-                await emailHelper.queueEmailForSend(mailOptions);     // Will sent the mail on queue (async)
-                return; 
-            } else {
-                 await emailHelper.sendEmail(mailOptions);     // Will sent the mail on queue (async)
-                 return;
-            }
+            return bookingQuota;
 
         } catch (err) {
-            console.log('[helpers][email][sendTemplateEmail]:  Error', err);
-            return { code: 'UNKNOWN_ERROR', message: err.message, error: err };
-        }
-    },
-
-    queueEmailForSend: async ({ from, to, subject, html }) => {
-        try {
-
-            console.log('[helpers][email][queueEmailForSend] : Going to Queue Email for Send');
-            // console.log('[helpers][email][queueEmailForSend] : Mail Options:', mailOptions);
-
-            const sqsMessageBody = JSON.stringify({ from, to, subject, html });
-            const messageSendResult = await sendSQSMessage(sqsMessageBody);
-
-            return { success: true, message: 'Email Queued for sending', data: messageSendResult };
-
-        } catch (err) {
-            console.log('[helpers][email][queueEmailForSend]:  Error', err);
-            return { code: 'UNKNOWN_ERROR', message: err.message, error: err };
-        }
-    },
-
-    sendEmail: async ({ from, to, subject, html }) => {
-        try {
-
-            console.log('[helpers][email][sendEmail] : Going to Send Email');
-            // console.log('[helpers][email][queueEmailForSend] : Mail Options:', mailOptions);
-
-            const emailSendResult = await sendEmailMessage({ from, to, subject, html });
-
-            return { success: true, message: 'Email Sent Successfully', data: emailSendResult };
-
-        } catch (err) {
-            console.log('[helpers][email][queueEmailForSend]:  Error', err);
+            console.log('[helpers][facility][getFacilityBookingCapacity]:  Error', err);
             return { code: 'UNKNOWN_ERROR', message: err.message, error: err };
         }
     }
 };
 
-module.exports = emailHelper;
+module.exports = facilityHelper;

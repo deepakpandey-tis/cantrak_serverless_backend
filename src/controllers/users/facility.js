@@ -5,6 +5,9 @@ const moment = require("moment-timezone");
 const _ = require("lodash");
 const emailHelper = require('../../helpers/email')
 
+const facilityHelper = require('../../helpers/facility');
+
+
 var arrayCompare = require("array-compare");
 
 
@@ -153,6 +156,7 @@ const facilityBookingController = {
         try {
 
             let resultData;
+            let facilityCapacity;
             let payload = req.body;
 
             const schema = Joi.object().keys({
@@ -168,6 +172,50 @@ const facilityBookingController = {
                     ]
                 });
             }
+
+
+            // Get Facility Quota By Facility Id
+
+            console.log("customerHouseInfo", req.me.houseIds);
+            let unitIds;
+            let checkQuotaByUnit;
+
+            let properUnitTypeMaster;
+            let getFacilityQuotaData = await knex('facility_property_unit_type_quota_limit').select('propertyUnitTypeId').where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId });
+            console.log("FacilityQuotaUnitWise", getFacilityQuotaData);
+
+            properUnitTypeMaster = getFacilityQuotaData.map(v => v.propertyUnitTypeId)//;
+
+            let getPropertyUnitMaster = await knex('property_units').select('id')
+                .where({ orgId: req.orgId })
+                .whereIn('propertyUnitType', properUnitTypeMaster);
+
+            let allProperUnitMaster = getPropertyUnitMaster.map(v => v.id)//;
+
+            console.log("allProperUnitMaster", allProperUnitMaster);
+
+            const compareData = arrayCompare(allProperUnitMaster, req.me.houseIds);
+
+            console.log("compare Property list", compareData);
+
+            compareData.found = compareData.found.map(a => a.a);
+            console.log("compare found", compareData.found);
+
+            let properUnitTypeIdFound;
+            if (compareData.found.length > 0) {
+                properUnitTypeIdFound = compareData.found[0].toString();
+            }
+            console.log("found property unit id", properUnitTypeIdFound);
+
+            if (!properUnitTypeIdFound) {
+                facilityCapacity = [];
+            } else {
+                unitIds = properUnitTypeIdFound;
+                checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds, orgId: req.orgId }).first();
+
+                facilityCapacity = await facilityHelper.getFacilityBookingCapacity({ 'facilityId': payload.id, 'propertyUnitTypeId': checkQuotaByUnit.propertyUnitType, 'orgId': req.orgId });
+            }
+
 
             let [facilityDetails,
                 openingClosingDetail,
@@ -225,7 +273,7 @@ const facilityBookingController = {
 
                 facilityDetails: {
                     ...facilityDetails, openingClosingDetail: _.uniqBy(openingClosingDetail, 'day'), ruleRegulationDetail: ruleRegulationDetail,
-                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'), bookingQuota
+                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'), bookingQuota, facilityCapacity
                 },
                 message: "Facility Details Successfully!"
             })
@@ -433,6 +481,7 @@ const facilityBookingController = {
             }
 
 
+            checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds, orgId: req.orgId }).first();
 
             // Check concurrent booking for only flexible booking
             let bookingCriteria1 = await knex('entity_booking_criteria').select('*').where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId }).first();
@@ -569,8 +618,8 @@ const facilityBookingController = {
             console.log("customerHouseInfo", req.me.houseIds);
             let unitIds;
             let checkQuotaByUnit;
-            
-           
+
+
             const schema = Joi.object().keys({
                 facilityId: Joi.string().required(),
                 bookingStartDateTime: Joi.date().required(),
@@ -621,7 +670,7 @@ const facilityBookingController = {
                         { code: "PROPERTY_UNIT_TYPE_STATUS", message: `This facility's property unit  has missing property unit type , Please contact admin for further assistance.` }
                     ]
                 });
-            }else{
+            } else {
                 unitIds = properUnitTypeIdFound;
                 checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds, orgId: req.orgId }).first();
             }
@@ -962,7 +1011,7 @@ const facilityBookingController = {
             let AllQuotaData = await knex('facility_property_unit_type_quota_limit')
                 .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', propertyUnitTypeId: checkQuotaByUnit.propertyUnitType, orgId: req.orgId }).first();
 
-          
+
             let startOf;
             let endOf;
             let dailyLimit;
