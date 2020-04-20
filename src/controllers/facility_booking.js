@@ -1059,7 +1059,7 @@ const facilityBookingController = {
             const user = await knex('users').select(['email', 'name']).where({ id: bookedByUser.bookedBy }).first()
             const facilityData = await knex('facility_master').where({ id: bookedByUser.entityId }).first();
 
-            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName: user.name, reason: cancellationReason, bookingStartDateTime: moment(Number(bookedByUser.bookingStartDateTime)).format('YYYY-MM-DD HH:mm A'), bookingEndDateTime: moment(+bookedByUser.bookingEndDateTime).format('YYYY-MM-DD HH:mm A'), noOfSeats: bookedByUser.noOfSeats, facilityName: facilityData.name } })
+            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName: user.name, reason: cancellationReason, bookingStartDateTime: moment(Number(bookedByUser.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+bookedByUser.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: bookedByUser.noOfSeats, facilityName: facilityData.name } })
             return res.status(200).json({ message: 'cancelled!', data: cancelled })
         } catch (err) {
             res.status(500).json({
@@ -1111,7 +1111,7 @@ const facilityBookingController = {
 
 
 
-                await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Approved', template: 'booking-approved.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData[0].bookingStartDateTime)).format('YYYY-MM-DD HH:mm A'), bookingEndDateTime: moment(+resultData[0].bookingEndDateTime).format('YYYY-MM-DD HH:mm A'), noOfSeats: resultData[0].noOfSeats, facilityName: facilityData.name } })
+                await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Approved', template: 'booking-approved.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData[0].bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData[0].bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData[0].noOfSeats, facilityName: facilityData.name } })
 
 
 
@@ -1355,7 +1355,7 @@ const facilityBookingController = {
 
                                         const user = await knex('users').select(['email', 'name']).where({ id: booked.bookedBy }).first()
 
-                                        await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName: user.name, reason: closeReason, bookingStartDateTime: moment(Number(booked.bookingStartDateTime)).format('YYYY-MM-DD HH:MM A'), bookingEndDateTime: moment(+booked.bookingEndDateTime).format('YYYY-MM-DD HH:MM A'), noOfSeats: booked.noOfSeats } })
+                                        await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName: user.name, reason: closeReason, bookingStartDateTime: moment(Number(booked.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+booked.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: booked.noOfSeats } })
 
 
                                     }
