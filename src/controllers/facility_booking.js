@@ -54,7 +54,31 @@ const facilityBookingController = {
                             { code: "VALIDATION_ERROR", message: result.error.message }
                         ]
                     });
+
                 }
+
+                let payloadOpeing = req.body.open_close_times;
+                let OpeningDayStatus = false;
+
+                for (let o of payloadOpeing) {
+
+                    if (o.day && o.openTime && o.closeTime) {
+
+                        OpeningDayStatus = true;
+
+                    }
+                }
+
+                if (OpeningDayStatus == false) {
+
+                    return res.status(400).json({
+                        errors: [
+                            { code: "VALIDATION_ERROR", message: "Please add At least 1 complete opeing hour!" }
+                        ]
+                    });
+                }
+
+
 
 
                 let checkUpdate = await knex('facility_master').where({ id: req.body.facilityId }).first();
@@ -1079,7 +1103,7 @@ const facilityBookingController = {
 
 
                 return res.status(200).json({ message: 'Booking Confirmed!', data: resultData })
-            } else{
+            } else {
 
                 return res.status(400).json({
                     errors: [
