@@ -683,7 +683,7 @@ const facilityBookingController = {
 
         try {
 
-            let { fromDate, toDate, id } = req.query;
+            let { fromDate, toDate, id, companyId, projectId, facilityName } = req.query;
             let orgId = req.orgId;
             let newFromDate;
             let newToDate;
@@ -694,18 +694,29 @@ const facilityBookingController = {
                 newToDate = new Date(toDate).getTime();
             }
 
+
+
+
             let result;
 
             if (id || fromDate && toDate) {
 
                 result = await knex.from('entity_bookings')
-                    .where({ orgId, isBookingCancelled: false })
+                    .leftJoin('facility_master', 'entity_bookings.entityId', 'facility_master.id')
+                    .leftJoin('property_units', 'entity_bookings.unitId', 'property_units.id')
+                    .select([
+                        'entity_bookings.*',
+                        'property_units.unitNumber',
+                        'property_units.description as unitDescription',
+                        'facility_master.name as facilityName',
+                    ])
+                    .where({ 'entity_bookings.orgId': orgId, isBookingCancelled: false })
                     .where(qb => {
 
                         if (fromDate && toDate) {
 
-                            qb.where('bookingStartDateTime', '>=', newFromDate)
-                            qb.where('bookingEndDateTime', '<', newToDate)
+                            qb.where('entity_bookings.bookingStartDateTime', '>=', newFromDate)
+                            qb.where('entity_bookings.bookingEndDateTime', '<', newToDate)
                             //qb.whereBetween("entity_bookings.bookingStartDateTime", [newFromDate, newFromDate]);
                             // qb.whereBetween("entity_bookings.bookingEndDateTime", [newToDate, newToDate]);
                         }
@@ -718,11 +729,34 @@ const facilityBookingController = {
                             qb.where('entity_bookings.entityType', 'facility_master')
                         }
 
+                        if (companyId) {
+                            qb.where('facility_master.companyId', companyId)
+                        }
+
+                        if (projectId) {
+                            qb.where('facility_master.projectId', projectId)
+                        }
+
+                        if (facilityName) {
+                            // qb.where('facility_master.name', 'iLIKE', `%${facilityName}%`)
+                            qb.where('facility_master.name', 'iLIKE', `%${facilityName}%`)
+                        }
+
+
                     })
 
             } else {
                 result = await knex.from('entity_bookings')
-                    .where({ orgId, isBookingCancelled: false })
+                    .leftJoin('facility_master', 'entity_bookings.entityId', 'facility_master.id')
+                    .leftJoin('property_units', 'entity_bookings.unitId', 'property_units.id')
+                    .select([
+                        'entity_bookings.*',
+                        'property_units.unitNumber',
+                        'property_units.description as unitDescription',
+                        'facility_master.name as facilityName',
+
+                    ])
+                    .where({ 'entity_bookings.orgId': req.orgId, isBookingCancelled: false })
 
             }
 
@@ -1102,12 +1136,12 @@ const facilityBookingController = {
                     confirmedAt: currentTime
                 }
                 let resultData = await knex('entity_bookings').update(updateData).where({ id: payload.id }).returning(['*']);
-                
-                console.log("=============",resultData,"=========")
 
-                let facilityData = await knex.from('facility_master').where({ id: resultData[0].entityId}).first();
+                console.log("=============", resultData, "=========")
 
-                const user = await knex('users').select(['email', 'name']).where({ id: resultData[0].bookedBy}).first();
+                let facilityData = await knex.from('facility_master').where({ id: resultData[0].entityId }).first();
+
+                const user = await knex('users').select(['email', 'name']).where({ id: resultData[0].bookedBy }).first();
 
 
 
@@ -1195,10 +1229,17 @@ const facilityBookingController = {
 
                             if (status == "Approved") {
                                 qb.where('entity_bookings.isBookingConfirmed', true)
+                                qb.where('entity_bookings.bookingStartDateTime', '>=', currentDate)
                             }
 
                             if (status == "Cancelled") {
                                 qb.where('entity_bookings.isBookingCancelled', true)
+                                qb.where('entity_bookings.bookingStartDateTime', '>=', currentDate)
+
+                            }
+
+                            if (status == "Expired") {
+                                qb.where('entity_bookings.bookingStartDateTime', '<', currentDate)
                             }
                         }
 
@@ -1240,11 +1281,19 @@ const facilityBookingController = {
 
                             if (status == "Approved") {
                                 qb.where('entity_bookings.isBookingConfirmed', true)
+                                qb.where('entity_bookings.bookingStartDateTime', '>=', currentDate)
                             }
 
                             if (status == "Cancelled") {
                                 qb.where('entity_bookings.isBookingCancelled', true)
+                                qb.where('entity_bookings.bookingStartDateTime', '>=', currentDate)
+
                             }
+                            if (status == "Expired") {
+                                qb.where('entity_bookings.bookingStartDateTime', '<', currentDate)
+                            }
+
+
                         }
 
                         if (facilityName) {
