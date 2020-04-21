@@ -514,7 +514,7 @@ const facilityBookingController = {
             // exit
 
             let facilityData = await knex.from('facility_master').where({ id: payload.facilityId }).first();
-           
+
 
             let startTime = new Date(payload.bookingStartDateTime).getTime();
             let endTime = new Date(payload.bookingEndDateTime).getTime();
@@ -640,6 +640,83 @@ const facilityBookingController = {
                     ]
                 });
             }
+
+
+            // Get project id
+
+            let facilityMaster = await knex('facility_master').select('projectId')
+                .where({ id: payload.facilityId, orgId: req.orgId, isActive: true }).first();
+
+            let getPropertyUnits = await knex('property_units').select('*')
+                .where({ projectId: facilityMaster.projectId, orgId: req.orgId })
+                .whereIn('id', req.me.houseIds);
+
+            //console.log("getPropertyUnits", getPropertyUnits);
+
+            if(getPropertyUnits.length > 1){
+                console.log("getMultipleUnits",getPropertyUnits);                 
+            }else{
+                console.log("getSingleUnits",getPropertyUnits);
+
+                let getFacilityQuotaData = await knex('facility_property_unit_type_quota_limit').select('*').where({ entityId: payload.facilityId, entityType: 'facility_master',propertyUnitTypeId: getPropertyUnits[0].propertyUnitType, orgId: req.orgId });
+                console.log("FacilityQuotaUnitWise", getFacilityQuotaData);
+                
+
+            }
+
+
+            let getAllPropertyUnitType = getPropertyUnits.map(v => v.propertyUnitType)//;
+
+            console.log("getAllPropertyUnitType", getAllPropertyUnitType);
+
+            // Daily Booking Allowed
+
+            let totalDailyLimit = await knex.raw(`select COALESCE(SUM("daily"),0) AS totalDaily from facility_property_unit_type_quota_limit where "entityId"  = ${payload.facilityId} and "entityType" = 'facility_master'  and  "propertyUnitTypeId" IN (${getAllPropertyUnitType})`);
+            console.log("totalDailyLimit", totalDailyLimit.rows);
+
+            let totalDailyLimitAllow = totalDailyLimit.rows[0].totaldaily;
+            console.log("total Daily Booking Allowed", totalDailyLimitAllow);
+
+            // Weekly Booking Allowed
+
+            let totalWeeklyLimit = await knex.raw(`select COALESCE(SUM("weekly"),0) AS totalWeekly from facility_property_unit_type_quota_limit where "entityId"  = ${payload.facilityId} and "entityType" = 'facility_master'  and  "propertyUnitTypeId" IN (${getAllPropertyUnitType})`);
+            console.log("totalWeeklyLimit", totalWeeklyLimit.rows);
+
+            let totalWeeklyLimitAllow = totalWeeklyLimit.rows[0].totalweekly;
+            console.log("total Weekly Booking Allowed", totalWeeklyLimitAllow);
+
+            // Monthly Booking Allowed
+
+            let totalMonthlyLimit = await knex.raw(`select COALESCE(SUM("monthly"),0) AS totalMonthly from facility_property_unit_type_quota_limit where "entityId"  = ${payload.facilityId} and "entityType" = 'facility_master'  and  "propertyUnitTypeId" IN (${getAllPropertyUnitType})`);
+            console.log("totalMonthlyLimit", totalMonthlyLimit.rows);
+
+            let totalMonthlyLimitAllow = totalMonthlyLimit.rows[0].totalmonthly;
+            console.log("total Monthly Booking Allowed", totalMonthlyLimitAllow);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             // Get Facility Quota By Facility Id
             let properUnitTypeMaster;
@@ -895,6 +972,7 @@ const facilityBookingController = {
 
             // Validate Daily Quota Limit, Weekly Quota Limit, And Monthly Quota Limit
             //let dailyQuota = await knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.facilityId, limitType: 1, entityType: 'facility_master', orgId: req.orgId }).first();
+
 
 
             if (getFacilityQuotaUnitWise && getFacilityQuotaUnitWise.daily && getFacilityQuotaUnitWise.daily > 0) {
