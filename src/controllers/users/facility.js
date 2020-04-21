@@ -416,6 +416,9 @@ const facilityBookingController = {
             let id = req.me.id;
             let payload = req.body;
             let resultData;
+            console.log("customerHouseInfo", req.me.houseIds);
+            let unitId = req.me.houseIds[0];
+
             const schema = Joi.object().keys({
                 facilityId: Joi.string().required(),
                 bookingStartDateTime: Joi.date().required(),
@@ -481,7 +484,7 @@ const facilityBookingController = {
             }
 
 
-            checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds, orgId: req.orgId }).first();
+            checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitId, orgId: req.orgId }).first();
 
             // Check concurrent booking for only flexible booking
             let bookingCriteria1 = await knex('entity_booking_criteria').select('*').where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId }).first();
@@ -511,8 +514,7 @@ const facilityBookingController = {
             // exit
 
             let facilityData = await knex.from('facility_master').where({ id: payload.facilityId }).first();
-            console.log("customerHouseInfo", req.me.houseIds);
-            let unitId = req.me.houseIds[0];
+           
 
             let startTime = new Date(payload.bookingStartDateTime).getTime();
             let endTime = new Date(payload.bookingEndDateTime).getTime();
@@ -661,7 +663,12 @@ const facilityBookingController = {
             compareData.found = compareData.found.map(a => a.a);
             console.log("compare found", compareData.found);
 
-            let properUnitTypeIdFound = compareData.found[0].toString();
+            let properUnitTypeIdFound;
+
+            if (compareData.found.length > 0) {
+                properUnitTypeIdFound = compareData.found[0].toString();
+            }
+
             console.log("found property unit id", properUnitTypeIdFound);
 
             if (!properUnitTypeIdFound) {
