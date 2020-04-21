@@ -5,6 +5,9 @@ const moment = require("moment-timezone");
 const _ = require("lodash");
 const emailHelper = require('../../helpers/email')
 
+const facilityHelper = require('../../helpers/facility');
+
+
 var arrayCompare = require("array-compare");
 
 
@@ -153,6 +156,7 @@ const facilityBookingController = {
         try {
 
             let resultData;
+            let facilityCapacity;
             let payload = req.body;
 
             const schema = Joi.object().keys({
@@ -168,6 +172,50 @@ const facilityBookingController = {
                     ]
                 });
             }
+
+
+            // Get Facility Quota By Facility Id
+
+            console.log("customerHouseInfo", req.me.houseIds);
+            let unitIds;
+            let checkQuotaByUnit;
+
+            let properUnitTypeMaster;
+            let getFacilityQuotaData = await knex('facility_property_unit_type_quota_limit').select('propertyUnitTypeId').where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId });
+            console.log("FacilityQuotaUnitWise", getFacilityQuotaData);
+
+            properUnitTypeMaster = getFacilityQuotaData.map(v => v.propertyUnitTypeId)//;
+
+            let getPropertyUnitMaster = await knex('property_units').select('id')
+                .where({ orgId: req.orgId })
+                .whereIn('propertyUnitType', properUnitTypeMaster);
+
+            let allProperUnitMaster = getPropertyUnitMaster.map(v => v.id)//;
+
+            console.log("allProperUnitMaster", allProperUnitMaster);
+
+            const compareData = arrayCompare(allProperUnitMaster, req.me.houseIds);
+
+            console.log("compare Property list", compareData);
+
+            compareData.found = compareData.found.map(a => a.a);
+            console.log("compare found", compareData.found);
+
+            let properUnitTypeIdFound;
+            if (compareData.found.length > 0) {
+                properUnitTypeIdFound = compareData.found[0].toString();
+            }
+            console.log("found property unit id", properUnitTypeIdFound);
+
+            if (!properUnitTypeIdFound) {
+                facilityCapacity = [];
+            } else {
+                unitIds = properUnitTypeIdFound;
+                checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds, orgId: req.orgId }).first();
+
+                facilityCapacity = await facilityHelper.getFacilityBookingCapacity({ 'facilityId': payload.id, 'propertyUnitTypeId': checkQuotaByUnit.propertyUnitType, 'orgId': req.orgId });
+            }
+
 
             let [facilityDetails,
                 openingClosingDetail,
@@ -225,7 +273,7 @@ const facilityBookingController = {
 
                 facilityDetails: {
                     ...facilityDetails, openingClosingDetail: _.uniqBy(openingClosingDetail, 'day'), ruleRegulationDetail: ruleRegulationDetail,
-                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'), bookingQuota
+                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'), bookingQuota, facilityCapacity
                 },
                 message: "Facility Details Successfully!"
             })
@@ -433,6 +481,7 @@ const facilityBookingController = {
             }
 
 
+            checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds, orgId: req.orgId }).first();
 
             // Check concurrent booking for only flexible booking
             let bookingCriteria1 = await knex('entity_booking_criteria').select('*').where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId }).first();
@@ -530,16 +579,16 @@ const facilityBookingController = {
                 }
 
 
-                await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Approval Required', template: 'booking-confirmed-required.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD HH:mm'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD HH:mm'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
+                await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Approved Required', template: 'booking-confirmed-required.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
 
-                await emailHelper.sendTemplateEmail({ to: adminEmail, subject: 'Booking Approval Required ', template: 'booking-confirmed-admin.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD HH:mm'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD HH:mm'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
+                await emailHelper.sendTemplateEmail({ to: adminEmail, subject: 'Booking Approved Required ', template: 'booking-confirmed-admin.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
 
 
             }
 
 
 
-            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Confirmed', template: 'booking-confirmed.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD HH:mm'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD HH:mm'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
+            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Confirmed', template: 'booking-confirmed.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
 
             let updateDisplayId = await knex('entity_bookings').update({ isActive: true }).where({ isActive: true });
 
@@ -569,8 +618,8 @@ const facilityBookingController = {
             console.log("customerHouseInfo", req.me.houseIds);
             let unitIds;
             let checkQuotaByUnit;
-            
-           
+
+
             const schema = Joi.object().keys({
                 facilityId: Joi.string().required(),
                 bookingStartDateTime: Joi.date().required(),
@@ -621,7 +670,7 @@ const facilityBookingController = {
                         { code: "PROPERTY_UNIT_TYPE_STATUS", message: `This facility's property unit  has missing property unit type , Please contact admin for further assistance.` }
                     ]
                 });
-            }else{
+            } else {
                 unitIds = properUnitTypeIdFound;
                 checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds, orgId: req.orgId }).first();
             }
@@ -962,7 +1011,7 @@ const facilityBookingController = {
             let AllQuotaData = await knex('facility_property_unit_type_quota_limit')
                 .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', propertyUnitTypeId: checkQuotaByUnit.propertyUnitType, orgId: req.orgId }).first();
 
-          
+
             let startOf;
             let endOf;
             let dailyLimit;
@@ -1106,7 +1155,7 @@ const facilityBookingController = {
             const cancelled = await knex('entity_bookings').update({ cancellationReason, cancelledAt: currentTime, cancelledBy: req.me.id, isBookingCancelled: true, isBookingConfirmed: false }).where({ id: bookingId }).returning(['*'])
             const bookedByUser = await knex('entity_bookings').select('*').where({ id: bookingId }).first()
             const user = await knex('users').select(['email', 'name']).where({ id: bookedByUser.bookedBy }).first()
-            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName: user.name, reason: cancellationReason, bookingStartDateTime: moment(Number(bookedByUser.bookingStartDateTime)).format('YYYY-MM-DD HH:MM A'), bookingEndDateTime: moment(+bookedByUser.bookingEndDateTime).format('YYYY-MM-DD HH:MM A'), noOfSeats: bookedByUser.noOfSeats } })
+            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName: user.name, reason: cancellationReason, bookingStartDateTime: moment(Number(bookedByUser.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+bookedByUser.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: bookedByUser.noOfSeats } })
             return res.status(200).json({ message: 'cancelled!', data: cancelled })
         } catch (err) {
             res.status(500).json({

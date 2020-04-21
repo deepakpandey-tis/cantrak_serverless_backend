@@ -1057,7 +1057,9 @@ const facilityBookingController = {
             const cancelled = await knex('entity_bookings').update({ cancellationReason, cancelledAt: currentTime, cancelledBy: req.me.id, isBookingCancelled: true }).where({ id: bookingId }).returning(['*'])
             const bookedByUser = await knex('entity_bookings').select('*').where({ id: bookingId }).first()
             const user = await knex('users').select(['email', 'name']).where({ id: bookedByUser.bookedBy }).first()
-            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName: user.name, reason: cancellationReason, bookingStartDateTime: moment(Number(bookedByUser.bookingStartDateTime)).format('YYYY-MM-DD HH:MM A'), bookingEndDateTime: moment(+bookedByUser.bookingEndDateTime).format('YYYY-MM-DD HH:MM A'), noOfSeats: bookedByUser.noOfSeats } })
+            const facilityData = await knex('facility_master').where({ id: bookedByUser.entityId }).first();
+
+            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName: user.name, reason: cancellationReason, bookingStartDateTime: moment(Number(bookedByUser.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+bookedByUser.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: bookedByUser.noOfSeats, facilityName: facilityData.name } })
             return res.status(200).json({ message: 'cancelled!', data: cancelled })
         } catch (err) {
             res.status(500).json({
@@ -1100,6 +1102,17 @@ const facilityBookingController = {
                     confirmedAt: currentTime
                 }
                 let resultData = await knex('entity_bookings').update(updateData).where({ id: payload.id }).returning(['*']);
+                
+                console.log("=============",resultData,"=========")
+
+                let facilityData = await knex.from('facility_master').where({ id: resultData[0].entityId}).first();
+
+                const user = await knex('users').select(['email', 'name']).where({ id: resultData[0].bookedBy}).first();
+
+
+
+                await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Approved', template: 'booking-approved.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData[0].bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData[0].bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData[0].noOfSeats, facilityName: facilityData.name } })
+
 
 
                 return res.status(200).json({ message: 'Booking Confirmed!', data: resultData })
@@ -1141,6 +1154,8 @@ const facilityBookingController = {
             }
 
 
+            let currentDate = new Date().getTime();
+
 
 
             let reqData = req.query;
@@ -1172,6 +1187,10 @@ const facilityBookingController = {
 
                             if (status == "Pending") {
                                 qb.where('entity_bookings.isBookingConfirmed', false)
+                                qb.where('entity_bookings.isBookingCancelled', false)
+                                qb.where('entity_bookings.bookingStartDateTime', '>=', currentDate)
+
+
                             }
 
                             if (status == "Approved") {
@@ -1213,6 +1232,10 @@ const facilityBookingController = {
 
                             if (status == "Pending") {
                                 qb.where('entity_bookings.isBookingConfirmed', false)
+                                qb.where('entity_bookings.isBookingCancelled', false)
+                                qb.where('entity_bookings.bookingStartDateTime', '>=', currentDate)
+
+
                             }
 
                             if (status == "Approved") {
@@ -1332,7 +1355,7 @@ const facilityBookingController = {
 
                                         const user = await knex('users').select(['email', 'name']).where({ id: booked.bookedBy }).first()
 
-                                        await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName: user.name, reason: closeReason, bookingStartDateTime: moment(Number(booked.bookingStartDateTime)).format('YYYY-MM-DD HH:MM A'), bookingEndDateTime: moment(+booked.bookingEndDateTime).format('YYYY-MM-DD HH:MM A'), noOfSeats: booked.noOfSeats } })
+                                        await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName: user.name, reason: closeReason, bookingStartDateTime: moment(Number(booked.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+booked.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: booked.noOfSeats } })
 
 
                                     }
@@ -1472,7 +1495,11 @@ const facilityBookingController = {
         try {
 
 
-            let result = await knex('entity_bookings').where({ "isBookingConfirmed": false, "isBookingCancelled": false, orgId: req.orgId });
+            let currentDate = new Date().getTime();
+
+            let result = await knex('entity_bookings')
+                .where('bookingStartDateTime', '>=', currentDate)
+                .where({ "isBookingConfirmed": false, "isBookingCancelled": false, orgId: req.orgId });
 
             let totalBooking = result.length;
 
