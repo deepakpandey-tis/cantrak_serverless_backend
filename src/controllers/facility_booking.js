@@ -1266,7 +1266,6 @@ const facilityBookingController = {
 
                             qb.where('entity_bookings.bookingStartDateTime', '>=', startTime)
                             qb.where('entity_bookings.bookingStartDateTime', '<=', endTime)
-
                         }
 
                         if (status) {
