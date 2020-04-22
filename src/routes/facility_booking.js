@@ -22,6 +22,7 @@ router.post('/add-facility', authMiddleware.isAuthenticated, facilityBookingCont
 router.post('/facility-details', authMiddleware.isAuthenticated, facilityBookingController.facilityDetails)
 
 router.post('/get-facility-booking-list', authMiddleware.isAuthenticated, facilityBookingController.getFacilityBookingList)
+
 router.get('/generate-facility-id', authMiddleware.isAuthenticated, facilityBookingController.generateFacilityId)
 
 /* USER FACILITY LIST */
