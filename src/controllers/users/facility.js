@@ -417,7 +417,8 @@ const facilityBookingController = {
             let payload = req.body;
             let resultData;
             console.log("customerHouseInfo", req.me.houseIds);
-            let unitId = req.me.houseIds[0];
+           // let unitId = req.me.houseIds[0];
+           let unitId;
 
             const schema = Joi.object().keys({
                 facilityId: Joi.string().required(),
@@ -435,6 +436,45 @@ const facilityBookingController = {
                     ]
                 });
             }
+
+
+            // Get Facility Quota By Facility Id
+            let properUnitTypeMaster;
+            let getFacilityQuotaData = await knex('facility_property_unit_type_quota_limit').select('propertyUnitTypeId').where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId });
+            console.log("FacilityQuotaUnitWise", getFacilityQuotaData);
+
+            properUnitTypeMaster = getFacilityQuotaData.map(v => v.propertyUnitTypeId)//;
+
+            let getPropertyUnitMaster = await knex('property_units').select('id')
+                .where({ orgId: req.orgId })
+                .whereIn('propertyUnitType', properUnitTypeMaster);
+
+            let allProperUnitMaster = getPropertyUnitMaster.map(v => v.id)//;
+
+            console.log("allProperUnitMaster", allProperUnitMaster);
+
+            const compareData = arrayCompare(allProperUnitMaster, req.me.houseIds);
+
+            console.log("compare Property list", compareData);
+
+            compareData.found = compareData.found.map(a => a.a);
+            console.log("compare found", compareData.found);
+
+            let properUnitTypeIdFound;
+
+            if (compareData.found.length > 0) {
+                properUnitTypeIdFound = compareData.found[0].toString();
+            }
+
+            console.log("found property unit id", properUnitTypeIdFound);
+
+            if (!properUnitTypeIdFound) {
+                unitId = req.me.houseIds[0];
+            } else {
+                unitId = properUnitTypeIdFound;
+            }
+
+
 
 
             // check facility is closed
@@ -640,83 +680,6 @@ const facilityBookingController = {
                     ]
                 });
             }
-
-
-            // Get project id
-
-            let facilityMaster = await knex('facility_master').select('projectId')
-                .where({ id: payload.facilityId, orgId: req.orgId, isActive: true }).first();
-
-            let getPropertyUnits = await knex('property_units').select('*')
-                .where({ projectId: facilityMaster.projectId, orgId: req.orgId })
-                .whereIn('id', req.me.houseIds);
-
-            //console.log("getPropertyUnits", getPropertyUnits);
-
-            if(getPropertyUnits.length > 1){
-                console.log("getMultipleUnits",getPropertyUnits);                 
-            }else{
-                console.log("getSingleUnits",getPropertyUnits);
-
-                let getFacilityQuotaData = await knex('facility_property_unit_type_quota_limit').select('*').where({ entityId: payload.facilityId, entityType: 'facility_master',propertyUnitTypeId: getPropertyUnits[0].propertyUnitType, orgId: req.orgId });
-                console.log("FacilityQuotaUnitWise", getFacilityQuotaData);
-                
-
-            }
-
-
-            let getAllPropertyUnitType = getPropertyUnits.map(v => v.propertyUnitType)//;
-
-            console.log("getAllPropertyUnitType", getAllPropertyUnitType);
-
-            // Daily Booking Allowed
-
-            let totalDailyLimit = await knex.raw(`select COALESCE(SUM("daily"),0) AS totalDaily from facility_property_unit_type_quota_limit where "entityId"  = ${payload.facilityId} and "entityType" = 'facility_master'  and  "propertyUnitTypeId" IN (${getAllPropertyUnitType})`);
-            console.log("totalDailyLimit", totalDailyLimit.rows);
-
-            let totalDailyLimitAllow = totalDailyLimit.rows[0].totaldaily;
-            console.log("total Daily Booking Allowed", totalDailyLimitAllow);
-
-            // Weekly Booking Allowed
-
-            let totalWeeklyLimit = await knex.raw(`select COALESCE(SUM("weekly"),0) AS totalWeekly from facility_property_unit_type_quota_limit where "entityId"  = ${payload.facilityId} and "entityType" = 'facility_master'  and  "propertyUnitTypeId" IN (${getAllPropertyUnitType})`);
-            console.log("totalWeeklyLimit", totalWeeklyLimit.rows);
-
-            let totalWeeklyLimitAllow = totalWeeklyLimit.rows[0].totalweekly;
-            console.log("total Weekly Booking Allowed", totalWeeklyLimitAllow);
-
-            // Monthly Booking Allowed
-
-            let totalMonthlyLimit = await knex.raw(`select COALESCE(SUM("monthly"),0) AS totalMonthly from facility_property_unit_type_quota_limit where "entityId"  = ${payload.facilityId} and "entityType" = 'facility_master'  and  "propertyUnitTypeId" IN (${getAllPropertyUnitType})`);
-            console.log("totalMonthlyLimit", totalMonthlyLimit.rows);
-
-            let totalMonthlyLimitAllow = totalMonthlyLimit.rows[0].totalmonthly;
-            console.log("total Monthly Booking Allowed", totalMonthlyLimitAllow);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
             // Get Facility Quota By Facility Id
             let properUnitTypeMaster;
@@ -1067,10 +1030,19 @@ const facilityBookingController = {
 
             let availableSeats = 0;
 
+            let startOfDay = moment(+payload.bookingStartDateTime).startOf('day').valueOf();
+            let endOfDay = moment(+payload.bookingStartDateTime).endOf('day').valueOf();
+
             let bookingData = await knex('entity_bookings').sum('noOfSeats as totalBookedSeats')
-                .where('entity_bookings.bookingStartDateTime', '>=', bookingStartTime)
-                .where('entity_bookings.bookingStartDateTime', '<=', bookingEndTime)
-                .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', 'orgId': req.orgId }).first();
+                .where('entity_bookings.bookingStartDateTime', '>=', startOfDay)
+                .where('entity_bookings.bookingEndDateTime', '<=', endOfDay)
+                .where({ 'entityId': payload.facilityId, 'isBookingCancelled': false, 'entityType': 'facility_master', 'orgId': req.orgId }).first();
+       
+
+            // let bookingData = await knex('entity_bookings').sum('noOfSeats as totalBookedSeats')
+            //     .where('entity_bookings.bookingStartDateTime', '>=', bookingStartTime)
+            //     .where('entity_bookings.bookingStartDateTime', '<=', bookingEndTime)
+            //     .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master',  'orgId': req.orgId }).first();
 
 
             let facilityData = await knex.from('facility_master')
