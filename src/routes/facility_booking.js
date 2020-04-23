@@ -66,6 +66,8 @@ router.post('/update-facility-close-date',authMiddleware.isAuthenticated,facilit
 
 router.get('/get-total-approval-required-booking',authMiddleware.isAuthenticated,facilityBookingController.getTotalApprovalRequiredBooking)
 
+/*GET BOOKING CANCELLED LIST */
+router.post('/get-booking-cancelled-list',authMiddleware.isAuthenticated,facilityBookingController.getBookingCancelledList)
 
 
 module.exports = router;
