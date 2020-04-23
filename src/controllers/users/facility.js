@@ -175,48 +175,7 @@ const facilityBookingController = {
 
 
             // Get Facility Quota By Facility Id
-
-            console.log("customerHouseInfo", req.me.houseIds);
-            let unitIds;
-            let checkQuotaByUnit;
-
-            let properUnitTypeMaster;
-            let getFacilityQuotaData = await knex('facility_property_unit_type_quota_limit').select('propertyUnitTypeId').where({ entityId: payload.id, entityType: 'facility_master', orgId: req.orgId });
-            console.log("FacilityQuotaUnitWise", getFacilityQuotaData);
-
-            properUnitTypeMaster = getFacilityQuotaData.map(v => v.propertyUnitTypeId)//;
-
-            let getPropertyUnitMaster = await knex('property_units').select('id')
-                .where({ orgId: req.orgId })
-                .whereIn('propertyUnitType', properUnitTypeMaster);
-
-            let allProperUnitMaster = getPropertyUnitMaster.map(v => v.id)//;
-
-            console.log("allProperUnitMaster", allProperUnitMaster);
-
-            const compareData = arrayCompare(allProperUnitMaster, req.me.houseIds);
-
-            console.log("compare Property list", compareData);
-
-            compareData.found = compareData.found.map(a => a.a);
-            console.log("compare found", compareData.found);
-
-            let properUnitTypeIdFound;
-            if (compareData.found.length > 0) {
-                properUnitTypeIdFound = compareData.found[0].toString();
-            }
-            console.log("found property unit id", properUnitTypeIdFound);
-
-            if (!properUnitTypeIdFound) {
-                facilityCapacity = [];
-            } else {
-                unitIds = properUnitTypeIdFound;
-                checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitIds, orgId: req.orgId }).first();
-
-                facilityCapacity = await facilityHelper.getFacilityBookingCapacity({ 'facilityId': payload.id, 'propertyUnitTypeId': checkQuotaByUnit.propertyUnitType, 'orgId': req.orgId });
-            }
-
-
+         
             let [facilityDetails,
                 openingClosingDetail,
                 ruleRegulationDetail,
@@ -273,7 +232,7 @@ const facilityBookingController = {
 
                 facilityDetails: {
                     ...facilityDetails, openingClosingDetail: _.uniqBy(openingClosingDetail, 'day'), ruleRegulationDetail: ruleRegulationDetail,
-                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'), bookingQuota, facilityCapacity
+                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'), bookingQuota
                 },
                 message: "Facility Details Successfully!"
             })
@@ -701,11 +660,11 @@ const facilityBookingController = {
 
             if (getPropertyUnits.length > 1) {
                 console.log("getMultipleUnits", getPropertyUnits);
-               
+
                 let uid = getPropertyUnits.map(v => v.id)//;
-               
+
                 let validateMissingPropertyUnitType = await knex.raw(`select * from property_units where "id" IN(${uid}) and "propertyUnitType" is not null`);
-                console.log("rows-rows",validateMissingPropertyUnitType.rows);
+                console.log("rows-rows", validateMissingPropertyUnitType.rows);
                 let allUnitIdData = validateMissingPropertyUnitType.rows;
 
                 unitIds = allUnitIdData.map(v => v.id)//;
@@ -715,7 +674,7 @@ const facilityBookingController = {
 
                 console.log("unitIdssssssss", unitIds);
 
-                if(getAllPropertyUnitType.length != unitIds.length){
+                if (getAllPropertyUnitType.length != unitIds.length) {
                     return res.status(400).json({
                         errors: [
                             { code: "PROPERTY_UNIT_TYPE_STATUS", message: `Property unit type of one of your properties is not defined please contact admin.....` }
@@ -723,8 +682,8 @@ const facilityBookingController = {
                     });
                 }
 
-                console.log("propertyUnitType/UnitId", getAllPropertyUnitType.length,unitIds.length);
-                  
+                console.log("propertyUnitType/UnitId", getAllPropertyUnitType.length, unitIds.length);
+
 
                 console.log("getAllPropertyUnitType", getAllPropertyUnitType);
 
@@ -776,7 +735,7 @@ const facilityBookingController = {
                     monthlyQuota = totalMonthlyLimitAllow;
                 }
 
-                console.log("daily/weekly/monthly",dailyQuota,weeklyQuota,monthlyQuota);
+                console.log("daily/weekly/monthly", dailyQuota, weeklyQuota, monthlyQuota);
 
                 /// End
             } else {
@@ -813,7 +772,7 @@ const facilityBookingController = {
                     monthlyQuota = getFacilityQuotaData.monthly;
                 }
 
-               // checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: getPropertyUnits[0].id, orgId: req.orgId }).first();
+                // checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: getPropertyUnits[0].id, orgId: req.orgId }).first();
             }
 
             // Get Facility Quota By Facility Id
