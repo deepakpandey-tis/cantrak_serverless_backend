@@ -324,11 +324,29 @@ const facilityBookingController = {
             const id = req.body.id;
             let message;
             let deactivatedFacility;
+            let bookingCancelled;
             let checkStatus = await knex('facility_master').where({ id: id }).first();
+            let currentTime = new Date().getTime();
 
             if (checkStatus && checkStatus.isActive == true) {
 
                 deactivatedFacility = await knex('facility_master').update({ isActive: false, inActiveReason: payload.deactivatedReason }).where({ id: id }).returning(['*']);
+                bookingCancelled = await knex('entity_bookings')
+                    .update({ isBookingCancelled: true, cancelledBy: req.me.id, cancellationReason: payload.deactivatedReason, cancelledAt: currentTime }).returning(['*'])
+                    .where('entity_bookings.bookingStartDateTime', '>=', currentTime)
+                    .where({ 'entityId': id, 'entityType': 'facility_master' })
+
+
+                for (let cancelled of bookingCancelled) {
+
+                    console.log("=====8888888888",cancelled,"============")
+
+                    const bookedByUser = await knex('entity_bookings').select('*').where({ id: cancelled.id }).first()
+                    const user = await knex('users').select(['email', 'name']).where({ id: bookedByUser.bookedBy }).first()
+
+                    await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName: user.name, reason: payload.deactivatedReason, bookingStartDateTime: moment(Number(bookedByUser.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+bookedByUser.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: bookedByUser.noOfSeats, facilityName: checkStatus.name } })
+
+                }
                 message = "Facility Deactivate successfully!"
 
             } else {
@@ -340,7 +358,8 @@ const facilityBookingController = {
 
             return res.status(200).json({
                 data: {
-                    deactivatedFacility
+                    deactivatedFacility,
+                    bookingCancelled: bookingCancelled
                 },
                 message: message
             })
@@ -1562,6 +1581,93 @@ const facilityBookingController = {
             res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
             })
+        }
+
+    },
+    getBookingCancelledList: async (req, res) => {
+
+        try {
+
+
+            let payload = req.body;
+            let reqData = req.query;
+            let total, rows;
+            let pagination = {};
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
+
+            [total, rows] = await Promise.all([
+
+                knex
+                    .count("* as count")
+                    .from("entity_bookings")
+                    .leftJoin('facility_master', 'entity_bookings.entityId', 'facility_master.id')
+                    .leftJoin('users', 'entity_bookings.bookedBy', 'users.id')
+                    .where(qb => {
+
+
+                        qb.where("entity_bookings.isBookingCancelled", true)
+
+                        qb.where("entity_bookings.entityId", payload.id)
+
+                        qb.where("entity_bookings.entityType", 'facility_master')
+
+                        qb.where("entity_bookings.orgId", req.orgId)
+
+                    }).first(),
+                knex
+                    .from("entity_bookings")
+                    .leftJoin('facility_master', 'entity_bookings.entityId', 'facility_master.id')
+                    .leftJoin('users', 'entity_bookings.bookedBy', 'users.id')
+                    .select([
+                        'entity_bookings.*',
+                        "facility_master.name",
+                        "users.name as bookedUser"
+                    ])
+                    .where(qb => {
+
+                        qb.where("entity_bookings.isBookingCancelled", true)
+
+                        qb.where("entity_bookings.entityId", payload.id)
+
+                        qb.where("entity_bookings.entityType", 'facility_master')
+
+                        qb.where("entity_bookings.orgId", req.orgId)
+
+                    })
+                    .orderBy('entity_bookings.createdAt', 'desc')
+                    .offset(offset)
+                    .limit(per_page)
+
+            ])
+
+            let count = total.count;
+            pagination.total = count;
+            pagination.per_page = per_page;
+            pagination.offset = offset;
+            pagination.to = offset + rows.length;
+            pagination.last_page = Math.ceil(count / per_page);
+            pagination.current_page = page;
+            pagination.from = offset;
+            pagination.data = rows;
+
+
+            return res.status(200).json({
+                data: {
+                    booking: pagination
+                },
+                message: "Facility cancelled booked List!"
+            });
+
+
+        } catch (err) {
+
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
+            })
+
         }
 
     }
