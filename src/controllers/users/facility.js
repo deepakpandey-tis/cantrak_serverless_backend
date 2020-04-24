@@ -175,7 +175,7 @@ const facilityBookingController = {
 
 
             // Get Facility Quota By Facility Id
-         
+
             let [facilityDetails,
                 openingClosingDetail,
                 ruleRegulationDetail,
@@ -672,9 +672,9 @@ const facilityBookingController = {
                 let getAllPropertyUnitType = allUnitIdData.map(v => v.propertyUnitType)//;
 
 
-                console.log("unitIdssssssss", unitIds);
+                console.log("unitIdssssssss", unitIds, getAllPropertyUnitType, uid);
 
-                if (getAllPropertyUnitType.length != unitIds.length) {
+                if (getAllPropertyUnitType.length != uid.length) {
                     return res.status(400).json({
                         errors: [
                             { code: "PROPERTY_UNIT_TYPE_STATUS", message: `Property unit type of one of your properties is not defined please contact admin.....` }
@@ -717,6 +717,7 @@ const facilityBookingController = {
                     .select('*')
                     .where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId })
                     .whereIn('propertyUnitTypeId', getAllPropertyUnitType);
+
                 console.log("FacilityQuotaUnitWise", getFacilityQuotaData);
 
                 let facilityData = await knex.from('entity_booking_criteria')
@@ -724,7 +725,7 @@ const facilityBookingController = {
                     .where({ 'entity_booking_criteria.entityId': payload.facilityId, 'entity_booking_criteria.entityType': 'facility_master', 'entity_booking_criteria.orgId': req.orgId })
                     .first();
 
-                if (facilityData.concurrentBookingLimit == null || getFacilityQuotaData == '') {
+                if (facilityData.concurrentBookingLimit == null || getFacilityQuotaData == '' || getFacilityQuotaData.length != getAllPropertyUnitType.length) {
                     // Case 1 : concurrent booking is not defined and property unit type not set quota for this facility,  all quota type  will set as unlimited
                     dailyQuota = 999999;
                     monthlyQuota = 999999;
@@ -1125,19 +1126,24 @@ const facilityBookingController = {
 
             let availableSeats = 0;
 
-            let startOfDay = moment(+payload.bookingStartDateTime).startOf('day').valueOf();
-            let endOfDay = moment(+payload.bookingStartDateTime).endOf('day').valueOf();
+            // let startOfDay = moment(+payload.bookingStartDateTime).startOf('day').valueOf();
+            // let endOfDay = moment(+payload.bookingStartDateTime).endOf('day').valueOf();
+
+            // let bookingData = await knex('entity_bookings').sum('noOfSeats as totalBookedSeats')
+            //     .where('entity_bookings.bookingStartDateTime', '>=', startOfDay)
+            //     .where('entity_bookings.bookingEndDateTime', '<=', endOfDay)
+            //     .where({ 'entityId': payload.facilityId, 'isBookingCancelled': false, 'entityType': 'facility_master', 'orgId': req.orgId }).first();
 
             let bookingData = await knex('entity_bookings').sum('noOfSeats as totalBookedSeats')
-                .where('entity_bookings.bookingStartDateTime', '>=', startOfDay)
-                .where('entity_bookings.bookingEndDateTime', '<=', endOfDay)
-                .where({ 'entityId': payload.facilityId, 'isBookingCancelled': false, 'entityType': 'facility_master', 'orgId': req.orgId }).first();
-
+                .where('entity_bookings.bookingEndDateTime', '>', bookingStartTime)
+                .where('entity_bookings.bookingStartDateTime', '<', bookingEndTime)
+                .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', 'isBookingCancelled': false, 'orgId': req.orgId }).first();
+            console.log("totalBookingSeats/bookingData", bookingData);
 
             // let bookingData = await knex('entity_bookings').sum('noOfSeats as totalBookedSeats')
             //     .where('entity_bookings.bookingStartDateTime', '>=', bookingStartTime)
             //     .where('entity_bookings.bookingStartDateTime', '<=', bookingEndTime)
-            //     .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master',  'orgId': req.orgId }).first();
+            //     .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', 'isBookingCancelled': false, 'orgId': req.orgId }).first();
 
 
             let facilityData = await knex.from('facility_master')
