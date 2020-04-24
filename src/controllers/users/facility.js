@@ -755,23 +755,25 @@ const facilityBookingController = {
                 }
 
                 let getFacilityQuotaData = await knex('facility_property_unit_type_quota_limit').select('*').where({ entityId: payload.facilityId, entityType: 'facility_master', propertyUnitTypeId: getPropertyUnits[0].propertyUnitType, orgId: req.orgId });
-                console.log("FacilityQuotaUnitWise", getFacilityQuotaData);
+                console.log("FacilityQuotaUnitWise", getFacilityQuotaData, getFacilityQuotaData.length);
 
                 let facilityData = await knex.from('entity_booking_criteria')
                     .select('entity_booking_criteria.concurrentBookingLimit')
                     .where({ 'entity_booking_criteria.entityId': payload.facilityId, 'entity_booking_criteria.entityType': 'facility_master', 'entity_booking_criteria.orgId': req.orgId })
                     .first();
 
-                if (facilityData.concurrentBookingLimit == null || getFacilityQuotaData.length == 0) {
+                if (facilityData.concurrentBookingLimit == null || getFacilityQuotaData == '') {
                     // Case 1 : concurrent booking is not defined and property unit type not set quota for this facility,  all quota type  will set as unlimited
                     dailyQuota = 999999;
                     monthlyQuota = 999999;
                     weeklyQuota = 999999;
                 } else {
-                    dailyQuota = getFacilityQuotaData.daily;
-                    weeklyQuota = getFacilityQuotaData.weekly;
-                    monthlyQuota = getFacilityQuotaData.monthly;
+                    console.log("getFacilityQuotaData11111111111111",getFacilityQuotaData[0].daily)
+                    dailyQuota = getFacilityQuotaData[0].daily;
+                    weeklyQuota = getFacilityQuotaData[0].weekly;
+                    monthlyQuota = getFacilityQuotaData[0].monthly;
                 }
+                console.log("daily/monthly/weekly", dailyQuota,weeklyQuota,monthlyQuota);
 
                 // checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: getPropertyUnits[0].id, orgId: req.orgId }).first();
             }
