@@ -24,7 +24,6 @@ const facilityBookingController = {
             let bookingQuotaResult = [];
             await knex.transaction(async trx => {
 
-
                 const payload = _.omit(req.body, [
                     'rules_and_regulations',
                     'open_close_times', 'images',
