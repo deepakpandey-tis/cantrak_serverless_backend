@@ -492,10 +492,10 @@ const facilityBookingController = {
             let allowBookingSeat = 0;
             if (bookingCriteria1 && bookingCriteria1.bookingType == '1') {   // Flexible Booking
 
-                let bookingData = await knex('entity_bookings').sum('noOfSeats as totalBookedSeats')
+                let bookingData = await knex('entity_bookings').count('* as totalBookedSeats')
                     .where('entity_bookings.bookingEndDateTime', '>', payload.bookingStartDateTime)
                     .where('entity_bookings.bookingStartDateTime', '<', payload.bookingEndDateTime)
-                    .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', 'orgId': req.orgId }).first();
+                    .where({ 'entityId': payload.facilityId, 'isBookingCancelled':false, 'entityType': 'facility_master', 'orgId': req.orgId }).first();
                 console.log("totalBookingSeats", bookingData);
                 allowBookingSeat = Number(payload.noOfSeats) + Number(bookingData.totalBookedSeats);
                 console.log("allowBookingSeat", allowBookingSeat);
@@ -1043,7 +1043,7 @@ const facilityBookingController = {
                 let endOfDay = moment(+payload.bookingStartDateTime).endOf('day').valueOf();
                 console.log("startOfDay", startOfDay, endOfDay);
 
-                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfDay}  and "bookingEndDateTime"  <= ${endOfDay} and "isBookingCancelled" = false  and "unitId" IN(${unitIds})`);
+                let rawQuery = await knex.raw(`select count(*) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfDay}  and "bookingEndDateTime"  <= ${endOfDay} and "isBookingCancelled" = false  and "unitId" IN(${unitIds})`);
                 let totalBookedSeatForADay = rawQuery.rows[0].totalseats;
                 console.log("total Bookings Done for a day", totalBookedSeatForADay);
 
@@ -1072,7 +1072,7 @@ const facilityBookingController = {
                 let endOfWeek = moment(+payload.bookingStartDateTime).endOf('week').valueOf();
                 console.log("startOfWeek", startOfWeek, endOfWeek);
                 console.log("weeklyQuota", weeklyQuota);
-                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfWeek}  and "bookingEndDateTime"  <= ${endOfWeek} and "isBookingCancelled" = false  and "unitId" IN(${unitIds})`);
+                let rawQuery = await knex.raw(`select count(*) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfWeek}  and "bookingEndDateTime"  <= ${endOfWeek} and "isBookingCancelled" = false  and "unitId" IN(${unitIds})`);
                 let totalBookedSeatForAWeek = rawQuery.rows[0].totalseats;
                 console.log("total Bookings Done for a week", totalBookedSeatForAWeek);
 
@@ -1104,7 +1104,7 @@ const facilityBookingController = {
                 let endOfMonth = moment(+payload.bookingStartDateTime).endOf('month').valueOf();
                 console.log("startOfMonth", startOfMonth, endOfMonth);
 
-                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfMonth}  and "bookingEndDateTime"  <= ${endOfMonth} and "isBookingCancelled" = false and "unitId" IN(${unitIds})`);
+                let rawQuery = await knex.raw(`select count(*) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfMonth}  and "bookingEndDateTime"  <= ${endOfMonth} and "isBookingCancelled" = false and "unitId" IN(${unitIds})`);
                 let totalBookedSeatForAMonth = rawQuery.rows[0].totalseats;
                 console.log("total Bookings Done for a month", totalBookedSeatForAMonth);
 
@@ -1136,7 +1136,7 @@ const facilityBookingController = {
             //     .where('entity_bookings.bookingEndDateTime', '<=', endOfDay)
             //     .where({ 'entityId': payload.facilityId, 'isBookingCancelled': false, 'entityType': 'facility_master', 'orgId': req.orgId }).first();
 
-            let bookingData = await knex('entity_bookings').sum('noOfSeats as totalBookedSeats')
+            let bookingData = await knex('entity_bookings').count('* as totalBookedSeats')
                 .where('entity_bookings.bookingEndDateTime', '>', bookingStartTime)
                 .where('entity_bookings.bookingStartDateTime', '<', bookingEndTime)
                 .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', 'isBookingCancelled': false, 'orgId': req.orgId }).first();
