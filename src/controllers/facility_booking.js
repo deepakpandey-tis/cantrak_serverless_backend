@@ -233,15 +233,17 @@ const facilityBookingController = {
                     if (!checkQuota.length) {
 
 
-                        if (q.propertyUnitTypeId && q.daily || q.weekly || q.monthly) {
+                        if (q.propertyUnitTypeId && q.noOfQuota && q.quotaType) {
+
+
 
                             let quotaResult = await knex('facility_property_unit_type_quota_limit')
                                 .insert({
 
                                     propertyUnitTypeId: q.propertyUnitTypeId,
-                                    daily: q.daily ? q.daily : 0,
-                                    weekly: q.weekly ? q.weekly : 0,
-                                    monthly: q.monthly ? q.monthly : 0,
+                                    daily: q.quotaType=="1" ? q.noOfQuota : 0,
+                                    weekly: q.quotaType=="2" ? q.noOfQuota : 0,
+                                    monthly: q.quotaType=="3" ? q.noOfQuota : 0,
                                     entityType: 'facility_master',
                                     entityId: addedFacilityResult.id,
                                     updatedAt: currentTime,
