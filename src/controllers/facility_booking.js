@@ -226,7 +226,10 @@ const facilityBookingController = {
                             entityType: 'facility_master',
                             entityId: addedFacilityResult.id,
                             orgId: req.orgId,
-                            propertyUnitTypeId: q.propertyUnitTypeId
+                            propertyUnitTypeId: q.propertyUnitTypeId,
+                            daily: q.quotaType == "1" ? q.noOfQuota : 0,
+                            weekly: q.quotaType == "2" ? q.noOfQuota : 0,
+                            monthly: q.quotaType == "3" ? q.noOfQuota : 0,
 
                         })
 
@@ -241,9 +244,9 @@ const facilityBookingController = {
                                 .insert({
 
                                     propertyUnitTypeId: q.propertyUnitTypeId,
-                                    daily: q.quotaType=="1" ? q.noOfQuota : 0,
-                                    weekly: q.quotaType=="2" ? q.noOfQuota : 0,
-                                    monthly: q.quotaType=="3" ? q.noOfQuota : 0,
+                                    daily: q.quotaType == "1" ? q.noOfQuota : 0,
+                                    weekly: q.quotaType == "2" ? q.noOfQuota : 0,
+                                    monthly: q.quotaType == "3" ? q.noOfQuota : 0,
                                     entityType: 'facility_master',
                                     entityId: addedFacilityResult.id,
                                     updatedAt: currentTime,
@@ -340,7 +343,7 @@ const facilityBookingController = {
 
                 for (let cancelled of bookingCancelled) {
 
-                    console.log("=====8888888888",cancelled,"============")
+                    console.log("=====8888888888", cancelled, "============")
 
                     const bookedByUser = await knex('entity_bookings').select('*').where({ id: cancelled.id }).first()
                     const user = await knex('users').select(['email', 'name']).where({ id: bookedByUser.bookedBy }).first()
