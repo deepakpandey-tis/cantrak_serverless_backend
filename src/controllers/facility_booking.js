@@ -233,14 +233,81 @@ const facilityBookingController = {
 
                         })
 
-                    if (!checkQuota.length) {
+                    // if (!checkQuota.length) {
 
 
-                        if (q.propertyUnitTypeId && q.noOfQuota && q.quotaType) {
+                    if (q.propertyUnitTypeId && q.noOfQuota && q.quotaType) {
 
 
+                        let quotaValue = await knex('facility_property_unit_type_quota_limit')
+                            .where({
+                                entityType: 'facility_master',
+                                entityId: addedFacilityResult.id,
+                                orgId: req.orgId,
+                                propertyUnitTypeId: q.propertyUnitTypeId,
+                            })
 
-                            let quotaResult = await knex('facility_property_unit_type_quota_limit')
+                        let quotaResult;
+
+                        if (quotaValue.length) {
+
+
+                            let updateQuotaData;
+
+
+                            if (q.quotaType == "1") {
+
+                                updateQuotaData = {
+                                    propertyUnitTypeId: q.propertyUnitTypeId,
+                                    daily: q.noOfQuota,
+                                    entityType: 'facility_master',
+                                    entityId: addedFacilityResult.id,
+                                    updatedAt: currentTime,
+                                    createdAt: currentTime,
+                                    orgId: req.orgId,
+                                }
+
+                            } else if (q.quotaType == "2") {
+
+                                updateQuotaData = {
+                                    propertyUnitTypeId: q.propertyUnitTypeId,
+                                    weekly:q.noOfQuota,
+                                    entityType: 'facility_master',
+                                    entityId: addedFacilityResult.id,
+                                    updatedAt: currentTime,
+                                    createdAt: currentTime,
+                                    orgId: req.orgId,
+                                }
+
+                            } else if (q.quotaType == "3") {
+
+                                updateQuotaData = {
+                                    propertyUnitTypeId: q.propertyUnitTypeId,
+                                    monthly:q.noOfQuota,
+                                    entityType: 'facility_master',
+                                    entityId: addedFacilityResult.id,
+                                    updatedAt: currentTime,
+                                    createdAt: currentTime,
+                                    orgId: req.orgId,
+                                }
+                            }
+
+
+                            quotaResult = await knex('facility_property_unit_type_quota_limit')
+                                .update(updateQuotaData)
+                                .where({
+                                    entityType: 'facility_master',
+                                    entityId: addedFacilityResult.id,
+                                    orgId: req.orgId,
+                                    propertyUnitTypeId: q.propertyUnitTypeId,
+                                })
+                                .returning(['*'])
+
+
+                        } else {
+
+
+                            quotaResult = await knex('facility_property_unit_type_quota_limit')
                                 .insert({
 
                                     propertyUnitTypeId: q.propertyUnitTypeId,
@@ -255,9 +322,11 @@ const facilityBookingController = {
 
                                 }).returning(['*'])
 
-                            bookingQuotaResult.push(quotaResult)
                         }
+
+                        bookingQuotaResult.push(quotaResult)
                     }
+                    //}
                 }
 
 
