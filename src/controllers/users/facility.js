@@ -497,7 +497,7 @@ const facilityBookingController = {
                     .where('entity_bookings.bookingStartDateTime', '<', payload.bookingEndDateTime)
                     .where({ 'entityId': payload.facilityId, 'isBookingCancelled':false, 'entityType': 'facility_master', 'orgId': req.orgId }).first();
                 console.log("totalBookingSeats", bookingData);
-                allowBookingSeat = Number(payload.noOfSeats) + Number(bookingData.totalBookedSeats);
+                allowBookingSeat = Number(1) + Number(bookingData.totalBookedSeats);
                 console.log("allowBookingSeat", allowBookingSeat);
 
                 if (allowBookingSeat > totalConcurrentLimit) {
