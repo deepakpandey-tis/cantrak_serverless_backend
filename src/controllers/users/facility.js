@@ -490,12 +490,12 @@ const facilityBookingController = {
             console.log("bookingCriteria", bookingCriteria1);
             let totalConcurrentLimit = bookingCriteria1.concurrentBookingLimit;
             let allowBookingSeat = 0;
-            if (bookingCriteria1 && bookingCriteria1.bookingType == '1') {   // Flexible Booking
+            if (bookingCriteria1 && bookingCriteria1.bookingType == '1' && bookingCriteria1.allowConcurrentBooking == true) {   // Flexible Booking
 
                 let bookingData = await knex('entity_bookings').count('* as totalBookedSeats')
                     .where('entity_bookings.bookingEndDateTime', '>', payload.bookingStartDateTime)
                     .where('entity_bookings.bookingStartDateTime', '<', payload.bookingEndDateTime)
-                    .where({ 'entityId': payload.facilityId, 'isBookingCancelled':false, 'entityType': 'facility_master', 'orgId': req.orgId }).first();
+                    .where({ 'entityId': payload.facilityId, 'isBookingCancelled': false, 'entityType': 'facility_master', 'orgId': req.orgId }).first();
                 console.log("totalBookingSeats", bookingData);
                 allowBookingSeat = Number(1) + Number(bookingData.totalBookedSeats);
                 console.log("allowBookingSeat", allowBookingSeat);
@@ -622,8 +622,6 @@ const facilityBookingController = {
             let dailyQuota;
             let weeklyQuota;
             let monthlyQuota;
-
-
 
             const schema = Joi.object().keys({
                 facilityId: Joi.string().required(),
@@ -768,12 +766,12 @@ const facilityBookingController = {
                     monthlyQuota = 999999;
                     weeklyQuota = 999999;
                 } else {
-                    console.log("getFacilityQuotaData11111111111111",getFacilityQuotaData[0].daily)
+                    console.log("getFacilityQuotaData11111111111111", getFacilityQuotaData[0].daily)
                     dailyQuota = getFacilityQuotaData[0].daily;
                     weeklyQuota = getFacilityQuotaData[0].weekly;
                     monthlyQuota = getFacilityQuotaData[0].monthly;
                 }
-                console.log("daily/monthly/weekly", dailyQuota,weeklyQuota,monthlyQuota);
+                console.log("daily/monthly/weekly", dailyQuota, weeklyQuota, monthlyQuota);
 
                 // checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: getPropertyUnits[0].id, orgId: req.orgId }).first();
             }
@@ -1164,7 +1162,16 @@ const facilityBookingController = {
                 .where({ 'facility_master.id': payload.facilityId, 'facility_master.orgId': req.orgId })
                 .first();
 
-            availableSeats = Number(facilityData.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
+            // Check if pax capacity disable and set NO
+            if (facilityData.allowConcurrentBooking == true) {
+                availableSeats = Number(facilityData.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
+            } else if(dailyQuota == 999999 && weeklyQuota == 999999 &&  monthlyQuota == 999999) {
+                availableSeats = Number(5000);
+            }else{
+                availableSeats = dailyQuota;
+            }
+
+
             console.log("totalSeatAvailable", facilityData.concurrentBookingLimit, bookingData.totalBookedSeats)
             console.log("availableSeats", availableSeats);
 
@@ -1174,15 +1181,15 @@ const facilityBookingController = {
 
             let startOf;
             let endOf;
-            let dailyLimit;
-            let weeklyLimit;
-            let monthlyLimit;
-            let dailyRemainingLimit;
-            let dailyBookedSeat;
-            let weeklyRemainingLimit;
-            let weeklyBookedSeat;
-            let monthlyRemainingLimit;
-            let monthlyBookedSeat;
+            let dailyLimit = 0;
+            let weeklyLimit = 0;
+            let monthlyLimit = 0;
+            let dailyRemainingLimit = 0;
+            let dailyBookedSeat = 0;
+            let weeklyRemainingLimit = 0;
+            let weeklyBookedSeat = 0;
+            let monthlyRemainingLimit = 0;
+            let monthlyBookedSeat = 0;
 
 
             if (dailyQuota && dailyQuota > 0) {
