@@ -221,17 +221,17 @@ const facilityBookingController = {
 
                 for (let q of bookingQuota) {
 
-                    let checkQuota = await knex('facility_property_unit_type_quota_limit')
-                        .where({
-                            entityType: 'facility_master',
-                            entityId: addedFacilityResult.id,
-                            orgId: req.orgId,
-                            propertyUnitTypeId: q.propertyUnitTypeId,
-                            daily: q.quotaType == "1" ? q.noOfQuota : 0,
-                            weekly: q.quotaType == "2" ? q.noOfQuota : 0,
-                            monthly: q.quotaType == "3" ? q.noOfQuota : 0,
+                    // let checkQuota = await knex('facility_property_unit_type_quota_limit')
+                    //     .where({
+                    //         entityType: 'facility_master',
+                    //         entityId: addedFacilityResult.id,
+                    //         orgId: req.orgId,
+                    //         propertyUnitTypeId: q.propertyUnitTypeId,
+                    //         daily: q.quotaType == "1" ? q.noOfQuota : 0,
+                    //         weekly: q.quotaType == "2" ? q.noOfQuota : 0,
+                    //         monthly: q.quotaType == "3" ? q.noOfQuota : 0,
 
-                        })
+                    //     })
 
                     // if (!checkQuota.length) {
 
