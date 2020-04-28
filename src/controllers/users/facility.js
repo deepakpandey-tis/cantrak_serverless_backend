@@ -1032,7 +1032,7 @@ const facilityBookingController = {
             // Validate Daily Quota Limit, Weekly Quota Limit, And Monthly Quota Limit
             //let dailyQuota = await knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.facilityId, limitType: 1, entityType: 'facility_master', orgId: req.orgId }).first();
 
-
+            let quotaBooked=0;
 
             if (dailyQuota && dailyQuota > 0) {
                 let dailyQuotas = Number(dailyQuota);
@@ -1044,7 +1044,7 @@ const facilityBookingController = {
                 let rawQuery = await knex.raw(`select count(*) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfDay}  and "bookingEndDateTime"  <= ${endOfDay} and "isBookingCancelled" = false  and "unitId" IN(${unitIds})`);
                 let totalBookedSeatForADay = rawQuery.rows[0].totalseats;
                 console.log("total Bookings Done for a day", totalBookedSeatForADay);
-
+                quotaBooked = dailyQuota;
                 // Checking Daily Booking Quota Limit Is Completed
                 if (dailyQuotas <= totalBookedSeatForADay) {
                     return res.status(400).json({
@@ -1073,7 +1073,7 @@ const facilityBookingController = {
                 let rawQuery = await knex.raw(`select count(*) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfWeek}  and "bookingEndDateTime"  <= ${endOfWeek} and "isBookingCancelled" = false  and "unitId" IN(${unitIds})`);
                 let totalBookedSeatForAWeek = rawQuery.rows[0].totalseats;
                 console.log("total Bookings Done for a week", totalBookedSeatForAWeek);
-
+                quotaBooked = weeklyQuota;
                 // Checking Weekly Booking Quota Limit Is Completed
                 if (weeklyQuotas <= totalBookedSeatForAWeek) {
                     return res.status(400).json({
@@ -1105,7 +1105,7 @@ const facilityBookingController = {
                 let rawQuery = await knex.raw(`select count(*) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfMonth}  and "bookingEndDateTime"  <= ${endOfMonth} and "isBookingCancelled" = false and "unitId" IN(${unitIds})`);
                 let totalBookedSeatForAMonth = rawQuery.rows[0].totalseats;
                 console.log("total Bookings Done for a month", totalBookedSeatForAMonth);
-
+                quotaBooked = monthlyQuota;
                 // Checking Monthly Booking Quota Limit Is Completed
                 if (monthlyQuotas <= totalBookedSeatForAMonth) {
                     return res.status(400).json({
@@ -1168,7 +1168,7 @@ const facilityBookingController = {
             } else if(dailyQuota == 999999 && weeklyQuota == 999999 &&  monthlyQuota == 999999) {
                 availableSeats = Number(5000);
             }else{
-                availableSeats = dailyQuota;
+                availableSeats = quotaBooked;
             }
 
 
