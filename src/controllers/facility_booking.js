@@ -24,7 +24,6 @@ const facilityBookingController = {
             let bookingQuotaResult = [];
             await knex.transaction(async trx => {
 
-
                 const payload = _.omit(req.body, [
                     'rules_and_regulations',
                     'open_close_times', 'images',
@@ -222,27 +221,99 @@ const facilityBookingController = {
 
                 for (let q of bookingQuota) {
 
-                    let checkQuota = await knex('facility_property_unit_type_quota_limit')
-                        .where({
-                            entityType: 'facility_master',
-                            entityId: addedFacilityResult.id,
-                            orgId: req.orgId,
-                            propertyUnitTypeId: q.propertyUnitTypeId
+                    // let checkQuota = await knex('facility_property_unit_type_quota_limit')
+                    //     .where({
+                    //         entityType: 'facility_master',
+                    //         entityId: addedFacilityResult.id,
+                    //         orgId: req.orgId,
+                    //         propertyUnitTypeId: q.propertyUnitTypeId,
+                    //         daily: q.quotaType == "1" ? q.noOfQuota : 0,
+                    //         weekly: q.quotaType == "2" ? q.noOfQuota : 0,
+                    //         monthly: q.quotaType == "3" ? q.noOfQuota : 0,
 
-                        })
+                    //     })
 
-                    if (!checkQuota.length) {
+                    // if (!checkQuota.length) {
 
 
-                        if (q.propertyUnitTypeId && q.daily || q.weekly || q.monthly) {
+                    if (q.propertyUnitTypeId && q.noOfQuota && q.quotaType) {
 
-                            let quotaResult = await knex('facility_property_unit_type_quota_limit')
+
+                        let quotaValue = await knex('facility_property_unit_type_quota_limit')
+                            .where({
+                                entityType: 'facility_master',
+                                entityId: addedFacilityResult.id,
+                                orgId: req.orgId,
+                                propertyUnitTypeId: q.propertyUnitTypeId,
+                            })
+
+                        let quotaResult;
+
+                        if (quotaValue.length) {
+
+
+                            let updateQuotaData;
+
+
+                            if (q.quotaType == "1") {
+
+                                updateQuotaData = {
+                                    propertyUnitTypeId: q.propertyUnitTypeId,
+                                    daily: q.noOfQuota,
+                                    entityType: 'facility_master',
+                                    entityId: addedFacilityResult.id,
+                                    updatedAt: currentTime,
+                                    createdAt: currentTime,
+                                    orgId: req.orgId,
+                                }
+
+                            } else if (q.quotaType == "2") {
+
+                                updateQuotaData = {
+                                    propertyUnitTypeId: q.propertyUnitTypeId,
+                                    weekly:q.noOfQuota,
+                                    entityType: 'facility_master',
+                                    entityId: addedFacilityResult.id,
+                                    updatedAt: currentTime,
+                                    createdAt: currentTime,
+                                    orgId: req.orgId,
+                                }
+
+                            } else if (q.quotaType == "3") {
+
+                                updateQuotaData = {
+                                    propertyUnitTypeId: q.propertyUnitTypeId,
+                                    monthly:q.noOfQuota,
+                                    entityType: 'facility_master',
+                                    entityId: addedFacilityResult.id,
+                                    updatedAt: currentTime,
+                                    createdAt: currentTime,
+                                    orgId: req.orgId,
+                                }
+                            }
+
+
+                            quotaResult = await knex('facility_property_unit_type_quota_limit')
+                                .update(updateQuotaData)
+                                .where({
+                                    entityType: 'facility_master',
+                                    entityId: addedFacilityResult.id,
+                                    orgId: req.orgId,
+                                    propertyUnitTypeId: q.propertyUnitTypeId,
+                                })
+                                .returning(['*'])
+
+
+                        } else {
+
+
+                            quotaResult = await knex('facility_property_unit_type_quota_limit')
                                 .insert({
 
                                     propertyUnitTypeId: q.propertyUnitTypeId,
-                                    daily: q.daily ? q.daily : 0,
-                                    weekly: q.weekly ? q.weekly : 0,
-                                    monthly: q.monthly ? q.monthly : 0,
+                                    daily: q.quotaType == "1" ? q.noOfQuota : 0,
+                                    weekly: q.quotaType == "2" ? q.noOfQuota : 0,
+                                    monthly: q.quotaType == "3" ? q.noOfQuota : 0,
                                     entityType: 'facility_master',
                                     entityId: addedFacilityResult.id,
                                     updatedAt: currentTime,
@@ -251,9 +322,11 @@ const facilityBookingController = {
 
                                 }).returning(['*'])
 
-                            bookingQuotaResult.push(quotaResult)
                         }
+
+                        bookingQuotaResult.push(quotaResult)
                     }
+                    //}
                 }
 
 
@@ -339,7 +412,7 @@ const facilityBookingController = {
 
                 for (let cancelled of bookingCancelled) {
 
-                    console.log("=====8888888888",cancelled,"============")
+                    console.log("=====8888888888", cancelled, "============")
 
                     const bookedByUser = await knex('entity_bookings').select('*').where({ id: cancelled.id }).first()
                     const user = await knex('users').select(['email', 'name']).where({ id: bookedByUser.bookedBy }).first()
