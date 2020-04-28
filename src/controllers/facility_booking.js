@@ -251,7 +251,6 @@ const facilityBookingController = {
 
                         if (quotaValue.length) {
 
-
                             let updateQuotaData;
 
 
