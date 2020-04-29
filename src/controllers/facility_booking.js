@@ -907,7 +907,6 @@ const facilityBookingController = {
 
             let projectArray = _.uniqBy(propertyUnitFinalResult, 'projectId').map(v => v.projectId)
 
-
             resultData = await knex.from('facility_master')
                 .leftJoin('companies', 'facility_master.companyId', 'companies.id')
                 .leftJoin('projects', 'facility_master.projectId', 'projects.id')
