@@ -270,7 +270,7 @@ const facilityBookingController = {
 
                                 updateQuotaData = {
                                     propertyUnitTypeId: q.propertyUnitTypeId,
-                                    weekly:q.noOfQuota,
+                                    weekly: q.noOfQuota,
                                     entityType: 'facility_master',
                                     entityId: addedFacilityResult.id,
                                     updatedAt: currentTime,
@@ -282,7 +282,7 @@ const facilityBookingController = {
 
                                 updateQuotaData = {
                                     propertyUnitTypeId: q.propertyUnitTypeId,
-                                    monthly:q.noOfQuota,
+                                    monthly: q.noOfQuota,
                                     entityType: 'facility_master',
                                     entityId: addedFacilityResult.id,
                                     updatedAt: currentTime,
@@ -1526,6 +1526,14 @@ const facilityBookingController = {
     facilityCloseDateList: async (req, res) => {
 
         try {
+            let total, rows;
+            let reqData = req.query;
+            let pagination = {};
+            let page = reqData.current_page || 1;
+            let per_page = reqData.per_page || 10;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
+
 
             let payload = req.body;
             const schema = Joi.object().keys({
@@ -1541,12 +1549,41 @@ const facilityBookingController = {
                 });
             }
 
-            let resultData = await knex('facility_close_date')
-                .where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId })
-                .orderBy("createdAt", 'desc');
+            [total, rows] = await Promise.all([
+
+                knex.count('* as count')
+                    .from('facility_close_date')
+                    .where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId }).first(),
+
+                knex('facility_close_date')
+                    .where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId })
+                    .offset(offset)
+                    .limit(per_page)
+                    .orderBy("createdAt", 'desc')
+            ])
+
+            let count = total.count;
+            pagination.total = count;
+            pagination.per_page = per_page;
+            pagination.offset = offset;
+            pagination.to = offset + rows.length;
+            pagination.last_page = Math.ceil(count / per_page);
+            pagination.current_page = page;
+            pagination.from = offset;
+            pagination.data = rows;
+
+
+
+
+            // let resultData = await knex('facility_close_date')
+            //     .where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId })
+            //     .orderBy("createdAt", 'desc');
+
             return res.status(200).json({
                 message: 'Close Date list successfully!',
-                data: resultData
+                data: {
+                    booking: pagination
+                }
             })
 
 
