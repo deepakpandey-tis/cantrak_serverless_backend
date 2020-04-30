@@ -659,6 +659,9 @@ const facilityBookingController = {
             if (getPropertyUnits.length > 1) {
                 console.log("getMultipleUnits", getPropertyUnits);
 
+                console.log("getSingleUnits", getPropertyUnits);
+              
+
                 let uid = getPropertyUnits.map(v => v.id)//;
 
                 let validateMissingPropertyUnitType = await knex.raw(`select * from property_units where "id" IN(${uid}) and "propertyUnitType" is not null`);
@@ -965,7 +968,7 @@ const facilityBookingController = {
                     let minDurationInMinutes = minDuration / 1000 / 60;
                     console.log("minDuration", minDurationInMinutes);
 
-                    if (minDurationInMinutes < bookingPeriodAllow.minBookingPeriod) {
+                    if (minDursudoationInMinutes < bookingPeriodAllow.minBookingPeriod) {
                         return res.status(400).json({
                             errors: [
                                 { code: "MIN_BOOKING_DURATION", message: `Minimum booking duration allowed is ${bookingPeriodAllow.minBookingPeriod} minutes. You can not book less then min duration.` }
