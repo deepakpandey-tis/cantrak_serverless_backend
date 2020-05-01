@@ -624,8 +624,9 @@ const facilityBookingController = {
             unitIds = getPropertyUnits[0].id//;
             // Case 2: If property unit does not have any property unit type set
             // Error : 
+            console.log("getPropertyUnits[0].propertyUnitType",getPropertyUnits[0].propertyUnitType);
 
-            if (getPropertyUnits.propertyUnitType == '') {
+            if (getPropertyUnits[0].propertyUnitType == null) {
                 return res.status(400).json({
                     errors: [
                         { code: "PROPERTY_UNIT_TYPE_STATUS", message: `Property unit type of one of your properties is not defined please contact admin.....` }
@@ -1220,10 +1221,13 @@ const facilityBookingController = {
     getUnitList: async (req, res) => {
         try {
             let id = req.me.id;
+            const { facilityId } = req.body;
             console.log("customerHouseInfo", req.me.houseIds);
 
+            let facilityData = await knex.from('facility_master').where({ id: facilityId }).first();
+
             let getPropertyUnits = await knex('property_units').select('*')
-                .where({ orgId: req.orgId })
+                .where({ projectId: facilityData.projectId, orgId: req.orgId })
                 .whereIn('id', req.me.houseIds);
 
             return res.status(200).json({
