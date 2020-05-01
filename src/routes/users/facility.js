@@ -34,7 +34,7 @@ router.post('/get-facility-available-seats', authMiddleware.isAuthenticated, use
 router.post('/cancel-booking', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
     facilityBookingController.cancelBooking);
 
-router.get('/get-all-units', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+router.post('/get-all-units', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
     facilityBookingController.getUnitList);
 
 
