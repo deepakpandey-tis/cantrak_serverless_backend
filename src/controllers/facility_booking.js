@@ -1697,7 +1697,6 @@ const facilityBookingController = {
 
         try {
 
-
             let payload = req.body;
             let reqData = req.query;
             let total, rows;
@@ -1715,7 +1714,6 @@ const facilityBookingController = {
                     .leftJoin('facility_master', 'entity_bookings.entityId', 'facility_master.id')
                     .leftJoin('users', 'entity_bookings.bookedBy', 'users.id')
                     .where(qb => {
-
 
                         qb.where("entity_bookings.isBookingCancelled", true)
 
