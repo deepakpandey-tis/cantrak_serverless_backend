@@ -384,7 +384,10 @@ const facilityBookingController = {
                 bookingStartDateTime: Joi.date().required(),
                 bookingEndDateTime: Joi.date().required(),
                 noOfSeats: Joi.number().required(),
-                unitId: Joi.string().required()
+                unitId: Joi.string().required(),
+                offset: Joi.number().required(),
+                currentTime: Joi.date().required(),
+                timezone: Joi.string().required(),
             })
 
             const result = Joi.validate(payload, schema);
@@ -401,6 +404,9 @@ const facilityBookingController = {
             // Get Facility Quota By Facility Id           
 
             unitId = payload.unitId;
+
+            await facilityHelper.getFacilityBookingCapacity({ facilityId: payload.facilityId, bookingStartDateTime: payload.bookingStartDateTime, bookingEndDateTime: payload.bookingEndDateTime, offset: payload.offset, currentTime: payload.currentTime, timezone: payload.timezone, unitId: payload.unitId, orgId: req.orgId  })
+
             // check facility is closed
 
             let closeFacility = await knex('facility_master')
