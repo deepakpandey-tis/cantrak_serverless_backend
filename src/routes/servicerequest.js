@@ -11,19 +11,19 @@ const path = require('path');
 /* GET users listing. */
 
 router.post('/post-service-request', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-	resourceAccessMiddleware.isCMAccessible,  serviceRequestController.addServiceRequest);
+	resourceAccessMiddleware.isCMAccessible, serviceRequestController.addServiceRequest);
 
 router.post('/add-service-problems', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-	resourceAccessMiddleware.isCMAccessible,  serviceRequestController.addServiceProblems);
+	resourceAccessMiddleware.isCMAccessible, serviceRequestController.addServiceProblems);
 
 // router.post('/update-service-request', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
 // 	resourceAccessMiddleware.isCMAccessible, serviceRequestController.updateServiceRequest);
 
-router.post('/get-service-request-list', 
-			authMiddleware.isAuthenticated, 
-			roleMiddleware.parseUserPermission,
-			resourceAccessMiddleware.isCMAccessible, 
-			serviceRequestController.getServiceRequestList)
+router.post('/get-service-request-list',
+	authMiddleware.isAuthenticated,
+	roleMiddleware.parseUserPermission,
+	resourceAccessMiddleware.isCMAccessible,
+	serviceRequestController.getServiceRequestList)
 
 router.post('/upload-images', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
 	resourceAccessMiddleware.isCMAccessible, serviceRequestController.updateImages);
@@ -32,17 +32,17 @@ router.post('/upload-image-url', authMiddleware.isAuthenticated, roleMiddleware.
 	resourceAccessMiddleware.isCMAccessible, serviceRequestController.getImageUploadUrl);
 
 router.post('/add-service-request-part', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-	resourceAccessMiddleware.isCMAccessible,  serviceRequestController.addServiceRequestPart)
+	resourceAccessMiddleware.isCMAccessible, serviceRequestController.addServiceRequestPart)
 
 router.post('/add-service-request-asset', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-	resourceAccessMiddleware.isCMAccessible,  serviceRequestController.addServiceRequestAsset)
+	resourceAccessMiddleware.isCMAccessible, serviceRequestController.addServiceRequestAsset)
 
 router.post('/delete-service-request-part', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
 	resourceAccessMiddleware.isCMAccessible, serviceRequestController.deleteServiceRequestPart)
 router.post('/delete-service-request-asset', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-	resourceAccessMiddleware.isCMAccessible,  serviceRequestController.deleteServiceRequestAsset)
+	resourceAccessMiddleware.isCMAccessible, serviceRequestController.deleteServiceRequestAsset)
 router.post('/export-service-request', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-	resourceAccessMiddleware.isCMAccessible,  serviceRequestController.exportServiceRequest)
+	resourceAccessMiddleware.isCMAccessible, serviceRequestController.exportServiceRequest)
 router.post('/get-property-units', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
 	resourceAccessMiddleware.isCMAccessible, serviceRequestController.getPropertyUnits)
 
@@ -76,15 +76,15 @@ router.post("/approve-service-request", authMiddleware.isAuthenticated, roleMidd
 	resourceAccessMiddleware.isCMAccessible, serviceRequestController.approveServiceRequest);
 
 router.post('/delete-service-problem', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-	resourceAccessMiddleware.isCMAccessible,  serviceRequestController.deleteServiceProblem)
+	resourceAccessMiddleware.isCMAccessible, serviceRequestController.deleteServiceProblem)
 
 router.post('/check-service-request-id', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
 	resourceAccessMiddleware.isCMAccessible, serviceRequestController.checkServiceRequestId)
 
 router.post('/get-service-request-assigned-teams', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isCMAccessible, serviceRequestController.getServiceAssignedTeamAndUsers)
-router.post('/update-service-request-project-id',authMiddleware.isAuthenticated,roleMiddleware.parseUserPermission,resourceAccessMiddleware.isCMAccessible,serviceRequestController.updateServiceRequestProjectId)
+router.post('/update-service-request-project-id', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isCMAccessible, serviceRequestController.updateServiceRequestProjectId)
 
-router.post('/get-assigned-assets-by-entity',authMiddleware.isAuthenticated,roleMiddleware.parseUserPermission,resourceAccessMiddleware.isAssetAccessible,serviceRequestController.getAssignedAssetsByEntity)
+router.post('/get-assigned-assets-by-entity', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isAssetAccessible, serviceRequestController.getAssignedAssetsByEntity)
 
 router.post('/get-service-order-id-by-service-request-id', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isCMAccessible, serviceRequestController.getServiceOrderIdByServiceRequestId)
 router.post('/get-service-order-id-by-service-request-id-asset', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isAssetAccessible, serviceRequestController.getServiceOrderIdByServiceRequestId)
@@ -93,6 +93,12 @@ router.post('/get-service-request-id-by-service-order-id-asset', authMiddleware.
 
 router.post('/get-service-request-for-report', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isCMAccessible, serviceRequestController.getServiceRequestForReport)
 
-router.get('/get-all-requested-by-list',authMiddleware.isAuthenticated, serviceRequestController.getAllRequestedByList)
+router.get('/get-all-requested-by-list', authMiddleware.isAuthenticated, serviceRequestController.getAllRequestedByList)
+
+/*GET SERVICE REQUEST REPORT */
+router.get("/get-service-request-report",
+	authMiddleware.isAuthenticated,
+	serviceRequestController.getServiceRequestReport);
+
 
 module.exports = router;

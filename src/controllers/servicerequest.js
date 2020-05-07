@@ -3568,7 +3568,74 @@ const serviceRequestController = {
 
     }
 
+  },
+  /*GET SERVICE REQUEST REPORT  */
+  getServiceRequestReport: async (req, res) => {
+
+    try {
+
+
+      let meData = req.me;
+      let payload = req.query;
+      const schema = Joi.object().keys({
+        id: Joi.string().required()
+      });
+
+      const result = Joi.validate(payload, schema);
+      console.log("[controllers][service][problem]: JOi Result", result);
+
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message }
+          ]
+        });
+      }
+
+      let reportResult = await knex('service_requests')
+        .leftJoin('companies', 'service_requests.companyId', 'companies.id')
+        .leftJoin('projects', 'service_requests.projectId', 'projects.id')
+        .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+        .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+        .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
+        .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+        .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+        .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id') 
+        .select([
+          'service_requests.*',
+          'companies.*',
+          'projects.project as ProjectCode',
+          'projects.projectName',
+          'buildings_and_phases.buildingPhaseCode',
+          'buildings_and_phases.description as BuildingDescription',
+          'requested_by.name as requestedByUser',
+          'service_problems.description as serviceProblemDescription',
+          'incident_categories.categoryCode',
+          'incident_categories.descriptionEng as categoryDescription',
+          'incident_sub_categories.descriptionEng as subCategory',
+          'service_problems.createdAt as incidentDate',
+          'service_problems.serviceRequestId',
+        ])
+            .where('service_requests.id', payload.id).first();
+
+        let images = await knex('images').where({entityId:payload.id,entityType:'service_problems'})
+
+            
+
+      return res.status(200).json({
+              data: {...reportResult,images,printedBy:meData},
+              message: "Service Request Report Successfully!",
+              });
+
+    } catch (err) {
+
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+
   }
+
 
 };
 
