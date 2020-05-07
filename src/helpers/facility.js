@@ -2,6 +2,8 @@ const Joi = require('@hapi/joi');
 const _ = require('lodash');
 const AWS = require('aws-sdk');
 const knex = require("../db/knex");
+const moment = require("moment-timezone");
+
 
 
 
@@ -25,7 +27,8 @@ const facilityHelper = {
                 offset: Joi.number().required(),
                 currentTime: Joi.date().required(),
                 timezone: Joi.string().required(),
-                unitId: Joi.string().required()
+                unitId: Joi.string().required(),
+                orgId: Joi.string().required()
             });
 
             const result = Joi.validate({ facilityId, bookingStartDateTime, bookingEndDateTime, offset, currentTime, timezone, unitId, orgId }, schema);
@@ -43,20 +46,16 @@ const facilityHelper = {
             let getPropertyUnits = await knex('property_units').select('*')
                 .where({ projectId: facilityMaster.projectId, orgId: orgId, id: unitId })
 
-            console.log("getPropertyUnits", getPropertyUnits);
-
+          
             unitIds = getPropertyUnits[0].id//;
             // Case 2: If property unit does not have any property unit type set
             // Error : 
-            console.log("getPropertyUnits[0].propertyUnitType", getPropertyUnits[0].propertyUnitType);
-
             if (getPropertyUnits[0].propertyUnitType == null) {
                 return { code: 'PROPERTY_UNIT_TYPE_STATUS', message: + result.error.message, error: new Error('Property unit type of one of your properties is not defined please contact admin.....') };
             }
 
             let getFacilityQuotaData = await knex('facility_property_unit_type_quota_limit').select('*').where({ entityId: facilityId, entityType: 'facility_master', propertyUnitTypeId: getPropertyUnits[0].propertyUnitType, orgId: orgId });
-            console.log("FacilityQuotaUnitWise", getFacilityQuotaData, getFacilityQuotaData.length);
-
+        
             let facilityData = await knex.from('entity_booking_criteria')
                 .select('entity_booking_criteria.concurrentBookingLimit')
                 .where({ 'entity_booking_criteria.entityId': facilityId, 'entity_booking_criteria.entityType': 'facility_master', 'entity_booking_criteria.orgId': orgId })
@@ -68,32 +67,26 @@ const facilityHelper = {
                 monthlyQuota = 999999;
                 weeklyQuota = 999999;
             } else {
-                console.log("getFacilityQuotaData11111111111111", getFacilityQuotaData[0].daily)
                 dailyQuota = getFacilityQuotaData[0].daily;
                 weeklyQuota = getFacilityQuotaData[0].weekly;
                 monthlyQuota = getFacilityQuotaData[0].monthly;
             }
-            console.log("daily/monthly/weekly", dailyQuota, weeklyQuota, monthlyQuota);
-
+          
             // Set timezone for moment
             moment.tz.setDefault(timezone);
-            let currentTime = moment();
-            console.log('Current Time:', currentTime.format('MMMM Do YYYY, h:mm:ss a'));
-
+            currentTime = moment();
+           
 
             let bookingStartTime = moment(+bookingStartDateTime).seconds(0).milliseconds(0).valueOf();
             let bookingEndTime = moment(+bookingEndDateTime).seconds(0).milliseconds(0).valueOf();
-            console.log('User Selected Booking Start/End Time: ', moment(bookingStartTime).format('YYYY-MM-DD HH:mm'), moment(bookingEndTime).format('YYYY-MM-DD HH:mm'));
-
+          
             let bookingDay = moment(bookingStartTime).format('ddd');
-            console.log('Checking Booking Availability of Day: ', bookingDay);
-
+          
             let openCloseTimes = await knex.from('entity_open_close_times').where({
                 entityId: facilityId, entityType: 'facility_master', orgId: orgId,
                 day: bookingDay
             }).first();
-            console.log('openCloseTimes:', openCloseTimes);
-
+          
             let bookingFullDay = moment(bookingStartTime).format('dddd');
 
             if (!openCloseTimes) {
@@ -114,7 +107,6 @@ const facilityHelper = {
                 .where({ id: facilityId, orgId: orgId, isActive: false })
                 .first();
 
-            console.log("closedFacility", closeFacility);
             if (closeFacility) {
 
                 let closeReasonMessage = closeFacility.inActiveReason;
@@ -136,7 +128,6 @@ const facilityHelper = {
                 .where('facility_close_date.startDate', '<', bookingEndTime)
                 .first();
 
-            console.log("closeFacilityTiming", closeFacilityTiming);
             if (closeFacilityTiming) {
 
                 let closeReason = await knex('facility_close_date')
@@ -156,8 +147,7 @@ const facilityHelper = {
 
 
             let bookingCriteria = await knex('entity_booking_criteria').select('*').where({ entityId: facilityId, entityType: 'facility_master', orgId: orgId }).first();
-            console.log("bookingCriteria", bookingCriteria);
-
+          
             if (bookingCriteria && bookingCriteria.bookingType == '1') {   // Flexible Booking
 
                 if (bookingEndTime <= bookingStartTime) {
@@ -177,9 +167,7 @@ const facilityHelper = {
                 let closingTimeOnBookingDay = moment(bookingStartTime).hours(moment(+openCloseTimes.closeTime).hours())
                     .minutes(moment(+openCloseTimes.closeTime).minutes()).seconds(0).milliseconds(0);
 
-                console.log('openingTimeOnBookingDay:', openingTimeOnBookingDay.format('YYYY-MM-DD HH:mm:ss'));
-                console.log('closingTimeOnBookingDay:', closingTimeOnBookingDay.format('YYYY-MM-DD HH:mm:ss'));
-
+             
 
                 if (openingTimeOnBookingDay.valueOf() > moment(bookingStartTime).valueOf()) {
                     return { code: 'INVALID_DATE_TIME_SELECTION', message: + result.error.message, error: new Error(`Please select booking start and end time b/w opening and closing hours for the day.`) };
@@ -204,15 +192,13 @@ const facilityHelper = {
                 }
 
                 let bookingPeriodAllow = await knex('entity_booking_criteria').select(['maxBookingPeriod', 'minBookingPeriod']).where({ entityId: facilityId, bookingType: 1, entityType: 'facility_master', orgId: orgId }).first();
-                console.log("maxBookingPeriodAllow", bookingPeriodAllow);
                 let maxDuration;
                 let minDuration;
 
                 if (bookingPeriodAllow && bookingPeriodAllow.maxBookingPeriod) {
                     maxDuration = moment(+bookingEndDateTime) - moment(+bookingStartDateTime);
                     let maxDurationInMinutes = maxDuration / 1000 / 60;
-                    console.log("maxDuration", maxDurationInMinutes);
-
+                
                     if (maxDurationInMinutes > bookingPeriodAllow.maxBookingPeriod) {
                         return { code: 'MAX_BOOKING_DURATION', message: + result.error.message, error: new Error(`Maximum booking duration allowed is ${bookingPeriodAllow.maxBookingPeriod} minutes. You can not book more then max duration.`) };
 
@@ -227,8 +213,7 @@ const facilityHelper = {
                 if (bookingPeriodAllow && bookingPeriodAllow.minBookingPeriod) {
                     minDuration = moment(+bookingEndDateTime) - moment(+bookingStartDateTime);
                     let minDurationInMinutes = minDuration / 1000 / 60;
-                    console.log("minDuration", minDurationInMinutes);
-
+                 
                     if (minDurationInMinutes < bookingPeriodAllow.minBookingPeriod) {
                         return { code: 'MIN_BOOKING_DURATION', message: + result.error.message, error: new Error(`Minimum booking duration allowed is ${bookingPeriodAllow.minBookingPeriod} minutes. You can not book less then min duration.`) };
 
@@ -245,18 +230,13 @@ const facilityHelper = {
 
             let bookingAllowingTiming = await knex('entity_booking_criteria').select(['bookingAllowedAdvanceTime', 'bookingCloseAdvanceTime']).where({ entityId: facilityId, entityType: 'facility_master', orgId: orgId }).first();
 
-            console.log('Booking Start Time:', moment(bookingStartTime).format('MMMM Do YYYY, h:mm:ss a'));
-            console.log('bookingAllowingTiming', bookingAllowingTiming);
-
+          
             if (bookingAllowingTiming && bookingAllowingTiming.bookingAllowedAdvanceTime) {
 
-                console.log('Advance Allow Time:', moment(currentTime).add(+bookingAllowingTiming.bookingAllowedAdvanceTime, 'minutes').format('MMMM Do YYYY, h:mm:ss a'));
-
+              
                 let isValidBookingInsideAllowPeriod = moment(currentTime).add(+bookingAllowingTiming.bookingAllowedAdvanceTime, 'minutes') > moment(bookingStartTime);
 
-                console.log("isValidBookingInsideAllowPeriod", isValidBookingInsideAllowPeriod);
-
-
+              
                 if (!isValidBookingInsideAllowPeriod) {
 
                     let advanceString = bookingAllowingTiming.bookingAllowedAdvanceTime;
@@ -281,13 +261,10 @@ const facilityHelper = {
 
             if (bookingAllowingTiming && bookingAllowingTiming.bookingCloseAdvanceTime) {
 
-                console.log('Advance Booking Close Time:', moment(currentTime).add(+bookingAllowingTiming.bookingCloseAdvanceTime, 'minutes').format('MMMM Do YYYY, h:mm:ss a'));
-
-
+              
                 let isValidBookingBeforeLockPeriod = moment(currentTime).add(+bookingAllowingTiming.bookingCloseAdvanceTime, 'minutes') < moment(bookingStartTime);
 
-                console.log("isValidBookingBeforeLockPeriod", isValidBookingBeforeLockPeriod);
-
+              
                 if (!isValidBookingBeforeLockPeriod) {
                     return { code: 'ADVANCED_BOOKING_LOCK_DURATION', message: + result.error.message, error: new Error(`Booking needs to be made before ${bookingAllowingTiming.bookingCloseAdvanceTime} minutes of booking start period.`) };
 
@@ -303,14 +280,11 @@ const facilityHelper = {
 
             if (dailyQuota && dailyQuota > 0) {
                 let dailyQuotas = Number(dailyQuota);
-                console.log("dailyQuota", dailyQuota);
                 let startOfDay = moment(+bookingStartDateTime).startOf('day').valueOf();
                 let endOfDay = moment(+bookingStartDateTime).endOf('day').valueOf();
-                console.log("startOfDay", startOfDay, endOfDay);
-
+             
                 let rawQuery = await knex.raw(`select count(*) AS totalSeats from entity_bookings where "entityId"  = ${facilityId}  and  "bookingStartDateTime" >= ${startOfDay}  and "bookingEndDateTime"  <= ${endOfDay} and "isBookingCancelled" = false  and "unitId" = ${unitIds} `);
                 let totalBookedSeatForADay = rawQuery.rows[0].totalseats;
-                console.log("total Bookings Done for a day", totalBookedSeatForADay);
                 quotaBooked = dailyQuota;
                 // Checking Daily Booking Quota Limit Is Completed
                 if (dailyQuotas <= totalBookedSeatForADay) {
@@ -328,11 +302,8 @@ const facilityHelper = {
                 let weeklyQuotas = Number(weeklyQuota);
                 let startOfWeek = moment(+bookingStartDateTime).startOf('week').valueOf();
                 let endOfWeek = moment(+bookingStartDateTime).endOf('week').valueOf();
-                console.log("startOfWeek", startOfWeek, endOfWeek);
-                console.log("weeklyQuota", weeklyQuota);
                 let rawQuery = await knex.raw(`select count(*) AS totalSeats from entity_bookings where "entityId"  = ${facilityId}  and  "bookingStartDateTime" >= ${startOfWeek}  and "bookingEndDateTime"  <= ${endOfWeek} and "isBookingCancelled" = false  and "unitId" = ${unitIds} `);
                 let totalBookedSeatForAWeek = rawQuery.rows[0].totalseats;
-                console.log("total Bookings Done for a week", totalBookedSeatForAWeek);
                 quotaBooked = weeklyQuota;
                 // Checking Weekly Booking Quota Limit Is Completed
                 if (weeklyQuotas <= totalBookedSeatForAWeek) {
@@ -349,15 +320,12 @@ const facilityHelper = {
 
             if (monthlyQuota && monthlyQuota > 0) {
                 let monthlyQuotas = Number(monthlyQuota);
-                console.log("monthlyQuota", monthlyQuotas);
-
+             
                 let startOfMonth = moment(+bookingStartDateTime).startOf('month').valueOf();
                 let endOfMonth = moment(+bookingStartDateTime).endOf('month').valueOf();
-                console.log("startOfMonth", startOfMonth, endOfMonth);
-
+              
                 let rawQuery = await knex.raw(`select count(*) AS totalSeats from entity_bookings where "entityId"  = ${facilityId}  and  "bookingStartDateTime" >= ${startOfMonth}  and "bookingEndDateTime"  <= ${endOfMonth} and "isBookingCancelled" = false and "unitId" = ${unitIds} `);
                 let totalBookedSeatForAMonth = rawQuery.rows[0].totalseats;
-                console.log("total Bookings Done for a month", totalBookedSeatForAMonth);
                 quotaBooked = monthlyQuota;
                 // Checking Monthly Booking Quota Limit Is Completed
                 if (monthlyQuotas <= totalBookedSeatForAMonth) {
@@ -433,7 +401,6 @@ const facilityHelper = {
                 endOf = moment(+bookingStartDateTime).endOf('day').valueOf();
 
                 let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${facilityId}  and  "bookingStartDateTime" >= ${startOf}  and "bookingEndDateTime"  <= ${endOf} and "isBookingCancelled" = false and "unitId" = ${unitIds} `);
-                console.log("totalBookedSeats", rawQuery.rows);
                 let totalBookedSeat = rawQuery.rows[0].totalseats;
 
                 dailyLimit = dailyQuota;
@@ -446,7 +413,6 @@ const facilityHelper = {
                 endOf = moment(+bookingStartDateTime).endOf('week').valueOf();
 
                 let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${facilityId}  and  "bookingStartDateTime" >= ${startOf}  and "bookingEndDateTime"  <= ${endOf}  and "isBookingCancelled" = false and "unitId" = ${unitIds} `);
-                console.log("totalBookedSeats", rawQuery.rows);
                 let totalBookedSeat = rawQuery.rows[0].totalseats;
 
                 weeklyLimit = weeklyQuota;
@@ -459,38 +425,20 @@ const facilityHelper = {
                 endOf = moment(+bookingStartDateTime).endOf('month').valueOf();
 
                 let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${facilityId}  and  "bookingStartDateTime" >= ${startOf}  and "bookingEndDateTime"  <= ${endOf} and  "isBookingCancelled" = false and "unitId" = ${unitIds} `);
-                console.log("totalBookedSeats", rawQuery.rows);
                 let totalBookedSeat = rawQuery.rows[0].totalseats;
 
                 monthlyLimit = monthlyQuota;
                 monthlyRemainingLimit = monthlyQuota - totalBookedSeat;
                 monthlyBookedSeat = totalBookedSeat;
             }
-
-            let remainingLimit = {
-                'daily': Number(dailyLimit),
-                'dailyRemaining': Number(dailyRemainingLimit),
-                'dailyBookedSeats': Number(dailyBookedSeat),
-                'weekly': Number(weeklyLimit),
-                'weeklyRemaining': Number(weeklyRemainingLimit),
-                'weeklyBookedSeats': Number(weeklyBookedSeat),
-                'monthly': Number(monthlyLimit),
-                'monthlyRemaining': Number(monthlyRemainingLimit),
-                'monthlyBookedSeats': Number(monthlyBookedSeat)
-            };
-
-            let QuotaData = {
-                remainingLimit
-            };
-
-            console.log("quota", QuotaData);
-
-            let bookingQuota = { availableSeats, userQuota: QuotaData }
+            
+            let bookingQuota = availableSeats
+            console.log("HelperRemaining", bookingQuota);
 
             return bookingQuota;
 
         } catch (err) {
-            console.log('[helpers][facility][getFacilityBookingCapacity]:  Error', err);
+            console.log('[helpers][facility][sendFacilityBooking]:  Error', err);
             return { code: 'UNKNOWN_ERROR', message: err.message, error: err };
         }
     }
