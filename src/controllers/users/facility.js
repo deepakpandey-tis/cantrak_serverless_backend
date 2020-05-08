@@ -405,15 +405,15 @@ const facilityBookingController = {
 
             unitId = payload.unitId;
 
-            let checkFacilityBooking = await facilityHelper.getFacilityBookingCapacity({ facilityId: payload.facilityId, bookingStartDateTime: payload.bookingStartDateTime, bookingEndDateTime: payload.bookingEndDateTime, offset: payload.offset, currentTime: payload.currentTime, timezone: payload.timezone, unitId: payload.unitId, orgId: req.orgId })
-            console.log("facilityBooking", checkFacilityBooking);
-            if(checkFacilityBooking < 1){
-                return res.status(400).json({
-                    errors: [
-                        { code: "SLOT_BOOKED", message: `Slot is not available` }
-                    ]
-                });
-            }
+            // let checkFacilityBooking = await facilityHelper.getFacilityBookingCapacity({ facilityId: payload.facilityId, bookingStartDateTime: payload.bookingStartDateTime, bookingEndDateTime: payload.bookingEndDateTime, offset: payload.offset, currentTime: payload.currentTime, timezone: payload.timezone, unitId: payload.unitId, orgId: req.orgId })
+            // console.log("facilityBooking", checkFacilityBooking);
+            // if(checkFacilityBooking < 1){
+            //     return res.status(400).json({
+            //         errors: [
+            //             { code: "SLOT_BOOKED", message: `Slot is not available` }
+            //         ]
+            //     });
+            // }
             // check facility is closed
 
             let closeFacility = await knex('facility_master')
