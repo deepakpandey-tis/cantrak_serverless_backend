@@ -55,4 +55,7 @@ router.post('/update-appointment-status', authMiddleware.isAuthenticated, servic
 router.post('/get-service-order-for-report', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isCMAccessible, serviceOrderController.getServiceOrderForReport)
 
 router.get('/get-satisfaction-list',authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isCMAccessible, serviceOrderController.getSatisfactionList)
+
+router.get('/get-service-order-report',authMiddleware.isAuthenticated, serviceOrderController.getServiceOrderReport)
+
 module.exports = router;

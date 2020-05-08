@@ -1348,6 +1348,7 @@ const serviceOrderController = {
                 let schema = Joi.object().keys({
                     partId: Joi.string().required(),
                     unitCost: Joi.string().required(),
+                    unitCost: Joi.number().required(),
                     quantity: Joi.number().required(),
                     status: Joi.string().required(),
                     serviceOrderId: Joi.string().required()
@@ -2685,6 +2686,86 @@ const serviceOrderController = {
         } catch (err) {
             console.log("[controllers][satisfaction][getSatisfactionList] :  Error", err);
             //trx.rollback
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    /*GET SERVICE ORDER REPORT */
+    getServiceOrderReport: async (req, res) => {
+
+        try {
+
+            let meData = req.me;
+            let payload = req.query;
+            const schema = Joi.object().keys({
+                id: Joi.string().required()
+            });
+
+            const result = Joi.validate(payload, schema);
+            console.log("[controllers][service][problem]: JOi Result", result);
+
+            if (result && result.hasOwnProperty("error") && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "VALIDATION_ERROR", message: result.error.message }
+                    ]
+                });
+            }
+
+            let serviceOrderResult = await knex('service_orders')
+                .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                .leftJoin('companies', 'service_requests.companyId', 'companies.id')
+                .leftJoin('projects', 'service_requests.projectId', 'projects.id')
+                .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+                .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+                .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
+                .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id')
+                .select([
+                    'service_orders.*',
+                    'companies.companyId',
+                    'companies.companyName',
+                    'companies.companyAddressEng',
+                    'companies.logoFile',
+                    'projects.project as ProjectCode',
+                    'projects.projectName',
+                    'buildings_and_phases.buildingPhaseCode',
+                    'buildings_and_phases.description as BuildingDescription',
+                    'requested_by.name as requestedByUser',
+                    'service_requests.serviceStatusCode',
+                    'service_requests.priority',
+                    'requested_by.name as requestedByUser',
+                    'service_requests.description',
+                    'incident_sub_categories.descriptionEng as subCategory',
+
+
+
+                ])
+                .where({ 'service_orders.id': payload.id }).first()
+
+
+            let partResult = await knex('assigned_parts')
+                .leftJoin('part_master', 'assigned_parts.partId', 'part_master.id')
+                .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
+                .select([
+                    'assigned_parts.*',
+                    'part_master.*',
+                    'part_category_master.*',
+                    'assigned_parts.createdAt as requestedAt'
+                ])
+                .where({ 'assigned_parts.entityId': payload.id })
+
+
+            return res.status(200).json({
+                data: { ...serviceOrderResult, partResult, printedBy: meData },
+                message: "Service Order Report Successfully!",
+            });
+
+
+        } catch (err) {
+
             res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
