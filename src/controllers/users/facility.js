@@ -408,7 +408,7 @@ const facilityBookingController = {
             // Check booking Quota
             let checkFacilityQuota = await facilityHelper.getBookingQuota({ facilityId: payload.facilityId, bookingStartDateTime: payload.bookingStartDateTime, bookingEndDateTime: payload.bookingEndDateTime, offset: payload.offset, currentTime: payload.currentTime, timezone: payload.timezone, unitId: payload.unitId, orgId: req.orgId })
             console.log("checkFacilityQuota", checkFacilityQuota);
-            if(checkFacilityQuota < 1){
+            if(checkFacilityQuota < 0){
                 return res.status(400).json({
                     errors: [
                         { code: "SLOT_BOOKED", message: `Slot is not available` }
@@ -417,9 +417,9 @@ const facilityBookingController = {
             }
 
             // Check booking Capacity
-            let checkFacilityCapacity = await facilityHelper.getBookingCapacity({ facilityId: payload.facilityId, bookingStartDateTime: payload.bookingStartDateTime, bookingEndDateTime: payload.bookingEndDateTime, offset: payload.offset, currentTime: payload.currentTime, timezone: payload.timezone, unitId: payload.unitId, orgId: req.orgId })
+            let checkFacilityCapacity = await facilityHelper.getBookingCapacity({ facilityId: payload.facilityId, bookingStartDateTime: payload.bookingStartDateTime, bookingEndDateTime: payload.bookingEndDateTime, offset: payload.offset, currentTime: payload.currentTime, timezone: payload.timezone, unitId: payload.unitId, orgId: req.orgId, noOfSeats: payload.noOfSeats })
             console.log("checkFacilityCapacity", checkFacilityCapacity);
-            if(checkFacilityCapacity < 1){
+            if(checkFacilityCapacity < 0){
                 return res.status(400).json({
                     errors: [
                         { code: "Quota_BOOKED", message: `Booking quota is not available` }
@@ -571,15 +571,15 @@ const facilityBookingController = {
                 }
 
 
-            //   await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Approved Required', template: 'booking-confirmed-required.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
+              await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Approved Required', template: 'booking-confirmed-required.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
 
-              // await emailHelper.sendTemplateEmail({ to: adminEmail, subject: 'Booking Approved Required ', template: 'booking-confirmed-admin.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
+              await emailHelper.sendTemplateEmail({ to: adminEmail, subject: 'Booking Approved Required ', template: 'booking-confirmed-admin.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
 
 
             } else {
 
 
-        //       await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Confirmed', template: 'booking-confirmed.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
+             await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Confirmed', template: 'booking-confirmed.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
 
             }
             let updateDisplayId = await knex('entity_bookings').update({ isActive: true }).where({ isActive: true });

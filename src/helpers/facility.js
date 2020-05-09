@@ -286,7 +286,7 @@ const facilityHelper = {
         }
     },
 
-    getBookingCapacity: async ({ facilityId, bookingStartDateTime, bookingEndDateTime, offset, currentTime, timezone, unitId, orgId }) => {
+    getBookingCapacity: async ({ facilityId, bookingStartDateTime, bookingEndDateTime, offset, currentTime, timezone, unitId, orgId, noOfSeats }) => {
         try {
             const schema = Joi.object().keys({
                 facilityId: Joi.string().required(),
@@ -296,10 +296,11 @@ const facilityHelper = {
                 currentTime: Joi.date().required(),
                 timezone: Joi.string().required(),
                 unitId: Joi.string().required(),
-                orgId: Joi.string().required()
+                orgId: Joi.string().required(),
+                noOfSeats: Joi.number().required()
             });
 
-            const result = Joi.validate({ facilityId, bookingStartDateTime, bookingEndDateTime, offset, currentTime, timezone, unitId, orgId }, schema);
+            const result = Joi.validate({ facilityId, bookingStartDateTime, bookingEndDateTime, offset, currentTime, timezone, unitId, orgId,noOfSeats }, schema);
             console.log('[helpers][facility][getFacilityBookingCapacity]: Joi Validate Params:', result);
 
             if (result && result.hasOwnProperty('error') && result.error) {
@@ -477,14 +478,14 @@ const facilityHelper = {
 
             // Check if pax capacity disable and set NO
             if (facilityDatas.allowConcurrentBooking == true) {
-                availableSeats = Number(facilityDatas.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
+                availableSeats = Number(facilityDatas.concurrentBookingLimit) - (Number(bookingData.totalBookedSeats) + Number(noOfSeats));
             } else if (dailyQuota == 999999 && weeklyQuota == 999999 && monthlyQuota == 999999) {
                 availableSeats = Number(5000);
             } else {
                 if (facilityDatas.concurrentBookingLimit == 0) {
                     availableSeats = Number(quotaBooked) - Number(bookingData.totalBookedSeats);
                 } else {
-                    availableSeats = Number(facilityDatas.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
+                    availableSeats = Number(facilityDatas.concurrentBookingLimit) - (Number(bookingData.totalBookedSeats) + Number(noOfSeats));
                 }
             }
 
