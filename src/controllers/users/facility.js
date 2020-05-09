@@ -1095,7 +1095,7 @@ const facilityBookingController = {
                 startOf = moment(+payload.bookingStartDateTime).startOf('day').valueOf();
                 endOf = moment(+payload.bookingStartDateTime).endOf('day').valueOf();
 
-                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOf}  and "bookingEndDateTime"  <= ${endOf} and "isBookingCancelled" = false and "unitId" = ${unitIds} `);
+                let rawQuery = await knex.raw(`select count(*) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOf}  and "bookingEndDateTime"  <= ${endOf} and "isBookingCancelled" = false and "unitId" = ${unitIds} `);
                 console.log("totalBookedSeats", rawQuery.rows);
                 let totalBookedSeat = rawQuery.rows[0].totalseats;
 
@@ -1108,7 +1108,7 @@ const facilityBookingController = {
                 startOf = moment(+payload.bookingStartDateTime).startOf('week').valueOf();
                 endOf = moment(+payload.bookingStartDateTime).endOf('week').valueOf();
 
-                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOf}  and "bookingEndDateTime"  <= ${endOf}  and "isBookingCancelled" = false and "unitId" = ${unitIds} `);
+                let rawQuery = await knex.raw(`select count(*) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOf}  and "bookingEndDateTime"  <= ${endOf}  and "isBookingCancelled" = false and "unitId" = ${unitIds} `);
                 console.log("totalBookedSeats", rawQuery.rows);
                 let totalBookedSeat = rawQuery.rows[0].totalseats;
 
@@ -1121,7 +1121,7 @@ const facilityBookingController = {
                 startOf = moment(+payload.bookingStartDateTime).startOf('month').valueOf();
                 endOf = moment(+payload.bookingStartDateTime).endOf('month').valueOf();
 
-                let rawQuery = await knex.raw(`select COALESCE(SUM("noOfSeats"),0) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOf}  and "bookingEndDateTime"  <= ${endOf} and  "isBookingCancelled" = false and "unitId" = ${unitIds} `);
+                let rawQuery = await knex.raw(`select count(*) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOf}  and "bookingEndDateTime"  <= ${endOf} and  "isBookingCancelled" = false and "unitId" = ${unitIds} `);
                 console.log("totalBookedSeats", rawQuery.rows);
                 let totalBookedSeat = rawQuery.rows[0].totalseats;
 
