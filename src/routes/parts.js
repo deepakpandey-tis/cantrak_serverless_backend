@@ -247,4 +247,11 @@ roleMiddleware.parseUserPermission,
 resourceAccessMiddleware.isPartAccessible,
 partsController.stockReport)
 
+
+router.get('/get-requisition-report',
+authMiddleware.isAuthenticated,
+roleMiddleware.parseUserPermission,
+resourceAccessMiddleware.isPartAccessible,
+partsController.getRequisitionReport)
+
 module.exports = router;

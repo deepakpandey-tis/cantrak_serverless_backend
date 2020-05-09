@@ -2156,7 +2156,8 @@ const partsController = {
                 updatedAt: currentTime,
                 adjustType: 1,
                 serviceOrderNo: assignedResult.entityId,
-                orgId: req.orgId
+                orgId: req.orgId,
+                approvedBy:req.me.id
             }
             let partLedger = await knex.insert(ledgerObject).returning(['*']).into('part_ledger');
             return res.status(200).json({
@@ -2595,6 +2596,100 @@ const partsController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
+    },
+    /*GET REQUISITION REPORT */
+    getRequisitionReport: async (req, res) => {
+
+        try {
+
+            let meData = req.me;
+            let payload = req.query;
+            const schema = Joi.object().keys({
+                id: Joi.string().required(),
+                soId: Joi.string().required()
+            });
+
+            const result = Joi.validate(payload, schema);
+            console.log("[controllers][service][problem]: JOi Result", result);
+
+            if (result && result.hasOwnProperty("error") && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "VALIDATION_ERROR", message: result.error.message }
+                    ]
+                });
+            }
+
+
+            let serviceResult = await knex('service_orders')
+                .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                .leftJoin('companies', 'service_requests.companyId', 'companies.id')
+                .leftJoin('projects', 'service_requests.projectId', 'projects.id')
+                .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+                .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+                .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
+
+                .select([
+                    'service_orders.*',
+                    'companies.companyId',
+                    'companies.companyName',
+                    'companies.logoFile',
+                    'projects.project as ProjectCode',
+                    'projects.projectName',
+                    'buildings_and_phases.buildingPhaseCode',
+                    'buildings_and_phases.description as BuildingDescription',
+                    'requested_by.name as requestedByUser',
+
+                ])
+                .where({ 'service_orders.id': payload.soId }).first();
+
+            let partResult = await knex('assigned_parts')
+                .leftJoin('part_master','assigned_parts.partId','part_master.id')
+                .leftJoin('part_category_master','part_master.partCategory','part_category_master.id')
+                .select([
+                    'assigned_parts.*',
+                    'part_master.*',
+                    'part_category_master.*',
+                    'assigned_parts.createdAt as requestedAt'
+                ])
+                .where({ 'assigned_parts.id': payload.id })
+
+                let approveResult = await knex('part_ledger').where({'serviceOrderNo':payload.soId})
+                .leftJoin("users",'part_ledger.approvedBy','users.id')
+                .select([
+                    'users.name as approvedUser',
+                    'part_ledger.createdAt as approvedAt',
+                ])
+                .first()
+
+
+            const Parallel = require('async-parallel')
+            partResult = await Parallel.map(partResult, async (part) => {
+               // let { id } = part;
+                let quantity = await knex('part_ledger').where({ partId: part.partId, orgId: req.orgId }).select('quantity')
+                let totalParts = 0
+                for (let i = 0; i < quantity.length; i++) {
+                    const element = quantity[i];
+                    totalParts += Number(element.quantity);
+                }
+                return { ...part, totalParts }
+            })
+
+            res.status(200).json({
+                data: { ...serviceResult, printedBy: meData, partResult ,approveResult},
+                message: "Requsition report Successfully!"
+            })
+
+
+
+        } catch (err) {
+
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+
+        }
+
     }
 }
 
