@@ -2740,8 +2740,6 @@ const serviceOrderController = {
                     'service_requests.description',
                     'incident_sub_categories.descriptionEng as subCategory',
 
-
-
                 ])
                 .where({ 'service_orders.id': payload.id }).first()
 
@@ -2771,7 +2769,51 @@ const serviceOrderController = {
             });
         }
     }
+    ,
+    /*GET PROBLEM CATEGORY REPORT */
+    getProblemCategoryReport: async (req, res) => {
 
+        try {
+
+            let payload = req.body;
+            let fromDate = payload.fromDate;
+            let toDate = payload.toDate;
+
+            let fromNewDate = moment(fromDate).startOf('date').format();
+            let toNewDate = moment(toDate).endOf('date', 'days').format();
+            let fromTime = new Date(fromNewDate).getTime();
+            let toTime = new Date(toNewDate).getTime();
+
+            let serviceResult = await knex('service_requests')
+                .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                .select([
+                    'service_requests.*',
+                    'service_problems.problemId',
+                    'service_problems.categoryId',
+
+                ])
+                .whereBetween('service_requests.createdAt', [fromTime, toTime])
+                .where({'service_requests.moderationStatus':true,'service_requests.orgId': req.orgId });
+
+           // categoryResult = _.uniqBy(categoryResult, "categoryId")
+
+            const Parallel = require('async-parallel');
+
+
+
+            return res.status(200).json({
+                data: { ...serviceResult },
+                message: "Problem Category Report Successfully!",
+            });
+
+
+        } catch (err) {
+
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    }
 }
 
 module.exports = serviceOrderController;
