@@ -448,7 +448,7 @@ const facilityBookingController = {
             if (checkFacilityCapacity < 0) {
                 return res.status(400).json({
                     errors: [
-                        { code: "Quota_BOOKED", message: `Booking quota is not available` }
+                        { code: "Quota_BOOKED", message: `Selected no. of Pax is not available in this slot.` }
                     ]
                 });
             }
