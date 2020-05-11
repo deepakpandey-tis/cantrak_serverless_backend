@@ -423,7 +423,18 @@ const facilityBookingController = {
             // Check booking Quota
             let checkFacilityQuota = await facilityHelper.getBookingQuota({ facilityId: payload.facilityId, bookingStartDateTime: payload.bookingStartDateTime, bookingEndDateTime: payload.bookingEndDateTime, offset: payload.offset, currentTime: payload.currentTime, timezone: payload.timezone, unitId: payload.unitId, orgId: req.orgId })
             console.log("checkFacilityQuota", checkFacilityQuota);
-            if (checkFacilityQuota < 0) {
+
+            if (checkFacilityQuota.code && checkFacilityQuota.message) {
+                return res.status(400).json({
+                    errors: [
+                        { code: checkFacilityQuota.code, message: checkFacilityQuota.message }
+                    ]
+                });
+            }
+
+
+
+            if (checkFacilityQuota < 0 && !checkFacilityQuota.code ) {
                 return res.status(400).json({
                     errors: [
                         { code: "SLOT_BOOKED", message: `Slot is not available` }
