@@ -400,6 +400,21 @@ const facilityBookingController = {
                 });
             }
 
+            // Get project id
+
+            let facilityMaster = await knex('facility_master').select('projectId')
+                .where({ id: payload.facilityId, orgId: req.orgId, isActive: true }).first();
+
+            console.log("facilityBook", facilityMaster);
+
+            if (!facilityMaster) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "NOT_FOUND", message: `Facility Closed.` }
+                    ]
+                });
+            }
+
 
             // Get Facility Quota By Facility Id           
 
@@ -408,7 +423,18 @@ const facilityBookingController = {
             // Check booking Quota
             let checkFacilityQuota = await facilityHelper.getBookingQuota({ facilityId: payload.facilityId, bookingStartDateTime: payload.bookingStartDateTime, bookingEndDateTime: payload.bookingEndDateTime, offset: payload.offset, currentTime: payload.currentTime, timezone: payload.timezone, unitId: payload.unitId, orgId: req.orgId })
             console.log("checkFacilityQuota", checkFacilityQuota);
-            if(checkFacilityQuota < 0){
+
+            if (checkFacilityQuota.code && checkFacilityQuota.message) {
+                return res.status(400).json({
+                    errors: [
+                        { code: checkFacilityQuota.code, message: checkFacilityQuota.message }
+                    ]
+                });
+            }
+
+
+
+            if (checkFacilityQuota < 0 && !checkFacilityQuota.code ) {
                 return res.status(400).json({
                     errors: [
                         { code: "SLOT_BOOKED", message: `Slot is not available` }
@@ -419,13 +445,13 @@ const facilityBookingController = {
             // Check booking Capacity
             let checkFacilityCapacity = await facilityHelper.getBookingCapacity({ facilityId: payload.facilityId, bookingStartDateTime: payload.bookingStartDateTime, bookingEndDateTime: payload.bookingEndDateTime, offset: payload.offset, currentTime: payload.currentTime, timezone: payload.timezone, unitId: payload.unitId, orgId: req.orgId, noOfSeats: payload.noOfSeats })
             console.log("checkFacilityCapacity", checkFacilityCapacity);
-            if(checkFacilityCapacity < 0){
+            if (checkFacilityCapacity < 0) {
                 return res.status(400).json({
                     errors: [
                         { code: "Quota_BOOKED", message: `Booking quota is not available` }
                     ]
                 });
-            }            
+            }
 
             // check facility is closed
 
@@ -571,15 +597,15 @@ const facilityBookingController = {
                 }
 
 
-              await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Approved Required', template: 'booking-confirmed-required.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
+                await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Approved Required', template: 'booking-confirmed-required.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
 
-              await emailHelper.sendTemplateEmail({ to: adminEmail, subject: 'Booking Approved Required ', template: 'booking-confirmed-admin.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
+                await emailHelper.sendTemplateEmail({ to: adminEmail, subject: 'Booking Approved Required ', template: 'booking-confirmed-admin.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
 
 
             } else {
- 
 
-             await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Confirmed', template: 'booking-confirmed.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
+
+                await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Confirmed', template: 'booking-confirmed.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
 
             }
             let updateDisplayId = await knex('entity_bookings').update({ isActive: true }).where({ isActive: true });
@@ -640,6 +666,15 @@ const facilityBookingController = {
 
             let facilityMaster = await knex('facility_master').select('projectId')
                 .where({ id: payload.facilityId, orgId: req.orgId, isActive: true }).first();
+            console.log("facilityBook", facilityMaster);
+
+            if (!facilityMaster) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "NOT_FOUND", message: `Facility Closed.` }
+                    ]
+                });
+            }
 
             let getPropertyUnits = await knex('property_units').select('*')
                 .where({ projectId: facilityMaster.projectId, orgId: req.orgId, id: payload.unitId })
