@@ -1107,14 +1107,10 @@ const facilityBookingController = {
             // Check if pax capacity disable and set NO
             if (facilityDatas.allowConcurrentBooking == true) {
                 availableSeats = Number(facilityDatas.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
-            } else if (dailyQuota == 999999 && weeklyQuota == 999999 && monthlyQuota == 999999) {
+            } else if (facilityDatas.allowConcurrentBooking == false &&  facilityDatas.concurrentBookingLimit == 0 ) {
                 availableSeats = Number(5000);
-            } else {
-                if (facilityDatas.concurrentBookingLimit == 0) {
-                    availableSeats = Number(quotaBooked) - Number(bookingData.totalBookedSeats);
-                } else {
-                    availableSeats = Number(facilityDatas.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
-                }
+            } else if(facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit != 0 )   {
+                availableSeats = Number(facilityDatas.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
             }
 
 
