@@ -2785,25 +2785,87 @@ const serviceOrderController = {
             let toTime = new Date(toNewDate).getTime();
 
             let serviceResult = await knex('service_requests')
-                .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                .leftJoin('companies', 'service_requests.companyId', 'companies.id')
+                .leftJoin('projects', 'service_requests.projectId', 'projects.id')
+                .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+                .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+                //.leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                // .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                // .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id')
+                // .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
                 .select([
                     'service_requests.*',
-                    'service_problems.problemId',
-                    'service_problems.categoryId',
-
+                    //'service_problems.problemId',
+                    //'service_problems.categoryId',
+                    //'incident_type.typeCode as problemTypeCode',
+                    //'incident_type.descriptionEng as problemType',
+                    //'incident_categories.categoryCode',
+                    //'incident_categories.descriptionEng as category',
+                    //'incident_sub_categories.descriptionEng as subCategory',
+                    'companies.companyId as companyCode',
+                    'companies.companyName',
+                    'companies.logoFile',
+                    'projects.project as ProjectCode',
+                    'projects.projectName',
+                    'buildings_and_phases.buildingPhaseCode',
+                    'buildings_and_phases.description as BuildingDescription',
                 ])
                 .whereBetween('service_requests.createdAt', [fromTime, toTime])
-                .where({'service_requests.moderationStatus':true,'service_requests.orgId': req.orgId });
+                .where({
+                    'service_requests.companyId': payload.companyId, 'service_requests.projectId': payload.projectId,
+                    'buildings_and_phases.id': payload.buildingId, 'service_requests.moderationStatus': true, 'service_requests.orgId': req.orgId
+                });
 
-           // categoryResult = _.uniqBy(categoryResult, "categoryId")
+            let serviceIds = serviceResult.map(it => it.id);
 
+
+            let serviceProblem = await knex.from('service_problems')
+                .leftJoin('service_requests', 'service_problems.serviceRequestId', 'service_requests.id')
+                .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id')
+                .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
+                .select([
+                    'service_problems.problemId',
+                    'service_problems.categoryId',
+                    'incident_type.typeCode as problemTypeCode',
+                    'incident_type.descriptionEng as problemType',
+                    'incident_categories.categoryCode',
+                    'incident_categories.descriptionEng as category',
+                    'incident_sub_categories.descriptionEng as subCategory',
+                    'service_requests.serviceStatusCode',
+                ])
+                .whereIn('service_problems.serviceRequestId', serviceIds)
+                .where({ 'service_problems.orgId': req.orgId });
+
+            let mapData = _.chain(serviceProblem)
+                .groupBy("categoryId")
+                .map((value, key) => ({ category: key, serviceOrder: value.length, value: value[0],
+                     allValue: value, workDone: value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length,
+                     percentage:value.length*value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length/100}))
+                .value()
+
+
+
+            let totalServiceOrder = 0;
+            let totalWorkDone = 0;
+            let totalPercentage = 0;
             const Parallel = require('async-parallel');
+            serviceResult = await Parallel.map(mapData, async item => {
 
+                totalServiceOrder += Number(item.serviceOrder);
+                totalWorkDone += Number(item.workDone);
+                totalPercentage += Number(item.percentage);
+
+
+                return { ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder, totalWorkDone: totalWorkDone,totalPercentage:totalPercentage};
+
+            })
 
 
             return res.status(200).json({
-                data: { ...serviceResult },
+                data: serviceResult,
                 message: "Problem Category Report Successfully!",
+
             });
 
 
