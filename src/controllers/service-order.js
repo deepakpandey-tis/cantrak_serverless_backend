@@ -2837,13 +2837,52 @@ const serviceOrderController = {
                 .whereIn('service_problems.serviceRequestId', serviceIds)
                 .where({ 'service_problems.orgId': req.orgId });
 
+
+
+            let serviceProblem2 = await knex.from('service_problems')
+                .leftJoin('service_requests', 'service_problems.serviceRequestId', 'service_requests.id')
+                .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id')
+                .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
+                .select([
+                    "incident_categories.categoryCode",
+                    "service_problems.serviceRequestId",
+                    "incident_categories.descriptionEng",
+                    "service_requests.serviceStatusCode"
+                ])
+                .whereIn('service_problems.serviceRequestId', serviceIds)
+                .where({ 'service_problems.orgId': req.orgId });
+
+
             let mapData = _.chain(serviceProblem)
                 .groupBy("categoryId")
-                .map((value, key) => ({ category: key, serviceOrder: value.length, value: value[0],
-                     allValue: value, workDone: value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length,
-                     percentage:value.length*value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length/100}))
+                .map((value, key) => ({
+                    category: key, serviceOrder: value.length, value: value[0],
+                    allValue: value, workDone: value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length,
+                    percentage: value.length * value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / 100
+                }))
                 .value()
 
+
+            let final = [];
+            let grouped = _.groupBy(serviceProblem2, "categoryCode");
+
+            final.push(grouped);
+
+            let chartData = _.flatten(
+                final
+                    .filter(v => !_.isEmpty(v))
+                    .map(v => _.keys(v).map(p => ({ [p]: v[p].length * v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / 100})))
+            ).reduce((a, p) => {
+                let l = _.keys(p)[0];
+                if (a[l]) {
+                    a[l] += p[l];
+
+                } else {
+                    a[l] = p[l];
+                }
+                return a;
+            }, {});
 
 
             let totalServiceOrder = 0;
@@ -2857,7 +2896,8 @@ const serviceOrderController = {
                 totalPercentage += Number(item.percentage);
 
 
-                return { ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder, totalWorkDone: totalWorkDone,totalPercentage:totalPercentage};
+                return { ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder,
+                     totalWorkDone: totalWorkDone, totalPercentage: totalPercentage,chartData};
 
             })
 
@@ -2865,7 +2905,6 @@ const serviceOrderController = {
             return res.status(200).json({
                 data: serviceResult,
                 message: "Problem Category Report Successfully!",
-
             });
 
 
