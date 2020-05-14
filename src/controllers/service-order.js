@@ -2853,7 +2853,6 @@ const serviceOrderController = {
 
                 let serviceIds = serviceResult.map(it => it.id);
 
-
                 let serviceProblem = await knex.from('service_problems')
                     .leftJoin('service_requests', 'service_problems.serviceRequestId', 'service_requests.id')
                     .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
