@@ -2891,7 +2891,6 @@ const serviceOrderController = {
                     .orderBy('categoryCode', 'asc');
 
 
-
                 let mapData = _.chain(serviceProblem)
                     .groupBy("categoryId")
                     .map((value, key) => ({
