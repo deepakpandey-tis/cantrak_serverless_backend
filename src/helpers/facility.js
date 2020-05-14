@@ -501,7 +501,7 @@ const facilityHelper = {
             } else if (facilityDatas.allowConcurrentBooking == false &&  facilityDatas.concurrentBookingLimit == 0 ) {
                 availableSeats = Number(5000);
             } else if(facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit != 0 )   {
-                availableSeats = Number(facilityDatas.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
+                availableSeats = Number(facilityDatas.concurrentBookingLimit) - (Number(bookingData.totalBookedSeats) + Number(noOfSeats));
             }
 
             // if (facilityDatas.allowConcurrentBooking == true) {
