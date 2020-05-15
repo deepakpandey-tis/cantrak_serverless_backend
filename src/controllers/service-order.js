@@ -2784,6 +2784,15 @@ const serviceOrderController = {
             let fromTime = new Date(fromNewDate).getTime();
             let toTime = new Date(toNewDate).getTime();
             let serviceResult;
+            let  buildingType = "";
+    
+             if(payload.buildingId){
+
+             } else {
+                buildingType = "All";
+             }
+
+
 
             if (payload.type == "SR") {
 
@@ -2929,7 +2938,7 @@ const serviceOrderController = {
 
                     return {
                         ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder,
-                        totalWorkDone: totalWorkDone, totalPercentage: (totalPercentage).toFixed(2), chartData, reportType: "SR"
+                        totalWorkDone: totalWorkDone, totalPercentage: (totalPercentage).toFixed(2), chartData, reportType: "SR",buildingType
                     };
 
                 })
@@ -3156,7 +3165,7 @@ const serviceOrderController = {
 
                     return {
                         ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder,
-                        totalWorkDone: totalWorkDone, totalPercentage: (totalPercentage).toFixed(2), chartData, reportType: "SR"
+                        totalWorkDone: totalWorkDone, totalPercentage: (totalPercentage).toFixed(2), chartData, reportType: "SO",buildingType
                     };
 
                 })
