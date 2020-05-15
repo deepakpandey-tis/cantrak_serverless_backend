@@ -2783,38 +2783,235 @@ const serviceOrderController = {
             let toNewDate = moment(toDate).endOf('date', 'days').format();
             let fromTime = new Date(fromNewDate).getTime();
             let toTime = new Date(toNewDate).getTime();
+            let serviceResult;
 
-            let serviceResult = await knex('service_requests')
-                .leftJoin('companies', 'service_requests.companyId', 'companies.id')
-                .leftJoin('projects', 'service_requests.projectId', 'projects.id')
-                .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
-                .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
-                //.leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                // .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                // .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id')
-                // .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
-                .select([
-                    'service_requests.*',
-                    //'service_problems.problemId',
-                    //'service_problems.categoryId',
-                    //'incident_type.typeCode as problemTypeCode',
-                    //'incident_type.descriptionEng as problemType',
-                    //'incident_categories.categoryCode',
-                    //'incident_categories.descriptionEng as category',
-                    //'incident_sub_categories.descriptionEng as subCategory',
-                    'companies.companyId as companyCode',
-                    'companies.companyName',
-                    'companies.logoFile',
-                    'projects.project as ProjectCode',
-                    'projects.projectName',
-                    'buildings_and_phases.buildingPhaseCode',
-                    'buildings_and_phases.description as BuildingDescription',
-                ])
-                .whereBetween('service_requests.createdAt', [fromTime, toTime])
-                .where({
-                    'service_requests.companyId': payload.companyId, 'service_requests.projectId': payload.projectId,
-                    'buildings_and_phases.id': payload.buildingId, 'service_requests.moderationStatus': true, 'service_requests.orgId': req.orgId
-                });
+            if (payload.type == "SR") {
+
+
+
+                serviceResult = await knex('service_requests')
+                    .leftJoin('companies', 'service_requests.companyId', 'companies.id')
+                    .leftJoin('projects', 'service_requests.projectId', 'projects.id')
+                    .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+                    .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+                    //.leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                    // .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                    // .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id')
+                    // .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
+                    .select([
+                        'service_requests.*',
+                        //'service_problems.problemId',
+                        //'service_problems.categoryId',
+                        //'incident_type.typeCode as problemTypeCode',
+                        //'incident_type.descriptionEng as problemType',
+                        //'incident_categories.categoryCode',
+                        //'incident_categories.descriptionEng as category',
+                        //'incident_sub_categories.descriptionEng as subCategory',
+                        'companies.companyId as companyCode',
+                        'companies.companyName',
+                        'companies.logoFile',
+                        'projects.project as ProjectCode',
+                        'projects.projectName',
+                        'buildings_and_phases.buildingPhaseCode',
+                        'buildings_and_phases.description as BuildingDescription',
+                    ])
+                    .whereBetween('service_requests.createdAt', [fromTime, toTime])
+                    .where(qb => {
+
+                        if (payload.companyId) {
+                            qb.where({ 'service_requests.companyId': payload.companyId })
+                        }
+
+                        if (payload.projectId) {
+                            qb.where({ 'service_requests.projectId': payload.projectId })
+
+                        } else {
+
+                        }
+
+                        if (payload.buildingId) {
+
+                            qb.where({ 'buildings_and_phases.id': payload.buildingId })
+
+                        } else {
+
+                        }
+                        if (payload.status) {
+
+                            qb.where({ 'service_requests.serviceStatusCode': payload.status })
+
+                        }
+
+                        qb.where({ 'service_requests.moderationStatus': true, 'service_requests.orgId': req.orgId })
+
+                    })
+
+                let serviceIds = serviceResult.map(it => it.id);
+
+                let serviceProblem = await knex.from('service_problems')
+                    .leftJoin('service_requests', 'service_problems.serviceRequestId', 'service_requests.id')
+                    .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                    .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id')
+                    .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
+                    .select([
+                        'service_problems.problemId',
+                        'service_problems.categoryId',
+                        'incident_type.typeCode as problemTypeCode',
+                        'incident_type.descriptionEng as problemType',
+                        'incident_categories.categoryCode',
+                        'incident_categories.descriptionEng as category',
+                        'incident_sub_categories.descriptionEng as subCategory',
+                        'service_requests.serviceStatusCode',
+                    ])
+                    .whereIn('service_problems.serviceRequestId', serviceIds)
+                    .where({ 'service_problems.orgId': req.orgId })
+                    .orderBy('categoryCode', 'asc');
+
+
+
+                let serviceProblem2 = await knex.from('service_problems')
+                    .leftJoin('service_requests', 'service_problems.serviceRequestId', 'service_requests.id')
+                    .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                    .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id')
+                    .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
+                    .select([
+                        "incident_categories.categoryCode",
+                        "service_problems.serviceRequestId",
+                        "incident_categories.descriptionEng",
+                        "service_requests.serviceStatusCode"
+                    ])
+                    .whereIn('service_problems.serviceRequestId', serviceIds)
+                    .where({ 'service_problems.orgId': req.orgId })
+                    .orderBy('categoryCode', 'asc');
+
+
+                let mapData = _.chain(serviceProblem)
+                    .groupBy("categoryId")
+                    .map((value, key) => ({
+                        category: key, serviceOrder: value.length, value: value[0],
+                        allValue: value, workDone: value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length,
+                        percentage: value.length * value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / 100
+                    }))
+                    .value()
+
+
+                let final = [];
+                let grouped = _.groupBy(serviceProblem2, "categoryCode");
+
+                final.push(grouped);
+
+                let chartData = _.flatten(
+                    final
+                        .filter(v => !_.isEmpty(v))
+                        .map(v => _.keys(v).map(p => ({ [p]: v[p].length * v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / 100 })))
+                ).reduce((a, p) => {
+                    let l = _.keys(p)[0];
+                    if (a[l]) {
+                        a[l] += p[l];
+
+                    } else {
+                        a[l] = p[l];
+                    }
+                    return a;
+                }, {});
+
+
+                let totalServiceOrder = 0;
+                let totalWorkDone = 0;
+                let totalPercentage = 0;
+                const Parallel = require('async-parallel');
+                serviceResult = await Parallel.map(mapData, async item => {
+
+                    totalServiceOrder += Number(item.serviceOrder);
+                    totalWorkDone += Number(item.workDone);
+                    totalPercentage += Number(item.percentage);
+
+
+                    return {
+                        ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder,
+                        totalWorkDone: totalWorkDone, totalPercentage: totalPercentage, chartData, reportType: "SR"
+                    };
+
+                })
+
+
+
+            } else {
+
+                serviceResult = await knex('service_orders')
+                    .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                    .leftJoin('companies', 'service_requests.companyId', 'companies.id')
+                    .leftJoin('projects', 'service_requests.projectId', 'projects.id')
+                    .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+                    .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+                    .select([
+                        'service_requests.*',
+                        'companies.companyId as companyCode',
+                        'companies.companyName',
+                        'companies.logoFile',
+                        'projects.project as ProjectCode',
+                        'projects.projectName',
+                        'buildings_and_phases.buildingPhaseCode',
+                        'buildings_and_phases.description as BuildingDescription',
+                        'service_orders.serviceRequestId'
+                    ])
+                    .whereBetween('service_orders.createdAt', [fromTime, toTime])
+                    .where(qb => {
+
+                        if (payload.companyId) {
+                            qb.where({ 'service_requests.companyId': payload.companyId })
+                        }
+
+                        if (payload.projectId) {
+                            qb.where({ 'service_requests.projectId': payload.projectId })
+
+                        } else {
+
+                        }
+
+                        if (payload.buildingId) {
+
+                            qb.where({ 'buildings_and_phases.id': payload.buildingId })
+
+                        } else {
+
+                        }
+
+                        if (payload.status) {
+
+                            qb.where({ 'service_requests.serviceStatusCode': payload.status })
+
+                        }
+
+                        qb.where({ 'service_requests.moderationStatus': true, 'service_requests.orgId': req.orgId })
+
+                    })
+                // .where({
+                //     'service_requests.companyId': payload.companyId, 'service_requests.projectId': payload.projectId,
+                //     'buildings_and_phases.id': payload.buildingId, 'service_requests.moderationStatus': true, 'service_requests.orgId': req.orgId
+                // });
+
+                let serviceIds = serviceResult.map(it => it.serviceRequestId);
+
+
+                let serviceProblem = await knex.from('service_problems')
+                    .leftJoin('service_requests', 'service_problems.serviceRequestId', 'service_requests.id')
+                    .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                    .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id')
+                    .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
+                    .select([
+                        'service_problems.problemId',
+                        'service_problems.categoryId',
+                        'incident_type.typeCode as problemTypeCode',
+                        'incident_type.descriptionEng as problemType',
+                        'incident_categories.categoryCode',
+                        'incident_categories.descriptionEng as category',
+                        'incident_sub_categories.descriptionEng as subCategory',
+                        'service_requests.serviceStatusCode',
+                    ])
+                    .whereIn('service_problems.serviceRequestId', serviceIds)
+                    .where({ 'service_problems.orgId': req.orgId })
+                    .orderBy('categoryCode', 'asc');
 
             let serviceIds = serviceResult.map(it => it.id);
 
@@ -2891,9 +3088,10 @@ const serviceOrderController = {
             const Parallel = require('async-parallel');
             serviceResult = await Parallel.map(mapData, async item => {
 
-                totalServiceOrder += Number(item.serviceOrder);
-                totalWorkDone += Number(item.workDone);
-                totalPercentage += Number(item.percentage);
+                    return {
+                        ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder,
+                        totalWorkDone: totalWorkDone, totalPercentage: totalPercentage, chartData, reportType: "SO"
+                    };
 
 
                 return { ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder,
