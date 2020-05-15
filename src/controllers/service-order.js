@@ -2778,11 +2778,21 @@ const serviceOrderController = {
             let payload = req.body;
             let fromDate = payload.fromDate;
             let toDate = payload.toDate;
+
             let fromNewDate = moment(fromDate).startOf('date').format();
             let toNewDate = moment(toDate).endOf('date', 'days').format();
             let fromTime = new Date(fromNewDate).getTime();
             let toTime = new Date(toNewDate).getTime();
             let serviceResult;
+            let buildingType = "";
+
+            if (payload.buildingId) {
+
+            } else {
+                buildingType = "All";
+            }
+
+
 
             if (payload.type == "SR") {
 
@@ -2834,22 +2844,34 @@ const serviceOrderController = {
 
                         } else {
 
+                        }
+
+
+                        if (payload.status.length > 0) {
+
+
+                            if (payload.status.includes("C") || payload.status.includes("O") ||
+                                payload.status.includes("A") || payload.status.includes("US") || payload.status.includes("IP") ||
+                                payload.status.includes("OH") || payload.status.includes("COM")) {
+
+                                qb.whereIn('service_requests.serviceStatusCode', payload.status)
+
+
+                            } else {
+
+                            }
 
                         }
 
-                        if(payload.status){
+                        // if (payload.status) {
 
-                           qb.where({'service_requests.serviceStatusCode':payload.status}) 
+                        //     qb.whereIn('service_requests.serviceStatusCode', payload.status)
 
-                        }
+                        // }
 
                         qb.where({ 'service_requests.moderationStatus': true, 'service_requests.orgId': req.orgId })
 
                     })
-                // .where({
-                //     'service_requests.companyId': payload.companyId, 'service_requests.projectId': payload.projectId,
-                //     'buildings_and_phases.id': payload.buildingId, 'service_requests.moderationStatus': true, 'service_requests.orgId': req.orgId
-                // });
 
                 let serviceIds = serviceResult.map(it => it.id);
 
@@ -2895,7 +2917,7 @@ const serviceOrderController = {
                     .map((value, key) => ({
                         category: key, serviceOrder: value.length, value: value[0],
                         allValue: value, workDone: value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length,
-                        percentage: value.length * value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / 100
+                        percentage: (100 * value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / value.length).toFixed(2)
                     }))
                     .value()
 
@@ -2908,7 +2930,7 @@ const serviceOrderController = {
                 let chartData = _.flatten(
                     final
                         .filter(v => !_.isEmpty(v))
-                        .map(v => _.keys(v).map(p => ({ [p]: v[p].length * v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / 100 })))
+                        .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / v[p].length).toFixed(2) })))
                 ).reduce((a, p) => {
                     let l = _.keys(p)[0];
                     if (a[l]) {
@@ -2934,7 +2956,7 @@ const serviceOrderController = {
 
                     return {
                         ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder,
-                        totalWorkDone: totalWorkDone, totalPercentage: totalPercentage, chartData,reportType:"SR"
+                        totalWorkDone: totalWorkDone, totalPercentage: (totalPercentage).toFixed(2), chartData, reportType: "SR", buildingType
                     };
 
                 })
@@ -2982,21 +3004,111 @@ const serviceOrderController = {
 
                         }
 
-                        if(payload.status){
+                        if (payload.status.length > 0) {
 
-                            qb.where({'service_requests.serviceStatusCode':payload.status}) 
- 
-                         }
+
+                            if (payload.status.includes("C") || payload.status.includes("O") ||
+                                payload.status.includes("A") || payload.status.includes("US") || payload.status.includes("IP") ||
+                                payload.status.includes("OH") || payload.status.includes("COM")) {
+
+                                qb.whereIn('service_requests.serviceStatusCode', payload.status)
+
+                            } else {
+
+                            }
+
+                        }
 
                         qb.where({ 'service_requests.moderationStatus': true, 'service_requests.orgId': req.orgId })
 
                     })
-                    // .where({
-                    //     'service_requests.companyId': payload.companyId, 'service_requests.projectId': payload.projectId,
-                    //     'buildings_and_phases.id': payload.buildingId, 'service_requests.moderationStatus': true, 'service_requests.orgId': req.orgId
-                    // });
+                // .where({
+                //     'service_requests.companyId': payload.companyId, 'service_requests.projectId': payload.projectId,
+                //     'buildings_and_phases.id': payload.buildingId, 'service_requests.moderationStatus': true, 'service_requests.orgId': req.orgId
+                // });
 
                 let serviceIds = serviceResult.map(it => it.serviceRequestId);
+
+
+                // let serviceProblem = await knex.from('service_problems')
+                //     .leftJoin('service_requests', 'service_problems.serviceRequestId', 'service_requests.id')
+                //     .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                //     .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id')
+                //     .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
+                //     .select([
+                //         'service_problems.problemId',
+                //         'service_problems.categoryId',
+                //         'incident_type.typeCode as problemTypeCode',
+                //         'incident_type.descriptionEng as problemType',
+                //         'incident_categories.categoryCode',
+                //         'incident_categories.descriptionEng as category',
+                //         'incident_sub_categories.descriptionEng as subCategory',
+                //         'service_requests.serviceStatusCode',
+                //     ])
+                //     .whereIn('service_problems.serviceRequestId', serviceIds)
+                //     .where({ 'service_problems.orgId': req.orgId })
+                //     .orderBy('categoryCode', 'asc');
+
+
+                // let serviceProblem2 = await knex.from('service_problems')
+                //     .leftJoin('service_requests', 'service_problems.serviceRequestId', 'service_requests.id')
+                //     .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                //     .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id')
+                //     .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
+                //     .select([
+                //         "incident_categories.categoryCode",
+                //         "service_problems.serviceRequestId",
+                //         "incident_categories.descriptionEng",
+                //         "service_requests.serviceStatusCode"
+                //     ])
+                //     .whereIn('service_problems.serviceRequestId', serviceIds)
+                //     .where({ 'service_problems.orgId': req.orgId });
+
+
+                // let mapData = _.chain(serviceProblem)
+                //     .groupBy("categoryId")
+                //     .map((value, key) => ({
+                //         category: key, serviceOrder: value.length, value: value[0],
+                //         allValue: value, workDone: value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length,
+                //         percentage: 100 * value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / value.length
+                //     }))
+                //     .value()
+
+
+
+                // let final = [];
+                // let grouped = _.groupBy(serviceProblem2, "categoryCode");
+
+                // final.push(grouped);
+
+                // let chartData = _.flatten(
+                //     final
+                //         .filter(v => !_.isEmpty(v))
+                //         .map(v => _.keys(v).map(p => ({ [p]: 100 * v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / v[p].length })))
+                // ).reduce((a, p) => {
+                //     let l = _.keys(p)[0];
+                //     if (a[l]) {
+                //         a[l] += p[l];
+
+                //     } else {
+                //         a[l] = p[l];
+                //     }
+                //     return a;
+                // }, {});
+
+
+                // let totalServiceOrder = 0;
+                // let totalWorkDone = 0;
+                // let totalPercentage = 0;
+                // const Parallel = require('async-parallel');
+                // serviceResult = await Parallel.map(mapData, async item => {
+
+                //     return {
+                //         ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder,
+                //         totalWorkDone: totalWorkDone, totalPercentage: totalPercentage, chartData, reportType: "SO"
+                //     };
+
+                // })
 
 
                 let serviceProblem = await knex.from('service_problems')
@@ -3036,13 +3148,12 @@ const serviceOrderController = {
                     .orderBy('categoryCode', 'asc');
 
 
-
                 let mapData = _.chain(serviceProblem)
                     .groupBy("categoryId")
                     .map((value, key) => ({
                         category: key, serviceOrder: value.length, value: value[0],
                         allValue: value, workDone: value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length,
-                        percentage: value.length * value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / 100
+                        percentage: (100 * value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / value.length).toFixed(2)
                     }))
                     .value()
 
@@ -3055,7 +3166,7 @@ const serviceOrderController = {
                 let chartData = _.flatten(
                     final
                         .filter(v => !_.isEmpty(v))
-                        .map(v => _.keys(v).map(p => ({ [p]: v[p].length * v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / 100 })))
+                        .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / v[p].length).toFixed(2) })))
                 ).reduce((a, p) => {
                     let l = _.keys(p)[0];
                     if (a[l]) {
@@ -3081,14 +3192,13 @@ const serviceOrderController = {
 
                     return {
                         ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder,
-                        totalWorkDone: totalWorkDone, totalPercentage: totalPercentage, chartData,reportType:"SO"
+                        totalWorkDone: totalWorkDone, totalPercentage: (totalPercentage).toFixed(2), chartData, reportType: "SO", buildingType
                     };
 
                 })
 
+
             }
-
-
 
             return res.status(200).json({
                 data: serviceResult,
