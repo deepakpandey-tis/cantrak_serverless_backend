@@ -1521,7 +1521,7 @@ const facilityBookingController = {
         }
 
     },
-    
+
     /*CLOSE DATE FACILITY LIST */
     facilityCloseDateList: async (req, res) => {
 
@@ -1777,7 +1777,641 @@ const facilityBookingController = {
 
         }
 
-    }
+    },
+
+    /*GET FACILITY LISTING */
+    getFacilityListing: async (req, res) => {
+
+        try {
+            //let filters = req.body;
+            let rows;
+
+            let pagination = {};
+
+            [rows] = await Promise.all([
+                knex
+                    .from("facility_master")
+                    .where({ "facility_master.orgId": req.orgId, "facility_master.isActive": true })
+                    .select([
+                        "facility_master.id",
+                        "facility_master.name"
+                    ])
+                    .groupBy([
+                        "facility_master.id"
+                    ])
+                    .orderBy('facility_master.displayId', 'asc')
+            ]);
+
+            pagination.data = rows;
+
+
+            return res.status(200).json({
+                data: {
+                    facilities: pagination
+                },
+                message: "Facility Listing!"
+            });
+        } catch (err) {
+            console.log("[controllers][facilityBooking][list] :  Error", err);
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+
+    /** GET UNITS BY FACILITY */
+
+    getUnitByFacilityList: async (req, res) => {
+        try {
+            const { facilityId } = req.body;
+
+            let facilityData = await knex.from('facility_master').where({ id: facilityId }).first();
+
+            let getPropertyUnits = await knex('property_units').select('*')
+                .where({ projectId: facilityData.projectId, orgId: req.orgId })
+            console.log("getUnits", getPropertyUnits);
+            return res.status(200).json({
+                data: {
+                    units: getPropertyUnits
+                }
+            })
+
+        } catch (err) {
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            })
+        }
+    },
+
+    /** GET TENANTS BY UNIT */
+
+    getTenantByUnit: async (req, res) => {
+        try {
+            const { unitId } = req.body;
+
+            let getTenants = await knex
+                .from("user_house_allocation")
+                .leftJoin('users', 'user_house_allocation.userId', 'users.id')
+                .select([
+                    "users.name",
+                    "users.id"
+                ])
+                .where('user_house_allocation.houseId', unitId);
+            console.log("getTenants", getTenants);
+            return res.status(200).json({
+                data: {
+                    tenants: getTenants
+                }
+            })
+
+        } catch (err) {
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            })
+        }
+    },
+
+     /* GET FACILITY AVAILABLE SEATS */
+     getFacilityAvailableSeats: async (req, res) => {
+
+        try {
+          
+            let payload = req.body;          
+            let unitIds;
+            let checkQuotaByUnit;
+            let dailyQuota;
+            let weeklyQuota;
+            let monthlyQuota;
+
+            const schema = Joi.object().keys({
+                facilityId: Joi.string().required(),
+                bookingStartDateTime: Joi.date().required(),
+                bookingEndDateTime: Joi.date().required(),
+                offset: Joi.number().required(),
+                currentTime: Joi.date().required(),
+                timezone: Joi.string().required(),
+                unitId: Joi.string().required(),
+                userId: Joi.string().required()
+            })
+
+            const result = Joi.validate(payload, schema);
+
+            if (result && result.hasOwnProperty("error") && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "VALIDATION_ERROR", message: result.error.message }
+                    ]
+                });
+            }
+
+            // Start New Implementation 
+
+
+            // Get project id
+
+            let facilityMaster = await knex('facility_master').select('projectId')
+                .where({ id: payload.facilityId, orgId: req.orgId, isActive: true }).first();
+            console.log("facilityBook", facilityMaster);
+
+            if (!facilityMaster) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "NOT_FOUND", message: `Facility Closed.` }
+                    ]
+                });
+            }
+
+            let getPropertyUnits = await knex('property_units').select('*')
+                .where({ projectId: facilityMaster.projectId, orgId: req.orgId, id: payload.unitId })
+
+            console.log("getPropertyUnits", getPropertyUnits);
+
+            unitIds = payload.unitId//;
+            // Case 2: If property unit does not have any property unit type set
+            // Error : 
+            console.log("getPropertyUnits[0].propertyUnitType", getPropertyUnits[0].propertyUnitType);
+
+            if (getPropertyUnits[0].propertyUnitType == null) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "PROPERTY_UNIT_TYPE_STATUS", message: `Property unit type of one of your properties is not defined please contact admin.....` }
+                    ]
+                });
+            }
+
+            let getFacilityQuotaData = await knex('facility_property_unit_type_quota_limit').select('*').where({ entityId: payload.facilityId, entityType: 'facility_master', propertyUnitTypeId: getPropertyUnits[0].propertyUnitType, orgId: req.orgId });
+            console.log("FacilityQuotaUnitWise", getFacilityQuotaData, getFacilityQuotaData.length);
+
+            let facilityData = await knex.from('entity_booking_criteria')
+                .select('entity_booking_criteria.concurrentBookingLimit')
+                .where({ 'entity_booking_criteria.entityId': payload.facilityId, 'entity_booking_criteria.entityType': 'facility_master', 'entity_booking_criteria.orgId': req.orgId })
+                .first();
+
+            if (facilityData.concurrentBookingLimit == null || getFacilityQuotaData == '') {
+                // Case 1 : concurrent booking is not defined and property unit type not set quota for this facility,  all quota type  will set as unlimited
+                dailyQuota = 999999;
+                monthlyQuota = 999999;
+                weeklyQuota = 999999;
+            } else {
+                console.log("getFacilityQuotaData11111111111111", getFacilityQuotaData[0].daily)
+                dailyQuota = getFacilityQuotaData[0].daily;
+                weeklyQuota = getFacilityQuotaData[0].weekly;
+                monthlyQuota = getFacilityQuotaData[0].monthly;
+            }
+            console.log("daily/monthly/weekly", dailyQuota, weeklyQuota, monthlyQuota);
+
+            // checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: getPropertyUnits[0].id, orgId: req.orgId }).first();
+    
+
+            // Set timezone for moment
+            moment.tz.setDefault(payload.timezone);
+            let currentTime = moment();
+            console.log('Current Time:', currentTime.format('MMMM Do YYYY, h:mm:ss a'));
+
+
+            let bookingStartTime = moment(+payload.bookingStartDateTime).seconds(0).milliseconds(0).valueOf();
+            let bookingEndTime = moment(+payload.bookingEndDateTime).seconds(0).milliseconds(0).valueOf();
+            console.log('User Selected Booking Start/End Time: ', moment(bookingStartTime).format('YYYY-MM-DD HH:mm'), moment(bookingEndTime).format('YYYY-MM-DD HH:mm'));
+
+            let bookingDay = moment(bookingStartTime).format('ddd');
+            console.log('Checking Booking Availability of Day: ', bookingDay);
+
+            let openCloseTimes = await knex.from('entity_open_close_times').where({
+                entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId,
+                day: bookingDay
+            }).first();
+            console.log('openCloseTimes:', openCloseTimes);
+
+            let bookingFullDay = moment(bookingStartTime).format('dddd');
+
+            if (!openCloseTimes) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "BOOKING_CLOSED_FOR_THE_DAY", message: `Booking is not opened for selected day (${bookingFullDay}).` }
+                    ]
+                });
+            }
+
+
+            // Get Booking Daily,Monthly,Weekly Quota By UNIT
+            // let getFacilityQuotaUnitWise = await knex('facility_property_unit_type_quota_limit').select('*').where({ entityId: payload.facilityId, entityType: 'facility_master', propertyUnitTypeId: checkQuotaByUnit.propertyUnitType, orgId: req.orgId }).first();
+            // console.log("FacilityQuotaUnitWise", getFacilityQuotaUnitWise);
+
+
+
+            // check facility is closed
+
+            let closeFacility = await knex('facility_master')
+                .select('inActiveReason')
+                .where({ id: payload.facilityId, orgId: req.orgId, isActive: false })
+                .first();
+
+            console.log("closedFacility", closeFacility);
+            if (closeFacility) {
+
+                let closeReasonMessage = closeFacility.inActiveReason;
+
+                return res.status(400).json({
+                    errors: [
+                        { code: "FACILITY_CLOSED_STATUS", message: `Facility is closed : Reason- ${closeReasonMessage}.` }
+                    ]
+                });
+            }
+
+            // check facility is closed
+
+            let closeFacilityTiming = await knex('facility_close_date')
+                .select('*')
+                .where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId })
+                .where('facility_close_date.endDate', '>', bookingStartTime)
+                .where('facility_close_date.startDate', '<', bookingEndTime)
+                .first();
+
+            console.log("closeFacilityTiming", closeFacilityTiming);
+            if (closeFacilityTiming) {
+
+                let closeReason = await knex('facility_close_date')
+                    .select('closeReason')
+                    .where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId })
+                    .first();
+
+                let closeReasonMessage = closeReason.closeReason;
+
+                return res.status(400).json({
+                    errors: [
+                        { code: "FACILITY_CLOSED", message: `Facility is closed for selected time slot : Reason- ${closeReasonMessage}.` }
+                    ]
+                });
+            }
+
+
+            let bookingCriteria = await knex('entity_booking_criteria').select('*').where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId }).first();
+            console.log("bookingCriteria", bookingCriteria);
+
+            if (bookingCriteria && bookingCriteria.bookingType == '1') {   // Flexible Booking
+
+                if (bookingEndTime <= bookingStartTime) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "INVALID_DATE_TIME_SELECTION", message: `Booking end time should be greater than start time. Please correct!` }
+                        ]
+                    });
+                }
+
+                let openingTimeOnBookingDay = moment(bookingStartTime).hours(moment(+openCloseTimes.openTime).hours())
+                    .minutes(moment(+openCloseTimes.openTime).minutes()).seconds(0).milliseconds(0);
+
+
+                let closingTimeOnBookingDay = moment(bookingStartTime).hours(moment(+openCloseTimes.closeTime).hours())
+                    .minutes(moment(+openCloseTimes.closeTime).minutes()).seconds(0).milliseconds(0);
+
+                console.log('openingTimeOnBookingDay:', openingTimeOnBookingDay.format('YYYY-MM-DD HH:mm:ss'));
+                console.log('closingTimeOnBookingDay:', closingTimeOnBookingDay.format('YYYY-MM-DD HH:mm:ss'));
+
+
+                if (openingTimeOnBookingDay.valueOf() > moment(bookingStartTime).valueOf()) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "INVALID_DATE_TIME_SELECTION", message: `Please select booking start and end time b/w opening and closing hours for the day.` }
+                        ]
+                    });
+                }
+
+
+                if (closingTimeOnBookingDay.valueOf() < moment(bookingEndTime).valueOf()) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "INVALID_DATE_TIME_SELECTION", message: `Please select booking start and end time b/w opening and closing hours for the day.` }
+                        ]
+                    });
+                }
+
+                let bookingPeriodAllow = await knex('entity_booking_criteria').select(['maxBookingPeriod', 'minBookingPeriod']).where({ entityId: payload.facilityId, bookingType: 1, entityType: 'facility_master', orgId: req.orgId }).first();
+                console.log("maxBookingPeriodAllow", bookingPeriodAllow);
+                let maxDuration;
+                let minDuration;
+
+                if (bookingPeriodAllow && bookingPeriodAllow.maxBookingPeriod) {
+                    maxDuration = moment(+payload.bookingEndDateTime) - moment(+payload.bookingStartDateTime);
+                    let maxDurationInMinutes = maxDuration / 1000 / 60;
+                    console.log("maxDuration", maxDurationInMinutes);
+
+                    if (maxDurationInMinutes > bookingPeriodAllow.maxBookingPeriod) {
+                        return res.status(400).json({
+                            errors: [
+                                { code: "MAX_BOOKING_DURATION", message: `Maximum booking duration allowed is ${bookingPeriodAllow.maxBookingPeriod} minutes. You can not book more then max duration.` }
+                            ]
+                        });
+                    }
+                }
+
+                if (bookingPeriodAllow && bookingPeriodAllow.minBookingPeriod) {
+                    minDuration = moment(+payload.bookingEndDateTime) - moment(+payload.bookingStartDateTime);
+                    let minDurationInMinutes = minDuration / 1000 / 60;
+                    console.log("minDuration", minDurationInMinutes);
+
+                    if (minDurationInMinutes < bookingPeriodAllow.minBookingPeriod) {
+                        return res.status(400).json({
+                            errors: [
+                                { code: "MIN_BOOKING_DURATION", message: `Minimum booking duration allowed is ${bookingPeriodAllow.minBookingPeriod} minutes. You can not book less then min duration.` }
+                            ]
+                        });
+                    }
+                }
+
+            }
+
+
+            let bookingAllowingTiming = await knex('entity_booking_criteria').select(['bookingAllowedAdvanceTime', 'bookingCloseAdvanceTime']).where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId }).first();
+
+            console.log('Booking Start Time:', moment(bookingStartTime).format('MMMM Do YYYY, h:mm:ss a'));
+            console.log('bookingAllowingTiming', bookingAllowingTiming);
+
+            if (bookingAllowingTiming && bookingAllowingTiming.bookingAllowedAdvanceTime) {
+
+                console.log('Advance Allow Time:', moment(currentTime).add(+bookingAllowingTiming.bookingAllowedAdvanceTime, 'minutes').format('MMMM Do YYYY, h:mm:ss a'));
+
+                let isValidBookingInsideAllowPeriod = moment(currentTime).add(+bookingAllowingTiming.bookingAllowedAdvanceTime, 'minutes') > moment(bookingStartTime);
+
+                console.log("isValidBookingInsideAllowPeriod", isValidBookingInsideAllowPeriod);
+
+
+                if (!isValidBookingInsideAllowPeriod) {
+
+                    let advanceString = bookingAllowingTiming.bookingAllowedAdvanceTime;
+                    if (parseInt(advanceString / 24 / 60) > 0) {
+                        advanceString = parseInt(advanceString / 24 / 60) + " days, " + parseInt(advanceString / 60 % 24) + ' hours, ' + parseInt(advanceString % 60) + ' minutes';
+                    } else {
+                        advanceString = parseInt(advanceString / 60 % 24) + ' hours, ' + parseInt(advanceString % 60) + ' minutes';
+                    }
+
+                    return res.status(400).json({
+                        errors: [
+                            { code: "ADVANCED_BOOKING_ALLOW_DURATION", message: `Advance booking upto ${advanceString} is allowed only.` }
+                        ]
+                    });
+                }
+            }
+
+
+
+            if (bookingAllowingTiming && bookingAllowingTiming.bookingCloseAdvanceTime) {
+
+                console.log('Advance Booking Close Time:', moment(currentTime).add(+bookingAllowingTiming.bookingCloseAdvanceTime, 'minutes').format('MMMM Do YYYY, h:mm:ss a'));
+
+
+                let isValidBookingBeforeLockPeriod = moment(currentTime).add(+bookingAllowingTiming.bookingCloseAdvanceTime, 'minutes') < moment(bookingStartTime);
+
+                console.log("isValidBookingBeforeLockPeriod", isValidBookingBeforeLockPeriod);
+
+                if (!isValidBookingBeforeLockPeriod) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "ADVANCED_BOOKING_LOCK_DURATION", message: `Booking needs to be made before ${bookingAllowingTiming.bookingCloseAdvanceTime} minutes of booking start period.` }
+                        ]
+                    });
+                }
+            }
+
+
+            // Validate Daily Quota Limit, Weekly Quota Limit, And Monthly Quota Limit
+            //let dailyQuota = await knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.facilityId, limitType: 1, entityType: 'facility_master', orgId: req.orgId }).first();
+
+            let quotaBooked = 0;
+
+            if (dailyQuota && dailyQuota > 0) {
+                let dailyQuotas = Number(dailyQuota);
+                console.log("dailyQuota", dailyQuota);
+                let startOfDay = moment(+payload.bookingStartDateTime).startOf('day').valueOf();
+                let endOfDay = moment(+payload.bookingStartDateTime).endOf('day').valueOf();
+                console.log("startOfDay", startOfDay, endOfDay);
+
+                let rawQuery = await knex.raw(`select count(*) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfDay}  and "bookingEndDateTime"  <= ${endOfDay} and "isBookingCancelled" = false  and "unitId" = ${unitIds} `);
+                let totalBookedSeatForADay = rawQuery.rows[0].totalseats;
+                console.log("total Bookings Done for a day", totalBookedSeatForADay);
+                quotaBooked = dailyQuota;
+                // Checking Daily Booking Quota Limit Is Completed
+                if (dailyQuotas <= totalBookedSeatForADay) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "DAILY_QUOTA_EXCEEDED", message: `Your daily quota of ${dailyQuota} seat bookings is full. You can not book any more seats today.` }
+                        ]
+                    });
+                }
+
+                // if (dailyQuota <= totalBookedSeatForADay) {
+                //     return res.status(400).json({
+                //         errors: [
+                //             { code: "DAILY_QUOTA_EXCEEDED", message: `Your daily quota of ${dailyQuota} seat bookings is full. You can not book any more seats today.` }
+                //         ]
+                //     });
+                // }
+            }
+
+            //let weeklyQuota = await knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.facilityId, limitType: 2, entityType: 'facility_master', orgId: req.orgId }).first();
+            if (weeklyQuota && weeklyQuota > 0) {
+                let weeklyQuotas = Number(weeklyQuota);
+                let startOfWeek = moment(+payload.bookingStartDateTime).startOf('week').valueOf();
+                let endOfWeek = moment(+payload.bookingStartDateTime).endOf('week').valueOf();
+                console.log("startOfWeek", startOfWeek, endOfWeek);
+                console.log("weeklyQuota", weeklyQuota);
+                let rawQuery = await knex.raw(`select count(*) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfWeek}  and "bookingEndDateTime"  <= ${endOfWeek} and "isBookingCancelled" = false  and "unitId" = ${unitIds} `);
+                let totalBookedSeatForAWeek = rawQuery.rows[0].totalseats;
+                console.log("total Bookings Done for a week", totalBookedSeatForAWeek);
+                quotaBooked = weeklyQuota;
+                // Checking Weekly Booking Quota Limit Is Completed
+                if (weeklyQuotas <= totalBookedSeatForAWeek) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "WEEKLY_QUOTA_EXCEEDED", message: `Your weekly quota of ${weeklyQuota} seat bookings is full. You can not book any more seats in this week.` }
+                        ]
+                    });
+                }
+
+                // if (weeklyQuota <= totalBookedSeatForAWeek) {
+                //     return res.status(400).json({
+                //         errors: [
+                //             { code: "WEEKLY_QUOTA_EXCEEDED", message: `Your weekly quota of ${weeklyQuota} seat bookings is full. You can not book any more seats in this week.` }
+                //         ]
+                //     });
+                // }
+            }
+
+            // let monthlyQuota = await knex('entity_booking_limit').select(['limitType', 'limitValue']).where({ entityId: payload.facilityId, limitType: 3, entityType: 'facility_master', orgId: req.orgId }).first();
+
+            if (monthlyQuota && monthlyQuota > 0) {
+                let monthlyQuotas = Number(monthlyQuota);
+                console.log("monthlyQuota", monthlyQuotas);
+
+                let startOfMonth = moment(+payload.bookingStartDateTime).startOf('month').valueOf();
+                let endOfMonth = moment(+payload.bookingStartDateTime).endOf('month').valueOf();
+                console.log("startOfMonth", startOfMonth, endOfMonth);
+
+                let rawQuery = await knex.raw(`select count(*) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOfMonth}  and "bookingEndDateTime"  <= ${endOfMonth} and "isBookingCancelled" = false and "unitId" = ${unitIds} `);
+                let totalBookedSeatForAMonth = rawQuery.rows[0].totalseats;
+                console.log("total Bookings Done for a month", totalBookedSeatForAMonth);
+                quotaBooked = monthlyQuota;
+                // Checking Monthly Booking Quota Limit Is Completed
+                if (monthlyQuotas <= totalBookedSeatForAMonth) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "MONTHLY_QUOTA_EXCEEDED", message: `Your monthly quota of ${monthlyQuota} seat bookings is full. You can not book any more seats in this month.` }
+                        ]
+                    });
+                }
+                // if (monthlyQuota <= totalBookedSeatForAMonth) {
+                //     return res.status(400).json({
+                //         errors: [
+                //             { code: "MONTHLY_QUOTA_EXCEEDED", message: `Your monthly quota of ${monthlyQuota} seat bookings is full. You can not book any more seats in this month.` }
+                //         ]
+                //     });
+                // }
+            }
+
+
+            let availableSeats = 0;
+
+            // let startOfDay = moment(+payload.bookingStartDateTime).startOf('day').valueOf();
+            // let endOfDay = moment(+payload.bookingStartDateTime).endOf('day').valueOf();
+
+            // let bookingData = await knex('entity_bookings').sum('noOfSeats as totalBookedSeats')
+            //     .where('entity_bookings.bookingStartDateTime', '>=', startOfDay)
+            //     .where('entity_bookings.bookingEndDateTime', '<=', endOfDay)
+            //     .where({ 'entityId': payload.facilityId, 'isBookingCancelled': false, 'entityType': 'facility_master', 'orgId': req.orgId }).first();
+
+            let bookingData = await knex('entity_bookings').sum('noOfSeats as totalBookedSeats')
+                .where('entity_bookings.bookingEndDateTime', '>', bookingStartTime)
+                .where('entity_bookings.bookingStartDateTime', '<', bookingEndTime)
+                .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', 'isBookingCancelled': false, 'orgId': req.orgId }).first();
+            console.log("totalBookingSeats/bookingData", bookingData);
+
+            // let bookingData = await knex('entity_bookings').sum('noOfSeats as totalBookedSeats')
+            //     .where('entity_bookings.bookingStartDateTime', '>=', bookingStartTime)
+            //     .where('entity_bookings.bookingStartDateTime', '<=', bookingEndTime)
+            //     .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', 'isBookingCancelled': false, 'orgId': req.orgId }).first();
+
+
+            let facilityDatas = await knex.from('facility_master')
+                .leftJoin('entity_booking_criteria', 'facility_master.id', 'entity_booking_criteria.entityId')
+                .select([
+                    'facility_master.id',
+                    'facility_master.name',
+                    'facility_master.multipleSeatsLimit',
+                    'entity_booking_criteria.minBookingPeriod',
+                    'entity_booking_criteria.maxBookingPeriod',
+                    'entity_booking_criteria.bookingAllowedAdvanceTime',
+                    'entity_booking_criteria.bookingCloseAdvanceTime',
+                    'entity_booking_criteria.allowConcurrentBooking',
+                    'entity_booking_criteria.concurrentBookingLimit',
+                ])
+                .where({ 'facility_master.id': payload.facilityId, 'facility_master.orgId': req.orgId })
+                .first();
+
+            // Check if pax capacity disable and set NO
+            if (facilityDatas.allowConcurrentBooking == true) {
+                availableSeats = Number(facilityDatas.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
+            } else if (facilityDatas.allowConcurrentBooking == false &&  facilityDatas.concurrentBookingLimit == 0 ) {
+                availableSeats = Number(5000);
+            } else if(facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit != 0 )   {
+                availableSeats = Number(facilityDatas.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
+            }
+
+
+            console.log("totalSeatAvailable", facilityDatas.concurrentBookingLimit, bookingData.totalBookedSeats)
+            console.log("availableSeats", availableSeats);
+
+            // let AllQuotaData = await knex('facility_property_unit_type_quota_limit')
+            //     .where({ 'entityId': payload.facilityId, 'entityType': 'facility_master', propertyUnitTypeId: checkQuotaByUnit.propertyUnitType, orgId: req.orgId }).first();
+
+
+            let startOf;
+            let endOf;
+            let dailyLimit = 0;
+            let weeklyLimit = 0;
+            let monthlyLimit = 0;
+            let dailyRemainingLimit = 0;
+            let dailyBookedSeat = 0;
+            let weeklyRemainingLimit = 0;
+            let weeklyBookedSeat = 0;
+            let monthlyRemainingLimit = 0;
+            let monthlyBookedSeat = 0;
+
+
+            if (dailyQuota && dailyQuota > 0) {
+                startOf = moment(+payload.bookingStartDateTime).startOf('day').valueOf();
+                endOf = moment(+payload.bookingStartDateTime).endOf('day').valueOf();
+
+                let rawQuery = await knex.raw(`select count(*) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOf}  and "bookingEndDateTime"  <= ${endOf} and "isBookingCancelled" = false and "unitId" = ${unitIds} `);
+                console.log("totalBookedSeats", rawQuery.rows);
+                let totalBookedSeat = rawQuery.rows[0].totalseats;
+
+                dailyLimit = dailyQuota;
+                dailyRemainingLimit = dailyQuota - totalBookedSeat;
+                dailyBookedSeat = totalBookedSeat;
+            }
+
+            if (weeklyQuota && weeklyQuota > 0) {
+                startOf = moment(+payload.bookingStartDateTime).startOf('week').valueOf();
+                endOf = moment(+payload.bookingStartDateTime).endOf('week').valueOf();
+
+                let rawQuery = await knex.raw(`select count(*) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOf}  and "bookingEndDateTime"  <= ${endOf}  and "isBookingCancelled" = false and "unitId" = ${unitIds} `);
+                console.log("totalBookedSeats", rawQuery.rows);
+                let totalBookedSeat = rawQuery.rows[0].totalseats;
+
+                weeklyLimit = weeklyQuota;
+                weeklyRemainingLimit = weeklyQuota - totalBookedSeat;
+                weeklyBookedSeat = totalBookedSeat;
+            }
+
+            if (monthlyQuota && monthlyQuota > 0) {
+                startOf = moment(+payload.bookingStartDateTime).startOf('month').valueOf();
+                endOf = moment(+payload.bookingStartDateTime).endOf('month').valueOf();
+
+                let rawQuery = await knex.raw(`select count(*) AS totalSeats from entity_bookings where "entityId"  = ${payload.facilityId}  and  "bookingStartDateTime" >= ${startOf}  and "bookingEndDateTime"  <= ${endOf} and  "isBookingCancelled" = false and "unitId" = ${unitIds} `);
+                console.log("totalBookedSeats", rawQuery.rows);
+                let totalBookedSeat = rawQuery.rows[0].totalseats;
+
+                monthlyLimit = monthlyQuota;
+                monthlyRemainingLimit = monthlyQuota - totalBookedSeat;
+                monthlyBookedSeat = totalBookedSeat;
+            }
+
+            let remainingLimit = {
+                'daily': Number(dailyLimit),
+                'dailyRemaining': Number(dailyRemainingLimit),
+                'dailyBookedSeats': Number(dailyBookedSeat),
+                'weekly': Number(weeklyLimit),
+                'weeklyRemaining': Number(weeklyRemainingLimit),
+                'weeklyBookedSeats': Number(weeklyBookedSeat),
+                'monthly': Number(monthlyLimit),
+                'monthlyRemaining': Number(monthlyRemainingLimit),
+                'monthlyBookedSeats': Number(monthlyBookedSeat)
+            };
+            //let bookedSeat = totalBookedSeat;
+
+            let QuotaData = {
+                remainingLimit
+            };
+
+            console.log("quota", QuotaData);
+
+
+            return res.status(200).json({
+                data: {
+                    facility: { ...facilityData, availableSeats, userQuota: QuotaData }
+                },
+                message: "Facility Data successfully!"
+            })
+
+
+        } catch (err) {
+
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            })
+
+        }
+    },
 }
 
 
