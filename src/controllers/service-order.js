@@ -3013,26 +3013,26 @@ const serviceOrderController = {
                     .where({ 'service_problems.orgId': req.orgId })
                     .orderBy('categoryCode', 'asc');
 
-            let serviceIds = serviceResult.map(it => it.id);
+            //let serviceIds = serviceResult.map(it => it.id);
 
 
-            let serviceProblem = await knex.from('service_problems')
-                .leftJoin('service_requests', 'service_problems.serviceRequestId', 'service_requests.id')
-                .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id')
-                .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
-                .select([
-                    'service_problems.problemId',
-                    'service_problems.categoryId',
-                    'incident_type.typeCode as problemTypeCode',
-                    'incident_type.descriptionEng as problemType',
-                    'incident_categories.categoryCode',
-                    'incident_categories.descriptionEng as category',
-                    'incident_sub_categories.descriptionEng as subCategory',
-                    'service_requests.serviceStatusCode',
-                ])
-                .whereIn('service_problems.serviceRequestId', serviceIds)
-                .where({ 'service_problems.orgId': req.orgId });
+            // let serviceProblem = await knex.from('service_problems')
+            //     .leftJoin('service_requests', 'service_problems.serviceRequestId', 'service_requests.id')
+            //     .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+            //     .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id')
+            //     .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
+            //     .select([
+            //         'service_problems.problemId',
+            //         'service_problems.categoryId',
+            //         'incident_type.typeCode as problemTypeCode',
+            //         'incident_type.descriptionEng as problemType',
+            //         'incident_categories.categoryCode',
+            //         'incident_categories.descriptionEng as category',
+            //         'incident_sub_categories.descriptionEng as subCategory',
+            //         'service_requests.serviceStatusCode',
+            //     ])
+            //     .whereIn('service_problems.serviceRequestId', serviceIds)
+            //     .where({ 'service_problems.orgId': req.orgId });
 
 
 
@@ -3099,13 +3099,14 @@ const serviceOrderController = {
 
             })
 
+        }
 
             return res.status(200).json({
                 data: serviceResult,
                 message: "Problem Category Report Successfully!",
             });
 
-
+        
         } catch (err) {
 
             res.status(500).json({
