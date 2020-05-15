@@ -2834,22 +2834,16 @@ const serviceOrderController = {
 
                         } else {
 
-
                         }
+                        if (payload.status) {
 
-                        if(payload.status){
-
-                           qb.where({'service_requests.serviceStatusCode':payload.status}) 
+                            qb.where({ 'service_requests.serviceStatusCode': payload.status })
 
                         }
 
                         qb.where({ 'service_requests.moderationStatus': true, 'service_requests.orgId': req.orgId })
 
                     })
-                // .where({
-                //     'service_requests.companyId': payload.companyId, 'service_requests.projectId': payload.projectId,
-                //     'buildings_and_phases.id': payload.buildingId, 'service_requests.moderationStatus': true, 'service_requests.orgId': req.orgId
-                // });
 
                 let serviceIds = serviceResult.map(it => it.id);
 
@@ -2934,7 +2928,7 @@ const serviceOrderController = {
 
                     return {
                         ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder,
-                        totalWorkDone: totalWorkDone, totalPercentage: totalPercentage, chartData,reportType:"SR"
+                        totalWorkDone: totalWorkDone, totalPercentage: totalPercentage, chartData, reportType: "SR"
                     };
 
                 })
@@ -2982,19 +2976,19 @@ const serviceOrderController = {
 
                         }
 
-                        if(payload.status){
+                        if (payload.status) {
 
-                            qb.where({'service_requests.serviceStatusCode':payload.status}) 
- 
-                         }
+                            qb.where({ 'service_requests.serviceStatusCode': payload.status })
+
+                        }
 
                         qb.where({ 'service_requests.moderationStatus': true, 'service_requests.orgId': req.orgId })
 
                     })
-                    // .where({
-                    //     'service_requests.companyId': payload.companyId, 'service_requests.projectId': payload.projectId,
-                    //     'buildings_and_phases.id': payload.buildingId, 'service_requests.moderationStatus': true, 'service_requests.orgId': req.orgId
-                    // });
+                // .where({
+                //     'service_requests.companyId': payload.companyId, 'service_requests.projectId': payload.projectId,
+                //     'buildings_and_phases.id': payload.buildingId, 'service_requests.moderationStatus': true, 'service_requests.orgId': req.orgId
+                // });
 
                 let serviceIds = serviceResult.map(it => it.serviceRequestId);
 
@@ -3081,7 +3075,7 @@ const serviceOrderController = {
 
                     return {
                         ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder,
-                        totalWorkDone: totalWorkDone, totalPercentage: totalPercentage, chartData,reportType:"SO"
+                        totalWorkDone: totalWorkDone, totalPercentage: totalPercentage, chartData, reportType: "SO"
                     };
 
                 })
