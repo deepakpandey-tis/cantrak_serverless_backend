@@ -2784,13 +2784,13 @@ const serviceOrderController = {
             let fromTime = new Date(fromNewDate).getTime();
             let toTime = new Date(toNewDate).getTime();
             let serviceResult;
-            let  buildingType = "";
-    
-             if(payload.buildingId){
+            let buildingType = "";
 
-             } else {
+            if (payload.buildingId) {
+
+            } else {
                 buildingType = "All";
-             }
+            }
 
 
 
@@ -2845,11 +2845,29 @@ const serviceOrderController = {
                         } else {
 
                         }
-                        if (payload.status) {
 
-                            qb.where({ 'service_requests.serviceStatusCode': payload.status })
+
+                        if (payload.status.length > 0) {
+
+
+                            if (payload.status.includes("C") || payload.status.includes("O") ||
+                                payload.status.includes("A") || payload.status.includes("US") || payload.status.includes("IP") ||
+                                payload.status.includes("OH") || payload.status.includes("COM")) {
+
+                                qb.whereIn('service_requests.serviceStatusCode', payload.status)
+
+
+                            } else {
+
+                            }
 
                         }
+
+                        // if (payload.status) {
+
+                        //     qb.whereIn('service_requests.serviceStatusCode', payload.status)
+
+                        // }
 
                         qb.where({ 'service_requests.moderationStatus': true, 'service_requests.orgId': req.orgId })
 
@@ -2938,7 +2956,7 @@ const serviceOrderController = {
 
                     return {
                         ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder,
-                        totalWorkDone: totalWorkDone, totalPercentage: (totalPercentage).toFixed(2), chartData, reportType: "SR",buildingType
+                        totalWorkDone: totalWorkDone, totalPercentage: (totalPercentage).toFixed(2), chartData, reportType: "SR", buildingType
                     };
 
                 })
@@ -2986,9 +3004,18 @@ const serviceOrderController = {
 
                         }
 
-                        if (payload.status) {
+                        if (payload.status.length > 0) {
 
-                            qb.where({ 'service_requests.serviceStatusCode': payload.status })
+
+                            if (payload.status.includes("C") || payload.status.includes("O") ||
+                                payload.status.includes("A") || payload.status.includes("US") || payload.status.includes("IP") ||
+                                payload.status.includes("OH") || payload.status.includes("COM")) {
+
+                                qb.whereIn('service_requests.serviceStatusCode', payload.status)
+
+                            } else {
+
+                            }
 
                         }
 
@@ -3165,7 +3192,7 @@ const serviceOrderController = {
 
                     return {
                         ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder,
-                        totalWorkDone: totalWorkDone, totalPercentage: (totalPercentage).toFixed(2), chartData, reportType: "SO",buildingType
+                        totalWorkDone: totalWorkDone, totalPercentage: (totalPercentage).toFixed(2), chartData, reportType: "SO", buildingType
                     };
 
                 })
