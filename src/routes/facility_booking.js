@@ -69,5 +69,14 @@ router.get('/get-total-approval-required-booking',authMiddleware.isAuthenticated
 /*GET BOOKING CANCELLED LIST */
 router.post('/get-booking-cancelled-list',authMiddleware.isAuthenticated,facilityBookingController.getBookingCancelledList)
 
+router.post('/get-facility-listing', authMiddleware.isAuthenticated, facilityBookingController.getFacilityListing)
+
+router.post('/get-unit-by-building',authMiddleware.isAuthenticated,facilityBookingController.getUnitByBuilding)
+
+router.post('/get-tenant-by-unit', authMiddleware.isAuthenticated,facilityBookingController.getTenantByUnit)
+
+/* GET FACILITY AVAILABLE SEATS */
+router.post('/get-facility-available-seats', authMiddleware.isAuthenticated, facilityBookingController.getFacilityAvailableSeats);
+
 
 module.exports = router;
