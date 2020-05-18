@@ -434,7 +434,7 @@ const facilityBookingController = {
 
 
 
-            if (checkFacilityQuota < 0 && !checkFacilityQuota.code ) {
+            if (checkFacilityQuota < 0 && !checkFacilityQuota.code) {
                 return res.status(400).json({
                     errors: [
                         { code: "SLOT_BOOKED", message: `Slot is not available` }
@@ -1107,9 +1107,9 @@ const facilityBookingController = {
             // Check if pax capacity disable and set NO
             if (facilityDatas.allowConcurrentBooking == true) {
                 availableSeats = Number(facilityDatas.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
-            } else if (facilityDatas.allowConcurrentBooking == false &&  facilityDatas.concurrentBookingLimit == 0 ) {
+            } else if (facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit == 0) {
                 availableSeats = Number(5000);
-            } else if(facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit != 0 )   {
+            } else if (facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit != 0) {
                 availableSeats = Number(facilityDatas.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
             }
 
@@ -1286,6 +1286,31 @@ const facilityBookingController = {
                 .where({ projectId: facilityData.projectId, orgId: req.orgId })
                 .whereIn('id', req.me.houseIds);
 
+            return res.status(200).json({
+                data: {
+                    propertyData: getPropertyUnits
+                }
+            })
+
+        } catch (err) {
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            })
+        }
+    },
+
+    // Get All Login User Unit List
+    getAllUnitList: async (req, res) => {
+        try {
+            let id = req.me.id;
+            const { facilityId } = req.body;
+            console.log("customerHouseInfo", req.me.houseIds);
+
+            let facilityData = await knex.from('facility_master').where({ id: facilityId }).first();
+
+            let getPropertyUnits = await knex('property_units').select('*')
+                .where({ projectId: facilityData.projectId, orgId: req.orgId })
+                               
             return res.status(200).json({
                 data: {
                     propertyData: getPropertyUnits
