@@ -1504,8 +1504,6 @@ const pmController = {
       res.json({
         data: pmResult,
         message: "Prenventive Maintenance report succesully!",
-        chartData,
-        mapData
       })
 
     } catch (err) {
