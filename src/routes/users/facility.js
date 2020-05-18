@@ -37,6 +37,9 @@ router.post('/cancel-booking', authMiddleware.isAuthenticated, userMiddleware.cu
 router.post('/get-all-units', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
     facilityBookingController.getUnitList);
 
+router.post('/get-units-list', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    facilityBookingController.getAllUnitList);
+
 
 
 module.exports = router;
