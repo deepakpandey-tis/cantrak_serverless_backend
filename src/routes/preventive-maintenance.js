@@ -28,5 +28,6 @@ router.post('/search-pm-template', authMiddleware.isAuthenticated, authMiddlewar
 router.post('/search-pm-by-name', authMiddleware.isAuthenticated, authMiddleware.isOrgAdmin, pmController.getPmByName)
 
 router.post('/pm-report', authMiddleware.isAuthenticated, authMiddleware.isOrgAdmin, pmController.pmReport)
+router.get('/pm-status-clone', pmController.pmStatusClone)
 
 module.exports = router
