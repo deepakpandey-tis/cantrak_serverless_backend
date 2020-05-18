@@ -5,7 +5,7 @@ require("moment-recur");
 
 const { RRule, RRuleSet, rrulestr } = require("rrule");
 const knex = require("../db/knex");
- 
+
 
 function getYears(mils) {
   let years = Math.ceil(mils / (1000 * 60 * 60 * 24 * 365));
@@ -164,8 +164,8 @@ const pmController = {
 
 
       await knex('survey_orders')
-      .update({ surveyInProcess: null })
-      .where({ id: surveyOrderId })
+        .update({ surveyInProcess: null })
+        .where({ id: surveyOrderId })
 
       return res.status(200).json({
         data: {
@@ -1362,6 +1362,79 @@ const pmController = {
     } catch (err) {
 
     }
+  }
+  ,
+  /*GET Pm REPORT */
+  pmReport: async (req, res) => {
+
+    try {
+
+      let payload = req.body;
+      let fromDate = payload.fromDate;
+      let toDate = payload.toDate;
+      let fromNewDate = moment(fromDate).startOf('date').format();
+      let toNewDate = moment(toDate).endOf('date', 'days').format();
+      let fromTime = new Date(fromNewDate).getTime();
+      let toTime = new Date(toNewDate).getTime();
+
+      let pmResult = await knex('pm_master2')
+        .whereBetween('pm_master2.createdAt', [fromTime, toTime])
+        .where(qb => {
+
+          if (payload.companyId) {
+            qb.where({ 'pm_master2.companyId': payload.companyId })
+          }
+
+          if (payload.projectId) {
+            qb.where({ 'pm_master2.projectId': payload.projectId })
+
+          } else {
+
+          }
+
+          qb.where({ 'pm_master2.orgId': req.orgId })
+
+        })
+
+      let pmIds = pmResult.map(it => it.id);
+
+      let pmSchedule = await knex('task_group_schedule')
+        .leftJoin('task_group_schedule_assign_assets', 'task_group_schedule.id', 'task_group_schedule_assign_assets.scheduleId')
+        .leftJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id')
+        .leftJoin('pm_task', 'task_group_schedule.taskGroupId', 'pm_task.taskGroupId')
+        .select([
+          'task_group_schedule.id as scheduleId',
+          'task_group_schedule.taskGroupId',
+          'task_group_schedule.pmId',
+          'task_group_schedule_assign_assets.assetId',
+          'asset_master.assetName',
+          'asset_master.assetCode',
+          'pm_task.taskName',
+          'pm_task.status',
+          'pm_task.id as taskId'
+        ])
+        .whereIn('task_group_schedule.pmId', pmIds)
+        .where({ 'task_group_schedule.orgId': req.orgId })
+
+
+        pmSchedule =  _.uniqBy(pmSchedule,'taskId')
+
+      res.json({
+        data: pmResult,
+        message: "Prenventive Maintenance report succesully!",
+             pmSchedule
+      })
+
+    } catch (err) {
+
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+
+    }
+
   }
 
 };

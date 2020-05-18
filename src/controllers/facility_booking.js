@@ -1783,7 +1783,8 @@ const facilityBookingController = {
     getFacilityListing: async (req, res) => {
 
         try {
-            //let filters = req.body;
+            let payload = req.body;
+            console.log("payloadData++++++++", payload);
             let rows;
 
             let pagination = {};
@@ -1791,7 +1792,11 @@ const facilityBookingController = {
             [rows] = await Promise.all([
                 knex
                     .from("facility_master")
-                    .where({ "facility_master.orgId": req.orgId, "facility_master.isActive": true })
+                    .where({ 
+                        "facility_master.orgId": req.orgId,
+                        "facility_master.isActive": true,
+                        "facility_master.projectId": payload.pid
+                        })
                     .select([
                         "facility_master.id",
                         "facility_master.name"
@@ -1821,18 +1826,21 @@ const facilityBookingController = {
 
     /** GET UNITS BY FACILITY */
 
-    getUnitByFacilityList: async (req, res) => {
+    getUnitByBuilding: async (req, res) => {
         try {
-            const { facilityId } = req.body;
-
-            let facilityData = await knex.from('facility_master').where({ id: facilityId }).first();
-
+            const { buildingId } = req.body;
+         
             let getPropertyUnits = await knex('property_units').select('*')
-                .where({ projectId: facilityData.projectId, orgId: req.orgId })
+                .where({ buildingPhaseId: buildingId, orgId: req.orgId })
             console.log("getUnits", getPropertyUnits);
+
+            let getFacilityList = await knex('facility_master').select('*')
+                .where({ buildingPhaseId: buildingId, orgId: req.orgId })
+
+            let result =  {'units': getPropertyUnits, 'facility': getFacilityList }
             return res.status(200).json({
                 data: {
-                    units: getPropertyUnits
+                    data: result
                 }
             })
 
@@ -1891,7 +1899,6 @@ const facilityBookingController = {
                 currentTime: Joi.date().required(),
                 timezone: Joi.string().required(),
                 unitId: Joi.string().required(),
-                userId: Joi.string().required()
             })
 
             const result = Joi.validate(payload, schema);
