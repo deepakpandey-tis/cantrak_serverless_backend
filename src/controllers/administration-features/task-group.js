@@ -1629,7 +1629,7 @@ const taskGroupController = {
           'asset_master.barcode as barCode',
           'asset_master.areaName as areaName',
           'asset_master.model as modelNo',
-          // 'companies.companyName',
+          'companies.logoFile',
           // 'projects.projectName',
           // 'buildings_and_phases.buildingPhaseCode',
           // 'floor_and_zones.floorZoneCode',
@@ -1681,8 +1681,11 @@ const taskGroupController = {
           )
           .select([
             'companies.companyName',
+            'companies.companyId',
             'projects.projectName',
+            'projects.project as projectCode',
             'buildings_and_phases.buildingPhaseCode',
+            'buildings_and_phases.description as buildingDescription',
             'floor_and_zones.floorZoneCode',
             'property_units.unitNumber'
           ]).where({ "asset_location.assetId": row.assetId })
@@ -1876,7 +1879,10 @@ const taskGroupController = {
         taskId: Joi.string().required(),
         status: Joi.string().required(),
         userId: Joi.string().required(),
-        cancelReason: Joi.string().allow("").allow(null).optional()
+        cancelReason: Joi.string().allow("").allow(null).optional(),
+        workOrderId: Joi.string().required(),
+        workOrderDate: Joi.date().required()
+
       })
       const result = Joi.validate(payload, schema);
       if (result && result.hasOwnProperty("error") && result.error) {
@@ -1891,9 +1897,33 @@ const taskGroupController = {
       // We need to check whther all the tasks have been updated or not
       let taskUpdated
       if (payload.status === 'COM') {
+
         // check id completedAt i.e current date is greater than pmDate then update completedAt and completedBy
         taskUpdated = await knex('pm_task').update({ status: payload.status, completedAt: currentTime, completedBy: payload.userId }).where({ taskGroupId: payload.taskGroupId, id: payload.taskId, orgId: req.orgId }).returning(['*'])
+
+        let workResult = await knex('pm_task').where({ taskGroupScheduleAssignAssetId: payload.workOrderId, orgId: req.orgId });
+        let workComplete = await knex('pm_task').where({ taskGroupScheduleAssignAssetId: payload.workOrderId, orgId: req.orgId, status: "COM" });
+
+        if (workResult.length == workComplete.length) {
+
+          let scheduleStatus = null;
+
+          let workDate = moment(payload.workOrderDate).format('YYYY-MM-DD');
+          let currnetDate = moment().format('YYYY-MM-DD');
+          if (workDate == currnetDate || workDate > currnetDate) {
+            scheduleStatus = "on"
+          } else if (workDate < currnetDate) {
+            scheduleStatus = "off"
+          }
+
+          let workOrder = await knex('task_group_schedule_assign_assets').update({ status: payload.status, updatedAt: currentTime, scheduleStatus: scheduleStatus }).where({ id: payload.workOrderId, orgId: req.orgId }).returning(['*'])
+
+        }
+
+
       } else {
+
+        await knex('task_group_schedule_assign_assets').update({ status: payload.status, updatedAt: currentTime,}).where({ id: payload.workOrderId, orgId: req.orgId }).returning(['*'])
 
         if (payload.status === 'C') {
           taskUpdated = await knex('pm_task').update({ status: payload.status, cancelReason: payload.status }).where({ taskGroupId: payload.taskGroupId, id: payload.taskId, orgId: req.orgId }).returning(['*'])
@@ -1928,7 +1958,8 @@ const taskGroupController = {
         taskGroupScheduleId: Joi.string().required(),
         taskGroupId: Joi.string().required(),
         assetId: Joi.string().required(),
-        description: Joi.string().required()
+        description: Joi.string().required(),
+        //workOrderId: Joi.string().required()
       })
       const result = Joi.validate(payload[0], schema);
 
