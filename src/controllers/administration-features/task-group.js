@@ -1881,6 +1881,7 @@ const taskGroupController = {
         userId: Joi.string().required(),
         cancelReason: Joi.string().allow("").allow(null).optional(),
         workOrderId: Joi.string().required(),
+        workOrderDate: Joi.date().required()
 
       })
       const result = Joi.validate(payload, schema);
@@ -1904,12 +1905,25 @@ const taskGroupController = {
         let workComplete = await knex('pm_task').where({ taskGroupScheduleAssignAssetId: payload.workOrderId, orgId: req.orgId, status: "COM" });
 
         if (workResult.length == workComplete.length) {
-          let workOrder = await knex('task_group_schedule_assign_assets').update({ status: payload.status, updatedAt: currentTime }).where({ id: payload.workOrderId, orgId: req.orgId }).returning(['*'])
+
+          let scheduleStatus = null;
+
+          let workDate = moment(payload.workOrderDate).format('YYYY-MM-DD');
+          let currnetDate = moment().format('YYYY-MM-DD');
+          if (workDate == currnetDate || workDate > currnetDate) {
+            scheduleStatus = "on"
+          } else if (workDate < currnetDate) {
+            scheduleStatus = "off"
+          }
+
+          let workOrder = await knex('task_group_schedule_assign_assets').update({ status: payload.status, updatedAt: currentTime, scheduleStatus: scheduleStatus }).where({ id: payload.workOrderId, orgId: req.orgId }).returning(['*'])
 
         }
 
 
       } else {
+
+        await knex('task_group_schedule_assign_assets').update({ status: payload.status, updatedAt: currentTime,}).where({ id: payload.workOrderId, orgId: req.orgId }).returning(['*'])
 
         if (payload.status === 'C') {
           taskUpdated = await knex('pm_task').update({ status: payload.status, cancelReason: payload.status }).where({ taskGroupId: payload.taskGroupId, id: payload.taskId, orgId: req.orgId }).returning(['*'])
