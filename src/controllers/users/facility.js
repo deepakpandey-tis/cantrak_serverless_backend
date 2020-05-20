@@ -434,7 +434,7 @@ const facilityBookingController = {
 
 
 
-            if (checkFacilityQuota < 0 && !checkFacilityQuota.code ) {
+            if (checkFacilityQuota < 0 && !checkFacilityQuota.code) {
                 return res.status(400).json({
                     errors: [
                         { code: "SLOT_BOOKED", message: `Slot is not available` }
@@ -917,25 +917,72 @@ const facilityBookingController = {
                 }
 
             }
+           
 
+            // Allow Advance Time Backup
+
+            // if (bookingAllowingTiming && bookingAllowingTiming.bookingAllowedAdvanceTime) {
+
+            //     console.log('Advance Allow Time:', moment(currentTime).add(+bookingAllowingTiming.bookingAllowedAdvanceTime, 'minutes').format('MMMM Do YYYY, h:mm:ss a'));
+
+            //     let isValidBookingInsideAllowPeriod = moment(currentTime).add(+bookingAllowingTiming.bookingAllowedAdvanceTime, 'minutes') > moment(bookingStartTime);
+
+            //     console.log("isValidBookingInsideAllowPeriod", isValidBookingInsideAllowPeriod);
+
+
+            //     if (!isValidBookingInsideAllowPeriod) {
+
+            //         let advanceString = bookingAllowingTiming.bookingAllowedAdvanceTime;
+            //         if (parseInt(advanceString / 24 / 60) > 0) {
+            //             advanceString = parseInt(advanceString / 24 / 60) + " days, " + parseInt(advanceString / 60 % 24) + ' hours, ' + parseInt(advanceString % 60) + ' minutes';
+            //         } else {
+            //             advanceString = parseInt(advanceString / 60 % 24) + ' hours, ' + parseInt(advanceString % 60) + ' minutes';
+            //         }
+
+            //         return res.status(400).json({
+            //             errors: [
+            //                 { code: "ADVANCED_BOOKING_ALLOW_DURATION", message: `Advance booking upto ${advanceString} is allowed only.` }
+            //             ]
+            //         });
+            //     }
+            // }
+
+            // Close Advance Time Backup
+            // if (bookingAllowingTiming && bookingAllowingTiming.bookingCloseAdvanceTime) {
+
+            //     console.log('Advance Booking Close Time:', moment(currentTime).add(+bookingAllowingTiming.bookingCloseAdvanceTime, 'minutes').format('MMMM Do YYYY, h:mm:ss a'));
+
+
+            //     let isValidBookingBeforeLockPeriod = moment(currentTime).add(+bookingAllowingTiming.bookingCloseAdvanceTime, 'minutes') < moment(bookingStartTime);
+
+            //     console.log("isValidBookingBeforeLockPeriod", isValidBookingBeforeLockPeriod);
+
+            //     if (!isValidBookingBeforeLockPeriod) {
+            //         return res.status(400).json({
+            //             errors: [
+            //                 { code: "ADVANCED_BOOKING_LOCK_DURATION", message: `Booking needs to be made before ${bookingAllowingTiming.bookingCloseAdvanceTime} minutes of booking start period.` }
+            //             ]
+            //         });
+            //     }
+            // }
 
             let bookingAllowingTiming = await knex('entity_booking_criteria').select(['bookingAllowedAdvanceTime', 'bookingCloseAdvanceTime']).where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId }).first();
 
             console.log('Booking Start Time:', moment(bookingStartTime).format('MMMM Do YYYY, h:mm:ss a'));
             console.log('bookingAllowingTiming', bookingAllowingTiming);
 
-            if (bookingAllowingTiming && bookingAllowingTiming.bookingAllowedAdvanceTime) {
+            if (bookingAllowingTiming && bookingAllowingTiming.bookingCloseAdvanceTime) {
 
-                console.log('Advance Allow Time:', moment(currentTime).add(+bookingAllowingTiming.bookingAllowedAdvanceTime, 'minutes').format('MMMM Do YYYY, h:mm:ss a'));
+                console.log('Advance Allow Time:', moment(currentTime).add(+bookingAllowingTiming.bookingCloseAdvanceTime, 'minutes').format('MMMM Do YYYY, h:mm:ss a'));
 
-                let isValidBookingInsideAllowPeriod = moment(currentTime).add(+bookingAllowingTiming.bookingAllowedAdvanceTime, 'minutes') > moment(bookingStartTime);
+                let isValidBookingInsideAllowPeriod = moment(currentTime).add(+bookingAllowingTiming.bookingCloseAdvanceTime, 'minutes') > moment(bookingStartTime);
 
                 console.log("isValidBookingInsideAllowPeriod", isValidBookingInsideAllowPeriod);
 
 
                 if (!isValidBookingInsideAllowPeriod) {
 
-                    let advanceString = bookingAllowingTiming.bookingAllowedAdvanceTime;
+                    let advanceString = bookingAllowingTiming.bookingCloseAdvanceTime;
                     if (parseInt(advanceString / 24 / 60) > 0) {
                         advanceString = parseInt(advanceString / 24 / 60) + " days, " + parseInt(advanceString / 60 % 24) + ' hours, ' + parseInt(advanceString % 60) + ' minutes';
                     } else {
@@ -950,21 +997,19 @@ const facilityBookingController = {
                 }
             }
 
+            if (bookingAllowingTiming && bookingAllowingTiming.bookingAllowedAdvanceTime) {
+
+                console.log('Advance Booking Close Time:', moment(currentTime).add(+bookingAllowingTiming.bookingAllowedAdvanceTime, 'minutes').format('MMMM Do YYYY, h:mm:ss a'));
 
 
-            if (bookingAllowingTiming && bookingAllowingTiming.bookingCloseAdvanceTime) {
-
-                console.log('Advance Booking Close Time:', moment(currentTime).add(+bookingAllowingTiming.bookingCloseAdvanceTime, 'minutes').format('MMMM Do YYYY, h:mm:ss a'));
-
-
-                let isValidBookingBeforeLockPeriod = moment(currentTime).add(+bookingAllowingTiming.bookingCloseAdvanceTime, 'minutes') < moment(bookingStartTime);
+                let isValidBookingBeforeLockPeriod = moment(currentTime).add(+bookingAllowingTiming.bookingAllowedAdvanceTime, 'minutes') < moment(bookingStartTime);
 
                 console.log("isValidBookingBeforeLockPeriod", isValidBookingBeforeLockPeriod);
 
                 if (!isValidBookingBeforeLockPeriod) {
                     return res.status(400).json({
                         errors: [
-                            { code: "ADVANCED_BOOKING_LOCK_DURATION", message: `Booking needs to be made before ${bookingAllowingTiming.bookingCloseAdvanceTime} minutes of booking start period.` }
+                            { code: "ADVANCED_BOOKING_LOCK_DURATION", message: `Booking needs to be made before ${bookingAllowingTiming.bookingAllowedAdvanceTime} minutes of booking start period.` }
                         ]
                     });
                 }
@@ -1107,9 +1152,9 @@ const facilityBookingController = {
             // Check if pax capacity disable and set NO
             if (facilityDatas.allowConcurrentBooking == true) {
                 availableSeats = Number(facilityDatas.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
-            } else if (facilityDatas.allowConcurrentBooking == false &&  facilityDatas.concurrentBookingLimit == 0 ) {
+            } else if (facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit == 0) {
                 availableSeats = Number(5000);
-            } else if(facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit != 0 )   {
+            } else if (facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit != 0) {
                 availableSeats = Number(facilityDatas.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
             }
 
@@ -1285,6 +1330,31 @@ const facilityBookingController = {
             let getPropertyUnits = await knex('property_units').select('*')
                 .where({ projectId: facilityData.projectId, orgId: req.orgId })
                 .whereIn('id', req.me.houseIds);
+
+            return res.status(200).json({
+                data: {
+                    propertyData: getPropertyUnits
+                }
+            })
+
+        } catch (err) {
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            })
+        }
+    },
+
+    // Get All Login User Unit List
+    getAllUnitList: async (req, res) => {
+        try {
+            let id = req.me.id;
+            const { facilityId } = req.body;
+            console.log("customerHouseInfo", req.me.houseIds);
+
+            let facilityData = await knex.from('facility_master').where({ id: facilityId }).first();
+
+            let getPropertyUnits = await knex('property_units').select('*')
+                .where({ projectId: facilityData.projectId, orgId: req.orgId })
 
             return res.status(200).json({
                 data: {

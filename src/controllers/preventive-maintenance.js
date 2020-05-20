@@ -1378,6 +1378,17 @@ const pmController = {
       let toTime = new Date(toNewDate).getTime();
 
       let pmResult = await knex('pm_master2')
+        .leftJoin('companies', 'pm_master2.companyId', 'companies.id')
+        .leftJoin('projects', 'pm_master2.projectId', 'projects.id')
+        .select([
+          'pm_master2.*',
+          'companies.companyId as companyCode',
+          'companies.companyName',
+          'companies.logoFile',
+          'projects.project as ProjectCode',
+          'projects.projectName',
+
+        ])
         .whereBetween('pm_master2.createdAt', [fromTime, toTime])
         .where(qb => {
 
@@ -1401,7 +1412,7 @@ const pmController = {
       let pmSchedule = await knex('task_group_schedule')
         .leftJoin('task_group_schedule_assign_assets', 'task_group_schedule.id', 'task_group_schedule_assign_assets.scheduleId')
         .leftJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id')
-        .leftJoin('pm_task', 'task_group_schedule.taskGroupId', 'pm_task.taskGroupId')
+        // .leftJoin('pm_task', 'task_group_schedule.taskGroupId', 'pm_task.taskGroupId')
         .select([
           'task_group_schedule.id as scheduleId',
           'task_group_schedule.taskGroupId',
@@ -1409,20 +1420,81 @@ const pmController = {
           'task_group_schedule_assign_assets.assetId',
           'asset_master.assetName',
           'asset_master.assetCode',
-          'pm_task.taskName',
-          'pm_task.status',
-          'pm_task.id as taskId'
+          'task_group_schedule_assign_assets.status',
+          'task_group_schedule_assign_assets.pmDate',
+          'task_group_schedule_assign_assets.updatedAt',
+          'task_group_schedule_assign_assets.scheduleStatus'
+
+          //'pm_task.taskName',
+          //  'pm_task.status',
+          //'pm_task.id as taskId'
         ])
         .whereIn('task_group_schedule.pmId', pmIds)
         .where({ 'task_group_schedule.orgId': req.orgId })
+      //pmSchedule.push({on:"",off:""})
+      //pmSchedule = pmSchedule.map(v => ({ ...v, on: 0, off: 0}))
+
+      let mapData = _.chain(pmSchedule)
+        .groupBy("assetCode")
+        .map((value, key) => ({
+          assetCode: key, planOrder: value.length, value: value[0],
+          allValue: value, workDone: value.map(ite => ite.status).filter(v => v == 'COM').length,
+          percentage: (100 * value.map(ite => ite.status).filter(v => v == 'COM').length / value.length).toFixed(2),
+          off: value.map(ite => ite.scheduleStatus).filter(v => v == 'off').length,
+          on: value.map(ite => ite.scheduleStatus).filter(v => v == 'on').length,
+        }))
+        .value()
 
 
-        pmSchedule =  _.uniqBy(pmSchedule,'taskId')
+      let final = [];
+      let grouped = _.groupBy(pmSchedule, "assetCode");
+
+      final.push(grouped);
+
+      let chartData = _.flatten(
+        final
+          .filter(v => !_.isEmpty(v))
+          .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].map(ite => ite.status).filter(v => v == 'COM').length / v[p].length).toFixed(2) })))
+      ).reduce((a, p) => {
+        let l = _.keys(p)[0];
+        if (a[l]) {
+          a[l] += p[l];
+
+        } else {
+          a[l] = p[l];
+        }
+        return a;
+      }, {});
+
+      let totalPlanOrder = 0;
+      let totalWorkDone = 0;
+      let totalPercentage = 0;
+      let totalOn = 0;
+      let totalOff = 0;
+      const Parallel = require('async-parallel');
+      pmResult = await Parallel.map(mapData, async item => {
+
+
+        totalPlanOrder += Number(item.planOrder);
+        totalWorkDone += Number(item.workDone);
+        totalPercentage += Number(item.percentage);
+        totalOn += Number(item.on);
+        totalOff += Number(item.off);
+
+
+        return {
+          ...pmResult[0], fromDate, toDate, planOrder: item, totalPlanOrder: totalPlanOrder,
+          totalWorkDone: totalWorkDone, totalPercentage: (totalPercentage).toFixed(2), chartData,
+          totalOn: totalOn,
+          totalOff: totalOff,
+        };
+
+      })
+
 
       res.json({
         data: pmResult,
         message: "Prenventive Maintenance report succesully!",
-             pmSchedule
       })
 
     } catch (err) {
@@ -1436,6 +1508,122 @@ const pmController = {
     }
 
   }
+  ,
+  pmHistoryReport: async (req, res) => {
 
+    try {
+
+      let payload = req.body;
+      let fromDate = payload.fromDate;
+      let toDate = payload.toDate;
+      let fromNewDate = moment(fromDate).startOf('date').format();
+      let toNewDate = moment(toDate).endOf('date', 'days').format();
+      let fromTime = new Date(fromNewDate).getTime();
+      let toTime = new Date(toNewDate).getTime();
+
+
+      let result = await knex('task_group_schedule_assign_assets')
+        .leftJoin('task_group_schedule', 'task_group_schedule_assign_assets.scheduleId', 'task_group_schedule.id')
+        .leftJoin('pm_master2', 'task_group_schedule.pmId', 'pm_master2.id')
+        .leftJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id')
+        .select([
+          'task_group_schedule_assign_assets.*',
+          'pm_master2.name as pmName',
+          'asset_master.assetSerial'
+        ])
+        .whereBetween('task_group_schedule_assign_assets.createdAt', [fromTime, toTime])
+        .where(qb => {
+
+          if (payload.assetSerial) {
+
+            qb.where('asset_master.assetSerial', payload.assetSerial)
+
+          }
+          if (payload.status) {
+
+            if (payload.status == "all" || payload.status == "") {
+
+            } else {
+
+              qb.where('task_group_schedule_assign_assets.status', payload.status)
+            }
+          }
+
+          qb.where({ 'task_group_schedule_assign_assets.orgId': req.orgId })
+
+        }).orderBy('pmDate', 'asc')
+
+      return res.json({
+        data: result,
+        message: "Pm History Successfully!"
+      })
+
+
+
+    } catch (err) {
+
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+
+    }
+
+  }
+  , pmStatusClone: async (req, res) => {
+
+    try {
+
+      let result = [];
+      let currentTime = new Date().getTime();
+      let sc = await knex('task_group_schedule_assign_assets');
+
+      for (let d of sc) {
+
+        let workResult = await knex('pm_task').where({ taskGroupScheduleAssignAssetId: d.id });
+        let workComplete = await knex('pm_task').where({ taskGroupScheduleAssignAssetId: d.id, status: "COM" });
+
+        if (workResult.length == workComplete.length) {
+
+          let workDate = moment(d.pmDate).format('YYYY-MM-DD');
+          let currnetDate = moment().format('YYYY-MM-DD');
+          if (workDate == currnetDate || workDate > currnetDate) {
+            scheduleStatus = "on"
+          } else if (workDate < currnetDate) {
+            scheduleStatus = "off"
+          }
+
+          let workOrder = await knex('task_group_schedule_assign_assets').update({ status: 'COM', updatedAt: currentTime, scheduleStatus: scheduleStatus }).where({ id: d.id }).returning(['*'])
+          result.push(workOrder[0]);
+        }
+
+        if (workResult[0].status == 'COM') {
+
+        } else {
+          await knex('task_group_schedule_assign_assets').update({ status: workResult[0].status, updatedAt: currentTime }).where({ id: d.id }).returning(['*'])
+
+        }
+
+      }
+
+      return res.status(200).json({
+        data: {
+          result
+        },
+        message: 'Clone Successfully!'
+      })
+
+    } catch (err) {
+
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+
+
+  }
 };
 module.exports = pmController;
