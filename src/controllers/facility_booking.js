@@ -6,7 +6,10 @@ const moment = require("moment");
 const QRCODE = require('qrcode');
 const uuidv4 = require("uuid/v4");
 var jwt = require("jsonwebtoken");
-const emailHelper = require('../helpers/email')
+
+const emailHelper = require('../helpers/email');
+const facilityHelper = require('../helpers/facility');
+
 
 const _ = require("lodash");
 
@@ -1111,18 +1114,91 @@ const facilityBookingController = {
         }
     },
     /*FACILITY BOOK NOW */
-    facilityBookNow: async (req, res) => {
+    // facilityBookNow: async (req, res) => {
+
+    //     try {
+    //         let id = req.me.id;
+    //         let payload = req.body;
+    //         let resultData;
+    //         const schema = Joi.object().keys({
+    //             facilityId: Joi.string().required(),
+    //             bookingStartDateTime: Joi.date().required(),
+    //             bookingEndDateTime: Joi.date().required(),
+    //             noOfSeats: Joi.number().required(),
+
+    //         })
+
+    //         const result = Joi.validate(payload, schema);
+
+    //         if (result && result.hasOwnProperty("error") && result.error) {
+    //             return res.status(400).json({
+    //                 errors: [
+    //                     { code: "VALIDATION_ERROR", message: result.error.message }
+    //                 ]
+    //             });
+    //         }
+
+
+    //         let facilityData = await knex.from('facility_master').where({ id: payload.facilityId }).first();
+
+
+    //         let startTime = new Date(payload.bookingStartDateTime).getTime();
+    //         let endTime = new Date(payload.bookingEndDateTime).getTime();
+
+    //         let currentTime = new Date().getTime();
+
+    //         let insertData = {
+    //             entityId: payload.facilityId,
+    //             entityType: "facility_master",
+    //             bookedAt: currentTime,
+    //             bookedBy: id,
+    //             noOfSeats: payload.noOfSeats,
+    //             feesPaid: 0,
+    //             bookingStartDateTime: startTime,
+    //             bookingEndDateTime: endTime,
+    //             createdAt: currentTime,
+    //             updatedAt: currentTime,
+    //             orgId: req.orgId
+    //         }
+
+    //         let insertResult = await knex('entity_bookings').insert(insertData).returning(['*']);
+    //         resultData = insertResult[0];
+
+    //         res.status(200).json({
+    //             result: resultData,
+    //             message: "Your facility booked successfully!"
+    //         })
+
+
+    //     } catch (err) {
+
+    //         res.status(500).json({
+    //             errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
+    //         })
+    //     }
+    // },
+
+     /*FACILITY BOOK NOW */
+     facilityBookNow: async (req, res) => {
 
         try {
-            let id = req.me.id;
+            let id;
             let payload = req.body;
             let resultData;
+          
+            // let unitId = req.me.houseIds[0];
+            let unitId;
+
             const schema = Joi.object().keys({
                 facilityId: Joi.string().required(),
                 bookingStartDateTime: Joi.date().required(),
                 bookingEndDateTime: Joi.date().required(),
                 noOfSeats: Joi.number().required(),
-
+                unitId: Joi.string().required(),
+                offset: Joi.number().required(),
+                currentTime: Joi.date().required(),
+                timezone: Joi.string().required(),
+                userId: Joi.string().required()
             })
 
             const result = Joi.validate(payload, schema);
@@ -1135,6 +1211,136 @@ const facilityBookingController = {
                 });
             }
 
+            // Get project id
+
+            id = payload.userId;
+
+            let facilityMaster = await knex('facility_master').select('projectId')
+                .where({ id: payload.facilityId, orgId: req.orgId, isActive: true }).first();
+
+            console.log("facilityBook", facilityMaster);
+
+            if (!facilityMaster) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "NOT_FOUND", message: `Facility Closed.` }
+                    ]
+                });
+            }
+
+
+            // Get Facility Quota By Facility Id           
+
+            unitId = payload.unitId;
+
+            // Check booking Quota
+            let checkFacilityQuota = await facilityHelper.getBookingQuota({ facilityId: payload.facilityId, bookingStartDateTime: payload.bookingStartDateTime, bookingEndDateTime: payload.bookingEndDateTime, offset: payload.offset, currentTime: payload.currentTime, timezone: payload.timezone, unitId: payload.unitId, orgId: req.orgId })
+            console.log("checkFacilityQuota", checkFacilityQuota);
+
+            if (checkFacilityQuota.code && checkFacilityQuota.message) {
+                return res.status(400).json({
+                    errors: [
+                        { code: checkFacilityQuota.code, message: checkFacilityQuota.message }
+                    ]
+                });
+            }
+
+
+
+            if (checkFacilityQuota < 0 && !checkFacilityQuota.code) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "SLOT_BOOKED", message: `Slot is not available` }
+                    ]
+                });
+            }
+
+            // Check booking Capacity
+            let checkFacilityCapacity = await facilityHelper.getBookingCapacity({ facilityId: payload.facilityId, bookingStartDateTime: payload.bookingStartDateTime, bookingEndDateTime: payload.bookingEndDateTime, offset: payload.offset, currentTime: payload.currentTime, timezone: payload.timezone, unitId: payload.unitId, orgId: req.orgId, noOfSeats: payload.noOfSeats })
+            console.log("checkFacilityCapacity", checkFacilityCapacity);
+            if (checkFacilityCapacity < 0) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "Quota_BOOKED", message: `Selected no. of Pax is not available in this slot.` }
+                    ]
+                });
+            }
+
+            // check facility is closed
+
+            let closeFacility = await knex('facility_master')
+                .select('inActiveReason')
+                .where({ id: payload.facilityId, orgId: req.orgId, isActive: false })
+                .first();
+
+            console.log("closedFacility", closeFacility);
+            if (closeFacility) {
+
+                let closeReasonMessage = closeFacility.inActiveReason;
+
+                return res.status(400).json({
+                    errors: [
+                        { code: "FACILITY_CLOSED_STATUS", message: `Facility is closed : Reason- ${closeReasonMessage}.` }
+                    ]
+                });
+            }
+
+
+            // check facility timing is closed
+
+            let closeFacilityTiming = await knex('facility_close_date')
+                .select('*')
+                .where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId })
+                .where('facility_close_date.endDate', '>', payload.bookingStartDateTime)
+                .where('facility_close_date.startDate', '<', payload.bookingEndDateTime)
+                .first();
+
+            console.log("closeFacilityTiming", closeFacilityTiming);
+            if (closeFacilityTiming) {
+
+                let closeReason = await knex('facility_close_date')
+                    .select('closeReason')
+                    .where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId })
+                    .first();
+
+                let closeReasonMessage = closeReason.closeReason;
+
+                return res.status(400).json({
+                    errors: [
+                        { code: "FACILITY_CLOSED", message: `Facility is closed for selected time slot : Reason- ${closeReasonMessage}.` }
+                    ]
+                });
+            }
+
+
+            checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: unitId, orgId: req.orgId }).first();
+
+            // Check concurrent booking for only flexible booking
+            let bookingCriteria1 = await knex('entity_booking_criteria').select('*').where({ entityId: payload.facilityId, entityType: 'facility_master', orgId: req.orgId }).first();
+            console.log("bookingCriteria", bookingCriteria1);
+            let totalConcurrentLimit = bookingCriteria1.concurrentBookingLimit;
+            let allowBookingSeat = 0;
+            if (bookingCriteria1 && bookingCriteria1.bookingType == '1' && bookingCriteria1.allowConcurrentBooking == true) {   // Flexible Booking
+
+                let bookingData = await knex('entity_bookings').count('* as totalBookedSeats')
+                    .where('entity_bookings.bookingEndDateTime', '>', payload.bookingStartDateTime)
+                    .where('entity_bookings.bookingStartDateTime', '<', payload.bookingEndDateTime)
+                    .where({ 'entityId': payload.facilityId, 'isBookingCancelled': false, 'entityType': 'facility_master', 'orgId': req.orgId }).first();
+                console.log("totalBookingSeats", bookingData);
+                allowBookingSeat = Number(1) + Number(bookingData.totalBookedSeats);
+                console.log("allowBookingSeat", allowBookingSeat);
+
+                if (allowBookingSeat > totalConcurrentLimit) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "ALREADY_SLOT_BOOKED", message: `You slot booking is overlapping, please try other timing slot.` }
+                        ]
+                    });
+                }
+
+            }
+
+            // exit
 
             let facilityData = await knex.from('facility_master').where({ id: payload.facilityId }).first();
 
@@ -1144,22 +1350,79 @@ const facilityBookingController = {
 
             let currentTime = new Date().getTime();
 
+            let price = await knex.from('entity_fees_master').where({ entityId: payload.facilityId }).first();
+
+            let facilitySlot = await knex.from('entity_booking_criteria').where({ entityId: payload.facilityId }).first();
+
+            let totalFees = 0;
+
+            if (price.feesType == '1') {
+                totalFees = price.feesAmount * payload.noOfSeats;
+            } else if (price.feesType == '2') {
+                let calDuration = facilitySlot.slotDuration * price.feesAmount / price.duration;
+                totalFees = calDuration * payload.noOfSeats;
+            } else {
+                totalFees = 0;
+            }
+
+
+            // Confirmed Status (1=>Auto Confirmed, 2=>Manually Confirmed)
+            if (facilityData.bookingStatus == 1) {
+                confirmedStatus = true;
+            } else {
+                confirmedStatus = false;
+            }
+
             let insertData = {
                 entityId: payload.facilityId,
                 entityType: "facility_master",
                 bookedAt: currentTime,
                 bookedBy: id,
                 noOfSeats: payload.noOfSeats,
-                feesPaid: 0,
+                feesPaid: totalFees,
                 bookingStartDateTime: startTime,
                 bookingEndDateTime: endTime,
                 createdAt: currentTime,
                 updatedAt: currentTime,
-                orgId: req.orgId
+                orgId: req.orgId,
+                unitId: unitId,
+                companyId: facilityData.companyId,
+                isBookingConfirmed: confirmedStatus,
+                bookingType: 1
             }
 
             let insertResult = await knex('entity_bookings').insert(insertData).returning(['*']);
             resultData = insertResult[0];
+
+
+            const user = await knex('users').select(['email', 'name']).where({ id: id }).first();
+
+
+            if (facilityData.bookingStatus == "2") {
+
+                let orgAdminResult = await knex('organisations').select('organisationAdminId').where({ id: req.orgId }).first();
+
+                let adminEmail;
+                if (orgAdminResult) {
+
+                    let adminUser = await knex('users').select('email').where({ id: orgAdminResult.organisationAdminId }).first();
+                    adminEmail = adminUser.email;
+
+                }
+
+
+                await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Approved Required', template: 'booking-confirmed-required.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
+
+                await emailHelper.sendTemplateEmail({ to: adminEmail, subject: 'Booking Approved Required ', template: 'booking-confirmed-admin.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
+
+
+            } else {
+
+
+                await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Confirmed', template: 'booking-confirmed.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
+
+            }
+            let updateDisplayId = await knex('entity_bookings').update({ isActive: true }).where({ isActive: true });
 
             res.status(200).json({
                 result: resultData,
@@ -1174,6 +1437,7 @@ const facilityBookingController = {
             })
         }
     },
+
     cancelBooking: async (req, res) => {
         try {
             const { bookingId, cancellationReason } = req.body;
@@ -1880,7 +2144,7 @@ const facilityBookingController = {
     },
 
      /* GET FACILITY AVAILABLE SEATS */
-     getFacilityAvailableSeats: async (req, res) => {
+    getFacilityAvailableSeats: async (req, res) => {
 
         try {
           
@@ -2419,6 +2683,53 @@ const facilityBookingController = {
 
         }
     },
+
+    getFacilityBookedDetails: async (req, res) => {
+        try {
+
+            let payload = req.body;
+            let rows;
+            let pagination = {};
+        
+            [rows] = await Promise.all([
+
+                knex
+                    .from("entity_bookings")
+                    .leftJoin('facility_master', 'entity_bookings.entityId', 'facility_master.id')
+                    .leftJoin('users', 'entity_bookings.bookedBy', 'users.id')
+                    .leftJoin('property_units', 'entity_bookings.unitId', 'property_units.id')
+                    .select([
+                        'entity_bookings.*',
+                        "facility_master.name",
+                        "facility_master.description as details",
+                        "users.name as bookedUser",
+                        "property_units.unitNumber",
+                        "property_units.description as pDescription",
+                    ])
+                    .where({"entity_bookings.orgId": req.orgId, "entity_bookings.entityId": payload.facilityId })
+                    .orderBy('id','desc')
+                    .limit(1)
+                    .first()                
+            ])
+
+            pagination.data = rows;
+
+            return res.status(200).json({
+                data: {
+                    booking: pagination
+                },
+                message: "Facility booked Details!"
+            });
+
+
+        } catch (err) {
+
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
+            })
+
+        }
+    }
 }
 
 

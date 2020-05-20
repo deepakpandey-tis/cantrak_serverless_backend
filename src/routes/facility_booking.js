@@ -78,5 +78,7 @@ router.post('/get-tenant-by-unit', authMiddleware.isAuthenticated,facilityBookin
 /* GET FACILITY AVAILABLE SEATS */
 router.post('/get-facility-available-seats', authMiddleware.isAuthenticated, facilityBookingController.getFacilityAvailableSeats);
 
+/* GET FACILITY BOOKED DETAILS FOR CONFIRMATION SCREEN */
+router.post('/get-facility-booked-details',authMiddleware.isAuthenticated,facilityBookingController.getFacilityBookedDetails)
 
 module.exports = router;
