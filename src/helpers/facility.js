@@ -203,6 +203,51 @@ const facilityHelper = {
             }
 
 
+            let bookingAllowingTiming = await knex('entity_booking_criteria').select(['bookingAllowedAdvanceTime', 'bookingCloseAdvanceTime']).where({ entityId: facilityId, entityType: 'facility_master', orgId: orgId }).first();
+
+         
+            if (bookingAllowingTiming && bookingAllowingTiming.bookingCloseAdvanceTime) {
+
+                console.log('Advance Allow Time:', moment(currentTime).add(+bookingAllowingTiming.bookingCloseAdvanceTime, 'minutes').format('MMMM Do YYYY, h:mm:ss a'));
+
+                let isValidBookingInsideAllowPeriod = moment(currentTime).add(+bookingAllowingTiming.bookingCloseAdvanceTime, 'minutes') > moment(bookingStartTime);
+
+                console.log("isValidBookingInsideAllowPeriod", isValidBookingInsideAllowPeriod);
+
+
+                if (!isValidBookingInsideAllowPeriod) {
+
+                    let advanceString = bookingAllowingTiming.bookingCloseAdvanceTime;
+                    if (parseInt(advanceString / 24 / 60) > 0) {
+                        advanceString = parseInt(advanceString / 24 / 60) + " days, " + parseInt(advanceString / 60 % 24) + ' hours, ' + parseInt(advanceString % 60) + ' minutes';
+                    } else {
+                        advanceString = parseInt(advanceString / 60 % 24) + ' hours, ' + parseInt(advanceString % 60) + ' minutes';
+                    }
+
+                    return { code: "ADVANCED_BOOKING_ALLOW_DURATION", message: `Advance booking upto ${advanceString} is allowed only.` }
+
+                }
+            }
+
+            if (bookingAllowingTiming && bookingAllowingTiming.bookingAllowedAdvanceTime) {
+
+                console.log('Advance Booking Close Time:', moment(currentTime).add(+bookingAllowingTiming.bookingAllowedAdvanceTime, 'minutes').format('MMMM Do YYYY, h:mm:ss a'));
+
+
+                let isValidBookingBeforeLockPeriod = moment(currentTime).add(+bookingAllowingTiming.bookingAllowedAdvanceTime, 'minutes') < moment(bookingStartTime);
+
+                console.log("isValidBookingBeforeLockPeriod", isValidBookingBeforeLockPeriod);
+
+                if (!isValidBookingBeforeLockPeriod) {
+
+                    return { code: "ADVANCED_BOOKING_LOCK_DURATION", message: `Booking needs to be made before ${bookingAllowingTiming.bookingAllowedAdvanceTime} minutes of booking start period.` }
+
+                }
+
+            }
+
+
+
             let availableSeats = 0;
 
             let bookingData = await knex('entity_bookings').sum('noOfSeats as totalBookedSeats')
@@ -227,6 +272,8 @@ const facilityHelper = {
                 ])
                 .where({ 'facility_master.id': facilityId, 'facility_master.orgId': orgId })
                 .first();
+
+
 
             // Check if pax capacity disable and set NO
             if (facilityDatas.allowConcurrentBooking == true) {
