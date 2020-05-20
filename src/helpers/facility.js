@@ -219,7 +219,8 @@ const facilityHelper = {
 
                     let advanceString = bookingAllowingTiming.bookingCloseAdvanceTime;
                     if (parseInt(advanceString / 24 / 60) > 0) {
-                        advanceString = parseInt(advanceString / 24 / 60) + " days, " + parseInt(advanceString / 60 % 24) + ' hours, ' + parseInt(advanceString % 60) + ' minutes';
+                        advanceString = parseInt(advanceString / 24 / 60) + " days";
+                       // advanceString = parseInt(advanceString / 24 / 60) + " days, " + parseInt(advanceString / 60 % 24) + ' hours, ' + parseInt(advanceString % 60) + ' minutes';
                     } else {
                         advanceString = parseInt(advanceString / 60 % 24) + ' hours, ' + parseInt(advanceString % 60) + ' minutes';
                     }
