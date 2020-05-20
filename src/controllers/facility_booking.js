@@ -2144,7 +2144,7 @@ const facilityBookingController = {
     },
 
      /* GET FACILITY AVAILABLE SEATS */
-     getFacilityAvailableSeats: async (req, res) => {
+    getFacilityAvailableSeats: async (req, res) => {
 
         try {
           
@@ -2683,6 +2683,53 @@ const facilityBookingController = {
 
         }
     },
+
+    getFacilityBookedDetails: async (req, res) => {
+        try {
+
+            let payload = req.body;
+            let rows;
+            let pagination = {};
+        
+            [rows] = await Promise.all([
+
+                knex
+                    .from("entity_bookings")
+                    .leftJoin('facility_master', 'entity_bookings.entityId', 'facility_master.id')
+                    .leftJoin('users', 'entity_bookings.bookedBy', 'users.id')
+                    .leftJoin('property_units', 'entity_bookings.unitId', 'property_units.id')
+                    .select([
+                        'entity_bookings.*',
+                        "facility_master.name",
+                        "facility_master.description as details",
+                        "users.name as bookedUser",
+                        "property_units.unitNumber",
+                        "property_units.description as pDescription",
+                    ])
+                    .where({"entity_bookings.orgId": req.orgId, "entity_bookings.entityId": payload.facilityId })
+                    .orderBy('id','desc')
+                    .limit(1)
+                    .first()                
+            ])
+
+            pagination.data = rows;
+
+            return res.status(200).json({
+                data: {
+                    booking: pagination
+                },
+                message: "Facility booked Details!"
+            });
+
+
+        } catch (err) {
+
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }]
+            })
+
+        }
+    }
 }
 
 
