@@ -1151,7 +1151,6 @@ const serviceRequestController = {
           ,
 
 
-
           knex.from("service_requests")
             .leftJoin(
               "property_units",
