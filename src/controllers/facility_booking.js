@@ -2729,7 +2729,8 @@ const facilityBookingController = {
             })
 
         }
-    }
+    },
+    
 }
 
 
