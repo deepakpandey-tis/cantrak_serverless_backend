@@ -1570,7 +1570,33 @@ const pmController = {
 
     }
 
+  },
+
+  pmPlanActionScheduleReport: async (req, res) => {
+
+    try {
+
+      let result = null;
+
+      return res.json({
+        data: result,
+        message: "Pm Plan Action Schedule Report Successfully!"
+      })
+
+
+
+    } catch (err) {
+
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+
+    }
+
   }
+
   , pmStatusClone: async (req, res) => {
 
     try {

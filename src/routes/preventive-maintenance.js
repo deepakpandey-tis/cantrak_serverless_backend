@@ -29,6 +29,7 @@ router.post('/search-pm-by-name', authMiddleware.isAuthenticated, authMiddleware
 
 router.post('/pm-report', authMiddleware.isAuthenticated, authMiddleware.isOrgAdmin, pmController.pmReport)
 router.post('/pm-history-report',authMiddleware.isAuthenticated, authMiddleware.isOrgAdmin, pmController.pmHistoryReport)
+router.post('/pm-plan-action-schedule-report',authMiddleware.isAuthenticated, authMiddleware.isOrgAdmin, pmController.pmPlanActionScheduleReport)
 
 router.get('/pm-status-clone', pmController.pmStatusClone)
 

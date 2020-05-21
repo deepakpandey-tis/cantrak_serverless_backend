@@ -845,7 +845,7 @@ const serviceRequestController = {
             .where(qb => {
 
               if (serviceId) {
-                qb.where({ 'service_requests.id': serviceId })
+                qb.where({ 'service_requests.displayId': serviceId })
               }
 
               if (location) {
@@ -988,7 +988,7 @@ const serviceRequestController = {
             .where(qb => {
 
               if (serviceId) {
-                qb.where({ 'service_requests.id': serviceId })
+                qb.where({ 'service_requests.displayId': serviceId })
               }
 
               if (location) {
@@ -1149,7 +1149,6 @@ const serviceRequestController = {
             .where({ 'service_requests.isCreatedFromSo': false })
             .distinct('service_requests.id')
           ,
-
 
 
           knex.from("service_requests")
