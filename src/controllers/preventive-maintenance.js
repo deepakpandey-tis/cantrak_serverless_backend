@@ -1572,15 +1572,42 @@ const pmController = {
 
   },
 
-  pmPlanActionScheduleReport: async (req, res) => {
+  pmScheduleReport: async (req, res) => {
 
     try {
 
-      let result = null;
+      let payload = req.body;
+      let startMonth = payload.startMonth;
+      let endMonth = payload.endMonth;
+      let year = payload.year;
+      let fromDate = year + "-" + startMonth + "-" + 01;
+      let toDate = year + "-" + endMonth + "-" + 31;
+      let fromNewDate = moment(fromDate).startOf('date').format();
+      let toNewDate = moment(toDate).endOf('date', 'days').format();
+      let fromTime = new Date(fromNewDate).getTime();
+      let toTime = new Date(toNewDate).getTime();
+
+      let result = await knex('task_group_schedule_assign_assets')
+        .leftJoin('task_group_schedule', 'task_group_schedule_assign_assets.scheduleId', 'task_group_schedule.id')
+        .leftJoin('pm_master2', 'task_group_schedule.pmId', 'pm_master2.id')
+        .leftJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id')
+        .select([
+          'task_group_schedule_assign_assets.*',
+          'pm_master2.name as pmName',
+          'asset_master.assetSerial'
+        ])
+        .returning(["*"])
+        .whereBetween('task_group_schedule_assign_assets.createdAt', [fromTime, toTime])
+        .where(qb => {
+
+          qb.where({ 'task_group_schedule_assign_assets.orgId': req.orgId })
+
+        }).orderBy('pmDate', 'asc')
+
 
       return res.json({
         data: result,
-        message: "Pm Plan Action Schedule Report Successfully!"
+        message: "Pm Plan Action schedule report Successfully!"
       })
 
 
