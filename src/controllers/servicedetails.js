@@ -522,6 +522,7 @@ const serviceDetailsController = {
           .select(
             "companies.companyName",
             "projects.projectName",
+            "projects.project as projectCode",
             "property_types.propertyType",
             "buildings_and_phases.buildingPhaseCode",
             "buildings_and_phases.description as buildingPhaseDescription",

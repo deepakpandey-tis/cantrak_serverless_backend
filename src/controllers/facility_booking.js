@@ -1178,14 +1178,14 @@ const facilityBookingController = {
     //     }
     // },
 
-     /*FACILITY BOOK NOW */
-     facilityBookNow: async (req, res) => {
+    /*FACILITY BOOK NOW */
+    facilityBookNow: async (req, res) => {
 
         try {
             let id;
             let payload = req.body;
             let resultData;
-          
+
             // let unitId = req.me.houseIds[0];
             let unitId;
 
@@ -2056,11 +2056,11 @@ const facilityBookingController = {
             [rows] = await Promise.all([
                 knex
                     .from("facility_master")
-                    .where({ 
+                    .where({
                         "facility_master.orgId": req.orgId,
                         "facility_master.isActive": true,
                         "facility_master.projectId": payload.pid
-                        })
+                    })
                     .select([
                         "facility_master.id",
                         "facility_master.name"
@@ -2093,7 +2093,7 @@ const facilityBookingController = {
     getUnitByBuilding: async (req, res) => {
         try {
             const { buildingId } = req.body;
-         
+
             let getPropertyUnits = await knex('property_units').select('*')
                 .where({ buildingPhaseId: buildingId, orgId: req.orgId })
             console.log("getUnits", getPropertyUnits);
@@ -2101,7 +2101,7 @@ const facilityBookingController = {
             let getFacilityList = await knex('facility_master').select('*')
                 .where({ buildingPhaseId: buildingId, orgId: req.orgId })
 
-            let result =  {'units': getPropertyUnits, 'facility': getFacilityList }
+            let result = { 'units': getPropertyUnits, 'facility': getFacilityList }
             return res.status(200).json({
                 data: {
                     data: result
@@ -2143,12 +2143,12 @@ const facilityBookingController = {
         }
     },
 
-     /* GET FACILITY AVAILABLE SEATS */
+    /* GET FACILITY AVAILABLE SEATS */
     getFacilityAvailableSeats: async (req, res) => {
 
         try {
-          
-            let payload = req.body;          
+
+            let payload = req.body;
             let unitIds;
             let checkQuotaByUnit;
             let dailyQuota;
@@ -2232,7 +2232,7 @@ const facilityBookingController = {
             console.log("daily/monthly/weekly", dailyQuota, weeklyQuota, monthlyQuota);
 
             // checkQuotaByUnit = await knex('property_units').select('propertyUnitType').where({ id: getPropertyUnits[0].id, orgId: req.orgId }).first();
-    
+
 
             // Set timezone for moment
             moment.tz.setDefault(payload.timezone);
@@ -2581,9 +2581,9 @@ const facilityBookingController = {
             // Check if pax capacity disable and set NO
             if (facilityDatas.allowConcurrentBooking == true) {
                 availableSeats = Number(facilityDatas.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
-            } else if (facilityDatas.allowConcurrentBooking == false &&  facilityDatas.concurrentBookingLimit == 0 ) {
+            } else if (facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit == 0) {
                 availableSeats = Number(5000);
-            } else if(facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit != 0 )   {
+            } else if (facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit != 0) {
                 availableSeats = Number(facilityDatas.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
             }
 
@@ -2690,7 +2690,7 @@ const facilityBookingController = {
             let payload = req.body;
             let rows;
             let pagination = {};
-        
+
             [rows] = await Promise.all([
 
                 knex
@@ -2706,10 +2706,10 @@ const facilityBookingController = {
                         "property_units.unitNumber",
                         "property_units.description as pDescription",
                     ])
-                    .where({"entity_bookings.orgId": req.orgId, "entity_bookings.entityId": payload.facilityId })
-                    .orderBy('id','desc')
+                    .where({ "entity_bookings.orgId": req.orgId, "entity_bookings.entityId": payload.facilityId })
+                    .orderBy('id', 'desc')
                     .limit(1)
-                    .first()                
+                    .first()
             ])
 
             pagination.data = rows;
@@ -2730,7 +2730,46 @@ const facilityBookingController = {
 
         }
     },
-    
+
+    getFacilityDropDownList: async (req, res) => {
+        try {
+            let rows;
+
+            let pagination = {};
+
+            [rows] = await Promise.all([
+                knex
+                    .from("facility_master")
+                    .where({
+                        "facility_master.orgId": req.orgId,
+                        "facility_master.isActive": true
+                    })
+                    .select([
+                        "facility_master.id",
+                        "facility_master.name"
+                    ])
+                    .groupBy([
+                        "facility_master.id"
+                    ])
+                    .orderBy('facility_master.displayId', 'asc')
+            ]);
+
+            pagination.data = rows;
+
+            return res.status(200).json({
+                data: {
+                    facilities: pagination
+                },
+                message: "Facility Listing!"
+            });
+        } catch (err) {
+            console.log("[controllers][facility][list] :  Error", err);
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    }
+
 }
 
 
