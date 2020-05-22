@@ -81,5 +81,7 @@ router.post('/get-facility-available-seats', authMiddleware.isAuthenticated, fac
 /* GET FACILITY BOOKED DETAILS FOR CONFIRMATION SCREEN */
 router.post('/get-facility-booked-details',authMiddleware.isAuthenticated,facilityBookingController.getFacilityBookedDetails)
 
+router.get('/get-facility-dropdown-list', authMiddleware.isAuthenticated, facilityBookingController.getFacilityDropDownList)
+
 
 module.exports = router;
