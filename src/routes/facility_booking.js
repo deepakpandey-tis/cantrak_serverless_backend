@@ -83,5 +83,6 @@ router.post('/get-facility-booked-details',authMiddleware.isAuthenticated,facili
 
 router.get('/get-facility-dropdown-list', authMiddleware.isAuthenticated, facilityBookingController.getFacilityDropDownList)
 
+router.post('/get-facility-by-project',authMiddleware.isAuthenticated,facilityBookingController.getFacilityByProject)
 
 module.exports = router;

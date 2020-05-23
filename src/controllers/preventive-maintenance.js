@@ -1579,9 +1579,40 @@ const pmController = {
       let payload = req.body;
       let startMonth = payload.startMonth;
       let endMonth = payload.endMonth;
-      let year = payload.year;
+      let lastDay;
+      if (endMonth == "jan") {
+
+        lastDay = 31;
+
+      } else if (endMonth == "feb") {
+
+        lastDay = 28;
+
+      } else if (endMonth == "mar") {
+
+        lastDay = 31;
+      } else if (endMonth == "apr") {
+        lastDay = 30;
+      } else if (endMonth == "may") {
+        lastDay = 31;
+      } else if (endMonth == "jun") {
+        lastDay = 30;
+      } else if (endMonth == "jul") {
+        lastDay = 31;
+      } else if (endMonth == "aug") {
+        lastDay = 31;
+      } else if (endMonth == "sep") {
+        lastDay = 30;
+      } else if (endMonth == "oct") {
+        lastDay = 31;
+      } else if (endMonth == "nov") {
+        lastDay = 30;
+      } else if (endMonth == "dec") {
+        lastDay = 31;
+      }
+      let year = payload.startYear;
       let fromDate = year + "-" + startMonth + "-" + 01;
-      let toDate = year + "-" + endMonth + "-" + 31;
+      let toDate = year + "-" + endMonth + "-" + lastDay;
       let fromNewDate = moment(fromDate).startOf('date').format();
       let toNewDate = moment(toDate).endOf('date', 'days').format();
       let fromTime = new Date(fromNewDate).getTime();
@@ -1591,23 +1622,158 @@ const pmController = {
         .leftJoin('task_group_schedule', 'task_group_schedule_assign_assets.scheduleId', 'task_group_schedule.id')
         .leftJoin('pm_master2', 'task_group_schedule.pmId', 'pm_master2.id')
         .leftJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id')
+        .leftJoin('companies', 'pm_master2.companyId', 'companies.id')
+        .leftJoin('projects', 'pm_master2.projectId', 'projects.id')
         .select([
           'task_group_schedule_assign_assets.*',
           'pm_master2.name as pmName',
-          'asset_master.assetSerial'
+          'asset_master.assetSerial',
+          'companies.companyId as companyCode',
+          'companies.companyName',
+          'companies.logoFile',
+          'projects.project as projectCode',
+          'projects.projectName',
+          'task_group_schedule.repeatPeriod'
         ])
         .returning(["*"])
         .whereBetween('task_group_schedule_assign_assets.createdAt', [fromTime, toTime])
         .where(qb => {
 
-          qb.where({ 'task_group_schedule_assign_assets.orgId': req.orgId })
+          if (payload.companyId) {
+            qb.where({ 'pm_master2.companyId': payload.companyId })
+          }
 
-        }).orderBy('pmDate', 'asc')
+          if (payload.projectId) {
+
+            if (payload.projectId == "all" || payload.projectId == "") {
+            } else {
+              qb.where({ 'pm_master2.projectId': payload.projectId })
+
+            }
+          } else {
+
+          }
+
+          qb.where({ 'task_group_schedule_assign_assets.orgId': req.orgId, 'task_group_schedule_assign_assets.status': 'COM' })
+
+        })
+        .orderBy('task_group_schedule_assign_assets.pmDate', 'asc')
+
+      const Parallel = require('async-parallel');
+
+      let totalWeeks = 0;
+      result = await Parallel.map(result, async item => {
+
+        let week;
+        week = Math.ceil(moment(item.pmDate).format('D') / 7);
+        let month = moment(item.pmDate).month() + 1;
+        var start = moment(item.pmDate).startOf('month').format('DD');
+        var end = moment(item.pmDate).endOf('month').format('DD');
+        var weeks = (end - start + 1) / 7;
+        weeks = Math.ceil(weeks);
+
+        let mv = moment(item.pmDate);
+
+        let newWeek = mv.weeks();
+
+
+        totalWeeks += weeks;
+
+        return { ...item, week, month, weeks, totalWeeks, newWeek };
+      })
+
+
+
+      var ONE_WEEK = 1000 * 60 * 60 * 24 * 7;
+      // Convert both dates to milliseconds
+      var date1_ms = new Date(fromDate).getTime();
+      var date2_ms = new Date(toDate).getTime();
+      // Calculate the difference in milliseconds
+      var difference_ms = Math.abs(date1_ms - date2_ms);
+      // Convert back to weeks and return hole weeks
+      a = Math.floor(difference_ms / ONE_WEEK);
+
+
+
+
+
+      let arr = [];
+      let p = { "repeatPeriod": 'MONTH', "repeatOn": "SU", "repeatFrequency": 1, "startDateTime": fromDate, "endDateTime": toDate };
+      let dates = genrateWork(p);
+
+
+      let arrMonth = [];
+
+      for (let n of dates) {
+
+
+
+      }
+
+
+      let v = 0;
+
+
+      let startWeek = moment(fromDate).week();
+      let endWeek = moment(toDate).week();
+
+      for(let i = startWeek; i<endWeek; i++){
+
+        arr.push({"day":i})
+
+      }
+
+
+      // for (let i = 1; i < a; i++) {
+
+
+      //   v++;
+
+      //   if (v == 5) {
+      //     v = 1;
+      //   }
+
+      //   let mObject;
+      //   for (let s of dates) {
+
+      //     mObject = moment(s).format('M');
+
+      //   }
+
+      //   arr.push({ "day": i, v, mObject })
+
+      // }
+
+
+
+
+
+
+
+
+      let arr1 = [];
+      let totalW = 0;
+      for (let nd of dates) {
+
+        var start1 = moment(nd).startOf('month').format('DD');
+        var end1 = moment(nd).endOf('month').format('DD');
+        var weeks1 = (end1 - start1 + 1) / 7;
+        weeks1 = Math.ceil(weeks1);
+        totalW += weeks1;
+        let month = moment(nd).format('M');
+
+
+        arr1.push({ ...nd, weeks1, totalW, month })
+      }
+
 
 
       return res.json({
         data: result,
-        message: "Pm Plan Action schedule report Successfully!"
+        message: "Pm Plan Action schedule report Successfully!",
+        totalColumn: arr,
+        dates,
+        arr1
       })
 
 
@@ -1680,3 +1846,80 @@ const pmController = {
   }
 };
 module.exports = pmController;
+
+function genrateWork(payload) {
+
+
+  let repeatPeriod = payload.repeatPeriod;
+  let repeatOn = payload.repeatOn ? payload.repeatOn : ""; //&& payload.repeatOn.length ? payload.repeatOn.join(',') : [];
+  let repeatFrequency = Number(payload.repeatFrequency);
+  let start = new Date(payload.startDateTime);
+
+  console.log("=============sss", start, "==========================")
+  let startYear = start.getFullYear();
+  let startMonth = start.getMonth();
+  let startDate = start.getDate();
+  let end = new Date(payload.endDateTime);
+
+  console.log("=============sss", end, "==========================", payload.repeatPeriod, payload.repeatOn, repeatFrequency, "=================")
+
+
+  let endYear = end.getFullYear();
+  let endMonth = end.getMonth();
+  let endDate = end.getDate();
+  let performingDates;
+
+  let config = {
+    interval: repeatFrequency,
+    dtstart: new Date(
+      Date.UTC(
+        startYear, startMonth, startDate
+      )
+    ),
+    until: new Date(
+      Date.UTC(
+        endYear, endMonth, endDate
+      )
+    ) // year, month, date
+  };
+  if (repeatPeriod === "YEAR") {
+    config["freq"] = RRule.YEARLY;
+  } else if (repeatPeriod === "MONTH") {
+    config["freq"] = RRule.MONTHLY;
+  } else if (repeatPeriod === "WEEK") {
+    config["freq"] = RRule.WEEKLY;
+    let array = [];
+
+    if (repeatOn.includes("MO")) {
+      array.push(RRule.MO);
+    }
+    if (repeatOn.includes("TU")) {
+      array.push(RRule.TU);
+    }
+    if (repeatOn.includes("WE")) {
+      array.push(RRule.WE);
+    }
+    if (repeatOn.includes("TH")) {
+      array.push(RRule.TH);
+    }
+    if (repeatOn.includes("FR")) {
+      array.push(RRule.FR);
+    }
+    if (repeatOn.includes("SA")) {
+      array.push(RRule.SA);
+    }
+    if (repeatOn.includes("SU")) {
+      array.push(RRule.SU);
+    }
+    config["byweekday"] = array;
+  } else if (repeatPeriod === "DAY") {
+    config["freq"] = RRule.DAILY;
+  }
+
+  const rule = new RRule(config);
+  performingDates = rule.all();
+
+  return performingDates;
+
+
+}

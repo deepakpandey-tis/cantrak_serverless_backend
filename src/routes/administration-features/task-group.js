@@ -225,4 +225,6 @@ router.post('/pm-location-detail', authMiddleware.isAuthenticated, taskGroupCont
 
 router.post('/generate-work-date', authMiddleware.isAuthenticated, taskGroupController.generateWorkDate)
 
+router.get('/pm-schedule-report',authMiddleware.isAuthenticated, taskGroupController.pmScheduleReport)
+
 module.exports = router

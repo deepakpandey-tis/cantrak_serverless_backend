@@ -1629,7 +1629,10 @@ const taskGroupController = {
           'asset_master.barcode as barCode',
           'asset_master.areaName as areaName',
           'asset_master.model as modelNo',
+          'asset_master.assetSerial',
+          'asset_master.assetCode',
           'companies.logoFile',
+          'companies.companyAddressEng',
           // 'projects.projectName',
           // 'buildings_and_phases.buildingPhaseCode',
           // 'floor_and_zones.floorZoneCode',
@@ -1687,6 +1690,7 @@ const taskGroupController = {
             'buildings_and_phases.buildingPhaseCode',
             'buildings_and_phases.description as buildingDescription',
             'floor_and_zones.floorZoneCode',
+            'floor_and_zones.description as floorDescription',
             'property_units.unitNumber'
           ]).where({ "asset_location.assetId": row.assetId })
           .orderBy("asset_location", 'desc')
@@ -1760,11 +1764,14 @@ const taskGroupController = {
       //   status = 'incomplete'
       // }
       // TASK CLOSE
+      let meData = req.me;
+
       return res.status(200).json({
         data: {
           taskGroupPmAssetDatails: _.uniqBy(pmResult, 'id'),
           additionalUsers: additionalUsers,
-          tasks: _.uniqBy(tasks, 'taskId')
+          tasks: _.uniqBy(tasks, 'taskId'),
+          printedBy:meData
         },
         message: 'Task Group Asset PM Details Successfully!'
       })
@@ -1923,7 +1930,7 @@ const taskGroupController = {
 
       } else {
 
-        await knex('task_group_schedule_assign_assets').update({ status: payload.status, updatedAt: currentTime,}).where({ id: payload.workOrderId, orgId: req.orgId }).returning(['*'])
+        await knex('task_group_schedule_assign_assets').update({ status: payload.status, updatedAt: currentTime, }).where({ id: payload.workOrderId, orgId: req.orgId }).returning(['*'])
 
         if (payload.status === 'C') {
           taskUpdated = await knex('pm_task').update({ status: payload.status, cancelReason: payload.status }).where({ taskGroupId: payload.taskGroupId, id: payload.taskId, orgId: req.orgId }).returning(['*'])
@@ -2725,6 +2732,30 @@ const taskGroupController = {
         ],
       });
     }
+
+  },
+  pmScheduleReport: async (req, res) => {
+
+    try {
+
+      let result = await knex('task_group_schedule_assign_assets')
+        .where({ 'task_group_schedule_assign_assets.orgId': req.orgId });
+
+      return res.status(200).json({
+        data: result,
+        message: 'Pm plan action schedule successfully!',
+
+      })
+
+
+    } catch (err) {
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+
 
   }
 }
