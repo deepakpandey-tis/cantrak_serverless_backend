@@ -2768,6 +2768,49 @@ const facilityBookingController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
+    },
+
+    getFacilityByProject: async (req, res) => {
+        try {
+            let rows;
+            let payload = req.body;
+            let pagination = {};
+
+            [rows] = await Promise.all([
+                knex
+                    .from("facility_master")
+                    .where({
+                        "facility_master.orgId": req.orgId,
+                        "facility_master.isActive": true
+                    })
+                    .where(qb => {
+                        if (payload.projectId && payload.projectId !='all') {
+                            qb.where({ 'facility_master.projectId': payload.projectId })
+                        }
+                    })
+                    .select([
+                        "facility_master.id",
+                        "facility_master.name"
+                    ])
+                    .groupBy([
+                        "facility_master.id"
+                    ])
+            ]);
+
+            pagination.data = rows;
+
+            return res.status(200).json({
+                data: {
+                    facilities: pagination
+                },
+                message: "Facility Listing!"
+            });
+        } catch (err) {
+            console.log("[controllers][facility][list] :  Error", err);
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
     }
 
 }
