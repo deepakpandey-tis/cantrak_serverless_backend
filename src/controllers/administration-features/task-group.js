@@ -1923,7 +1923,7 @@ const taskGroupController = {
 
       } else {
 
-        await knex('task_group_schedule_assign_assets').update({ status: payload.status, updatedAt: currentTime,}).where({ id: payload.workOrderId, orgId: req.orgId }).returning(['*'])
+        await knex('task_group_schedule_assign_assets').update({ status: payload.status, updatedAt: currentTime, }).where({ id: payload.workOrderId, orgId: req.orgId }).returning(['*'])
 
         if (payload.status === 'C') {
           taskUpdated = await knex('pm_task').update({ status: payload.status, cancelReason: payload.status }).where({ taskGroupId: payload.taskGroupId, id: payload.taskId, orgId: req.orgId }).returning(['*'])
@@ -2725,6 +2725,30 @@ const taskGroupController = {
         ],
       });
     }
+
+  },
+  pmScheduleReport: async (req, res) => {
+
+    try {
+
+      let result = await knex('task_group_schedule_assign_assets')
+        .where({ 'task_group_schedule_assign_assets.orgId': req.orgId });
+
+      return res.status(200).json({
+        data: result,
+        message: 'Pm plan action schedule successfully!',
+
+      })
+
+
+    } catch (err) {
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+
 
   }
 }
