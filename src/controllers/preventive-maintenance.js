@@ -1666,17 +1666,20 @@ const pmController = {
 
         let week;
         week = Math.ceil(moment(item.pmDate).format('D') / 7);
-        let month = moment(item.pmDate).format('M');
+        let month = moment(item.pmDate).month() + 1;
         var start = moment(item.pmDate).startOf('month').format('DD');
         var end = moment(item.pmDate).endOf('month').format('DD');
         var weeks = (end - start + 1) / 7;
         weeks = Math.ceil(weeks);
 
+        let mv = moment(item.pmDate);
+
+        let newWeek = mv.weeks();
 
 
         totalWeeks += weeks;
 
-        return { ...item, week, month, weeks, totalWeeks };
+        return { ...item, week, month, weeks, totalWeeks, newWeek };
       })
 
 
@@ -1690,32 +1693,77 @@ const pmController = {
       // Convert back to weeks and return hole weeks
       a = Math.floor(difference_ms / ONE_WEEK);
 
-      let arr = [];
-      for (let i = 1; i < a; i++) {
 
-        arr.push({ "day": i })
+
+
+
+      let arr = [];
+      let p = { "repeatPeriod": 'MONTH', "repeatOn": "SU", "repeatFrequency": 1, "startDateTime": fromDate, "endDateTime": toDate };
+      let dates = genrateWork(p);
+
+
+      let arrMonth = [];
+
+      for (let n of dates) {
+
+
 
       }
 
 
-      let p  = {"repeatPeriod":'MONTH',"repeatOn":"SU","repeatFrequency":1,"startDateTime":fromDate,"endDateTime":toDate};
+      let v = 0;
 
 
-      let dates = genrateWork(p);
+      let startWeek = moment(fromDate).week();
+      let endWeek = moment(toDate).week();
 
-      arr1 = [];
+      for(let i = startWeek; i<endWeek; i++){
+
+        arr.push({"day":i})
+
+      }
+
+
+      // for (let i = 1; i < a; i++) {
+
+
+      //   v++;
+
+      //   if (v == 5) {
+      //     v = 1;
+      //   }
+
+      //   let mObject;
+      //   for (let s of dates) {
+
+      //     mObject = moment(s).format('M');
+
+      //   }
+
+      //   arr.push({ "day": i, v, mObject })
+
+      // }
+
+
+
+
+
+
+
+
+      let arr1 = [];
       let totalW = 0;
-      for(let nd of dates){
+      for (let nd of dates) {
 
         var start1 = moment(nd).startOf('month').format('DD');
         var end1 = moment(nd).endOf('month').format('DD');
         var weeks1 = (end1 - start1 + 1) / 7;
         weeks1 = Math.ceil(weeks1);
-        totalW +=weeks1;
+        totalW += weeks1;
         let month = moment(nd).format('M');
 
 
-        arr1.push({...nd,weeks1,totalW,month})
+        arr1.push({ ...nd, weeks1, totalW, month })
       }
 
 
