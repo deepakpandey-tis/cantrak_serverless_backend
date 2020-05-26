@@ -77,24 +77,23 @@ const courierStorageController = {
           .transacting(trx)
           .into("courier");
 
-          incident = incidentResult[0]
+        incident = incidentResult[0];
 
-          trx.commit;
+        trx.commit;
       });
 
       res.status(200).json({
         data: {
-          category: incident
+          category: incident,
         },
-        message: "Courier added successfully !"
+        message: "Courier added successfully !",
       });
     } catch (err) {
       console.log("[controllers][courier][courierAdd] :  Error", err);
 
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
-
     }
   },
 
@@ -106,8 +105,8 @@ const courierStorageController = {
 
   getCourierList: async (req, res) => {
     try {
-      let sortPayLoad = req.body;
-      if (!sortPayLoad.sortBy && !sortPayLoad.orderBy) {
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
         sortPayload.sortBy = "courierName";
         sortPayload.orderBy = "asc";
       }
@@ -118,18 +117,70 @@ const courierStorageController = {
       let page = reqData.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
+      let { searchValue } = req.body;
       let orgId = req.query.orgId;
       let total, rows;
 
       [total, rows] = await Promise.all([
-        knex("courier_and_storage")
+        knex
+          .count("* as count")
+          .from("courier")
+          .leftJoin("users", "users.id", "courier.createdBy")
+          .where({ "courier.orgId": req.orgId })
+          .where((qb) => {
+            if (searchValue) {
+              qb.where("courier.courierCode", "iLIKE", `%${searchValue}%`);
+              qb.orWhere("courier.courierName", "iLIKE", `%${searchValue}%`);
+              qb.orWhere("courier.mobileNo", "iLIKE", `%${searchValue}%`);
+              qb.orWhere("courier.website", "iLIKE", `%${searchValue}%`);
+              qb.orWhere("courier.address", "iLIKE", `%${searchValue}%`);
+            }
+          })
+          .first(),
+        knex
+          .from("courier")
+          .leftJoin("users", "users.id", "courier.createdBy")
+          .where({ "courier.orgId": req.orgId })
           .select([
-            "courier_and_storage.id",
-            "courier_and_storage.courierName as CourierName",
+            "courier.id as id",
+            "courier.courierCode as Courier Code",
+            "courier.courierName as Courier Name",
+            "courier.mobileNo as Mobile Number",
+            "courier.website",
+            "courier.address",
+            "users.name as Created By",
+            "courier.createdAt as Date Created",
           ])
-          .where({ orgId: orgId })
-          .orderBy("courierName", "asc"),
+          .where((qb) => {
+            if (searchValue) {
+              qb.where("courier.courierCode", "iLIKE", `%${searchValue}%`);
+              qb.orWhere("courier.courierName", "iLIKE", `%${searchValue}%`);
+              qb.orWhere("courier.mobileNo", "iLIKE", `%${searchValue}%`);
+              qb.orWhere("courier.website", "iLIKE", `%${searchValue}%`);
+              qb.orWhere("courier.address", "iLIKE", `%${searchValue}%`);
+            }
+          })
+          .orderBy(sortPayload.sortBy, sortPayload.orderBy)
+          .offset(offset)
+          .limit(per_page),
       ]);
+
+      let count = total.count;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+      return res.status(200).json({
+        data: {
+          courier: pagination
+        },
+        message: "Courier List!"
+      });
     } catch (err) {
       console.log("[controllers][couriers][getCouriers],Error", err);
     }
