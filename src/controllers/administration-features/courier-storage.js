@@ -97,12 +97,6 @@ const courierStorageController = {
     }
   },
 
-  // addStorage:async(req,res)={
-  //   try{
-
-  //   }catch(err){}
-  // },
-
   getCourierList: async (req, res) => {
     try {
       let sortPayload = req.body;
@@ -177,12 +171,47 @@ const courierStorageController = {
 
       return res.status(200).json({
         data: {
-          courier: pagination
+          courier: pagination,
         },
-        message: "Courier List!"
+        message: "Courier List!",
       });
     } catch (err) {
       console.log("[controllers][couriers][getCouriers],Error", err);
+    }
+  },
+  getCourierDetailById: async (req, res) => {
+    try {
+      let courierDetail = null;
+      let orgId = req.orgId;
+
+      await knex.transaction(async (trx) => {
+        let payload = req.body;
+        const schema = Joi.object().keys({
+          id: Joi.string().required(),
+        });
+        const result = Joi.validate(payload, schema);
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message },
+            ],
+          });
+        }
+        let courierResult = await knex("courier")
+          .select("courier.*")
+          .where({ id: payload.id, orgId: orgId });
+
+        storageDetail = _.omit(courierResult[0], ["createdAt", "updatedAt"]);
+        trx.commit;
+      });
+      return res.status(200).json({
+        data: {
+          courierDetails: courierDetail,
+        },
+        message: "Courier Details !!",
+      });
+    } catch (err) {
+      console.log("[controllers][courier][courierDetails] :  Error", err);
     }
   },
 };

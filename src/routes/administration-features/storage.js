@@ -9,4 +9,19 @@ router.post(
   authMiddleware.isAuthenticated,
   storageController.addStorage
 );
+router.post(
+  "/get-storage-list",
+  authMiddleware.isAuthenticated,
+  storageController.getStorageList
+);
+router.post(
+  "/get-storage-details",
+  authMiddleware.isAuthenticated,
+  storageController.getStorageDetailsById
+);
+router.post(
+  "/update-storage",
+  authMiddleware.isAuthenticated,
+  storageController.updateStorage
+);
 module.exports = router;
