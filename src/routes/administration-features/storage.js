@@ -24,4 +24,18 @@ router.post(
   authMiddleware.isAuthenticated,
   storageController.updateStorage
 );
+router.post(
+  "/import-storage-data",
+  authMiddleware.isAuthenticated,
+  storageController.importStorageData
+);
+router.get(
+  "/export-storage-data",
+  authMiddleware.isAuthenticated,
+  storageController.exportStorageData
+);
+router.post("/toggle-storage",
+authMiddleware.isAuthenticated,
+storageController.toggleStorage
+)
 module.exports = router;

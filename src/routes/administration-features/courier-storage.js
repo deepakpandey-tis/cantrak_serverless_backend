@@ -15,9 +15,29 @@ router.post(
   courierStorageController.getCourierList
 );
 router.post(
-  "get-courier-detail",
+  "/get-courier-detail",
   authMiddleware.isAuthenticated,
   courierStorageController.getCourierDetailById
+);
+router.post(
+  "/update-courier",
+  authMiddleware.isAuthenticated,
+  courierStorageController.updateCourier
+);
+router.post(
+  "/import-courier-data",
+  authMiddleware.isAuthenticated,
+  courierStorageController.importCourierData
+);
+router.get(
+  "/export-courier-data",
+  authMiddleware.isAuthenticated,
+  courierStorageController.exportCourierData
+);
+router.post(
+  "/toggle-courier",
+  authMiddleware.isAuthenticated,
+  courierStorageController.toggleCourier
 );
 
 module.exports = router;

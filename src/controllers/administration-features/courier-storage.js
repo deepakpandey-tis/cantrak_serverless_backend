@@ -96,6 +96,86 @@ const courierStorageController = {
       });
     }
   },
+  updateCourier: async (req, res) => {
+    try {
+      let updateStatusPayload = null;
+      let userId = req.me.id;
+      let orgId = req.orgId;
+
+      await knex.transaction(async (trx) => {
+        let statusPaylaod = req.body;
+
+        const schema = Joi.object().keys({
+          id: Joi.number().required(),
+          courierCode: Joi.string().required(),
+          courierName: Joi.string().required(),
+          mobileNo: Joi.string().optional(),
+          website: Joi.string().optional(),
+          address: Joi.string().required(),
+        });
+        const result = Joi.validate(statusPaylaod, schema);
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message },
+            ],
+          });
+        }
+        const existStatusCode = await knex("courier")
+          .where({
+            courierCode: statusPaylaod.courierCode.toUpperCase(),
+            orgId: orgId,
+          })
+          .whereNot({ id: statusPaylaod.id });
+        console.log(
+          "[controllers][status][updateStatus]: Status Code",
+          existStatusCode
+        );
+        if (existStatusCode && existStatusCode.length) {
+          return res.status(400).json({
+            errors: [
+              {
+                code: "STORAGE_EXIST_ERROR",
+                message: "Storage Code already exist !",
+              },
+            ],
+          });
+        }
+        const currentTime = new Date().getTime();
+
+        const updateStatusResult = await knex
+          .update({
+            courierCode: statusPaylaod.courierCode.toUpperCase(),
+            courierName: statusPaylaod.courierName,
+            mobileNo: statusPaylaod.mobileNo,
+            website: statusPaylaod.website,
+            address: statusPaylaod.address,
+            updatedAt: currentTime,
+          })
+          .where({ id: statusPaylaod.id, createdBy: userId, orgId: orgId })
+          .returning(["*"])
+          .transacting(trx)
+          .into("courier");
+        console.log(
+          "[controllers][status][updateStatus]: Update Data",
+          updateStatusResult
+        );
+        updateStatusPayload = updateStatusResult[0];
+        trx.commit;
+      });
+      res.status(200).json({
+        data: {
+          courier: updateStatusPayload,
+        },
+        message: "Courier updated successfully !",
+      });
+    } catch (err) {
+      console.log("[controllers][status][updateStatus] :  Error", err);
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
 
   getCourierList: async (req, res) => {
     try {
@@ -142,6 +222,7 @@ const courierStorageController = {
             "courier.mobileNo as Mobile Number",
             "courier.website",
             "courier.address",
+            "courier.isActive as Status",
             "users.name as Created By",
             "courier.createdAt as Date Created",
           ])
@@ -201,7 +282,7 @@ const courierStorageController = {
           .select("courier.*")
           .where({ id: payload.id, orgId: orgId });
 
-        storageDetail = _.omit(courierResult[0], ["createdAt", "updatedAt"]);
+        courierDetail = _.omit(courierResult[0], ["createdAt", "updatedAt"]);
         trx.commit;
       });
       return res.status(200).json({
@@ -214,5 +295,291 @@ const courierStorageController = {
       console.log("[controllers][courier][courierDetails] :  Error", err);
     }
   },
+  importCourierData:async(req,res)=>{
+    try{
+      const userId = req.me.id;
+      let data = req.body;
+      let totalData = data.length - 1;
+      let fail = 0;
+      let success = 0;
+      console.log("=======", data[0], "+++++++++++++++")
+      let result = null;
+      let errors = []
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
+      
+      if(
+        data[0].A == "Ã¯Â»Â¿COURIER_CODE" ||
+        (data[0].A == "COURIER_CODE" &&
+          data[0].B == "COURIER_NAME" &&
+          data[0].C == "MOBILE_NO" &&
+          data[0].D == "WEBSITE" &&
+          data[0].E == "ADDRESS"
+          )
+      ){
+        if(data.length>0){
+          let i =0 
+          for(let courierData of data){
+            i++
+            if(i>1){
+              if(!courierData.A){
+                let values = _.values(courierData)
+                values.unshift("Courier code can not be empty")
+                errors.push(values)
+                fail++
+                continue
+              }
+              if(!courierData.B){
+                let values = _.values(courierData)
+                values.unshift("Courier Name can not be empty")
+                errors.push(values)
+                fail++
+                continue
+
+              }
+              if(!courierData.C){
+                let values = _.values(courierData)
+                values.unshift("Mobile Number can not be empty")
+                errors.push(values)
+                fail++
+                continue
+
+              }
+              if(!courierData.E){
+                let values = _.values(courierData)
+                values.unshift("Address can not be empty")
+                errors.push(values)
+                fail++
+                continue
+
+              }
+
+              let checkList = await knex("courier")
+              .select("id")
+              .where({courierCode:courierData.A.toUpperCase(),orgId:req.orgId})
+              if(checkList.length<1){
+                let currentTime = new Date().getTime();
+                let insertData = {
+                  orgId: req.orgId,
+                  courierCode: courierData.A.toUpperCase(),
+                  courierName: courierData.B,
+                  mobileNo: courierData.C,
+                  website:courierData.D,
+                  address:courierData.E,
+                  createdAt: currentTime,
+                  updatedAt: currentTime,
+                  createdBy: userId
+                }
+                resultData = await knex
+                  .insert(insertData)
+                  .returning(["*"])
+                  .into("courier");
+                  if(resultData && resultData.length){
+                    success++
+                  }
+
+              }else{
+                let values = _.values(courierData)
+                values.unshift('Courier code already exists')
+                errors.push(values)
+                fail++
+              }
+
+            }
+          }
+
+          let message = null;
+          if (totalData == success) {
+            message =
+              "System have processed ( " +
+              totalData +
+              " ) entries and added them successfully!";
+          } else {
+            message =
+              "System have processed ( " +
+              totalData +
+              " ) entries out of which only ( " +
+              success +
+              " ) are added and others are failed ( " +
+              fail +
+              " ) due to validation!";
+          }
+
+          return res.status(200).json({
+            message: message,
+            errors: errors
+          });
+        }
+
+      }else{
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
+      }
+
+    }catch(err){
+      console.log("[controllers][propertysetup][importCourierData] :  Error", err);
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+
+    }
+  },
+  exportCourierData:async(req,res)=>{
+    try{
+      let reqData = req.query;
+      let rows;
+      [rows] = await Promise.all([
+        knex.from("courier")
+        .where({"courier.orgId":req.orgId})
+        .select([
+          "courier.courierCode as COURIER_CODE",
+          "courier.courierName as COURIER_NAME",
+          "courier.mobileNo as MOBILE_NO",
+          "courier.website as WEBSITE",
+          "courier.address as ADDRESS"
+        ])
+      ])
+      let tempraryDirectory = null;
+      let bucketName = null;
+      if(process.env.IS_OFFLINE){
+        bucketName = 'sls-app-resources-bucket';
+        tempraryDirectory = 'tmp/';
+      }else{
+        tempraryDirectory = '/tmp/';
+        bucketName = process.env.S3_BUCKET_NAME;
+      }
+      var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
+      var ws;
+
+      if (rows && rows.length) {
+        ws = XLSX.utils.json_to_sheet(rows);
+      }else{
+        ws = XLSX.utils.json_to_sheet([
+          {
+            COURIER_CODE: "",
+            COURIER_NAME: "",
+            MOBILE_NO: "",
+            WEBSITE:"",
+            ADDRESS:""
+          }
+        ]);
+      }
+
+      XLSX.utils.book_append_sheet(wb, ws, "pres");
+      XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
+      let filename = "CourierData-" + Date.now() + ".csv";
+      let filepath = tempraryDirectory + filename;
+      let check = XLSX.writeFile(wb, filepath);
+      const AWS = require('aws-sdk');
+
+      fs.readFile(filepath, function (err, file_buffer){
+        var s3 = new AWS.S3();
+        var params = {
+          Bucket: bucketName,
+          Key: "Export/Courier/" + filename,
+          Body: file_buffer,
+          ACL: 'public-read'
+        }
+        s3.putObject(params, function (err, data) {
+          if (err) {
+            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            res.status(500).json({
+              errors: [
+                { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+              ],
+            });
+            //next(err);
+          } else {
+            console.log("File uploaded Successfully");
+            //next(null, filePath);
+            let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
+            let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Courier/" + filename;
+            res.status(200).json({
+              data: rows,
+              message: "Courier data export successfully!",
+              url: url
+            });
+          }
+        });
+      })
+    }catch(err){
+      console.log("[controllers][generalsetup][viewCourier] :  Error", err);
+
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+
+    }
+  },
+  toggleCourier:async(req,res)=>{
+    try{
+      let courier = null
+      let message;
+      await knex.transaction(async trx=>{
+        let payload = req.body;
+        let orgId = req.orgId;
+
+        const schema = Joi.object().keys({
+          id: Joi.number().required()
+        });
+        const result = Joi.validate(payload, schema);
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message }
+            ]
+          });
+        }
+        let courierResult
+        let checkStatus = await knex.from('courier').where({ id: payload.id }).returning(['*'])
+        if (checkStatus && checkStatus.length) {
+
+          if (checkStatus[0].isActive == true) {
+
+            courierResult = await knex
+              .update({ isActive: false })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("courier");
+            courier = courierResult[0];
+            message = "Courier deactivate successfully!"
+
+          } else {
+
+            courierResult = await knex
+              .update({ isActive: true })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("courier");
+            courier = courierResult[0];
+            message = "Courier activate successfully!"
+          }
+        }
+        trx.commit
+
+      })
+      return res.status(200).json({
+        data: {
+          courier: courier
+        },
+        message: message
+      });
+    }catch(err){
+      console.log(
+        "[controllers][Courier][toggleCourier] :  Error",
+        err
+      );
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+
+    }
+  }
 };
 module.exports = courierStorageController;
