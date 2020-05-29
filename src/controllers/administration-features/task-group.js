@@ -1644,7 +1644,8 @@ const taskGroupController = {
           'teams.teamName as teamName',
           'assigned_service_team.userId as mainUserId',
           'users.name as mainUser',
-          'task_group_schedule_assign_assets.pmDate as pmDate'
+          'task_group_schedule_assign_assets.pmDate as pmDate',
+          'task_group_schedule_assign_assets.displayId'
         ])
         .where({
           'task_group_schedule.id': payload.taskGroupScheduleId,
