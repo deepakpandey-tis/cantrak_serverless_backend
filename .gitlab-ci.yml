@@ -49,6 +49,8 @@ deploy_stage:
     - rm ./package-lock.json
     - npm install -g serverless
     - npm install
+    - echo $AWS_KEY_STAGE
+    - echo $AWS_SECRET_STAGE
     - sls config credentials --profile servicemind-stage --provider aws --key $AWS_KEY_STAGE --secret $AWS_SECRET_STAGE
     - NODE_ENV=stage sls deploy --stage stage --aws-profile servicemind-stage --config serverless.stage.yml
     - echo 'Success'
