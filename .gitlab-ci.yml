@@ -39,7 +39,7 @@ deploy_master:
 
 
 
-deploy_master:
+deploy_stage:
   stage: deploy
   only:
     - stage
