@@ -39,5 +39,10 @@ router.post(
   authMiddleware.isAuthenticated,
   courierStorageController.toggleCourier
 );
+router.get(
+  "/courier-lists",
+  authMiddleware.isAuthenticated,
+  courierStorageController.getCourierListForParcel
+);
 
 module.exports = router;

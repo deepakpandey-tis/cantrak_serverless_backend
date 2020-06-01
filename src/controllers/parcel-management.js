@@ -28,6 +28,54 @@ if (process.env.IS_OFFLINE) {
   });
 }
 
+const parcelManagementController = {
+
+  getStorageList:async(req,res)=>{
+    try{
+      
+    }catch(err){}
+  },
+
+getCompanyListHavingPropertyUnit:async(req,res)=>{
+  try{
+    let pagination = {};
+    let result;
+    let companyHavingPU
+    let companyArr = []
+
+    let houseIds = req.me.houseIds;
+    
+    companyHavingPU = await knex('property_units').select(['companyId'])
+          .where({ orgId: req.orgId, isActive: true })
+          .whereIn('property_units.id', houseIds)
+
+        companyArr = companyHavingPU.map(v => v.companyId)
+        result = await knex("companies")
+          .innerJoin('property_units', 'companies.id', 'property_units.companyId')
+          .select("companies.id", "companies.companyId", "companies.companyName as CompanyName")
+          .where({ 'companies.isActive': true, 'companies.orgId': req.orgId })
+          .whereIn('companies.id', companyArr)
+          .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
+          .orderBy('companies.companyName', 'asc')
+      pagination.data = result;
+      return res.status(200).json({
+        data: {
+          companies: pagination
+        },
+        message: "Companies List!"
+      });
+  }catch(err){
+    console.log(
+      "[controllers][propertysetup][getCompanyListHavingPropertyUnits] :  Error",
+      err
+    );
+    //trx.rollback
+    res.status(500).json({
+      errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+    });
+  }
+},
+
 /**ADD PARCEL */
 
 addParcelRequest: async (req, res) => {
@@ -67,6 +115,11 @@ addParcelRequest: async (req, res) => {
               ]
           })
       }
+      const currentTime = new Date().getTime();
+
+
     });
   } catch (error) {}
+}
 };
+module.exports = parcelManagementController

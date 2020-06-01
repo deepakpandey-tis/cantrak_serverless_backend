@@ -531,6 +531,55 @@ const storageController = {
       });
 
     }
+  },
+  getStorageListForParcel:async(req,res)=>{
+    try{
+      let pagination = {};
+      let role = req.me.roles[0];
+      let name = req.me.name;
+      let result;
+      let orgId = req.query.orgId;
+      if(role === "superAdmin" && name === "superAdmin"){
+        if(orgId){
+          [result] = await Promise.all([
+            knex("storage")
+            .select("id","storageName as StorageName")
+            .where({isActive:true,orgId:orgId})
+            .orderBy('storage.storageName','asc')
+          ])
+        }else{
+          [result] =await Promise.all([
+            knex("storage")
+            .select("id","storageName as StorageName")
+            .where({isActive:true})
+            .orderBy('storage.storageName','asc')
+          ])
+        }
+      }else{
+        [result] = await Promise.all([
+          knex("storage")
+          .select("id","storageName as StorageName")
+          .where({isActive:true,orgId:req.orgId})
+          .orderBy('storage.storageName','asc')
+
+        ])
+      }
+      pagination.data = result;
+      return res.status(200).json({
+        data: {
+          storage: pagination
+        },
+        message: "Storage List!"
+      });
+    }catch(err){
+      console.log("[controllers][generalsetup][viewStorage] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+
+    }
   }
+
 };
 module.exports = storageController;

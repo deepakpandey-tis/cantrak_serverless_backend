@@ -65,6 +65,7 @@ const userFacilityRouter = require("./users/facility");
 const propertyUnitTypeRouter = require("./administration-features/property-unit-type");
 const courierRouter = require("./administration-features/courier-storage");
 const storageRouter = require("./administration-features/storage");
+const parcelManagementRouter = require("./parcel-management")
 /* GET home page. */
 router.get("/", async (req, res, next) => {
   res.json({ app: "Serverless Express App" });
@@ -149,5 +150,6 @@ router.use(
 );
 router.use("/administration-features/courier-storage", courierRouter);
 router.use("/administration-features/storage",storageRouter);
+router.use("/parcel-management",parcelManagementRouter)
 
 module.exports = router;

@@ -580,6 +580,55 @@ const courierStorageController = {
       });
 
     }
+  },
+  getCourierListForParcel:async(req,res)=>{
+    try{
+      let pagination = {};
+      let role = req.me.roles[0];
+      let name = req.me.name;
+      let result;
+      let orgId = req.query.orgId;
+
+      if(role === "superAdmin" && name === "superAdmin"){
+        if(orgId){
+          [result] = await Promise.all([
+            knex("courier")
+            .select("id","courierName as CourierName")
+            .where({isActive:true,orgId:orgId})
+            .orderBy('courier.courierName','asc')
+          ])
+
+        }else{
+          [result] =await Promise.all([
+            knex("courier")
+            .select("id","courierName as CourierName")
+            .where({isActive:true})
+            .orderBy('courier.courierName','asc')
+          ])
+        }
+      }else{
+        [result] = await Promise.all([
+          knex("courier")
+          .select("id","courierName as CourierName")
+          .where({isActive:true,orgId:req.orgId})
+          .orderBy('courier.courierName','asc')
+
+        ])
+      }
+      pagination.data = result;
+      return res.status(200).json({
+        data: {
+          courier: pagination
+        },
+        message: "Couriers List!"
+      });
+    }catch(err){
+      console.log("[controllers][generalsetup][viewCourier] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 module.exports = courierStorageController;

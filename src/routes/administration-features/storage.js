@@ -34,8 +34,14 @@ router.get(
   authMiddleware.isAuthenticated,
   storageController.exportStorageData
 );
-router.post("/toggle-storage",
-authMiddleware.isAuthenticated,
-storageController.toggleStorage
-)
+router.post(
+  "/toggle-storage",
+  authMiddleware.isAuthenticated,
+  storageController.toggleStorage
+);
+router.get(
+  "/storage-lists",
+  authMiddleware.isAuthenticated,
+  storageController.getStorageListForParcel
+);
 module.exports = router;
