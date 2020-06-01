@@ -1,40 +1,50 @@
 
 service:
   name: ${self:custom.serviceName}
-
-# You can pin your service to only deploy with a specific Serverless version
-# Check out our docs for more details
-# frameworkVersion: "=X.X.X"
-
+  
+  # You can pin your service to only deploy with a specific Serverless version
+  # Check out our docs for more details
+  # frameworkVersion: "=X.X.X"
+  
 plugins:
   - serverless-apigw-binary
   - serverless-offline
   - serverless-dotenv-plugin
   - serverless-s3-local
+
 provider:
   name: aws
   runtime: nodejs12.x
-  stage: dev
-  region: us-east-2
+  stage: production
+  region: us-east-1
   memorySize: 3000
   timeout: 30
   environment: 
-
+  vpc:
+    securityGroupIds:
+      - sg-6a527248
+    subnetIds:
+      - subnet-94cc03cb
+      - subnet-35488b53
+      - subnet-c5fc35e4
+      - subnet-7f831132
+  
 
 custom:
-  serviceName: tis-serverless-backend
+  serviceName: servicemind-backend
   stage: ${opt:stage, self:custom.defaultStage}
   profile: ${self:custom.profiles.${self:provider.stage}}
-  bucket: sls-app-resources-bucket
-  defaultStage: dev
+  bucket: servicemind-resources
+  defaultStage: stage
   profiles:
-    dev: tis-dev
-    prod: tis-prod
+    dev: servicemind-dev
+    stage: servicemind-stage
+    production: servicemind-production
   apigwBinary:
     types:
       - "*/*"
-
-
+  
+  
 functions:
   app:
     handler: src/app.server # reference the file and exported method
@@ -47,15 +57,10 @@ functions:
           path: /{proxy+}
           method: ANY
           # cors: true
-  webhook:
-    handler: src/app.webhook
-    events:
-      - http:
-         method: GET
-         path: webhook
   emailSender:
     handler: src/app.emailQueueProcessor
     batchSize: 1                           # Using a batchSize of 1, so that messages succeed or fail on their own.
     reservedConcurrency: 10                # <-- Concurrency control
     events:
-      - sqs: arn:aws:sqs:us-east-2:525317543069:email-messages-queue
+      - sqs: arn:aws:sqs:us-east-1:925816896007:mail-queue
+  
