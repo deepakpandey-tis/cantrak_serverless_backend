@@ -1369,8 +1369,10 @@ const facilityBookingController = {
             // Confirmed Status (1=>Auto Confirmed, 2=>Manually Confirmed)
             if (facilityData.bookingStatus == 1) {
                 confirmedStatus = true;
+                confirmType = 1;
             } else {
                 confirmedStatus = false;
+                confirmType = 0;
             }
 
             let insertData = {
@@ -1388,7 +1390,8 @@ const facilityBookingController = {
                 unitId: unitId,
                 companyId: facilityData.companyId,
                 isBookingConfirmed: confirmedStatus,
-                bookingType: 1
+                bookingType: 1,
+                confirmedType: confirmType
             }
 
             let insertResult = await knex('entity_bookings').insert(insertData).returning(['*']);
@@ -1584,6 +1587,7 @@ const facilityBookingController = {
                             if (status == "Approved") {
                                 qb.where('entity_bookings.isBookingConfirmed', true)
                                 qb.where('entity_bookings.bookingStartDateTime', '>=', currentDate)
+                                qb.where('entity_bookings.confirmedType',0)
                             }
 
                             if (status == "Cancelled") {
@@ -1594,6 +1598,12 @@ const facilityBookingController = {
 
                             if (status == "Expired") {
                                 qb.where('entity_bookings.bookingStartDateTime', '<', currentDate)
+                            }
+
+                            if (status == "Confirmed") {
+                                qb.where('entity_bookings.isBookingConfirmed', true)
+                                qb.where('entity_bookings.bookingStartDateTime', '>=', currentDate)
+                                qb.where('entity_bookings.confirmedType',1)
                             }
                         }
 
@@ -1628,22 +1638,25 @@ const facilityBookingController = {
                                 qb.where('entity_bookings.isBookingConfirmed', false)
                                 qb.where('entity_bookings.isBookingCancelled', false)
                                 qb.where('entity_bookings.bookingStartDateTime', '>=', currentDate)
-
-
                             }
 
                             if (status == "Approved") {
                                 qb.where('entity_bookings.isBookingConfirmed', true)
                                 qb.where('entity_bookings.bookingStartDateTime', '>=', currentDate)
+                                qb.where('entity_bookings.confirmedType',0)
                             }
 
                             if (status == "Cancelled") {
                                 qb.where('entity_bookings.isBookingCancelled', true)
                                 qb.where('entity_bookings.bookingStartDateTime', '>=', currentDate)
-
                             }
                             if (status == "Expired") {
                                 qb.where('entity_bookings.bookingStartDateTime', '<', currentDate)
+                            }
+                            if (status == "Confirmed") {
+                                qb.where('entity_bookings.isBookingConfirmed', true)
+                                qb.where('entity_bookings.bookingStartDateTime', '>=', currentDate)
+                                qb.where('entity_bookings.confirmedType',1)
                             }
 
 
