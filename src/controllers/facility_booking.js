@@ -3294,8 +3294,8 @@ const facilityBookingController = {
           console.log("facility list",req.body)
          
           if (startDate && endDate) {
-            startNewDate = moment(startDate).startOf("date").format();
-            endNewDate = moment(endDate).endOf("date").format();
+            startNewDate = moment(startDate).startOf("time").format();
+            endNewDate = moment(endDate).endOf("time").format();
             startTime = new Date(startNewDate).getTime();
             endTime = new Date(endNewDate).getTime();
           }
