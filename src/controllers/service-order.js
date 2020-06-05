@@ -2892,7 +2892,7 @@ const serviceOrderController = {
                     ])
                     .whereIn('service_problems.serviceRequestId', serviceIds)
                     .where({ 'service_problems.orgId': req.orgId })
-                    .orderBy('categoryCode', 'asc');
+                    .orderBy('incident_type.typeCode', 'asc');
 
 
 
@@ -2909,7 +2909,7 @@ const serviceOrderController = {
                     ])
                     .whereIn('service_problems.serviceRequestId', serviceIds)
                     .where({ 'service_problems.orgId': req.orgId })
-                    .orderBy('categoryCode', 'asc');
+                    .orderBy('incident_type.typeCode', 'asc');
 
 
                 let mapData = _.chain(serviceProblem)
@@ -2917,7 +2917,7 @@ const serviceOrderController = {
                     .map((value, key) => ({
                         category: key, serviceOrder: value.length, value: value[0],
                         allValue: value, workDone: value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length,
-                        percentage: (100 * value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / value.length).toFixed(2)
+                        percentage: (100 * value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / serviceProblem.length).toFixed(2)
                     }))
                     .value()
 
@@ -2930,7 +2930,7 @@ const serviceOrderController = {
                 let chartData = _.flatten(
                     final
                         .filter(v => !_.isEmpty(v))
-                        .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / v[p].length).toFixed(2) })))
+                        .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / serviceProblem2.length).toFixed(2) })))
                 ).reduce((a, p) => {
                     let l = _.keys(p)[0];
                     if (a[l]) {
@@ -3128,7 +3128,7 @@ const serviceOrderController = {
                     ])
                     .whereIn('service_problems.serviceRequestId', serviceIds)
                     .where({ 'service_problems.orgId': req.orgId })
-                    .orderBy('categoryCode', 'asc');
+                    .orderBy('incident_type.typeCode', 'asc');
 
 
 
@@ -3145,7 +3145,7 @@ const serviceOrderController = {
                     ])
                     .whereIn('service_problems.serviceRequestId', serviceIds)
                     .where({ 'service_problems.orgId': req.orgId })
-                    .orderBy('categoryCode', 'asc');
+                    .orderBy('incident_type.typeCode', 'asc');
 
 
                 let mapData = _.chain(serviceProblem)
@@ -3153,7 +3153,7 @@ const serviceOrderController = {
                     .map((value, key) => ({
                         category: key, serviceOrder: value.length, value: value[0],
                         allValue: value, workDone: value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length,
-                        percentage: (100 * value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / value.length).toFixed(2)
+                        percentage: (100 * value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / serviceProblem.length).toFixed(2)
                     }))
                     .value()
 
@@ -3166,7 +3166,7 @@ const serviceOrderController = {
                 let chartData = _.flatten(
                     final
                         .filter(v => !_.isEmpty(v))
-                        .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / v[p].length).toFixed(2) })))
+                        .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / serviceProblem2.length).toFixed(2) })))
                 ).reduce((a, p) => {
                     let l = _.keys(p)[0];
                     if (a[l]) {
