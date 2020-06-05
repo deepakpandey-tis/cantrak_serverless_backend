@@ -22,12 +22,12 @@ provider:
   environment: 
   vpc:
     securityGroupIds:
-      - sg-f4e38fd6
+      - sg-6a527248
     subnetIds:
-      - subnet-294c8076
-      - subnet-cec80ba8
-      - subnet-277fb106
-      - subnet-e50093a8
+      - subnet-94cc03cb
+      - subnet-35488b53
+      - subnet-c5fc35e4
+      - subnet-7f831132
   
 
 custom:
@@ -35,9 +35,10 @@ custom:
   stage: ${opt:stage, self:custom.defaultStage}
   profile: ${self:custom.profiles.${self:provider.stage}}
   bucket: servicemind-resources
-  defaultStage: production
+  defaultStage: stage
   profiles:
     dev: servicemind-dev
+    stage: servicemind-stage
     production: servicemind-production
   apigwBinary:
     types:
@@ -61,5 +62,5 @@ functions:
     batchSize: 1                           # Using a batchSize of 1, so that messages succeed or fail on their own.
     reservedConcurrency: 10                # <-- Concurrency control
     events:
-      - sqs: arn:aws:sqs:us-east-1:037792882519:mail-queue
+      - sqs: arn:aws:sqs:us-east-1:925816896007:mail-queue
   

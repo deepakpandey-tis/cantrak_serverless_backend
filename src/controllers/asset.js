@@ -2067,7 +2067,7 @@ const assetController = {
           floorId: '165' }
         */
       if (req.body.previousLocationId) {
-
+ 
         // Check Current Location is Exits
 
         let currentLocation = await knex('asset_location').select('*').where({ assetId: payload.assetId, unitId: payload.unitId });
