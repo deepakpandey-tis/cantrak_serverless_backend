@@ -1085,9 +1085,9 @@ const dashboardController = {
 
       return res.status(200).json({
         data: {
-          todaysServiceAppointments: _.uniqBy(result, "id").length,
-          todaysSurveyAppointments: _.uniqBy(result2, "id").length,
-          todaysWorkOrders: result3.length
+          ServiceAppointments: _.uniqBy(result, "id").length,
+          SurveyAppointments: _.uniqBy(result2, "id").length,
+          WorkOrders: result3.length
         }
       });
     } catch (err) {
