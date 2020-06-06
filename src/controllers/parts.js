@@ -809,7 +809,37 @@ const partsController = {
                         serviceOrderNo: Joi.string().required(),
                         isPartAdded: Joi.string().required()
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'description', 'date', 'workOrderId'), schema);
+                    result = Joi.validate(_.omit(partStockPayload, 'description', 'date', 'workOrderId','receiveBy','receiveDate','deductBy','deductDate','building','floor'), schema);
+
+                } else if (partStockPayload.adjustType == "2") {
+                    const schema = Joi.object().keys({
+                        partId: Joi.string().required(),
+                        unitCost: Joi.number().allow("").allow(null).optional(),
+                        unitCost: Joi.string().allow("").allow(null).optional(),
+                        quantity: Joi.number().required(),
+                        adjustType: Joi.string().required(),
+                        serviceOrderNo: Joi.string().allow("").allow(null).optional(),
+                        isPartAdded: Joi.string().required(),
+                        receiveBy: Joi.string().required(),
+                        receiveDate: Joi.string().required()
+                    });
+                    result = Joi.validate(_.omit(partStockPayload, 'description', 'date', 'workOrderId','deductBy','deductDate','building','floor'), schema);
+
+                } else if (partStockPayload.adjustType == "6") {
+                    const schema = Joi.object().keys({
+                        partId: Joi.string().required(),
+                        unitCost: Joi.number().allow("").allow(null).optional(),
+                        unitCost: Joi.string().allow("").allow(null).optional(),
+                        quantity: Joi.number().required(),
+                        adjustType: Joi.string().required(),
+                        serviceOrderNo: Joi.string().allow("").allow(null).optional(),
+                        isPartAdded: Joi.string().required(),
+                        deductBy: Joi.string().required(),
+                        deductDate: Joi.string().required(),
+                        building: Joi.string().required(),
+                        floor: Joi.string().required()
+                    });
+                    result = Joi.validate(_.omit(partStockPayload, 'description', 'date', 'workOrderId','receiveBy','receiveDate'), schema);
 
                 } else if (partStockPayload.adjustType == "10") {
                     const schema = Joi.object().keys({
@@ -821,7 +851,7 @@ const partsController = {
                         workOrderId: Joi.string().required(),
                         isPartAdded: Joi.string().required()
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'serviceOrderNo', 'description', 'date'), schema);
+                    result = Joi.validate(_.omit(partStockPayload, 'serviceOrderNo', 'description', 'date','receiveBy','receiveDate','deductBy','deductDate','building','floor'), schema);
 
                 } else {
                     const schema = Joi.object().keys({
@@ -832,7 +862,7 @@ const partsController = {
                         adjustType: Joi.string().required(),
                         isPartAdded: Joi.string().required()
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'serviceOrderNo', 'description', 'date', 'workOrderId'), schema);
+                    result = Joi.validate(_.omit(partStockPayload, 'serviceOrderNo', 'description', 'date', 'workOrderId','receiveBy','receiveDate','deductBy','deductDate','building','floor'), schema);
 
                 }
 
