@@ -380,28 +380,28 @@ const assetController = {
               if (assetName) {
                 qb.where(
                   "asset_master.assetName",
-                  "like",
+                  "iLIKE",
                   `%${assetName}%`
                 );
               }
               if (assetSerial) {
                 qb.where(
                   "asset_master.assetSerial",
-                  "like",
+                  "iLIKE",
                   `%${assetSerial}%`
                 )
               }
               if (assetModel) {
                 qb.where(
                   "asset_master.model",
-                  "like",
+                  "iLIKE",
                   `%${assetModel}%`
                 );
               }
               if (category) {
                 qb.where(
                   "asset_category_master.categoryName",
-                  "like",
+                  "iLIKE",
                   `%${category}%`
                 );
               }
@@ -448,28 +448,28 @@ const assetController = {
               if (assetName) {
                 qb.where(
                   "asset_master.assetName",
-                  "like",
+                  "iLIKE",
                   `%${assetName}%`
                 );
               }
               if (assetSerial) {
                 qb.where(
                   "asset_master.assetSerial",
-                  "like",
+                  "iLIKE",
                   `%${assetSerial}%`
                 )
               }
               if (assetModel) {
                 qb.where(
                   "asset_master.model",
-                  "like",
+                  "iLIKE",
                   `%${assetModel}%`
                 );
               }
               if (category) {
                 qb.where(
                   "asset_category_master.categoryName",
-                  "like",
+                  "iLIKE",
                   `%${category}%`
                 );
               }
@@ -493,6 +493,32 @@ const assetController = {
       pagination.current_page = page;
       pagination.from = offset;
       pagination.data = rows;
+
+      const Parallel = require('async-parallel');
+
+      pagination.data = await Parallel.map(rows, async pd => {
+
+        let houseResult = await knex.from('asset_location')
+          .leftJoin('property_units', 'asset_location.unitId', 'property_units.id')
+          .select(['property_units.unitNumber', 'property_units.houseId', 'property_units.description'])
+          .where({ "asset_location.assetId": pd.ID }).first().orderBy('asset_location.id', 'desc')
+
+        if (houseResult) {
+          return {
+            ...pd,
+            "unitNumber": houseResult.unitNumber,
+            "unitDescription": houseResult.description,
+          }
+        } else {
+          return {
+            ...pd,
+            "unitNumber": "",
+            "unitDescription": "",
+          }
+        }
+
+      })
+
 
       return res.status(200).json({
         data: {
@@ -2041,14 +2067,14 @@ const assetController = {
           floorId: '165' }
         */
       if (req.body.previousLocationId) {
-
+ 
         // Check Current Location is Exits
 
         let currentLocation = await knex('asset_location').select('*').where({ assetId: payload.assetId, unitId: payload.unitId });
-       console.log("currentLocation", currentLocation);
+        console.log("currentLocation", currentLocation);
         if (currentLocation.length > 0) {
           return res.status(400).json({
-            data:{},
+            data: {},
             message: 'Asset location already exist'
           })
         }

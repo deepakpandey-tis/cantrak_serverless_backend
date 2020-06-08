@@ -55,6 +55,11 @@ router.post('/facility-delete',authMiddleware.isAuthenticated,facilityBookingCon
 router.post('/approve-facility',authMiddleware.isAuthenticated,facilityBookingController.approveFacility)
 
 router.post('/get-facility-booked-list',authMiddleware.isAuthenticated,facilityBookingController.getfacilityBookedList)
+router.post('/facility-booked-list-by-date',authMiddleware.isAuthenticated,facilityBookingController.getFacilityBookedListbydate)
+router.post('/facility-booked-list-report',authMiddleware.isAuthenticated,facilityBookingController.facilityBookedListReport)
+router.get('/facility-booked-list-by-name',authMiddleware.isAuthenticated,facilityBookingController.facilityBookedListByFacilityName)
+router.get('/facility-booked-list-by-unit',authMiddleware.isAuthenticated,facilityBookingController.facilityBookedListByUnit)
+
 /*ADD FACILTIY CLOSE DATE */
 router.post('/add-facility-close-date',authMiddleware.isAuthenticated,facilityBookingController.addFacilityCloseDate)
 
