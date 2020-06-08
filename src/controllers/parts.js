@@ -809,7 +809,37 @@ const partsController = {
                         serviceOrderNo: Joi.string().required(),
                         isPartAdded: Joi.string().required()
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'description', 'date', 'workOrderId'), schema);
+                    result = Joi.validate(_.omit(partStockPayload, 'description', 'date', 'workOrderId','receiveBy','receiveDate','deductBy','deductDate','building','floor'), schema);
+
+                } else if (partStockPayload.adjustType == "2") {
+                    const schema = Joi.object().keys({
+                        partId: Joi.string().required(),
+                        unitCost: Joi.number().allow("").allow(null).optional(),
+                        unitCost: Joi.string().allow("").allow(null).optional(),
+                        quantity: Joi.number().required(),
+                        adjustType: Joi.string().required(),
+                        serviceOrderNo: Joi.string().allow("").allow(null).optional(),
+                        isPartAdded: Joi.string().required(),
+                        receiveBy: Joi.string().required(),
+                        receiveDate: Joi.string().required()
+                    });
+                    result = Joi.validate(_.omit(partStockPayload, 'description', 'date', 'workOrderId','deductBy','deductDate','building','floor'), schema);
+
+                } else if (partStockPayload.adjustType == "6") {
+                    const schema = Joi.object().keys({
+                        partId: Joi.string().required(),
+                        unitCost: Joi.number().allow("").allow(null).optional(),
+                        unitCost: Joi.string().allow("").allow(null).optional(),
+                        quantity: Joi.number().required(),
+                        adjustType: Joi.string().required(),
+                        serviceOrderNo: Joi.string().allow("").allow(null).optional(),
+                        isPartAdded: Joi.string().required(),
+                        deductBy: Joi.string().required(),
+                        deductDate: Joi.string().required(),
+                        building: Joi.string().required(),
+                        floor: Joi.string().required()
+                    });
+                    result = Joi.validate(_.omit(partStockPayload, 'description', 'date', 'workOrderId','receiveBy','receiveDate'), schema);
 
                 } else if (partStockPayload.adjustType == "10") {
                     const schema = Joi.object().keys({
@@ -821,7 +851,7 @@ const partsController = {
                         workOrderId: Joi.string().required(),
                         isPartAdded: Joi.string().required()
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'serviceOrderNo', 'description', 'date'), schema);
+                    result = Joi.validate(_.omit(partStockPayload, 'serviceOrderNo', 'description', 'date','receiveBy','receiveDate','deductBy','deductDate','building','floor'), schema);
 
                 } else {
                     const schema = Joi.object().keys({
@@ -832,7 +862,7 @@ const partsController = {
                         adjustType: Joi.string().required(),
                         isPartAdded: Joi.string().required()
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'serviceOrderNo', 'description', 'date', 'workOrderId'), schema);
+                    result = Joi.validate(_.omit(partStockPayload, 'serviceOrderNo', 'description', 'date', 'workOrderId','receiveBy','receiveDate','deductBy','deductDate','building','floor'), schema);
 
                 }
 
@@ -1226,7 +1256,7 @@ const partsController = {
     partRequisitionLogList: async (req, res) => {
         try {
 
-            let { partId, partName, serviceOrderNo, workOrderId, adjustType } = req.body
+            let { partId, partCode, partName, serviceOrderNo, workOrderId, adjustType } = req.body
             let reqData = req.query;
             let total, rows
             let pagination = {};
@@ -1235,7 +1265,7 @@ const partsController = {
             if (page < 1) page = 1;
             let offset = (page - 1) * per_page;
 
-            if (partId || partName || serviceOrderNo || workOrderId || adjustType) {
+            if (partId || partName || serviceOrderNo || workOrderId || adjustType || partCode) {
 
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from("part_ledger")
@@ -1247,7 +1277,7 @@ const partsController = {
                                 qb.where('part_master.id', partId)
                             }
                             if (partName) {
-                                qb.where('part_master.partName', 'like', `%${partName}%`)
+                                qb.where('part_master.partName', 'iLIKE', `%${partName}%`)
                             }
                             if (serviceOrderNo) {
                                 qb.where('part_ledger.serviceOrderNo', 'like', `%${serviceOrderNo}%`)
@@ -1258,6 +1288,10 @@ const partsController = {
                             }
                             if (adjustType) {
                                 qb.where('part_ledger.adjustType', adjustType)
+                            }
+                            if (partCode) {
+                                qb.where('part_master.partCode','iLIKE',`%${partCode}%`)
+
                             }
 
                         })
@@ -1288,7 +1322,7 @@ const partsController = {
                                 qb.where('part_master.id', partId)
                             }
                             if (partName) {
-                                qb.where('part_master.partName', 'like', `%${partName}%`)
+                                qb.where('part_master.partName', 'iLIKE', `%${partName}%`)
                             }
                             if (serviceOrderNo) {
                                 qb.where('part_ledger.serviceOrderNo', 'like', `%${serviceOrderNo}%`)
@@ -1299,6 +1333,11 @@ const partsController = {
                             }
                             if (adjustType) {
                                 qb.where('part_ledger.adjustType', adjustType)
+                            }
+
+                            if (partCode) {
+                                qb.where('part_master.partCode','iLIKE',`%${partCode}%`)
+
                             }
 
                         })
@@ -2157,7 +2196,7 @@ const partsController = {
                 adjustType: 1,
                 serviceOrderNo: assignedResult.entityId,
                 orgId: req.orgId,
-                approvedBy:req.me.id
+                approvedBy: req.me.id
             }
             let partLedger = await knex.insert(ledgerObject).returning(['*']).into('part_ledger');
             return res.status(200).json({
@@ -2644,8 +2683,8 @@ const partsController = {
                 .where({ 'service_orders.id': payload.soId }).first();
 
             let partResult = await knex('assigned_parts')
-                .leftJoin('part_master','assigned_parts.partId','part_master.id')
-                .leftJoin('part_category_master','part_master.partCategory','part_category_master.id')
+                .leftJoin('part_master', 'assigned_parts.partId', 'part_master.id')
+                .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
                 .select([
                     'assigned_parts.*',
                     'part_master.*',
@@ -2654,8 +2693,8 @@ const partsController = {
                 ])
                 .where({ 'assigned_parts.id': payload.id })
 
-                let approveResult = await knex('part_ledger').where({'serviceOrderNo':payload.soId})
-                .leftJoin("users",'part_ledger.approvedBy','users.id')
+            let approveResult = await knex('part_ledger').where({ 'serviceOrderNo': payload.soId })
+                .leftJoin("users", 'part_ledger.approvedBy', 'users.id')
                 .select([
                     'users.name as approvedUser',
                     'part_ledger.createdAt as approvedAt',
@@ -2665,7 +2704,7 @@ const partsController = {
 
             const Parallel = require('async-parallel')
             partResult = await Parallel.map(partResult, async (part) => {
-               // let { id } = part;
+                // let { id } = part;
                 let quantity = await knex('part_ledger').where({ partId: part.partId, orgId: req.orgId }).select('quantity')
                 let totalParts = 0
                 for (let i = 0; i < quantity.length; i++) {
@@ -2676,7 +2715,7 @@ const partsController = {
             })
 
             res.status(200).json({
-                data: { ...serviceResult, printedBy: meData, partResult ,approveResult},
+                data: { ...serviceResult, printedBy: meData, partResult, approveResult },
                 message: "Requsition report Successfully!"
             })
 
