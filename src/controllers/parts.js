@@ -809,7 +809,7 @@ const partsController = {
                         serviceOrderNo: Joi.string().required(),
                         isPartAdded: Joi.string().required()
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'description', 'date', 'workOrderId','receiveBy','receiveDate','deductBy','deductDate','building','floor'), schema);
+                    result = Joi.validate(_.omit(partStockPayload, 'description', 'date', 'workOrderId', 'receiveBy', 'receiveDate', 'deductBy', 'deductDate', 'building', 'floor'), schema);
 
                 } else if (partStockPayload.adjustType == "2") {
                     const schema = Joi.object().keys({
@@ -823,7 +823,9 @@ const partsController = {
                         receiveBy: Joi.string().required(),
                         receiveDate: Joi.string().required()
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'description', 'date', 'workOrderId','deductBy','deductDate','building','floor'), schema);
+                    result = Joi.validate(_.omit(partStockPayload, 'description', 'date', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor'), schema);
+                    partStockPayload = _.omit(partStockPayload, ['deductBy', 'deductDate', 'building', 'floor'])
+                    partStockPayload.receiveDate = new Date(partStockPayload.receiveDate).getTime();
 
                 } else if (partStockPayload.adjustType == "6") {
                     const schema = Joi.object().keys({
@@ -839,7 +841,9 @@ const partsController = {
                         building: Joi.string().required(),
                         floor: Joi.string().required()
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'description', 'date', 'workOrderId','receiveBy','receiveDate'), schema);
+                    result = Joi.validate(_.omit(partStockPayload, 'description', 'date', 'workOrderId', 'receiveBy', 'receiveDate'), schema);
+                    partStockPayload = _.omit(partStockPayload, ['receiveDate'])
+                    partStockPayload.deductDate = new Date(partStockPayload.deductDate).getTime();
 
                 } else if (partStockPayload.adjustType == "10") {
                     const schema = Joi.object().keys({
@@ -851,7 +855,7 @@ const partsController = {
                         workOrderId: Joi.string().required(),
                         isPartAdded: Joi.string().required()
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'serviceOrderNo', 'description', 'date','receiveBy','receiveDate','deductBy','deductDate','building','floor'), schema);
+                    result = Joi.validate(_.omit(partStockPayload, 'serviceOrderNo', 'description', 'date', 'receiveBy', 'receiveDate', 'deductBy', 'deductDate', 'building', 'floor'), schema);
 
                 } else {
                     const schema = Joi.object().keys({
@@ -862,7 +866,7 @@ const partsController = {
                         adjustType: Joi.string().required(),
                         isPartAdded: Joi.string().required()
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'serviceOrderNo', 'description', 'date', 'workOrderId','receiveBy','receiveDate','deductBy','deductDate','building','floor'), schema);
+                    result = Joi.validate(_.omit(partStockPayload, 'serviceOrderNo', 'description', 'date', 'workOrderId', 'receiveBy', 'receiveDate', 'deductBy', 'deductDate', 'building', 'floor'), schema);
 
                 }
 
@@ -1290,7 +1294,7 @@ const partsController = {
                                 qb.where('part_ledger.adjustType', adjustType)
                             }
                             if (partCode) {
-                                qb.where('part_master.partCode','iLIKE',`%${partCode}%`)
+                                qb.where('part_master.partCode', 'iLIKE', `%${partCode}%`)
 
                             }
 
@@ -1336,7 +1340,7 @@ const partsController = {
                             }
 
                             if (partCode) {
-                                qb.where('part_master.partCode','iLIKE',`%${partCode}%`)
+                                qb.where('part_master.partCode', 'iLIKE', `%${partCode}%`)
 
                             }
 
@@ -2182,6 +2186,8 @@ const partsController = {
         try {
             let approvalId = req.body.approvalId;
             let currentTime = new Date().getTime();
+            let payload = req.body;
+            let recDate = new Date(payload.receiveDate).getTime();
             const update = await knex('assigned_parts').update({ status: 'approved' }).where({ orgId: req.orgId, id: approvalId }).returning(['*'])
             let assignedResult = update[0];
             let quantity = "-" + assignedResult.quantity;
@@ -2196,7 +2202,9 @@ const partsController = {
                 adjustType: 1,
                 serviceOrderNo: assignedResult.entityId,
                 orgId: req.orgId,
-                approvedBy: req.me.id
+                approvedBy: req.me.id,
+                receiveBy:payload.receiveBy,
+                receiveDate:recDate,
             }
             let partLedger = await knex.insert(ledgerObject).returning(['*']).into('part_ledger');
             return res.status(200).json({
@@ -2727,6 +2735,35 @@ const partsController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
 
+        }
+
+    },
+    /*GET BUILDING LIST BY PART ID */
+    getBuildingListByPartId: async (req, res) => {
+
+        try {
+
+            let partId = req.query.partId;
+            let partResult = await knex.from('part_master').where({ id: partId, orgId: req.orgId }).first();
+
+            let projectResult = await knex.from('projects').where({ companyId: partResult.companyId, orgId: req.orgId });
+
+            let projectIds = projectResult.map(v => v.id);
+            let buildingResult = await knex('buildings_and_phases')
+                .whereIn('projectId', projectIds)
+                .where({ orgId: req.orgId })
+
+
+            res.json({
+                data: buildingResult,
+                message: "Building list successfully!"
+            })
+
+
+        } catch (err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
         }
 
     }
