@@ -1641,8 +1641,10 @@ const facilityBookingController = {
       // Confirmed Status (1=>Auto Confirmed, 2=>Manually Confirmed)
       if (facilityData.bookingStatus == 1) {
         confirmedStatus = true;
+        confirmType = 1;
       } else {
         confirmedStatus = false;
+        confirmType = 0
       }
 
       let insertData = {
@@ -1661,6 +1663,7 @@ const facilityBookingController = {
         companyId: facilityData.companyId,
         isBookingConfirmed: confirmedStatus,
         bookingType: 1,
+        confirmedType:confirmType
       };
 
       let insertResult = await knex("entity_bookings")
@@ -1944,6 +1947,18 @@ const facilityBookingController = {
                   ">=",
                   currentDate
                 );
+                qb.where("entity_bookings.confirmedType", 0);
+
+              }
+
+              if (status == "Confirmed") {
+                qb.where("entity_bookings.isBookingConfirmed", true);
+                qb.where(
+                  "entity_bookings.bookingStartDateTime",
+                  ">=",
+                  currentDate
+                );
+                qb.where("entity_bookings.confirmedType", 1);
               }
 
               if (status == "Cancelled") {
@@ -2008,6 +2023,17 @@ const facilityBookingController = {
                   ">=",
                   currentDate
                 );
+                qb.where("entity_bookings.confirmedType", 0);
+              }
+
+              if (status == "Confirmed") {
+                qb.where("entity_bookings.isBookingConfirmed", true);
+                qb.where(
+                  "entity_bookings.bookingStartDateTime",
+                  ">=",
+                  currentDate
+                );
+                qb.where("entity_bookings.confirmedType", 1);
               }
 
               if (status == "Cancelled") {
