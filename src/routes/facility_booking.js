@@ -90,4 +90,7 @@ router.get('/get-facility-dropdown-list', authMiddleware.isAuthenticated, facili
 
 router.post('/get-facility-by-project',authMiddleware.isAuthenticated,facilityBookingController.getFacilityByProject)
 
+router.post('/update-facility-status',authMiddleware.isAuthenticated,facilityBookingController.updateFacilityStatus)
+
+
 module.exports = router;
