@@ -75,7 +75,7 @@ const facilityBookingController = {
                         qb.where('entity_open_close_times.closeTime', '<=', endDateTime)
                     }
                 })
-                .where({ 'facility_master.orgId': req.orgId, 'facility_master.moderationStatus': true })
+                .where({ 'facility_master.orgId': req.orgId, 'facility_master.moderationStatus': true, 'facility_master.status' : true })
                 .whereIn('facility_master.projectId', projectArray)
                 .orderBy('facility_master.id', 'desc')
                 .groupBy('facility_master.id', 'companies.id', 'projects.id', 'buildings_and_phases.id', 'floor_and_zones.id')
