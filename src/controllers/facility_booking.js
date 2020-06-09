@@ -2125,10 +2125,14 @@ const facilityBookingController = {
         //   "companies.id"
         // )
         .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+        .leftJoin("property_units","entity_bookings.unitId","property_units.id")
         .select([
           "entity_bookings.*",
           "facility_master.name",
           "users.name as bookedUser",
+          "property_units.unitNumber",
+          "property_units.type as unitType"
+
         ])
         .where((qb => {
           if (companyId) {
@@ -3522,22 +3526,23 @@ const facilityBookingController = {
     try {
       // let payload = req.body
       let bookingListResult = await knex("entity_bookings")
-        .leftJoin(
-          "facility_master",
-          "entity_bookings.entityId",
-          "facility_master.id"
-        )
-        .leftJoin("users", "entity_bookings.bookedBy", "users.id")
-        .select([
-          "entity_bookings.id",
-          "entity_bookings.bookingStartDateTime",
-          "entity_bookings.bookingEndDateTime",
-          "entity_bookings.noOfSeats",
-          "entity_bookings.feesPaid",
-          "entity_bookings.bookedAt",
-          "facility_master.name",
-          "users.name as bookedUser",
-        ])
+      .leftJoin(
+        "facility_master",
+        "entity_bookings.entityId",
+        "facility_master.id"
+      )
+      .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+      .select([
+        "entity_bookings.id",
+        "entity_bookings.bookingStartDateTime",
+        "entity_bookings.bookingEndDateTime",
+        "entity_bookings.noOfSeats",
+        "entity_bookings.feesPaid",
+        "entity_bookings.bookedAt",
+        // "entity_bookings.*",
+        "facility_master.name",
+        "users.name as bookedUser",
+      ])
       // let facilityName=[]
       // let allDataFromBooking=[]
       // bookingListResult.forEach(data=>{
@@ -3605,6 +3610,8 @@ const facilityBookingController = {
         },
         message: 'Facility booked list'
       })
+      
+      
 
 
     } catch (err) {
@@ -3618,33 +3625,72 @@ const facilityBookingController = {
   facilityBookedListByUnit: async (req, res) => {
     try {
       let bookingListResult = await knex("entity_bookings")
-        .leftJoin(
-          "facility_master",
-          "entity_bookings.entityId",
-          "facility_master.id"
-        )
-        .leftJoin("users", "entity_bookings.bookedBy", "users.id")
-        .leftJoin("property_units", "entity_bookings.unitId", "property_units.id")
-        .select(
-          "entity_bookings.id",
-          "entity_bookings.bookingStartDateTime",
-          "entity_bookings.bookingEndDateTime",
-          "entity_bookings.noOfSeats",
-          "entity_bookings.feesPaid",
-          "entity_bookings.bookedAt",
-          "facility_master.name",
-          "users.name as bookedUser",
-          "property_units.unitNumber"
-        )
-      bookingListResult.forEach(data => {
+      .leftJoin(
+        "facility_master",
+        "entity_bookings.entityId",
+        "facility_master.id"
+      )
+      .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+      .leftJoin("property_units","entity_bookings.unitId","property_units.id")
+      .select(
+        "entity_bookings.id",
+        "entity_bookings.bookingStartDateTime",
+        "entity_bookings.bookingEndDateTime",
+        "entity_bookings.noOfSeats",
+        "entity_bookings.feesPaid",
+        "entity_bookings.bookedAt",
+        "facility_master.name",
+        "users.name as bookedUser",
+        "property_units.unitNumber"
+      )
 
+      // let newList = []
+
+      // bookingListResult.forEach(item=>{
+      //   let newItem = {unitNumber:item.unitNumber,elements:[]}
+      //   bookingListResult.forEach(innerItem=>{
+      //     if(innerItem.unitNumber == item.unitNumber){
+      //       newItem = newItem.concat(innerItem.elements)
+      //     }
+      //   })
+      //   newList.push(newItem)
+      // })
+      // console.log("newList",newList)
+      // const bookingReport = 
+      let incb215 = []
+     let incb211 = []
+      let canteen = []
+      let inc1303 = []
+      let inc1311 = []
+      bookingListResult.forEach(data=>{
+        if(data.unitNumber == 'INC2B-215'){
+          incb215.push(data)
+        }else if(data.unitNumber=='INCB2B-211'){
+          incb211.push(data)
+        }else if(data.unitNumber == 'CANTEEN'){
+          canteen.push(data)
+        }else if(data.unitNumber == 'INC1-303'){
+          inc1303.push(data)
+        }else if(data.unitNumber == 'INC1-311'){
+          inc1311.push(data)
+        }
+        
       })
 
       res.status(200).json({
-        data: {
-          BookingListResult: bookingListResult
-        },
-        message: "facility Booked List by unit"
+        data:
+        // bookingListResult
+          
+        { 
+          //  Incb215:incb215,
+        //   Incb211:incb211,
+        //   Canteen:canteen,
+        //   Inc1303:inc1303,
+        //   Inc1311:inc1311,
+          BookingResult:bookingListResult
+        }
+        ,
+        message:"facility Booked List by unit"
       })
     } catch (err) {
       console.log("[controllers][facility][listByFacilityUnit] :  Error", err);
@@ -3653,6 +3699,106 @@ const facilityBookingController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  facilityBookedReportByCreatedDate:async(req,res)=>{
+    try{
+      let bookingListResult = await knex("entity_bookings")
+      .leftJoin(
+        "facility_master",
+        "entity_bookings.entityId",
+        "facility_master.id"
+      )
+      .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+      .leftJoin("property_units","entity_bookings.unitId","property_units.id")
+      .select(
+        "entity_bookings.id",
+        "entity_bookings.bookingStartDateTime",
+        "entity_bookings.bookingEndDateTime",
+        "entity_bookings.noOfSeats",
+        "entity_bookings.feesPaid",
+        "entity_bookings.bookedAt",
+        "facility_master.name",
+        "users.name as bookedUser",
+        "property_units.unitNumber"
+      )
+      let createDate1= []
+      let createDate2=[]
+        bookingListResult.forEach(data=>{
+          if(data.bookingStartDateTime =='1589788800000'){
+            createDate1.push(data)
+          }else if(data.bookingStartDateTime == '1589522400000'){
+            createDate2.push(data)
+
+          }
+        })
+        res.status(200).json({
+          data:
+          // bookingListResult
+            
+          { 
+            // CreateDate1:createDate1,
+            // CreateDate2:createDate2
+            BookingResult:bookingListResult
+          }
+          ,
+          message:"facility Booked List by unit"
+        })
+
+
+
+    }catch(err){
+      console.log("[controllers][facility][listByFacilityCreatedDate] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+          errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+
+  getFacilityreportByBookingDate:async(req,res)=>{
+    try{
+      let bookingListResult = await knex("entity_bookings")
+      .leftJoin(
+        "facility_master",
+        "entity_bookings.entityId",
+        "facility_master.id"
+      )
+      .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+      .leftJoin("property_units","entity_bookings.unitId","property_units.id")
+      .select(
+        "entity_bookings.id",
+        "entity_bookings.bookingStartDateTime",
+        "entity_bookings.bookingEndDateTime",
+        "entity_bookings.noOfSeats",
+        "entity_bookings.feesPaid",
+        "entity_bookings.bookedAt",
+        "facility_master.name",
+        "users.name as bookedUser",
+        "property_units.unitNumber"
+      )
+
+      let date1= []
+
+      bookingListResult.forEach(data=>{
+        if(data.bookedAt = '1589262257832'){
+          date1.push(data)
+
+        }
+        // else if(data.)
+      })
+      res.status(200).json({
+        data:
+        // bookingListResult
+          
+        {  
+          Date1:date1
+          // BookingResult:bookingListResult
+        }
+        ,
+        message:"facility Booked List by Booking Date"
+      })
+
+    }catch(err){}
   },
 
   getFacilityBookedDetails: async (req, res) => {
@@ -3818,6 +3964,59 @@ const facilityBookingController = {
       });
     }
   },
+  cancelledBookingList : async (req, res) => {
+    try {
+      let payload = req.body;
+      let { startDate, endDate } = req.body;
+      console.log("facility list", req.body)
+
+      if (startDate && endDate) {
+        startNewDate = moment(startDate).startOf("time").format();
+        endNewDate = moment(endDate).endOf("time").format();
+        startTime = new Date(startNewDate).getTime();
+        endTime = new Date(endNewDate).getTime();
+      }
+
+
+      const schema = Joi.object().keys({
+        startDate: Joi.string().required(),
+        endDate: Joi.string().required()
+      });
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+        });
+      }
+
+      let listResult = await knex("entity_bookings")
+        .leftJoin(
+          "facility_master",
+          "entity_bookings.entityId",
+          "facility_master.id"
+        )
+        .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+        .select([
+          "entity_bookings.*",
+          "facility_master.name",
+          "users.name as bookedUser",
+        ])
+        .where("entity_bookings.bookingStartDateTime", ">=", startTime)
+        .where("entity_bookings.bookingEndDateTime", "<=", endTime)
+
+      return res.status(200).json({
+        data: {
+          booking: listResult,
+        },
+        message: "Facility booked List!",
+      });
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }],
+      });
+    }
+  }
 };
 
 module.exports = facilityBookingController;

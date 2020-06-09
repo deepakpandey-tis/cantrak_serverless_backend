@@ -59,6 +59,8 @@ router.post('/facility-booked-list-by-date',authMiddleware.isAuthenticated,facil
 router.post('/facility-booked-list-report',authMiddleware.isAuthenticated,facilityBookingController.facilityBookedListReport)
 router.get('/facility-booked-list-by-name',authMiddleware.isAuthenticated,facilityBookingController.facilityBookedListByFacilityName)
 router.get('/facility-booked-list-by-unit',authMiddleware.isAuthenticated,facilityBookingController.facilityBookedListByUnit)
+router.get('/facility-booked-list-by-booking-date',authMiddleware.isAuthenticated,facilityBookingController.getFacilityreportByBookingDate)
+router.get('/facility-booked-list-by-created-date',authMiddleware.isAuthenticated,facilityBookingController.facilityBookedReportByCreatedDate)
 
 /*ADD FACILTIY CLOSE DATE */
 router.post('/add-facility-close-date',authMiddleware.isAuthenticated,facilityBookingController.addFacilityCloseDate)
@@ -92,5 +94,6 @@ router.post('/get-facility-by-project',authMiddleware.isAuthenticated,facilityBo
 
 router.post('/update-facility-status',authMiddleware.isAuthenticated,facilityBookingController.updateFacilityStatus)
 
+router.post('/cancelled-booking-list-by-date',authMiddleware.isAuthenticated,facilityBookingController.cancelledBookingList)
 
 module.exports = router;
