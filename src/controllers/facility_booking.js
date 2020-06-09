@@ -2125,10 +2125,14 @@ const facilityBookingController = {
         //   "companies.id"
         // )
         .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+        .leftJoin("property_units","entity_bookings.unitId","property_units.id")
         .select([
           "entity_bookings.*",
           "facility_master.name",
           "users.name as bookedUser",
+          "property_units.unitNumber",
+          "property_units.type as unitType"
+
         ])
         .where((qb => {
           if (companyId) {
