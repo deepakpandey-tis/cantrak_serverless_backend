@@ -836,14 +836,16 @@ const partsController = {
                         adjustType: Joi.string().required(),
                         serviceOrderNo: Joi.string().allow("").allow(null).optional(),
                         isPartAdded: Joi.string().required(),
-                        deductBy: Joi.string().required(),
-                        deductDate: Joi.string().required(),
+                        //deductBy: Joi.string().required(),
+                        //deductDate: Joi.string().required(),
                         building: Joi.string().required(),
-                        floor: Joi.string().required()
+                        floor: Joi.string().required(),
+                        receiveBy: Joi.string().required(),
+                        receiveDate: Joi.string().required()
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'description', 'date', 'workOrderId', 'receiveBy', 'receiveDate'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['receiveDate'])
-                    partStockPayload.deductDate = new Date(partStockPayload.deductDate).getTime();
+                    result = Joi.validate(_.omit(partStockPayload, 'description', 'date', 'workOrderId','deductBy', 'deductDate'), schema);
+                    partStockPayload = _.omit(partStockPayload, ['deductBy','deductDate'])
+                    partStockPayload.receiveDate = new Date(partStockPayload.receiveDate).getTime();
 
                 } else if (partStockPayload.adjustType == "10") {
                     const schema = Joi.object().keys({

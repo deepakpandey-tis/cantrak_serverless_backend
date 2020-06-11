@@ -94,5 +94,6 @@ router.post('/get-facility-by-project',authMiddleware.isAuthenticated,facilityBo
 
 router.post('/update-facility-status',authMiddleware.isAuthenticated,facilityBookingController.updateFacilityStatus)
 
+router.post('/cancelled-booking-list-by-date',authMiddleware.isAuthenticated,facilityBookingController.cancelledBookingList)
 
 module.exports = router;

@@ -2125,10 +2125,14 @@ const facilityBookingController = {
         //   "companies.id"
         // )
         .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+        .leftJoin("property_units","entity_bookings.unitId","property_units.id")
         .select([
           "entity_bookings.*",
           "facility_master.name",
           "users.name as bookedUser",
+          "property_units.unitNumber",
+          "property_units.type as unitType"
+
         ])
         .where((qb => {
           if (companyId) {
@@ -3748,9 +3752,7 @@ const facilityBookingController = {
       res.status(500).json({
           errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
-
     }
-
   },
 
   getFacilityreportByBookingDate:async(req,res)=>{
@@ -3962,6 +3964,59 @@ const facilityBookingController = {
       });
     }
   },
+  cancelledBookingList : async (req, res) => {
+    try {
+      let payload = req.body;
+      let { startDate, endDate } = req.body;
+      console.log("facility list", req.body)
+
+      if (startDate && endDate) {
+        startNewDate = moment(startDate).startOf("time").format();
+        endNewDate = moment(endDate).endOf("time").format();
+        startTime = new Date(startNewDate).getTime();
+        endTime = new Date(endNewDate).getTime();
+      }
+
+
+      const schema = Joi.object().keys({
+        startDate: Joi.string().required(),
+        endDate: Joi.string().required()
+      });
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+        });
+      }
+
+      let listResult = await knex("entity_bookings")
+        .leftJoin(
+          "facility_master",
+          "entity_bookings.entityId",
+          "facility_master.id"
+        )
+        .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+        .select([
+          "entity_bookings.*",
+          "facility_master.name",
+          "users.name as bookedUser",
+        ])
+        .where("entity_bookings.bookingStartDateTime", ">=", startTime)
+        .where("entity_bookings.bookingEndDateTime", "<=", endTime)
+
+      return res.status(200).json({
+        data: {
+          booking: listResult,
+        },
+        message: "Facility booked List!",
+      });
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }],
+      });
+    }
+  }
 };
 
 module.exports = facilityBookingController;

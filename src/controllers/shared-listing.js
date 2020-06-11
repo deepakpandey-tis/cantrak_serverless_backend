@@ -53,7 +53,7 @@ const assetController = {
               if (assetName) {
                 qb.where(
                   "asset_master.assetName",
-                  "like",
+                  "iLIKE",
                   `%${assetName}%`
                 );
               }
@@ -67,7 +67,7 @@ const assetController = {
               if (assetModel) {
                 qb.where(
                   "asset_master.model",
-                  "like",
+                  "iLIKE",
                   `%${assetModel}%`
                 );
               }
@@ -118,14 +118,14 @@ const assetController = {
               if (assetName) {
                 qb.where(
                   "asset_master.assetName",
-                  "like",
+                  "iLIKE",
                   `%${assetName}%`
                 );
               }
               if (assetModel) {
                 qb.where(
                   "asset_master.model",
-                  "like",
+                  "iLIKE",
                   `%${assetModel}%`
                 );
               }
