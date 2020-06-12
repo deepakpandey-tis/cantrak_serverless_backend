@@ -3503,9 +3503,9 @@ const facilityBookingController = {
         "facility_master.name",
         "users.name as bookedUser",
       ])
-      .where("entity_bookings.bookingStartDateTime", ">=", startTime)
-      .where("entity_bookings.bookingEndDateTime", "<=", endTime)
-      .where("entity_bookings.isBookingCancelled", "=", true)
+      .where("entity_bookings.isBookingCancelled", true)
+      .where("entity_bookings.bookingStartDateTime", ">=", startDate)
+      .where("entity_bookings.bookingEndDateTime", "<=", endDate)
       ;
       return res.status(200).json({
         data: {
