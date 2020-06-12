@@ -61,6 +61,7 @@ router.get('/facility-booked-list-by-name',authMiddleware.isAuthenticated,facili
 router.get('/facility-booked-list-by-unit',authMiddleware.isAuthenticated,facilityBookingController.facilityBookedListByUnit)
 router.get('/facility-booked-list-by-booking-date',authMiddleware.isAuthenticated,facilityBookingController.getFacilityreportByBookingDate)
 router.get('/facility-booked-list-by-created-date',authMiddleware.isAuthenticated,facilityBookingController.facilityBookedReportByCreatedDate)
+router.post('/facility-booked-cancelled-list',authMiddleware.isAuthenticated,facilityBookingController.getFacilityBookedCancelledList)
 
 /*ADD FACILTIY CLOSE DATE */
 router.post('/add-facility-close-date',authMiddleware.isAuthenticated,facilityBookingController.addFacilityCloseDate)
