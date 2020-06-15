@@ -326,6 +326,7 @@ const floorZoneController = {
         floorZoneCode,
       } = req.body;
       let pagination = {};
+      
 
       if (companyId || projectId || buildingPhaseId || floorZoneCode) {
 

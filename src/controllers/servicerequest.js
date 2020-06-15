@@ -676,6 +676,7 @@ const serviceRequestController = {
       } = req.body;
       let total, rows;
 
+      
       //console.log('USER**************************************',req.userProjectResources)
       const accessibleProjects = req.userProjectResources[0].projects
 

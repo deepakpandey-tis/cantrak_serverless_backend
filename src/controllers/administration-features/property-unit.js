@@ -339,6 +339,7 @@ const propertyUnitController = {
   getPropertyUnitList: async (req, res) => {
     try {
 
+      
       let resourceProject = req.userProjectResources[0].projects;
 
       let sortPayload = req.body;
