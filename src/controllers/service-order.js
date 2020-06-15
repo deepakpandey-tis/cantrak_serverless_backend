@@ -396,6 +396,7 @@ const serviceOrderController = {
                             "service_requests.displayId as SR#",
 
                             // "assignUser.name as Tenant Name"
+                            
 
                         ]).where((qb) => {
                             qb.where({ 'service_orders.orgId': req.orgId });
