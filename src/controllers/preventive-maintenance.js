@@ -591,6 +591,7 @@ const pmController = {
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
 
+      
       //const pms = await knex('pm_master').select()
 
       let [total, rows] = await Promise.all([
@@ -1439,7 +1440,7 @@ const pmController = {
         .map((value, key) => ({
           assetCode: key, planOrder: value.length, value: value[0],
           allValue: value, workDone: value.map(ite => ite.status).filter(v => v == 'COM').length,
-          percentage: (100 * value.map(ite => ite.status).filter(v => v == 'COM').length / value.length).toFixed(2),
+          percentage: (100 * value.map(ite => ite.status).filter(v => v == 'COM').length / pmSchedule.length).toFixed(2),
           off: value.map(ite => ite.scheduleStatus).filter(v => v == 'off').length,
           on: value.map(ite => ite.scheduleStatus).filter(v => v == 'on').length,
         }))
@@ -1454,7 +1455,7 @@ const pmController = {
       let chartData = _.flatten(
         final
           .filter(v => !_.isEmpty(v))
-          .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].map(ite => ite.status).filter(v => v == 'COM').length / v[p].length).toFixed(2) })))
+          .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].map(ite => ite.status).filter(v => v == 'COM').length / pmSchedule.length).toFixed(2) })))
       ).reduce((a, p) => {
         let l = _.keys(p)[0];
         if (a[l]) {

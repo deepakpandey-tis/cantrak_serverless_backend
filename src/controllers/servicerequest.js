@@ -676,6 +676,7 @@ const serviceRequestController = {
       } = req.body;
       let total, rows;
 
+
       //console.log('USER**************************************',req.userProjectResources)
       const accessibleProjects = req.userProjectResources[0].projects
 
@@ -3534,9 +3535,64 @@ const serviceRequestController = {
 
       })
 
+
+      let filterStatus = sr.filter(v => v.Status != "Cancel")
+
+
+      let serviceIds = filterStatus.map(it => it.id);
+
+      let serviceProblem = await knex.from('service_problems')
+        .leftJoin('service_requests', 'service_problems.serviceRequestId', 'service_requests.id')
+        .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+        .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id')
+        .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
+        .select([
+          'service_problems.problemId',
+          'service_problems.categoryId',
+          'incident_type.typeCode as problemTypeCode',
+          'incident_type.descriptionEng as problemType',
+          'incident_categories.categoryCode',
+          'incident_categories.descriptionEng as category',
+          'incident_sub_categories.descriptionEng as subCategory',
+          'service_requests.serviceStatusCode',
+        ])
+        .whereIn('service_problems.serviceRequestId', serviceIds)
+        .where({ 'service_problems.orgId': req.orgId })
+        .orderBy('incident_type.typeCode', 'asc');
+
+      let mapData = _.chain(serviceProblem).groupBy('categoryId').map((value, key) => ({
+        category: key,
+        serviceOrder: value.length,
+        value: value[0]
+      }))
+
+
+
+      let arr = [];
+      let totalServiceOrder = 0;
+
+      for(let md of mapData){
+
+        totalServiceOrder +=Number(md.serviceOrder)
+        arr.push({totalServiceOrder,
+          serviceOrder:md.serviceOrder,
+          problemTypeCode:md.value.problemTypeCode,
+          problemType:md.value.problemType,
+          categoryCode: md.value.categoryCode,
+          category: md.value.category,
+          subCategory: md.value.subCategory,
+        })
+      }
+
+
+    
+
+
+
       return res.status(200).json({
         data: {
-          service_requests: srWithTenant
+          service_requests: srWithTenant,
+          problemData:_.orderBy(arr,"totalServiceOrder","asc")
         }
       })
     } catch (err) {
@@ -3599,7 +3655,7 @@ const serviceRequestController = {
         .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
         .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
         .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-        .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id') 
+        .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id')
         .select([
           'service_requests.*',
           'companies.*',
@@ -3615,16 +3671,16 @@ const serviceRequestController = {
           'service_problems.createdAt as incidentDate',
           'service_problems.serviceRequestId',
         ])
-            .where('service_requests.id', payload.id).first();
+        .where('service_requests.id', payload.id).first();
 
-        let images = await knex('images').where({entityId:payload.id,entityType:'service_problems'})
+      let images = await knex('images').where({ entityId: payload.id, entityType: 'service_problems' })
 
-            
+
 
       return res.status(200).json({
-              data: {...reportResult,images,printedBy:meData},
-              message: "Service Request Report Successfully!",
-              });
+        data: { ...reportResult, images, printedBy: meData },
+        message: "Service Request Report Successfully!",
+      });
 
     } catch (err) {
 

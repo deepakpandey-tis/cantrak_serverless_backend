@@ -738,8 +738,22 @@ const serviceRequestController = {
             ])
             .where({ "service_requests.orgId": req.orgId })
             .where(qb => {
+
+              if(serviceId){
+                qb.where('service_requests.id',serviceId)
+
+              }
+
+              if(status){
+                qb.where('service_requests.serviceStatusCode',status)
+              }
+
               if (location) {
                 qb.where('service_requests.location', 'iLIKE', `%${location}%`)
+              }
+
+              if (priority) {
+                qb.where("service_requests.priority",priority);
               }
 
               if (description) {
@@ -759,7 +773,7 @@ const serviceRequestController = {
                 ]);
                 qb.where({ closedBy: "" })
               }
-              qb.where(filters);
+              //qb.where(filters);
             })
             .whereIn("service_requests.houseId", houseIds)
             .orWhere("service_requests.createdBy", req.me.id)
@@ -806,12 +820,26 @@ const serviceRequestController = {
             ])
             .where({ "service_requests.orgId": req.orgId })
             .where(qb => {
+
+              if(serviceId){
+                qb.where('service_requests.id',serviceId)
+
+              }
+
+              if(status){
+                qb.where('service_requests.serviceStatusCode',status)
+              }
+
               if (location) {
                 qb.where('service_requests.location', 'iLIKE', `%${location}%`)
               }
 
               if (description) {
                 qb.where('service_requests.description', 'iLIKE', `%${description}%`)
+              }
+
+              if (priority) {
+                qb.where("service_requests.priority",priority);
               }
 
               if (serviceFromDate && serviceToDate) {
@@ -828,7 +856,7 @@ const serviceRequestController = {
                 ]);
                 qb.where({ closedBy: "" })
               }
-              qb.where(filters);
+              //qb.where(filters);
             })
             .whereIn("service_requests.houseId", houseIds)
             .orWhere("service_requests.createdBy", req.me.id)

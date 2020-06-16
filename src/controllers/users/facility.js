@@ -75,7 +75,7 @@ const facilityBookingController = {
                         qb.where('entity_open_close_times.closeTime', '<=', endDateTime)
                     }
                 })
-                .where({ 'facility_master.orgId': req.orgId, 'facility_master.moderationStatus': true })
+                .where({ 'facility_master.orgId': req.orgId, 'facility_master.moderationStatus': true, 'facility_master.status' : true })
                 .whereIn('facility_master.projectId', projectArray)
                 .orderBy('facility_master.id', 'desc')
                 .groupBy('facility_master.id', 'companies.id', 'projects.id', 'buildings_and_phases.id', 'floor_and_zones.id')
@@ -256,7 +256,7 @@ const facilityBookingController = {
 
             console.log("listType+++++++", listType);
 
-            
+
             if (listType == "upcoming") {
 
                 console.log("upcoming++++++++++++++++++++");
@@ -553,12 +553,14 @@ const facilityBookingController = {
                 totalFees = 0;
             }
 
-
+            let confirmType;
             // Confirmed Status (1=>Auto Confirmed, 2=>Manually Confirmed)
             if (facilityData.bookingStatus == 1) {
                 confirmedStatus = true;
+                confirmType = 1;
             } else {
                 confirmedStatus = false;
+                confirmType = 0;
             }
 
             let insertData = {
@@ -575,9 +577,9 @@ const facilityBookingController = {
                 orgId: req.orgId,
                 unitId: unitId,
                 companyId: facilityData.companyId,
-                isBookingConfirmed: confirmedStatus
+                isBookingConfirmed: confirmedStatus,
+                confirmedType: confirmType
             }
-
             let insertResult = await knex('entity_bookings').insert(insertData).returning(['*']);
             resultData = insertResult[0];
 
@@ -918,7 +920,7 @@ const facilityBookingController = {
                 }
 
             }
-           
+
 
             // Allow Advance Time Backup
 
@@ -985,9 +987,9 @@ const facilityBookingController = {
 
                     let advanceString = bookingAllowingTiming.bookingCloseAdvanceTime;
                     if (parseInt(advanceString / 24 / 60) > 0) {
-                      //  advanceString = parseInt(advanceString / 24 / 60) + " days, " + parseInt(advanceString / 60 % 24) + ' hours, ' + parseInt(advanceString % 60) + ' minutes';
-                       advanceString = parseInt(advanceString / 24 / 60) + " days";
-                   
+                        //  advanceString = parseInt(advanceString / 24 / 60) + " days, " + parseInt(advanceString / 60 % 24) + ' hours, ' + parseInt(advanceString % 60) + ' minutes';
+                        advanceString = parseInt(advanceString / 24 / 60) + " days";
+
                     } else {
                         advanceString = parseInt(advanceString / 60 % 24) + ' hours, ' + parseInt(advanceString % 60) + ' minutes';
                     }

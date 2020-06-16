@@ -254,4 +254,6 @@ roleMiddleware.parseUserPermission,
 resourceAccessMiddleware.isPartAccessible,
 partsController.getRequisitionReport)
 
+router.get('/get-building-list-by-partId',authMiddleware.isAuthenticated,partsController.getBuildingListByPartId)
+
 module.exports = router;

@@ -55,6 +55,14 @@ router.post('/facility-delete',authMiddleware.isAuthenticated,facilityBookingCon
 router.post('/approve-facility',authMiddleware.isAuthenticated,facilityBookingController.approveFacility)
 
 router.post('/get-facility-booked-list',authMiddleware.isAuthenticated,facilityBookingController.getfacilityBookedList)
+router.post('/facility-booked-list-by-date',authMiddleware.isAuthenticated,facilityBookingController.getFacilityBookedListbydate)
+router.post('/facility-booked-list-report',authMiddleware.isAuthenticated,facilityBookingController.facilityBookedListReport)
+router.get('/facility-booked-list-by-name',authMiddleware.isAuthenticated,facilityBookingController.facilityBookedListByFacilityName)
+router.get('/facility-booked-list-by-unit',authMiddleware.isAuthenticated,facilityBookingController.facilityBookedListByUnit)
+router.get('/facility-booked-list-by-booking-date',authMiddleware.isAuthenticated,facilityBookingController.getFacilityreportByBookingDate)
+router.get('/facility-booked-list-by-created-date',authMiddleware.isAuthenticated,facilityBookingController.facilityBookedReportByCreatedDate)
+router.post('/facility-booked-cancelled-list',authMiddleware.isAuthenticated,facilityBookingController.getFacilityBookedCancelledList)
+
 /*ADD FACILTIY CLOSE DATE */
 router.post('/add-facility-close-date',authMiddleware.isAuthenticated,facilityBookingController.addFacilityCloseDate)
 
@@ -84,5 +92,17 @@ router.post('/get-facility-booked-details',authMiddleware.isAuthenticated,facili
 router.get('/get-facility-dropdown-list', authMiddleware.isAuthenticated, facilityBookingController.getFacilityDropDownList)
 
 router.post('/get-facility-by-project',authMiddleware.isAuthenticated,facilityBookingController.getFacilityByProject)
+
+router.post('/update-facility-status',authMiddleware.isAuthenticated,facilityBookingController.updateFacilityStatus)
+
+router.post('/cancelled-booking-list-by-date',authMiddleware.isAuthenticated,facilityBookingController.cancelledBookingList)
+
+router.post('/generate-facility-reportId',authMiddleware.isAuthenticated,facilityBookingController.generateReportId)
+
+router.post('/add-facility-report',authMiddleware.isAuthenticated,facilityBookingController.addFacilityReport)
+
+router.post('/get-facility-report-list',authMiddleware.isAuthenticated,facilityBookingController.getFacilityReportList)
+
+router.post('/get-facilityList-by-date',authMiddleware.isAuthenticated,facilityBookingController.facilityListingByDate)
 
 module.exports = router;
