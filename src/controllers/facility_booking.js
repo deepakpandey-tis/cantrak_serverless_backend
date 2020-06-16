@@ -4234,7 +4234,7 @@ const facilityBookingController = {
         knex
         .from("facility_report_master")
         .leftJoin("users", "users.id", "facility_report_master.createdBy")
-        // .where({ "facility_report_master.orgId": req.orgId })
+        .where({ "facility_report_master.orgId": req.orgId })
         .select([
           "facility_report_master.id as id",
           "facility_report_master.reportName",
