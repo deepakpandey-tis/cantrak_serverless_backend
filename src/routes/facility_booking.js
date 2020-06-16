@@ -103,4 +103,6 @@ router.post('/add-facility-report',authMiddleware.isAuthenticated,facilityBookin
 
 router.post('/get-facility-report-list',authMiddleware.isAuthenticated,facilityBookingController.getFacilityReportList)
 
+router.post('/get-facilityList-by-date',authMiddleware.isAuthenticated,facilityBookingController.facilityListingByDate)
+
 module.exports = router;
