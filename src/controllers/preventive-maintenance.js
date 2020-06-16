@@ -591,7 +591,7 @@ const pmController = {
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
 
-      
+
       //const pms = await knex('pm_master').select()
 
       let [total, rows] = await Promise.all([
@@ -1377,6 +1377,7 @@ const pmController = {
       let toNewDate = moment(toDate).endOf('date', 'days').format();
       let fromTime = new Date(fromNewDate).getTime();
       let toTime = new Date(toNewDate).getTime();
+      let filterProblem;
 
       let pmResult = await knex('pm_master2')
         .leftJoin('companies', 'pm_master2.companyId', 'companies.id')
@@ -1435,12 +1436,16 @@ const pmController = {
       //pmSchedule.push({on:"",off:""})
       //pmSchedule = pmSchedule.map(v => ({ ...v, on: 0, off: 0}))
 
+
+      filterProblem = pmSchedule.filter(v=>v.status=='COM')
+
+
       let mapData = _.chain(pmSchedule)
         .groupBy("assetCode")
         .map((value, key) => ({
           assetCode: key, planOrder: value.length, value: value[0],
           allValue: value, workDone: value.map(ite => ite.status).filter(v => v == 'COM').length,
-          percentage: (100 * value.map(ite => ite.status).filter(v => v == 'COM').length / pmSchedule.length).toFixed(2),
+          percentage: (100 * value.map(ite => ite.status).filter(v => v == 'COM').length / value.length).toFixed(2),
           off: value.map(ite => ite.scheduleStatus).filter(v => v == 'off').length,
           on: value.map(ite => ite.scheduleStatus).filter(v => v == 'on').length,
         }))
@@ -1452,10 +1457,25 @@ const pmController = {
 
       final.push(grouped);
 
+      // let chartData = _.flatten(
+      //   final
+      //     .filter(v => !_.isEmpty(v))
+      //     .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].map(ite => ite.status).filter(v => v == 'COM').length / pmSchedule.length).toFixed(2) })))
+      // ).reduce((a, p) => {
+      //   let l = _.keys(p)[0];
+      //   if (a[l]) {
+      //     a[l] += p[l];
+
+      //   } else {
+      //     a[l] = p[l];
+      //   }
+      //   return a;
+      // }, {});
+
       let chartData = _.flatten(
         final
           .filter(v => !_.isEmpty(v))
-          .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].map(ite => ite.status).filter(v => v == 'COM').length / pmSchedule.length).toFixed(2) })))
+          .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].length / pmSchedule.length).toFixed(2) })))
       ).reduce((a, p) => {
         let l = _.keys(p)[0];
         if (a[l]) {
@@ -1466,6 +1486,24 @@ const pmController = {
         }
         return a;
       }, {});
+
+      /*Work Done open */
+      let workDoneChartData = _.flatten(
+        final
+          .filter(v => !_.isEmpty(v))
+          .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].map(ite => ite.status).filter(v => v == 'COM').length / filterProblem.length).toFixed(2) })))
+      ).reduce((a, p) => {
+        let l = _.keys(p)[0];
+        if (a[l]) {
+          a[l] += p[l];
+
+        } else {
+          a[l] = p[l];
+        }
+        return a;
+      }, {});
+
+      /*Work Done close */
 
       let totalPlanOrder = 0;
       let totalWorkDone = 0;
@@ -1478,7 +1516,7 @@ const pmController = {
 
         totalPlanOrder += Number(item.planOrder);
         totalWorkDone += Number(item.workDone);
-        totalPercentage += Number(item.percentage);
+        totalPercentage = 100 * totalWorkDone / totalPlanOrder;
         totalOn += Number(item.on);
         totalOff += Number(item.off);
 
@@ -1488,6 +1526,8 @@ const pmController = {
           totalWorkDone: totalWorkDone, totalPercentage: (totalPercentage).toFixed(2), chartData,
           totalOn: totalOn,
           totalOff: totalOff,
+          workDoneChartData,
+          
         };
 
       })
@@ -1496,6 +1536,8 @@ const pmController = {
       res.json({
         data: pmResult,
         message: "Prenventive Maintenance report succesully!",
+        a:filterProblem.length,
+        filterProblem
       })
 
     } catch (err) {
@@ -1718,9 +1760,9 @@ const pmController = {
       let startWeek = moment(fromDate).week();
       let endWeek = moment(toDate).week();
 
-      for(let i = startWeek; i<endWeek; i++){
+      for (let i = startWeek; i < endWeek; i++) {
 
-        arr.push({"day":i})
+        arr.push({ "day": i })
 
       }
 
