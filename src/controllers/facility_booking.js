@@ -642,6 +642,199 @@ const facilityBookingController = {
       });
     }
   },
+  facilityListingByDate:async(req,res) =>{
+    try{
+      let payload = req.body
+      let reqData = req.query
+      let {companyId,projectId,buildingPhaseId,unitId,facilityName,status} = req.body
+      let fromDate = payload.createdDateFrom;
+      let toDate = payload.createdDateTo;
+      let bookingDateFrom = payload.bookingDateTimeFrom;
+      let bookingDateTo = payload.bookingDateTimeTo
+      console.log("requested data", payload.companyId, toDate, fromDate, bookingDateFrom, bookingDateTo,facilityName,status)
+
+
+      let currentDate = new Date().getTime();
+
+      // if(fromDate && toDate){
+      let fromNewDate = moment(fromDate).startOf('date').format();
+      let toNewDate = moment(toDate).endOf('date', 'days').format();
+      let fromTime = new Date(fromNewDate).getTime();
+      let toTime = new Date(toNewDate).getTime();
+      let fromBookDate = moment(bookingDateFrom).startOf('date').format();
+      let toBookDate = moment(bookingDateTo).endOf('date', 'days');
+      let fromBookTime = new Date(fromBookDate).getTime();
+      let toBookTime = new Date(toBookDate).getTime();
+      let facilityReportResult
+      
+      if(companyId || projectId || buildingPhaseId || unitId || facilityName || status){
+        try{
+          facilityReportResult= await
+          knex
+              .from("entity_bookings")
+              .leftJoin("facility_master","entity_bookings.entityId","facility_master.id")
+              .leftJoin(
+                "companies",
+                "entity_bookings.companyId",
+                "companies.id"
+              )
+          .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+        .leftJoin("property_units","entity_bookings.unitId","property_units.id")
+              .select([
+                "entity_bookings.*",
+                "facility_master.displayId as No",
+                "users.name as bookedUser",
+                "facility_master.name as Facility",
+                "facility_master.projectId",
+                "facility_master.buildingPhaseId",
+                "companies.companyName as Company",
+                "property_units.unitNumber",
+                "property_units.type as unitType",
+                "companies.companyId",
+              ])
+              .where((qb) => {
+                if (facilityName) {
+                  qb.where(
+                    "facility_master.name",
+                    "iLIKE",
+                    `%${facilityName}%`
+                  );
+                }
+                if (projectId) {
+                  qb.where("facility_master.projectId", projectId);
+                }
+                if (buildingPhaseId) {
+                  qb.where("facility_master.buildingPhaseId", buildingPhaseId);
+                }
+                if (unitId) {
+                  qb.where("facility_master.floorZoneId", floorZoneId);
+                }
+                if (companyId) {
+                  qb.where("entity_bookings.companyId", companyId);
+                }
+                if(projectId){
+                  qb.where("facility_master.projectId",projectId)
+
+                }
+                if(buildingPhaseId){
+                  qb.where("facility_master.buildingPhaseId",buildingPhaseId)
+                }
+                if (fromDate && toDate) {
+              qb.where("entity_bookings.createdAt", ">=", fromTime);
+              qb.where("entity_bookings.createdAt", "<=", toTime);
+            }
+                if (bookingDateFrom && bookingDateTo) {
+                  qb.where("entity_bookings.bookingStartDateTime", ">=", fromBookTime);
+                  qb.where("entity_bookings.bookingStartDateTime", "<=", toBookTime);
+                }
+                if (status) {
+                  if (status == "Pending") {
+                    qb.where("entity_bookings.isBookingConfirmed", false);
+                    qb.where("entity_bookings.isBookingCancelled", false);
+                    qb.where(
+                      "entity_bookings.bookingStartDateTime",
+                      ">=",
+                      fromBookTime
+                    );
+                  qb.where("entity_bookings.bookingStartDateTime", "<=", toBookTime);
+
+                  }
+    
+                  if (status == "Approved") {
+                    qb.where("entity_bookings.isBookingConfirmed", true);
+                    qb.where(
+                      "entity_bookings.bookingStartDateTime",
+                      ">=",
+                      fromBookTime
+                    );
+                  qb.where("entity_bookings.bookingStartDateTime", "<=", toBookTime);
+                    qb.where("entity_bookings.confirmedType", 0);
+    
+                  }
+    
+                  if (status == "Confirmed") {
+                    qb.where("entity_bookings.isBookingConfirmed", true);
+                    qb.where(
+                      "entity_bookings.bookingStartDateTime",
+                      ">=",
+                      fromBookTime
+                    );
+                  qb.where("entity_bookings.bookingStartDateTime", "<=", toBookTime);
+
+                    qb.where("entity_bookings.confirmedType", 1);
+                  }
+    
+                  if (status == "Cancelled") {
+                    qb.where("entity_bookings.isBookingCancelled", true);
+                    qb.where(
+                      "entity_bookings.bookingStartDateTime",
+                      ">=",
+                      fromBookTime
+                    );
+                  qb.where("entity_bookings.bookingStartDateTime", "<=", toBookTime);
+
+                  }
+    
+                  if (status == "Expired") {
+                    qb.where(
+                      "entity_bookings.bookingStartDateTime",
+                      "<",
+                      fromBookTime
+                    );
+                  qb.where("entity_bookings.bookingStartDateTime", "<=", toBookTime);
+
+                  }
+                }
+                qb.where("entity_bookings.orgId", req.orgId);
+              })
+              .orderBy("entity_bookings.id", "asc")
+
+        }catch(err){}
+      }else{
+        facilityReportResult = await
+        knex
+            .from("entity_bookings")
+            .leftJoin("facility_master","entity_bookings.entityId","facility_master.id")
+            .leftJoin("companies", "entity_bookings.companyId", "companies.id")
+          .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+        .leftJoin("property_units","entity_bookings.unitId","property_units.id")
+            .where("entity_bookings.orgId", req.orgId)
+            .select([
+              "entity_bookings.*",
+              "users.name as bookedUser",
+              "facility_master.name as Facility",
+              "companies.companyName as Company",
+              "property_units.unitNumber",
+              "property_units.type as unitType"
+             
+            ])
+            .where("entity_bookings.bookingStartDateTime", ">=", fromBookTime)
+            .where("entity_bookings.bookingStartDateTime", "<=", toBookTime)
+            .where("entity_bookings.createdAt", ">=", fromTime)
+            .where("entity_bookings.createdAt", "<=", toTime)
+            .groupBy([
+              "entity_bookings.id",
+              "facility_master.id",
+              "companies.id",
+              "users.name",
+              "property_units.unitNumber",
+              "property_units.type"
+            ])
+            .orderBy("entity_bookings.id", "asc")
+      }
+      return res.status(200).json({
+        data: {
+          facilities: facilityReportResult,
+        },
+        message: "Facility List!",
+      });
+    }catch(err){
+      console.log("[controllers][facilityBooking][list] :  Error", err);
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
   facilityListing: async (req, res) => {
     try {
       let reqData = req.query;
