@@ -16,47 +16,8 @@ const XLSX = require("xlsx");
 const fs = require("fs");
 const https = require("https");
 
-if (process.env.IS_OFFLINE) {
-  AWS.config.update({
-    accessKeyId: "S3RVER",
-    secretAccessKey: "S3RVER"
-  });
-} else {
-  AWS.config.update({
-    accessKeyId: process.env.ACCESS_KEY_ID,
-    secretAccessKey: process.env.SECRET_ACCESS_KEY,
-  });
-}
+const imageHelper = require("../../helpers/image");
 
-AWS.config.update({ region: process.env.REGION || "us-east-2" });
-
-const getUploadURL = async (mimeType, filename, type = "") => {
-  let re = /(?:\.([^.]+))?$/;
-  let ext = re.exec(filename)[1];
-  let uploadFolder = type + "/";
-  const actionId = uuidv4();
-  const s3Params = {
-    Bucket: process.env.S3_BUCKET_NAME,
-    Key: `${uploadFolder}${actionId}.${ext}`,
-    ContentType: mimeType,
-    ACL: "public-read"
-  };
-  return new Promise(async (resolve, reject) => {
-    const s3 = new AWS.S3();
-    let uploadURL = await s3.getSignedUrl("putObject", s3Params);
-    if (Boolean(process.env.IS_OFFLINE)) {
-      uploadURL = uploadURL
-        .replace("https://", "http://")
-        .replace(".com", ".com:8000");
-    }
-    resolve({
-      isBase64Encoded: false,
-      headers: { "Access-Control-Allow-Origin": "*" },
-      uploadURL: uploadURL,
-      photoFilename: `${actionId}.${ext}`
-    });
-  });
-};
 
 const serviceRequestController = {
   addServiceRequest: async (req, res) => {
@@ -231,7 +192,7 @@ const serviceRequestController = {
     const filename = req.body.filename;
     const type = req.body.type;
     try {
-      const uploadUrlData = await getUploadURL(mimeType, filename, type);
+      const uploadUrlData = await imageHelper.getUploadURL(mimeType, filename, type);
 
       res.status(200).json({
         data: {
@@ -1041,7 +1002,7 @@ const serviceRequestController = {
   getServiceRequestByMonth: async (req, res) => { },
 
 
-  getUrl: getUploadURL,
+  getUrl: imageHelper.getUploadURL,
 
 
   getServiceRequestAssignedAssets: async (req, res) => {

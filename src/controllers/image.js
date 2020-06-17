@@ -6,17 +6,11 @@ const knex = require('../db/knex');
 const AWS = require("aws-sdk");
 
 
-if (process.env.IS_OFFLINE) {
-  AWS.config.update({
-    accessKeyId: "S3RVER",
-    secretAccessKey: "S3RVER"
-  });
-} else {
-  AWS.config.update({
-    accessKeyId: process.env.ACCESS_KEY_ID,
-    secretAccessKey: process.env.SECRET_ACCESS_KEY,
-  });
-}
+AWS.config.update({
+  accessKeyId: process.env.ACCESS_KEY_ID,
+  secretAccessKey: process.env.SECRET_ACCESS_KEY,
+  region: process.env.REGION || "us-east-1"
+});
 
 const imageController = {
   deleteImage: async (req, res) => {
@@ -30,7 +24,7 @@ const imageController = {
       let path = s3Url.pop()
       const deletedImage = await knex.del().from('images').where({ id: id })
       // Remove it from S3
-      var params = { Bucket: 'sls-app-resources-bucket', Key: path+'/'+fileId };
+      var params = { Bucket: process.env.S3_BUCKET_NAME, Key: path+'/'+fileId };
       s3.deleteObject(params, function (err, data) {
         if (err) {
           console.log(err, err.stack);  // error

@@ -16,17 +16,11 @@ const XLSX = require("xlsx");
 const fs = require("fs");
 const https = require("https");
 
-if (process.env.IS_OFFLINE) {
-  AWS.config.update({
-    accessKeyId: "S3RVER",
-    secretAccessKey: "S3RVER",
-  });
-} else {
-  AWS.config.update({
-    accessKeyId: process.env.S3_ACCESS_KEY_ID,
-    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
-  });
-}
+AWS.config.update({
+  accessKeyId: process.env.ACCESS_KEY_ID,
+  secretAccessKey: process.env.SECRET_ACCESS_KEY,
+  region: process.env.REGION || "us-east-1"
+});
 
 const parcelManagementController = {
 

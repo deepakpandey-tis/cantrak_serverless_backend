@@ -7,6 +7,8 @@ const indexRouter = require('./routes/index');
 const emailHelper = require('./helpers/email');
 
 
+process.env.IS_OFFLINE = process.env.NODE_ENV === 'local';   // If Node Env is local, assume offline
+
 /**
  * App
  */
@@ -61,6 +63,7 @@ app.use((req, res, next) => {
 /**
  * Routers
  */
+
 app.use('/', indexRouter);
 
 // catch 404 and forward to error handler
@@ -87,6 +90,7 @@ app.use((err, req, res, next) => {
 
 
 module.exports.server = sls(app);
+
 
 // const server = sls(app);
 // module.exports.server = async (event, context) => {
@@ -131,6 +135,6 @@ module.exports.emailQueueProcessor = (event, context) => {
   (async () => {
     await emailHelper.sendEmail(mailOptions);
   })();
-  
-  return; 
+
+  return;
 };

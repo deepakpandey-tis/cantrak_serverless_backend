@@ -7,12 +7,12 @@ const nodemailer = require("nodemailer");
 AWS.config.update({
     accessKeyId: process.env.ACCESS_KEY_ID,
     secretAccessKey: process.env.SECRET_ACCESS_KEY,
+    region: process.env.REGION || "us-east-1"
 });
 
 const SHOULD_QUEUE = false;
 
 const sendEmailMessage = async (mailOptions) => {
-    AWS.config.update({ region: process.env.REGION || 'us-east-1' });
 
     return new Promise(async (resolve, reject) => {
         const ses = new AWS.SES();
@@ -36,7 +36,6 @@ const sendEmailMessage = async (mailOptions) => {
 
 const sendSQSMessage = async (messageBody) => {
 
-    AWS.config.update({ region: process.env.REGION || 'us-east-2' });
     const createdAt = new Date().toISOString();
 
     let params = {
