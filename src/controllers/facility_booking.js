@@ -3682,7 +3682,7 @@ const facilityBookingController = {
 
   },
   getFacilityBookedCancelledList: async (req, res) => {
-    try {
+    try { 
       let payload = req.body
       let { startDate, endDate } = req.body
 
