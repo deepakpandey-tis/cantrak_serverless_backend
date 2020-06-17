@@ -4464,6 +4464,7 @@ const facilityBookingController = {
             "facility_report_master.id as id",
             "facility_report_master.reportName",
             "facility_report_master.createdBy",
+            "facility_report_master.orgId",
             "users.name as createdName"
 
           ])
