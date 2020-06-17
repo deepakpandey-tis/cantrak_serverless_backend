@@ -15,8 +15,19 @@ router.get('/', async(req,res) => {
         }
         // const status = await emailHelper.sendTemplateEmail(mailOptions);
 
+        let a;
+
+        if(process.env.IS_OFFLINE){
+            a = true;
+        } else {
+            a = false;
+        }
+
         res.json({
-            IS_OFFLINE: process.env.IS_OFFLINE
+            IS_OFFLINE: process.env.IS_OFFLINE,
+            ifCheck: a,
+            typeOf: typeof process.env.IS_OFFLINE,
+            typeof1: typeof true
         });
 
     } catch(err){

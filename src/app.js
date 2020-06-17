@@ -7,8 +7,6 @@ const indexRouter = require('./routes/index');
 const emailHelper = require('./helpers/email');
 
 
-process.env.IS_OFFLINE = process.env.IS_OFFLINE_MODE === 'true';   // If true, assume offline
-
 /**
  * App
  */
