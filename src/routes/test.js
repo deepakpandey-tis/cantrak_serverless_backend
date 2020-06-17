@@ -13,10 +13,10 @@ router.get('/', async(req,res) => {
             template: 'test-email.ejs',
             templateData: {fullName: 'Deepak', OTP: '1111'}
         }
-        const status = await emailHelper.sendTemplateEmail(mailOptions);
+        // const status = await emailHelper.sendTemplateEmail(mailOptions);
 
         res.json({
-            status
+            IS_OFFLINE: process.env.IS_OFFLINE
         });
 
     } catch(err){
