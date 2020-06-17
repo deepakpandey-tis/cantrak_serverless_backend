@@ -4419,15 +4419,18 @@ const facilityBookingController = {
         .from('facility_report_master')
         .leftJoin("users", "users.id", "facility_report_master.createdBy")
         .where({"facility_report_master.orgId":req.orgId})
+        .orWhere({"facility_report_master.orgId":0})
         .where((qb)=>{
           if(searchValue){
             qb.where("facility_report_master.reportName","iLIKE", `%${searchValue}%`)
+            qb.where({ "facility_report_master.orgId": req.orgId })
           }
         }).first(),
         knex
         .from("facility_report_master")
         .leftJoin("users", "users.id", "facility_report_master.createdBy")
         .where({ "facility_report_master.orgId": req.orgId })
+        .orWhere({"facility_report_master.orgId":0})
         .select([
           "facility_report_master.id as id",
           "facility_report_master.reportName",
@@ -4438,6 +4441,7 @@ const facilityBookingController = {
         .where((qb)=>{
           if(searchValue){
             qb.where("facility_report_master.reportName", "iLIKE", `%${searchValue}%`)
+            qb.where({ "facility_report_master.orgId": req.orgId })
           }
         })
         .orderBy(sortPayload.sortBy, sortPayload.orderBy)
