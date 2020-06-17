@@ -4,6 +4,7 @@ var _ = require("lodash");
 const createError = require("http-errors");
 
 const roleMiddleware = {
+
   parseUserPermission: async (req, res, next) => {
     try {
       if (!req.headers || !req.headers.authorization) {
@@ -26,40 +27,50 @@ const roleMiddleware = {
         const orgId = decodedTokenData.orgId;
         req.id = decodedTokenData.id;
         req.orgId = decodedTokenData.orgId;
-        console.log("****************MSG***************", userId, orgId);
+        console.log('[middleware][role]: parseUserPermission:', userId, orgId);
 
         if (req.orgAdmin) {
 
-          console.log("this is orgAdmin");
+          console.log('[middleware][role]: parseUserPermission:', "User is orgAdmin");
           // get all the projects of this admin
           const projects = await knex("projects")
             .select("id")
             .where({ orgId: req.orgId });
+
           const companies = await knex("companies")
             .select("id")
             .where({ orgId: req.orgId });
+
           const resources = await knex("organisation_resources_master")
             .select("resourceId as id")
             .where({ orgId: req.orgId });
+
           const userProjectResources = _.uniqBy(resources, "id").map(v => ({
             id: v.id,
             projects: projects.map(v => v.id)
           }));
+
           const userCompanyResources = _.uniqBy(resources, "id").map(v => ({
             id: v.id,
             companies: companies.map(v => v.id)
           }));
-          if(userProjectResources.length === 0) {
+
+          if (userProjectResources.length === 0) {
             return next(createError(403))
           }
-          //console.log(mappedProjects)
+
           req.userCompanyResources = userCompanyResources;
           req.userProjectResources = userProjectResources;
-          // console.log(userCompanyResources, userProjectResources);
-          
+
+          // console.log('[middleware][role]: parseUserPermission: userCompanyResources :: ', userCompanyResources);
+          console.log('[middleware][role]: parseUserPermission: userProjectResources :: ', userProjectResources);
+
         }
 
         if (req.orgUser) {
+
+          console.log('[middleware][role]: parseUserPermission:', "User is orgUser");
+
           const result = await knex("team_users")
             .innerJoin(
               "team_roles_project_master",
@@ -74,30 +85,32 @@ const roleMiddleware = {
             .select([
               "team_roles_project_master.projectId as projectId",
               "role_resource_master.resourceId as resourceId"
-            ]).where({'team_users.userId':userId,'team_users.orgId':req.orgId})//.whereIn('team_users.teamId',teams);
+            ]).where({ 'team_users.userId': userId, 'team_users.orgId': req.orgId })//.whereIn('team_users.teamId',teams);
 
-            console.log(
-              "result***********************************************************",
-              result
-            );
-            if(result.length === 0){
-              next(createError(403))
-            }
+          console.log(
+            "result***********************************************************",
+            result
+          );
+          if (result.length === 0) {
+            next(createError(403))
+          }
 
-            let userProjectResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, projects: value.map(a => a.projectId) })).value();
-            req.userProjectResources = userProjectResources;
-           //req.userCompanyResources = userProjectResources
+          let userProjectResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, projects: value.map(a => a.projectId) })).value();
+          req.userProjectResources = userProjectResources;
+          console.log('[middleware][role]: parseUserPermission: userProjectResources :: ', userProjectResources);
 
-           //let projects = result.map(v => v.projectId)
+          //req.userCompanyResources = userProjectResources
+
+          //let projects = result.map(v => v.projectId)
           //  let companyResources = []
           //  for(let i=0;i<result.length;i++){
           //    let projectId = result[i].projectId
           //    let resourceId = result[i].resourceId;
           //    let companyresult = await knex('projects').where({id:projectId}).select('companyId')
           //    companyResources.push({resourceId, companyId:companyresult[0].companyId})
-            //companyResources.push({id:resourceId, companies})
+          //companyResources.push({id:resourceId, companies})
           //  }
-           //console.log("++++++++++++++++++++++++++++", companyResources, '++++++++++++++++++++++++++++++++');
+          //console.log("++++++++++++++++++++++++++++", companyResources, '++++++++++++++++++++++++++++++++');
           //   let userCompanyResources = _.chain(companyResources)
           //     .groupBy("resourceId")
           //     .map((value, key) => ({
@@ -111,30 +124,17 @@ const roleMiddleware = {
 
         }
 
-        let currentUser = await knex("users").where({
-          id: userId,
-          orgId: orgId
-        });
-        currentUser = currentUser[0];
+        // let currentUser = await knex("users").where({
+        //   id: userId,
+        //   orgId: orgId
+        // });
+        // currentUser = currentUser[0];
         next();
       }
     } catch (err) {
       console.log(err);
       next(createError(403));
       return res.status(200).json({ error: err });
-    }
-  },
-  canAccessServiceRequest: async (req, res, next) => {
-    try {
-      let cmId = 2;
-      if (req.resources.includes(cmId)) {
-        next();
-      } else {
-        next(createError(401));
-      }
-    } catch (err) {
-      //next(createError())
-      next(createError(401));
     }
   }
 };
