@@ -3446,6 +3446,7 @@ const serviceRequestController = {
           "incident_categories.id"
         )
         .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
+        .leftJoin("requested_by",'service_requests.requestedBy','requested_by.id')
 
         .select([
           "service_requests.id as S Id",
@@ -3455,7 +3456,7 @@ const serviceRequestController = {
           "service_requests.location as Location",
           "status.descriptionEng as Status",
           "property_units.unitNumber as Unit No",
-          // "requested_by.name as Requested By",
+          "requested_by.name as Requested By",
           "service_requests.createdAt as Date Created",
           "buildings_and_phases.buildingPhaseCode",
           "buildings_and_phases.description as buildingDescription",
@@ -3465,7 +3466,8 @@ const serviceRequestController = {
           "teams.teamCode",
           "mainUsers.name as mainUser",
           "service_orders.id as SO Id",
-          "property_units.id as unitId"
+          "property_units.id as unitId",
+          "service_requests.completedOn"
 
         ])
         .groupBy([
@@ -3480,7 +3482,8 @@ const serviceRequestController = {
           "teams.teamId",
           "mainUsers.id",
           "incident_categories.id",
-          "service_orders.id"
+          "service_orders.id",
+          'requested_by.id'
 
         ])
         .where(qb => {
