@@ -642,6 +642,199 @@ const facilityBookingController = {
       });
     }
   },
+  facilityListingByDate: async (req, res) => {
+    try {
+      let payload = req.body
+      let reqData = req.query
+      let { companyId, projectId, buildingPhaseId, unitId, facilityName, status } = req.body
+      let fromDate = payload.createdDateFrom;
+      let toDate = payload.createdDateTo;
+      let bookingDateFrom = payload.bookingDateTimeFrom;
+      let bookingDateTo = payload.bookingDateTimeTo
+      console.log("requested data", payload.companyId, toDate, fromDate, bookingDateFrom, bookingDateTo, facilityName, status)
+
+
+      let currentDate = new Date().getTime();
+
+      // if(fromDate && toDate){
+      let fromNewDate = moment(fromDate).startOf('date').format();
+      let toNewDate = moment(toDate).endOf('date', 'days').format();
+      let fromTime = new Date(fromNewDate).getTime();
+      let toTime = new Date(toNewDate).getTime();
+      let fromBookDate = moment(bookingDateFrom).startOf('date').format();
+      let toBookDate = moment(bookingDateTo).endOf('date', 'days');
+      let fromBookTime = new Date(fromBookDate).getTime();
+      let toBookTime = new Date(toBookDate).getTime();
+      let facilityReportResult
+
+      if (companyId || projectId || buildingPhaseId || unitId || facilityName || status) {
+        try {
+          facilityReportResult = await
+            knex
+              .from("entity_bookings")
+              .leftJoin("facility_master", "entity_bookings.entityId", "facility_master.id")
+              .leftJoin(
+                "companies",
+                "entity_bookings.companyId",
+                "companies.id"
+              )
+              .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+              .leftJoin("property_units", "entity_bookings.unitId", "property_units.id")
+              .select([
+                "entity_bookings.*",
+                "facility_master.displayId as No",
+                "users.name as bookedUser",
+                "facility_master.name as Facility",
+                "facility_master.projectId",
+                "facility_master.buildingPhaseId",
+                "companies.companyName as Company",
+                "property_units.unitNumber",
+                "property_units.type as unitType",
+                "companies.companyId",
+              ])
+              .where((qb) => {
+                if (facilityName) {
+                  qb.where(
+                    "facility_master.name",
+                    "iLIKE",
+                    `%${facilityName}%`
+                  );
+                }
+                if (projectId) {
+                  qb.where("facility_master.projectId", projectId);
+                }
+                if (buildingPhaseId) {
+                  qb.where("facility_master.buildingPhaseId", buildingPhaseId);
+                }
+                if (unitId) {
+                  qb.where("facility_master.floorZoneId", floorZoneId);
+                }
+                if (companyId) {
+                  qb.where("entity_bookings.companyId", companyId);
+                }
+                if (projectId) {
+                  qb.where("facility_master.projectId", projectId)
+
+                }
+                if (buildingPhaseId) {
+                  qb.where("facility_master.buildingPhaseId", buildingPhaseId)
+                }
+                if (fromDate && toDate) {
+                  qb.where("entity_bookings.createdAt", ">=", fromTime);
+                  qb.where("entity_bookings.createdAt", "<=", toTime);
+                }
+                if (bookingDateFrom && bookingDateTo) {
+                  qb.where("entity_bookings.bookingStartDateTime", ">=", fromBookTime);
+                  qb.where("entity_bookings.bookingStartDateTime", "<=", toBookTime);
+                }
+                if (status) {
+                  if (status == "Pending") {
+                    qb.where("entity_bookings.isBookingConfirmed", false);
+                    qb.where("entity_bookings.isBookingCancelled", false);
+                    qb.where(
+                      "entity_bookings.bookingStartDateTime",
+                      ">=",
+                      fromBookTime
+                    );
+                    qb.where("entity_bookings.bookingStartDateTime", "<=", toBookTime);
+
+                  }
+
+                  if (status == "Approved") {
+                    qb.where("entity_bookings.isBookingConfirmed", true);
+                    qb.where(
+                      "entity_bookings.bookingStartDateTime",
+                      ">=",
+                      fromBookTime
+                    );
+                    qb.where("entity_bookings.bookingStartDateTime", "<=", toBookTime);
+                    qb.where("entity_bookings.confirmedType", 0);
+
+                  }
+
+                  if (status == "Confirmed") {
+                    qb.where("entity_bookings.isBookingConfirmed", true);
+                    qb.where(
+                      "entity_bookings.bookingStartDateTime",
+                      ">=",
+                      fromBookTime
+                    );
+                    qb.where("entity_bookings.bookingStartDateTime", "<=", toBookTime);
+
+                    qb.where("entity_bookings.confirmedType", 1);
+                  }
+
+                  if (status == "Cancelled") {
+                    qb.where("entity_bookings.isBookingCancelled", true);
+                    qb.where(
+                      "entity_bookings.bookingStartDateTime",
+                      ">=",
+                      fromBookTime
+                    );
+                    qb.where("entity_bookings.bookingStartDateTime", "<=", toBookTime);
+
+                  }
+
+                  if (status == "Expired") {
+                    qb.where(
+                      "entity_bookings.bookingStartDateTime",
+                      "<",
+                      fromBookTime
+                    );
+                    qb.where("entity_bookings.bookingStartDateTime", "<=", toBookTime);
+
+                  }
+                }
+                qb.where("entity_bookings.orgId", req.orgId);
+              })
+              .orderBy("entity_bookings.id", "asc")
+
+        } catch (err) { }
+      } else {
+        facilityReportResult = await
+          knex
+            .from("entity_bookings")
+            .leftJoin("facility_master", "entity_bookings.entityId", "facility_master.id")
+            .leftJoin("companies", "entity_bookings.companyId", "companies.id")
+            .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+            .leftJoin("property_units", "entity_bookings.unitId", "property_units.id")
+            .where("entity_bookings.orgId", req.orgId)
+            .select([
+              "entity_bookings.*",
+              "users.name as bookedUser",
+              "facility_master.name as Facility",
+              "companies.companyName as Company",
+              "property_units.unitNumber",
+              "property_units.type as unitType"
+
+            ])
+            .where("entity_bookings.bookingStartDateTime", ">=", fromBookTime)
+            .where("entity_bookings.bookingStartDateTime", "<=", toBookTime)
+            .where("entity_bookings.createdAt", ">=", fromTime)
+            .where("entity_bookings.createdAt", "<=", toTime)
+            .groupBy([
+              "entity_bookings.id",
+              "facility_master.id",
+              "companies.id",
+              "users.name",
+              "property_units.unitNumber",
+              "property_units.type"
+            ])
+            .orderBy("entity_bookings.id", "asc")
+      }
+      return res.status(200).json({
+        data: {
+          facilities: facilityReportResult,
+        },
+        message: "Facility List!",
+      });
+    } catch (err) {
+      console.log("[controllers][facilityBooking][list] :  Error", err);
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
   facilityListing: async (req, res) => {
     try {
       let reqData = req.query;
@@ -2125,7 +2318,7 @@ const facilityBookingController = {
         //   "companies.id"
         // )
         .leftJoin("users", "entity_bookings.bookedBy", "users.id")
-        .leftJoin("property_units","entity_bookings.unitId","property_units.id")
+        .leftJoin("property_units", "entity_bookings.unitId", "property_units.id")
         .select([
           "entity_bookings.*",
           "facility_master.name",
@@ -2567,19 +2760,33 @@ const facilityBookingController = {
       let rows;
 
       let pagination = {};
+      if (payload.pid) {
+        [rows] = await Promise.all([
+          knex
+            .from("facility_master")
+            .where({
+              "facility_master.orgId": req.orgId,
+              "facility_master.isActive": true,
+              "facility_master.projectId": payload.pid,
+            })
+            .select(["facility_master.id", "facility_master.name"])
+            .groupBy(["facility_master.id"])
+            .orderBy("facility_master.displayId", "asc"),
+        ]);
+      } else {
+        [rows] = await Promise.all([
+          knex
+            .from("facility_master")
+            .where({
+              "facility_master.orgId": req.orgId,
+              "facility_master.isActive": true,
+            })
+            .select(["facility_master.id", "facility_master.name"])
+            .groupBy(["facility_master.id"])
+            .orderBy("facility_master.displayId", "asc"),
+        ]);
+      }
 
-      [rows] = await Promise.all([
-        knex
-          .from("facility_master")
-          .where({
-            "facility_master.orgId": req.orgId,
-            "facility_master.isActive": true,
-            "facility_master.projectId": payload.pid,
-          })
-          .select(["facility_master.id", "facility_master.name"])
-          .groupBy(["facility_master.id"])
-          .orderBy("facility_master.displayId", "asc"),
-      ]);
 
       pagination.data = rows;
 
@@ -3469,10 +3676,10 @@ const facilityBookingController = {
     }
 
   },
-  getFacilityBookedCancelledList:async(req,res)=>{
-    try{
+  getFacilityBookedCancelledList: async (req, res) => {
+    try {
       let payload = req.body
-      let {startDate,endDate}= req.body
+      let { startDate, endDate } = req.body
 
       if (startDate && endDate) {
         startNewDate = moment(startDate).startOf("time").format();
@@ -3491,22 +3698,35 @@ const facilityBookingController = {
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
         });
       }
-      let listResult = await knex("entity_bookings")
-      .leftJoin(
-        "facility_master",
-        "entity_bookings.entityId",
-        "facility_master.id"
-      )
-      .leftJoin("users", "entity_bookings.bookedBy", "users.id")
-      .select([
-        "entity_bookings.*",
-        "facility_master.name",
-        "users.name as bookedUser",
-      ])
-      .where("entity_bookings.bookingStartDateTime", ">=", startTime)
-      .where("entity_bookings.bookingEndDateTime", "<=", endTime)
-      .where("entity_bookings.isBookingCancelled", "=", true)
-      ;
+      // let listResult = await knex("entity_bookings")
+      // .leftJoin(
+      //   "facility_master",
+      //   "entity_bookings.entityId",
+      //   "facility_master.id"
+      // )
+      // .leftJoin("users", "entity_bookings.bookedBy", "users.id").
+      // leftJoin("facility_close_date","entity_bookings.entityId","facility_close_date.entityId")
+      // .select([
+      //   "entity_bookings.*",
+      //   "facility_master.name",
+      //   "users.name as bookedUser",
+
+      // ])
+      // .where("entity_bookings.isBookingCancelled", true)
+      // .where("facility_close_date.startDate", ">=", startDate)
+      // .where("facility_close_date.endDate", "<=", endDate)
+      // ;
+      let listResult = await knex("facility_close_date")
+        .leftJoin("entity_bookings", "facility_close_date.entityId", "entity_bookings.entityId")
+        .leftJoin("facility_master", "facility_close_date.entityId", "facility_master.id")
+        .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+        .select([
+          "entity_bookings.*",
+          "facility_master.name",
+          "users.name as bookedUser"
+        ])
+        .where("facility_close_date.startDate", ">=", startDate)
+        .where("facility_close_date.endDate", "<=", endDate)
       return res.status(200).json({
         data: {
           booking: listResult,
@@ -3514,7 +3734,7 @@ const facilityBookingController = {
         message: "Facility booked List!",
       });
 
-    }catch(err){
+    } catch (err) {
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }],
       });
@@ -3523,7 +3743,7 @@ const facilityBookingController = {
   getFacilityBookedListbydate: async (req, res) => {
     try {
       let payload = req.body;
-      let { startDate, endDate } = req.body;
+      let { startDate, endDate, facilityId } = req.body;
       console.log("facility list", req.body)
 
       if (startDate && endDate) {
@@ -3535,15 +3755,41 @@ const facilityBookingController = {
 
 
       const schema = Joi.object().keys({
-        startDate: Joi.string().required(),
-        endDate: Joi.string().required()
+        startDate: Joi.date().required(),
+        endDate: Joi.date().required(),
+        facilityId: Joi.number().required(),
+        offset: Joi.number().required(),
+        currentTime: Joi.date().required(),
+        timezone: Joi.string().required(),
       });
+
       const result = Joi.validate(payload, schema);
+
       if (result && result.hasOwnProperty("error") && result.error) {
         return res.status(400).json({
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
         });
       }
+
+
+      moment.tz.setDefault(payload.timezone);
+      let currentTime = moment();
+      console.log("Current Time:", currentTime.format("MMMM Do YYYY, h:mm:ss a"));
+
+      let bookingStartTime = moment(+payload.startDate)
+        .seconds(0)
+        .milliseconds(0)
+        .valueOf();
+      let bookingEndTime = moment(+payload.endDate)
+        .seconds(0)
+        .milliseconds(0)
+        .valueOf();
+      console.log("bookingStartTime", bookingStartTime, bookingEndTime);
+
+
+      // .where("facility_close_date.endDate", ">", bookingStartTime)
+      // .where("facility_close_date.startDate", "<", bookingEndTime)
+
       let listResult = await knex("entity_bookings")
         .leftJoin(
           "facility_master",
@@ -3556,10 +3802,10 @@ const facilityBookingController = {
           "facility_master.name",
           "users.name as bookedUser",
         ])
-        .where("entity_bookings.bookingStartDateTime", ">=", startTime)
-        .where("entity_bookings.bookingEndDateTime", "<=", endTime)
+        .where("entity_bookings.bookingStartDateTime", "<", bookingEndTime)
+        .where("entity_bookings.bookingEndDateTime", ">", bookingStartTime)
         .where("entity_bookings.isBookingCancelled", "=", false)
-        ;
+        .where("entity_bookings.entityId", "=", facilityId)
 
       return res.status(200).json({
         data: {
@@ -3577,23 +3823,23 @@ const facilityBookingController = {
     try {
       // let payload = req.body
       let bookingListResult = await knex("entity_bookings")
-      .leftJoin(
-        "facility_master",
-        "entity_bookings.entityId",
-        "facility_master.id"
-      )
-      .leftJoin("users", "entity_bookings.bookedBy", "users.id")
-      .select([
-        "entity_bookings.id",
-        "entity_bookings.bookingStartDateTime",
-        "entity_bookings.bookingEndDateTime",
-        "entity_bookings.noOfSeats",
-        "entity_bookings.feesPaid",
-        "entity_bookings.bookedAt",
-        // "entity_bookings.*",
-        "facility_master.name",
-        "users.name as bookedUser",
-      ])
+        .leftJoin(
+          "facility_master",
+          "entity_bookings.entityId",
+          "facility_master.id"
+        )
+        .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+        .select([
+          "entity_bookings.id",
+          "entity_bookings.bookingStartDateTime",
+          "entity_bookings.bookingEndDateTime",
+          "entity_bookings.noOfSeats",
+          "entity_bookings.feesPaid",
+          "entity_bookings.bookedAt",
+          // "entity_bookings.*",
+          "facility_master.name",
+          "users.name as bookedUser",
+        ])
       // let facilityName=[]
       // let allDataFromBooking=[]
       // bookingListResult.forEach(data=>{
@@ -3661,8 +3907,8 @@ const facilityBookingController = {
         },
         message: 'Facility booked list'
       })
-      
-      
+
+
 
 
     } catch (err) {
@@ -3676,24 +3922,24 @@ const facilityBookingController = {
   facilityBookedListByUnit: async (req, res) => {
     try {
       let bookingListResult = await knex("entity_bookings")
-      .leftJoin(
-        "facility_master",
-        "entity_bookings.entityId",
-        "facility_master.id"
-      )
-      .leftJoin("users", "entity_bookings.bookedBy", "users.id")
-      .leftJoin("property_units","entity_bookings.unitId","property_units.id")
-      .select(
-        "entity_bookings.id",
-        "entity_bookings.bookingStartDateTime",
-        "entity_bookings.bookingEndDateTime",
-        "entity_bookings.noOfSeats",
-        "entity_bookings.feesPaid",
-        "entity_bookings.bookedAt",
-        "facility_master.name",
-        "users.name as bookedUser",
-        "property_units.unitNumber"
-      )
+        .leftJoin(
+          "facility_master",
+          "entity_bookings.entityId",
+          "facility_master.id"
+        )
+        .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+        .leftJoin("property_units", "entity_bookings.unitId", "property_units.id")
+        .select(
+          "entity_bookings.id",
+          "entity_bookings.bookingStartDateTime",
+          "entity_bookings.bookingEndDateTime",
+          "entity_bookings.noOfSeats",
+          "entity_bookings.feesPaid",
+          "entity_bookings.bookedAt",
+          "facility_master.name",
+          "users.name as bookedUser",
+          "property_units.unitNumber"
+        )
 
       // let newList = []
 
@@ -3709,39 +3955,39 @@ const facilityBookingController = {
       // console.log("newList",newList)
       // const bookingReport = 
       let incb215 = []
-     let incb211 = []
+      let incb211 = []
       let canteen = []
       let inc1303 = []
       let inc1311 = []
-      bookingListResult.forEach(data=>{
-        if(data.unitNumber == 'INC2B-215'){
+      bookingListResult.forEach(data => {
+        if (data.unitNumber == 'INC2B-215') {
           incb215.push(data)
-        }else if(data.unitNumber=='INCB2B-211'){
+        } else if (data.unitNumber == 'INCB2B-211') {
           incb211.push(data)
-        }else if(data.unitNumber == 'CANTEEN'){
+        } else if (data.unitNumber == 'CANTEEN') {
           canteen.push(data)
-        }else if(data.unitNumber == 'INC1-303'){
+        } else if (data.unitNumber == 'INC1-303') {
           inc1303.push(data)
-        }else if(data.unitNumber == 'INC1-311'){
+        } else if (data.unitNumber == 'INC1-311') {
           inc1311.push(data)
         }
-        
+
       })
 
       res.status(200).json({
         data:
         // bookingListResult
-          
-        { 
+
+        {
           //  Incb215:incb215,
-        //   Incb211:incb211,
-        //   Canteen:canteen,
-        //   Inc1303:inc1303,
-        //   Inc1311:inc1311,
-          BookingResult:bookingListResult
+          //   Incb211:incb211,
+          //   Canteen:canteen,
+          //   Inc1303:inc1303,
+          //   Inc1311:inc1311,
+          BookingResult: bookingListResult
         }
         ,
-        message:"facility Booked List by unit"
+        message: "facility Booked List by unit"
       })
     } catch (err) {
       console.log("[controllers][facility][listByFacilityUnit] :  Error", err);
@@ -3751,87 +3997,87 @@ const facilityBookingController = {
       });
     }
   },
-  facilityBookedReportByCreatedDate:async(req,res)=>{
-    try{
+  facilityBookedReportByCreatedDate: async (req, res) => {
+    try {
       let bookingListResult = await knex("entity_bookings")
-      .leftJoin(
-        "facility_master",
-        "entity_bookings.entityId",
-        "facility_master.id"
-      )
-      .leftJoin("users", "entity_bookings.bookedBy", "users.id")
-      .leftJoin("property_units","entity_bookings.unitId","property_units.id")
-      .select(
-        "entity_bookings.id",
-        "entity_bookings.bookingStartDateTime",
-        "entity_bookings.bookingEndDateTime",
-        "entity_bookings.noOfSeats",
-        "entity_bookings.feesPaid",
-        "entity_bookings.bookedAt",
-        "facility_master.name",
-        "users.name as bookedUser",
-        "property_units.unitNumber"
-      )
-      let createDate1= []
-      let createDate2=[]
-        bookingListResult.forEach(data=>{
-          if(data.bookingStartDateTime =='1589788800000'){
-            createDate1.push(data)
-          }else if(data.bookingStartDateTime == '1589522400000'){
-            createDate2.push(data)
+        .leftJoin(
+          "facility_master",
+          "entity_bookings.entityId",
+          "facility_master.id"
+        )
+        .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+        .leftJoin("property_units", "entity_bookings.unitId", "property_units.id")
+        .select(
+          "entity_bookings.id",
+          "entity_bookings.bookingStartDateTime",
+          "entity_bookings.bookingEndDateTime",
+          "entity_bookings.noOfSeats",
+          "entity_bookings.feesPaid",
+          "entity_bookings.bookedAt",
+          "facility_master.name",
+          "users.name as bookedUser",
+          "property_units.unitNumber"
+        )
+      let createDate1 = []
+      let createDate2 = []
+      bookingListResult.forEach(data => {
+        if (data.bookingStartDateTime == '1589788800000') {
+          createDate1.push(data)
+        } else if (data.bookingStartDateTime == '1589522400000') {
+          createDate2.push(data)
 
-          }
-        })
-        res.status(200).json({
-          data:
-          // bookingListResult
-            
-          { 
-            // CreateDate1:createDate1,
-            // CreateDate2:createDate2
-            BookingResult:bookingListResult
-          }
-          ,
-          message:"facility Booked List by unit"
-        })
+        }
+      })
+      res.status(200).json({
+        data:
+        // bookingListResult
+
+        {
+          // CreateDate1:createDate1,
+          // CreateDate2:createDate2
+          BookingResult: bookingListResult
+        }
+        ,
+        message: "facility Booked List by unit"
+      })
 
 
 
-    }catch(err){
+    } catch (err) {
       console.log("[controllers][facility][listByFacilityCreatedDate] :  Error", err);
       //trx.rollback
       res.status(500).json({
-          errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
 
-  getFacilityreportByBookingDate:async(req,res)=>{
-    try{
+  getFacilityreportByBookingDate: async (req, res) => {
+    try {
       let bookingListResult = await knex("entity_bookings")
-      .leftJoin(
-        "facility_master",
-        "entity_bookings.entityId",
-        "facility_master.id"
-      )
-      .leftJoin("users", "entity_bookings.bookedBy", "users.id")
-      .leftJoin("property_units","entity_bookings.unitId","property_units.id")
-      .select(
-        "entity_bookings.id",
-        "entity_bookings.bookingStartDateTime",
-        "entity_bookings.bookingEndDateTime",
-        "entity_bookings.noOfSeats",
-        "entity_bookings.feesPaid",
-        "entity_bookings.bookedAt",
-        "facility_master.name",
-        "users.name as bookedUser",
-        "property_units.unitNumber"
-      )
+        .leftJoin(
+          "facility_master",
+          "entity_bookings.entityId",
+          "facility_master.id"
+        )
+        .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+        .leftJoin("property_units", "entity_bookings.unitId", "property_units.id")
+        .select(
+          "entity_bookings.id",
+          "entity_bookings.bookingStartDateTime",
+          "entity_bookings.bookingEndDateTime",
+          "entity_bookings.noOfSeats",
+          "entity_bookings.feesPaid",
+          "entity_bookings.bookedAt",
+          "facility_master.name",
+          "users.name as bookedUser",
+          "property_units.unitNumber"
+        )
 
-      let date1= []
+      let date1 = []
 
-      bookingListResult.forEach(data=>{
-        if(data.bookedAt = '1589262257832'){
+      bookingListResult.forEach(data => {
+        if (data.bookedAt = '1589262257832') {
           date1.push(data)
 
         }
@@ -3840,16 +4086,16 @@ const facilityBookingController = {
       res.status(200).json({
         data:
         // bookingListResult
-          
-        {  
-          Date1:date1
+
+        {
+          Date1: date1
           // BookingResult:bookingListResult
         }
         ,
-        message:"facility Booked List by Booking Date"
+        message: "facility Booked List by Booking Date"
       })
 
-    }catch(err){}
+    } catch (err) { }
   },
 
   getFacilityBookedDetails: async (req, res) => {
@@ -3995,27 +4241,27 @@ const facilityBookingController = {
 
       const currentTime = new Date().getTime();
 
-        let updateData = {
-          status: payload.status,
-          updatedAt: currentTime,
-        };
+      let updateData = {
+        status: payload.status,
+        updatedAt: currentTime,
+      };
 
-        let resultData = await knex("facility_master")
-          .update(updateData)
-          .where({ id: payload.facilityId })
-          .returning(["*"]);
+      let resultData = await knex("facility_master")
+        .update(updateData)
+        .where({ id: payload.facilityId })
+        .returning(["*"]);
 
-        return res
-          .status(200)
-          .json({ message: "Facility Status Updated!", data: resultData });
-      
+      return res
+        .status(200)
+        .json({ message: "Facility Status Updated!", data: resultData });
+
     } catch (err) {
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }],
       });
     }
   },
-  cancelledBookingList : async (req, res) => {
+  cancelledBookingList: async (req, res) => {
     try {
       let payload = req.body;
       let { startDate, endDate } = req.body;
@@ -4066,6 +4312,187 @@ const facilityBookingController = {
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }],
       });
+    }
+  },
+
+  generateReportId: async (req, res) => {
+    try {
+      let facilityReportId = null
+      const currentTime = new Date().getTime()
+      let orgId = req.orgId
+
+      const insertData = {
+
+        isActive: "true",
+        orgId: orgId,
+        createdAt: currentTime,
+        updatedAt: currentTime
+      };
+
+      console.log(
+        "[controllers][facilityReport][generateFacilityReport]: Insert Data",
+        insertData
+      );
+      const facilityReportResult = await knex
+        .insert(insertData)
+        .returning('*')
+        .into('facility_report_master')
+
+      facilityReportId = facilityReportResult[0]
+
+      res.status(200).json({
+        data: {
+          facilityReport: facilityReportId
+        },
+        message: "facility Id generated successfully !"
+      });
+
+    } catch (err) {
+      console.log("[controllers][facilityReport][generateFacilityReport] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  addFacilityReport: async (req, res) => {
+    try {
+      let userId = req.me.id
+      let orgId = req.orgId
+      let { facilityReport, reportName } = req.body
+
+      await knex.transaction(async (trx) => {
+        const facilityPayload = req.body
+        console.log("[Controllers][facility_bookings][addReport]", facilityPayload.reportName);
+
+        // const facilityReportSingle = Joi.object().keys({
+        //   reportJson:Joi.object().required()
+        // })
+
+        const schema = Joi.object().keys({
+          reportName: Joi.string().required(),
+          reportJson: Joi.object().required(),
+        })
+        const result = Joi.validate(facilityPayload, schema)
+        console.log("[Controller][Facility_bookings][addReport]:Joi result", result);
+
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message },
+            ],
+          });
+        }
+
+        const currentTime = new Date().getTime()
+
+        const insertData = {
+          ...facilityPayload,
+          orgId: orgId,
+          createdBy: userId,
+          createdAt: currentTime,
+          updatedAt: currentTime,
+          reportJson: JSON.stringify(facilityPayload)
+        }
+        console.log("[controllers][facilityReport][addReport]: Insert Data", insertData);
+
+        const facilityReportResult = await knex
+          .insert(insertData)
+          .returning(["*"])
+          .transacting(trx)
+          .into("facility_report_master");
+
+        facilityReport = facilityReportResult[0];
+
+        trx.commit;
+      })
+
+      res.status(200).json({
+        data: {
+          facilityReport: facilityReport,
+        },
+        message: "facility report added successfully !",
+      });
+    } catch (err) {
+      console.log("[controllers][facility][reportAdd] :  Error", err);
+
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
+  getFacilityReportList: async (req, res) => {
+    try {
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "id";
+        sortPayload.orderBy = "asc";
+      }
+
+      let reqData = req.query;
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+      let { searchValue } = req.body;
+      let orgId = req.query.orgId;
+      let total, rows;
+
+      [total, rows] = await Promise.all([
+        knex.count('* as count')
+          .from('facility_report_master')
+          .leftJoin("users", "users.id", "facility_report_master.createdBy")
+          .where({ "facility_report_master.orgId": req.orgId })
+          .orWhere({ "facility_report_master.orgId": 0 })
+          .where((qb) => {
+            if (searchValue) {
+              qb.where("facility_report_master.reportName", "iLIKE", `%${searchValue}%`)
+              qb.where({ "facility_report_master.orgId": req.orgId })
+            }
+          }).first(),
+        knex
+          .from("facility_report_master")
+          .leftJoin("users", "users.id", "facility_report_master.createdBy")
+          .where({ "facility_report_master.orgId": req.orgId })
+          .orWhere({ "facility_report_master.orgId": 0 })
+          .select([
+            "facility_report_master.id as id",
+            "facility_report_master.reportName",
+            "facility_report_master.createdBy",
+            "users.name as createdName"
+
+          ])
+          .where((qb) => {
+            if (searchValue) {
+              qb.where("facility_report_master.reportName", "iLIKE", `%${searchValue}%`)
+              qb.where({ "facility_report_master.orgId": req.orgId })
+            }
+          })
+          .orderBy(sortPayload.sortBy, sortPayload.orderBy)
+          .offset(offset)
+          .limit(per_page),
+      ])
+      let count = total.count;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+      return res.status(200).json({
+        data: {
+          facilityReport: pagination,
+        },
+        message: "Facility Report List!",
+      });
+
+    } catch (err) {
+      console.log("[controllers][facility_report_master][getReports],Error", err);
+
     }
   }
 };

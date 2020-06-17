@@ -97,4 +97,12 @@ router.post('/update-facility-status',authMiddleware.isAuthenticated,facilityBoo
 
 router.post('/cancelled-booking-list-by-date',authMiddleware.isAuthenticated,facilityBookingController.cancelledBookingList)
 
+router.post('/generate-facility-reportId',authMiddleware.isAuthenticated,facilityBookingController.generateReportId)
+
+router.post('/add-facility-report',authMiddleware.isAuthenticated,facilityBookingController.addFacilityReport)
+
+router.post('/get-facility-report-list',authMiddleware.isAuthenticated,facilityBookingController.getFacilityReportList)
+
+router.post('/get-facilityList-by-date',authMiddleware.isAuthenticated,facilityBookingController.facilityListingByDate)
+
 module.exports = router;
