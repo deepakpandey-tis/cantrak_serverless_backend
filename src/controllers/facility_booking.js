@@ -692,6 +692,7 @@ const facilityBookingController = {
                 "property_units.type as unitType",
                 "companies.companyId",
               ])
+              .where("entity_bookings.bookingStartDateTime", ">=", currentDate)
               .where((qb) => {
                 // if (facilityName) {
                 //   qb.where(
@@ -815,6 +816,7 @@ const facilityBookingController = {
             .where("entity_bookings.bookingStartDateTime", "<=", toBookTime)
             .where("entity_bookings.createdAt", ">=", fromTime)
             .where("entity_bookings.createdAt", "<=", toTime)
+            .where("entity_bookings.bookingStartDateTime", ">=", currentDate)
             .groupBy([
               "entity_bookings.id",
               "facility_master.id",
