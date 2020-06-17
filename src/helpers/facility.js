@@ -5,14 +5,12 @@ const knex = require("../db/knex");
 const moment = require("moment-timezone");
 
 
-
-
 AWS.config.update({
     accessKeyId: process.env.ACCESS_KEY_ID,
     secretAccessKey: process.env.SECRET_ACCESS_KEY,
+    region: process.env.REGION || "us-east-1"
 });
 
-const SHOULD_QUEUE = false;
 const facilityHelper = {
     getBookingQuota: async ({ facilityId, bookingStartDateTime, bookingEndDateTime, offset, currentTime, timezone, unitId, orgId }) => {
         try {
@@ -150,18 +148,18 @@ const facilityHelper = {
 
             if (dailyQuota && dailyQuota > 0) {
                 let dailyQuotas = Number(dailyQuota);
-               // console.log("dailyQuota", dailyQuota);
+                // console.log("dailyQuota", dailyQuota);
                 let startOfDay = moment(+bookingStartDateTime).startOf('day').valueOf();
                 let endOfDay = moment(+bookingStartDateTime).endOf('day').valueOf();
-               // console.log("startOfDay", startOfDay, endOfDay);
+                // console.log("startOfDay", startOfDay, endOfDay);
 
                 let rawQuery = await knex.raw(`select count(*) AS totalSeats from entity_bookings where "entityId"  = ${facilityId}  and  "bookingStartDateTime" >= ${startOfDay}  and "bookingEndDateTime"  <= ${endOfDay} and "isBookingCancelled" = false  and "unitId" = ${unitIds} `);
                 let totalBookedSeatForADay = rawQuery.rows[0].totalseats;
-               // console.log("total Bookings Done for a day", totalBookedSeatForADay);
+                // console.log("total Bookings Done for a day", totalBookedSeatForADay);
                 quotaBooked = dailyQuota;
                 // Checking Daily Booking Quota Limit Is Completed
                 if (dailyQuotas <= totalBookedSeatForADay) {
-                    return   { code: "DAILY_QUOTA_EXCEEDED", message: `Your daily quota of ${dailyQuota} seat bookings is full. You can not book any more seats today.` }
+                    return { code: "DAILY_QUOTA_EXCEEDED", message: `Your daily quota of ${dailyQuota} seat bookings is full. You can not book any more seats today.` }
                 }
             }
 
@@ -171,14 +169,14 @@ const facilityHelper = {
                 let startOfWeek = moment(+bookingStartDateTime).startOf('week').valueOf();
                 let endOfWeek = moment(+bookingStartDateTime).endOf('week').valueOf();
                 // console.log("startOfWeek", startOfWeek, endOfWeek);
-               // console.log("weeklyQuota", weeklyQuota);
+                // console.log("weeklyQuota", weeklyQuota);
                 let rawQuery = await knex.raw(`select count(*) AS totalSeats from entity_bookings where "entityId"  = ${facilityId}  and  "bookingStartDateTime" >= ${startOfWeek}  and "bookingEndDateTime"  <= ${endOfWeek} and "isBookingCancelled" = false  and "unitId" = ${unitIds} `);
                 let totalBookedSeatForAWeek = rawQuery.rows[0].totalseats;
-               // console.log("total Bookings Done for a week", totalBookedSeatForAWeek);
+                // console.log("total Bookings Done for a week", totalBookedSeatForAWeek);
                 quotaBooked = weeklyQuota;
                 // Checking Weekly Booking Quota Limit Is Completed
                 if (weeklyQuotas <= totalBookedSeatForAWeek) {
-                    return  { code: "WEEKLY_QUOTA_EXCEEDED", message: `Your weekly quota of ${weeklyQuota} seat bookings is full. You can not book any more seats in this week.` }
+                    return { code: "WEEKLY_QUOTA_EXCEEDED", message: `Your weekly quota of ${weeklyQuota} seat bookings is full. You can not book any more seats in this week.` }
                 }
             }
 
@@ -186,7 +184,7 @@ const facilityHelper = {
 
             if (monthlyQuota && monthlyQuota > 0) {
                 let monthlyQuotas = Number(monthlyQuota);
-               // console.log("monthlyQuota", monthlyQuotas);
+                // console.log("monthlyQuota", monthlyQuotas);
 
                 let startOfMonth = moment(+bookingStartDateTime).startOf('month').valueOf();
                 let endOfMonth = moment(+bookingStartDateTime).endOf('month').valueOf();
@@ -205,7 +203,7 @@ const facilityHelper = {
 
             let bookingAllowingTiming = await knex('entity_booking_criteria').select(['bookingAllowedAdvanceTime', 'bookingCloseAdvanceTime']).where({ entityId: facilityId, entityType: 'facility_master', orgId: orgId }).first();
 
-         
+
             if (bookingAllowingTiming && bookingAllowingTiming.bookingCloseAdvanceTime) {
 
                 console.log('Advance Allow Time:', moment(currentTime).add(+bookingAllowingTiming.bookingCloseAdvanceTime, 'minutes').format('MMMM Do YYYY, h:mm:ss a'));
@@ -220,7 +218,7 @@ const facilityHelper = {
                     let advanceString = bookingAllowingTiming.bookingCloseAdvanceTime;
                     if (parseInt(advanceString / 24 / 60) > 0) {
                         advanceString = parseInt(advanceString / 24 / 60) + " days";
-                       // advanceString = parseInt(advanceString / 24 / 60) + " days, " + parseInt(advanceString / 60 % 24) + ' hours, ' + parseInt(advanceString % 60) + ' minutes';
+                        // advanceString = parseInt(advanceString / 24 / 60) + " days, " + parseInt(advanceString / 60 % 24) + ' hours, ' + parseInt(advanceString % 60) + ' minutes';
                     } else {
                         advanceString = parseInt(advanceString / 60 % 24) + ' hours, ' + parseInt(advanceString % 60) + ' minutes';
                     }
@@ -279,14 +277,14 @@ const facilityHelper = {
             // Check if pax capacity disable and set NO
             if (facilityDatas.allowConcurrentBooking == true) {
                 availableSeats = Number(facilityDatas.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
-            } else if (facilityDatas.allowConcurrentBooking == false &&  facilityDatas.concurrentBookingLimit == 0 ) {
+            } else if (facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit == 0) {
                 availableSeats = Number(5000);
-            } else if(facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit != 0 )   {
+            } else if (facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit != 0) {
                 availableSeats = Number(facilityDatas.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
             }
 
-            
-           
+
+
             let startOf;
             let endOf;
             let dailyLimit = 0;
@@ -366,7 +364,7 @@ const facilityHelper = {
                 noOfSeats: Joi.number().required()
             });
 
-            const result = Joi.validate({ facilityId, bookingStartDateTime, bookingEndDateTime, offset, currentTime, timezone, unitId, orgId,noOfSeats }, schema);
+            const result = Joi.validate({ facilityId, bookingStartDateTime, bookingEndDateTime, offset, currentTime, timezone, unitId, orgId, noOfSeats }, schema);
             console.log('[helpers][facility][getFacilityBookingCapacity]: Joi Validate Params:', result);
 
             if (result && result.hasOwnProperty('error') && result.error) {
@@ -546,9 +544,9 @@ const facilityHelper = {
 
             if (facilityDatas.allowConcurrentBooking == true) {
                 availableSeats = Number(facilityDatas.concurrentBookingLimit) - (Number(bookingData.totalBookedSeats) + Number(noOfSeats));
-            } else if (facilityDatas.allowConcurrentBooking == false &&  facilityDatas.concurrentBookingLimit == 0 ) {
+            } else if (facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit == 0) {
                 availableSeats = Number(5000);
-            } else if(facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit != 0 )   {
+            } else if (facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit != 0) {
                 availableSeats = Number(facilityDatas.concurrentBookingLimit) - (Number(bookingData.totalBookedSeats) + Number(noOfSeats));
             }
 
@@ -767,9 +765,9 @@ const facilityHelper = {
             // Check if pax capacity disable and set NO
             if (facilityDatas.allowConcurrentBooking == true) {
                 availableSeats = Number(facilityDatas.concurrentBookingLimit) - Number(bookingData.totalBookedSeats) + Number(noOfSeats);
-            } else if (facilityDatas.allowConcurrentBooking == false &&  facilityDatas.concurrentBookingLimit == 0 ) {
+            } else if (facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit == 0) {
                 availableSeats = Number(5000);
-            } else if(facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit != 0 )   {
+            } else if (facilityDatas.allowConcurrentBooking == false && facilityDatas.concurrentBookingLimit != 0) {
                 availableSeats = Number(facilityDatas.concurrentBookingLimit) - Number(bookingData.totalBookedSeats);
             }
 

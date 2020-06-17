@@ -8,9 +8,7 @@ const multerS3 = require("multer-s3");
 
 const knex = require("../../db/knex");
 
-const bcrypt = require("bcrypt");
-const saltRounds = 10;
-
+const imageHelper = require("../../helpers/image");
 
 
 const surveyOrderController = {
@@ -460,7 +458,7 @@ const surveyOrderController = {
     const filename = req.body.filename;
     const type = req.body.type;
     try {
-      const uploadUrlData = await getUploadURL(mimeType, filename, type);
+      const uploadUrlData = await imageHelper.getUploadURL(mimeType, filename, type);
 
       res.status(200).json({
         data: {

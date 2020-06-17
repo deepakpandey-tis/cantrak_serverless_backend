@@ -7,6 +7,8 @@ const indexRouter = require('./routes/index');
 const emailHelper = require('./helpers/email');
 
 
+process.env.IS_OFFLINE = process.env.NODE_ENV === 'local';   // If Node Env is local, assume offline
+
 /**
  * App
  */
@@ -61,6 +63,7 @@ app.use((req, res, next) => {
 /**
  * Routers
  */
+
 app.use('/', indexRouter);
 
 // catch 404 and forward to error handler
@@ -88,6 +91,7 @@ app.use((err, req, res, next) => {
 
 module.exports.server = sls(app);
 
+
 // const server = sls(app);
 // module.exports.server = async (event, context) => {
 //   context.callbackWaitsForEmptyEventLoop = false;
@@ -107,24 +111,13 @@ if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
 
 
 
-// S3
-const AWS = require('aws-sdk');
-
-module.exports.webhook = (event, context, callback) => {
-  const S3 = new AWS.S3({
-    s3ForcePathStyle: true,
-    accessKeyId: process.env.S3_ACCESS_KEY_ID, // This specific key is required when working offline
-    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
-    endpoint: new AWS.Endpoint(process.env.S3_END_POINT),
-  });
-};
 
 global.appRoot = path.resolve(__dirname);
 
 module.exports.s3hook = (event, context) => {
-  console.log(JSON.stringify(event));
-  console.log(JSON.stringify(context));
-  console.log(JSON.stringify(process.env));
+  console.log('S3 Hook: Event   :: ', JSON.stringify(event));
+  console.log('S3 Hook: Context ::', JSON.stringify(context));
+  // console.log(JSON.stringify(process.env));
 };
 
 
@@ -142,6 +135,6 @@ module.exports.emailQueueProcessor = (event, context) => {
   (async () => {
     await emailHelper.sendEmail(mailOptions);
   })();
-  
-  return; 
+
+  return;
 };

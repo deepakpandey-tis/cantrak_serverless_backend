@@ -15,7 +15,7 @@ provider:
   name: aws
   runtime: nodejs10.x
   stage: dev
-  region: us-east-2
+  region: us-east-1
   memorySize: 2048
   timeout: 30
   environment: 
@@ -49,12 +49,12 @@ custom:
     # Uncomment only if you already have a S3 server running locally
     # noStart: true
 
-resources:
-  Resources:
-    NewResource:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: ${self:custom.bucket}
+# resources:
+#   Resources:
+#     NewResource:
+#       Type: AWS::S3::Bucket
+#       Properties:
+#         BucketName: ${self:custom.bucket}
         
 functions:
   app:
@@ -68,12 +68,7 @@ functions:
           path: /{proxy+}
           method: ANY
           # cors: true
-  webhook:
-    handler: src/app.webhook
-    events:
-      - http:
-         method: GET
-         path: webhook
+  
   s3hook:
     handler: src/app.s3hook
     events:

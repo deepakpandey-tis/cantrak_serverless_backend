@@ -693,12 +693,15 @@ const facilityBookingController = {
                 "companies.companyId",
               ])
               .where((qb) => {
-                if (facilityName) {
-                  qb.where(
-                    "facility_master.name",
-                    "iLIKE",
-                    `%${facilityName}%`
-                  );
+                // if (facilityName) {
+                //   qb.where(
+                //     "facility_master.name",
+                //     "iLIKE",
+                //     `%${facilityName}%`
+                //   );
+                // }
+                if(facilityName){
+                  qb.whereIn("facility_master.name",facilityName)
                 }
                 if (projectId) {
                   qb.where("facility_master.projectId", projectId);
@@ -3752,7 +3755,6 @@ const facilityBookingController = {
         startTime = new Date(startNewDate).getTime();
         endTime = new Date(endNewDate).getTime();
       }
-
 
       const schema = Joi.object().keys({
         startDate: Joi.date().required(),
