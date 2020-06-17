@@ -7,8 +7,6 @@ const indexRouter = require('./routes/index');
 const emailHelper = require('./helpers/email');
 
 
-process.env.IS_OFFLINE = process.env.NODE_ENV === 'local';   // If Node Env is local, assume offline
-
 /**
  * App
  */
