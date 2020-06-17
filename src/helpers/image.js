@@ -28,7 +28,7 @@ const imageHelper = {
                 'signatureVersion':'v4'
             });
             let uploadURL = await s3.getSignedUrl("putObject", s3Params);
-            if (Boolean(process.env.IS_OFFLINE)) {
+            if (process.env.IS_OFFLINE) {
                 uploadURL = uploadURL
                     .replace("https://", "http://")
                     .replace(".com", ".com:8000");
