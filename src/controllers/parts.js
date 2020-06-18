@@ -2536,10 +2536,26 @@ const partsController = {
 
                 let stockResult = await knex.from('part_ledger')
                     .leftJoin('part_master', 'part_ledger.partId', 'part_master.id')
+                    .leftJoin('part_category_master','part_master.partCategory','part_category_master.id')
+                    .leftJoin('buildings_and_phases','part_ledger.building','buildings_and_phases.id')
+                    .leftJoin('projects','buildings_and_phases.projectId','projects.id')
+                    .leftJoin('floor_and_zones','part_ledger.floor','floor_and_zones.id')
+                    .leftJoin('adjust_type','part_ledger.adjustType','adjust_type.id')
+
                     .select([
                         'part_ledger.*',
                         'part_master.partName',
                         'part_master.partCode',
+                        'part_master.unitOfMeasure',
+                        'part_category_master.categoryName as partCategory',
+                        'buildings_and_phases.buildingPhaseCode',
+                        'buildings_and_phases.description as buildingDescription',
+                        'projects.project as projectCode',
+                        'projects.projectName',
+                        'floor_and_zones.floorZoneCode',
+                        'floor_and_zones.description as floorDescripton',
+                        'adjust_type.adjustType as adjustTypeName'
+
                     ])
                     .where({ 'part_ledger.orgId': req.orgId })
                     .whereBetween('part_ledger.createdAt', [fromTime, toTime])
@@ -2623,10 +2639,53 @@ const partsController = {
                         partCode: st.partCode,
                         partName: st.partName,
                         openingBalance: openingBalance,
-                        stockData: updatedStockDataWithInAndOut
+                        stockData: updatedStockDataWithInAndOut,
+                        unitOfMeasure:st.unitOfMeasure
                     }
                 })
 
+
+                /*Export Data open */
+                let updatedStockDataWithInAndOut2 = [];
+                    let newBal2 = 0;
+                    let s2 = 0;
+                    let totalIn2 = 0;
+                    let totalOut2 = 0;
+                    for (let d2 of stockResult) {
+                        s2++;
+                        let i2 = 0;
+                        let o2 = 0;
+                        let bal2 = 0
+
+
+                        if (d2.quantity && d2.quantity.includes('-')) {
+                            o2 = Number(d2.quantity)
+                            //    balance.totalQuantity = Number(balance.totalQuantity) + o
+                            //if (s > 1) {
+                            bal2 = Number(newBal2) + o2;
+                            //} else {
+                            //   bal = Number(balance.quantity);
+                            //}
+
+                        } else {
+
+                            i2 = Number(d2.quantity)
+                            //    balance.totalQuantity = Number(balance.totalQuantity) + i
+                            //if (s > 1) {
+                            bal2 = Number(newBal2) + i2;
+                            //} else {
+                            //   bal = Number(balance.quantity);
+                            //}
+
+
+                        }
+                        newBal2 = bal2;
+                        totalIn2 += i2;
+                        totalOut2 += Math.abs(o2);
+
+                        updatedStockDataWithInAndOut2.push({ ...d2, in: i2, out: o2, balance: newBal2, totalIn: totalIn2, totalOut: totalOut2 })
+                    }
+                /*Export Data close */
 
                 res.status(200).json({
                     data: {
@@ -2635,6 +2694,7 @@ const partsController = {
                         toDate,
                         fromTime,
                         toTime,
+                        exportStockData:updatedStockDataWithInAndOut2,
                     },
                     message: "Stock report Successfully!"
                 })

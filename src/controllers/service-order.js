@@ -2562,7 +2562,7 @@ const serviceOrderController = {
                     "incident_categories",
                     "service_problems.categoryId",
                     "incident_categories.id"
-                )
+                ).leftJoin('users as c', 'service_requests.createdBy', 'c.id')
 
                 .select([
                     "service_requests.id as S Id",
@@ -2583,7 +2583,8 @@ const serviceOrderController = {
                     "mainUsers.name as mainUser",
                     "service_orders.id as SO Id",
                     "property_units.id as unitId",
-                    "service_orders.orderDueDate"
+                    "service_orders.orderDueDate",
+                    'c.name as createdBy'
 
                 ])
                 .groupBy([
@@ -2598,7 +2599,8 @@ const serviceOrderController = {
                     "teams.teamId",
                     "mainUsers.id",
                     "incident_categories.id",
-                    "service_orders.id"
+                    "service_orders.id",
+                    "c.id"
 
                 ])
                 .where(qb => {
@@ -2966,7 +2968,7 @@ const serviceOrderController = {
                     .where({ 'service_problems.orgId': req.orgId })
                     .orderBy('incident_type.typeCode', 'asc');
 
-                     filterProblem = serviceProblem2.filter(v=>v.serviceStatusCode=='COM')
+                filterProblem = serviceProblem2.filter(v => v.serviceStatusCode == 'COM')
 
 
                 let mapData = _.chain(serviceProblem)
@@ -3031,7 +3033,7 @@ const serviceOrderController = {
                     return a;
                 }, {});
                 /*Work done percentage close */
-                
+
 
 
 
@@ -3043,7 +3045,7 @@ const serviceOrderController = {
 
                     totalServiceOrder += Number(item.serviceOrder);
                     totalWorkDone += Number(item.workDone);
-                    totalPercentage = 100*totalWorkDone/totalServiceOrder;
+                    totalPercentage = 100 * totalWorkDone / totalServiceOrder;
 
 
                     return {
@@ -3241,7 +3243,7 @@ const serviceOrderController = {
                     .orderBy('incident_type.typeCode', 'asc');
 
 
-                    filterProblem = serviceProblem2.filter(v=>v.serviceStatusCode=='COM')
+                filterProblem = serviceProblem2.filter(v => v.serviceStatusCode == 'COM')
 
 
                 let mapData = _.chain(serviceProblem)
@@ -3301,7 +3303,7 @@ const serviceOrderController = {
 
                     totalServiceOrder += Number(item.serviceOrder);
                     totalWorkDone += Number(item.workDone);
-                    totalPercentage = 100*totalWorkDone/totalServiceOrder;
+                    totalPercentage = 100 * totalWorkDone / totalServiceOrder;
 
 
                     return {
