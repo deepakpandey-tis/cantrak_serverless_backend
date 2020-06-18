@@ -4441,6 +4441,7 @@ const facilityBookingController = {
       let offset = (page - 1) * per_page;
       let { searchValue } = req.body;
       let orgId = req.query.orgId;
+      console.log(searchValue)
       let total, rows;
 
       [total, rows] = await Promise.all([
@@ -4452,7 +4453,7 @@ const facilityBookingController = {
           .where((qb) => {
             if (searchValue) {
               qb.where("facility_report_master.reportName", "iLIKE", `%${searchValue}%`)
-              qb.where({ "facility_report_master.orgId": req.orgId })
+              // qb.where({ "facility_report_master.orgId": req.orgId })
             }
           }).first(),
         knex
@@ -4471,7 +4472,7 @@ const facilityBookingController = {
           .where((qb) => {
             if (searchValue) {
               qb.where("facility_report_master.reportName", "iLIKE", `%${searchValue}%`)
-              qb.where({ "facility_report_master.orgId": req.orgId })
+              // qb.where({ "facility_report_master.orgId": req.orgId })
             }
           })
           .orderBy(sortPayload.sortBy, sortPayload.orderBy)
