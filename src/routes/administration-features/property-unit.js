@@ -45,6 +45,8 @@ router.post('/get-property-unit-list',
 //PROPERTY UNIT LIST DROPDOWN
 router.get('/get-propert-unit-all-list',
   propertyUnitController.getPropertyUnitAllList)
+
+// router.get('get-property-unit-list-report',authMiddleware.isAuthenticated,propertyUnitController.getPropertyUnitListForReport)
 //  Export Property Unit Data
 
 router.get('/export-property-unit',
