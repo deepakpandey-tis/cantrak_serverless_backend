@@ -79,4 +79,4 @@ functions:
     batchSize: 1                           # Using a batchSize of 1, so that messages succeed or fail on their own.
     reservedConcurrency: 10                # <-- Concurrency control
     events:
-      - sqs: arn:aws:sqs:us-east-2:525317543069:email-messages-queue
+      - sqs: arn:aws:sqs:us-east-1:925816896007:mail-queue
