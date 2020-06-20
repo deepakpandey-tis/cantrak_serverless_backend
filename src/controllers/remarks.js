@@ -105,7 +105,7 @@ const remarksController = {
                             .insert({
                                 entityId: remarkNoteId.id,
                                 ...image,
-                                entityType: 'remarks_master',
+                                entityType: upNotesPayload.entityType,
                                 createdAt: currentTime,
                                 updatedAt: currentTime,
                                 orgId: req.orgId
@@ -173,12 +173,7 @@ const remarksController = {
 
             const Parallel = require('async-parallel');
             remarksNotesList = await Parallel.map(remarksNotesList, async item => {
-                let images = await knex.raw(
-                    `select * from "images" 
-                     where "images"."entityId"= ${item.id} and 
-                    "images"."entityType" = 'remarks_master' and 
-                    "images"."orgId" = ${req.orgId} `
-                );
+                let images = await knex.raw(`select * from "images" where "images"."entityId"= ${item.id} and "images"."entityType" = '${entityType}' and "images"."orgId" = ${req.orgId} `);
                 item.images = images.rows;
                 return item;
             });
