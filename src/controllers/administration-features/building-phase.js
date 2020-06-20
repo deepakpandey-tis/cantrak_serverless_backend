@@ -783,6 +783,29 @@ const buildingPhaseController = {
       });
     }
   },
+  getBuildingPhase:async(req,res)=>{
+    try{
+
+      let orgId = req.orgId
+      let buildings = await knex("buildings_and_phases")
+      .select("*")
+      .where({orgId:orgId,isActive:true})
+      .orderBy('buildings_and_phases.description', 'asc')
+
+      return res
+        .status(200)
+        .json({ data: { buildings }, message: "Buildings list" });
+    }catch(err){
+      console.log(
+        "[controllers][generalsetup][viewbuildingPhase] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
   getBuildingPhaseListByProjectId: async (req, res) => {
     try {
       const { projectId } = req.body;

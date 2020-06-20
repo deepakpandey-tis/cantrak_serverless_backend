@@ -254,6 +254,12 @@ roleMiddleware.parseUserPermission,
 resourceAccessMiddleware.isPartAccessible,
 partsController.getRequisitionReport)
 
-router.get('/get-building-list-by-partId',authMiddleware.isAuthenticated,partsController.getBuildingListByPartId)
+router.get('/get-building-list-by-partId',authMiddleware.isAuthenticated,partsController.getBuildingListByPartId);
+
+router.post('/stock-summary-report',
+authMiddleware.isAuthenticated,
+roleMiddleware.parseUserPermission,
+resourceAccessMiddleware.isPartAccessible,
+partsController.stockSummaryReport)
 
 module.exports = router;

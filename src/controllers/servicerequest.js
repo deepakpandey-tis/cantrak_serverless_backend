@@ -636,7 +636,7 @@ const serviceRequestController = {
         unit
       } = req.body;
       let total, rows;
-
+      console.log("service request list===",req.body)
 
       //console.log('USER**************************************',req.userProjectResources)
       const accessibleProjects = req.userProjectResources[0].projects
@@ -3379,6 +3379,7 @@ const serviceRequestController = {
   getServiceRequestForReport: async (req, res) => {
     try {
       const payload = req.body;
+      console.log("service request report priority",payload.priority)
       const accessibleProjects = req.userProjectResources[0].projects
       let sr = await knex.from("service_requests")
         .leftJoin(
@@ -3471,6 +3472,9 @@ const serviceRequestController = {
           }
           if (payload.status && payload.status.length) {
             qb.whereIn('status.statusCode', payload.status)
+          }
+          if(payload.priority){
+            qb.whereIn('service_requests.priority',payload.priority)
           }
         })
         .whereIn('service_requests.projectId', accessibleProjects)

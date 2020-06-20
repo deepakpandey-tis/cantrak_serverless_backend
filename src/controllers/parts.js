@@ -799,7 +799,7 @@ const partsController = {
                 console.log('[controllers][part][stock]', partStockPayload);
                 // validate keys
                 let result;
-                if (partStockPayload.adjustType == "1" || partStockPayload.adjustType == "3") {
+                if (partStockPayload.adjustType == "1" || partStockPayload.adjustType == "3" || partStockPayload.adjustType == "11") {
                     const schema = Joi.object().keys({
                         partId: Joi.string().required(),
                         unitCost: Joi.number().allow("").allow(null).optional(),
@@ -807,9 +807,26 @@ const partsController = {
                         quantity: Joi.number().required(),
                         adjustType: Joi.string().required(),
                         serviceOrderNo: Joi.string().required(),
-                        isPartAdded: Joi.string().required()
+                        isPartAdded: Joi.string().required(),
+                        issueBy: Joi.string().allow("").allow(null).optional(),
+                        issueTo: Joi.string().allow("").allow(null).optional(),
+                        returnedBy: Joi.string().allow("").allow(null).optional(),
+
+
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'description', 'date', 'workOrderId', 'receiveBy', 'receiveDate', 'deductBy', 'deductDate', 'building', 'floor'), schema);
+                    result = Joi.validate(_.omit(partStockPayload, 'storeAdjustmentBy', 'description', 'date', 'workOrderId', 'receiveBy', 'receiveDate', 'deductBy', 'deductDate', 'building', 'floor'), schema);
+
+                    if (partStockPayload.adjustType == "1") {
+
+                        partStockPayload = _.omit(partStockPayload, ['storeAdjustmentBy', 'returnedBy', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor'])
+
+                    } else if (partStockPayload.adjustType == "3") {
+                        partStockPayload = _.omit(partStockPayload, ['storeAdjustmentBy', 'issueBy', 'issueTo', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor'])
+
+                    } else {
+                        partStockPayload = _.omit(partStockPayload, ['storeAdjustmentBy', 'issueBy', 'returnedBy', 'issueTo', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor'])
+
+                    }
 
                 } else if (partStockPayload.adjustType == "2") {
                     const schema = Joi.object().keys({
@@ -821,10 +838,17 @@ const partsController = {
                         serviceOrderNo: Joi.string().allow("").allow(null).optional(),
                         isPartAdded: Joi.string().required(),
                         receiveBy: Joi.string().required(),
-                        receiveDate: Joi.string().required()
+                        receiveDate: Joi.string().required(),
+                        deductBy: Joi.string().required(),
+                        building: Joi.string().allow("").allow(null).optional(),
+                        floor: Joi.string().allow("").allow(null).optional(),
+                        returnedBy: Joi.string().allow("").allow(null).optional(),
+
+                        //deductBy : Joi.number().required()
+
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'description', 'date', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['deductBy', 'deductDate', 'building', 'floor'])
+                    result = Joi.validate(_.omit(partStockPayload, 'storeAdjustmentBy', 'issueBy', 'issueTo', 'description', 'date', 'workOrderId', 'deductDate', 'building', 'floor'), schema);
+                    partStockPayload = _.omit(partStockPayload, ['serviceOrderNo', 'returnedBy', 'workOrderId', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'deductDate'])
                     partStockPayload.receiveDate = new Date(partStockPayload.receiveDate).getTime();
 
                 } else if (partStockPayload.adjustType == "6") {
@@ -838,13 +862,13 @@ const partsController = {
                         isPartAdded: Joi.string().required(),
                         //deductBy: Joi.string().required(),
                         //deductDate: Joi.string().required(),
-                        building: Joi.string().required(),
-                        floor: Joi.string().required(),
+                        building: Joi.string().allow("").allow(null).optional(),
+                        floor: Joi.string().allow("").allow(null).optional(),
                         receiveBy: Joi.string().required(),
                         receiveDate: Joi.string().required()
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'description', 'date', 'workOrderId','deductBy', 'deductDate'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['deductBy','deductDate'])
+                    result = Joi.validate(_.omit(partStockPayload, 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'description', 'date', 'workOrderId', 'deductBy', 'deductDate'), schema);
+                    partStockPayload = _.omit(partStockPayload, ['storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor'])
                     partStockPayload.receiveDate = new Date(partStockPayload.receiveDate).getTime();
 
                 } else if (partStockPayload.adjustType == "10") {
@@ -857,9 +881,66 @@ const partsController = {
                         workOrderId: Joi.string().required(),
                         isPartAdded: Joi.string().required()
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'serviceOrderNo', 'description', 'date', 'receiveBy', 'receiveDate', 'deductBy', 'deductDate', 'building', 'floor'), schema);
+                    result = Joi.validate(_.omit(partStockPayload, 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'serviceOrderNo', 'description', 'date', 'receiveBy', 'receiveDate', 'deductBy', 'deductDate', 'building', 'floor'), schema);
+                    partStockPayload = _.omit(partStockPayload, ['serviceOrderNo', "receiveBy",
+                        "receiveDate",
+                        "building",
+                        "floor",
+                        "storeAdjustmentBy",
+                        "issueBy",
+                        "issueTo",
+                        "deductBy",
+                        "returnedBy"])
 
-                } else {
+
+
+                } else if (partStockPayload.adjustType == "4") {
+
+
+                    const schema = Joi.object().keys({
+                        partId: Joi.string().required(),
+                        unitCost: Joi.number().allow("").allow(null).optional(),
+                        unitCost: Joi.string().allow("").allow(null).optional(),
+                        quantity: Joi.number().required(),
+                        adjustType: Joi.string().required(),
+                        //serviceOrderNo: Joi.string().allow("").allow(null).optional(),
+                        isPartAdded: Joi.string().required(),
+                        //deductBy: Joi.string().required(),
+                        //deductDate: Joi.string().required(),
+                        building: Joi.string().allow("").allow(null).optional(),
+                        floor: Joi.string().allow("").allow(null).optional(),
+                        //receiveBy: Joi.string().required(),
+                        //receiveDate: Joi.string().required()
+                        storeAdjustmentBy: Joi.string().allow("").allow(null).optional()
+                    });
+                    result = Joi.validate(_.omit(partStockPayload, 'issueBy', 'issueTo', 'returnedBy', 'description', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate'), schema);
+                    partStockPayload = _.omit(partStockPayload, ['issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId'])
+
+                }
+                else if (partStockPayload.adjustType == "5") {
+
+
+                    const schema = Joi.object().keys({
+                        partId: Joi.string().required(),
+                        unitCost: Joi.number().allow("").allow(null).optional(),
+                        unitCost: Joi.string().allow("").allow(null).optional(),
+                        quantity: Joi.number().required(),
+                        adjustType: Joi.string().required(),
+                        //serviceOrderNo: Joi.string().allow("").allow(null).optional(),
+                        isPartAdded: Joi.string().required(),
+                        //deductBy: Joi.string().required(),
+                        //deductDate: Joi.string().required(),
+                        building: Joi.string().allow("").allow(null).optional(),
+                        floor: Joi.string().allow("").allow(null).optional(),
+                        //receiveBy: Joi.string().required(),
+                        //receiveDate: Joi.string().required()
+                        storeAdjustmentBy: Joi.string().allow("").allow(null).optional()
+                    });
+                    result = Joi.validate(_.omit(partStockPayload, 'issueBy', 'issueTo', 'returnedBy', 'description', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate'), schema);
+                    partStockPayload = _.omit(partStockPayload, ['issueBy', 'issueTo', 'returnedBy', 'unitCost', 'deductBy', 'deductDate', 'building', 'floor', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId'])
+
+                }
+                else {
                     const schema = Joi.object().keys({
                         partId: Joi.string().required(),
                         unitCost: Joi.number().allow("").allow(null).optional(),
@@ -2189,7 +2270,9 @@ const partsController = {
             let approvalId = req.body.approvalId;
             let currentTime = new Date().getTime();
             let payload = req.body;
-            let recDate = new Date(payload.receiveDate).getTime();
+            let recDate = new Date(payload.receiveDate).getTime()
+            let issueDate = new Date(payload.issueDate).getTime();
+
             const update = await knex('assigned_parts').update({ status: 'approved' }).where({ orgId: req.orgId, id: approvalId }).returning(['*'])
             let assignedResult = update[0];
             let quantity = "-" + assignedResult.quantity;
@@ -2205,8 +2288,11 @@ const partsController = {
                 serviceOrderNo: assignedResult.entityId,
                 orgId: req.orgId,
                 approvedBy: req.me.id,
-                receiveBy:payload.receiveBy,
-                receiveDate:recDate,
+                receiveBy: payload.receiveBy,
+                receiveDate: recDate,
+                issueBy: payload.issueBy,
+                issueTo: payload.issueTo,
+                issueDate: issueDate,
             }
             let partLedger = await knex.insert(ledgerObject).returning(['*']).into('part_ledger');
             return res.status(200).json({
@@ -2536,11 +2622,11 @@ const partsController = {
 
                 let stockResult = await knex.from('part_ledger')
                     .leftJoin('part_master', 'part_ledger.partId', 'part_master.id')
-                    .leftJoin('part_category_master','part_master.partCategory','part_category_master.id')
-                    .leftJoin('buildings_and_phases','part_ledger.building','buildings_and_phases.id')
-                    .leftJoin('projects','buildings_and_phases.projectId','projects.id')
-                    .leftJoin('floor_and_zones','part_ledger.floor','floor_and_zones.id')
-                    .leftJoin('adjust_type','part_ledger.adjustType','adjust_type.id')
+                    .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
+                    .leftJoin('buildings_and_phases', 'part_ledger.building', 'buildings_and_phases.id')
+                    .leftJoin('projects', 'buildings_and_phases.projectId', 'projects.id')
+                    .leftJoin('floor_and_zones', 'part_ledger.floor', 'floor_and_zones.id')
+                    .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
 
                     .select([
                         'part_ledger.*',
@@ -2557,6 +2643,33 @@ const partsController = {
                         'adjust_type.adjustType as adjustTypeName'
 
                     ])
+                    .where(qb => {
+                        if (payload.partId) {
+
+                            qb.where('part_ledger.partId', payload.partId)
+                        }
+
+                        if (payload.partCode) {
+
+                            qb.where('part_master.partCode', 'iLIKE', `%${payload.partCode}%`)
+                        }
+
+                        if (payload.partName) {
+
+                            qb.where('part_master.partName', 'iLIKE', `%${payload.partName}%`)
+                        }
+
+                        if (payload.partCategory) {
+
+                            qb.where('part_master.partCategory', payload.partCategory)
+                        }
+
+                        if (payload.adjustType) {
+
+                            qb.where('part_ledger.adjustType', payload.adjustType)
+                        }
+
+                    })
                     .where({ 'part_ledger.orgId': req.orgId })
                     .whereBetween('part_ledger.createdAt', [fromTime, toTime])
                     .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
@@ -2581,6 +2694,13 @@ const partsController = {
                             'part_ledger.*',
                             'adjust_type.adjustType as adjustTypeName'
                         ])
+                        .where(qb => {
+
+                            if (payload.adjustType) {
+
+                                qb.where('part_ledger.adjustType', payload.adjustType)
+                            }
+                        })
                         .where({ 'part_ledger.orgId': req.orgId, partId: st.partId })
                         .whereBetween('part_ledger.createdAt', [fromTime, toTime])
                         .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
@@ -2623,7 +2743,6 @@ const partsController = {
                             //   bal = Number(balance.quantity);
                             //}
 
-
                         }
                         newBal = bal;
                         totalIn += i;
@@ -2640,51 +2759,51 @@ const partsController = {
                         partName: st.partName,
                         openingBalance: openingBalance,
                         stockData: updatedStockDataWithInAndOut,
-                        unitOfMeasure:st.unitOfMeasure
+                        unitOfMeasure: st.unitOfMeasure
                     }
                 })
 
 
                 /*Export Data open */
                 let updatedStockDataWithInAndOut2 = [];
-                    let newBal2 = 0;
-                    let s2 = 0;
-                    let totalIn2 = 0;
-                    let totalOut2 = 0;
-                    for (let d2 of stockResult) {
-                        s2++;
-                        let i2 = 0;
-                        let o2 = 0;
-                        let bal2 = 0
+                let newBal2 = 0;
+                let s2 = 0;
+                let totalIn2 = 0;
+                let totalOut2 = 0;
+                for (let d2 of stockResult) {
+                    s2++;
+                    let i2 = 0;
+                    let o2 = 0;
+                    let bal2 = 0
 
 
-                        if (d2.quantity && d2.quantity.includes('-')) {
-                            o2 = Number(d2.quantity)
-                            //    balance.totalQuantity = Number(balance.totalQuantity) + o
-                            //if (s > 1) {
-                            bal2 = Number(newBal2) + o2;
-                            //} else {
-                            //   bal = Number(balance.quantity);
-                            //}
+                    if (d2.quantity && d2.quantity.includes('-')) {
+                        o2 = Number(d2.quantity)
+                        //    balance.totalQuantity = Number(balance.totalQuantity) + o
+                        //if (s > 1) {
+                        bal2 = Number(newBal2) + o2;
+                        //} else {
+                        //   bal = Number(balance.quantity);
+                        //}
 
-                        } else {
+                    } else {
 
-                            i2 = Number(d2.quantity)
-                            //    balance.totalQuantity = Number(balance.totalQuantity) + i
-                            //if (s > 1) {
-                            bal2 = Number(newBal2) + i2;
-                            //} else {
-                            //   bal = Number(balance.quantity);
-                            //}
+                        i2 = Number(d2.quantity)
+                        //    balance.totalQuantity = Number(balance.totalQuantity) + i
+                        //if (s > 1) {
+                        bal2 = Number(newBal2) + i2;
+                        //} else {
+                        //   bal = Number(balance.quantity);
+                        //}
 
 
-                        }
-                        newBal2 = bal2;
-                        totalIn2 += i2;
-                        totalOut2 += Math.abs(o2);
-
-                        updatedStockDataWithInAndOut2.push({ ...d2, in: i2, out: o2, balance: newBal2, totalIn: totalIn2, totalOut: totalOut2 })
                     }
+                    newBal2 = bal2;
+                    totalIn2 += i2;
+                    totalOut2 += Math.abs(o2);
+
+                    updatedStockDataWithInAndOut2.push({ ...d2, in: i2, out: o2, balance: newBal2, totalIn: totalIn2, totalOut: totalOut2 })
+                }
                 /*Export Data close */
 
                 res.status(200).json({
@@ -2694,7 +2813,7 @@ const partsController = {
                         toDate,
                         fromTime,
                         toTime,
-                        exportStockData:updatedStockDataWithInAndOut2,
+                        exportStockData: updatedStockDataWithInAndOut2,
                     },
                     message: "Stock report Successfully!"
                 })
@@ -2765,9 +2884,14 @@ const partsController = {
 
             let approveResult = await knex('part_ledger').where({ 'serviceOrderNo': payload.soId })
                 .leftJoin("users", 'part_ledger.approvedBy', 'users.id')
+                .leftJoin('users as ib', 'part_ledger.issueBy', 'ib.id')
+                .leftJoin('users as it', 'part_ledger.issueTo', 'it.id')
                 .select([
                     'users.name as approvedUser',
                     'part_ledger.createdAt as approvedAt',
+                    'ib.name as issueBy',
+                    'it.name as issueTo',
+                    'part_ledger.issueDate'
                 ])
                 .first()
 
@@ -2828,6 +2952,130 @@ const partsController = {
             });
         }
 
+    },
+    /*STOCK SUMMARY REPORT */
+    stockSummaryReport: async (req, res) => {
+
+        try {
+
+            let payload = req.body;
+            let fromDate = payload.fromDate;
+            let toDate = payload.toDate;
+
+            if (fromDate && toDate) {
+
+                let fromNewDate = moment(fromDate).startOf('date').format();
+                let toNewDate = moment(toDate).endOf('date', 'days').format();
+                let fromTime = new Date(fromNewDate).getTime();
+                let toTime = new Date(toNewDate).getTime();
+
+
+                let stockResult = await knex.from('part_ledger')
+                    .leftJoin('part_master', 'part_ledger.partId', 'part_master.id')
+                    .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
+                    .leftJoin('buildings_and_phases', 'part_ledger.building', 'buildings_and_phases.id')
+                    .leftJoin('projects', 'buildings_and_phases.projectId', 'projects.id')
+                    .leftJoin('floor_and_zones', 'part_ledger.floor', 'floor_and_zones.id')
+                    .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
+
+                    .select([
+                        'part_ledger.*',
+                        'part_master.partName',
+                        'part_master.partCode',
+                        'part_master.unitOfMeasure',
+                        'part_category_master.categoryName as partCategory',
+                        'buildings_and_phases.buildingPhaseCode',
+                        'buildings_and_phases.description as buildingDescription',
+                        'projects.project as projectCode',
+                        'projects.projectName',
+                        'floor_and_zones.floorZoneCode',
+                        'floor_and_zones.description as floorDescripton',
+                        'adjust_type.adjustType as adjustTypeName',
+                        'part_master.minimumQuantity'
+
+                    ])
+                    .where({ 'part_ledger.orgId': req.orgId })
+                    .whereBetween('part_ledger.createdAt', [fromTime, toTime])
+                    .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
+
+                let fromDateEnd = moment(fromTime).endOf('date').format();
+                let fromTimeEnd = new Date(fromDateEnd).getTime();
+
+
+
+                /*Export Data open */
+                let updatedStockDataWithInAndOut2 = [];
+                let newBal2 = 0;
+                let s2 = 0;
+                let totalIn2 = 0;
+                let totalOut2 = 0;
+                for (let d2 of stockResult) {
+
+                    let balance = await knex.from('part_ledger')
+                        .sum('quantity as quantity')
+                        .where('part_ledger.createdAt', '<=', fromTimeEnd)
+                        .where({ partId: d2.partId, orgId: req.orgId }).first();
+
+                    let openingBalance = 0;
+                    if (balance.quantity) {
+                        openingBalance = balance.quantity;
+                    }
+
+
+                    s2++;
+                    let i2 = 0;
+                    let o2 = 0;
+                    let bal2 = 0
+
+
+                    if (d2.quantity && d2.quantity.includes('-')) {
+                        o2 = Number(d2.quantity)
+                        //    balance.totalQuantity = Number(balance.totalQuantity) + o
+                        //if (s > 1) {
+                        bal2 = Number(newBal2) + o2;
+                        //} else {
+                        //   bal = Number(balance.quantity);
+                        //}
+
+                    } else {
+
+                        i2 = Number(d2.quantity)
+                        //    balance.totalQuantity = Number(balance.totalQuantity) + i
+                        //if (s > 1) {
+                        bal2 = Number(newBal2) + i2;
+                        //} else {
+                        //   bal = Number(balance.quantity);
+                        //}
+
+
+                    }
+                    newBal2 = bal2;
+                    totalIn2 += i2;
+                    totalOut2 += Math.abs(o2);
+
+                    updatedStockDataWithInAndOut2.push({ ...d2, in: i2, out: o2, balance: newBal2, totalIn: totalIn2, totalOut: totalOut2, openingBalance: openingBalance })
+                }
+                /*Export Data close */
+
+                res.status(200).json({
+                    data: {
+                        stockSummary: updatedStockDataWithInAndOut2,
+                        fromDate,
+                        toDate,
+                        fromTime,
+                        toTime,
+                    },
+                    message: "Stock Summary Successfully!"
+                })
+
+
+            }
+        } catch (err) {
+
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
     }
 }
 

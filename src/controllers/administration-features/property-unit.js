@@ -839,6 +839,7 @@ const propertyUnitController = {
       });
     }
   },
+  
   checkHouseId: async (req, res) => {
     try {
       const id = req.body.id;

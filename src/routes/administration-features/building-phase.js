@@ -52,6 +52,8 @@ router.get('/get-buildings-phases-all-list',
   authMiddleware.isAuthenticated,
   buildingPhaseController.getBuildingPhaseAllList)
 
+router.get('/get-building-phase',authMiddleware.isAuthenticated,buildingPhaseController.getBuildingPhase)
+
 
 
 /**IMPORT Building DATA */

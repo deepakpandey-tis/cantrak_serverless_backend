@@ -105,4 +105,8 @@ router.post('/get-facility-report-list',authMiddleware.isAuthenticated,facilityB
 
 router.post('/get-facilityList-by-date',authMiddleware.isAuthenticated,facilityBookingController.facilityListingByDate)
 
+router.get('/get-property-unit-list-report',authMiddleware.isAuthenticated,facilityBookingController.getPropertyUnitListForReport)
+
+router.post('/delete-facility-report',authMiddleware.isAuthenticated,facilityBookingController.deleteFacilityManagementReport)
+
 module.exports = router;

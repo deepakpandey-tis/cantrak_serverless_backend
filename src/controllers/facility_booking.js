@@ -654,7 +654,7 @@ const facilityBookingController = {
       console.log("requested data", payload.companyId, toDate, fromDate, bookingDateFrom, bookingDateTo, facilityName, status)
 
 
-      let currentDate = new Date().getTime();
+      // let currentDate = new Date().getTime();
 
       // if(fromDate && toDate){
       let fromNewDate = moment(fromDate).startOf('date').format();
@@ -692,7 +692,7 @@ const facilityBookingController = {
                 "property_units.type as unitType",
                 "companies.companyId",
               ])
-              .where("entity_bookings.bookingStartDateTime", ">=", currentDate)
+              // .where("entity_bookings.bookingStartDateTime", ">=", currentDate)
               .where((qb) => {
                 // if (facilityName) {
                 //   qb.where(
@@ -816,7 +816,7 @@ const facilityBookingController = {
             .where("entity_bookings.bookingStartDateTime", "<=", toBookTime)
             .where("entity_bookings.createdAt", ">=", fromTime)
             .where("entity_bookings.createdAt", "<=", toTime)
-            .where("entity_bookings.bookingStartDateTime", ">=", currentDate)
+            // .where("entity_bookings.bookingStartDateTime", ">=", currentDate)
             .groupBy([
               "entity_bookings.id",
               "facility_master.id",
@@ -2836,6 +2836,29 @@ const facilityBookingController = {
       });
     }
   },
+  getPropertyUnitListForReport:async(req,res)=>{
+    try{
+      let orgId = req.orgId
+      console.log("report orgId",orgId)
+
+      let result = await knex("property_units")
+      .select("*")
+      .where("property_units.orgId",orgId)
+
+      return res.status(200).json({
+        data: {
+          data: result,
+        },
+        message: "Property Unit List"
+      });
+
+    }catch(err){
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+
+  },
 
   /** GET TENANTS BY UNIT */
 
@@ -3925,6 +3948,7 @@ const facilityBookingController = {
   },
   facilityBookedListByUnit: async (req, res) => {
     try {
+      console.log("facility booked list by unit",req.orgId)
       let bookingListResult = await knex("entity_bookings")
         .leftJoin(
           "facility_master",
@@ -3935,15 +3959,20 @@ const facilityBookingController = {
         .leftJoin("property_units", "entity_bookings.unitId", "property_units.id")
         .select(
           "entity_bookings.id",
+          "entity_bookings.orgId",
           "entity_bookings.bookingStartDateTime",
           "entity_bookings.bookingEndDateTime",
           "entity_bookings.noOfSeats",
           "entity_bookings.feesPaid",
           "entity_bookings.bookedAt",
+          "entity_bookings.isBookingConfirmed",
+          "entity_bookings.isBookingCancelled",
+          "entity_bookings.confirmedType",
           "facility_master.name",
           "users.name as bookedUser",
           "property_units.unitNumber"
         )
+        .where("entity_bookings.orgId",req.orgId)
 
       // let newList = []
 
@@ -3958,25 +3987,25 @@ const facilityBookingController = {
       // })
       // console.log("newList",newList)
       // const bookingReport = 
-      let incb215 = []
-      let incb211 = []
-      let canteen = []
-      let inc1303 = []
-      let inc1311 = []
-      bookingListResult.forEach(data => {
-        if (data.unitNumber == 'INC2B-215') {
-          incb215.push(data)
-        } else if (data.unitNumber == 'INCB2B-211') {
-          incb211.push(data)
-        } else if (data.unitNumber == 'CANTEEN') {
-          canteen.push(data)
-        } else if (data.unitNumber == 'INC1-303') {
-          inc1303.push(data)
-        } else if (data.unitNumber == 'INC1-311') {
-          inc1311.push(data)
-        }
+      // let incb215 = []
+      // let incb211 = []
+      // let canteen = []
+      // let inc1303 = []
+      // let inc1311 = []
+      // bookingListResult.forEach(data => {
+      //   if (data.unitNumber == 'INC2B-215') {
+      //     incb215.push(data)
+      //   } else if (data.unitNumber == 'INCB2B-211') {
+      //     incb211.push(data)
+      //   } else if (data.unitNumber == 'CANTEEN') {
+      //     canteen.push(data)
+      //   } else if (data.unitNumber == 'INC1-303') {
+      //     inc1303.push(data)
+      //   } else if (data.unitNumber == 'INC1-311') {
+      //     inc1311.push(data)
+      //   }
 
-      })
+      // })
 
       res.status(200).json({
         data:
@@ -4499,6 +4528,44 @@ const facilityBookingController = {
     } catch (err) {
       console.log("[controllers][facility_report_master][getReports],Error", err);
 
+    }
+  },
+  deleteFacilityManagementReport:async(req,res)=>{
+    try{
+      const id = req.body.id
+
+      let payload = req.body
+      console.log(req.body)
+      const schema = Joi.object().keys({
+        id: Joi.string().required()
+      });
+      const result = Joi.validate(payload, schema);
+
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message }
+          ]
+        });
+      }
+
+      const deleteRow = await knex("facility_report_master")
+      .where("facility_report_master.id",id)
+      .del().returning(['*'])
+
+      let resultData = deleteRow.rows
+
+      return res.status(200).json({
+        data: {
+          resultData,
+          message: 'Deleted row successfully!'
+        }
+      })
+
+    }catch(err){
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
     }
   }
 };
