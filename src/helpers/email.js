@@ -10,7 +10,7 @@ AWS.config.update({
     region: process.env.REGION || "us-east-1"
 });
 
-const SHOULD_QUEUE = false;
+const SHOULD_QUEUE = true;
 
 const sendEmailMessage = async (mailOptions) => {
 
