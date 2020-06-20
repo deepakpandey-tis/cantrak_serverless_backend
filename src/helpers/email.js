@@ -3,23 +3,22 @@ const _ = require('lodash');
 const AWS = require('aws-sdk');
 const nodemailer = require("nodemailer");
 
-
-AWS.config.update({
-    accessKeyId: process.env.NOTIFIER_ACCESS_KEY_ID,
-    secretAccessKey: process.env.NOTIFIER_SECRET_ACCESS_KEY,
-    region: process.env.REGION || "us-east-1"
-});
-
-const SHOULD_QUEUE = true;
+const SHOULD_QUEUE = true;   // If true email will be queued and then sent
 
 const sendEmailMessage = async (mailOptions) => {
 
 
-    if(process.env.APP_ENV !== 'PRODUCTION') {
-        console.log("Not Production Env, we will not send mail");
+    // if(process.env.APP_ENV !== 'PRODUCTION') {
+    //     console.log("Not Production Env, we will not send mail");
 
-        return Promise.resolve();
-    }
+    //     return Promise.resolve();
+    // }
+
+    AWS.config.update({
+        accessKeyId: process.env.NOTIFIER_ACCESS_KEY_ID,
+        secretAccessKey: process.env.NOTIFIER_SECRET_ACCESS_KEY,
+        region: process.env.REGION || "us-east-1"
+    });
 
 
     return new Promise(async (resolve, reject) => {
@@ -44,16 +43,17 @@ const sendEmailMessage = async (mailOptions) => {
 
 const sendSQSMessage = async (messageBody) => {
 
-    if(process.env.APP_ENV !== 'PRODUCTION') {
-        console.log("Not Production Env, Not Queing");
+    AWS.config.update({
+        accessKeyId: process.env.NOTIFIER_ACCESS_KEY_ID,
+        secretAccessKey: process.env.NOTIFIER_SECRET_ACCESS_KEY,
+        region: process.env.REGION || "us-east-1"
+    });
 
-        return Promise.resolve();
-    }
 
     const createdAt = new Date().toISOString();
 
     let params = {
-        DelaySeconds: 10,
+        DelaySeconds: 5,
         MessageAttributes: {
             "title": {
                 DataType: "String",
@@ -62,11 +62,7 @@ const sendSQSMessage = async (messageBody) => {
             "createdAt": {
                 DataType: "String",
                 StringValue: createdAt
-            },
-            // "WeeksOn": {
-            //     DataType: "Number",
-            //     StringValue: "6"
-            // }
+            }
         },
         MessageBody: messageBody,
         // MessageDeduplicationId: "TheWhistler",  // Required for FIFO queues
@@ -75,7 +71,7 @@ const sendSQSMessage = async (messageBody) => {
     };
 
     return new Promise(async (resolve, reject) => {
-        const sqs = new AWS.SQS();
+        const sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
         sqs.sendMessage(params, (err, data) => {
             if (err) {
                 console.log("SQS Message POST Error", err);
@@ -87,6 +83,8 @@ const sendSQSMessage = async (messageBody) => {
         });
     })
 };
+
+
 
 
 const emailHelper = {
