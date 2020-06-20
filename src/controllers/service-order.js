@@ -2626,6 +2626,10 @@ const serviceOrderController = {
                     if (payload.status && payload.status.length) {
                         qb.whereIn('status.statusCode', payload.status)
                     }
+
+                    if (payload.requestBy) {
+                        qb.where('service_requests.requestedBy', payload.requestBy)
+                    }
                 })
                 .whereIn('service_requests.projectId', accessibleProjects)
                 .distinct('service_requests.id')

@@ -636,7 +636,7 @@ const serviceRequestController = {
         unit
       } = req.body;
       let total, rows;
-      console.log("service request list===",req.body)
+      console.log("service request list===", req.body)
 
       //console.log('USER**************************************',req.userProjectResources)
       const accessibleProjects = req.userProjectResources[0].projects
@@ -2344,7 +2344,7 @@ const serviceRequestController = {
     }
   },
   getServiceRequestByMonth: async (req, res) => { },
-  
+
   getUrl: imageHelper.getUploadURL,
 
   getServiceRequestAssignedAssets: async (req, res) => {
@@ -3379,7 +3379,7 @@ const serviceRequestController = {
   getServiceRequestForReport: async (req, res) => {
     try {
       const payload = req.body;
-      console.log("service request report priority",payload.priority)
+      console.log("service request report priority", payload.priority)
       const accessibleProjects = req.userProjectResources[0].projects
       let sr = await knex.from("service_requests")
         .leftJoin(
@@ -3410,7 +3410,7 @@ const serviceRequestController = {
           "incident_categories.id"
         )
         .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
-        .leftJoin("requested_by",'service_requests.requestedBy','requested_by.id')
+        .leftJoin("requested_by", 'service_requests.requestedBy', 'requested_by.id')
 
         .select([
           "service_requests.id as S Id",
@@ -3452,6 +3452,7 @@ const serviceRequestController = {
         ])
         .where(qb => {
           qb.where({ "service_requests.orgId": req.orgId })
+          qb.where('service_requests.moderationStatus',true)
           if (payload.fromDate && payload.toDate) {
             qb.whereBetween('service_requests.createdAt', [payload.fromDate, payload.toDate])
           }
@@ -3462,10 +3463,10 @@ const serviceRequestController = {
             qb.whereIn('buildings_and_phases.id', payload.buildingId)
           }
           if (payload.companyId) {
-            qb.where('companies.id', '=', payload.companyId)
+            qb.where('companies.id', payload.companyId)
           }
           if (payload.projectId) {
-            qb.where('projects.id', '=', payload.projectId)
+            qb.where('projects.id', payload.projectId)
           }
           if (payload.categoryId & payload.categoryId.length) {
             qb.whereIn('incident_categories.id', payload.categoryId)
@@ -3473,13 +3474,16 @@ const serviceRequestController = {
           if (payload.status && payload.status.length) {
             qb.whereIn('status.statusCode', payload.status)
           }
-          if(payload.priority){
-            qb.whereIn('service_requests.priority',payload.priority)
+          if (payload.priority && payload.priority.length) {
+            qb.whereIn('service_requests.priority', payload.priority)
           }
+          // if (payload.requestBy) {
+          //   qb.where('service_requests.requestedBy', payload.requestBy)
+          // }
         })
         .whereIn('service_requests.projectId', accessibleProjects)
         .distinct('service_requests.id')
-        .orderBy('incident_categories.descriptionEng', 'asc')
+        //.orderBy('incident_categories.descriptionEng', 'asc')
         .orderBy('service_requests.createdAt', 'desc')
 
 
@@ -3541,13 +3545,14 @@ const serviceRequestController = {
       let arr = [];
       let totalServiceOrder = 0;
 
-      for(let md of mapData){
+      for (let md of mapData) {
 
-        totalServiceOrder +=Number(md.serviceOrder)
-        arr.push({totalServiceOrder,
-          serviceOrder:md.serviceOrder,
-          problemTypeCode:md.value.problemTypeCode,
-          problemType:md.value.problemType,
+        totalServiceOrder += Number(md.serviceOrder)
+        arr.push({
+          totalServiceOrder,
+          serviceOrder: md.serviceOrder,
+          problemTypeCode: md.value.problemTypeCode,
+          problemType: md.value.problemType,
           categoryCode: md.value.categoryCode,
           category: md.value.category,
           subCategory: md.value.subCategory,
@@ -3555,14 +3560,15 @@ const serviceRequestController = {
       }
 
 
-    
+
 
 
 
       return res.status(200).json({
         data: {
           service_requests: srWithTenant,
-          problemData:_.orderBy(arr,"totalServiceOrder","asc")
+          problemData: _.orderBy(arr, "totalServiceOrder", "asc"),
+          sr
         }
       })
     } catch (err) {
