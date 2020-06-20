@@ -5,14 +5,22 @@ const nodemailer = require("nodemailer");
 
 
 AWS.config.update({
-    accessKeyId: process.env.ACCESS_KEY_ID,
-    secretAccessKey: process.env.SECRET_ACCESS_KEY,
+    accessKeyId: process.env.NOTIFIER_ACCESS_KEY_ID,
+    secretAccessKey: process.env.NOTIFIER_SECRET_ACCESS_KEY,
     region: process.env.REGION || "us-east-1"
 });
 
 const SHOULD_QUEUE = true;
 
 const sendEmailMessage = async (mailOptions) => {
+
+
+    if(process.env.APP_ENV !== 'PRODUCTION') {
+        console.log("Not Production Env, we will not send mail");
+
+        return Promise.resolve();
+    }
+
 
     return new Promise(async (resolve, reject) => {
         const ses = new AWS.SES();
@@ -36,6 +44,12 @@ const sendEmailMessage = async (mailOptions) => {
 
 const sendSQSMessage = async (messageBody) => {
 
+    if(process.env.APP_ENV !== 'PRODUCTION') {
+        console.log("Not Production Env, Not Queing");
+
+        return Promise.resolve();
+    }
+
     const createdAt = new Date().toISOString();
 
     let params = {
@@ -57,7 +71,7 @@ const sendSQSMessage = async (messageBody) => {
         MessageBody: messageBody,
         // MessageDeduplicationId: "TheWhistler",  // Required for FIFO queues
         // MessageId: "Group1",  // Required for FIFO queues
-        QueueUrl: process.env.SQS_MAIL_QUEUE_URL || 'https://sqs.us-east-2.amazonaws.com/525317543069/email-messages-queue'
+        QueueUrl: process.env.SQS_MAIL_QUEUE_URL
     };
 
     return new Promise(async (resolve, reject) => {
@@ -122,12 +136,15 @@ const emailHelper = {
 
             console.log('[helpers][email][sendTemplateEmail]: htmlEmailContents :', htmlEmailContents);
 
-            let from = process.env.FROM_EMAIL_ADDRESS || 'no-reply@servicemind.asia';
+            let from = process.env.FROM_EMAIL_ADDRESS || 'important-notifications@servicemind.asia';
 
             let mailOptions = {
                 from: from,
                 to: to,
                 subject: subject,
+                headers: {
+                    'SM-MAIL-TRACE': 'SM'
+                },
                 // text: `Verification Link: ${emailMessageData.verficationLink}`,
                 html: htmlEmailContents
             };
@@ -135,10 +152,10 @@ const emailHelper = {
 
             if (SHOULD_QUEUE) {
                 await emailHelper.queueEmailForSend(mailOptions);     // Will sent the mail on queue (async)
-                return; 
+                return true; 
             } else {
                  await emailHelper.sendEmail(mailOptions);     // Will sent the mail on queue (async)
-                 return;
+                 return true;
             }
 
         } catch (err) {
