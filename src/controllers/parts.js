@@ -2994,11 +2994,40 @@ const partsController = {
                         'part_master.minimumQuantity'
 
                     ])
+                    .where(qb => {
+                        if (payload.partId) {
+
+                            qb.where('part_ledger.partId', payload.partId)
+                        }
+
+                        if (payload.partCode) {
+
+                            qb.where('part_master.partCode', 'iLIKE', `%${payload.partCode}%`)
+                        }
+
+                        if (payload.partName) {
+
+                            qb.where('part_master.partName', 'iLIKE', `%${payload.partName}%`)
+                        }
+
+                        if (payload.partCategory) {
+
+                            qb.where('part_master.partCategory', payload.partCategory)
+                        }
+
+                        if (payload.adjustType) {
+
+                            qb.where('part_ledger.adjustType', payload.adjustType)
+                        }
+
+                    })
                     .where({ 'part_ledger.orgId': req.orgId })
                     .whereBetween('part_ledger.createdAt', [fromTime, toTime])
                     .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
 
-                let fromDateEnd = moment(fromTime).endOf('date').format();
+
+                let lessFromDate = moment(fromDate).subtract('1', 'M').format('YYYY-MM-DD')
+                let fromDateEnd = moment(lessFromDate).endOf('date').format();
                 let fromTimeEnd = new Date(fromDateEnd).getTime();
 
 
@@ -3064,6 +3093,7 @@ const partsController = {
                         toDate,
                         fromTime,
                         toTime,
+                        
                     },
                     message: "Stock Summary Successfully!"
                 })

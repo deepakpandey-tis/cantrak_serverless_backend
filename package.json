@@ -18,7 +18,7 @@
     "@hapi/joi": "^15.1.0",
     "array-compare": "^2.0.0",
     "async-parallel": "^1.2.3",
-    "aws-sdk": "^2.659.0",
+    "aws-sdk": "^2.701.0",
     "bcrypt": "^4.0.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
