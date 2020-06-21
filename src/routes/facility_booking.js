@@ -58,7 +58,7 @@ router.post('/get-facility-booked-list',authMiddleware.isAuthenticated,facilityB
 router.post('/facility-booked-list-by-date',authMiddleware.isAuthenticated,facilityBookingController.getFacilityBookedListbydate)
 router.post('/facility-booked-list-report',authMiddleware.isAuthenticated,facilityBookingController.facilityBookedListReport)
 router.get('/facility-booked-list-by-name',authMiddleware.isAuthenticated,facilityBookingController.facilityBookedListByFacilityName)
-router.get('/facility-booked-list-by-unit',authMiddleware.isAuthenticated,facilityBookingController.facilityBookedListByUnit)
+router.post('/facility-booked-list-by-unit',authMiddleware.isAuthenticated,facilityBookingController.facilityBookedListByUnit)
 router.get('/facility-booked-list-by-booking-date',authMiddleware.isAuthenticated,facilityBookingController.getFacilityreportByBookingDate)
 router.get('/facility-booked-list-by-created-date',authMiddleware.isAuthenticated,facilityBookingController.facilityBookedReportByCreatedDate)
 router.post('/facility-booked-cancelled-list',authMiddleware.isAuthenticated,facilityBookingController.getFacilityBookedCancelledList)
@@ -108,5 +108,7 @@ router.post('/get-facilityList-by-date',authMiddleware.isAuthenticated,facilityB
 router.get('/get-property-unit-list-report',authMiddleware.isAuthenticated,facilityBookingController.getPropertyUnitListForReport)
 
 router.post('/delete-facility-report',authMiddleware.isAuthenticated,facilityBookingController.deleteFacilityManagementReport)
+
+router.post('/get-facility-report-detail',authMiddleware.isAuthenticated,facilityBookingController.getFacilityReportDetailById)
 
 module.exports = router;
