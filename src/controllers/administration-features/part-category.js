@@ -378,7 +378,7 @@ const PartCategoryController = {
       let tempraryDirectory = null;
       let bucketName = null;
       if (process.env.IS_OFFLINE) {
-        bucketName = "sls-app-resources-bucket";
+        bucketName = process.env.S3_BUCKET_NAME;
         tempraryDirectory = "tmp/";
       } else {
         tempraryDirectory = "/tmp/";
@@ -422,9 +422,11 @@ const PartCategoryController = {
             let deleteFile = fs.unlink(filepath, err => {
               console.log("File Deleting Error " + err);
             });
-            let url =
-              "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Part_Category/" +
-              filename;
+            let url = process.env.S3_BUCKET_URL+"/Export/Part_Category/" +
+            filename;
+            // let url =
+            //   "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Part_Category/" +
+            //   filename;
             res.status(200).json({
               data: rows,
               message: "Part Category Data Export Successfully!",

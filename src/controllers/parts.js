@@ -2271,7 +2271,7 @@ const partsController = {
             let currentTime = new Date().getTime();
             let payload = req.body;
             let recDate = new Date(payload.receiveDate).getTime()
-            let issueDate = new Date(payload.issueDate).getTime();
+           // let issueDate = new Date(payload.issueDate).getTime();
 
             const update = await knex('assigned_parts').update({ status: 'approved' }).where({ orgId: req.orgId, id: approvalId }).returning(['*'])
             let assignedResult = update[0];
@@ -2292,7 +2292,7 @@ const partsController = {
                 receiveDate: recDate,
                 issueBy: payload.issueBy,
                 issueTo: payload.issueTo,
-                issueDate: issueDate,
+               // issueDate: issueDate,
             }
             let partLedger = await knex.insert(ledgerObject).returning(['*']).into('part_ledger');
             return res.status(200).json({
