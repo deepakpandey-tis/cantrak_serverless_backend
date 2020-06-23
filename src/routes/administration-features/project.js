@@ -53,4 +53,6 @@ router.get("/get-user-project-by-companies",authMiddleware.isAuthenticated,proje
 
 router.get('/project-lists-having-property-units', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, projectController.getProjectListHavingPropertyUnits)
 
+router.post('/get-project-by-Id',authMiddleware.isAuthenticated,projectController.getProjectById)
+
 module.exports = router

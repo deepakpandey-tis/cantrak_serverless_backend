@@ -997,6 +997,33 @@ const ProjectController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  getProjectById:async(req,res)=>{
+    try{
+      let projectId = req.body.id
+      let orgId = req.orgId
+
+      let projectResult = await knex("projects")
+      .select([
+        "projects.id",
+        "projects.projectName"
+      ])
+      .where("projects.id",projectId)
+      .where("projects.orgId",orgId)
+
+      return res.status(200).json({
+        data: {
+          projects: projectResult
+        },
+        message: "projects List!"
+      });
+    }catch(err){
+      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 
 };

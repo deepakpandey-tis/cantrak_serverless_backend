@@ -91,6 +91,7 @@ router.get('/get-building-phase-all-list-having-property-units',
   roleMiddleware.parseUserPermission,
   buildingPhaseController.getBuildingPhaseAllListHavingPropertyUnits
 ) 
+router.post('/get-building-phase-by-Id',authMiddleware.isAuthenticated,buildingPhaseController.getBuildingPhaseById)
 
 
 module.exports = router

@@ -1202,6 +1202,37 @@ const buildingPhaseController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  getBuildingPhaseById:async(req,res)=>{
+    try{
+      let id = req.body.id
+      let orgId = req.orgId
+      let buildingPhaseResult = await knex("buildings_and_phases")
+      .select([
+        "buildings_and_phases.id",
+        "buildings_and_phases.description",
+        "buildings_and_phases.buildingPhaseCode"
+      ])
+      .where("buildings_and_phases.id",id)
+      .where("buildings_and_phases.orgId",orgId)
+
+      return res.status(200).json({
+        data: {
+          buildingPhases: buildingPhaseResult
+        },
+        message: "Building Phases List!"
+      });
+
+    }catch(err){
+      console.log(
+        "[controllers][generalsetup][viewbuildingPhase] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 
