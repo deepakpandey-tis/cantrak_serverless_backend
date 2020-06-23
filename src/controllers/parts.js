@@ -1810,7 +1810,7 @@ const partsController = {
             let tempraryDirectory = null;
             let bucketName = null;
             if (process.env.IS_OFFLINE) {
-                bucketName = "sls-app-resources-bucket";
+                bucketName = process.env.S3_BUCKET_NAME;
                 tempraryDirectory = "tmp/";
             } else {
                 tempraryDirectory = "/tmp/";
@@ -1868,9 +1868,11 @@ const partsController = {
                         fs.unlink(filepath, err => {
                             console.log("File Deleting Error " + err);
                         });
-                        let url =
-                            "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Part/" +
+                        let url = process.env.S3_BUCKET_URL + "/Export/Part/" +
                             filename;
+                        // let url =
+                        //     "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Part/" +
+                        //     filename;
 
                         return res.status(200).json({
                             data: {
@@ -2271,7 +2273,7 @@ const partsController = {
             let currentTime = new Date().getTime();
             let payload = req.body;
             let recDate = new Date(payload.receiveDate).getTime()
-           // let issueDate = new Date(payload.issueDate).getTime();
+            // let issueDate = new Date(payload.issueDate).getTime();
 
             const update = await knex('assigned_parts').update({ status: 'approved' }).where({ orgId: req.orgId, id: approvalId }).returning(['*'])
             let assignedResult = update[0];
@@ -2292,7 +2294,7 @@ const partsController = {
                 receiveDate: recDate,
                 issueBy: payload.issueBy,
                 issueTo: payload.issueTo,
-               // issueDate: issueDate,
+                // issueDate: issueDate,
             }
             let partLedger = await knex.insert(ledgerObject).returning(['*']).into('part_ledger');
             return res.status(200).json({
@@ -2675,7 +2677,9 @@ const partsController = {
                     .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
 
 
-                let fromDateEnd = moment(fromTime).endOf('date').format();
+                //let lessOne = moment(fromTime) 
+
+                let fromDateEnd = moment(fromTime).startOf('date').format();
                 let fromTimeEnd = new Date(fromDateEnd).getTime();
 
 
@@ -2683,7 +2687,7 @@ const partsController = {
                 const final = await Parallel.map(_.uniqBy(stockResult, 'partId'), async (st) => {
                     let balance = await knex.from('part_ledger')
                         .sum('quantity as quantity')
-                        .where('part_ledger.createdAt', '<=', fromTimeEnd)
+                        .where('part_ledger.createdAt', '<', fromTimeEnd)
                         .where({ partId: st.partId, orgId: req.orgId }).first();
 
                     //.whereBetween('part_ledger.createdAt', [fromTime, toTime]).first()
@@ -3093,7 +3097,7 @@ const partsController = {
                         toDate,
                         fromTime,
                         toTime,
-                        
+
                     },
                     message: "Stock Summary Successfully!"
                 })
