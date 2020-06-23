@@ -652,7 +652,7 @@ const facilityBookingController = {
       let bookingDateFrom = payload.bookingDateTimeFrom;
       let bookingDateTo = payload.bookingDateTimeTo
       // console.log("requested data", payload.companyId, toDate, fromDate, bookingDateFrom, bookingDateTo, facilityName, status)
-      console.log("requested unit id",unitNo,projectId,buildingPhaseId)
+      // console.log("requested unit id",unitNo,projectId,buildingPhaseId)
 
       // let currentDate = new Date().getTime();
 
@@ -665,6 +665,8 @@ const facilityBookingController = {
       let toBookDate = moment(bookingDateTo).endOf('date', 'days');
       let fromBookTime = new Date(fromBookDate).getTime();
       let toBookTime = new Date(toBookDate).getTime();
+      console.log("times",fromTime,toTime,fromBookTime,toBookTime)
+      
       let facilityReportResult
 
       if (companyId || projectId || buildingPhaseId || unitNo || facilityName || status) {
@@ -680,6 +682,7 @@ const facilityBookingController = {
               )
               .leftJoin("users", "entity_bookings.bookedBy", "users.id")
               .leftJoin("property_units", "entity_bookings.unitId", "property_units.id")
+              .leftJoin("property_unit_type_master","property_units.propertyUnitType","property_unit_type_master.id")
               .select([
                 "entity_bookings.*",
                 "facility_master.displayId as No",
@@ -690,7 +693,10 @@ const facilityBookingController = {
                 "companies.companyName as Company",
                 "property_units.unitNumber",
                 "property_units.type as unitType",
+                "property_units.description",
                 "companies.companyId",
+                "property_unit_type_master.propertyUnitTypeCode",
+                "property_unit_type_master.descriptionEng"
               ])
               // .where("entity_bookings.bookingStartDateTime", ">=", currentDate)
               .where((qb) => {
@@ -802,6 +808,7 @@ const facilityBookingController = {
             .leftJoin("companies", "entity_bookings.companyId", "companies.id")
             .leftJoin("users", "entity_bookings.bookedBy", "users.id")
             .leftJoin("property_units", "entity_bookings.unitId", "property_units.id")
+            .leftJoin("property_unit_type_master","property_units.propertyUnitType","property_unit_type_master.id")
             .where("entity_bookings.orgId", req.orgId)
             .select([
               "entity_bookings.*",
@@ -809,7 +816,10 @@ const facilityBookingController = {
               "facility_master.name as Facility",
               "companies.companyName as Company",
               "property_units.unitNumber",
-              "property_units.type as unitType"
+              "property_units.type as unitType",
+              "property_units.description",
+              "property_unit_type_master.propertyUnitTypeCode",
+            "property_unit_type_master.descriptionEng"
 
             ])
             .where("entity_bookings.bookingStartDateTime", ">=", fromBookTime)
@@ -823,7 +833,10 @@ const facilityBookingController = {
               "companies.id",
               "users.name",
               "property_units.unitNumber",
-              "property_units.type"
+              "property_units.type",
+              "property_units.description",
+              "property_unit_type_master.propertyUnitTypeCode",
+              "property_unit_type_master.descriptionEng"
             ])
             .orderBy("entity_bookings.id", "asc")
       }
@@ -3977,6 +3990,7 @@ const facilityBookingController = {
           )
           .leftJoin("users", "entity_bookings.bookedBy", "users.id")
           .leftJoin("property_units", "entity_bookings.unitId", "property_units.id")
+          .leftJoin("property_unit_type_master","property_units.propertyUnitType","property_unit_type_master.id")
           .select(
             "entity_bookings.id",
             "entity_bookings.orgId",
@@ -3992,7 +4006,10 @@ const facilityBookingController = {
             "facility_master.name",
             "users.name as bookedUser",
             "property_units.unitNumber",
-            "property_units.propertyUnitType as unitType"
+            "property_units.propertyUnitType as unitType",
+            "property_units.description",
+            "property_unit_type_master.propertyUnitTypeCode",
+            "property_unit_type_master.descriptionEng"
           )
           .where("entity_bookings.orgId",req.orgId)
         // .where("entity_bookings.bookingStartDateTime", ">=", fromBookTime)
@@ -4081,6 +4098,7 @@ const facilityBookingController = {
         )
         .leftJoin("users", "entity_bookings.bookedBy", "users.id")
         .leftJoin("property_units", "entity_bookings.unitId", "property_units.id")
+        .leftJoin("property_unit_type_master","property_units.propertyUnitType","property_unit_type_master.id")
         .select(
           "entity_bookings.id",
           "entity_bookings.orgId",
@@ -4096,7 +4114,10 @@ const facilityBookingController = {
           "facility_master.name",
           "users.name as bookedUser",
           "property_units.unitNumber",
-          "property_units.propertyUnitType as unitType"
+          "property_units.propertyUnitType as unitType",
+          "property_units.description",
+          "property_unit_type_master.propertyUnitTypeCode",
+            "property_unit_type_master.descriptionEng"
         )
         .where("entity_bookings.orgId",req.orgId)
         .where("entity_bookings.bookingStartDateTime", ">=", fromBookTime)
@@ -4108,7 +4129,10 @@ const facilityBookingController = {
               "facility_master.id",
               "users.name",
               "property_units.unitNumber",
-              "property_units.propertyUnitType"
+              "property_units.propertyUnitType",
+              "property_units.description",
+              "property_unit_type_master.propertyUnitTypeCode",
+            "property_unit_type_master.descriptionEng"
             ])
             .orderBy("entity_bookings.id", "asc")
 
