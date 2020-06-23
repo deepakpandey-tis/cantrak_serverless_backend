@@ -3950,8 +3950,9 @@ const facilityBookingController = {
     try {
       // let {} =req.body
       let payload = req.body
-      let reqData = req.query
+      // let reqData = req.query
       let { facilityName, status } = req.body
+      console.log("status of facility",status)
       let fromDate = payload.createdDateFrom;
       let toDate = payload.createdDateTo;
       let bookingDateFrom = payload.bookingDateTimeFrom;
@@ -3984,24 +3985,33 @@ const facilityBookingController = {
             "entity_bookings.noOfSeats",
             "entity_bookings.feesPaid",
             "entity_bookings.bookedAt",
+            "entity_bookings.createdAt",
             "entity_bookings.isBookingConfirmed",
             "entity_bookings.isBookingCancelled",
             "entity_bookings.confirmedType",
             "facility_master.name",
             "users.name as bookedUser",
-            "property_units.unitNumber"
+            "property_units.unitNumber",
+            "property_units.propertyUnitType as unitType"
           )
           .where("entity_bookings.orgId",req.orgId)
-        .where("entity_bookings.bookingStartDateTime", ">=", fromBookTime)
-            .where("entity_bookings.bookingStartDateTime", "<=", toBookTime)
+        // .where("entity_bookings.bookingStartDateTime", ">=", fromBookTime)
+            // .where("entity_bookings.bookingStartDateTime", "<=", toBookTime)
             .where("entity_bookings.createdAt", ">=", fromTime)
             .where("entity_bookings.createdAt", "<=", toTime)
           .where((qb)=>{
             if(facilityName){
               qb.whereIn("facility_master.name",facilityName)
+              qb.where(
+                "entity_bookings.bookingStartDateTime",
+                ">=",
+                fromBookTime
+              );
+              qb.where("entity_bookings.bookingStartDateTime", "<=", toBookTime);
+
             }
             if(status){
-              if (status == "Pending") {
+              if (status === "Pending") {
                 qb.where("entity_bookings.isBookingConfirmed", false);
                 qb.where("entity_bookings.isBookingCancelled", false);
                 qb.where(
@@ -4013,7 +4023,7 @@ const facilityBookingController = {
 
               }
 
-              if (status == "Approved") {
+              if (status === "Approved") {
                 qb.where("entity_bookings.isBookingConfirmed", true);
                 qb.where(
                   "entity_bookings.bookingStartDateTime",
@@ -4025,7 +4035,7 @@ const facilityBookingController = {
 
               }
 
-              if (status == "Confirmed") {
+              if (status === "Confirmed") {
                 qb.where("entity_bookings.isBookingConfirmed", true);
                 qb.where(
                   "entity_bookings.bookingStartDateTime",
@@ -4037,7 +4047,7 @@ const facilityBookingController = {
                 qb.where("entity_bookings.confirmedType", 1);
               }
 
-              if (status == "Cancelled") {
+              if (status === "Cancelled") {
                 qb.where("entity_bookings.isBookingCancelled", true);
                 qb.where(
                   "entity_bookings.bookingStartDateTime",
@@ -4052,7 +4062,14 @@ const facilityBookingController = {
 
           })
 
-        }catch(err){}
+        }catch(err){
+          console.log("[controllers][facility][listByFacilityUnit] :  Error", err);
+          //trx.rollback
+          res.status(500).json({
+            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+          });
+
+        }
 
       }else{
 
@@ -4072,12 +4089,14 @@ const facilityBookingController = {
           "entity_bookings.noOfSeats",
           "entity_bookings.feesPaid",
           "entity_bookings.bookedAt",
+          "entity_bookings.createdAt",
           "entity_bookings.isBookingConfirmed",
           "entity_bookings.isBookingCancelled",
           "entity_bookings.confirmedType",
           "facility_master.name",
           "users.name as bookedUser",
-          "property_units.unitNumber"
+          "property_units.unitNumber",
+          "property_units.propertyUnitType as unitType"
         )
         .where("entity_bookings.orgId",req.orgId)
         .where("entity_bookings.bookingStartDateTime", ">=", fromBookTime)
@@ -4087,10 +4106,9 @@ const facilityBookingController = {
             .groupBy([
               "entity_bookings.id",
               "facility_master.id",
-              // "companies.id",
               "users.name",
               "property_units.unitNumber",
-              "property_units.type"
+              "property_units.propertyUnitType"
             ])
             .orderBy("entity_bookings.id", "asc")
 
@@ -4585,7 +4603,7 @@ const facilityBookingController = {
       let offset = (page - 1) * per_page;
       let { searchValue } = req.body;
       let orgId = req.query.orgId;
-      console.log(searchValue)
+      console.log("search value",searchValue)
       let total, rows;
 
       [total, rows] = await Promise.all([
