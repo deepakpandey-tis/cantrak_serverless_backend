@@ -543,7 +543,7 @@ const ProjectController = {
       let tempraryDirectory = null;
       let bucketName = null;
       if (process.env.IS_OFFLINE) {
-        bucketName = 'sls-app-resources-bucket';
+        bucketName = process.env.S3_BUCKET_NAME;
         tempraryDirectory = 'tmp/';
       } else {
         tempraryDirectory = '/tmp/';
@@ -592,7 +592,9 @@ const ProjectController = {
             console.log("File uploaded Successfully");
             //next(null, filePath);
             let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
-            let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Project/" + filename;
+            let url = process.env.S3_BUCKET_URL+"/Export/Project/" +
+            filename;
+           // let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Project/" + filename;
             return res.status(200).json({
               data: rows,
               message: "Project Data Export Successfully!",
@@ -989,6 +991,33 @@ const ProjectController = {
         message: "projects List!"
       });
     } catch(err) {
+      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getProjectById:async(req,res)=>{
+    try{
+      let projectId = req.body.id
+      let orgId = req.orgId
+
+      let projectResult = await knex("projects")
+      .select([
+        "projects.id",
+        "projects.projectName"
+      ])
+      .where("projects.id",projectId)
+      .where("projects.orgId",orgId)
+
+      return res.status(200).json({
+        data: {
+          projects: projectResult
+        },
+        message: "projects List!"
+      });
+    }catch(err){
       console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
       //trx.rollback
       res.status(500).json({

@@ -601,7 +601,7 @@ const companyController = {
       let tempraryDirectory = null;
       let bucketName = null;
       if (process.env.IS_OFFLINE) {
-        bucketName = "sls-app-resources-bucket";
+        bucketName = process.env.S3_BUCKET_NAME;
         tempraryDirectory = "tmp/";
       } else {
         tempraryDirectory = "/tmp/";
@@ -656,9 +656,11 @@ const companyController = {
             let deleteFile = fs.unlink(filepath, err => {
               console.log("File Deleting Error " + err);
             });
-            let url =
-              "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Company/" +
-              filename;
+            let url = process.env.S3_BUCKET_URL+"/Export/Company/" +
+            filename;
+            // let url =
+            //   "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Company/" +
+            //   filename;
             return res.status(200).json({
               data: rows,
               message: "Companies Data Export Successfully!",
@@ -1133,6 +1135,38 @@ const companyController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  getCompanyById:async(req,res)=>{
+    try{
+      let companyId = req.body.id
+      let orgId = req.orgId
+
+      let companyResult = await knex("companies")
+      .select([
+        "companies.id",
+        "companies.companyName",
+    ])
+      .where("companies.orgId",orgId)
+      .where("companies.id",companyId)
+
+      return res.status(200).json({
+        data: {
+          companies:companyResult
+        },
+        message: "Companies List!"
+      });
+
+    }catch(err){
+      console.log(
+        "[controllers][companies][getCompany] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+   
   }
 };
 

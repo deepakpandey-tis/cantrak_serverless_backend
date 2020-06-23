@@ -650,7 +650,7 @@ const buildingPhaseController = {
       let tempraryDirectory = null;
       let bucketName = null;
       if (process.env.IS_OFFLINE) {
-        bucketName = "sls-app-resources-bucket";
+        bucketName = process.env.S3_BUCKET_NAME;
         tempraryDirectory = "tmp/";
       } else {
         tempraryDirectory = "/tmp/";
@@ -704,9 +704,11 @@ const buildingPhaseController = {
             fs.unlink(filepath, err => {
               console.log("File Deleting Error " + err);
             });
-            let url =
-              "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/BuildingPhase/" +
-              filename;
+            let url = process.env.S3_BUCKET_URL+"/Export/BuildingPhase/" +
+            filename;
+            // let url =
+            //   "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/BuildingPhase/" +
+            //   filename;
 
             return res.status(200).json({
               data: {
@@ -1191,6 +1193,37 @@ const buildingPhaseController = {
         message: "Building Phases List!"
       });
     } catch (err) {
+      console.log(
+        "[controllers][generalsetup][viewbuildingPhase] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  getBuildingPhaseById:async(req,res)=>{
+    try{
+      let id = req.body.id
+      let orgId = req.orgId
+      let buildingPhaseResult = await knex("buildings_and_phases")
+      .select([
+        "buildings_and_phases.id",
+        "buildings_and_phases.description",
+        "buildings_and_phases.buildingPhaseCode"
+      ])
+      .where("buildings_and_phases.id",id)
+      .where("buildings_and_phases.orgId",orgId)
+
+      return res.status(200).json({
+        data: {
+          buildingPhases: buildingPhaseResult
+        },
+        message: "Building Phases List!"
+      });
+
+    }catch(err){
       console.log(
         "[controllers][generalsetup][viewbuildingPhase] :  Error",
         err
