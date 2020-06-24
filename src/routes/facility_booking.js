@@ -83,6 +83,8 @@ router.post('/get-unit-by-building',authMiddleware.isAuthenticated,facilityBooki
 
 router.post('/get-tenant-by-unit', authMiddleware.isAuthenticated,facilityBookingController.getTenantByUnit)
 
+router.get('/get-tenant-list',authMiddleware.isAuthenticated,facilityBookingController.getTenantList)
+
 /* GET FACILITY AVAILABLE SEATS */
 router.post('/get-facility-available-seats', authMiddleware.isAuthenticated, facilityBookingController.getFacilityAvailableSeats);
 
