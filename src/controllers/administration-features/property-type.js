@@ -392,7 +392,7 @@ const propertyTypeController = {
       let tempraryDirectory = null;
       let bucketName = null;
       if (process.env.IS_OFFLINE) {
-        bucketName = 'sls-app-resources-bucket';
+        bucketName = process.env.S3_BUCKET_NAME;
         tempraryDirectory = 'tmp/';
       } else {
         tempraryDirectory = '/tmp/';
@@ -442,7 +442,9 @@ const propertyTypeController = {
             console.log("File uploaded Successfully");
             //next(null, filePath);
             let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
-            let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/PropertyType/" + filename;
+            let url = process.env.S3_BUCKET_URL+"/Export/PropertyType/" +
+            filename;
+            //let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/PropertyType/" + filename;
             return res.status(200).json({
               propertyType: rows,
               message: "Property Type Data Export Successfully!",

@@ -46,10 +46,11 @@ const remarksController = {
         // Define try/catch block
         try {
             let problemImagesData = [];
+            let remarkFilesData = [];
             let userId = req.me.id;
 
             await knex.transaction(async trx => {
-                let upNotesPayload = _.omit(req.body, ["images"]);
+                let upNotesPayload = _.omit(req.body, ["images"],["files"]);
                 console.log("[controllers][remarks][updateRemarksNotes] : Request Body", upNotesPayload);
 
                 // validate keys
@@ -118,11 +119,39 @@ const remarksController = {
                     }
                 }
 
+
+                /*INSERT FILE TABLE DATA OPEN */
+
+                if (req.body.files && req.body.files.length) {
+                    let filesData = req.body.files;
+                    for (file of filesData) {
+                        let d = await knex
+                            .insert({
+                                entityId: remarkNoteId.id,
+                                ...file,
+                                entityType: upNotesPayload.entityType,
+                                createdAt: currentTime,
+                                updatedAt: currentTime,
+                                orgId: req.orgId
+                            })
+                            .returning(["*"])
+                            .transacting(trx)
+                            .into("files");
+
+                        remarkFilesData.push(d[0]);
+                    }
+                }
+
                 /*INSERT IMAGE TABLE DATA CLOSE */
-                if (problemImagesData.length) {
-                    notesData = { ...notesData, s3Url: problemImagesData[0].s3Url }
+                if (problemImagesData.length && remarkFilesData.length) {
+                    notesData = { ...notesData, s3Url: problemImagesData[0].s3Url, fs3Url:remarkFilesData[0].s3Url }
+                }
+                else if (problemImagesData.length) {
+                    notesData = { ...notesData, s3Url: problemImagesData[0].s3Url, fs3Url: '' }
+                } else  if (remarkFilesData.length ) {
+                    notesData = { ...notesData, s3Url: '', fs3Url:remarkFilesData[0].s3Url  }
                 } else {
-                    notesData = { ...notesData, s3Url: '' }
+                    notesData = { ...notesData, s3Url: '', fs3Url: '' }
                 }
 
                 trx.commit;
@@ -175,6 +204,13 @@ const remarksController = {
             remarksNotesList = await Parallel.map(remarksNotesList, async item => {
                 let images = await knex.raw(`select * from "images" where "images"."entityId"= ${item.id} and "images"."entityType" = '${entityType}' and "images"."orgId" = ${req.orgId} `);
                 item.images = images.rows;
+                return item;
+            });
+
+            const Parallel1 = require('async-parallel');
+            remarksNotesList = await Parallel1.map(remarksNotesList, async item => {
+                let files = await knex.raw(`select * from "files" where "files"."entityId"= ${item.id} and "files"."entityType" = '${entityType}' and "files"."orgId" = ${req.orgId} `);
+                item.files = files.rows;
                 return item;
             });
 

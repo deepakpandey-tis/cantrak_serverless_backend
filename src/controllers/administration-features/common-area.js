@@ -746,7 +746,7 @@ const commonAreaController = {
       let tempraryDirectory = null;
       let bucketName = null;
       if (process.env.IS_OFFLINE) {
-        bucketName = 'sls-app-resources-bucket';
+        bucketName = process.env.S3_BUCKET_NAME;
         tempraryDirectory = 'tmp/';
       } else {
         tempraryDirectory = '/tmp/';
@@ -796,7 +796,9 @@ const commonAreaController = {
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
-            let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/CommonArea/" + filename;
+            let url = process.env.S3_BUCKET_URL+"/Export/CommonArea/" +
+            filename;
+            //let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/CommonArea/" + filename;
             res.status(200).json({
               data: rows,
               message: "Common Area Data Export Successfully !",

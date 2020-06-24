@@ -60,7 +60,7 @@ const assetController = {
               if (assetSerial) {
                 qb.where(
                   "asset_master.assetSerial",
-                  "like",
+                  "iLIKE",
                   `%${assetSerial}%`
                 )
               }
@@ -132,7 +132,7 @@ const assetController = {
               if (assetSerial) {
                 qb.where(
                   "asset_master.assetSerial",
-                  "like",
+                  "iLIKE",
                   `%${assetSerial}%`
                 )
               }
