@@ -54,6 +54,8 @@ router.get('/user-company-lists',authMiddleware.isAuthenticated, companyControll
 // GET COMPANY LIST HAVING PROPERTY UNITS
 router.get('/company-lists-having-property-units', authMiddleware.isAuthenticated, companyController.getCompanyListHavingPropertyUnits)
 
+router.post('/get-company-by-Id',authMiddleware.isAuthenticated,companyController.getCompanyById)
+
 
 
 

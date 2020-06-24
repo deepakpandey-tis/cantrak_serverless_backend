@@ -539,6 +539,7 @@ const singupController = {
   forgotPassword: async (req, res) => {
 
     try {
+      let url = process.env.SITE_URL;
       let payload = req.body;
       let emailExistResult = await knex.from('users').where({ email: payload.email }).returning(['*']);
       if (emailExistResult.length) {
@@ -550,7 +551,7 @@ const singupController = {
           template: 'forgot-email.ejs',
           templateData: {
             fullName: emailExistResult[0].name,
-            URL: 'https://dj47f2ckirq9d.cloudfront.net/reset-password/' + uid
+            URL: url+'/reset-password/' + uid
           }
         })
         let result = await knex.from('users').update({ verifyToken: uid }).where({ email: emailExistResult[0].email }).returning(['*']);
