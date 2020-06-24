@@ -32,7 +32,8 @@ ALTER TABLE public.part_ledger ADD "storeAdjustmentBy" int8 NULL;
 ALTER TABLE public.part_ledger ADD "returnedBy" int8 NULL;
 ALTER TABLE public.assigned_parts ALTER COLUMN quantity TYPE float8 USING quantity::float8;
 
-
+ALTER TABLE public.part_ledger ALTER COLUMN "issueBy" TYPE varchar USING "issueBy"::varchar;
+ALTER TABLE public.part_ledger ALTER COLUMN "issueTo" TYPE varchar USING "issueTo"::varchar;
 
 
 
