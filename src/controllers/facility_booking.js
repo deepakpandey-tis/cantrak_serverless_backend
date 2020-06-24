@@ -646,7 +646,7 @@ const facilityBookingController = {
     try {
       let payload = req.body
       let reqData = req.query
-      let { companyId, projectId, buildingPhaseId, unitNo, facilityName, status } = req.body
+      let { companyId, projectId, buildingPhaseId, unitNo, facilityName, status,tenantName } = req.body
       let fromDate = payload.createdDateFrom;
       let toDate = payload.createdDateTo;
       let bookingDateFrom = payload.bookingDateTimeFrom;
@@ -657,19 +657,19 @@ const facilityBookingController = {
       // let currentDate = new Date().getTime();
 
       // if(fromDate && toDate){
-      let fromNewDate = moment(fromDate).startOf('date').format();
-      let toNewDate = moment(toDate).endOf('date', 'days').format();
+      let fromNewDate = moment(fromDate).startOf('time','date').format();
+      let toNewDate = moment(toDate).endOf('time', 'date').format();
       let fromTime = new Date(fromNewDate).getTime();
       let toTime = new Date(toNewDate).getTime();
-      let fromBookDate = moment(bookingDateFrom).startOf('date').format();
-      let toBookDate = moment(bookingDateTo).endOf('date', 'days');
+      let fromBookDate = moment(bookingDateFrom).startOf('time','date').format();
+      let toBookDate = moment(bookingDateTo).endOf('time', 'date');
       let fromBookTime = new Date(fromBookDate).getTime();
       let toBookTime = new Date(toBookDate).getTime();
       console.log("times",fromTime,toTime,fromBookTime,toBookTime)
       
       let facilityReportResult
 
-      if (companyId || projectId || buildingPhaseId || unitNo || facilityName || status) {
+      if (companyId || projectId || buildingPhaseId || unitNo || facilityName || status || tenantName) {
         try {
           facilityReportResult = await
             knex
@@ -703,18 +703,12 @@ const facilityBookingController = {
                 // if (facilityName) {
                 //   qb.where(
                 //     "facility_master.name",
-                //     "iLIKE",
+                    // "iLIKE",
                 //     `%${facilityName}%`
                 //   );
                 // }
                 if(facilityName){
                   qb.whereIn("facility_master.name",facilityName)
-                }
-                if (projectId) {
-                  qb.where("facility_master.projectId", projectId);
-                }
-                if (buildingPhaseId) {
-                  qb.where("facility_master.buildingPhaseId", buildingPhaseId);
                 }
                 if (unitNo) {
                   qb.where("entity_bookings.unitId", unitNo);
@@ -728,6 +722,9 @@ const facilityBookingController = {
                 }
                 if (buildingPhaseId) {
                   qb.where("facility_master.buildingPhaseId", buildingPhaseId)
+                }
+                if(tenantName){
+                  qb.where("users.name","iLIKE",`%${tenantName}%`)
                 }
                 if (fromDate && toDate) {
                   qb.where("entity_bookings.createdAt", ">=", fromTime);
@@ -795,6 +792,7 @@ const facilityBookingController = {
 
                   }
                 }
+                
                 qb.where("entity_bookings.orgId", req.orgId);
               })
               .orderBy("entity_bookings.id", "asc")
@@ -2896,6 +2894,27 @@ const facilityBookingController = {
       });
     }
   },
+  getTenantList:async(req,res) =>{
+    try{
+      let orgId = req.orgId
+      let tenantList = await knex 
+      .from("user_house_allocation")
+      .leftJoin("users", "user_house_allocation.userId", "users.id")
+      .select(["users.name", "users.id"])
+      .where("users.orgId",orgId)
+
+      return res.status(200).json({
+        data: {
+          tenants: tenantList,
+        },
+      });
+
+    }catch(err){
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
 
   /* GET FACILITY AVAILABLE SEATS */
   getFacilityAvailableSeats: async (req, res) => {
@@ -3964,7 +3983,7 @@ const facilityBookingController = {
       // let {} =req.body
       let payload = req.body
       // let reqData = req.query
-      let { facilityName, status } = req.body
+      let { facilityName, status,companyId,projectId,buildingPhaseId,unitNo ,tenantName} = req.body
       console.log("status of facility",status)
       let fromDate = payload.createdDateFrom;
       let toDate = payload.createdDateTo;
@@ -3979,7 +3998,7 @@ const facilityBookingController = {
       let fromBookTime = new Date(fromBookDate).getTime();
       let toBookTime = new Date(toBookDate).getTime();
       let bookingListResult
-      if(status || facilityName){
+      if(status || facilityName || companyId || projectId || buildingPhaseId || unitNo || tenantName){
         try{
           bookingListResult = await knex
           .from("entity_bookings")
@@ -4027,6 +4046,10 @@ const facilityBookingController = {
               qb.where("entity_bookings.bookingStartDateTime", "<=", toBookTime);
 
             }
+            if(tenantName){
+              qb.where("users.name","iLIKE",`%${tenantName}%`)
+            }
+            
             if(status){
               if (status === "Pending") {
                 qb.where("entity_bookings.isBookingConfirmed", false);
@@ -4072,9 +4095,20 @@ const facilityBookingController = {
                   fromBookTime
                 );
                 qb.where("entity_bookings.bookingStartDateTime", "<=", toBookTime);
-
               }
+            }
+            if (unitNo) {
+              qb.where("entity_bookings.unitId", unitNo);
+            }
+            if (companyId) {
+              qb.where("entity_bookings.companyId", companyId);
+            }
+            if (projectId) {
+              qb.where("facility_master.projectId", projectId)
 
+            }
+            if (buildingPhaseId) {
+              qb.where("facility_master.buildingPhaseId", buildingPhaseId)
             }
 
           })
