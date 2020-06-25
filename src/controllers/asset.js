@@ -641,7 +641,7 @@ const assetController = {
           }),
 
         knex("asset_master")
-          .select(["id", "assetName", "model", "barcode", "areaName", "assetSerial"])
+          .select(["id", "assetCode", "assetName", "model", "barcode", "areaName", "assetSerial"])
           .where({ assetCategoryId, companyId })
           .offset(offset)
           .limit(per_page)
