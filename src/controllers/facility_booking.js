@@ -653,24 +653,13 @@ const facilityBookingController = {
         status,
         tenantName,
       } = req.body;
-      
-      console.log("payload timezone",payload.timezone)
+      console.log("status",status)
 
       let fromDate = payload.createdDateFrom;
       let toDate = payload.createdDateTo;
       let bookingDateFrom = payload.bookingDateTimeFrom;
       let bookingDateTo = payload.bookingDateTimeTo;
-      // console.log("Dates",fromDate,toDate,bookingDateFrom,bookingDateTo)
-      // let fromNewDate = moment(fromDate).startOf("time", "date").format();
-      // let toNewDate = moment(toDate).endOf("time", "date").format();
-      // let fromTime = new Date(fromNewDate).getTime();
-      // let toTime = new Date(toNewDate).getTime();
-      // let fromBookDate = moment(bookingDateFrom)
-      //   .startOf("time", "date")
-      //   .format();
-      // let toBookDate = moment(bookingDateTo).endOf("time", "date");
-      // let fromBookTime = new Date(fromBookDate).getTime();
-      // let toBookTime = new Date(toBookDate).getTime();
+      
 
       moment.tz.setDefault(payload.timezone);
       let currentTime = moment();
@@ -694,17 +683,16 @@ const facilityBookingController = {
 
 
       let facilityReportResult;
-      // if(unitNo.length === 1 || facilityName.length === 1 || status.length === 1 || tenantName.length === 1){
       if (
         companyId ||
         projectId ||
         buildingPhaseId ||
-        unitNo ||
-        facilityName ||
+        unitNo || 
         status ||
-        tenantName 
-        // &&
-        // tenantName[0] !=0
+        facilityName || 
+        tenantName ||
+        (fromDate && toDate) || (bookingDateFrom && bookingDateTo)
+        
       ) {
         try {
           facilityReportResult = await knex
@@ -741,7 +729,6 @@ const facilityBookingController = {
               "property_unit_type_master.propertyUnitTypeCode",
               "property_unit_type_master.descriptionEng",
             ])
-            // .where("entity_bookings.bookingStartDateTime", ">=", currentDate)
             .where((qb) => {
               // if (facilityName) {
               //   qb.where(
@@ -758,6 +745,7 @@ const facilityBookingController = {
               }
               if (companyId) {
                 qb.where("entity_bookings.companyId", companyId);
+                // qb.orWhere("entity_bookings.companyId",'')
               }
               if (projectId) {
                 qb.where("facility_master.projectId", projectId);
@@ -765,16 +753,10 @@ const facilityBookingController = {
               if (buildingPhaseId) {
                 qb.where("facility_master.buildingPhaseId", buildingPhaseId);
               }
-              // if(tenantName){
-              //   qb.where("users.name","iLIKE",`%${tenantName}%`)
-              // }
-              // if(tenantName[0]==0){
-
-              // }else{
-              //   qb.whereIn("users.name", tenantName);
-              // }
+              
               if (tenantName) {
-                qb.whereIn("users.name", tenantName);
+                
+                  qb.whereIn("users.name",tenantName)
               }
               if (fromDate && toDate) {
                 qb.where("entity_bookings.createdAt", ">=", createStartTime);
@@ -796,82 +778,36 @@ const facilityBookingController = {
                 if (status == "Pending") {
                   qb.where("entity_bookings.isBookingConfirmed", false);
                   qb.where("entity_bookings.isBookingCancelled", false);
-                  qb.where(
-                    "entity_bookings.bookingStartDateTime",
-                    ">=",
-                    bookingStartTime
-                  );
-                  qb.where(
-                    "entity_bookings.bookingStartDateTime",
-                    "<=",
-                    bookingEndTime
-                  );
+                  
                 }
 
                 if (status == "Approved") {
                   qb.where("entity_bookings.isBookingConfirmed", true);
-                  qb.where(
-                    "entity_bookings.bookingStartDateTime",
-                    ">=",
-                    bookingStartTime
-                  );
-                  qb.where(
-                    "entity_bookings.bookingStartDateTime",
-                    "<=",
-                    bookingEndTime
-                  );
-                  qb.where("entity_bookings.confirmedType", 0);
+                  qb.where("entity_bookings.confirmedType", null);
+                  // qb.orWhere("entity_bookings.confirmedType",0)
                 }
 
                 if (status == "Confirmed") {
                   qb.where("entity_bookings.isBookingConfirmed", true);
-                  qb.where(
-                    "entity_bookings.bookingStartDateTime",
-                    ">=",
-                    bookingStartTime
-                  );
-                  qb.where(
-                    "entity_bookings.bookingStartDateTime",
-                    "<=",
-                    bookingEndTime
-                  );
-
                   qb.where("entity_bookings.confirmedType", 1);
                 }
 
                 if (status == "Cancelled") {
                   qb.where("entity_bookings.isBookingCancelled", true);
-                  qb.where(
-                    "entity_bookings.bookingStartDateTime",
-                    ">=",
-                    bookingStartTime
-                  );
-                  qb.where(
-                    "entity_bookings.bookingStartDateTime",
-                    "<=",
-                    bookingEndTime
-                  );
-                }
-
-                if (status == "Expired") {
-                  qb.where(
-                    "entity_bookings.bookingStartDateTime",
-                    "<",
-                    bookingStartTime
-                  );
-                  qb.where(
-                    "entity_bookings.bookingStartDateTime",
-                    "<=",
-                    bookingEndTime
-                  );
+                  
                 }
               }
 
               qb.where("entity_bookings.orgId", req.orgId);
             })
             .orderBy("entity_bookings.id", "asc");
-        } catch (err) {}
-      } else {
+        } catch (err) {
+          console.log("[controllers][facilityBooking][list] :  Error", err);
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+        }
+      }else {
         facilityReportResult = await knex
           .from("entity_bookings")
           .leftJoin(
@@ -907,7 +843,6 @@ const facilityBookingController = {
           .where("entity_bookings.bookingStartDateTime", "<=", bookingEndTime)
           .where("entity_bookings.createdAt", ">=", createStartTime)
           .where("entity_bookings.createdAt", "<=", createdEndTime)
-          // .where("entity_bookings.bookingStartDateTime", ">=", currentDate)
           .groupBy([
             "entity_bookings.id",
             "facility_master.id",
@@ -955,6 +890,7 @@ const facilityBookingController = {
         floorZoneId,
         facilityName,
       } = req.body;
+      // console.log("companyId",companyId)
 
       if (
         companyId ||
@@ -2725,6 +2661,36 @@ const facilityBookingController = {
         errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }],
       });
     }
+  },
+  updateFacilityReport:async(req,res) =>{
+    try{
+      
+      let payload = req.body
+      const currentTime = new Date().getTime();
+      console.log(payload)
+
+      let insertData = {
+        updatedAt: currentTime,
+        reportName:payload.reportName,
+        reportJson: JSON.stringify(payload),
+      };
+
+      let result = await knex("facility_report_master")
+      .update(insertData)
+      .returning(["*"])
+      .where({id:payload.id});
+
+      return res.status(200).json({
+        message:"facility report updated successfully !",
+        data :result
+      })
+
+    }catch(err){
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }],
+      });
+    }
+
   },
   updateFacilityCloseDate: async (req, res) => {
     try {
@@ -4708,11 +4674,6 @@ const facilityBookingController = {
           "[Controllers][facility_bookings][addReport]",
           facilityPayload.reportName
         );
-
-        // const facilityReportSingle = Joi.object().keys({
-        //   reportJson:Joi.object().required()
-        // })
-
         const schema = Joi.object().keys({
           reportName: Joi.string().required(),
           reportJson: Joi.object().required(),

@@ -103,6 +103,8 @@ router.post('/generate-facility-reportId',authMiddleware.isAuthenticated,facilit
 
 router.post('/add-facility-report',authMiddleware.isAuthenticated,facilityBookingController.addFacilityReport)
 
+router.post('/update-facility-report',authMiddleware.isAuthenticated,facilityBookingController.updateFacilityReport)
+
 router.post('/get-facility-report-list',authMiddleware.isAuthenticated,facilityBookingController.getFacilityReportList)
 
 router.post('/get-facilityList-by-date',authMiddleware.isAuthenticated,facilityBookingController.facilityListingByDate)
