@@ -799,7 +799,7 @@ const partsController = {
                 console.log('[controllers][part][stock]', partStockPayload);
                 // validate keys
                 let result;
-                if (partStockPayload.adjustType == "1" || partStockPayload.adjustType == "3" || partStockPayload.adjustType == "11") {
+                if (partStockPayload.adjustType == "1" || partStockPayload.adjustType == "3") {
                     const schema = Joi.object().keys({
                         partId: Joi.string().required(),
                         unitCost: Joi.number().allow("").allow(null).optional(),
@@ -871,7 +871,7 @@ const partsController = {
                     partStockPayload = _.omit(partStockPayload, ['storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor'])
                     partStockPayload.receiveDate = new Date(partStockPayload.receiveDate).getTime();
 
-                } else if (partStockPayload.adjustType == "10") {
+                } else if (partStockPayload.adjustType == "10" || partStockPayload.adjustType == "11") {
                     const schema = Joi.object().keys({
                         partId: Joi.string().required(),
                         unitCost: Joi.number().allow("").allow(null).optional(),
@@ -879,16 +879,17 @@ const partsController = {
                         quantity: Joi.number().required(),
                         adjustType: Joi.string().required(),
                         workOrderId: Joi.string().required(),
-                        isPartAdded: Joi.string().required()
+                        isPartAdded: Joi.string().required(),
+                        issueBy: Joi.string().allow("").allow(null).optional(),
+                        issueTo: Joi.string().allow("").allow(null).optional(),
+                        
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'serviceOrderNo', 'description', 'date', 'receiveBy', 'receiveDate', 'deductBy', 'deductDate', 'building', 'floor'), schema);
+                    result = Joi.validate(_.omit(partStockPayload, 'storeAdjustmentBy', 'returnedBy', 'serviceOrderNo', 'description', 'date', 'receiveBy', 'receiveDate', 'deductBy', 'deductDate', 'building', 'floor'), schema);
                     partStockPayload = _.omit(partStockPayload, ['serviceOrderNo', "receiveBy",
                         "receiveDate",
                         "building",
                         "floor",
                         "storeAdjustmentBy",
-                        "issueBy",
-                        "issueTo",
                         "deductBy",
                         "returnedBy"])
 
@@ -976,7 +977,7 @@ const partsController = {
                 }
 
                 let quantity;
-                if (partStockPayload.adjustType == 1 || partStockPayload.adjustType == 2 || partStockPayload.adjustType == 5 || partStockPayload.adjustType == 7) {
+                if (partStockPayload.adjustType == 11 || partStockPayload.adjustType == 1 || partStockPayload.adjustType == 2 || partStockPayload.adjustType == 5 || partStockPayload.adjustType == 7) {
                     quantity = "-" + partStockPayload.quantity;
                 } else {
                     quantity = partStockPayload.quantity;
@@ -1326,10 +1327,10 @@ const partsController = {
             let workOrderId = req.params.id;
             let result = "";
             result = await knex('task_group_schedule_assign_assets').returning('*')
-                .where({ id: workOrderId, orgId: orgId })
+                .where({ displayId: workOrderId, orgId: orgId })
             return res.status(200).json({
                 data: result,
-                message: "Work Order Id Successfully!"
+                message: "Work Order no. Successfully!"
             });
         } catch (err) {
             return res.status(500).json({
@@ -2391,7 +2392,7 @@ const partsController = {
             let serviceId = req.query.serviceId;
             let result = "";
             result = await knex('service_orders').returning('*')
-                .where({ id: serviceId, orgId: orgId })
+                .where({ displayId: serviceId, orgId: orgId })
             return res.status(200).json({
                 data: result,
                 message: "Service order Id Successfully!"
