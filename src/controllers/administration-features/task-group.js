@@ -897,7 +897,7 @@ const taskGroupController = {
             'asset_category_master.*',
             'pm_master2.*',
             'pm_master2.id as id',
-            'pm_master2.displayId as PM'
+            'pm_master2.displayId as PMNo'
           ]).where(qb => {
             qb.where(filters)
             qb.whereIn("pm_master2.projectId", projects);
@@ -1011,7 +1011,7 @@ const taskGroupController = {
           })
           .where(qb => {
             if (payload.workOrderId) {
-              qb.where('task_group_schedule_assign_assets.id', payload.workOrderId)
+              qb.where('task_group_schedule_assign_assets.displayId', payload.workOrderId)
             }
             if (payload.category) {
               qb.where('task_group_schedule_assign_assets.assetId', payload.category)
@@ -1061,7 +1061,7 @@ const taskGroupController = {
           })
           .where(qb => {
             if (payload.workOrderId) {
-              qb.where('task_group_schedule_assign_assets.id', payload.workOrderId)
+              qb.where('task_group_schedule_assign_assets.displayId', payload.workOrderId)
             }
             if (payload.category) {
               qb.where('task_group_schedule_assign_assets.assetId', payload.category)
