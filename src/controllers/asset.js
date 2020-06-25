@@ -559,6 +559,10 @@ const assetController = {
       let {
         assetCategoryId,
         companyId,
+        assetName,
+        assetModel,
+        assetSerial,
+        assetCode,
       } = req.body;
       let pagination = {};
       let per_page = reqData.per_page || 10;
@@ -572,12 +576,20 @@ const assetController = {
       // validate keys
       const schema = Joi.object().keys({
         assetCategoryId: Joi.number().required(),
-        companyId: Joi.number().required()
+        companyId: Joi.number().required(),
+        assetName: Joi.string().allow("").allow(null).optional(),
+        assetModel: Joi.string().allow("").allow(null).optional(),
+        assetSerial: Joi.string().allow("").allow(null).optional(),
+        assetCode: Joi.string().allow("").allow(null).optional(),
       });
 
       let result = Joi.validate({
         assetCategoryId,
         companyId,
+        assetName,
+        assetModel,
+        assetSerial,
+        assetCode,
       }, schema);
       console.log('[controllers][asset][addAsset]: JOi Result', result);
 
@@ -596,7 +608,37 @@ const assetController = {
           .from("asset_master")
           .where({ assetCategoryId, companyId })
           .first()
-          .where({ orgId: req.orgId }),
+          .where({ orgId: req.orgId })
+          .where(qb => {
+            if (assetName) {
+              qb.where(
+                "asset_master.assetName",
+                "iLIKE",
+                `%${assetName}%`
+              );
+            }
+            if (assetSerial) {
+              qb.where(
+                "asset_master.assetSerial",
+                "iLIKE",
+                `%${assetSerial}%`
+              )
+            }
+            if (assetModel) {
+              qb.where(
+                "asset_master.model",
+                "iLIKE",
+                `%${assetModel}%`
+              );
+            }
+            if (assetCode) {
+              qb.where(
+                "asset_master.assetCode",
+                "iLIKE",
+                `%${assetCode}%`
+              );
+            }
+          }),
 
         knex("asset_master")
           .select(["id", "assetName", "model", "barcode", "areaName", "assetSerial"])
@@ -604,6 +646,36 @@ const assetController = {
           .offset(offset)
           .limit(per_page)
           .where({ orgId: req.orgId })
+          .where(qb => {
+            if (assetName) {
+              qb.where(
+                "asset_master.assetName",
+                "iLIKE",
+                `%${assetName}%`
+              );
+            }
+            if (assetSerial) {
+              qb.where(
+                "asset_master.assetSerial",
+                "iLIKE",
+                `%${assetSerial}%`
+              )
+            }
+            if (assetModel) {
+              qb.where(
+                "asset_master.model",
+                "iLIKE",
+                `%${assetModel}%`
+              );
+            }
+            if (assetCode) {
+              qb.where(
+                "asset_master.assetCode",
+                "iLIKE",
+                `%${assetCode}%`
+              );
+            }
+          })
       ]);
 
 
