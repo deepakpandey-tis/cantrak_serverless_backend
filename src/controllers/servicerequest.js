@@ -633,7 +633,9 @@ const serviceRequestController = {
         serviceTo,
         serviceType,
         status,
-        unit
+        unit,
+        company,
+        project
       } = req.body;
       let total, rows;
       console.log("service request list===", req.body)
@@ -714,6 +716,13 @@ const serviceRequestController = {
       if (requestedBy) {
         filters["service_requests.requestedBy"] = requestedBy;
       }
+      if (company) {
+        filters["service_requests.companyId"] = company;
+      }
+      if(project){
+        filters["service_requests.projectId"] = project;
+      }
+
       let dueFrom, dueTo;
       if (dueDateFrom && dueDateTo) {
         dueFrom = new Date(dueDateFrom).getTime()
@@ -737,7 +746,9 @@ const serviceRequestController = {
         serviceTo ||
         serviceType ||
         status ||
-        unit) {
+        unit || 
+        company || 
+        project ) {
 
 
 
@@ -783,7 +794,9 @@ const serviceRequestController = {
             // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
             // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
             .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
-
+            .leftJoin('companies', 'service_requests.companyId', 'companies.id')
+            .leftJoin('projects', 'service_requests.projectId', 'projects.id')
+            
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
@@ -799,6 +812,10 @@ const serviceRequestController = {
               "property_units.id as unitId",
               "service_orders.displayId as SO#",
               "service_requests.displayId as SR#",
+              "companies.companyName",
+              "companies.companyId",
+              "projects.project",
+              "projects.projectName",
 
 
             ])
@@ -852,6 +869,14 @@ const serviceRequestController = {
                 qb.where('service_requests.completedBy', completedBy)
               }
 
+              if (company) {
+                qb.where('service_requests.companyId', company)
+              }
+
+              if (project) {
+                qb.where('service_requests.projectId', project)
+              }
+
               // if (dueDateFrom && dueDateTo) {
 
               //   console.log("dsfsdfsdfsdfsdfffffffffffffffffff=========")
@@ -879,7 +904,9 @@ const serviceRequestController = {
               "incident_categories.id",
               // "assignUser.id",
               // "user_house_allocation.id",
-              "service_orders.id"
+              "service_orders.id",
+              "companies.id",
+              "projects.id"
             ])
             .distinct('service_requests.id')
           ,
@@ -922,7 +949,9 @@ const serviceRequestController = {
             // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
             // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
             .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
-
+            .leftJoin('companies', 'service_requests.companyId', 'companies.id')
+            .leftJoin('projects', 'service_requests.projectId', 'projects.id')
+           
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
@@ -943,6 +972,10 @@ const serviceRequestController = {
               "property_units.id as unitId",
               "service_orders.displayId as SO#",
               "service_requests.displayId as SR#",
+              "companies.companyName",
+              "companies.companyId",
+              "projects.project",
+              "projects.projectName",
             ])
             .orderBy('service_requests.id', 'desc')
             .where({ "service_requests.orgId": req.orgId, 'service_requests.moderationStatus': true })
@@ -997,6 +1030,13 @@ const serviceRequestController = {
                 qb.where('service_requests.completedBy', completedBy)
               }
 
+              if (company) {
+                qb.where('service_requests.companyId', company)
+              }
+
+              if (project) {
+                qb.where('service_requests.projectId', project)
+              }
 
               // if (dueDateFrom && dueDateTo) {
               //   qb.whereBetween("service_requests.createdAt", [
@@ -1026,7 +1066,9 @@ const serviceRequestController = {
               "incident_categories.id",
               // "assignUser.id",
               // "user_house_allocation.id",
-              "service_orders.id"
+              "service_orders.id",
+              "companies.id",
+              "projects.id"
             ])
             .distinct('service_requests.id')
         ]);
@@ -1073,6 +1115,8 @@ const serviceRequestController = {
             // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
             // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
             .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
+            .leftJoin('companies', 'service_requests.companyId', 'companies.id')
+            .leftJoin('projects', 'service_requests.projectId', 'projects.id')
 
             .select([
               "service_requests.id as S Id",
@@ -1088,6 +1132,10 @@ const serviceRequestController = {
               "property_units.id as unitId",
               "service_orders.displayId as SO#",
               "service_requests.displayId as SR#",
+              "companies.companyName",
+              "companies.companyId",
+              "projects.project",
+              "projects.projectName",
 
             ])
             .groupBy([
@@ -1104,7 +1152,9 @@ const serviceRequestController = {
               "incident_categories.id",
               // "assignUser.id",
               // "user_house_allocation.id",
-              "service_orders.id"
+              "service_orders.id",
+              "companies.id",
+              "projects.id"
             ])
             .where({ "service_requests.orgId": req.orgId, 'service_requests.moderationStatus': true })
             .whereIn('service_requests.projectId', accessibleProjects)
@@ -1147,6 +1197,8 @@ const serviceRequestController = {
             // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
             // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
             .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
+            .leftJoin('companies', 'service_requests.companyId', 'companies.id')
+            .leftJoin('projects', 'service_requests.projectId', 'projects.id')
 
             .select([
               "service_requests.id as S Id",
@@ -1169,8 +1221,10 @@ const serviceRequestController = {
               "property_units.id as unitId",
               "service_orders.displayId as SO#",
               "service_requests.displayId as SR#",
-
-
+              "companies.companyName",
+              "companies.companyId",
+              "projects.project",
+              "projects.projectName",
             ])
             .groupBy([
               "service_requests.id",
@@ -1186,8 +1240,9 @@ const serviceRequestController = {
               "incident_categories.id",
               // "assignUser.id",
               // "user_house_allocation.id",
-              "service_orders.id"
-
+              "service_orders.id",
+              "companies.id",
+              "projects.id"
             ])
             .where({ "service_requests.orgId": req.orgId, 'service_requests.moderationStatus': true })
             .whereIn('service_requests.projectId', accessibleProjects)

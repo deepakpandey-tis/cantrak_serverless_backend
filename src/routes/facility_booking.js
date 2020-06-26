@@ -115,4 +115,6 @@ router.post('/delete-facility-report',authMiddleware.isAuthenticated,facilityBoo
 
 router.post('/get-facility-report-detail',authMiddleware.isAuthenticated,facilityBookingController.getFacilityReportDetailById)
 
+router.post('/get-facility-by-status',authMiddleware.isAuthenticated,facilityBookingController.facilityListingStatus)
+
 module.exports = router;
