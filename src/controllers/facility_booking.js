@@ -766,7 +766,7 @@ const facilityBookingController = {
       .seconds(0)
       .milliseconds(0)
       .valueOf();
-      let Status
+      let Status;
       if(status){
         Status = status.join(' ')
       }
@@ -780,7 +780,7 @@ const facilityBookingController = {
         status ||
         facilityName || 
         tenantName ||
-        (fromDate && toDate) || (bookingDateFrom && bookingDateTo)
+        (createStartTime && createdEndTime) || (bookingStartTime && bookingEndTime)
         
       ) {
         try {
@@ -847,11 +847,11 @@ const facilityBookingController = {
                 
                   qb.whereIn("users.name",tenantName)
               }
-              if (fromDate && toDate) {
+              if (createStartTime && createdEndTime) {
                 qb.where("entity_bookings.createdAt", ">=", createStartTime);
                 qb.where("entity_bookings.createdAt", "<=", createdEndTime);
               }
-              if (bookingDateFrom && bookingDateTo) {
+              if (bookingStartTime && bookingEndTime) {
                 qb.where(
                   "entity_bookings.bookingStartDateTime",
                   ">=",
@@ -888,26 +888,24 @@ const facilityBookingController = {
                   qb.where("entity_bookings.isBookingCancelled", true);
                 }
                 if(Status ==  "Approved Pending Cancelled Confirmed"){
-                  console.log("All status",status)
+                  // console.log("All status",status)
 
                   qb.where("entity_bookings.isBookingConfirmed", false);
                   qb.orWhere("entity_bookings.isBookingConfirmed", true);
-                  // qb.where("entity_bookings.confirmedType", null);
                   qb.orWhere("entity_bookings.confirmedType", 1);
                   qb.where("entity_bookings.isBookingCancelled", true);
                   qb.orWhere("entity_bookings.isBookingCancelled", false);
                 }
                 if(Status ==="Approved Pending Confirmed"){
-                  console.log("Pending, Approved,Confirmed ",status)
+                  // console.log("Pending, Approved,Confirmed ",status)
                   qb.where("entity_bookings.isBookingConfirmed", false);
                   qb.where("entity_bookings.isBookingCancelled", false);
                   qb.orWhere("entity_bookings.isBookingConfirmed", true);
-                  // qb.where("entity_bookings.confirmedType", null);
                   qb.orWhere("entity_bookings.confirmedType", 1);
 
                 }
                 if(Status === "Approved Cancelled"){
-                  console.log("Approved and cancelled",status)
+                  // console.log("Approved and cancelled",status)
                   qb.where({"entity_bookings.isBookingConfirmed" : true, "entity_bookings.confirmedType":0});
                   qb.where({"entity_bookings.isBookingCancelled": true, "entity_bookings.confirmedType":0});
                   qb.orWhere({"entity_bookings.isBookingConfirmed": true, "entity_bookings.confirmedType":0});
@@ -915,65 +913,46 @@ const facilityBookingController = {
                 
                 }
                 if(Status==="Approved Confirmed"){
-                  console.log("Approved and confirmed")
+                  // console.log("Approved and confirmed")
                   qb.where("entity_bookings.isBookingConfirmed", true);
                   qb.where("entity_bookings.isBookingCancelled", false);
-                  // qb.where("entity_bookings.confirmedType", 1);
-                  // qb.orWhere("entity_bookings.confirmedType",0)
-                  // qb.orWhere("entity_bookings.confirmedType",null)
+                  
                 }
                 if(Status === "Approved Pending"){
-                  console.log("Pending and approved",Status)
+                  // console.log("Pending and approved",Status)
                   qb.where({"entity_bookings.isBookingConfirmed" : true, "entity_bookings.isBookingCancelled": false,  "entity_bookings.confirmedType":0});
                   qb.orWhere({"entity_bookings.isBookingConfirmed": false, "entity_bookings.isBookingCancelled": false, "entity_bookings.confirmedType":0});
-                  // qb.orWhere({"entity_bookings.isBookingConfirmed": true, "entity_bookings.confirmedType":0});
-                  // qb.orWhere({"entity_bookings.isBookingConfirmed": false, "entity_bookings.confirmedType":0 });
-                
-
-                  // qb.where("entity_bookings.isBookingConfirmed", false);
-                  // qb.where("entity_bookings.isBookingCancelled", false);
-                  // qb.orWhere("entity_bookings.isBookingConfirmed", true);
-                  // qb.where("entity_bookings.confirmedType", null);
-                  // qb.where("entity_bookings.isBookingCancelled",false)
+                  
+                  
                 }
                 if(Status === "Pending Confirmed"){
-                  console.log("Pending and Confirmed",status)
+                  // console.log("Pending and Confirmed",status)
                   qb.where({"entity_bookings.isBookingConfirmed" : false, "entity_bookings.isBookingCancelled": false, "entity_bookings.confirmedType":0});
                   qb.orWhere({"entity_bookings.isBookingConfirmed": true, "entity_bookings.isBookingCancelled": false, "entity_bookings.confirmedType":1});
-                  
-                  // qb.orWhere("entity_bookings.isBookingConfirmed", false);
-                  // qb.where("entity_bookings.isBookingCancelled", false);
-                  // qb.orWhere("entity_bookings.isBookingConfirmed", true);
-                  // qb.where("entity_bookings.confirmedType", 1);
-
+                 
                 }
                 if(Status === "Pending Cancelled"){
-                  console.log("Pending,Cancelled",status)
+                  // console.log("Pending,Cancelled",status)
                   qb.where("entity_bookings.isBookingConfirmed", false);
                   qb.where("entity_bookings.isBookingCancelled", false);
                   qb.orWhere("entity_bookings.isBookingCancelled", true);
 
                 }
                 if(Status === "Approved Pending Cancelled"){
-                  console.log("Pending,Approved,Cancelled",status)
+                  // console.log("Pending,Approved,Cancelled",status)
                   qb.where({"entity_bookings.isBookingConfirmed" : true,  "entity_bookings.confirmedType":0});
                   qb.orWhere({"entity_bookings.isBookingConfirmed": false, "entity_bookings.confirmedType":0});
                   qb.orWhere({"entity_bookings.isBookingCancelled": true,  "entity_bookings.confirmedType":0});
                   
-                  // qb.where("entity_bookings.isBookingConfirmed", false);
-                  // qb.where("entity_bookings.isBookingCancelled", false);
-                  // qb.orWhere("entity_bookings.isBookingConfirmed", true);
-                  // qb.where("entity_bookings.confirmedType", null);
                 }
                 if(Status === "Approved Cancelled Confirmed"){
-                  console.log("Approved,Cancelled,Confirmed",status)
+                  // console.log("Approved,Cancelled,Confirmed",status)
                   qb.where("entity_bookings.isBookingConfirmed", true);
-                  // qb.where("entity_bookings.confirmedType", null);
                   qb.where("entity_bookings.isBookingCancelled", true);
                   qb.orWhere("entity_bookings.confirmedType", 1);
                 }
                 if(Status === "Pending Cancelled Confirmed"){
-                  console.log("Pending,Cancelled,confirmed",status)
+                  // console.log("Pending,Cancelled,confirmed",status)
                   qb.where("entity_bookings.isBookingConfirmed", false);
                   qb.where("entity_bookings.isBookingCancelled", false);
                   qb.orWhere("entity_bookings.isBookingCancelled", true);
@@ -981,16 +960,10 @@ const facilityBookingController = {
                   qb.where("entity_bookings.confirmedType", 1);
                 }
                 if(Status === "Cancelled Confirmed"){
-                  console.log("Cancelled,confirmed",status)
+                  // console.log("Cancelled,confirmed",status)
                   qb.where({"entity_bookings.isBookingCancelled" : true});
                   qb.orWhere({"entity_bookings.confirmedType": 1,"entity_bookings.isBookingConfirmed" : true});
                  
-                 
-                  // qb.where("entity_bookings.isBookingConfirmed", false);
-                  // qb.where("entity_bookings.isBookingCancelled", false);
-                  // qb.orWhere("entity_bookings.isBookingCancelled", true);
-                  // qb.orWhere("entity_bookings.isBookingConfirmed", true);
-                  // qb.where("entity_bookings.confirmedType", 1);
                 }
               }
             })
@@ -4237,20 +4210,12 @@ const facilityBookingController = {
         unitNo,
         tenantName,
       } = req.body;
+      let Status;
+      if(status){
+        Status = status.join(' ')
+      }
       console.log("status of facility", status);
-      // let fromDate = payload.createdDateFrom;
-      // let toDate = payload.createdDateTo;
-      // let bookingDateFrom = payload.bookingDateTimeFrom;
-      // let bookingDateTo = payload.bookingDateTimeTo;
-      // let fromNewDate = moment(fromDate).startOf("date").format();
-      // let toNewDate = moment(toDate).endOf("date", "days").format();
-      // let fromTime = new Date(fromNewDate).getTime();
-      // let toTime = new Date(toNewDate).getTime();
-      // let fromBookDate = moment(bookingDateFrom).startOf("date").format();
-      // let toBookDate = moment(bookingDateTo).endOf("date", "days");
-      // let fromBookTime = new Date(fromBookDate).getTime();
-      // let toBookTime = new Date(toBookDate).getTime();
-
+      
       moment.tz.setDefault(payload.timezone);
       let currentTime = moment();
 
@@ -4343,64 +4308,106 @@ const facilityBookingController = {
               }
 
               if (status) {
-                if (status === "Pending") {
+                // let Status = status.join(" ")
+                console.log("Status of status",Status)
+                if (Status == "Pending") {
+                  console.log("Pending",status)
                   qb.where("entity_bookings.isBookingConfirmed", false);
                   qb.where("entity_bookings.isBookingCancelled", false);
-                  qb.where(
-                    "entity_bookings.bookingStartDateTime",
-                    ">=",
-                    bookingStartTime
-                  );
-                  qb.where(
-                    "entity_bookings.bookingStartDateTime",
-                    "<=",
-                    bookingEndTime
-                  );
                 }
-
-                if (status === "Approved") {
+                if (Status == "Approved") {
+                  console.log("Approved",status)
                   qb.where("entity_bookings.isBookingConfirmed", true);
-                  qb.where(
-                    "entity_bookings.bookingStartDateTime",
-                    ">=",
-                    bookingStartTime
-                  );
-                  qb.where(
-                    "entity_bookings.bookingStartDateTime",
-                    "<=",
-                    bookingEndTime
-                  );
-                  qb.where("entity_bookings.confirmedType", 0);
+                  qb.where("entity_bookings.isBookingCancelled", false);
+                 // qb.where("entity_bookings.confirmedType", null);
+                  qb.where("entity_bookings.confirmedType",0)
                 }
+                if (Status == "Confirmed") {
+                  console.log("Confirmed",status)
+                  qb.where({"entity_bookings.isBookingConfirmed": true, "entity_bookings.isBookingCancelled": false,"entity_bookings.confirmedType":1});
+                  // qb.where("entity_bookings.confirmedType", 1);
+                }
+                if (Status == "Cancelled") {
+                  console.log("Cancelled",status)
+                  qb.where("entity_bookings.isBookingCancelled", true);
+                }
+                if(Status ==  "Approved Pending Cancelled Confirmed"){
+                  // console.log("All status",status)
 
-                if (status === "Confirmed") {
+                  qb.where("entity_bookings.isBookingConfirmed", false);
+                  qb.orWhere("entity_bookings.isBookingConfirmed", true);
+                  qb.orWhere("entity_bookings.confirmedType", 1);
+                  qb.where("entity_bookings.isBookingCancelled", true);
+                  qb.orWhere("entity_bookings.isBookingCancelled", false);
+                }
+                if(Status ==="Approved Pending Confirmed"){
+                  // console.log("Pending, Approved,Confirmed ",status)
+                  qb.where("entity_bookings.isBookingConfirmed", false);
+                  qb.where("entity_bookings.isBookingCancelled", false);
+                  qb.orWhere("entity_bookings.isBookingConfirmed", true);
+                  qb.orWhere("entity_bookings.confirmedType", 1);
+
+                }
+                if(Status === "Approved Cancelled"){
+                  // console.log("Approved and cancelled",status)
+                  qb.where({"entity_bookings.isBookingConfirmed" : true, "entity_bookings.confirmedType":0});
+                  qb.where({"entity_bookings.isBookingCancelled": true, "entity_bookings.confirmedType":0});
+                  qb.orWhere({"entity_bookings.isBookingConfirmed": true, "entity_bookings.confirmedType":0});
+                  qb.orWhere({"entity_bookings.isBookingCancelled": true, "entity_bookings.confirmedType":0 });
+                
+                }
+                if(Status==="Approved Confirmed"){
+                  // console.log("Approved and confirmed")
                   qb.where("entity_bookings.isBookingConfirmed", true);
-                  qb.where(
-                    "entity_bookings.bookingStartDateTime",
-                    ">=",
-                    bookingStartTime
-                  );
-                  qb.where(
-                    "entity_bookings.bookingStartDateTime",
-                    "<=",
-                    bookingEndTime
-                  );
+                  qb.where("entity_bookings.isBookingCancelled", false);
+                  
+                }
+                if(Status === "Approved Pending"){
+                  // console.log("Pending and approved",Status)
+                  qb.where({"entity_bookings.isBookingConfirmed" : true, "entity_bookings.isBookingCancelled": false,  "entity_bookings.confirmedType":0});
+                  qb.orWhere({"entity_bookings.isBookingConfirmed": false, "entity_bookings.isBookingCancelled": false, "entity_bookings.confirmedType":0});
+                  
+                  
+                }
+                if(Status === "Pending Confirmed"){
+                  // console.log("Pending and Confirmed",status)
+                  qb.where({"entity_bookings.isBookingConfirmed" : false, "entity_bookings.isBookingCancelled": false, "entity_bookings.confirmedType":0});
+                  qb.orWhere({"entity_bookings.isBookingConfirmed": true, "entity_bookings.isBookingCancelled": false, "entity_bookings.confirmedType":1});
+                 
+                }
+                if(Status === "Pending Cancelled"){
+                  // console.log("Pending,Cancelled",status)
+                  qb.where("entity_bookings.isBookingConfirmed", false);
+                  qb.where("entity_bookings.isBookingCancelled", false);
+                  qb.orWhere("entity_bookings.isBookingCancelled", true);
 
+                }
+                if(Status === "Approved Pending Cancelled"){
+                  // console.log("Pending,Approved,Cancelled",status)
+                  qb.where({"entity_bookings.isBookingConfirmed" : true,  "entity_bookings.confirmedType":0});
+                  qb.orWhere({"entity_bookings.isBookingConfirmed": false, "entity_bookings.confirmedType":0});
+                  qb.orWhere({"entity_bookings.isBookingCancelled": true,  "entity_bookings.confirmedType":0});
+                  
+                }
+                if(Status === "Approved Cancelled Confirmed"){
+                  // console.log("Approved,Cancelled,Confirmed",status)
+                  qb.where("entity_bookings.isBookingConfirmed", true);
+                  qb.where("entity_bookings.isBookingCancelled", true);
+                  qb.orWhere("entity_bookings.confirmedType", 1);
+                }
+                if(Status === "Pending Cancelled Confirmed"){
+                  // console.log("Pending,Cancelled,confirmed",status)
+                  qb.where("entity_bookings.isBookingConfirmed", false);
+                  qb.where("entity_bookings.isBookingCancelled", false);
+                  qb.orWhere("entity_bookings.isBookingCancelled", true);
+                  qb.orWhere("entity_bookings.isBookingConfirmed", true);
                   qb.where("entity_bookings.confirmedType", 1);
                 }
-
-                if (status === "Cancelled") {
-                  qb.where("entity_bookings.isBookingCancelled", true);
-                  qb.where(
-                    "entity_bookings.bookingStartDateTime",
-                    ">=",
-                    bookingStartTime
-                  );
-                  qb.where(
-                    "entity_bookings.bookingStartDateTime",
-                    "<=",
-                    bookingEndTime
-                  );
+                if(Status === "Cancelled Confirmed"){
+                  // console.log("Cancelled,confirmed",status)
+                  qb.where({"entity_bookings.isBookingCancelled" : true});
+                  qb.orWhere({"entity_bookings.confirmedType": 1,"entity_bookings.isBookingConfirmed" : true});
+                 
                 }
               }
               if (unitNo) {
