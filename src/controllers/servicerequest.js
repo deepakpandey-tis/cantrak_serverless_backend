@@ -719,7 +719,7 @@ const serviceRequestController = {
       if (company) {
         filters["service_requests.companyId"] = company;
       }
-      if(project){
+      if (project) {
         filters["service_requests.projectId"] = project;
       }
 
@@ -746,9 +746,9 @@ const serviceRequestController = {
         serviceTo ||
         serviceType ||
         status ||
-        unit || 
-        company || 
-        project ) {
+        unit ||
+        company ||
+        project) {
 
 
 
@@ -796,7 +796,7 @@ const serviceRequestController = {
             .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
             .leftJoin('companies', 'service_requests.companyId', 'companies.id')
             .leftJoin('projects', 'service_requests.projectId', 'projects.id')
-            
+
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
@@ -951,7 +951,7 @@ const serviceRequestController = {
             .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
             .leftJoin('companies', 'service_requests.companyId', 'companies.id')
             .leftJoin('projects', 'service_requests.projectId', 'projects.id')
-           
+
             .select([
               "service_requests.id as S Id",
               "service_requests.description as Description",
@@ -1246,7 +1246,7 @@ const serviceRequestController = {
             ])
             .where({ "service_requests.orgId": req.orgId, 'service_requests.moderationStatus': true })
             .whereIn('service_requests.projectId', accessibleProjects)
-            // .where({'service_requests.isCreatedFromSo':false})
+            .where({ 'service_requests.isCreatedFromSo': false })
             .distinct('service_requests.id')
             .orderBy('service_requests.id', 'desc')
             .offset(offset)
@@ -2564,7 +2564,7 @@ const serviceRequestController = {
 
         // Insert into requested by
 
-        const requestedByResult = await knex('requested_by').insert({ name: req.body.name, mobile: req.body.mobile, email: req.body.email }).returning(['*'])
+        const requestedByResult = await knex('requested_by').insert({ name: req.body.name, mobile: req.body.mobile, email: req.body.email,orgId:req.orgId }).returning(['*'])
 
         /*UPDATE SERVICE REQUEST DATA OPEN */
         let common;
@@ -3505,9 +3505,13 @@ const serviceRequestController = {
           'requested_by.id'
 
         ])
+
         .where(qb => {
+          qb.whereNot('status.descriptionEng','Cancel')
           qb.where({ "service_requests.orgId": req.orgId })
-          qb.where('service_requests.moderationStatus',true)
+          qb.where('service_requests.moderationStatus', true)
+          qb.where({ 'service_requests.isCreatedFromSo': false })
+
           if (payload.fromDate && payload.toDate) {
             qb.whereBetween('service_requests.createdAt', [payload.fromDate, payload.toDate])
           }
@@ -3532,9 +3536,9 @@ const serviceRequestController = {
           if (payload.priority && payload.priority.length) {
             qb.whereIn('service_requests.priority', payload.priority)
           }
-          // if (payload.requestBy) {
-          //   qb.where('service_requests.requestedBy', payload.requestBy)
-          // }
+          if (payload.requestBy) {
+            qb.where('service_requests.requestedBy', payload.requestBy)
+          }
         })
         .whereIn('service_requests.projectId', accessibleProjects)
         .distinct('service_requests.id')
@@ -3615,15 +3619,12 @@ const serviceRequestController = {
       }
 
 
-
-
-
-
       return res.status(200).json({
         data: {
           service_requests: srWithTenant,
           problemData: _.orderBy(arr, "totalServiceOrder", "asc"),
-          sr
+          sr,
+          serviceIds
         }
       })
     } catch (err) {
