@@ -1595,6 +1595,7 @@ const pmController = {
           qb.where({ 'task_group_schedule_assign_assets.orgId': req.orgId })
 
         }).orderBy('pmDate', 'asc')
+        
 
       return res.json({
         data: result,
