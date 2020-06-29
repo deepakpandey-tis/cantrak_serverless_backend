@@ -1100,7 +1100,7 @@ const serviceDetailsController = {
       let tempraryDirectory = null;
       let bucketName = null;
       if (process.env.IS_OFFLINE) {
-        bucketName = "sls-app-resources-bucket";
+        bucketName = process.env.S3_BUCKET_NAME;
         tempraryDirectory = "tmp/";
       } else {
         tempraryDirectory = "/tmp/";
@@ -1149,9 +1149,12 @@ const serviceDetailsController = {
             let deleteFile = fs.unlink(filepath, err => {
               console.log("File Deleting Error " + err);
             });
-            let url =
-              "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/LocationTag/" +
-              filename;
+            let url = process.env.S3_BUCKET_URL + "/Export/LocationTag/" +
+            filename;
+      
+            // let url =
+            //   "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/LocationTag/" +
+            //   filename;
             res.status(200).json({
               data: rows,
               message: "Location Tags List!",
