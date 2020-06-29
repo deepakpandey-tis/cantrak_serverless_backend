@@ -386,6 +386,8 @@ const serviceDetailsController = {
                     //.leftJoin("requested_by AS reqBy", "service_requests.requestedBy", "reqBy.id")
                     .leftJoin("source_of_request", "service_requests.serviceType", "source_of_request.id")
                     .leftJoin("images", "service_requests.id", "images.entityId")
+                    .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
+
                     .select(
                         "companies.companyName",
                         "projects.projectName",
@@ -407,7 +409,9 @@ const serviceDetailsController = {
                         "images.name",
                         "property_units.*",
                         "service_requests.requestedBy",
-                        "property_types.descriptionEng as propertyDescription"
+                        "property_types.descriptionEng as propertyDescription",
+                        'status.descriptionEng as Status',
+
 
 
                     )

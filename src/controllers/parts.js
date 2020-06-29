@@ -938,7 +938,7 @@ const partsController = {
                         storeAdjustmentBy: Joi.string().allow("").allow(null).optional()
                     });
                     result = Joi.validate(_.omit(partStockPayload, 'issueBy', 'issueTo', 'returnedBy', 'description', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['issueBy', 'issueTo', 'returnedBy', 'unitCost', 'deductBy', 'deductDate', 'building', 'floor', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId'])
+                    partStockPayload = _.omit(partStockPayload, ['issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId'])
 
                 }
                 else {
@@ -2691,6 +2691,7 @@ const partsController = {
                         .where('part_ledger.createdAt', '<', fromTimeEnd)
                         .where({ partId: st.partId, orgId: req.orgId }).first();
 
+
                     //.whereBetween('part_ledger.createdAt', [fromTime, toTime]).first()
 
                     let stockData = await knex.from('part_ledger')
@@ -2708,17 +2709,20 @@ const partsController = {
                         })
                         .where({ 'part_ledger.orgId': req.orgId, partId: st.partId })
                         .whereBetween('part_ledger.createdAt', [fromTime, toTime])
-                        .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
+                        .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc');
+
+
 
                     let openingBalance = 0;
                     if (balance.quantity) {
                         openingBalance = balance.quantity;
                     }
 
+                   
 
 
                     let updatedStockDataWithInAndOut = [];
-                    let newBal = 0;
+                    let newBal = openingBalance;
                     let s = 0;
                     let totalIn = 0;
                     let totalOut = 0;
@@ -2728,8 +2732,9 @@ const partsController = {
                         let o = 0;
                         let bal = 0
 
+                      //  if (d.quantity && d.quantity.includes('-')) {
 
-                        if (d.quantity && d.quantity.includes('-')) {
+                        if (d.quantity && Math.sign(d.quantity)==-1) {
                             o = Number(d.quantity)
                             //    balance.totalQuantity = Number(balance.totalQuantity) + o
                             //if (s > 1) {
@@ -2782,7 +2787,7 @@ const partsController = {
                     let bal2 = 0
 
 
-                    if (d2.quantity && d2.quantity.includes('-')) {
+                    if (d2.quantity && Math.sign(d2.quantity)==-1) {
                         o2 = Number(d2.quantity)
                         //    balance.totalQuantity = Number(balance.totalQuantity) + o
                         //if (s > 1) {
@@ -3047,7 +3052,7 @@ const partsController = {
 
                     let balance = await knex.from('part_ledger')
                         .sum('quantity as quantity')
-                        .where('part_ledger.createdAt', '<=', fromTimeEnd)
+                        .where('part_ledger.createdAt', '<', fromTimeEnd)
                         .where({ partId: d2.partId, orgId: req.orgId }).first();
 
                     let openingBalance = 0;
@@ -3062,7 +3067,7 @@ const partsController = {
                     let bal2 = 0
 
 
-                    if (d2.quantity && d2.quantity.includes('-')) {
+                    if (d2.quantity && Math.sign(d2.quantity)==-1) {
                         o2 = Number(d2.quantity)
                         //    balance.totalQuantity = Number(balance.totalQuantity) + o
                         //if (s > 1) {

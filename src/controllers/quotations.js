@@ -477,10 +477,10 @@ const quotationsController = {
       }
 
       if (quotationId) {
-        filters["quotations.id"] = quotationId;
+        filters["quotations.displayId"] = quotationId;
       }
       if (serviceId) {
-        filters["service_requests.id"] = serviceId;
+        filters["service_requests.displayId"] = serviceId;
       }
       // if (quotationStatus) {
       //   filters["quotations.quotationStatus"] = quotationStatus;
@@ -564,10 +564,10 @@ const quotationsController = {
           .where("quotations.orgId", req.orgId)
           .where(qb => {
             if (serviceId) {
-              qb.where('service_requests.id', serviceId)
+              qb.where('service_requests.displayId', serviceId)
             }
             if (quotationId) {
-              qb.where('quotations.id', quotationId)
+              qb.where('quotations.displayId', quotationId)
             }
             if (quotationStatus) {
               qb.where('quotations.quotationStatus', quotationStatus)
@@ -656,21 +656,21 @@ const quotationsController = {
             "requested_by.name as requestedBy",
             //"user_house_allocation",
             "property_units.id as unitId",
-            "quotations.displayId as Q#",
+            "quotations.displayId as Q No",
             "service_requests.displayId as SR#",
 
           ])
           .where("quotations.orgId", req.orgId)
           .where(qb => {
             if (serviceId) {
-              qb.where('service_requests.id', serviceId)
+              qb.where('service_requests.displayId', serviceId)
             }
             if (quotationStatus) {
               qb.where('quotations.quotationStatus', quotationStatus)
             }
 
             if (quotationId) {
-              qb.where('quotations.id', quotationId)
+              qb.where('quotations.displayId', quotationId)
             }
             if (description) {
               qb.where('service_requests.description', 'iLIKE', `%${description}%`)

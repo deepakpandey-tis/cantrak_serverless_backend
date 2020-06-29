@@ -229,7 +229,7 @@ const serviceOrderController = {
             //let filters = 
             let filters = {}
             if (serviceRequestId) {
-                filters['service_requests.id'] = serviceRequestId
+                filters['service_requests.displayId'] = serviceRequestId
             }
             // if (description) {
             //     filters['service_requests.description'] = description;
@@ -241,7 +241,7 @@ const serviceOrderController = {
                 filters['status.descriptionEng'] = serviceOrderStatus
             }
             if (serviceOrderId) {
-                filters['service_orders.id'] = serviceOrderId
+                filters['service_orders.displayId'] = serviceOrderId
             }
 
             if (archive) {
