@@ -247,13 +247,13 @@ const usersController = {
         try {
             const users = await knex('users')
                 .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
-                .whereNotIn('application_user_roles.roleId', [2,4,5])
+                .whereNotIn('application_user_roles.roleId', [2, 4, 5])
                 //.leftJoin('organisation_user_roles','users.id','organisation_user_roles.userId')
                 .select('users.id', 'users.name', 'users.email')
                 //    .whereNotIn('organisation_user_roles.roleId', [1, 4])
                 //.where({'organisation_user_roles.orgId':req.orgId})
                 .where({ 'users.orgId': req.orgId, isActive: true })
-                .orderBy('users.name','asc')
+                .orderBy('users.name', 'asc')
                 .groupBy('users.id')
 
             return res.status(200).json({
@@ -271,6 +271,32 @@ const usersController = {
                 ],
             });
         }
+    },
+    /*GET ALL REQUEST BY USER */
+    getAllRequestBy: async (req, res) => {
+
+        try {
+
+            const users = await knex('requested_by')
+                .select('requested_by.id', 'requested_by.name', 'requested_by.email')
+                .where({ 'requested_by.orgId': req.orgId })
+                .orderBy('requested_by.name', 'asc')
+            return res.status(200).json({
+                data: {
+                    users
+                },
+                messsage: 'Users list'
+            })
+        } catch (err) {
+            console.log('[controllers][serviceOrder][GetServiceOrderList] :  Error', err);
+            //trx.rollback
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+
     }
 };
 

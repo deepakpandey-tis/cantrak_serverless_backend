@@ -2139,16 +2139,38 @@ const assetController = {
           floorId: '165' }
         */
       if (req.body.previousLocationId) {
- 
+
         // Check Current Location is Exits
 
         let currentLocation = await knex('asset_location').select('*').where({ assetId: payload.assetId, unitId: payload.unitId });
         console.log("currentLocation", currentLocation);
         if (currentLocation.length > 0) {
-          return res.status(400).json({
-            data: {},
-            message: 'Asset location already exist'
+
+
+          await knex('asset_location')
+            .update({
+              ...payload,
+              createdAt: currentTime,
+              updatedAt: currentTime,
+              startDate: currentTime,
+              orgId: req.orgId
+            })
+            .where({ assetId: payload.assetId, unitId: payload.unitId })
+
+          
+            await knex('asset_location')
+            .update({ endDate: currentTime })
+            .where({ assetId: payload.assetId, id: req.body.previousLocationId })
+  
+
+          return res.status(200).json({
+
+            message: 'Asset location updated'
           })
+          // return res.status(400).json({
+          //   data: {},
+          //   message: 'Asset location already exist'
+          // })
         }
 
         await knex('asset_location')
@@ -2319,8 +2341,8 @@ const assetController = {
             // fs.unlink(filepath, err => {
             //   console.log("File Deleting Error " + err);
             // });
-            let url = process.env.S3_BUCKET_URL+"/Export/Asset/" +
-            filename;
+            let url = process.env.S3_BUCKET_URL + "/Export/Asset/" +
+              filename;
             // let url =
             //   "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Asset/" +
             //   filename;
