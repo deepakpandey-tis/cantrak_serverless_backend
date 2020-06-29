@@ -459,7 +459,9 @@ const quotationsController = {
         completedBy,
         completedFrom,
         completedTo,
-        assingedTo
+        assingedTo,
+        company,
+        project
       } = req.body;
 
       let newDateFrom;
@@ -523,6 +525,13 @@ const quotationsController = {
         filters["users.name"] = assingedTo;
       }
 
+      if (company) {
+        filters["quotations.companyId"] = company;
+      }
+      if (project) {
+        filters["quotations.projectId"] = project;
+      }
+
       //  if (_.isEmpty(filters)) {
       [total, rows] = await Promise.all([
         knex
@@ -559,6 +568,7 @@ const quotationsController = {
             "service_problems.categoryId",
             "incident_categories.id"
           )
+
           //.leftJoin('user_house_allocation', 'quotations.unitId', 'user_house_allocation.houseId')
           // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
           .where("quotations.orgId", req.orgId)
@@ -568,6 +578,12 @@ const quotationsController = {
             }
             if (quotationId) {
               qb.where('quotations.displayId', quotationId)
+            }
+            if (company) {
+              qb.where('quotations.companyId', company)
+            }
+            if (project) {
+              qb.where('quotations.projectId', project)
             }
             if (quotationStatus) {
               qb.where('quotations.quotationStatus', quotationStatus)
@@ -594,6 +610,8 @@ const quotationsController = {
             "requested_by.id",
             "service_problems.id",
             "incident_categories.id",
+            "companies.companyId",
+            "projects.project",
             //  "assignUser.id",
             // "user_house_allocation.id"
           ])
@@ -633,6 +651,7 @@ const quotationsController = {
             "service_problems.categoryId",
             "incident_categories.id"
           )
+
           //.leftJoin('user_house_allocation', 'quotations.unitId', 'user_house_allocation.houseId')
           //.leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
 
@@ -658,6 +677,8 @@ const quotationsController = {
             "property_units.id as unitId",
             "quotations.displayId as Q No",
             "service_requests.displayId as SR#",
+            "companies.companyId",
+            "projects.project",
 
           ])
           .where("quotations.orgId", req.orgId)
@@ -671,6 +692,12 @@ const quotationsController = {
 
             if (quotationId) {
               qb.where('quotations.displayId', quotationId)
+            }
+            if (company) {
+              qb.where('quotations.companyId', company)
+            }
+            if (project) {
+              qb.where('quotations.projectId', project)
             }
             if (description) {
               qb.where('service_requests.description', 'iLIKE', `%${description}%`)
@@ -696,7 +723,11 @@ const quotationsController = {
             //"user_house_allocation.id",
             "buildings_and_phases.description",
             // "user_house_allocation.userId",
-            "property_units.id"
+            "property_units.id",
+            "companies.companyName",
+            "companies.companyId",
+            "projects.project"
+            
           ])
           .orderBy('quotations.id', 'desc')
           .offset(offset)
