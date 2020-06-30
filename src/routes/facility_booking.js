@@ -107,6 +107,8 @@ router.post('/update-facility-report',authMiddleware.isAuthenticated,facilityBoo
 
 router.post('/get-facility-report-list',authMiddleware.isAuthenticated,facilityBookingController.getFacilityReportList)
 
+router.get('/get-facility-report',authMiddleware.isAuthenticated,facilityBookingController.getFacilityReport)
+
 router.post('/get-facilityList-by-date',authMiddleware.isAuthenticated,facilityBookingController.facilityListingByDate)
 
 router.get('/get-property-unit-list-report',authMiddleware.isAuthenticated,facilityBookingController.getPropertyUnitListForReport)
@@ -115,6 +117,6 @@ router.post('/delete-facility-report',authMiddleware.isAuthenticated,facilityBoo
 
 router.post('/get-facility-report-detail',authMiddleware.isAuthenticated,facilityBookingController.getFacilityReportDetailById)
 
-router.post('/get-facility-by-status',authMiddleware.isAuthenticated,facilityBookingController.facilityListingStatus)
+// router.post('/get-facility-by-status',authMiddleware.isAuthenticated,facilityBookingController.facilityListingStatus)
 
 module.exports = router;
