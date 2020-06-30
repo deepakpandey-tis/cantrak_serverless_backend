@@ -760,7 +760,22 @@ const serviceOrderController = {
                                 qb.where('service_requests.priority', 'ilike', `%${priority}%`)
                             }
 
-                        })
+                        }).groupBy([
+                            "service_requests.id",
+                            "service_orders.id",
+                            "service_problems.id",
+                            "incident_categories.id",
+                            "assigned_service_team.id",
+                            "users.id",
+                            "u.id",
+                            "status.id",
+                            'buildings_and_phases.id',
+                            'teams.teamId',
+                            'requested_by.id',
+                            'property_units.id',
+                            // "assignUser.id",
+                            // "user_house_allocation.id"
+                        ])
                         .offset(offset)
                         .limit(per_page).orderBy('service_orders.id', 'desc')
                 ]);
