@@ -692,6 +692,7 @@ const facilityBookingController = {
         (tenantName && tenantName.length > 0) ||
         createStartTime || createdEndTime || bookingStartTime || bookingEndTime
       ) {
+        // if(facilityName.length>0 || tenantName.length)
         try {
           // console.log("facility name length",facilityName.length,tenantName.length)
           facilityReportResult = await knex
@@ -997,6 +998,7 @@ const facilityBookingController = {
        
       // }
       else{
+        console.log("else returned")
         facilityReportResult = await knex
           .from("entity_bookings")
           .leftJoin(
@@ -5009,6 +5011,43 @@ const facilityBookingController = {
       });
     }
   },
+  getFacilityReport:async(req,res) =>{
+    try{
+      let sortPayload = req.body
+      orgId = req.orgId
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "id";
+        sortPayload.orderBy = "asc";
+      }
+
+      let reportList = await knex("facility_report_master")
+      .leftJoin("users", "users.id", "facility_report_master.createdBy")
+      .select([
+        "facility_report_master.id as id",
+        "facility_report_master.reportName",
+        "facility_report_master.createdBy",
+        "facility_report_master.orgId",
+        "users.name as createdName",
+      ])
+      .where({ "facility_report_master.orgId": req.orgId })
+      .orWhere({ "facility_report_master.orgId": 0 })
+      .orderBy(sortPayload.sortBy, sortPayload.orderBy)
+
+      return res.status(200).json({
+        data: {
+          facilityReport: reportList,
+        },
+        message: "Facility Report List!",
+      }); 
+
+
+    }catch(err){
+      console.log(
+        "[controllers][facility_report_master][getReports],Error",
+        err
+      );
+    }
+  },
   getFacilityReportList: async (req, res) => {
     try {
       let sortPayload = req.body;
@@ -5025,7 +5064,7 @@ const facilityBookingController = {
       let offset = (page - 1) * per_page;
       let { searchValue } = req.body;
       let orgId = req.query.orgId;
-      console.log("search value", searchValue);
+      // console.log("search value", searchValue);
       let total, rows;
 
       [total, rows] = await Promise.all([
@@ -5041,8 +5080,10 @@ const facilityBookingController = {
                 "facility_report_master.reportName",
                 "iLIKE",
                 `%${searchValue}%`
+                // searchValue
               );
               // qb.where({ "facility_report_master.orgId": req.orgId })
+              // qb.orWhere({"facility_report_master.orgId": 0})
             }
           })
           .first(),
@@ -5064,8 +5105,10 @@ const facilityBookingController = {
                 "facility_report_master.reportName",
                 "iLIKE",
                 `%${searchValue}%`
+                // searchValue
               );
               // qb.where({ "facility_report_master.orgId": req.orgId })
+              // qb.orWhere({"facility_report_master.orgId": 0})
             }
           })
           .orderBy(sortPayload.sortBy, sortPayload.orderBy)
