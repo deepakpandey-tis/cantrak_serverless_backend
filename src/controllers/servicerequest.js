@@ -3538,6 +3538,7 @@ const serviceRequestController = {
             qb.where('projects.id', payload.projectId)
           }
           if (payload.categoryId & payload.categoryId.length) {
+            console.log("CategoryID", payload.categoryId);
             qb.whereIn('incident_categories.id', payload.categoryId)
           }
           if (payload.status && payload.status.length) {
