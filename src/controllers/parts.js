@@ -734,6 +734,7 @@ const partsController = {
             let images = null;
             let id = req.body.id;
             let qrcode = ''
+            let quantityResult;
 
             qrcode = await QRCode.toDataURL('org-' + req.orgId + '-part-' + id)
 
@@ -751,10 +752,20 @@ const partsController = {
                 ).orderBy('id', 'desc')
             let partQuantityDataResult = partQuantityData
 
+
+            quantityResult = await knex.from('part_ledger')
+                .sum('quantity as quantity')
+                .where({ partId: id, orgId: req.orgId }).first();
+
+
             let totalQuantity = 0;
-            for (let i = 0; i < partQuantityDataResult.length; i++) {
-                totalQuantity += parseInt(partQuantityDataResult[i].quantity)
+
+            if (quantityResult) {
+                totalQuantity = quantityResult.quantity;
             }
+            // for (let i = 0; i < partQuantityDataResult.length; i++) {
+            //     totalQuantity += parseInt(partQuantityDataResult[i].quantity)
+            // }
             let totalUnitCost = 0;
 
             // for (let i = 0; i < partQuantityDataResult.length; i++) {
@@ -769,7 +780,8 @@ const partsController = {
             if (partQuantityDataResult[0]) {
                 return res.status(200).json({
                     data: { part: { quantity: totalQuantity, unitCost: partQuantityDataResult[0].unitCost, ...omitedPartDataResult, additionalAttributes, images, files, qrcode } },
-                    message: "Part Details"
+                    message: "Part Details",
+                    quantityResult
                 });
             }
 
@@ -811,6 +823,8 @@ const partsController = {
                         issueBy: Joi.string().allow("").allow(null).optional(),
                         issueTo: Joi.string().allow("").allow(null).optional(),
                         returnedBy: Joi.string().allow("").allow(null).optional(),
+                        companyId: Joi.string().allow("").allow(null).optional(),
+                        companyId2: Joi.string().allow("").allow(null).optional(),
 
 
                     });
@@ -818,13 +832,13 @@ const partsController = {
 
                     if (partStockPayload.adjustType == "1") {
 
-                        partStockPayload = _.omit(partStockPayload, ['storeAdjustmentBy', 'returnedBy', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor'])
+                        partStockPayload = _.omit(partStockPayload, ['companyId2', 'storeAdjustmentBy', 'returnedBy', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor'])
 
                     } else if (partStockPayload.adjustType == "3") {
-                        partStockPayload = _.omit(partStockPayload, ['storeAdjustmentBy', 'issueBy', 'issueTo', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor'])
+                        partStockPayload = _.omit(partStockPayload, ['companyId2', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor'])
 
                     } else {
-                        partStockPayload = _.omit(partStockPayload, ['storeAdjustmentBy', 'issueBy', 'returnedBy', 'issueTo', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor'])
+                        partStockPayload = _.omit(partStockPayload, ['companyId', 'companyId2', 'storeAdjustmentBy', 'issueBy', 'returnedBy', 'issueTo', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor'])
 
                     }
 
@@ -843,12 +857,14 @@ const partsController = {
                         building: Joi.string().allow("").allow(null).optional(),
                         floor: Joi.string().allow("").allow(null).optional(),
                         returnedBy: Joi.string().allow("").allow(null).optional(),
+                        companyId: Joi.string().allow("").allow(null).optional(),
+                        companyId2: Joi.string().allow("").allow(null).optional(),
 
                         //deductBy : Joi.number().required()
 
                     });
                     result = Joi.validate(_.omit(partStockPayload, 'storeAdjustmentBy', 'issueBy', 'issueTo', 'description', 'date', 'workOrderId', 'deductDate', 'building', 'floor'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['serviceOrderNo', 'returnedBy', 'workOrderId', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'deductDate'])
+                    partStockPayload = _.omit(partStockPayload, ['companyId', 'companyId2', 'serviceOrderNo', 'returnedBy', 'workOrderId', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'deductDate'])
                     partStockPayload.receiveDate = new Date(partStockPayload.receiveDate).getTime();
 
                 } else if (partStockPayload.adjustType == "6") {
@@ -865,10 +881,12 @@ const partsController = {
                         building: Joi.string().allow("").allow(null).optional(),
                         floor: Joi.string().allow("").allow(null).optional(),
                         receiveBy: Joi.string().required(),
-                        receiveDate: Joi.string().required()
+                        receiveDate: Joi.string().required(),
+                        companyId: Joi.string().allow("").allow(null).optional(),
+                        companyId2: Joi.string().allow("").allow(null).optional(),
                     });
                     result = Joi.validate(_.omit(partStockPayload, 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'description', 'date', 'workOrderId', 'deductBy', 'deductDate'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor'])
+                    partStockPayload = _.omit(partStockPayload, ['companyId', 'companyId2', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor'])
                     partStockPayload.receiveDate = new Date(partStockPayload.receiveDate).getTime();
 
                 } else if (partStockPayload.adjustType == "10" || partStockPayload.adjustType == "11") {
@@ -882,7 +900,9 @@ const partsController = {
                         isPartAdded: Joi.string().required(),
                         issueBy: Joi.string().allow("").allow(null).optional(),
                         issueTo: Joi.string().allow("").allow(null).optional(),
-                        
+                        companyId: Joi.string().allow("").allow(null).optional(),
+                        companyId2: Joi.string().allow("").allow(null).optional(),
+
                     });
                     result = Joi.validate(_.omit(partStockPayload, 'storeAdjustmentBy', 'returnedBy', 'serviceOrderNo', 'description', 'date', 'receiveBy', 'receiveDate', 'deductBy', 'deductDate', 'building', 'floor'), schema);
                     partStockPayload = _.omit(partStockPayload, ['serviceOrderNo', "receiveBy",
@@ -891,7 +911,11 @@ const partsController = {
                         "floor",
                         "storeAdjustmentBy",
                         "deductBy",
-                        "returnedBy"])
+                        "returnedBy",
+                        'companyId',
+                        'companyId2'
+                    ])
+                    partStockPayload.companyId = req.body.companyId2;
 
 
 
@@ -912,10 +936,12 @@ const partsController = {
                         floor: Joi.string().allow("").allow(null).optional(),
                         //receiveBy: Joi.string().required(),
                         //receiveDate: Joi.string().required()
-                        storeAdjustmentBy: Joi.string().allow("").allow(null).optional()
+                        storeAdjustmentBy: Joi.string().allow("").allow(null).optional(),
+                        companyId: Joi.string().allow("").allow(null).optional(),
+                        companyId2: Joi.string().allow("").allow(null).optional(),
                     });
                     result = Joi.validate(_.omit(partStockPayload, 'issueBy', 'issueTo', 'returnedBy', 'description', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId'])
+                    partStockPayload = _.omit(partStockPayload, ['companyId', 'companyId2', 'issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId'])
 
                 }
                 else if (partStockPayload.adjustType == "5") {
@@ -935,10 +961,12 @@ const partsController = {
                         floor: Joi.string().allow("").allow(null).optional(),
                         //receiveBy: Joi.string().required(),
                         //receiveDate: Joi.string().required()
-                        storeAdjustmentBy: Joi.string().allow("").allow(null).optional()
+                        storeAdjustmentBy: Joi.string().allow("").allow(null).optional(),
+                        companyId: Joi.string().allow("").allow(null).optional(),
+                        companyId2: Joi.string().allow("").allow(null).optional(),
                     });
                     result = Joi.validate(_.omit(partStockPayload, 'issueBy', 'issueTo', 'returnedBy', 'description', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId'])
+                    partStockPayload = _.omit(partStockPayload, ['companyId', 'companyId2', 'issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId'])
 
                 }
                 else {
@@ -948,7 +976,9 @@ const partsController = {
                         unitCost: Joi.string().allow("").allow(null).optional(),
                         quantity: Joi.number().required(),
                         adjustType: Joi.string().required(),
-                        isPartAdded: Joi.string().required()
+                        isPartAdded: Joi.string().required(),
+                        companyId: Joi.string().allow("").allow(null).optional(),
+                        companyId2: Joi.string().allow("").allow(null).optional(),
                     });
                     result = Joi.validate(_.omit(partStockPayload, 'serviceOrderNo', 'description', 'date', 'workOrderId', 'receiveBy', 'receiveDate', 'deductBy', 'deductDate', 'building', 'floor'), schema);
 
@@ -977,7 +1007,7 @@ const partsController = {
                 }
 
                 let quantity;
-                if (partStockPayload.adjustType == 11 || partStockPayload.adjustType == 1 || partStockPayload.adjustType == 2 || partStockPayload.adjustType == 5 || partStockPayload.adjustType == 7) {
+                if (partStockPayload.adjustType == 1 || partStockPayload.adjustType == 2 || partStockPayload.adjustType == 5 || partStockPayload.adjustType == 7 || partStockPayload.adjustType == 10) {
                     quantity = "-" + partStockPayload.quantity;
                 } else {
                     quantity = partStockPayload.quantity;
@@ -1324,10 +1354,15 @@ const partsController = {
     checkOrderWorkId: async (req, res) => {
         try {
             let orgId = req.orgId;
-            let workOrderId = req.params.id;
+            let workOrderId = req.query.workOrderId;
+            let companyId = req.query.companyId;
+
             let result = "";
-            result = await knex('task_group_schedule_assign_assets').returning('*')
-                .where({ displayId: workOrderId, orgId: orgId })
+            result = await knex('task_group_schedule_assign_assets')
+                .leftJoin('task_group_schedule', 'task_group_schedule_assign_assets.scheduleId', 'task_group_schedule.id')
+                .leftJoin('pm_master2', 'task_group_schedule.pmId', 'pm_master2.id')
+                .returning('*')
+                .where({ 'task_group_schedule_assign_assets.displayId': workOrderId, 'pm_master2.companyId': companyId, 'task_group_schedule_assign_assets.orgId': orgId })
             return res.status(200).json({
                 data: result,
                 message: "Work Order no. Successfully!"
@@ -2390,9 +2425,10 @@ const partsController = {
         try {
             let orgId = req.orgId;
             let serviceId = req.query.serviceId;
+            let companyId = req.query.companyId;
             let result = "";
             result = await knex('service_orders').returning('*')
-                .where({ displayId: serviceId, orgId: orgId })
+                .where({ companyId: companyId, displayId: serviceId, orgId: orgId })
             return res.status(200).json({
                 data: result,
                 message: "Service order Id Successfully!"
@@ -2718,7 +2754,7 @@ const partsController = {
                         openingBalance = balance.quantity;
                     }
 
-                   
+
 
 
                     let updatedStockDataWithInAndOut = [];
@@ -2732,9 +2768,9 @@ const partsController = {
                         let o = 0;
                         let bal = 0
 
-                      //  if (d.quantity && d.quantity.includes('-')) {
+                        //  if (d.quantity && d.quantity.includes('-')) {
 
-                        if (d.quantity && Math.sign(d.quantity)==-1) {
+                        if (d.quantity && Math.sign(d.quantity) == -1) {
                             o = Number(d.quantity)
                             //    balance.totalQuantity = Number(balance.totalQuantity) + o
                             //if (s > 1) {
@@ -2787,7 +2823,7 @@ const partsController = {
                     let bal2 = 0
 
 
-                    if (d2.quantity && Math.sign(d2.quantity)==-1) {
+                    if (d2.quantity && Math.sign(d2.quantity) == -1) {
                         o2 = Number(d2.quantity)
                         //    balance.totalQuantity = Number(balance.totalQuantity) + o
                         //if (s > 1) {
@@ -3067,7 +3103,7 @@ const partsController = {
                     let bal2 = 0
 
 
-                    if (d2.quantity && Math.sign(d2.quantity)==-1) {
+                    if (d2.quantity && Math.sign(d2.quantity) == -1) {
                         o2 = Number(d2.quantity)
                         //    balance.totalQuantity = Number(balance.totalQuantity) + o
                         //if (s > 1) {
