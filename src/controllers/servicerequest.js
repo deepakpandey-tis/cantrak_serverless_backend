@@ -2560,12 +2560,22 @@ const serviceRequestController = {
           });
         }
         const currentTime = new Date().getTime();
-
+        let requestedByResult;
 
         // Insert into requested by
 
-        const requestedByResult = await knex('requested_by').insert({ name: req.body.name, mobile: req.body.mobile, email: req.body.email,orgId:req.orgId }).returning(['*'])
+        /*CHECK REQUIESTED BY OPEN */
 
+        let requestByData = await knex('requested_by').where({ name: req.body.name, mobile: req.body.mobile, email: req.body.email, orgId: req.orgId }).returning(['*']);
+
+        if (requestByData && requestByData.length) {
+
+          requestedByResult = requestByData;
+        } else {
+          /*CHECK REQUIESTED BY CLOSE */
+
+          requestedByResult = await knex('requested_by').insert({ name: req.body.name, mobile: req.body.mobile, email: req.body.email, orgId: req.orgId }).returning(['*'])
+        }
         /*UPDATE SERVICE REQUEST DATA OPEN */
         let common;
         let priority;
@@ -3507,7 +3517,7 @@ const serviceRequestController = {
         ])
 
         .where(qb => {
-          qb.whereNot('status.descriptionEng','Cancel')
+          qb.whereNot('status.descriptionEng', 'Cancel')
           qb.where({ "service_requests.orgId": req.orgId })
           qb.where('service_requests.moderationStatus', true)
           qb.where({ 'service_requests.isCreatedFromSo': false })

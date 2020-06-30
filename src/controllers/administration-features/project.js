@@ -931,6 +931,29 @@ const ProjectController = {
             "companies.companyId",
             "projects.project"])
           .orderBy('projects.projectName', 'asc')
+      }else if (req.query.areaName === 'all' && companyId==='') {
+        companyHavingProjects = await knex('projects').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+        companyArr1 = companyHavingProjects.map(v => v.companyId)
+        rows = await knex("projects")
+          .innerJoin('companies', 'projects.companyId', 'companies.id')
+          .innerJoin('property_units', 'projects.id', 'property_units.projectId')
+          .where({ "projects.isActive": true })
+          .whereIn('projects.id', projects)
+          .whereIn('projects.companyId', companyArr1)
+          .select([
+            "projects.id as id",
+            "projects.projectName",
+            "companies.companyName",
+            "companies.id as cid",
+            "companies.companyId",
+            "projects.project as projectId"
+          ]).groupBy(["projects.id",
+            "projects.projectName",
+            "companies.companyName",
+            "companies.id",
+            "companies.companyId",
+            "projects.project"])
+          .orderBy('projects.projectName', 'asc')
       } else if (req.query.areaName === 'all') {
         companyHavingProjects = await knex('projects').select(['companyId']).where({ orgId: req.orgId, isActive: true })
         companyArr1 = companyHavingProjects.map(v => v.companyId)
