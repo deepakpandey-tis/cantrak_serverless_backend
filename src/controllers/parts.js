@@ -828,17 +828,17 @@ const partsController = {
 
 
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'storeAdjustmentBy', 'description', 'date', 'workOrderId', 'receiveBy', 'receiveDate', 'deductBy', 'deductDate', 'building', 'floor'), schema);
+                    result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'storeAdjustmentBy', 'description', 'date', 'workOrderId', 'receiveBy', 'receiveDate', 'deductBy', 'deductDate', 'building', 'floor'), schema);
 
                     if (partStockPayload.adjustType == "1") {
 
-                        partStockPayload = _.omit(partStockPayload, ['companyId2', 'storeAdjustmentBy', 'returnedBy', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor'])
+                        partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId2', 'storeAdjustmentBy', 'returnedBy', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor'])
 
                     } else if (partStockPayload.adjustType == "3") {
-                        partStockPayload = _.omit(partStockPayload, ['companyId2', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor'])
+                        partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId2', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor'])
 
                     } else {
-                        partStockPayload = _.omit(partStockPayload, ['companyId', 'companyId2', 'storeAdjustmentBy', 'issueBy', 'returnedBy', 'issueTo', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor'])
+                        partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'storeAdjustmentBy', 'issueBy', 'returnedBy', 'issueTo', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor'])
 
                     }
 
@@ -863,8 +863,8 @@ const partsController = {
                         //deductBy : Joi.number().required()
 
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'storeAdjustmentBy', 'issueBy', 'issueTo', 'description', 'date', 'workOrderId', 'deductDate', 'building', 'floor'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['companyId', 'companyId2', 'serviceOrderNo', 'returnedBy', 'workOrderId', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'deductDate'])
+                    result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'description', 'date', 'workOrderId', 'deductDate', 'building', 'floor'), schema);
+                    partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'serviceOrderNo', 'returnedBy', 'workOrderId', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'deductDate'])
                     partStockPayload.receiveDate = new Date(partStockPayload.receiveDate).getTime();
 
                 } else if (partStockPayload.adjustType == "6") {
@@ -885,8 +885,8 @@ const partsController = {
                         companyId: Joi.string().allow("").allow(null).optional(),
                         companyId2: Joi.string().allow("").allow(null).optional(),
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'description', 'date', 'workOrderId', 'deductBy', 'deductDate'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['companyId', 'companyId2', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor'])
+                    result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'description', 'date', 'workOrderId', 'deductBy', 'deductDate'), schema);
+                    partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor'])
                     partStockPayload.receiveDate = new Date(partStockPayload.receiveDate).getTime();
 
                 } else if (partStockPayload.adjustType == "10" || partStockPayload.adjustType == "11") {
@@ -902,6 +902,7 @@ const partsController = {
                         issueTo: Joi.string().allow("").allow(null).optional(),
                         companyId: Joi.string().allow("").allow(null).optional(),
                         companyId2: Joi.string().allow("").allow(null).optional(),
+                        receiveFrom: Joi.string().allow("").allow(null).optional(),
 
                     });
                     result = Joi.validate(_.omit(partStockPayload, 'storeAdjustmentBy', 'returnedBy', 'serviceOrderNo', 'description', 'date', 'receiveBy', 'receiveDate', 'deductBy', 'deductDate', 'building', 'floor'), schema);
@@ -940,8 +941,8 @@ const partsController = {
                         companyId: Joi.string().allow("").allow(null).optional(),
                         companyId2: Joi.string().allow("").allow(null).optional(),
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'issueBy', 'issueTo', 'returnedBy', 'description', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['companyId', 'companyId2', 'issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId'])
+                    result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'issueBy', 'issueTo', 'returnedBy', 'description', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate'), schema);
+                    partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId'])
 
                 }
                 else if (partStockPayload.adjustType == "5") {
@@ -965,8 +966,8 @@ const partsController = {
                         companyId: Joi.string().allow("").allow(null).optional(),
                         companyId2: Joi.string().allow("").allow(null).optional(),
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'issueBy', 'issueTo', 'returnedBy', 'description', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['companyId', 'companyId2', 'issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId'])
+                    result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'issueBy', 'issueTo', 'returnedBy', 'description', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate'), schema);
+                    partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId'])
 
                 }
                 else {
@@ -980,7 +981,7 @@ const partsController = {
                         companyId: Joi.string().allow("").allow(null).optional(),
                         companyId2: Joi.string().allow("").allow(null).optional(),
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'serviceOrderNo', 'description', 'date', 'workOrderId', 'receiveBy', 'receiveDate', 'deductBy', 'deductDate', 'building', 'floor'), schema);
+                    result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'serviceOrderNo', 'description', 'date', 'workOrderId', 'receiveBy', 'receiveDate', 'deductBy', 'deductDate', 'building', 'floor'), schema);
 
                 }
 
@@ -2816,11 +2817,15 @@ const partsController = {
                 let s2 = 0;
                 let totalIn2 = 0;
                 let totalOut2 = 0;
-                for (let d2 of stockResult) {
+                let a =[];
+                for (let d2 of _.orderBy(stockResult, 'partName')) {
                     s2++;
                     let i2 = 0;
                     let o2 = 0;
                     let bal2 = 0
+
+                    a.push(d2.partCode)
+
 
 
                     if (d2.quantity && Math.sign(d2.quantity) == -1) {
@@ -2848,9 +2853,20 @@ const partsController = {
                     totalIn2 += i2;
                     totalOut2 += Math.abs(o2);
 
-                    updatedStockDataWithInAndOut2.push({ ...d2, in: i2, out: o2, balance: newBal2, totalIn: totalIn2, totalOut: totalOut2 })
+                    updatedStockDataWithInAndOut2.push({ ...d2, in: i2, out: o2, balance: newBal2, totalIn: totalIn2, totalOut: totalOut2 ,a})
                 }
                 /*Export Data close */
+
+
+                var result = [];
+                _.orderBy(stockResult, 'partName').reduce(function (res, value) {
+                    if (!res[value.partCode]) {
+                        res[value.partCode] = { partCode: value.partCode, quantity: 0 };
+                        result.push(res[value.partCode])
+                    }
+                    res[value.partCode].quantity += value.quantity;
+                    return res;
+                }, {});
 
                 res.status(200).json({
                     data: {
@@ -2860,6 +2876,7 @@ const partsController = {
                         fromTime,
                         toTime,
                         exportStockData: updatedStockDataWithInAndOut2,
+                        result
                     },
                     message: "Stock report Successfully!"
                 })
