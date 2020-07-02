@@ -80,7 +80,7 @@ router.get(
   partsController.getPartDetailById
 );
 router.get(
-  "/check-order-work-id/:id",
+  "/check-order-work-id",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPartAccessible,

@@ -2683,15 +2683,18 @@ const serviceOrderController = {
                 .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id')
                 .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
                 .select([
+                    'service_problems.serviceRequestId',
                     'service_problems.problemId',
                     'service_problems.categoryId',
+                    'service_problems.serviceRequestId',
                     'incident_type.typeCode as problemTypeCode',
                     'incident_type.descriptionEng as problemType',
                     'incident_categories.categoryCode',
                     'incident_categories.descriptionEng as category',
                     'incident_sub_categories.descriptionEng as subCategory',
                     'service_requests.serviceStatusCode',
-                ])
+                ])   
+                            
                 .whereIn('service_problems.serviceRequestId', serviceIds)
                 .where({ 'service_problems.orgId': req.orgId })
                 .orderBy('incident_type.typeCode', 'asc');

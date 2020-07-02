@@ -3537,7 +3537,7 @@ const serviceRequestController = {
           if (payload.projectId) {
             qb.where('projects.id', payload.projectId)
           }
-          if (payload.categoryId & payload.categoryId.length) {
+          if (payload.categoryId) {
             console.log("CategoryID", payload.categoryId);
             qb.whereIn('incident_categories.id', payload.categoryId)
           }
@@ -3593,6 +3593,7 @@ const serviceRequestController = {
         .select([
           'service_problems.problemId',
           'service_problems.categoryId',
+          'service_problems.serviceRequestId',
           'incident_type.typeCode as problemTypeCode',
           'incident_type.descriptionEng as problemType',
           'incident_categories.categoryCode',
@@ -3600,6 +3601,17 @@ const serviceRequestController = {
           'incident_sub_categories.descriptionEng as subCategory',
           'service_requests.serviceStatusCode',
         ])
+        .groupBy([
+          "service_problems.problemId",
+          "service_problems.categoryId",
+          "service_problems.serviceRequestId",
+          "incident_type.descriptionEng",
+          "incident_type.typeCode",
+          "incident_categories.descriptionEng",
+          "incident_sub_categories.descriptionEng",
+          "service_requests.serviceStatusCode",
+          "incident_categories.categoryCode"
+      ])
         .whereIn('service_problems.serviceRequestId', serviceIds)
         .where({ 'service_problems.orgId': req.orgId })
         .orderBy('incident_type.typeCode', 'asc');
