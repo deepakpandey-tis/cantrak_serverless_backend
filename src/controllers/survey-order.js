@@ -958,6 +958,9 @@ const surveyOrderController = {
       if (filterList.company) {
         filters['o.companyId'] = filterList.company;
       }
+      if (filterList.project) {
+        filters['property_units.projectId'] = filterList.project;
+      }
 
       // if(filterList.description){
       //   filters['s.description'] = filterList.description;
@@ -1037,6 +1040,7 @@ const surveyOrderController = {
           .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
           .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
           .leftJoin('companies', 'o.companyId', 'companies.id')
+          .leftJoin('projects', 'property_units.projectId', 'projects.id')
 
           .select(
             "o.id AS surveyId",
@@ -1056,6 +1060,8 @@ const surveyOrderController = {
             "s.displayId as SR#",
             "companies.companyName",
             "companies.companyId",
+            "projects.project",
+            "projects.projectName",
 
           )
           .where({ "assigned_service_team.entityType": "survey_orders" })
@@ -1071,7 +1077,8 @@ const surveyOrderController = {
             "assigned_service_team.entityType",
             "assignUser.id",
             "user_house_allocation.id",
-            "companies.id"
+            "companies.id",
+            "projects.id"
           ]), knex
             .select(
               "o.id as S Id",
@@ -1095,6 +1102,8 @@ const surveyOrderController = {
               "s.displayId as SR#",
               "companies.companyName",
               "companies.companyId",
+              "projects.project",
+              "projects.projectName",
             )
             .from("survey_orders As o")
             .where(qb => {
@@ -1158,6 +1167,7 @@ const surveyOrderController = {
             .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
             .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
             .leftJoin('companies', 'o.companyId', 'companies.id')
+            .leftJoin('projects', 'property_units.projectId', 'projects.id')
 
             .whereIn('s.projectId', accessibleProjects)
             .orderBy('o.id', 'desc')
