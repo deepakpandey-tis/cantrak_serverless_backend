@@ -2693,8 +2693,7 @@ const serviceOrderController = {
                     'incident_categories.descriptionEng as category',
                     'incident_sub_categories.descriptionEng as subCategory',
                     'service_requests.serviceStatusCode',
-                ])   
-                            
+                ])                               
                 .whereIn('service_problems.serviceRequestId', serviceIds)
                 .where({ 'service_problems.orgId': req.orgId })
                 .orderBy('incident_type.typeCode', 'asc');
