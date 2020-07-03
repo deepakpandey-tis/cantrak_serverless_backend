@@ -1252,7 +1252,7 @@ const dashboardController = {
           ])
           .where({
             "service_requests.orgId": req.orgId,
-           // "incident_sub_categories.incidentTypeId": problemTypeId
+            "incident_sub_categories.incidentTypeId": problemTypeId
           })
           .where({ "service_requests.orgId": req.orgId })
           .whereBetween("service_requests.createdAt", [
