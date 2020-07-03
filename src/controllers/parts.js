@@ -906,7 +906,7 @@ const partsController = {
 
                     });
                     result = Joi.validate(_.omit(partStockPayload, 'storeAdjustmentBy', 'returnedBy', 'serviceOrderNo', 'description', 'date', 'receiveBy', 'receiveDate', 'deductBy', 'deductDate', 'building', 'floor'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['serviceOrderNo', "receiveBy",
+                    partStockPayload = _.omit(partStockPayload, ['serviceOrderNo',
                         "receiveDate",
                         "building",
                         "floor",
@@ -2817,19 +2817,32 @@ const partsController = {
                 let s2 = 0;
                 let totalIn2 = 0;
                 let totalOut2 = 0;
-                let a =[];
+                let partArr = [];
                 for (let d2 of _.orderBy(stockResult, 'partName')) {
                     s2++;
                     let i2 = 0;
                     let o2 = 0;
                     let bal2 = 0
 
-                    a.push(d2.partCode)
+                    var lastValue = partArr[partArr.length - 1];
+
+                    if (d2.partCode == lastValue) {
+                        // console.log("yesss",lastValue)
+
+                    } else {
+
+                        newBal2 = 0;
+                        //console.log("NOOOOOOOOOOOOOoo")
+                    }
+
+                    partArr.push(d2.partCode);
 
 
 
                     if (d2.quantity && Math.sign(d2.quantity) == -1) {
                         o2 = Number(d2.quantity)
+
+
                         //    balance.totalQuantity = Number(balance.totalQuantity) + o
                         //if (s > 1) {
                         bal2 = Number(newBal2) + o2;
@@ -2849,24 +2862,15 @@ const partsController = {
 
 
                     }
+
+
                     newBal2 = bal2;
                     totalIn2 += i2;
                     totalOut2 += Math.abs(o2);
 
-                    updatedStockDataWithInAndOut2.push({ ...d2, in: i2, out: o2, balance: newBal2, totalIn: totalIn2, totalOut: totalOut2 ,a})
+                    updatedStockDataWithInAndOut2.push({ ...d2, in: i2, out: o2, balance: newBal2, totalIn: totalIn2, totalOut: totalOut2, partArr })
                 }
                 /*Export Data close */
-
-
-                var result = [];
-                _.orderBy(stockResult, 'partName').reduce(function (res, value) {
-                    if (!res[value.partCode]) {
-                        res[value.partCode] = { partCode: value.partCode, quantity: 0 };
-                        result.push(res[value.partCode])
-                    }
-                    res[value.partCode].quantity += value.quantity;
-                    return res;
-                }, {});
 
                 res.status(200).json({
                     data: {
@@ -2876,7 +2880,6 @@ const partsController = {
                         fromTime,
                         toTime,
                         exportStockData: updatedStockDataWithInAndOut2,
-                        result
                     },
                     message: "Stock report Successfully!"
                 })
@@ -2947,14 +2950,15 @@ const partsController = {
 
             let approveResult = await knex('part_ledger').where({ 'serviceOrderNo': payload.soId })
                 .leftJoin("users", 'part_ledger.approvedBy', 'users.id')
-                .leftJoin('users as ib', 'part_ledger.issueBy', 'ib.id')
-                .leftJoin('users as it', 'part_ledger.issueTo', 'it.id')
+                //.leftJoin('users as ib', 'part_ledger.issueBy', 'ib.id')
+                //.leftJoin('users as it', 'part_ledger.issueTo', 'it.id')
                 .select([
                     'users.name as approvedUser',
                     'part_ledger.createdAt as approvedAt',
-                    'ib.name as issueBy',
-                    'it.name as issueTo',
-                    'part_ledger.issueDate'
+                    'part_ledger.issueBy',
+                    'part_ledger.issueTo',
+                    'part_ledger.issueDate',
+                    'part_ledger.receiveDate'
                 ])
                 .first()
 
@@ -3089,8 +3093,7 @@ const partsController = {
                     .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
 
 
-                let lessFromDate = moment(fromDate).subtract('1', 'M').format('YYYY-MM-DD')
-                let fromDateEnd = moment(lessFromDate).endOf('date').format();
+                let fromDateEnd = moment(fromTime).startOf('date').format();
                 let fromTimeEnd = new Date(fromDateEnd).getTime();
 
 
@@ -3101,23 +3104,43 @@ const partsController = {
                 let s2 = 0;
                 let totalIn2 = 0;
                 let totalOut2 = 0;
-                for (let d2 of stockResult) {
+                let partArr = [];
+                for (let d2 of _.orderBy(stockResult, 'partName')) {
 
                     let balance = await knex.from('part_ledger')
                         .sum('quantity as quantity')
                         .where('part_ledger.createdAt', '<', fromTimeEnd)
                         .where({ partId: d2.partId, orgId: req.orgId }).first();
 
-                    let openingBalance = 0;
+                    let openingBalance;
                     if (balance.quantity) {
                         openingBalance = balance.quantity;
+
                     }
+
+                    //newBal2 = balance.quantity;
 
 
                     s2++;
                     let i2 = 0;
                     let o2 = 0;
                     let bal2 = 0
+
+                    var lastValue = partArr[partArr.length - 1];
+
+                    if (d2.partCode == lastValue) {
+                        // console.log("yesss",lastValue)
+                        openingBalance = "";
+
+                    } else {
+
+                        newBal2 = 0;
+                        openingBalance = openingBalance
+                        //console.log("NOOOOOOOOOOOOOoo")
+                    }
+
+                    partArr.push(d2.partCode);
+
 
 
                     if (d2.quantity && Math.sign(d2.quantity) == -1) {
