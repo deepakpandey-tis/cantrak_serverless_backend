@@ -852,7 +852,7 @@ const taskGroupController = {
       const list = await knex('pm_master2').select()
       let reqData = req.query;
       let total, rows
-      let { assetCategoryId, pmPlanName, startDate, endDate } = req.body;
+      let { companyId,pmNo,assetCategoryId, pmPlanName, startDate, endDate } = req.body;
       let filters = {}
       if (assetCategoryId) {
         filters['asset_category_master.id'] = assetCategoryId;
@@ -879,15 +879,25 @@ const taskGroupController = {
             qb.where(filters)
             qb.where({ 'pm_master2.orgId': req.orgId });
             qb.whereIn("pm_master2.projectId", projects);
+            if(companyId){
+              qb.where('pm_master2.companyId', companyId)
+
+            }
+            if(pmNo){
+              qb.where('pm_master2.displayId', pmNo)
+
+            }
+
             //qb.where({'pm_master2.projectId':})
             if (pmPlanName) {
               qb.where('pm_master2.name', 'iLIKE', `%${pmPlanName}%`)
             }
-            if (startDate) {
-              qb.where({ 'task_group_schedule.startDate': startDate })
+            if (startDate && endDate) {
+              qb.where('task_group_schedule.startDate','>=', startDate)
+              qb.where('task_group_schedule.endDate','<=', endDate )
             }
             if (endDate) {
-              qb.where({ 'task_group_schedule.endDate': endDate })
+            //  qb.where({ 'task_group_schedule.endDate': endDate })
             }
           }),
         knex.from('pm_master2')
@@ -904,14 +914,24 @@ const taskGroupController = {
 
             qb.where({ "pm_master2.orgId": req.orgId });
 
+            if(companyId){
+              qb.where('pm_master2.companyId', companyId)
+            }
+
+            if(pmNo){
+              qb.where('pm_master2.displayId', pmNo)
+
+            }
+
             if (pmPlanName) {
               qb.where('pm_master2.name', 'iLIKE', `%${pmPlanName}%`)
             }
-            if (startDate) {
-              qb.where({ 'task_group_schedule.startDate': startDate })
+            if (startDate && endDate) {
+              qb.where('task_group_schedule.startDate','>=', startDate)
+              qb.where('task_group_schedule.endDate','<=', endDate )
             }
             if (endDate) {
-              qb.where({ 'task_group_schedule.endDate': endDate })
+            //  qb.where({ 'task_group_schedule.endDate': endDate })
             }
           })
           .orderBy("pm_master2.createdAt", 'desc')
