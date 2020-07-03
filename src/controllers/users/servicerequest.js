@@ -523,7 +523,7 @@ const serviceRequestController = {
 
       // Service ID
       if (serviceId) {
-        filters["service_requests.id"] = serviceId;
+        filters["service_requests.displayId"] = serviceId;
       }
 
       // Location
@@ -611,7 +611,8 @@ const serviceRequestController = {
               "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
               "requested_by.name as Requested By",
-              "service_requests.createdAt as Date Created"
+              "service_requests.createdAt as Date Created",
+              "service_requests.displayId as SR#"
             ])
             .groupBy([
               "service_requests.id",
@@ -622,7 +623,7 @@ const serviceRequestController = {
             .where({ "service_requests.orgId": req.orgId })
             .whereIn("service_requests.houseId", houseIds)
             .orWhere("service_requests.createdBy", req.me.id)
-            .distinct('service_requests.id'),
+            .distinct('service_requests.displayId'),
 
           knex
             .from("service_requests")
@@ -650,14 +651,15 @@ const serviceRequestController = {
               "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
               "requested_by.name as Requested By",
-              "service_requests.createdAt as Date Created"
+              "service_requests.createdAt as Date Created",
+              "service_requests.displayId as SR#"
             ])
             .offset(offset)
             .limit(per_page)
             .where({ "service_requests.orgId": req.orgId })
             .whereIn("service_requests.houseId", houseIds)
             .orWhere("service_requests.createdBy", req.me.id)
-            .distinct('service_requests.id')
+            .distinct('service_requests.displayId')
 
         ]);
 
@@ -695,14 +697,14 @@ const serviceRequestController = {
               "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
               "requested_by.name as Requested By",
-              "service_requests.createdAt as Date Created"
+              "service_requests.createdAt as Date Created",
+              "service_requests.displayId as SR#"
             ])
             .where({ "service_requests.orgId": req.orgId })
             .where(qb => {
 
               if(serviceId){
-                qb.where('service_requests.id',serviceId)
-
+                qb.where('service_requests.displayId',serviceId)
               }
 
               if(status){
@@ -746,7 +748,7 @@ const serviceRequestController = {
               // "incident_categories.id",
               "property_units.id"
             ])
-            .distinct('service_requests.id'),
+            .distinct('service_requests.displayId'),
           knex
             .from("service_requests")
             .leftJoin(
@@ -777,14 +779,13 @@ const serviceRequestController = {
               "status.descriptionEng as Status",
               "property_units.unitNumber as Unit No",
               "requested_by.name as Requested By",
-              "service_requests.createdAt as Date Created"
+              "service_requests.createdAt as Date Created",
+              "service_requests.displayId as SR#"
             ])
             .where({ "service_requests.orgId": req.orgId })
             .where(qb => {
-
               if(serviceId){
-                qb.where('service_requests.id',serviceId)
-
+                qb.where('service_requests.displayId',serviceId)
               }
 
               if(status){
@@ -823,7 +824,7 @@ const serviceRequestController = {
             .orWhere("service_requests.createdBy", req.me.id)
             .offset(offset)
             .limit(per_page)
-            .distinct('service_requests.id')
+            .distinct('service_requests.displayId')
 
         ]);
       }

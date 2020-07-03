@@ -315,7 +315,7 @@ const surveyOrderController = {
           .count("* as count")
           .from("survey_orders as o")          
           .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
-          .where("s.id", serviceRequestId)
+          .where("s.displayId", serviceRequestId)
           .leftJoin(
             "assigned_service_team",
             "o.id",
@@ -346,7 +346,7 @@ const surveyOrderController = {
         rows = await knex
           .from("survey_orders As o")        
           .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
-          .where("s.id", serviceRequestId)
+          .where("s.displayId", serviceRequestId)
           .leftJoin(
             "assigned_service_team",
             "o.id",
@@ -375,7 +375,8 @@ const surveyOrderController = {
             "u.name as Created By",
             "status.descriptionEng AS Status",
             "o.createdAt as Date Created",
-            "teams.teamName as teamName"
+            "teams.teamName as teamName",
+            "o.displayId as SO"
           )
           .offset(offset)
           .limit(per_page);
@@ -780,10 +781,10 @@ const surveyOrderController = {
 
       let filters = {}
       if (filterList.serviceRequestId) {
-        filters['s.id'] = filterList.serviceRequestId;
+        filters['s.displayId'] = filterList.serviceRequestId;
       }
       if (filterList.surveyOrderId) {
-        filters['o.id'] = filterList.surveyOrderId
+        filters['o.displayId'] = filterList.surveyOrderId
       }
       if (filterList.status) {
         filters['o.surveyOrderStatus'] = filterList.status;
@@ -858,7 +859,9 @@ const surveyOrderController = {
             "o.appointedTime AS appointmentTime",
             "o.createdAt AS createdAt",
             "teams.teamName as teamName",
-            "assignUser.name  as Tenant Name"
+            "assignUser.name  as Tenant Name",
+            "o.displayId as SO",
+            "s.displayId as SR"
           )
           .where({ "assigned_service_team.entityType": "survey_orders" })
           .whereIn("o.serviceRequestId", serviceRequestIds)
@@ -891,7 +894,9 @@ const surveyOrderController = {
               "property_units.unitNumber",
               "incident_categories.descriptionEng as problemDescription",
               "requested_by.name as requestedBy",
-              "assignUser.name  as Tenant Name"
+              "assignUser.name  as Tenant Name",
+              "o.displayId as SO",
+              "s.displayId as SR"
             )
             .from("survey_orders As o")
             .where(qb => {
