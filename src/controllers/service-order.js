@@ -213,7 +213,9 @@ const serviceOrderController = {
                 createdFrom,
                 createdTo,
                 unit,
-                serviceType, serviceOrderId, building, tenantName, priority } = req.body
+                serviceType,
+                serviceOrderId,
+                building, tenantName, priority, company, project } = req.body
 
             let reqData = req.query;
             let total, rows
@@ -289,6 +291,14 @@ const serviceOrderController = {
             if (serviceStopTime) {
                 filters['service_orders.serviceStopTime'] = serviceStopTime
             }
+
+            if (company) {
+                filters["service_orders.companyId"] = company;
+            }
+            if (project) {
+                filters["property_units.projectId"] = project;
+            }
+
 
 
             // CreatedAt BETWEEN dates for created from - created to
@@ -373,6 +383,8 @@ const serviceOrderController = {
                         .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
                         // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
                         // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+                        .leftJoin('companies', 'service_orders.companyId', 'companies.id')
+                        .leftJoin('projects', 'property_units.projectId', 'projects.id')
 
                         .select([
                             'service_orders.id as So Id',
@@ -394,6 +406,10 @@ const serviceOrderController = {
                             "property_units.id as unitId",
                             "service_orders.displayId as SO#",
                             "service_requests.displayId as SR#",
+                            "companies.companyName",
+                            "companies.companyId",
+                            "projects.project",
+                            "projects.projectName",
 
                             // "assignUser.name as Tenant Name"
 
@@ -444,6 +460,8 @@ const serviceOrderController = {
                             'incident_categories.id',
                             'assigned_service_team.id',
                             'users.id', 'u.id',
+                            "companies.id",
+                            "projects.id",
                             // "assignUser.id",
                             // "user_house_allocation.id",
                             'status.id', 'users.id']),
@@ -466,6 +484,8 @@ const serviceOrderController = {
                         .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
                         // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
                         // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+                        .leftJoin('companies', 'service_orders.companyId', 'companies.id')
+                        .leftJoin('projects', 'property_units.projectId', 'projects.id')
 
                         .select([
                             'service_orders.id as So Id',
@@ -488,6 +508,10 @@ const serviceOrderController = {
                             "property_units.id as unitId",
                             "service_orders.displayId as SO#",
                             "service_requests.displayId as SR#",
+                            "companies.companyName",
+                            "companies.companyId",
+                            "projects.project",
+                            "projects.projectName",
 
                             // "assignUser.name as Tenant Name"
 
@@ -567,6 +591,8 @@ const serviceOrderController = {
                         .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
                         // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
                         // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+                        .leftJoin('companies', 'service_orders.companyId', 'companies.id')
+                        .leftJoin('projects', 'property_units.projectId', 'projects.id')
 
                         .select([
                             "service_orders.id as So Id",
@@ -588,6 +614,10 @@ const serviceOrderController = {
                             "property_units.id as unitId",
                             "service_orders.displayId as SO#",
                             "service_requests.displayId as SR#",
+                            "companies.companyName",
+                            "companies.companyId",
+                            "projects.project",
+                            "projects.projectName",
 
                             // "assignUser.name as Tenant Name"
                         ])
@@ -651,6 +681,8 @@ const serviceOrderController = {
                             'teams.teamId',
                             'requested_by.id',
                             'property_units.id',
+                            "companies.id",
+                            "projects.id",
                             // "assignUser.id",
                             // "user_house_allocation.id"
 
@@ -690,6 +722,8 @@ const serviceOrderController = {
                         .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
                         // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
                         // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+                        .leftJoin('companies', 'service_orders.companyId', 'companies.id')
+                        .leftJoin('projects', 'property_units.projectId', 'projects.id')
 
                         .select([
                             "service_orders.id as So Id",
@@ -711,6 +745,10 @@ const serviceOrderController = {
                             "property_units.id as unitId",
                             "service_orders.displayId as SO#",
                             "service_requests.displayId as SR#",
+                            "companies.companyName",
+                            "companies.companyId",
+                            "projects.project",
+                            "projects.projectName",
 
                             // "assignUser.name as Tenant Name"
 
@@ -773,6 +811,8 @@ const serviceOrderController = {
                             'teams.teamId',
                             'requested_by.id',
                             'property_units.id',
+                            "companies.id",
+                            "projects.id",
                             // "assignUser.id",
                             // "user_house_allocation.id"
                         ])
@@ -948,6 +988,8 @@ const serviceOrderController = {
                         .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
                         // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
                         // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+                        .leftJoin('companies', 'service_orders.companyId', 'companies.id')
+                        .leftJoin('projects', 'property_units.projectId', 'projects.id')
 
                         .select([
                             "service_orders.id as So Id",
@@ -969,6 +1011,10 @@ const serviceOrderController = {
                             "property_units.id as unitId",
                             "service_orders.displayId as SO#",
                             "service_requests.displayId as SR#",
+                            "companies.companyName",
+                            "companies.companyId",
+                            "projects.project",
+                            "projects.projectName",
 
                             // "assignUser.name as Tenant Name"
                         ])
@@ -1032,6 +1078,8 @@ const serviceOrderController = {
                             'teams.teamId',
                             'requested_by.id',
                             'property_units.id',
+                            "companies.id",
+                            "projects.id",
                             // "assignUser.id",
                             // "user_house_allocation.id"
 
@@ -1071,6 +1119,8 @@ const serviceOrderController = {
                         .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
                         // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
                         // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+                        .leftJoin('companies', 'service_orders.companyId', 'companies.id')
+                        .leftJoin('projects', 'property_units.projectId', 'projects.id')
 
                         .select([
                             "service_orders.id as So Id",
@@ -1092,6 +1142,10 @@ const serviceOrderController = {
                             "property_units.id as unitId",
                             "service_orders.displayId as SO#",
                             "service_requests.displayId as SR#",
+                            "companies.companyName",
+                            "companies.companyId",
+                            "projects.project",
+                            "projects.projectName",
                             // "assignUser.name as Tenant Name"
 
                         ])
@@ -2693,7 +2747,7 @@ const serviceOrderController = {
                     'incident_categories.descriptionEng as category',
                     'incident_sub_categories.descriptionEng as subCategory',
                     'service_requests.serviceStatusCode',
-                ])                               
+                ])
                 .whereIn('service_problems.serviceRequestId', serviceIds)
                 .where({ 'service_problems.orgId': req.orgId })
                 .orderBy('incident_type.typeCode', 'asc');
