@@ -1437,7 +1437,7 @@ const pmController = {
       //pmSchedule = pmSchedule.map(v => ({ ...v, on: 0, off: 0}))
 
 
-      filterProblem = pmSchedule.filter(v=>v.status=='COM')
+      filterProblem = pmSchedule.filter(v => v.status == 'COM')
 
 
       let mapData = _.chain(pmSchedule)
@@ -1527,7 +1527,7 @@ const pmController = {
           totalOn: totalOn,
           totalOff: totalOff,
           workDoneChartData,
-          
+
         };
 
       })
@@ -1536,7 +1536,7 @@ const pmController = {
       res.json({
         data: pmResult,
         message: "Prenventive Maintenance report succesully!",
-        a:filterProblem.length,
+        a: filterProblem.length,
         filterProblem
       })
 
@@ -1574,8 +1574,14 @@ const pmController = {
           'pm_master2.name as pmName',
           'asset_master.assetSerial'
         ])
-        .whereBetween('task_group_schedule_assign_assets.createdAt', [fromTime, toTime])
+        .whereBetween('task_group_schedule_assign_assets.pmDate', [fromNewDate, toNewDate])
         .where(qb => {
+
+          if (payload.companyId) {
+
+            qb.where('pm_master2.companyId', payload.companyId)
+
+          }
 
           if (payload.assetSerial) {
 
@@ -1595,7 +1601,7 @@ const pmController = {
           qb.where({ 'task_group_schedule_assign_assets.orgId': req.orgId })
 
         }).orderBy('pmDate', 'asc')
-        
+
 
       return res.json({
         data: result,
