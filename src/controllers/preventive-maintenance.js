@@ -1409,6 +1409,9 @@ const pmController = {
 
         })
 
+
+        let n = pmResult;
+
       let pmIds = pmResult.map(it => it.id);
 
       let pmSchedule = await knex('task_group_schedule')
@@ -1475,7 +1478,7 @@ const pmController = {
       let chartData = _.flatten(
         final
           .filter(v => !_.isEmpty(v))
-          .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].length / pmSchedule.length).toFixed(2) })))
+          .map(v => _.keys(v).map(p => ({ [p]: (v[p].length) })))
       ).reduce((a, p) => {
         let l = _.keys(p)[0];
         if (a[l]) {
@@ -1491,7 +1494,7 @@ const pmController = {
       let workDoneChartData = _.flatten(
         final
           .filter(v => !_.isEmpty(v))
-          .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].map(ite => ite.status).filter(v => v == 'COM').length / filterProblem.length).toFixed(2) })))
+          .map(v => _.keys(v).map(p => ({ [p]: (v[p].map(ite => ite.status).filter(v => v == 'COM').length) })))
       ).reduce((a, p) => {
         let l = _.keys(p)[0];
         if (a[l]) {
@@ -1527,6 +1530,8 @@ const pmController = {
           totalOn: totalOn,
           totalOff: totalOff,
           workDoneChartData,
+          totalSchedule: pmSchedule.length,
+          totalDone: filterProblem.length,
 
         };
 
@@ -1535,9 +1540,9 @@ const pmController = {
 
       res.json({
         data: pmResult,
+        a:pmIds,
+        n,
         message: "Prenventive Maintenance report succesully!",
-        a: filterProblem.length,
-        filterProblem
       })
 
     } catch (err) {

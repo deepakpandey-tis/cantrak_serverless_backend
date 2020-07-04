@@ -3022,10 +3022,26 @@ const serviceOrderController = {
                 //     return a;
                 // }, {});
 
+                // let chartData = _.flatten(
+                //     final
+                //         .filter(v => !_.isEmpty(v))
+                //         .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].length / serviceProblem2.length).toFixed(2) })))
+                // ).reduce((a, p) => {
+                //     let l = _.keys(p)[0];
+                //     if (a[l]) {
+                //         a[l] += p[l];
+
+                //     } else {
+                //         a[l] = p[l];
+                //     }
+                //     return a;
+                // }, {});
+
+
                 let chartData = _.flatten(
                     final
                         .filter(v => !_.isEmpty(v))
-                        .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].length / serviceProblem2.length).toFixed(2) })))
+                        .map(v => _.keys(v).map(p => ({ [p]: (v[p].length) })))
                 ).reduce((a, p) => {
                     let l = _.keys(p)[0];
                     if (a[l]) {
@@ -3038,11 +3054,29 @@ const serviceOrderController = {
                 }, {});
 
 
+
+
                 /*Work done percentage open */
+                // let workDoneChartData = _.flatten(
+                //     final
+                //         .filter(v => !_.isEmpty(v))
+                //         .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / filterProblem.length).toFixed(2) })))
+                // ).reduce((a, p) => {
+                //     let l = _.keys(p)[0];
+                //     if (a[l]) {
+                //         a[l] += p[l];
+
+                //     } else {
+                //         a[l] = p[l];
+                //     }
+                //     return a;
+                // }, {});
+
+
                 let workDoneChartData = _.flatten(
                     final
                         .filter(v => !_.isEmpty(v))
-                        .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / filterProblem.length).toFixed(2) })))
+                        .map(v => _.keys(v).map(p => ({ [p]: (v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length)})))
                 ).reduce((a, p) => {
                     let l = _.keys(p)[0];
                     if (a[l]) {
@@ -3072,7 +3106,7 @@ const serviceOrderController = {
                     return {
                         ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder,
                         totalWorkDone: totalWorkDone, totalPercentage: (totalPercentage).toFixed(2), chartData, reportType: "SR", buildingType,
-                        workDoneChartData
+                        workDoneChartData,totalServiceRequest : serviceProblem2.length, totalDone:filterProblem.length
                     };
 
                 })
@@ -3282,10 +3316,26 @@ const serviceOrderController = {
 
                 final.push(grouped);
 
+                // let chartData = _.flatten(
+                //     final
+                //         .filter(v => !_.isEmpty(v))
+                //         .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].length / serviceProblem2.length).toFixed(2) })))
+                // ).reduce((a, p) => {
+                //     let l = _.keys(p)[0];
+                //     if (a[l]) {
+                //         a[l] += p[l];
+
+                //     } else {
+                //         a[l] = p[l];
+                //     }
+                //     return a;
+                // }, {});
+
+
                 let chartData = _.flatten(
                     final
                         .filter(v => !_.isEmpty(v))
-                        .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].length / serviceProblem2.length).toFixed(2) })))
+                        .map(v => _.keys(v).map(p => ({ [p]: (v[p].length) })))
                 ).reduce((a, p) => {
                     let l = _.keys(p)[0];
                     if (a[l]) {
@@ -3296,14 +3346,31 @@ const serviceOrderController = {
                     }
                     return a;
                 }, {});
+
 
 
 
                 /*Work done percentage open */
+                // let workDoneChartData = _.flatten(
+                //     final
+                //         .filter(v => !_.isEmpty(v))
+                //         .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / filterProblem.length).toFixed(2) })))
+                // ).reduce((a, p) => {
+                //     let l = _.keys(p)[0];
+                //     if (a[l]) {
+                //         a[l] += p[l];
+
+                //     } else {
+                //         a[l] = p[l];
+                //     }
+                //     return a;
+                // }, {});
+
+
                 let workDoneChartData = _.flatten(
                     final
                         .filter(v => !_.isEmpty(v))
-                        .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / filterProblem.length).toFixed(2) })))
+                        .map(v => _.keys(v).map(p => ({ [p]: ( v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length) })))
                 ).reduce((a, p) => {
                     let l = _.keys(p)[0];
                     if (a[l]) {
@@ -3314,6 +3381,7 @@ const serviceOrderController = {
                     }
                     return a;
                 }, {});
+
                 /*Work done percentage close */
 
                 let totalServiceOrder = 0;
@@ -3330,7 +3398,7 @@ const serviceOrderController = {
                     return {
                         ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder,
                         totalWorkDone: totalWorkDone, totalPercentage: (totalPercentage).toFixed(2), chartData, reportType: "SO", buildingType,
-                        workDoneChartData
+                        workDoneChartData,totalServiceRequest : serviceProblem2.length, totalDone:filterProblem.length
                     };
 
                 })
