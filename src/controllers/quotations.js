@@ -461,7 +461,8 @@ const quotationsController = {
         completedTo,
         assingedTo,
         company,
-        project
+        project,
+        serviceIdForShared,
       } = req.body;
 
       let newDateFrom;
@@ -483,6 +484,9 @@ const quotationsController = {
       }
       if (serviceId) {
         filters["service_requests.displayId"] = serviceId;
+      }
+      if (serviceIdForShared) {
+        filters["quotations.serviceRequestId"] = serviceIdForShared;
       }
       // if (quotationStatus) {
       //   filters["quotations.quotationStatus"] = quotationStatus;
@@ -578,6 +582,9 @@ const quotationsController = {
             }
             if (quotationId) {
               qb.where('quotations.displayId', quotationId)
+            }
+            if (serviceIdForShared) {
+              qb.where('quotations.serviceRequestId', serviceIdForShared)
             }
             if (company) {
               qb.where('quotations.companyId', company)
@@ -685,6 +692,12 @@ const quotationsController = {
           .where(qb => {
             if (serviceId) {
               qb.where('service_requests.displayId', serviceId)
+            }
+            if (serviceId) {
+              qb.where('service_requests.displayId', serviceId)
+            }
+            if (serviceIdForShared) {
+              qb.where('quotations.serviceRequestId', serviceIdForShared)
             }
             if (quotationStatus) {
               qb.where('quotations.quotationStatus', quotationStatus)
