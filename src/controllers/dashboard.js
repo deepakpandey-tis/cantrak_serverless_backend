@@ -1087,7 +1087,7 @@ const dashboardController = {
         data: {
           ServiceAppointments: _.uniqBy(result, "id").length,
           SurveyAppointments: _.uniqBy(result2, "id").length,
-          WorkOrders: result3.length
+          WorkOrders:result3.length
         }
       });
     } catch (err) {
