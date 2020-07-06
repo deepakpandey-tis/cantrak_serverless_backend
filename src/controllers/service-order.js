@@ -215,7 +215,7 @@ const serviceOrderController = {
                 unit,
                 serviceType,
                 serviceOrderId,
-                building, tenantName, priority, company, project } = req.body
+                building, tenantName, priority, company, project,serviceRequestIdForShared } = req.body
 
             let reqData = req.query;
             let total, rows
@@ -232,6 +232,9 @@ const serviceOrderController = {
             let filters = {}
             if (serviceRequestId) {
                 filters['service_requests.displayId'] = serviceRequestId
+            }
+            if (serviceRequestIdForShared) {
+                filters['service_requests.id'] = serviceRequestIdForShared
             }
             // if (description) {
             //     filters['service_requests.description'] = description;

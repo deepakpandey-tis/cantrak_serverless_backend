@@ -2210,7 +2210,12 @@ const serviceRequestController = {
       let companyHavingProjects = []
       let companyArr1 = []
       let rows = []
-
+      let pId;
+      pId = await knex
+      .from("user_house_allocation")
+      .select("houseId")
+      .where({ "user_house_allocation.userId": req.me.id, orgId: req.orgId }).first();
+console.log("pid",pId);
       if (req.query.areaName === 'common') {
 
         companyHavingProjects = await knex('projects').select(['companyId']).where({ orgId: req.orgId, isActive: true })
@@ -2220,6 +2225,7 @@ const serviceRequestController = {
           .innerJoin('property_units', 'projects.id', 'property_units.projectId')
           .where({ "projects.companyId": companyId, "projects.isActive": true, 'property_units.type': 2 })
           .whereIn('projects.companyId', companyArr1)
+          .where('property_units.id', pId.houseId)
           .select([
             "projects.id as id",
             "projects.projectName",
@@ -2243,6 +2249,7 @@ const serviceRequestController = {
           .innerJoin('property_units', 'projects.id', 'property_units.projectId')
           .where({ "projects.companyId": companyId, "projects.isActive": true, 'property_units.type': 1 })
           .whereIn('projects.companyId', companyArr1)
+          .where('property_units.id', pId.houseId)
           .select([
             "projects.id as id",
             "projects.projectName",
