@@ -1409,6 +1409,9 @@ const pmController = {
 
         })
 
+
+        let n = pmResult;
+
       let pmIds = pmResult.map(it => it.id);
 
       let pmSchedule = await knex('task_group_schedule')
@@ -1437,7 +1440,7 @@ const pmController = {
       //pmSchedule = pmSchedule.map(v => ({ ...v, on: 0, off: 0}))
 
 
-      filterProblem = pmSchedule.filter(v=>v.status=='COM')
+      filterProblem = pmSchedule.filter(v => v.status == 'COM')
 
 
       let mapData = _.chain(pmSchedule)
@@ -1475,7 +1478,7 @@ const pmController = {
       let chartData = _.flatten(
         final
           .filter(v => !_.isEmpty(v))
-          .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].length / pmSchedule.length).toFixed(2) })))
+          .map(v => _.keys(v).map(p => ({ [p]: (v[p].length) })))
       ).reduce((a, p) => {
         let l = _.keys(p)[0];
         if (a[l]) {
@@ -1491,7 +1494,7 @@ const pmController = {
       let workDoneChartData = _.flatten(
         final
           .filter(v => !_.isEmpty(v))
-          .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].map(ite => ite.status).filter(v => v == 'COM').length / filterProblem.length).toFixed(2) })))
+          .map(v => _.keys(v).map(p => ({ [p]: (v[p].map(ite => ite.status).filter(v => v == 'COM').length) })))
       ).reduce((a, p) => {
         let l = _.keys(p)[0];
         if (a[l]) {
@@ -1527,7 +1530,9 @@ const pmController = {
           totalOn: totalOn,
           totalOff: totalOff,
           workDoneChartData,
-          
+          totalSchedule: pmSchedule.length,
+          totalDone: filterProblem.length,
+
         };
 
       })
@@ -1535,9 +1540,9 @@ const pmController = {
 
       res.json({
         data: pmResult,
+        a:pmIds,
+        n,
         message: "Prenventive Maintenance report succesully!",
-        a:filterProblem.length,
-        filterProblem
       })
 
     } catch (err) {
@@ -1574,8 +1579,14 @@ const pmController = {
           'pm_master2.name as pmName',
           'asset_master.assetSerial'
         ])
-        .whereBetween('task_group_schedule_assign_assets.createdAt', [fromTime, toTime])
+        .whereBetween('task_group_schedule_assign_assets.pmDate', [fromNewDate, toNewDate])
         .where(qb => {
+
+          if (payload.companyId) {
+
+            qb.where('pm_master2.companyId', payload.companyId)
+
+          }
 
           if (payload.assetSerial) {
 
@@ -1595,7 +1606,7 @@ const pmController = {
           qb.where({ 'task_group_schedule_assign_assets.orgId': req.orgId })
 
         }).orderBy('pmDate', 'asc')
-        
+
 
       return res.json({
         data: result,

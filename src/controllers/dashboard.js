@@ -1087,7 +1087,7 @@ const dashboardController = {
         data: {
           ServiceAppointments: _.uniqBy(result, "id").length,
           SurveyAppointments: _.uniqBy(result2, "id").length,
-          WorkOrders: result3.length
+          WorkOrders:result3.length
         }
       });
     } catch (err) {
@@ -1252,7 +1252,7 @@ const dashboardController = {
           ])
           .where({
             "service_requests.orgId": req.orgId,
-           // "incident_sub_categories.incidentTypeId": problemTypeId
+            "incident_sub_categories.incidentTypeId": problemTypeId
           })
           .where({ "service_requests.orgId": req.orgId })
           .whereBetween("service_requests.createdAt", [

@@ -51,10 +51,10 @@ const quotationsController = {
             } = req.body;
 
             if (quotationId) {
-                filters["quotations.id"] = quotationId;
+                filters["quotations.displayId"] = quotationId;
             }
             if (serviceId) {
-                filters["service_requests.id"] = serviceId;
+                filters["service_requests.displayId"] = serviceId;
             }
             if (quotationStatus) {
                 filters["quotations.quotationStatus"] = quotationStatus;
@@ -200,7 +200,9 @@ const quotationsController = {
                             "service_requests.priority as Priority",
                             "users.name as Created By",
                             "quotations.quotationStatus as Status",
-                            "quotations.createdAt as Date Created"
+                            "quotations.createdAt as Date Created",
+                            "quotations.displayId as QNo",
+                            "service_requests.displayId as SR",
                         ])
                         .havingNotNull('quotations.quotationStatus')
                         .groupBy(["quotations.id", "service_requests.id", "assigned_service_team.id", "users.id", "companies.companyName",
@@ -304,7 +306,9 @@ const quotationsController = {
                                 "service_requests.priority as Priority",
                                 "users.name as Created By",
                                 "quotations.quotationStatus as Status",
-                                "quotations.createdAt as Date Created"
+                                "quotations.createdAt as Date Created",
+                                "quotations.displayId as QNo",
+                                "service_requests.displayId as SR",
                             ])
                             .where(qb => {
                                 qb.where(filters);

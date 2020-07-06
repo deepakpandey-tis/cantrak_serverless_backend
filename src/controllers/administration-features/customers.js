@@ -159,6 +159,7 @@ const customerController = {
               "users.email as email",
              // "user_house_allocation.houseId as houseId",
               "users.id as userId",
+              "property_units.unitNumber",
               "users.isActive"
             ])
             .where({
@@ -178,7 +179,7 @@ const customerController = {
                 }
               }
             })
-            .groupBy(['users.id'])
+            .groupBy(['users.id','property_units.id'])
             .distinct(['users.id'])
             ,
           knex("users")
@@ -202,6 +203,7 @@ const customerController = {
               "users.email as email",
               //"user_house_allocation.houseId as houseId",
               "users.id as userId",
+              "property_units.unitNumber",
               "users.isActive"
             ])
             .orderBy(sortPayload.sortBy, sortPayload.orderBy)
@@ -222,7 +224,7 @@ const customerController = {
                 }
               }
             })
-            .groupBy(['users.id'])
+            .groupBy(['users.id','property_units.id'])
             .distinct(['users.id'])
             .offset(offset)
             .limit(per_page)
@@ -254,13 +256,14 @@ const customerController = {
               "users.email as email",
               //"user_house_allocation.houseId as houseId",
               "users.id as userId",
+              "property_units.unitNumber",
               "users.isActive"
             ])
             .where({
               "application_user_roles.roleId": 4,
               "users.orgId": req.orgId
             })
-            .groupBy(['users.id'])
+            .groupBy(['users.id','property_units.id'])
             .distinct(['users.id'])
             .whereIn('property_units.projectId', resourceProject)
             .andWhere(qb => {
@@ -301,6 +304,7 @@ const customerController = {
               //"property_units.id as houseId",
               //"user_house_allocation.houseId as houseId",
               "users.id as userId",
+              "property_units.unitNumber",
               "users.isActive"
             ])
             .orderBy(sortPayload.sortBy, sortPayload.orderBy)
@@ -323,7 +327,7 @@ const customerController = {
                 }
               }
             })
-            .groupBy(['users.id'])
+            .groupBy(['users.id','property_units.id'])
             .distinct(['users.id'])
             .offset(offset)
             .limit(per_page)
