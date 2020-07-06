@@ -4112,6 +4112,7 @@ const facilityBookingController = {
           "facility_master.name",
           "users.name as bookedUser",
         ])
+        // .where("entity_bookings.orgId",req.orgId)
         .where("entity_bookings.bookingStartDateTime", "<", bookingEndTime)
         .where("entity_bookings.bookingEndDateTime", ">", bookingStartTime)
         .where("entity_bookings.isBookingCancelled", "=", true)
