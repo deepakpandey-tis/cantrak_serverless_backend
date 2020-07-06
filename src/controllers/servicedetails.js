@@ -517,7 +517,7 @@ const serviceDetailsController = {
           .leftJoin("source_of_request", "service_requests.serviceType", "source_of_request.id")
           .leftJoin("images", "service_requests.id", "images.entityId")
           .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
-          .leftJoin('users as u', 'service_requests.cancelledBy', 'users.id')
+          .leftJoin('users as u', 'service_requests.cancelledBy', 'u.id')
 
           .select(
             "companies.companyName",
