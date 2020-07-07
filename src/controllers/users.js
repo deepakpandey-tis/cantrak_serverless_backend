@@ -319,13 +319,19 @@ const usersController = {
                 .where({ orgId: req.orgId })
 
 
-            //let users = users.co
+            if (requestedByResult && requestedByResult.length) {
 
+
+                users = users.concat(requestedByResult);
+
+            }
+
+            users = _.uniqBy(users, 'email');
 
             return res.status(200).json({
                 data: {
                     users,
-                    requestedByResult
+
                 },
                 messsage: 'Users list'
             })

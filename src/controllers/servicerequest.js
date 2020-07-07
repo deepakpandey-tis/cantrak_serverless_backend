@@ -2514,7 +2514,7 @@ const serviceRequestController = {
   /**CREATE SERVICE REQUEST */
   createServiceRequest: async (req, res) => {
     try {
-      
+
       let result;
       let orgId = req.orgId;
       let payload = _.omit(req.body, ["images", "isSo", "mobile", "email", "name"]);
@@ -2573,10 +2573,18 @@ const serviceRequestController = {
 
           requestedByResult = requestByData;
         } else {
-          /*CHECK REQUIESTED BY CLOSE */
 
-          requestedByResult = await knex('requested_by').insert({ name: req.body.name, mobile: req.body.mobile, email: req.body.email, orgId: req.orgId }).returning(['*'])
+          requestedByResult = await knex('requested_by').insert({
+            name: req.body.name,
+            mobile: req.body.mobile,
+            email: req.body.email,
+            createdAt: currentTime,
+            updatedAt: currentTime,
+            orgId: req.orgId
+          }).returning(['*'])
         }
+        /*CHECK REQUIESTED BY CLOSE */
+
         /*UPDATE SERVICE REQUEST DATA OPEN */
         let common;
         let priority;
@@ -3000,7 +3008,41 @@ const serviceRequestController = {
         const currentTime = new Date().getTime();
 
         let currentServiceRequestData = await knex('service_requests').select('*').where({ 'id': payload.serviceRequestId }).first();
-        await knex('requested_by').update({ name: req.body.name, mobile: req.body.mobile, email: req.body.email }).where({ id: currentServiceRequestData.requestedBy });
+
+        //await knex('requested_by').update({ name: req.body.name, mobile: req.body.mobile, email: req.body.email }).where({ id: currentServiceRequestData.requestedBy });
+
+
+        // Insert into requested by
+
+        /*CHECK REQUIESTED BY OPEN */
+
+        let requestedByResult;
+        let requestId;
+
+        if (req.body.name && req.body.email) {
+
+          let requestByData = await knex('requested_by').where({ name: req.body.name, mobile: req.body.mobile, email: req.body.email, orgId: req.orgId }).returning(['*']);
+
+          if (requestByData && requestByData.length) {
+
+            requestedByResult = requestByData;
+            requestId = requestedByResult[0].id;
+          } else {
+
+            requestedByResult = await knex('requested_by').insert({
+              name: req.body.name,
+              mobile: req.body.mobile,
+              email: req.body.email,
+              createdAt: currentTime,
+              updatedAt: currentTime,
+              orgId: req.orgId
+            }).returning(['*'])
+            requestId = requestedByResult[0].id;
+          }
+        } else {
+          requestId = currentServiceRequestData.requestedBy;
+        }
+        /*CHECK REQUIESTED BY CLOSE */
 
 
         /*UPDATE SERVICE REQUEST DATA OPEN */
@@ -3027,7 +3069,8 @@ const serviceRequestController = {
             orgId: orgId,
             createdAt: currentTime,
             updatedAt: currentTime,
-            createdBy: req.me.id
+            createdBy: req.me.id,
+            requestedBy: requestId
           };
         } else {
           insertData = {
@@ -3043,7 +3086,8 @@ const serviceRequestController = {
             orgId: orgId,
             createdAt: currentTime,
             updatedAt: currentTime,
-            createdBy: req.me.id
+            createdBy: req.me.id,
+            requestedBy:requestId
           };
         }
         let serviceResult = await knex
@@ -3612,7 +3656,7 @@ const serviceRequestController = {
           "incident_sub_categories.descriptionEng",
           "service_requests.serviceStatusCode",
           "incident_categories.categoryCode"
-      ])
+        ])
         .whereIn('service_problems.serviceRequestId', serviceIds)
         .where({ 'service_problems.orgId': req.orgId })
         .orderBy('incident_type.typeCode', 'asc');
