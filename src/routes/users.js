@@ -13,4 +13,7 @@ router.post('/update-user-details', authMiddleware.isAuthenticated, usersControl
 router.get('/get-all-users',authMiddleware.isAuthenticated,usersController.getAllUsers)
 router.get('/get-all-requestBy',authMiddleware.isAuthenticated,usersController.getAllRequestBy)
 
+router.get('/get-all-users-for-service-request',authMiddleware.isAuthenticated,usersController.getAllUsersForServiceRequest)
+
+
 module.exports = router;
