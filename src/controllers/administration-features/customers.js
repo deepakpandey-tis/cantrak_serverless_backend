@@ -225,9 +225,7 @@ const customerController = {
             })
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
-
                 if (name) {
-
                   qb.where('users.name', 'iLIKE', `%${name}%`)
                   qb.orWhere('users.email', 'iLIKE', `%${name}%`)
                   qb.orWhere('users.mobileNo', 'iLIKE', `%${name}%`)
@@ -281,9 +279,7 @@ const customerController = {
             .whereIn('property_units.projectId', resourceProject)
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
-
                 if (name) {
-
                   qb.where('users.name', 'iLIKE', `%${name}%`)
                   qb.orWhere('users.email', 'iLIKE', `%${name}%`)
                   qb.orWhere('users.mobileNo', 'iLIKE', `%${name}%`)
@@ -329,8 +325,7 @@ const customerController = {
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
 
-                if (name) {
-
+                if (name) { 
                   qb.where('users.name', 'iLIKE', `%${name}%`)
                   qb.orWhere('users.email', 'iLIKE', `%${name}%`)
                   qb.orWhere('users.mobileNo', 'iLIKE', `%${name}%`)
