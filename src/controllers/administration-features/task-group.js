@@ -572,7 +572,7 @@ const taskGroupController = {
         // create recurring pm of this task group open
 
         let repeatPeriod = payload.repeatPeriod;
-        let repeatOn = payload.repeatOn ? payload.repeatOn : ""; //&& payload.repeatOn.length ? payload.repeatOn.join(',') : [];
+        let repeatOn = payload.repeatOn.length ? payload.repeatOn.join(',') : [];//payload.repeatOn ? payload.repeatOn : ""; //&& ;
         let repeatFrequency = Number(payload.repeatFrequency);
         let start = new Date(payload.startDateTime);
 
@@ -1367,7 +1367,7 @@ const taskGroupController = {
             startDate: payload.startDateTime,
             endDate: payload.endDateTime,
             repeatPeriod: payload.repeatPeriod,
-            repeatOn: payload.repeatOn ? payload.repeatOn : "",
+            repeatOn: payload.repeatOn.length ? payload.repeatOn.join(',') : [],
             repeatFrequency: payload.repeatFrequency,
             createdAt: currentTime,
             updatedAt: currentTime,
