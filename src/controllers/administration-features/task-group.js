@@ -852,7 +852,7 @@ const taskGroupController = {
       const list = await knex('pm_master2').select()
       let reqData = req.query;
       let total, rows
-      let { companyId,pmNo,assetCategoryId, pmPlanName, startDate, endDate } = req.body;
+      let { companyId, pmNo, assetCategoryId, pmPlanName, startDate, endDate } = req.body;
       let filters = {}
       if (assetCategoryId) {
         filters['asset_category_master.id'] = assetCategoryId;
@@ -879,11 +879,11 @@ const taskGroupController = {
             qb.where(filters)
             qb.where({ 'pm_master2.orgId': req.orgId });
             qb.whereIn("pm_master2.projectId", projects);
-            if(companyId){
+            if (companyId) {
               qb.where('pm_master2.companyId', companyId)
 
             }
-            if(pmNo){
+            if (pmNo) {
               qb.where('pm_master2.displayId', pmNo)
 
             }
@@ -893,11 +893,11 @@ const taskGroupController = {
               qb.where('pm_master2.name', 'iLIKE', `%${pmPlanName}%`)
             }
             if (startDate && endDate) {
-              qb.where('task_group_schedule.startDate','>=', startDate)
-              qb.where('task_group_schedule.endDate','<=', endDate )
+              qb.where('task_group_schedule.startDate', '>=', startDate)
+              qb.where('task_group_schedule.endDate', '<=', endDate)
             }
             if (endDate) {
-            //  qb.where({ 'task_group_schedule.endDate': endDate })
+              //  qb.where({ 'task_group_schedule.endDate': endDate })
             }
           }),
         knex.from('pm_master2')
@@ -914,11 +914,11 @@ const taskGroupController = {
 
             qb.where({ "pm_master2.orgId": req.orgId });
 
-            if(companyId){
+            if (companyId) {
               qb.where('pm_master2.companyId', companyId)
             }
 
-            if(pmNo){
+            if (pmNo) {
               qb.where('pm_master2.displayId', pmNo)
 
             }
@@ -927,11 +927,11 @@ const taskGroupController = {
               qb.where('pm_master2.name', 'iLIKE', `%${pmPlanName}%`)
             }
             if (startDate && endDate) {
-              qb.where('task_group_schedule.startDate','>=', startDate)
-              qb.where('task_group_schedule.endDate','<=', endDate )
+              qb.where('task_group_schedule.startDate', '>=', startDate)
+              qb.where('task_group_schedule.endDate', '<=', endDate)
             }
             if (endDate) {
-            //  qb.where({ 'task_group_schedule.endDate': endDate })
+              //  qb.where({ 'task_group_schedule.endDate': endDate })
             }
           })
           .orderBy("pm_master2.createdAt", 'desc')
@@ -1792,7 +1792,7 @@ const taskGroupController = {
           taskGroupPmAssetDatails: _.uniqBy(pmResult, 'id'),
           additionalUsers: additionalUsers,
           tasks: _.uniqBy(tasks, 'taskId'),
-          printedBy:meData
+          printedBy: meData
         },
         message: 'Task Group Asset PM Details Successfully!'
       })
@@ -2270,11 +2270,10 @@ const taskGroupController = {
   },
   getTaskGroupTemplateList: async (req, res) => {
     try {
-
-
       let sortPayload = req.body;
+      
       if (!sortPayload.sortBy && !sortPayload.orderBy) {
-        sortPayload.sortBy = "taskGroupName";
+        sortPayload.sortBy = "categoryName";
         sortPayload.orderBy = "asc"
       }
 
@@ -2288,21 +2287,30 @@ const taskGroupController = {
       let orgId = req.orgId;
 
       let [total, rows] = await Promise.all([
-        knex('task_group_templates').select('*')
+        knex('task_group_templates').select('task_group_templates.*','asset_category_master.categoryName')
+          .innerJoin('asset_category_master', 'task_group_templates.assetCategoryId', 'asset_category_master.id')
           .where({ "task_group_templates.orgId": orgId })
           .where(qb => {
             if (filters.taskGroupName) {
               qb.where('task_group_templates.taskGroupName', 'iLIKE', `%${filters.taskGroupName}%`)
             }
+            if (filters.categoryId) {
+              qb.whereIn("task_group_templates.assetCategoryId", filters.categoryId);
+            }
+
           }),
-        knex('task_group_templates').select('*').offset(offset).limit(per_page)
+        knex('task_group_templates').select('task_group_templates.*','asset_category_master.categoryName').offset(offset).limit(per_page)
+          .innerJoin('asset_category_master', 'task_group_templates.assetCategoryId', 'asset_category_master.id')
           .where({ "task_group_templates.orgId": orgId })
           .where(qb => {
             if (filters.taskGroupName) {
               qb.where('task_group_templates.taskGroupName', 'iLIKE', `%${filters.taskGroupName}%`)
+            }
+            if (filters.categoryId) {
+              qb.whereIn("task_group_templates.assetCategoryId", filters.categoryId);
             }
           })
-          .orderBy(sortPayload.sortBy, sortPayload.orderBy)
+          .orderBy('asset_category_master.categoryName', sortPayload.orderBy)
       ])
 
       let count = total.length;
