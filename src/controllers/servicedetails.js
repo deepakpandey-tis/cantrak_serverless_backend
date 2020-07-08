@@ -548,7 +548,7 @@ const serviceDetailsController = {
             "property_types.descriptionEng as propertyDescription",
             'status.descriptionEng as Status',
             "service_requests.displayId as SRS",
-             
+
           )
           .where({
             "property_units.id": houseId,
@@ -1150,8 +1150,8 @@ const serviceDetailsController = {
               console.log("File Deleting Error " + err);
             });
             let url = process.env.S3_BUCKET_URL + "/Export/LocationTag/" +
-            filename;
-      
+              filename;
+
             // let url =
             //   "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/LocationTag/" +
             //   filename;
