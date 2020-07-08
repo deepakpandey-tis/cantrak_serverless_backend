@@ -16,6 +16,7 @@ const facilityDashboardController = {
         try{
             let reqData = req.body
             let orgId = req.orgId
+            console.log("requested",req.body)
             var getDaysArray = function(start,end){
                 let dt = start;
                 let arr = [];
@@ -29,18 +30,9 @@ const facilityDashboardController = {
                 new Date(reqData.startDate),
                 new Date(reqData.endDate)
               );
-              const getMonths = () =>{
-                  const months = []
-                  const dateStart = moment()
-                  const dateEnd = moment().add(12,'month')
-
-                  while(dateEnd.diff(dateStart,'months')>=0){
-                      months.push(dateStart.format('M'))
-                      dateStart.add(1,'month')
-                  }
-                  return months;
-              }
-              console.log("List of months",getMonths())
+             
+              console.log("dates",dates)
+          
       let final = [];
 
       for(d of dates){
@@ -168,8 +160,29 @@ const facilityDashboardController = {
         try{
             let reqData = req.body
             let orgId = req.orgId
+            let final = []
+            let bookings = null
+            bookings = await knex
+            .from("entity_bookings")
+            .leftJoin(
+                "facility_master",
+                "entity_bookings.entityId",
+                "facility_master.id"
+              )
+              .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+              .select([
+                  "entity_bookings.entityId",
+                //   "entity_bookings."
+            ])
+              .where("entity_bookings.orgId",orgId)
+              .distinct("entity_bookings.id")
+          .orderBy("entity_bookings.id", "desc");
 
-            let facilityBookingResult
+          return res.status(200).json({
+              data:bookings
+          })
+
+
         }catch(err){}
     }
 };

@@ -11,5 +11,7 @@ router.post('/get-start-end-facility-bookings',authMiddleware.isAuthenticated,ro
 
 router.get('/get-facility-dashboard-data',authMiddleware.isAuthenticated,facilityDashboardController.getFacilityDasboardData)
 
+router.post('/get-facility-booking-pie-chart',authMiddleware.isAuthenticated,facilityDashboardController.getPieChartForFacilityBookings)
+
 
 module.exports = router;
