@@ -62,6 +62,7 @@ const customerController = {
           ])
           .where({ 'users.id': customerId });
 
+
         // Users property units start
         units = await knex('user_house_allocation').select(['houseId', 'id']).where({ userId: customerId })
         for (let u of units) {
@@ -75,9 +76,21 @@ const customerController = {
           fullLocationDetails.push(a)
 
         }
+
+        let userResult;
+        if(userDetails.length){
+
+          userResult = userDetails[0];
+
+        } else{
+
+          userResult = await knex('requested_by').select('name','email','mobile as mobileNo').where({id:customerId,orgId:req.orgId}).first(); 
+
+        }
+
         // users property units end
         return res.status(200).json({
-          userDetails: { ...userDetails[0], propertyDetails: userDetails, fullLocationDetails },
+          userDetails: { ...userResult, propertyDetails: userDetails, fullLocationDetails },
         });
       }
 
