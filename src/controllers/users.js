@@ -297,6 +297,54 @@ const usersController = {
             });
         }
 
+    },
+
+    /*GET ALL USERS FOR SERVICE REQUEST */
+    getAllUsersForServiceRequest: async (req, res) => {
+
+        try {
+            let users = await knex('users')
+                .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+                .whereNotIn('application_user_roles.roleId', [2, 5])
+                //.leftJoin('organisation_user_roles','users.id','organisation_user_roles.userId')
+                .select('users.id', 'users.name', 'users.email')
+                //    .whereNotIn('organisation_user_roles.roleId', [1, 4])
+                //.where({'organisation_user_roles.orgId':req.orgId})
+                .where({ 'users.orgId': req.orgId, isActive: true })
+                .orderBy('users.name', 'asc')
+                .groupBy('users.id');
+
+            let requestedByResult = await knex('requested_by')
+                .select('id', 'name', 'email')
+                .where({ orgId: req.orgId })
+
+
+            if (requestedByResult && requestedByResult.length) {
+
+
+                users = users.concat(requestedByResult);
+
+            }
+
+            users = _.uniqBy(users, 'email');
+
+            return res.status(200).json({
+                data: {
+                    users,
+
+                },
+                messsage: 'Users list'
+            })
+        } catch (err) {
+            console.log('[controllers][serviceOrder][GetServiceOrderList] :  Error', err);
+            //trx.rollback
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+
     }
 };
 

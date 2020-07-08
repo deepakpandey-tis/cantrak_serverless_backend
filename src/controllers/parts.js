@@ -3164,7 +3164,7 @@ const partsController = {
 
 
                     }
-                    newBal2 = bal2;
+                    newBal2 = bal2+openingBalance;
                     totalIn2 += i2;
                     totalOut2 += Math.abs(o2);
 

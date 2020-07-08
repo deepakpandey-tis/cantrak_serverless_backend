@@ -2147,15 +2147,15 @@ const assetController = {
         if (currentLocation.length > 0) {
 
 
-          await knex('asset_location')
-            .update({
-              ...payload,
-              createdAt: currentTime,
-              updatedAt: currentTime,
-              startDate: currentTime,
-              orgId: req.orgId
-            })
-            .where({ assetId: payload.assetId, unitId: payload.unitId })
+          // await knex('asset_location')
+          //   .update({
+          //     ...payload,
+          //     createdAt: currentTime,
+          //     updatedAt: currentTime,
+          //     startDate: currentTime,
+          //     orgId: req.orgId
+          //   })
+          //   .where({ assetId: payload.assetId, unitId: payload.unitId })
 
           
             await knex('asset_location')
@@ -2163,10 +2163,10 @@ const assetController = {
             .where({ assetId: payload.assetId, id: req.body.previousLocationId })
   
 
-          return res.status(200).json({
+          // return res.status(200).json({
 
-            message: 'Asset location updated'
-          })
+          //   message: 'Asset location updated'
+          // })
           // return res.status(400).json({
           //   data: {},
           //   message: 'Asset location already exist'

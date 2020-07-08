@@ -1517,6 +1517,7 @@ const pmController = {
       pmResult = await Parallel.map(mapData, async item => {
 
 
+        
         totalPlanOrder += Number(item.planOrder);
         totalWorkDone += Number(item.workDone);
         totalPercentage = 100 * totalWorkDone / totalPlanOrder;

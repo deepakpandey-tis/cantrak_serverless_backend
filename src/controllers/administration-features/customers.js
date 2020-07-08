@@ -62,6 +62,7 @@ const customerController = {
           ])
           .where({ 'users.id': customerId });
 
+
         // Users property units start
         units = await knex('user_house_allocation').select(['houseId', 'id']).where({ userId: customerId })
         for (let u of units) {
@@ -75,9 +76,21 @@ const customerController = {
           fullLocationDetails.push(a)
 
         }
+
+        let userResult;
+        if(userDetails.length){
+
+          userResult = userDetails[0];
+
+        } else{
+
+          userResult = await knex('requested_by').select('name','email','mobile as mobileNo').where({id:customerId,orgId:req.orgId}).first(); 
+
+        }
+
         // users property units end
         return res.status(200).json({
-          userDetails: { ...userDetails[0], propertyDetails: userDetails, fullLocationDetails },
+          userDetails: { ...userResult, propertyDetails: userDetails, fullLocationDetails },
         });
       }
 
@@ -212,9 +225,7 @@ const customerController = {
             })
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
-
                 if (name) {
-
                   qb.where('users.name', 'iLIKE', `%${name}%`)
                   qb.orWhere('users.email', 'iLIKE', `%${name}%`)
                   qb.orWhere('users.mobileNo', 'iLIKE', `%${name}%`)
@@ -268,9 +279,7 @@ const customerController = {
             .whereIn('property_units.projectId', resourceProject)
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
-
                 if (name) {
-
                   qb.where('users.name', 'iLIKE', `%${name}%`)
                   qb.orWhere('users.email', 'iLIKE', `%${name}%`)
                   qb.orWhere('users.mobileNo', 'iLIKE', `%${name}%`)
@@ -316,8 +325,7 @@ const customerController = {
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
 
-                if (name) {
-
+                if (name) { 
                   qb.where('users.name', 'iLIKE', `%${name}%`)
                   qb.orWhere('users.email', 'iLIKE', `%${name}%`)
                   qb.orWhere('users.mobileNo', 'iLIKE', `%${name}%`)
