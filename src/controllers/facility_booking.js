@@ -681,7 +681,7 @@ const facilityBookingController = {
       }
 
       let facilityReportResult;
-      console.log("details for all",companyId,projectId,buildingPhaseId,unitNo,status,facilityName,tenantName)
+      // console.log("details for all",companyId,projectId,buildingPhaseId,unitNo,status,facilityName,tenantName)
       if (
         companyId ||
         projectId ||

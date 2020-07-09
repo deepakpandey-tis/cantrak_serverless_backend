@@ -2,7 +2,7 @@ const { Router } = require("express")
 
 const router = Router()
 const authMiddleware = require('../middlewares/auth')
-const dashboardController = require('../controllers/dashboard')
+// const dashboardController = require('../controllers/dashboard')
 const roleMiddleware = require('../middlewares/role')
 const facilityDashboardController = require("../controllers/facility_dashboard")
 const { route } = require("./dashboard")
