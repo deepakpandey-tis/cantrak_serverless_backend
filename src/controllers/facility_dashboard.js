@@ -16,7 +16,13 @@ const facilityDashboardController = {
         try{
             let reqData = req.body
             let orgId = req.orgId
+            let{facilityName,status,queryStartDate,queryEndDate}=req.body
+            let totalFacilityBookings = null
             console.log("requested",req.body)
+            let Status;
+      if(status){
+        Status = status.join(' ')
+      }
             var getDaysArray = function(start,end){
                 let dt = start;
                 let arr = [];
@@ -27,8 +33,8 @@ const facilityDashboardController = {
             }
 
             var dates = getDaysArray(
-                new Date(reqData.startDate),
-                new Date(reqData.endDate)
+                new Date(queryStartDate),
+                new Date(queryEndDate)
               );
              
               console.log("dates",dates)
@@ -46,8 +52,193 @@ const facilityDashboardController = {
 
       let currentStartTime = new Date(startNewDate).getTime();
       let currentEndTime = new Date(endNewDate).getTime();
+        if((facilityName && facilityName.length >= 0) || (status && status.length >= 0)){
+            console.log("if selected")
+            totalFacilityBookings = await
+            knex
+            .from("entity_bookings")
+            .leftJoin(
+              "facility_master",
+              "entity_bookings.entityId",
+              "facility_master.id"
+            )
+            .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+            .select([
+              "entity_bookings.entityId",
+              "entity_bookings.bookedAt",
+              "entity_bookings.bookedBy",
+              "entity_bookings.noOfSeats",
+              "entity_bookings.entityId",
+              "entity_bookings.bookingStartDateTime",
+              "entity_bookings.bookingEndDateTime",
+              "entity_bookings.feesPaid",
+              "entity_bookings.isBookingConfirmed",
+              "entity_bookings.isBookingCancelled",
+              "entity_bookings.createdAt",
+              "facility_master.name",
+              "users.name as bookedUser",
+            ])
+            .where({"entity_bookings.orgId":orgId})
+            .whereBetween("entity_bookings.createdAt",[
+                currentStartTime,
+                currentEndTime
+            ])
+            .where((qb)=>{
+                if(facilityName){
+                    qb.whereIn("facility_master.name", facilityName)
+                }
+                if (status) {
+                    console.log("Status of status",Status)
+                    if (Status == "Pending") {
+                      console.log("Pending",status)
+                      qb.where("entity_bookings.isBookingConfirmed", false);
+                      qb.where("entity_bookings.isBookingCancelled", false);
+                //   qb.whereBetween("entity_bookings.createdAt", [createStartTime, createdEndTime])
+    
+                    }
+                    if (Status == "Approved") {
+                      console.log("Approved",status)
+                      qb.where({"entity_bookings.isBookingConfirmed" : true, "entity_bookings.confirmedType":0,"entity_bookings.isBookingCancelled": false});
+                      qb.orWhere({"entity_bookings.isBookingConfirmed" : true, "entity_bookings.confirmedType":null,"entity_bookings.isBookingCancelled": false});
+                //   qb.whereBetween("entity_bookings.createdAt", [createStartTime, createdEndTime])
+    
+                      // qb.where("entity_bookings.isBookingCancelled", false);
+                    }
+                    if (Status == "Confirmed") {
+                      console.log("Confirmed",status)
+                      qb.where({"entity_bookings.isBookingConfirmed": true, "entity_bookings.isBookingCancelled": false,"entity_bookings.confirmedType":1});
+                //   qb.whereBetween("entity_bookings.createdAt", [createStartTime, createdEndTime])
+    
+                      // qb.where("entity_bookings.confirmedType", 1);
+                    }
+                    if (Status == "Cancelled") {
+                      console.log("Cancelled",status)
+                      qb.where("entity_bookings.isBookingCancelled", true);
+                //   qb.whereBetween("entity_bookings.createdAt", [createStartTime, createdEndTime])
+    
+                    }
+                    if(Status ==  "Approved Pending Cancelled Confirmed"){
+                      // console.log("All status",status)
+    
+                      qb.where("entity_bookings.isBookingConfirmed", false);
+                      qb.orWhere("entity_bookings.isBookingConfirmed", true);
+                      qb.orWhere("entity_bookings.confirmedType", 1);
+                      qb.where("entity_bookings.isBookingCancelled", true);
+                      qb.orWhere("entity_bookings.isBookingCancelled", false);
+                //   qb.whereBetween("entity_bookings.createdAt", [createStartTime, createdEndTime])
+    
+                    }
+                    if(Status ==  "Approved Pending Cancelled Confirmed 0"){
+                      console.log("All status 0",status)
+    
+                      qb.where("entity_bookings.isBookingConfirmed", false);
+                      qb.orWhere("entity_bookings.isBookingConfirmed", true);
+                      qb.orWhere("entity_bookings.confirmedType", 1);
+                      qb.where("entity_bookings.isBookingCancelled", true);
+                      qb.orWhere("entity_bookings.isBookingCancelled", false);
+                //   qb.whereBetween("entity_bookings.createdAt", [createStartTime, createdEndTime])
+    
+                    }
+                    if(Status ==="Approved Pending Confirmed"){
+                      console.log("Pending, Approved,Confirmed ",status)
+                      qb.where({"entity_bookings.isBookingConfirmed" : true, "entity_bookings.confirmedType":0,"entity_bookings.isBookingCancelled": false});
+                      qb.orWhere({"entity_bookings.isBookingConfirmed" : true, "entity_bookings.confirmedType":null,"entity_bookings.isBookingCancelled": false});
+                      qb.orWhere({"entity_bookings.isBookingConfirmed":false,"entity_bookings.isBookingCancelled":false})
+                      qb.orWhere({"entity_bookings.isBookingConfirmed": true, "entity_bookings.isBookingCancelled": false,"entity_bookings.confirmedType":1});
+                //   qb.whereBetween("entity_bookings.createdAt", [createStartTime, createdEndTime])
+    
+                    }
+                    if(Status === "Approved Cancelled"){
+                      // console.log("Approved and cancelled",status)
+                      qb.where({"entity_bookings.isBookingConfirmed" : true, "entity_bookings.confirmedType":0});
+                      qb.where({"entity_bookings.isBookingCancelled": true, "entity_bookings.confirmedType":0});
+                      qb.orWhere({"entity_bookings.isBookingConfirmed": true, "entity_bookings.confirmedType":0});
+                      qb.orWhere({"entity_bookings.isBookingCancelled": true, "entity_bookings.confirmedType":0 });
+                //   qb.whereBetween("entity_bookings.createdAt", [createStartTime, createdEndTime])
+    
+                    
+                    }
+                    if(Status==="Approved Confirmed"){
+                      // console.log("Approved and confirmed")
+                      qb.where("entity_bookings.isBookingConfirmed", true);
+                      qb.where("entity_bookings.isBookingCancelled", false);
+                //   qb.whereBetween("entity_bookings.createdAt", [createStartTime, createdEndTime])
+    
+                      
+                    }
+                    if(Status === "Approved Pending"){
+                      console.log("Pending and approved",Status)
+                      qb.where({"entity_bookings.isBookingConfirmed" : true, "entity_bookings.isBookingCancelled": false,  "entity_bookings.confirmedType":0});
+                      qb.orWhere({"entity_bookings.isBookingConfirmed" : true, "entity_bookings.isBookingCancelled": false,  "entity_bookings.confirmedType":null});
+                      qb.orWhere({"entity_bookings.isBookingConfirmed": false, "entity_bookings.isBookingCancelled": false, "entity_bookings.confirmedType":0});
+                //   qb.whereBetween("entity_bookings.createdAt", [createStartTime, createdEndTime])
+    
+                      
+                      
+                    }
+                    if(Status === "Pending Confirmed"){
+                      // console.log("Pending and Confirmed",status)
+                      qb.where({"entity_bookings.isBookingConfirmed" : false, "entity_bookings.isBookingCancelled": false, "entity_bookings.confirmedType":0});
+                      qb.orWhere({"entity_bookings.isBookingConfirmed": true, "entity_bookings.isBookingCancelled": false, "entity_bookings.confirmedType":1});
+                //   qb.whereBetween("entity_bookings.createdAt", [createStartTime, createdEndTime])
+                     
+                    }
+                    if(Status === "Pending Cancelled"){
+                      // console.log("Pending,Cancelled",status)
+                      qb.where("entity_bookings.isBookingConfirmed", false);
+                      qb.where("entity_bookings.isBookingCancelled", false);
+                      qb.orWhere("entity_bookings.isBookingCancelled", true);
+                //   qb.whereBetween("entity_bookings.createdAt", [createStartTime, createdEndTime])
+    
+    
+                    }
+                    if(Status === "Approved Pending Cancelled"){
+                      // console.log("Pending,Approved,Cancelled",status)
+                      qb.where({"entity_bookings.isBookingConfirmed" : true,  "entity_bookings.confirmedType":0});
+                      qb.orWhere({"entity_bookings.isBookingConfirmed": false, "entity_bookings.confirmedType":0});
+                      qb.orWhere({"entity_bookings.isBookingConfirmed":true,"entity_bookings.confirmedType":null})
+                      qb.orWhere({"entity_bookings.isBookingCancelled": true,  "entity_bookings.confirmedType":0});
+                //   qb.whereBetween("entity_bookings.createdAt", [createStartTime, createdEndTime])
+    
+                      
+                    }
+                    if(Status === "Approved Cancelled Confirmed"){
+                      // console.log("Approved,Cancelled,Confirmed",status)
+                      qb.where("entity_bookings.isBookingConfirmed", true);
+                      qb.where("entity_bookings.isBookingCancelled", true);
+                      qb.orWhere("entity_bookings.confirmedType", 1);
+                //   qb.whereBetween("entity_bookings.createdAt", [createStartTime, createdEndTime])
+    
+                    }
+                    if(Status === "Pending Cancelled Confirmed"){
+                      // console.log("Pending,Cancelled,confirmed",status)
+                      qb.where("entity_bookings.isBookingConfirmed", false);
+                      qb.where("entity_bookings.isBookingCancelled", false);
+                      qb.orWhere("entity_bookings.isBookingCancelled", true);
+                      qb.orWhere("entity_bookings.isBookingConfirmed", true);
+                      qb.where("entity_bookings.confirmedType", 1);
+                //   qb.whereBetween("entity_bookings.createdAt", [createStartTime, createdEndTime])
+    
+                    }
+                    if(Status === "Cancelled Confirmed"){
+                      // console.log("Cancelled,confirmed",status)
+                      qb.where({"entity_bookings.isBookingCancelled" : true});
+                      qb.orWhere({"entity_bookings.confirmedType": 1,"entity_bookings.isBookingConfirmed" : true});
+                //   qb.whereBetween("entity_bookings.createdAt", [createStartTime, createdEndTime])
+                     
+                    }
+                  }
+            })
+            .orderBy("entity_bookings.id","asc")
 
-      [totalFacilityBookings] = await Promise.all([
+            final.push({
+                date:moment(d).format("L"),
+                totalFacilityBookings: _.uniqBy(totalFacilityBookings,"id").length
+            })
+        }else{
+            console.log("else selected")
+      totalFacilityBookings = await
+    //    Promise.all([
           knex
           .from("entity_bookings")
           .leftJoin(
@@ -77,12 +268,13 @@ const facilityDashboardController = {
               currentEndTime
           ])
           .orderBy("entity_bookings.id","asc")
-      ])
+    //   ])
 
       final.push({
           date:moment(d).format("L"),
           totalFacilityBookings: _.uniqBy(totalFacilityBookings,"id").length
       })
+    }
 
       }
       res.status(200).json({
@@ -359,21 +551,6 @@ const facilityDashboardController = {
             let orgId = req.orgId
             console.log("requested dates",reqData)
 
-            // var getDaysArray = function(start,end){
-            //     let dt = start;
-            //     let arr = [];
-            //     for (; dt <= end; dt.setDate(dt.getDate() + 1)) {
-            //       arr.push(new Date(dt));
-            //     }
-            //     return arr;
-            // }
-
-            // var dates = getDaysArray(
-            //     new Date(reqData.startDate),
-            //     new Date(reqData.endDate)
-            //   );
-             
-            
             let startNewDate = moment(reqData.queryStartDate)
             .startOf("date")
             .format();
@@ -386,15 +563,28 @@ const facilityDashboardController = {
             const [total,approved,cancelled,confirmed,pending] = await Promise.all([
                 knex
                 .from("entity_bookings")
+                .leftJoin(
+                    "facility_master",
+                    "entity_bookings.entityId",
+                    "facility_master.id"
+                  )
+                  .leftJoin("users", "entity_bookings.bookedBy", "users.id")
                 .select("entity_bookings.entityId")
                 .where("entity_bookings.orgId",orgId)
                 .whereBetween("entity_bookings.createdAt",[
                     currentStartTime,
                     currentEndTime
-                ]),
+                ])
+                .orderBy("entity_bookings.id","asc"),
 
                 knex
                 .from("entity_bookings")
+                .leftJoin(
+                    "facility_master",
+                    "entity_bookings.entityId",
+                    "facility_master.id"
+                  )
+                  .leftJoin("users", "entity_bookings.bookedBy", "users.id")
                 .select("entity_bookings.entityId")
                 .where("entity_bookings.orgId",orgId)
                 .where({"entity_bookings.isBookingConfirmed" : true, "entity_bookings.confirmedType":0,"entity_bookings.isBookingCancelled": false})
@@ -402,37 +592,59 @@ const facilityDashboardController = {
                 .whereBetween("entity_bookings.createdAt",[
                     currentStartTime,
                     currentEndTime
-                ]),
+                ])
+                .orderBy("entity_bookings.id","asc"),
 
                 knex
                 .from("entity_bookings")
+                .leftJoin(
+                    "facility_master",
+                    "entity_bookings.entityId",
+                    "facility_master.id"
+                  )
+                  .leftJoin("users", "entity_bookings.bookedBy", "users.id")
                 .select("entity_bookings.entityId")
                 .where("entity_bookings.orgId",orgId)
                 .where("entity_bookings.isBookingCancelled", true)
                 .whereBetween("entity_bookings.createdAt",[
                     currentStartTime,
                     currentEndTime
-                ]),
+                ])
+                .orderBy("entity_bookings.id","asc"),
 
                 knex
                 .from("entity_bookings")
+                .leftJoin(
+                    "facility_master",
+                    "entity_bookings.entityId",
+                    "facility_master.id"
+                  )
+                  .leftJoin("users", "entity_bookings.bookedBy", "users.id")
                 .select("entity_bookings.entityId")
                 .where("entity_bookings.orgId",orgId)
                 .where({"entity_bookings.isBookingConfirmed": true, "entity_bookings.isBookingCancelled": false,"entity_bookings.confirmedType":1})
                 .whereBetween("entity_bookings.createdAt",[
                     currentStartTime,
                     currentEndTime
-                ]),
+                ])
+                .orderBy("entity_bookings.id","asc"),
 
                 knex
                 .from("entity_bookings")
+                .leftJoin(
+                    "facility_master",
+                    "entity_bookings.entityId",
+                    "facility_master.id"
+                  )
+                  .leftJoin("users", "entity_bookings.bookedBy", "users.id")
                 .select("entity_bookings.entityId")
                 .where("entity_bookings.orgId",orgId)
                 .where({"entity_bookings.isBookingConfirmed":false,"entity_bookings.isBookingCancelled": false})
                 .whereBetween("entity_bookings.createdAt",[
                     currentStartTime,
                     currentEndTime
-                ]),
+                ])
+                .orderBy("entity_bookings.id","asc"),
 
 
             ])
@@ -517,17 +729,17 @@ const facilityDashboardController = {
                 currentEndTime
             ]),
         ])
-            let approvedBookings = approved.length
-            let cancelledBookings = cancelled.length
-            let confirmedBookings = confirmed.length
-            let pendingBookings = pending.length
+            let APPROVED = approved.length
+            let CANCELLED = cancelled.length
+            let CONFIRMED = confirmed.length
+            let PENDING = pending.length
 
           return res.status(200).json({
               data:{
-                approvedBookings,
-                cancelledBookings,
-                confirmedBookings,
-                pendingBookings
+                APPROVED,
+                CANCELLED,
+                CONFIRMED,
+                PENDING
               }
           })
 
