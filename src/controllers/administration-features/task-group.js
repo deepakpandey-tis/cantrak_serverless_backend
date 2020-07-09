@@ -854,9 +854,9 @@ const taskGroupController = {
       let total, rows
       let { companyId, pmNo, assetCategoryId, pmPlanName, startDate, endDate } = req.body;
       let filters = {}
-      if (assetCategoryId) {
-        filters['asset_category_master.id'] = assetCategoryId;
-      }
+      // if (assetCategoryId) {
+      //   filters['asset_category_master.id'] = assetCategoryId;
+      // }
 
       startDate = startDate ? moment(startDate).startOf('date').format("YYYY-MM-DD HH:mm:ss") : ''
       endDate = endDate ? moment(endDate).endOf('date').format("YYYY-MM-DD HH:mm:ss") : ''
@@ -875,17 +875,20 @@ const taskGroupController = {
         knex.count('* as count').from("pm_master2")
           .innerJoin('asset_category_master', 'pm_master2.assetCategoryId', 'asset_category_master.id')
           .innerJoin('task_group_schedule', 'pm_master2.id', 'task_group_schedule.pmId')
+          .innerJoin('companies', 'pm_master2.companyId', 'companies.id')
+         
           .where(qb => {
             qb.where(filters)
             qb.where({ 'pm_master2.orgId': req.orgId });
             qb.whereIn("pm_master2.projectId", projects);
             if (companyId) {
-              qb.where('pm_master2.companyId', companyId)
-
+              qb.where('pm_master2.assetCategoryId', companyId)
+            }
+            if (assetCategoryId) {
+              qb.whereIn('pm_master2.assetCategoryId', assetCategoryId)
             }
             if (pmNo) {
               qb.where('pm_master2.displayId', pmNo)
-
             }
 
             //qb.where({'pm_master2.projectId':})
@@ -903,11 +906,14 @@ const taskGroupController = {
         knex.from('pm_master2')
           .innerJoin('asset_category_master', 'pm_master2.assetCategoryId', 'asset_category_master.id')
           .innerJoin('task_group_schedule', 'pm_master2.id', 'task_group_schedule.pmId')
-          .select([
+          .innerJoin('companies', 'pm_master2.companyId', 'companies.id')
+         .select([
             'asset_category_master.*',
             'pm_master2.*',
             'pm_master2.id as id',
-            'pm_master2.displayId as PMNo'
+            'pm_master2.displayId as PMNo',
+            "companies.companyName",
+            "companies.companyId",
           ]).where(qb => {
             qb.where(filters)
             qb.whereIn("pm_master2.projectId", projects);
@@ -918,6 +924,10 @@ const taskGroupController = {
               qb.where('pm_master2.companyId', companyId)
             }
 
+            if (assetCategoryId) {
+              qb.whereIn('pm_master2.assetCategoryId', assetCategoryId)
+            }
+            
             if (pmNo) {
               qb.where('pm_master2.displayId', pmNo)
 
