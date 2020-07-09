@@ -563,6 +563,8 @@ const assetController = {
         assetModel,
         assetSerial,
         assetCode,
+        floorZone,
+        building
       } = req.body;
       let pagination = {};
       let per_page = reqData.per_page || 10;
@@ -707,6 +709,15 @@ const assetController = {
             'floor_and_zones.floorZoneCode',
             'property_units.unitNumber'
           ]).where({ 'asset_location.assetId': row.id })
+          .where(qb => {
+            if (building) {
+              qb.where('buildings_and_phases.id', building)
+            }
+
+            if (floorZone) {
+              qb.where('floor_and_zones.id', floorZone)
+            }
+          })
           .orderBy("asset_location.id", "desc")
           .limit(1)
           .first()
@@ -2157,11 +2168,11 @@ const assetController = {
           //   })
           //   .where({ assetId: payload.assetId, unitId: payload.unitId })
 
-          
-            await knex('asset_location')
+
+          await knex('asset_location')
             .update({ endDate: currentTime })
             .where({ assetId: payload.assetId, id: req.body.previousLocationId })
-  
+
 
           // return res.status(200).json({
 
