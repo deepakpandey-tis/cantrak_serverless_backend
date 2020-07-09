@@ -744,7 +744,7 @@ const facilityBookingController = {
               //   );
               // }
               if (facilityName) {
-                console.log("Facility name 755",facilityName)
+                // console.log("Facility name 755",facilityName)
                 qb.whereIn("facility_master.name", facilityName)
               qb.whereBetween("entity_bookings.createdAt", [createStartTime, createdEndTime])
                 
