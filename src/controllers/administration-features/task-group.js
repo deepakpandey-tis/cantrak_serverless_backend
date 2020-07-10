@@ -193,14 +193,14 @@ const taskGroupController = {
         templateExist
       );
 
-      if (templateExist && templateExist.length) {
+      // if (templateExist && templateExist.length) {
 
-        return res.status(400).json({
-          errors: [
-            { code: "VALIDATION_ERROR", message: "Template already exist!!" }
-          ]
-        });
-      }
+      //   return res.status(400).json({
+      //     errors: [
+      //       { code: "VALIDATION_ERROR", message: "Template already exist!!" }
+      //     ]
+      //   });
+      // }
       // Check duplicate value close
 
 
@@ -854,9 +854,9 @@ const taskGroupController = {
       let total, rows
       let { companyId, pmNo, assetCategoryId, pmPlanName, startDate, endDate } = req.body;
       let filters = {}
-      if (assetCategoryId) {
-        filters['asset_category_master.id'] = assetCategoryId;
-      }
+      // if (assetCategoryId) {
+      //   filters['asset_category_master.id'] = assetCategoryId;
+      // }
 
       startDate = startDate ? moment(startDate).startOf('date').format("YYYY-MM-DD HH:mm:ss") : ''
       endDate = endDate ? moment(endDate).endOf('date').format("YYYY-MM-DD HH:mm:ss") : ''
@@ -875,17 +875,20 @@ const taskGroupController = {
         knex.count('* as count').from("pm_master2")
           .innerJoin('asset_category_master', 'pm_master2.assetCategoryId', 'asset_category_master.id')
           .innerJoin('task_group_schedule', 'pm_master2.id', 'task_group_schedule.pmId')
+          .innerJoin('companies', 'pm_master2.companyId', 'companies.id')
+         
           .where(qb => {
             qb.where(filters)
             qb.where({ 'pm_master2.orgId': req.orgId });
             qb.whereIn("pm_master2.projectId", projects);
             if (companyId) {
-              qb.where('pm_master2.companyId', companyId)
-
+              qb.where('pm_master2.assetCategoryId', companyId)
+            }
+            if (assetCategoryId) {
+              qb.whereIn('pm_master2.assetCategoryId', assetCategoryId)
             }
             if (pmNo) {
               qb.where('pm_master2.displayId', pmNo)
-
             }
 
             //qb.where({'pm_master2.projectId':})
@@ -903,11 +906,14 @@ const taskGroupController = {
         knex.from('pm_master2')
           .innerJoin('asset_category_master', 'pm_master2.assetCategoryId', 'asset_category_master.id')
           .innerJoin('task_group_schedule', 'pm_master2.id', 'task_group_schedule.pmId')
-          .select([
+          .innerJoin('companies', 'pm_master2.companyId', 'companies.id')
+         .select([
             'asset_category_master.*',
             'pm_master2.*',
             'pm_master2.id as id',
-            'pm_master2.displayId as PMNo'
+            'pm_master2.displayId as PMNo',
+            "companies.companyName",
+            "companies.companyId",
           ]).where(qb => {
             qb.where(filters)
             qb.whereIn("pm_master2.projectId", projects);
@@ -918,6 +924,10 @@ const taskGroupController = {
               qb.where('pm_master2.companyId', companyId)
             }
 
+            if (assetCategoryId) {
+              qb.whereIn('pm_master2.assetCategoryId', assetCategoryId)
+            }
+            
             if (pmNo) {
               qb.where('pm_master2.displayId', pmNo)
 
@@ -2271,7 +2281,7 @@ const taskGroupController = {
   getTaskGroupTemplateList: async (req, res) => {
     try {
       let sortPayload = req.body;
-      
+
       if (!sortPayload.sortBy && !sortPayload.orderBy) {
         sortPayload.sortBy = "categoryName";
         sortPayload.orderBy = "asc"
@@ -2287,7 +2297,7 @@ const taskGroupController = {
       let orgId = req.orgId;
 
       let [total, rows] = await Promise.all([
-        knex('task_group_templates').select('task_group_templates.*','asset_category_master.categoryName')
+        knex('task_group_templates').select('task_group_templates.*', 'asset_category_master.categoryName')
           .innerJoin('asset_category_master', 'task_group_templates.assetCategoryId', 'asset_category_master.id')
           .where({ "task_group_templates.orgId": orgId })
           .where(qb => {
@@ -2299,7 +2309,7 @@ const taskGroupController = {
             }
 
           }),
-        knex('task_group_templates').select('task_group_templates.*','asset_category_master.categoryName').offset(offset).limit(per_page)
+        knex('task_group_templates').select('task_group_templates.*', 'asset_category_master.categoryName').offset(offset).limit(per_page)
           .innerJoin('asset_category_master', 'task_group_templates.assetCategoryId', 'asset_category_master.id')
           .where({ "task_group_templates.orgId": orgId })
           .where(qb => {
@@ -2373,8 +2383,10 @@ const taskGroupController = {
   updateOldTaskGroupScheduleWithWorkOrders: async (req, res) => {
     try {
       const { scheduleId, taskGroupId, newData } = req.body;
-      const { startDateTime, endDateTime, repeatFrequency, repeatOn, repeatPeriod } = newData;
+      let { startDateTime, endDateTime, repeatFrequency, repeatOn, repeatPeriod } = newData;
       const { teamId, mainUserId, additionalUsers } = newData;
+
+     let repeat = repeatOn.length ? repeatOn.join(',') : [];
 
       let currentDate = moment().format("YYYY-MM-DD");
       //return res.json(currentDate)  
@@ -2399,15 +2411,10 @@ const taskGroupController = {
 
       // Generate New Work Orders for the same schedule but from the date which are coming next
       // Previous date should be discarded
-      let generatedDates = getRecurringDates({ startDateTime, endDateTime, repeatFrequency, repeatOn, repeatPeriod })
+      let generatedDates = getRecurringDates({ startDateTime, endDateTime, repeatFrequency, repeat, repeatPeriod })
 
 
 
-
-
-
-      // Delete work orders which are not yet completed
-      await knex('task_group_schedule_assign_assets').where({ scheduleId, orgId: req.orgId }).whereRaw(knex.raw(`DATE("task_group_schedule_assign_assets"."pmDate") > now()`)).select('*').del()
 
       // Create New Work Orders Now
       // Get tasks for which the pms are to be created
@@ -2419,6 +2426,12 @@ const taskGroupController = {
       const assetIdsResult = await knex('task_group_schedule_assign_assets').where({ scheduleId, orgId: req.orgId }).select('assetId')
 
       const assetIds = _.uniq(assetIdsResult.map(r => r.assetId).map(v => Number(v)))
+
+      // Delete work orders which are not yet completed
+      if (generatedDates.length > 0) {
+        await knex('task_group_schedule_assign_assets').where({ scheduleId, orgId: req.orgId }).whereRaw(knex.raw(`DATE("task_group_schedule_assign_assets"."pmDate") > now()`)).select('*').del()
+      }
+
       let currentTime = new Date().getTime()
       for (let i = 0; i < assetIds.length; i++) {
         const assetId = assetIds[i];
@@ -2451,6 +2464,7 @@ const taskGroupController = {
 
           // CREATE PM TASK CLOSE
           assetResults.push(assetResult[0]);
+
         }
       }
 
@@ -2768,7 +2782,7 @@ const taskGroupController = {
     try {
 
       let result = await knex('task_group_schedule_assign_assets')
-        .where({ 'task_group_schedule_assign_assets.orgId': req.orgId });
+        .where({ 'task_group_scperformingDateshedule_assign_assets.orgId': req.orgId });
 
       return res.status(200).json({
         data: result,
