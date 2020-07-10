@@ -3667,6 +3667,9 @@ const serviceRequestController = {
         value: value[0]
       }))
 
+      // console.log("mapData", mapData);
+      // console.log("serviceProblem", serviceProblem);
+
 
 
       let arr = [];
