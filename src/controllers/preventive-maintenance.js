@@ -1379,6 +1379,9 @@ const pmController = {
       let toTime = new Date(toNewDate).getTime();
       let filterProblem;
 
+
+      console.log("From Time", fromDate, "To")
+
       let pmResult = await knex('pm_master2')
         .leftJoin('companies', 'pm_master2.companyId', 'companies.id')
         .leftJoin('projects', 'pm_master2.projectId', 'projects.id')
@@ -1391,8 +1394,13 @@ const pmController = {
           'projects.projectName',
 
         ])
-        .whereBetween('pm_master2.createdAt', [fromTime, toTime])
         .where(qb => {
+
+
+          if (fromDate && toDate) {
+            qb.whereBetween('pm_master2.createdAt', [fromTime, toTime])
+
+          }
 
           if (payload.companyId) {
             qb.where({ 'pm_master2.companyId': payload.companyId })
@@ -1410,7 +1418,7 @@ const pmController = {
         })
 
 
-        let n = pmResult;
+      let n = pmResult;
 
       let pmIds = pmResult.map(it => it.id);
 
@@ -1517,7 +1525,7 @@ const pmController = {
       pmResult = await Parallel.map(mapData, async item => {
 
 
-        
+
         totalPlanOrder += Number(item.planOrder);
         totalWorkDone += Number(item.workDone);
         totalPercentage = 100 * totalWorkDone / totalPlanOrder;
@@ -1541,8 +1549,9 @@ const pmController = {
 
       res.json({
         data: pmResult,
-        a:pmIds,
+        a: pmIds,
         n,
+        pmResult,
         message: "Prenventive Maintenance report succesully!",
       })
 
@@ -1580,10 +1589,17 @@ const pmController = {
           'pm_master2.name as pmName',
           'asset_master.assetSerial'
         ])
-        .whereBetween('task_group_schedule_assign_assets.pmDate', [fromNewDate, toNewDate])
         .where(qb => {
 
-          if (payload.companyId) {
+          if (fromDate && toDate) {
+            qb.whereBetween('task_group_schedule_assign_assets.pmDate', [fromNewDate, toNewDate])
+
+          }
+
+          if (payload.companyId == 'all' || payload.companyId == '' || payload.companyId == null) {
+
+
+          } else {
 
             qb.where('pm_master2.companyId', payload.companyId)
 
@@ -1591,7 +1607,7 @@ const pmController = {
 
           if (payload.assetSerial) {
 
-            qb.where('asset_master.assetSerial', payload.assetSerial)
+            qb.where('asset_master.assetSerial', 'iLIKE', `%${payload.assetSerial}%`)
 
           }
           if (payload.status) {
@@ -1669,7 +1685,22 @@ const pmController = {
       let year = payload.startYear;
       let fromDate = year + "-" + startMonth + "-" + 01;
       let toDate = year + "-" + endMonth + "-" + lastDay;
-      let fromNewDate = moment(fromDate).startOf('date').format();
+
+
+      let monthDifference = moment(toDate).diff(fromDate, "months");
+
+      if (monthDifference > 3) {
+
+        return res.status(400).json({
+          errors: [
+            { code: 'VALIDATION_ERROR', message: "You can see max four month report, please select max four month difference!" }
+          ],
+        });
+
+      }
+
+
+      let fromNewDate = moment(fromDate).startOf('date').format("YYYY-MM-DD");
       let toNewDate = moment(toDate).endOf('date', 'days').format();
       let fromTime = new Date(fromNewDate).getTime();
       let toTime = new Date(toNewDate).getTime();
@@ -1692,7 +1723,7 @@ const pmController = {
           'task_group_schedule.repeatPeriod'
         ])
         .returning(["*"])
-        .whereBetween('task_group_schedule_assign_assets.createdAt', [fromTime, toTime])
+        .whereBetween('task_group_schedule_assign_assets.pmDate', [fromNewDate, toNewDate])
         .where(qb => {
 
           if (payload.companyId) {
@@ -1726,11 +1757,11 @@ const pmController = {
         var start = moment(item.pmDate).startOf('month').format('DD');
         var end = moment(item.pmDate).endOf('month').format('DD');
         var weeks = (end - start + 1) / 7;
-        weeks = Math.ceil(weeks);
+        weeks = Math.floor(weeks);
 
         let mv = moment(item.pmDate);
 
-        let newWeek = mv.weeks();
+        let newWeek = moment(item.pmDate).week();//mv.weeks();
 
 
         totalWeeks += weeks;
@@ -1754,56 +1785,30 @@ const pmController = {
 
 
       let arr = [];
-      let p = { "repeatPeriod": 'MONTH', "repeatOn": "SU", "repeatFrequency": 1, "startDateTime": fromDate, "endDateTime": toDate };
+      let p = { "repeatPeriod": 'MONTH', "repeatOn": ["SU"], "repeatFrequency": 1, "startDateTime": fromDate, "endDateTime": toDate };
       let dates = genrateWork(p);
 
 
       let arrMonth = [];
 
-      for (let n of dates) {
-
-
-
-      }
-
-
       let v = 0;
 
 
       let startWeek = moment(fromDate).week();
-      let endWeek = moment(toDate).week();
+      let endWeek;
+      if(endMonth=='dec'){
+       endWeek = 54;
+      } else {
+
+        endWeek = moment(toDate).week();
+
+      }
 
       for (let i = startWeek; i < endWeek; i++) {
 
         arr.push({ "day": i })
 
       }
-
-
-      // for (let i = 1; i < a; i++) {
-
-
-      //   v++;
-
-      //   if (v == 5) {
-      //     v = 1;
-      //   }
-
-      //   let mObject;
-      //   for (let s of dates) {
-
-      //     mObject = moment(s).format('M');
-
-      //   }
-
-      //   arr.push({ "day": i, v, mObject })
-
-      // }
-
-
-
-
-
 
 
 
@@ -1829,7 +1834,12 @@ const pmController = {
         message: "Pm Plan Action schedule report Successfully!",
         totalColumn: arr,
         dates,
-        arr1
+        arr1,
+        startWeek,
+        endWeek,
+        fromDate,
+        toDate,
+        
       })
 
 
@@ -1907,7 +1917,7 @@ function genrateWork(payload) {
 
 
   let repeatPeriod = payload.repeatPeriod;
-  let repeatOn = payload.repeatOn ? payload.repeatOn : ""; //&& payload.repeatOn.length ? payload.repeatOn.join(',') : [];
+  let repeatOn = payload.repeatOn.length ? payload.repeatOn.join(',') : [];
   let repeatFrequency = Number(payload.repeatFrequency);
   let start = new Date(payload.startDateTime);
 

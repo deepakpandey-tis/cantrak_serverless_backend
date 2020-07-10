@@ -851,9 +851,10 @@ const partsController = {
                         adjustType: Joi.string().required(),
                         serviceOrderNo: Joi.string().allow("").allow(null).optional(),
                         isPartAdded: Joi.string().required(),
-                        receiveBy: Joi.string().required(),
-                        receiveDate: Joi.string().required(),
+                        //receiveBy: Joi.string().required(),
+                        //receiveDate: Joi.string().required(),
                         deductBy: Joi.string().required(),
+                        deductDate: Joi.string().required(),
                         building: Joi.string().allow("").allow(null).optional(),
                         floor: Joi.string().allow("").allow(null).optional(),
                         returnedBy: Joi.string().allow("").allow(null).optional(),
@@ -863,9 +864,9 @@ const partsController = {
                         //deductBy : Joi.number().required()
 
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'description', 'date', 'workOrderId', 'deductDate', 'building', 'floor'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'serviceOrderNo', 'returnedBy', 'workOrderId', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'deductDate'])
-                    partStockPayload.receiveDate = new Date(partStockPayload.receiveDate).getTime();
+                    result = Joi.validate(_.omit(partStockPayload,'receiveBy','receiveDate', 'receiveFrom', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'description', 'date', 'workOrderId', 'building', 'floor'), schema);
+                    partStockPayload = _.omit(partStockPayload, ['receiveBy','receiveDate','receiveFrom', 'companyId', 'companyId2', 'serviceOrderNo', 'returnedBy', 'workOrderId', 'storeAdjustmentBy', 'issueBy', 'issueTo'])
+                    partStockPayload.deductDate = new Date(partStockPayload.deductDate).getTime();
 
                 } else if (partStockPayload.adjustType == "6") {
                     const schema = Joi.object().keys({
@@ -914,7 +915,8 @@ const partsController = {
                         "deductBy",
                         "returnedBy",
                         'companyId',
-                        'companyId2'
+                        'companyId2',
+                        'deductDate'
                     ])
                     partStockPayload.companyId = req.body.companyId2;
 
