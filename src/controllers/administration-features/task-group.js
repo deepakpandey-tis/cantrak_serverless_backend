@@ -861,6 +861,10 @@ const taskGroupController = {
       startDate = startDate ? moment(startDate).startOf('date').format("YYYY-MM-DD HH:mm:ss") : ''
       endDate = endDate ? moment(endDate).endOf('date').format("YYYY-MM-DD HH:mm:ss") : ''
 
+      let startTime = new Date(startDate).getTime();
+      let endTime = new Date(endDate).getTime();
+
+
       let pagination = {};
       let per_page = reqData.per_page || 10;
       let page = reqData.current_page || 1;
@@ -874,7 +878,7 @@ const taskGroupController = {
       [total, rows] = await Promise.all([
         knex.count('* as count').from("pm_master2")
           .innerJoin('asset_category_master', 'pm_master2.assetCategoryId', 'asset_category_master.id')
-          .innerJoin('task_group_schedule', 'pm_master2.id', 'task_group_schedule.pmId')
+          //.innerJoin('task_group_schedule', 'pm_master2.id', 'task_group_schedule.pmId')
           .innerJoin('companies', 'pm_master2.companyId', 'companies.id')
          
           .where(qb => {
@@ -896,16 +900,20 @@ const taskGroupController = {
               qb.where('pm_master2.name', 'iLIKE', `%${pmPlanName}%`)
             }
             if (startDate && endDate) {
-              qb.where('task_group_schedule.startDate', '>=', startDate)
-              qb.where('task_group_schedule.endDate', '<=', endDate)
+              qb.whereBetween('pm_master2.createdAt',[startTime,endTime])
+             // qb.where('task_group_schedule.endDate', '<=', endDate)
             }
+            // if (startDate && endDate) {
+            //   qb.where('task_group_schedule.startDate', '>=', startDate)
+            //   qb.where('task_group_schedule.endDate', '<=', endDate)
+            // }
             if (endDate) {
               //  qb.where({ 'task_group_schedule.endDate': endDate })
             }
           }),
         knex.from('pm_master2')
           .innerJoin('asset_category_master', 'pm_master2.assetCategoryId', 'asset_category_master.id')
-          .innerJoin('task_group_schedule', 'pm_master2.id', 'task_group_schedule.pmId')
+          //.innerJoin('task_group_schedule', 'pm_master2.id', 'task_group_schedule.pmId')
           .innerJoin('companies', 'pm_master2.companyId', 'companies.id')
          .select([
             'asset_category_master.*',
@@ -915,7 +923,7 @@ const taskGroupController = {
             "companies.companyName",
             "companies.companyId",
           ]).where(qb => {
-            qb.where(filters)
+            //qb.where(filters)
             qb.whereIn("pm_master2.projectId", projects);
 
             qb.where({ "pm_master2.orgId": req.orgId });
@@ -937,8 +945,8 @@ const taskGroupController = {
               qb.where('pm_master2.name', 'iLIKE', `%${pmPlanName}%`)
             }
             if (startDate && endDate) {
-              qb.where('task_group_schedule.startDate', '>=', startDate)
-              qb.where('task_group_schedule.endDate', '<=', endDate)
+              qb.whereBetween('pm_master2.createdAt',[startTime,endTime])
+             // qb.where('task_group_schedule.endDate', '<=', endDate)
             }
             if (endDate) {
               //  qb.where({ 'task_group_schedule.endDate': endDate })
@@ -957,10 +965,12 @@ const taskGroupController = {
       pagination.last_page = Math.ceil(count / per_page);
       pagination.current_page = page;
       pagination.from = offset;
-      pagination.data = _.uniqBy(rows, 'id');
+      pagination.data = rows;
       return res.status(200).json({
         data: {
-          pm_list: pagination
+          pm_list: pagination,
+          startTime,
+          endTime
         }
       })
     } catch (err) {

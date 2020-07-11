@@ -20,5 +20,11 @@ router.post('/get-approved-facility-bookings',authMiddleware.isAuthenticated,fac
 
 router.post('/get-cancelled-facility-bookings',authMiddleware.isAuthenticated,facilityDashboardController.getCancelledFacilityBookings)
 
+router.post('/get-confirmed-facility-bookings',authMiddleware.isAuthenticated,facilityDashboardController.getConfirmedFacilityBooking)
+
+router.post('/get-pending-facility-bookings',authMiddleware.isAuthenticated,facilityDashboardController.getPendingFacilityBookings)
+
+router.post('/get-booking-duration',authMiddleware.isAuthenticated,facilityDashboardController.getBookingForAverageDuration)
+
 
 module.exports = router;

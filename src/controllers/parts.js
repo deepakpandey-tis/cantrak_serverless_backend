@@ -21,9 +21,9 @@ const partsController = {
 
             let { partName,
                 partCode,
-                partCategory, partId } = req.body;
+                partCategory, partId, company } = req.body;
 
-            if (partName || partCode || partCategory || partId) {
+            if (partName || partCode || partCategory || partId || company) {
 
                 let per_page = reqData.per_page || 10;
                 let page = reqData.current_page || 1;
@@ -45,7 +45,10 @@ const partsController = {
                                 qb.where('part_master.partCategory', partCategory)
                             }
                             if (partId) {
-                                qb.where({ 'part_master.id': partId })
+                                qb.where({ 'part_master.displayId': partId })
+                            }
+                            if (company) {
+                                qb.where({ 'part_master.companyId': company })
                             }
                         })
                         .groupBy(['part_master.id'])
@@ -55,6 +58,7 @@ const partsController = {
                     knex.from('part_master')
                         .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
                         .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
+                        .leftJoin('companies', 'part_master.companyId', 'companies.id')
                         .select([
                             'part_master.id as partId',
                             'part_master.partName as Name',
@@ -66,6 +70,9 @@ const partsController = {
                             'part_master.barcode as Barcode',
                             'part_master.createdAt as Date Added',
                             'part_master.isActive',
+                            'part_master.displayId as PNo',
+                            "companies.companyName",
+                            "companies.companyId",
                         ])
                         .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
                         .where(qb => {
@@ -80,11 +87,14 @@ const partsController = {
                                 qb.where('part_master.partCategory', partCategory)
                             }
                             if (partId) {
-                                qb.where({ 'part_master.id': partId })
+                                qb.where({ 'part_master.displayId': partId })
+                            }
+                            if (company) {
+                                qb.where({ 'part_master.companyId': company })
                             }
                         })
                         .orderBy('part_master.createdAt', 'desc')
-                        .groupBy(['part_master.id', 'part_category_master.id'])
+                        .groupBy(['part_master.id','companies.companyId', 'companies.companyName','part_category_master.id'])
                         .distinct('part_master.id')
                         .offset(offset).limit(per_page)
                 ])
@@ -117,6 +127,7 @@ const partsController = {
                     knex.from('part_master')
                         .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
                         .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
+                        .leftJoin('companies', 'part_master.companyId', 'companies.id')
                         .select([
                             'part_master.id as partId',
                             'part_master.partName as Name',
@@ -128,10 +139,13 @@ const partsController = {
                             'part_master.barcode as Barcode',
                             'part_master.createdAt as Date Added',
                             'part_master.isActive',
+                            'part_master.displayId as PNo',
+                            "companies.companyName",
+                            "companies.companyId",
                         ])
                         .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
                         .orderBy('part_master.createdAt', 'desc')
-                        .groupBy(['part_master.id', 'part_category_master.id'])
+                        .groupBy(['part_master.id','companies.companyId', 'companies.companyName', 'part_category_master.id'])
                         .distinct('part_master.id')
                         .offset(offset).limit(per_page)
                 ])
@@ -851,9 +865,10 @@ const partsController = {
                         adjustType: Joi.string().required(),
                         serviceOrderNo: Joi.string().allow("").allow(null).optional(),
                         isPartAdded: Joi.string().required(),
-                        receiveBy: Joi.string().required(),
-                        receiveDate: Joi.string().required(),
+                        //receiveBy: Joi.string().required(),
+                        //receiveDate: Joi.string().required(),
                         deductBy: Joi.string().required(),
+                        deductDate: Joi.string().required(),
                         building: Joi.string().allow("").allow(null).optional(),
                         floor: Joi.string().allow("").allow(null).optional(),
                         returnedBy: Joi.string().allow("").allow(null).optional(),
@@ -863,9 +878,9 @@ const partsController = {
                         //deductBy : Joi.number().required()
 
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'description', 'date', 'workOrderId', 'deductDate', 'building', 'floor'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'serviceOrderNo', 'returnedBy', 'workOrderId', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'deductDate'])
-                    partStockPayload.receiveDate = new Date(partStockPayload.receiveDate).getTime();
+                    result = Joi.validate(_.omit(partStockPayload,'receiveBy','receiveDate', 'receiveFrom', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'description', 'date', 'workOrderId', 'building', 'floor'), schema);
+                    partStockPayload = _.omit(partStockPayload, ['receiveBy','receiveDate','receiveFrom', 'companyId', 'companyId2', 'serviceOrderNo', 'returnedBy', 'workOrderId', 'storeAdjustmentBy', 'issueBy', 'issueTo'])
+                    partStockPayload.deductDate = new Date(partStockPayload.deductDate).getTime();
 
                 } else if (partStockPayload.adjustType == "6") {
                     const schema = Joi.object().keys({
@@ -914,7 +929,8 @@ const partsController = {
                         "deductBy",
                         "returnedBy",
                         'companyId',
-                        'companyId2'
+                        'companyId2',
+                        'deductDate'
                     ])
                     partStockPayload.companyId = req.body.companyId2;
 
@@ -3164,7 +3180,7 @@ const partsController = {
 
 
                     }
-                    newBal2 = bal2+openingBalance;
+                    newBal2 = bal2 + openingBalance;
                     totalIn2 += i2;
                     totalOut2 += Math.abs(o2);
 

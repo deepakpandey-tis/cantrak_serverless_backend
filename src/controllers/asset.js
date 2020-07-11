@@ -302,6 +302,9 @@ const assetController = {
         assetModel,
         assetSerial,
         category,
+        company,
+        project,
+        asNo,
       } = req.body;
       let pagination = {};
       let per_page = reqData.per_page || 10;
@@ -376,6 +379,8 @@ const assetController = {
               "asset_master.companyId",
               "companies.id"
             )
+            .leftJoin('projects', 'asset_master.projectId', 'projects.id')
+
             .where(qb => {
               if (assetName) {
                 qb.where(
@@ -384,6 +389,7 @@ const assetController = {
                   `%${assetName}%`
                 );
               }
+             
               if (assetSerial) {
                 qb.where(
                   "asset_master.assetSerial",
@@ -404,6 +410,15 @@ const assetController = {
                   "iLIKE",
                   `%${category}%`
                 );
+              }
+              if (asNo) {
+                qb.where("asset_master.displayId",asNo)
+              }
+              if (company) {
+                qb.where('asset_master.companyId', company)
+              }
+              if (project) {
+                qb.where('asset_master.projectId', project)
               }
             })
             .first()
@@ -429,6 +444,8 @@ const assetController = {
               "asset_master.companyId",
               "companies.id"
             )
+            .leftJoin('projects', 'asset_master.projectId', 'projects.id')
+
             .select([
               "asset_master.assetName as Name",
               "asset_master.id as ID",
@@ -441,7 +458,11 @@ const assetController = {
               "asset_master.createdAt as Date Created",
               "asset_master.unitOfMeasure as Unit Of Measure",
               "asset_master.price as Price",
-              "companies.companyName"
+              "companies.companyName",
+              "companies.companyId",
+              "projects.project",
+              "projects.projectName",
+              "asset_master.displayId as AsNo"
             ])
             .where({ 'asset_master.orgId': req.orgId })
             .where(qb => {
@@ -472,6 +493,15 @@ const assetController = {
                   "iLIKE",
                   `%${category}%`
                 );
+              }
+              if (asNo) {
+                qb.where("asset_master.displayId",asNo)
+              }
+              if (company) {
+                qb.where('asset_master.companyId', company)
+              }
+              if (project) {
+                qb.where('asset_master.projectId', project)
               }
             })
             .orderBy("asset_master.id", "desc")
