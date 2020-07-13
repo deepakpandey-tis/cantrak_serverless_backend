@@ -780,8 +780,11 @@ const facilityDashboardController = {
                     "facility_master.id"
                   )
                   .leftJoin("users", "entity_bookings.bookedBy", "users.id")
-                .select("entity_bookings.entityId")
-                .where("entity_bookings.orgId",orgId)
+                .select([ "entity_bookings.entityId",
+                "entity_bookings.bookedAt",
+                "entity_bookings.bookedBy",
+                "entity_bookings.noOfSeats"])
+                .where({"entity_bookings.orgId":orgId})
                 .whereBetween("entity_bookings.createdAt",[
                     currentStartTime,
                     currentEndTime
@@ -796,8 +799,11 @@ const facilityDashboardController = {
                     "facility_master.id"
                   )
                   .leftJoin("users", "entity_bookings.bookedBy", "users.id")
-                .select("entity_bookings.entityId")
-                .where("entity_bookings.orgId",orgId)
+                .select([ "entity_bookings.entityId",
+                "entity_bookings.bookedAt",
+                "entity_bookings.bookedBy",
+                "entity_bookings.noOfSeats"])
+                .where({"entity_bookings.orgId":orgId})
                 .where({"entity_bookings.isBookingConfirmed" : true, "entity_bookings.confirmedType":0,"entity_bookings.isBookingCancelled": false})
                 .orWhere({"entity_bookings.isBookingConfirmed" : true, "entity_bookings.confirmedType":null,"entity_bookings.isBookingCancelled": false})
                 .whereBetween("entity_bookings.createdAt",[
@@ -814,8 +820,11 @@ const facilityDashboardController = {
                     "facility_master.id"
                   )
                   .leftJoin("users", "entity_bookings.bookedBy", "users.id")
-                .select("entity_bookings.entityId")
-                .where("entity_bookings.orgId",orgId)
+                .select([ "entity_bookings.entityId",
+                "entity_bookings.bookedAt",
+                "entity_bookings.bookedBy",
+                "entity_bookings.noOfSeats"])
+                .where({"entity_bookings.orgId":orgId})
                 .where("entity_bookings.isBookingCancelled", true)
                 .whereBetween("entity_bookings.createdAt",[
                     currentStartTime,
@@ -831,8 +840,11 @@ const facilityDashboardController = {
                     "facility_master.id"
                   )
                   .leftJoin("users", "entity_bookings.bookedBy", "users.id")
-                .select("entity_bookings.entityId")
-                .where("entity_bookings.orgId",orgId)
+                .select([ "entity_bookings.entityId",
+                "entity_bookings.bookedAt",
+                "entity_bookings.bookedBy",
+                "entity_bookings.noOfSeats"])
+                .where({"entity_bookings.orgId":orgId})
                 .where({"entity_bookings.isBookingConfirmed": true, "entity_bookings.isBookingCancelled": false,"entity_bookings.confirmedType":1})
                 .whereBetween("entity_bookings.createdAt",[
                     currentStartTime,
@@ -848,8 +860,11 @@ const facilityDashboardController = {
                     "facility_master.id"
                   )
                   .leftJoin("users", "entity_bookings.bookedBy", "users.id")
-                .select("entity_bookings.entityId")
-                .where("entity_bookings.orgId",orgId)
+                .select([ "entity_bookings.entityId",
+                "entity_bookings.bookedAt",
+                "entity_bookings.bookedBy",
+                "entity_bookings.noOfSeats"])
+                .where({"entity_bookings.orgId":orgId})
                 .where({"entity_bookings.isBookingConfirmed":false,"entity_bookings.isBookingCancelled": false})
                 .whereBetween("entity_bookings.createdAt",[
                     currentStartTime,
