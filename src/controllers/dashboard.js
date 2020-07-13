@@ -42,8 +42,8 @@ const dashboardController = {
           .select("service_requests.serviceStatusCode as status")
           .distinct("service_requests.id")
           .whereIn("service_requests.projectId", accessibleProjects)
-          .where({ serviceStatusCode: "US", orgId: orgId, "moderationStatus":true})
-          .orWhere({ serviceStatusCode: "O", orgId: orgId,"moderationStatus":true }),
+          .where({ serviceStatusCode: "US", orgId: orgId, "moderationStatus": true })
+          .orWhere({ serviceStatusCode: "O", orgId: orgId, "moderationStatus": true }),
         knex
           .from("service_requests")
           .select("service_requests.serviceStatusCode as status")
@@ -61,13 +61,13 @@ const dashboardController = {
             serviceStatusCode: "US",
             orgId: orgId,
             priority: priorityValue,
-            "moderationStatus":true
+            "moderationStatus": true
           })
           .orWhere({
             serviceStatusCode: "O",
             orgId: orgId,
             priority: priorityValue,
-            "moderationStatus":true
+            "moderationStatus": true
           }),
         //.where({ serviceStatusCode: 'O', orgId, priority: priorityValue })
         // .whereIn('service_requests.projectId', accessibleProjects)
@@ -606,7 +606,7 @@ const dashboardController = {
       // let endDate = moment(reqData.endDate).isValid() ? moment(reqData.endDate).format('YYYY-MM-DD') : today;
       const accessibleProjects = req.userProjectResources[0].projects;
 
-      var getDaysArray = function(start, end) {
+      var getDaysArray = function (start, end) {
         let dt = start;
         let arr = [];
         for (; dt <= end; dt.setDate(dt.getDate() + 1)) {
@@ -1087,7 +1087,7 @@ const dashboardController = {
         data: {
           ServiceAppointments: _.uniqBy(result, "id").length,
           SurveyAppointments: _.uniqBy(result2, "id").length,
-          WorkOrders:result3.length
+          WorkOrders: result3.length
         }
       });
     } catch (err) {
@@ -1106,7 +1106,7 @@ const dashboardController = {
       //   .where({'incident_sub_categories.orgId':req.orgId})
       let problems = null;
       let problemTypeId = req.body.problemTypeId;
-      var getDaysArray = function(start, end) {
+      var getDaysArray = function (start, end) {
         let dt = start;
         let arr = [];
         for (; dt <= end; dt.setDate(dt.getDate() + 1)) {
@@ -1195,7 +1195,7 @@ const dashboardController = {
     try {
       let problems = null;
       let problemTypeId = req.body.problemTypeId;
-      var getDaysArray = function(start, end) {
+      var getDaysArray = function (start, end) {
         let dt = start;
         let arr = [];
         for (; dt <= end; dt.setDate(dt.getDate() + 1)) {
@@ -1293,63 +1293,74 @@ const dashboardController = {
   getPieChartForAllIncidentTypes: async (req, res) => {
     try {
       let problems = null;
-      
-      
-      let final = [];
-     // for (let d of dates) {
-        
-        
-        problems = await knex
-          .from("service_requests")
-          .leftJoin(
-            "service_problems",
-            "service_requests.id",
-            "service_problems.serviceRequestId"
-          )
-          .leftJoin(
-            "incident_categories",
-            "service_problems.categoryId",
-            "incident_categories.id"
-          )
-          .leftJoin(
-            "incident_sub_categories",
-            "incident_categories.id",
-            "incident_sub_categories.incidentCategoryId"
-          )
-          .leftJoin(
-            "incident_type",
-            "incident_sub_categories.incidentTypeId",
-            "incident_type.id"
-          )
-          .leftJoin(
-            "property_units",
-            "service_requests.houseId",
-            "property_units.id"
-          )
-          .leftJoin(
-            "assigned_service_team",
-            "service_requests.id",
-            "assigned_service_team.entityId"
-          )
-          .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
-          .select([
-            "service_problems.serviceRequestId",
-            "incident_type.typeCode as categoryCode",
-            "incident_categories.descriptionEng"
-          ])
-          .where({
-            "service_requests.orgId": req.orgId,
-          })
-          .where({ "service_requests.orgId": req.orgId })
-          
-          .where({ "service_requests.isCreatedFromSo": false })
-          .distinct("service_requests.id")
-          .orderBy("service_requests.id", "desc");
-        let grouped = _.groupBy(problems, "categoryCode");
 
-        // let problemWise = _.keys(grouped).map(category => ({totalServiceRequests:grouped[category].length,category}))
-        final.push(grouped); //totalServiceRequest: problems.length })
+
+      let final = [];
+      // for (let d of dates) {
+
+
+      problems = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "incident_type",
+          "incident_sub_categories.incidentTypeId",
+          "incident_type.id"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_problems.serviceRequestId",
+          "incident_type.typeCode as categoryCode",
+          "incident_categories.descriptionEng"
+        ])
+        .where({
+          "service_requests.orgId": req.orgId,
+        })
+        .where({ "service_requests.orgId": req.orgId })
+
+        .where({ "service_requests.isCreatedFromSo": false })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "desc");
+      let grouped = _.groupBy(problems, "categoryCode");
+
+
+    
+
+      // let problemWise = _.keys(grouped).map(category => ({totalServiceRequests:grouped[category].length,category}))
+      final.push(grouped); //totalServiceRequest: problems.length })
       //}
+
+
+      final = final.map(obj => {
+        obj["Others"] = obj[null]
+        delete obj[null];
+        return obj;
+      })
+
       let finalData = _.flatten(
         final
           .filter(v => !_.isEmpty(v))
@@ -1364,7 +1375,7 @@ const dashboardController = {
         return a;
       }, {});
       return res.status(200).json({
-        data: finalData
+        data: finalData,
       });
     } catch (err) {
       console.log("[controllers][dashboard][getAssesList] : Error", err);

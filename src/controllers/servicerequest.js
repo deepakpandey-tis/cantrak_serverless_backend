@@ -3087,7 +3087,7 @@ const serviceRequestController = {
             createdAt: currentTime,
             updatedAt: currentTime,
             createdBy: req.me.id,
-            requestedBy:requestId
+            requestedBy: requestId
           };
         }
         let serviceResult = await knex
@@ -3521,7 +3521,6 @@ const serviceRequestController = {
         )
         .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
         .leftJoin("requested_by", 'service_requests.requestedBy', 'requested_by.id')
-
         .select([
           "service_requests.id as S Id",
           "service_requests.houseId as houseId",
@@ -3544,28 +3543,10 @@ const serviceRequestController = {
           "service_requests.completedOn"
 
         ])
-        .groupBy([
-          "service_requests.id",
-          "status.id",
-          "u.id",
-          "property_units.id",
-          "buildings_and_phases.id",
-          "service_problems.id",
-          // "requested_by.id",
-          "assigned_service_team.id",
-          "teams.teamId",
-          "mainUsers.id",
-          "incident_categories.id",
-          "service_orders.id",
-          'requested_by.id'
-
-        ])
-
+        .where({ "service_requests.orgId": req.orgId, 'service_requests.moderationStatus': true })
+        .where({ 'service_requests.isCreatedFromSo': false })
+        .whereNot('status.descriptionEng', 'Cancel')
         .where(qb => {
-          qb.whereNot('status.descriptionEng', 'Cancel')
-          qb.where({ "service_requests.orgId": req.orgId })
-          qb.where('service_requests.moderationStatus', true)
-          qb.where({ 'service_requests.isCreatedFromSo': false })
 
           if (payload.fromDate && payload.toDate) {
             qb.whereBetween('service_requests.createdAt', [payload.fromDate, payload.toDate])
@@ -3595,10 +3576,25 @@ const serviceRequestController = {
           if (payload.requestBy) {
             qb.where('service_requests.requestedBy', payload.requestBy)
           }
+          qb.whereIn('service_requests.projectId', accessibleProjects)
         })
-        .whereIn('service_requests.projectId', accessibleProjects)
+        .groupBy([
+          "service_requests.id",
+          "status.id",
+          "u.id",
+          "property_units.id",
+          "buildings_and_phases.id",
+          "service_problems.id",
+          // "requested_by.id",
+          "assigned_service_team.id",
+          "teams.teamId",
+          "mainUsers.id",
+          "incident_categories.id",
+          "service_orders.id",
+          'requested_by.id'
+
+        ])
         .distinct('service_requests.id')
-        //.orderBy('incident_categories.descriptionEng', 'asc')
         .orderBy('service_requests.createdAt', 'desc')
 
 
@@ -3669,8 +3665,6 @@ const serviceRequestController = {
 
       // console.log("mapData", mapData);
       // console.log("serviceProblem", serviceProblem);
-
-
 
       let arr = [];
       let totalServiceOrder = 0;

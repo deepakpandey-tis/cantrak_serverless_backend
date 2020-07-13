@@ -155,7 +155,7 @@ router.post(
   partsController.importPartData
 );
 
-router.get(
+router.post(
   "/export-part-data",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
