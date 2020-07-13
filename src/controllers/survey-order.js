@@ -1168,9 +1168,27 @@ const surveyOrderController = {
             .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
             .leftJoin('companies', 'o.companyId', 'companies.id')
             .leftJoin('projects', 'property_units.projectId', 'projects.id')
+            .groupBy([
+              "o.id",
+              "s.id",
+              "status.descriptionEng",
+              "status.statusCode",
+              "u.id",
+              "users.id",
+              "teams.teamId",
+              "assigned_service_team.entityType",
+              "assignUser.id",
+              "user_house_allocation.id",
+              "companies.id",
+              "projects.id",
+              "buildings_and_phases.id",
+              "property_units.id",
+              "incident_categories.id",
+              "requested_by.id"
 
+            ])
             .whereIn('s.projectId', accessibleProjects)
-            .orderBy('o.id', 'desc')
+            // .orderBy('o.id', 'desc')
             .offset(offset)
             .limit(per_page)
       ])

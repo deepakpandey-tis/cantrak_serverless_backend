@@ -289,6 +289,7 @@ const assetController = {
       });
     }
   },
+  
   getAssetList: async (req, res) => {
     // name, model, area, category
     try {
