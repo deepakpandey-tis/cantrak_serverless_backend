@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const moment = require("moment");
 const QRCODE = require("qrcode");
-const uuidv4 = require("uuid/v4");
+const uuid = require("uuid/v4");
 var jwt = require("jsonwebtoken");
 
 const emailHelper = require("../helpers/email");
@@ -104,6 +104,7 @@ const facilityBookingController = {
             moderationStatus: true,
             multipleSeatsLimit: req.body.statuses.multipleSeatsLimit,
             status: false,
+            uuid : uuid()
           })
           .where({ id: req.body.facilityId })
           .returning(["*"]);
@@ -188,6 +189,7 @@ const facilityBookingController = {
               orgId: req.orgId,
               updatedAt: currentTime,
               createdAt: currentTime,
+              uuid : uuid()
             })
             .returning(["*"]);
           insertedImages.push(insertedImage[0]);
@@ -241,6 +243,7 @@ const facilityBookingController = {
               updatedAt: currentTime,
               createdAt: currentTime,
               orgId: req.orgId,
+              
             })
             .returning(["*"]);
           bookingFrequencyResult.push(bookingFrequencyResultData);
@@ -566,6 +569,7 @@ const facilityBookingController = {
             "facility_master.bookingStatus",
             "facility_master.inActiveReason",
             "facility_master.isActive",
+            "facility_master.uuid"
           ])
           .where({ "facility_master.id": payload.id })
           .first(),
