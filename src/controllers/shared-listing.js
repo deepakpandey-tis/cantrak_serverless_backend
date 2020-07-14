@@ -88,6 +88,7 @@ const assetController = {
             })
             .first()
             .where({ 'asset_master.orgId': req.orgId }),
+            
           knex("asset_master")
             .leftJoin(
               "asset_category_master",
@@ -99,6 +100,19 @@ const assetController = {
               "asset_master.companyId",
               "companies.id"
             )
+            .leftJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
+            .leftJoin(
+              "buildings_and_phases",
+              "asset_location.buildingId",
+              "buildings_and_phases.id"
+            )
+           
+            .leftJoin(
+              "property_units",
+              "asset_location.unitId",
+              "property_units.id"
+            )
+
             .select([
               "asset_master.assetName as Name",
               "asset_master.id as ID",
@@ -112,8 +126,12 @@ const assetController = {
               "asset_master.price as Price",
               "companies.companyName",
               "asset_master.assetCode",
+              'buildings_and_phases.buildingPhaseCode',
+              "buildings_and_phases.description as building",
+              'property_units.unitNumber'
             ])
-            .where({ 'asset_master.orgId': req.orgId })
+            .where({'asset_master.orgId': req.orgId })
+            .where('asset_location.endDate', null)
             .where(qb => {
               if (assetName) {
                 qb.where(

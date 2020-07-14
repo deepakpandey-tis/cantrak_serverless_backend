@@ -294,7 +294,7 @@ const surveyOrderController = {
   getSurveyOrderList: async (req, res) => {
     try {
       let servicePayload = req.body;
-      let serviceRequestId = req.body.serviceRequestId;    
+      let serviceRequestId = req.body.serviceRequestId;
       let pagination = {};
       let per_page = req.query.per_page || 10;
       let page = req.query.current_page || 1;
@@ -304,16 +304,16 @@ const surveyOrderController = {
       console.log("customerInfo", req.me.id);
       console.log("customerHouseInfo", req.me.houseIds);
       let houseIds = req.me.houseIds;
-    
 
 
-      if (servicePayload.isFilterActive == "true") {        
+
+      if (servicePayload.isFilterActive == "true") {
 
         /* Get List of survey order List By Filter Data */
         // For get the totalCount
         total = await knex
           .count("* as count")
-          .from("survey_orders as o")          
+          .from("survey_orders as o")
           .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
           .where("s.displayId", serviceRequestId)
           .leftJoin(
@@ -331,7 +331,7 @@ const surveyOrderController = {
             "s.serviceStatusCode",
             "status.statusCode"
           )
-          .leftJoin("users AS u", "o.createdBy", "u.id")         
+          .leftJoin("users AS u", "o.createdBy", "u.id")
           .groupBy([
             "o.id",
             "s.id",
@@ -344,7 +344,7 @@ const surveyOrderController = {
 
         // For Get Rows In Pagination With Offset and Limit
         rows = await knex
-          .from("survey_orders As o")        
+          .from("survey_orders As o")
           .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
           .where("s.displayId", serviceRequestId)
           .leftJoin(
@@ -960,7 +960,27 @@ const surveyOrderController = {
             )
             .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
             .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
-            .orderBy('o.id', 'desc')
+            .leftJoin('companies', 'o.companyId', 'companies.id')
+            .leftJoin('projects', 'property_units.projectId', 'projects.id')
+            .groupBy([
+              "o.id",
+              "s.id",
+              "status.descriptionEng",
+              "status.statusCode",
+              "u.id",
+              "users.id",
+              "teams.teamId",
+              "assigned_service_team.entityType",
+              "assignUser.id",
+              "user_house_allocation.id",
+              "companies.id",
+              "projects.id",
+              "buildings_and_phases.id",
+              "property_units.id",
+              "incident_categories.id",
+              "requested_by.id"
+            ])
+            //.orderBy('o.id', 'desc')
             .offset(offset)
             .limit(per_page)
       ])
