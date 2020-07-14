@@ -1576,17 +1576,21 @@ const serviceDetailsController = {
         // Get Service Request Status      
 
         DataResult = await knex("service_requests").where({
-          isActive: "true",
-          id: incidentRequestPayload.id,
-          orgId: orgId
+          "service_requests.isActive": "true",
+          "service_requests.id": incidentRequestPayload.id,
+          "service_requests.orgId": orgId
         })
+          .leftJoin('users as u', 'service_requests.cancelledBy', 'u.id')
           .select(
             "service_requests.id",
             "service_requests.description",
             "service_requests.createdAt",
             "service_requests.priority",
             "service_requests.serviceStatusCode",
-            "service_requests.displayId"
+            "service_requests.displayId",
+            "service_requests.cancellationReason as cancellationReason",
+            "service_requests.cancelledOn as sCancelledOn",
+            "u.name as cancelledBy",
           )
 
         console.log(
