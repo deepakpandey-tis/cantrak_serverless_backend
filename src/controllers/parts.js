@@ -94,7 +94,7 @@ const partsController = {
                             }
                         })
                         .orderBy('part_master.createdAt', 'desc')
-                        .groupBy(['part_master.id','companies.companyId', 'companies.companyName','part_category_master.id'])
+                        .groupBy(['part_master.id', 'companies.companyId', 'companies.companyName', 'part_category_master.id'])
                         .distinct('part_master.id')
                         .offset(offset).limit(per_page)
                 ])
@@ -145,7 +145,7 @@ const partsController = {
                         ])
                         .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
                         .orderBy('part_master.createdAt', 'desc')
-                        .groupBy(['part_master.id','companies.companyId', 'companies.companyName', 'part_category_master.id'])
+                        .groupBy(['part_master.id', 'companies.companyId', 'companies.companyName', 'part_category_master.id'])
                         .distinct('part_master.id')
                         .offset(offset).limit(per_page)
                 ])
@@ -878,8 +878,8 @@ const partsController = {
                         //deductBy : Joi.number().required()
 
                     });
-                    result = Joi.validate(_.omit(partStockPayload,'receiveBy','receiveDate', 'receiveFrom', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'description', 'date', 'workOrderId', 'building', 'floor'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['receiveBy','receiveDate','receiveFrom', 'companyId', 'companyId2', 'serviceOrderNo', 'returnedBy', 'workOrderId', 'storeAdjustmentBy', 'issueBy', 'issueTo'])
+                    result = Joi.validate(_.omit(partStockPayload, 'receiveBy', 'receiveDate', 'receiveFrom', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'description', 'date', 'workOrderId', 'building', 'floor'), schema);
+                    partStockPayload = _.omit(partStockPayload, ['receiveBy', 'receiveDate', 'receiveFrom', 'companyId', 'companyId2', 'serviceOrderNo', 'returnedBy', 'workOrderId', 'storeAdjustmentBy', 'issueBy', 'issueTo'])
                     partStockPayload.deductDate = new Date(partStockPayload.deductDate).getTime();
 
                 } else if (partStockPayload.adjustType == "6") {
@@ -1834,6 +1834,8 @@ const partsController = {
     exportPartData: async (req, res) => {
         try {
 
+
+            let payload = req.body;
             let [rows] = await Promise.all([
 
                 knex.from('part_master')
@@ -1855,6 +1857,24 @@ const partsController = {
                         "part_master.minimumQuantity as MINIMUM_QUANTITY"
 
                     ])
+                    .where(qb => {
+                        if (payload.partName) {
+                            qb.where('part_master.partName', 'iLIKE', `%${payload.partName}%`)
+                        }
+                        if (payload.partCode) {
+                            qb.where('part_master.partCode', 'iLIKE', `%${payload.partCode}%`)
+                        }
+                        if (payload.partCategory) {
+                            qb.where('part_master.partCategory', payload.partCategory)
+                        }
+                        if (payload.partId) {
+                            qb.where('part_master.displayId', payload.partId)
+                        }
+                        if (payload.company) {
+                            qb.where('part_master.companyId', payload.company)
+                        }
+
+                    })
                     .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
                     .groupBy(['part_master.id', 'part_category_master.id', 'companies.id'])
                 //.distinct('part_master.id as ""')
@@ -1890,7 +1910,6 @@ const partsController = {
                     }
                 ]);
             }
-
 
             //var ws = XLSX.utils.json_to_sheet(rows);
             XLSX.utils.book_append_sheet(wb, ws, "pres");
