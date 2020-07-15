@@ -3173,7 +3173,7 @@ const partsController = {
 
                     if (d2.partCode == lastValue) {
                         // console.log("yesss",lastValue)
-                        openingBalance = "";
+                        openingBalance = 0;
 
                     } else {
 
@@ -3207,7 +3207,19 @@ const partsController = {
 
 
                     }
-                    newBal2 = bal2 + openingBalance;
+
+                    let opening;
+                    if (openingBalance == undefined) {
+
+                        opening = 0;
+
+                    } else {
+
+                        opening = openingBalance;
+
+                    }
+
+                    newBal2 = bal2+opening;
                     totalIn2 += i2;
                     totalOut2 += Math.abs(o2);
 
