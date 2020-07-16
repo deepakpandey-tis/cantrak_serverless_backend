@@ -1414,7 +1414,7 @@ const partsController = {
                         .where(qb => {
                             qb.where({ 'part_ledger.orgId': req.orgId })
                             if (partId) {
-                                qb.where('part_master.id', partId)
+                                qb.where('part_master.displayId', partId)
                             }
                             if (partName) {
                                 qb.where('part_master.partName', 'iLIKE', `%${partName}%`)
@@ -1441,12 +1441,13 @@ const partsController = {
                         .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
                         .select([
                             'part_ledger.id as Log Id',
+                            'part_master.displayId as P No',
                             'part_master.id as Part Id',
                             'part_master.partName as Part Name',
                             'part_master.partCode as Part Code',
                             'part_ledger.quantity as Quantity',
                             'part_ledger.unitCost as Unit Cost',
-                            'part_ledger.serviceOrderNo as Service Order No',
+                            'part_ledger.serviceOrderNo as SO No',
                             'part_ledger.workOrderId as Work Order ID',
                             'adjust_type.adjustType as Adjust Type',
                             'part_ledger.adjustType as adjustTypeId',
@@ -1459,7 +1460,7 @@ const partsController = {
                             qb.where({ 'part_ledger.orgId': req.orgId })
 
                             if (partId) {
-                                qb.where('part_master.id', partId)
+                                qb.where('part_master.displayId', partId)
                             }
                             if (partName) {
                                 qb.where('part_master.partName', 'iLIKE', `%${partName}%`)
@@ -1502,11 +1503,12 @@ const partsController = {
                         .select([
                             'part_ledger.id as Log Id',
                             'part_master.id as Part Id',
+                            'part_master.displayId as P No',
                             'part_master.partName as Part Name',
                             'part_master.partCode as Part Code',
                             'part_ledger.quantity as Quantity',
                             'part_ledger.unitCost as Unit Cost',
-                            'part_ledger.serviceOrderNo as Service Order No',
+                            'part_ledger.serviceOrderNo as SO No',
                             'part_ledger.workOrderId as Work Order ID',
                             'adjust_type.adjustType as Adjust Type',
                             'part_ledger.adjustType as adjustTypeId',
@@ -2250,23 +2252,26 @@ const partsController = {
                 filters['assigned_parts.status'] = req.body.status;
             }
             if (req.body.partId) {
-                filters['part_master.id'] = req.body.partId
+                filters['part_master.displayId'] = req.body.partId
             }
             if (req.body.serviceOrderId) {
-                filters['assigned_parts.entityId'] = req.body.serviceOrderId
+                filters['service_orders.displayId'] = req.body.serviceOrderId
             }
             [total, rows] = await Promise.all([
                 knex('assigned_parts')
                     .leftJoin('part_master', 'assigned_parts.partId', 'part_master.id')
+                    .leftJoin('service_orders', 'assigned_parts.entityId', 'service_orders.id')
                     .select([
                         'assigned_parts.id as approvalId',
                         'part_master.id',
+                        'part_master.displayId as PNo',
                         'part_master.partName',
                         'part_master.minimumQuantity',
                         'assigned_parts.unitCost as requestedPartsUnitCost',
                         'assigned_parts.quantity as requestedParts',
                         'assigned_parts.status as approvalStatus',
-                        'assigned_parts.entityId'
+                        'assigned_parts.entityId',
+                        'service_orders.displayId as SO No',
                     ])
                     .where({
                         'part_master.orgId': req.orgId,
@@ -2282,15 +2287,18 @@ const partsController = {
                     }),
                 knex('assigned_parts')
                     .leftJoin('part_master', 'assigned_parts.partId', 'part_master.id')
+                    .leftJoin('service_orders', 'assigned_parts.entityId', 'service_orders.id')
                     .select(['assigned_parts.id as approvalId',
                         'part_master.partCategory',
                         'part_master.id',
+                        'part_master.displayId as PNo',
                         'part_master.partName',
                         'part_master.minimumQuantity',
                         'assigned_parts.unitCost as requestedPartsUnitCost',
                         'assigned_parts.quantity as requestedParts',
                         'assigned_parts.status as approvalStatus',
-                        'assigned_parts.entityId'
+                        'assigned_parts.entityId',
+                        'service_orders.displayId as SO No',
                     ])
                     .where({ 'part_master.orgId': req.orgId, 'assigned_parts.entityType': 'service_orders' })
                     .where(qb => {
