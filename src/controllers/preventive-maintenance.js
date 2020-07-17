@@ -1770,20 +1770,6 @@ const pmController = {
       })
 
 
-
-      var ONE_WEEK = 1000 * 60 * 60 * 24 * 7;
-      // Convert both dates to milliseconds
-      var date1_ms = new Date(fromDate).getTime();
-      var date2_ms = new Date(toDate).getTime();
-      // Calculate the difference in milliseconds
-      var difference_ms = Math.abs(date1_ms - date2_ms);
-      // Convert back to weeks and return hole weeks
-      a = Math.floor(difference_ms / ONE_WEEK);
-
-
-
-
-
       let arr = [];
       let p = { "repeatPeriod": 'MONTH', "repeatOn": ["SU"], "repeatFrequency": 1, "startDateTime": fromDate, "endDateTime": toDate };
       let dates = genrateWork(p);
