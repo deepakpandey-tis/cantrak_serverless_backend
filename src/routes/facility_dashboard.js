@@ -26,5 +26,7 @@ router.post('/get-pending-facility-bookings',authMiddleware.isAuthenticated,faci
 
 router.post('/get-booking-duration',authMiddleware.isAuthenticated,facilityDashboardController.getBookingForAverageDuration)
 
+// router.post('/get-facility-booking-pie-chart',authMiddleware.isAuthenticated,facilityDashboardController.getPieChartForBookings)
+
 
 module.exports = router;
