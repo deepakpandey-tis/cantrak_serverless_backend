@@ -67,6 +67,7 @@ const courierRouter = require("./administration-features/courier-storage");
 const storageRouter = require("./administration-features/storage");
 const parcelManagementRouter = require("./parcel-management");
 const facilityDashboardRouter = require("./facility_dashboard");
+const facilityTypeMaster = require("./administration-features/facility-type")
 /* GET home page. */
 router.get("/", async (req, res, next) => {
   res.json({ app: "Serverless Express App" });
@@ -152,6 +153,7 @@ router.use(
 router.use("/administration-features/courier-storage", courierRouter);
 router.use("/administration-features/storage",storageRouter);
 router.use("/parcel-management",parcelManagementRouter)
-router.use("/facility-dashboard",facilityDashboardRouter)
+router.use("/facility-dashboard",facilityDashboardRouter);
+router.use("/administration-features/facility-type",facilityTypeMaster)
 
 module.exports = router;

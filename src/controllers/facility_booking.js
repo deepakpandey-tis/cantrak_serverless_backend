@@ -39,6 +39,7 @@ const facilityBookingController = {
         ]);
 
         const schema = Joi.object().keys({
+          facilityTypeId: Joi.string().required(),
           name: Joi.string().required(),
           companyId: Joi.string().required(),
           projectId: Joi.string().required(),
