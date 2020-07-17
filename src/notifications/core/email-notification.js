@@ -1,6 +1,5 @@
 const _ = require('lodash');
-const emailHelper = require('../../helpers/email');
-
+const emailHelper = require('../../helpers/email'); 
 
 const emailNotification = {
     send: async ({ to, subject, template, templateData }) => {
