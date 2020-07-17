@@ -52,7 +52,7 @@ const facilityDashboardController = {
         let currentDate = new Date().getTime();
       let currentStartTime = new Date(startNewDate).getTime();
       let currentEndTime = new Date(endNewDate).getTime();
-        if((facilityName && facilityName.length >= 0) || (status && status.length >= 0)){
+        if((facilityName && facilityName.length > 0) || (status && status.length > 0)){
             console.log("if selected")
             totalFacilityBookings = await
             knex
@@ -334,6 +334,7 @@ const facilityDashboardController = {
 
             let reqData = req.body
             let orgId = req.orgId
+            let {facilityName} =req.body
             console.log("requested",req.body)
             var getDaysArray = function(start,end){
                 let dt = start;
@@ -437,6 +438,7 @@ const facilityDashboardController = {
               console.log("dates",dates)
           
       let final = [];
+      
 
       for(d of dates){
 
@@ -483,7 +485,6 @@ const facilityDashboardController = {
           ])
           .orderBy("entity_bookings.id","asc")
       ])
-
       final.push({
           date:moment(d).format("L"),
           totalFacilityBookings: _.uniqBy(totalFacilityBookings,"id").length
@@ -900,6 +901,7 @@ const facilityDashboardController = {
     },
     getPieChartForFacilityBookings:async(req,res)=>{
         try{
+          let facilityBookings = null;
             let reqData = req.body
             let orgId = req.orgId
             let startNewDate = moment(reqData.queryStartDate)
@@ -976,6 +978,82 @@ const facilityDashboardController = {
               errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
+    },
+    getPieChartForBookings:async(req,res)=>{
+      try{
+        let orgId = req.orgId
+        let bookings = null;
+        var getDaysArray = function (start, end) {
+          let dt = start;
+          let arr = [];
+          for (; dt <= end; dt.setDate(dt.getDate() + 1)) {
+            arr.push(new Date(dt));
+          }
+          return arr;
+        };
+        var dates = getDaysArray(
+          new Date(req.body.queryStartDate),
+          new Date(req.body.queryEndDate)
+        );
+        let final = []
+        for(let d of dates){
+          let startNewDate = moment(d)
+          .startOf("date")
+          .format();
+        let endNewDate = moment(d)
+          .endOf("date", "day")
+          .format();
+        let currentStartTime = new Date(startNewDate).getTime();
+        let currentEndTime = new Date(endNewDate).getTime();
+        bookings = await knex
+        .from("entity_bookings")
+        .leftJoin(
+          "facility_master",
+          "entity_bookings.entityId",
+          "facility_master.id"
+        )
+        .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+        .select([
+          "entity_bookings.entityId",
+          "entity_bookings.bookingStartDateTime",
+          "entity_bookings.bookingEndDateTime",
+          "entity_bookings.createdAt",
+          "facility_master.id"
+        ])
+        .where({"entity_bookings.orgId":orgId})
+        .whereBetween("entity_bookings.createdAt",[
+          currentStartTime,
+          currentEndTime
+      ])
+      .distinct("entity_bookings.id")
+      .orderBy("entity_bookings.id","desc")
+
+      let grouped = _.groupBy(bookings,"id")
+
+      final.push(grouped)
+
+        }
+        let finalData = _.flatten(
+          final.filter(v=>!_.isEmpty(v))
+          .map(v=>_.keys(v).map(p =>({[p]:v[p].length})))
+        ).reduce((a,p)=>{
+          let l = _.keys(p)[0]
+          if(a[l]){
+            a[l] += p[l]
+          }else{
+            a[l]=p[l]
+          }
+          return a;
+        },{});
+        return res.status(200).json({
+          data: finalData
+        });
+      }catch(err){
+        console.log("[controllers][facility_dashboard][getBookingCount] :  Error", err);
+        res.status(500).json({
+          errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        });
+      }
     },
     getBookingForAverageDuration:async(req,res)=>{
       try{

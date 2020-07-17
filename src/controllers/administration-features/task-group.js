@@ -186,6 +186,7 @@ const taskGroupController = {
       // Check duplicate value open
       const templateExist = await knex("task_group_templates")
         .where('taskGroupName', 'iLIKE', payload.taskGroupName)
+        .where('assetCategoryId', payload.assetCategoryId)
         .where({ orgId: req.orgId });
 
       console.log(
@@ -2162,6 +2163,7 @@ const taskGroupController = {
       let tasks = req.body.tasks;
       let deletedTasks = req.body.deletedTasks
       let additionalUsers = req.body.additionalUsers;
+      let taskGroupCatId = req.body.assetCategoryId;
       let currentTime = new Date().getTime()
 
       // Delete Tasks
@@ -2186,6 +2188,7 @@ const taskGroupController = {
       // Check duplicate value open
       const templateExist = await knex("task_group_templates")
         .where('taskGroupName', 'iLIKE', req.body.taskGroupName)
+        .where('assetCategoryId', taskGroupCatId)
         .where({ orgId: req.orgId })
         .whereNot({ id });
 
@@ -2331,7 +2334,9 @@ const taskGroupController = {
             }
           })
           .orderBy('asset_category_master.categoryName', sortPayload.orderBy)
-      ])
+          .orderBy('task_group_templates.updatedAt', 'desc')
+          
+        ])
 
       let count = total.length;
       pagination.total = count;
