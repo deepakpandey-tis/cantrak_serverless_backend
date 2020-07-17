@@ -3,20 +3,23 @@ const knex = require('../../db/knex');
 
 
 const inAppNotification = {
-    send: async ({orgId, senderId, receiverId, payload, actions}) => {
+    send: async ({ orgId, senderId, receiverId, payload, actions }) => {
         try {
-            const currentTime =  new Date().getTime();
+            const currentTime = new Date().getTime();
 
             let insertDataObj = {
                 orgId,
                 senderId,
                 receiverId,
-                payload,
-                actions
+                payload: JSON.stringify(payload),
+                actions: JSON.stringify(actions)
             }
 
-            let insertedData = { ...insertDataObj, createdAt: currentTime, updatedAt: currentTime };
-            console.log('[notifications][core][in-app-notification]: In App Messaging, Inserted Data', insertedData);
+            let insertedData = await knex.insert({ ...insertDataObj, createdAt: currentTime, updatedAt: currentTime })
+                .returning(["*"])
+                .into("user_notifications");
+
+            console.log('[notifications][core][in-app-notification]: In App Messaging, Inserted Data:', insertedData);
 
         } catch (err) {
             console.log('[notifications][core][notification][send]:  Error', err);
