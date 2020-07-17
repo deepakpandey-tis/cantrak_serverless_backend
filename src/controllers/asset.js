@@ -733,6 +733,7 @@ const assetController = {
               'companies.companyName',
               'projects.projectName',
               'buildings_and_phases.buildingPhaseCode',
+              "buildings_and_phases.description as building",
               'floor_and_zones.floorZoneCode',
               'property_units.unitNumber'
             ])
@@ -847,6 +848,7 @@ const assetController = {
               "asset_master.model",
               "asset_master.barcode",
               "asset_master.areaName", "assetSerial",
+
             ])
             .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId })
             .offset(offset)
@@ -910,6 +912,7 @@ const assetController = {
               'companies.companyName',
               'projects.projectName',
               'buildings_and_phases.buildingPhaseCode',
+              "buildings_and_phases.description as building",
               'floor_and_zones.floorZoneCode',
               'property_units.unitNumber'
             ]).where({ 'asset_location.assetId': row.id })

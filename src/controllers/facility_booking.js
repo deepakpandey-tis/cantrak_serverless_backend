@@ -39,12 +39,15 @@ const facilityBookingController = {
         ]);
 
         const schema = Joi.object().keys({
+          facilityTypeId: Joi.string().required(),
           name: Joi.string().required(),
           companyId: Joi.string().required(),
           projectId: Joi.string().required(),
           buildingPhaseId: Joi.string().required(),
           floorZoneId: Joi.string().required(),
           description: Joi.string().required(),
+          enableCheckIn: Joi.boolean().required(),
+          checkInType:Joi.string().optional()
           // "descriptionAlternateLang": Joi.string().required(),
         });
 
@@ -546,6 +549,7 @@ const facilityBookingController = {
             "facility_master.floorZoneId",
             "floor_and_zones.id"
           )
+          .leftJoin("facility_type_master","facility_master.facilityTypeId","facility_type_master.id")
           .select([
             "facility_master.id",
             "facility_master.name",
@@ -554,6 +558,8 @@ const facilityBookingController = {
             "facility_master.bookingStatus",
             "facility_master.multipleSeatsLimit",
             "facility_master.moderationStatus",
+            "facility_type_master.id as facilityTypeId",
+            "facility_type_master.facilityTypeName",
             "companies.companyId",
             "companies.id as cid",
             "projects.id as pid",
