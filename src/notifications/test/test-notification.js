@@ -1,22 +1,19 @@
 const _ = require('lodash');
 const AWS = require('aws-sdk');
 const notification = require('../core/notification');
+const { template } = require('lodash');
 
 const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY', 'SMS'];
 
 const testNotification = {
-    send: async (sender, receiver, data) => {
+    send: async (sender, receiver, data, allowedChannels = ALLOWED_CHANNELS) => {
         try {
 
-            console.log('[notifications][test][test-notification][send]: User To Notify:', user);
-            console.log('[notifications][test][test-notification][send]: Notification Data:', data);
+            // console.log('[notifications][test][test-notification][send]: Sender:', sender);
+            // console.log('[notifications][test][test-notification][send]: Receiver:', receiver);
+            console.log('[notifications][test][test-notification][send]: Data:', data);
 
-            await testNotification.sendInAppNotification(sender, receiver, JSON.parse(JSON.stringify(data)));
-            await testNotification.sendEmailNotification(sender, receiver, JSON.parse(JSON.stringify(data)));
-            await testNotification.sendWebPushNotification(sender, receiver, JSON.parse(JSON.stringify(data)));
-            await testNotification.sendSocketNotification(sender, receiver, JSON.parse(JSON.stringify(data)));
-            await testNotification.sendLineNotification(sender, receiver, JSON.parse(JSON.stringify(data)));
-            await testNotification.sendSMSNotification(sender, receiver, JSON.parse(JSON.stringify(data)));
+            await notification.send(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, testNotification);
 
             console.log('[notifications][test][test-notification][send]: All Notifications Sent');
 
@@ -28,9 +25,54 @@ const testNotification = {
 
 
     sendInAppNotification: async (sender, receiver, data) => {
-        console.log('[notifications][test][test-notification][sendInAppNotification]: Start');
 
-        // Todo : Modify Data Object As Needed
+        data = {
+            orgId: sender.orgId,
+            senderId: sender.id,
+            receiverId: receiver.id,
+            payload: {
+                ...data,
+                subject: 'Test Notification',
+                body: `Hi!!, This is a test notification to all users from ${sender.name}`,
+                icon: 'assets/icons/icon-512x512.png',
+                image: 'assets/icons/icon-512x512.png',
+                extraData: {
+                    dateOfArrival: Date.now(),
+                    url: `${process.env.SITE_URL}/admin/dashboard/home`,
+                    primaryKey: Date.now()
+                }
+            },
+            actions: [
+                {
+                    action: "explore",
+                    title: "Open Home Page",
+                    url: `${process.env.SITE_URL}/admin/dashboard/home`
+                }
+            ]
+        }
+
+        return data;
+    },
+
+
+    sendEmailNotification: async (sender, receiver, data) => {
+        data = {
+            receiverEmail: receiver.email,
+            template: 'test-email.ejs',
+            templateData: {
+                fullName: receiver.name
+            },
+            payload: {
+                ...data,
+                subject: 'Test Email Notification',
+            }
+        };
+
+        return data;
+    },
+
+    sendWebPushNotification: async (sender, receiver, data) => {
+
         data = {
             orgId: sender.orgId,
             senderId: sender.id,
@@ -55,40 +97,53 @@ const testNotification = {
             ]
         }
 
-        await notification.send(data, ALLOWED_CHANNELS[0], testNotification);
-        console.log('[notifications][test][test-notification][sendInAppNotification]: Sent Successfully');
-    },
-
-
-    sendEmailNotification: async (sender, receiver, data) => {
-        console.log('[notifications][test][test-notification][sendEmailNotification]: Start');
-
-        console.log('[notifications][test][test-notification][sendEmailNotification]: Sent Successfully');
-    },
-
-    sendWebPushNotification: async (sender, receiver, data) => {
-        console.log('[notifications][test][test-notification][sendWebPushNotification]: Start');
-
-        console.log('[notifications][test][test-notification][sendWebPushNotification]: Sent Successfully');
+        return data;
     },
 
     sendSocketNotification: async (sender, receiver, data) => {
-        console.log('[notifications][test][test-notification][sendSocketNotification]: Start');
-
-        console.log('[notifications][test][test-notification][sendSocketNotification]: Sent Successfully');
+        data = {
+            orgId: sender.orgId,
+            senderId: sender.id,
+            receiverId: receiver.id,
+            payload: {
+                ...data,
+                subject: 'Test Notification',
+                body: `Hi!!, This is a test notification to all users from ${sender.name}`,
+                icon: 'assets/icons/icon-512x512.png',
+                image: 'assets/icons/icon-512x512.png',
+                extraData: {
+                    dateOfArrival: Date.now(),
+                    url: `${process.env.SITE_URL}/admin/dashboard/home`,
+                    primaryKey: Date.now()
+                }
+            },
+            actions: [
+                {
+                    action: "explore",
+                    title: "Open Home Page",
+                    url: `${process.env.SITE_URL}/admin/dashboard/home`
+                }
+            ]
+        }
+        return data;
     },
 
 
     sendLineNotification: async (sender, receiver, data) => {
-        console.log('[notifications][test][test-notification][sendLineNotification]: Start');
+        data = {
 
-        console.log('[notifications][test][test-notification][sendLineNotification]: Sent Successfully');
+        }
+
+        return data;
     },
 
     sendSMSNotification: async (sender, receiver, data) => {
-        console.log('[notifications][test][test-notification][sendSMSNotification]: Start');
+        data = {
+            receiverMobileNumber: receiver.mobileNo,
+            textMessage: `Hi ${receiver.name} this is simple text message send to test the notification`
+        }
 
-        console.log('[notifications][test][test-notification][sendSMSNotification]: Sent Successfully');
+        return data;
     }
 
 };
