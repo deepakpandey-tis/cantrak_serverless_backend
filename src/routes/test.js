@@ -6,8 +6,8 @@ const trimmer = require('../middlewares/trimmer');
 
 const knex = require('../db/knex');
 
-const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SMS'];
-// const ALLOWED_CHANNELS = ['WEB_PUSH'];
+// const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SMS'];
+const ALLOWED_CHANNELS = ['IN_APP'];
 
 
 
