@@ -2,15 +2,21 @@ const _ = require('lodash');
 const knex = require('../../db/knex');
 const webPush = require('web-push');
 
+async function sendWebPush(subscription, notification, options) {
+
+    webPush.setVapidDetails(
+        'https://app1.servicemind.asia',
+        process.env.VAPID_PUBLIC_KEY,
+        process.env.VAPID_PRIVATE_KEY
+    );
+
+    return webPush.sendNotification(subscription, JSON.stringify({ notification }), options);
+
+}
+
 const webPushNotification = {
     send: async ({ receiverId, subject, body, icon, image, extraData, actions }) => {
         try {
-
-            webPush.setVapidDetails(
-                process.env.SITE_URL,
-                process.env.VAPID_PUBLIC_KEY,
-                process.env.VAPID_PRIVATE_KEY
-            );
 
             let subscriptions = await knex.from('push_subscribers').where({ userId: receiverId });
 
@@ -30,16 +36,14 @@ const webPushNotification = {
             //     }]
             // };
 
-            let notificationPayload = {
-                notification: {
-                    title: subject,
-                    body: body,
-                    icon: icon,
-                    image: image,
-                    vibrate: [100, 50, 100],
-                    data: extraData,
-                    actions: actions
-                }
+            let notification = {
+                title: subject,
+                body: body,
+                icon: icon,
+                image: image,
+                vibrate: [100, 50, 100],
+                data: extraData,
+                actions: actions
             };
 
             const options = {
@@ -47,19 +51,19 @@ const webPushNotification = {
             };
 
             const Parallel = require("async-parallel");
-            Parallel.forEach(subscriptions, async (subscription) => {
-                console.log(`[notifications][core][web-push-notification] :Sending Notification For User: ${receiverId} on Endpoint: `, subscription.endpoint);
+            Parallel.each(subscriptions, async (subs) => {
+                let subscription = subs.subscription;
                 try {
-                    const res = await webPush.sendNotification(subscription, JSON.stringify(notificationPayload), options);
-                    console.log("[notifications][core][web-push-notification] :  Notification Sent:", res);
+                    const res = await sendWebPush(subscription, notification, options);
+                    console.log(`[notifications][core][web-push-notification] :Sending Notification For User: ${receiverId} on Endpoint: `, subscription.endpoint, ', Sent:', res);
                 } catch (err) {
-                    console.log("[controllers][push-notification] :  Send Notification Error:", err);
+                    console.error(`[notifications][core][web-push-notification] :Sending Notification For User: ${receiverId} on Endpoint: `, subscription.endpoint, ', Failed:', err);
                 }
             });
 
         } catch (err) {
-            console.log('[notifications][core][email-notification][send]:  Error', err);
-            return { code: 'UNKNOWN_ERROR', message: err.message, error: err };
+            console.log('[notifications][core][push-notification][send]:  Error', err);
+            return { code: 'UNKNOWN_ERROR', error: err };
         }
     },
 

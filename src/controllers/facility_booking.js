@@ -47,7 +47,8 @@ const facilityBookingController = {
           floorZoneId: Joi.string().required(),
           description: Joi.string().required(),
           enableCheckIn: Joi.boolean().required(),
-          checkInType:Joi.string().optional()
+          checkInType:Joi.string().optional(),
+          preCheckinTime: Joi.string().optional()
           // "descriptionAlternateLang": Joi.string().required(),
         });
 
@@ -558,6 +559,9 @@ const facilityBookingController = {
             "facility_master.bookingStatus",
             "facility_master.multipleSeatsLimit",
             "facility_master.moderationStatus",
+            "facility_master.enableCheckIn",
+            "facility_master.checkInType",
+            "facility_master.preCheckinTime",
             "facility_type_master.id as facilityTypeId",
             "facility_type_master.facilityTypeName",
             "companies.companyId",

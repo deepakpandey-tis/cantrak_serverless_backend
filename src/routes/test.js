@@ -1,23 +1,33 @@
-const {Router} = require("express")
+const { Router } = require("express")
 
-const router = Router()
-const emailHelper = require('../helpers/email');
-const trimmer = require('../middlewares/trimmer')
+const router = Router();
+const testNotification = require('../notifications/test/test-notification');
+const trimmer = require('../middlewares/trimmer');
+
+const knex = require('../db/knex');
+
+const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SMS'];
+// const ALLOWED_CHANNELS = ['WEB_PUSH'];
 
 
-router.get('/', async(req,res) => {
+
+router.get('/', async (req, res) => {
     try {
-        let mailOptions = {
-            to: 'mail@deepakpandey.in',
-            subject: 'Test Email ',
-            template: 'test-email.ejs',
-            templateData: {fullName: 'Deepak', OTP: '1111'}
-        }
-        const status = await emailHelper.sendTemplateEmail(mailOptions);
+
+        let sender = await knex.from('users').where({ id: 406 }).first();
+        let receiver = await knex.from('users').where({ id: 750 }).first();
+
+        let data = {
+            payload: {
+            }
+        };
+
+        // await testNotification.send(sender, receiver, data);
+        await testNotification.send(sender, receiver, data, ALLOWED_CHANNELS);
 
         let a;
 
-        if(process.env.IS_OFFLINE){
+        if (process.env.IS_OFFLINE) {
             a = true;
         } else {
             a = false;
@@ -30,12 +40,12 @@ router.get('/', async(req,res) => {
             typeof1: typeof true
         });
 
-    } catch(err){
-        res.status(200).json({failed:true})
+    } catch (err) {
+        res.status(200).json({ failed: true, error: err });
     }
 })
 
-router.post('/',trimmer, (req,res) => {
+router.post('/', trimmer, (req, res) => {
     return res.status(200).json(req.body)
 })
 

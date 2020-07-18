@@ -375,6 +375,7 @@ const taskGroupController = {
   createPmTaskgroupSchedule: async (req, res) => {
 
     try {
+    
       let createTemplateTask = null;
       let createTemplate = null;
       let createPM = null;
@@ -383,7 +384,7 @@ const taskGroupController = {
       let taskSchedule = null;
       let assignedAdditionalUser = null;
       let assetResults = [];
-      let createPmTask;
+      let createPmTask=[];
       let payload = _.omit(req.body, ['additionalUsers']);
 
 
@@ -674,21 +675,64 @@ const taskGroupController = {
               .transacting(trx)
               .into("task_group_schedule_assign_assets");
 
-            // CREATE PM TASK OPEN
-            let InsertPmTaskPayload = payload.tasks.map(da => ({
-              taskName: da.taskName,
-              taskNameAlternate: da.taskNameAlternate,
-              taskSerialNumber: da.taskSerialNumber,
-              taskGroupId: createPmTaskGroup.id,
-              taskGroupScheduleAssignAssetId: assetResult[0].id,
-              createdAt: currentTime,
-              updatedAt: currentTime,
-              orgId: req.orgId,
-              status: 'O',
-            }))
+            // // CREATE PM TASK OPEN
+            // let InsertPmTaskPayload = payload.tasks.map(da => ({
+            //   taskName: da.taskName,
+            //   taskNameAlternate: da.taskNameAlternate,
+            //   taskSerialNumber: da.taskSerialNumber,
+            //   taskGroupId: createPmTaskGroup.id,
+            //   taskGroupScheduleAssignAssetId: assetResult[0].id,
+            //   createdAt: currentTime,
+            //   updatedAt: currentTime,
+            //   orgId: req.orgId,
+            //   status: 'O',
+            // }))
 
-            let insertPmTaskResult = await knex.insert(InsertPmTaskPayload).returning(['*']).transacting(trx).into('pm_task');
-            createPmTask = insertPmTaskResult;
+            // let insertPmTaskResult = await knex.insert(InsertPmTaskPayload).returning(['*']).transacting(trx).into('pm_task');
+            // createPmTask = insertPmTaskResult;
+
+            for (let da of payload.tasks) {
+
+              let InsertPmTaskPayload = {
+
+                taskName: da.taskName,
+                taskNameAlternate: da.taskNameAlternate,
+                taskSerialNumber: da.taskSerialNumber,
+                taskGroupId: createPmTaskGroup.id,
+                taskGroupScheduleAssignAssetId: assetResult[0].id,
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                orgId: req.orgId,
+                status: 'O',
+
+              }
+
+              let insertPmTaskResult = await knex.insert(InsertPmTaskPayload).returning(['*']).transacting(trx).into('pm_task');
+
+              createPmTask.push(insertPmTaskResult)
+              if (da.attachPart == undefined) {
+
+              } else {
+
+                for (let part of da.attachPart) {
+                  let insertPart = {
+                    taskId: insertPmTaskResult[0].id,
+                    partId: part.partId,
+                    quantity: part.desiredQuantity,
+                    createdAt: currentTime,
+                    updatedAt: currentTime,
+                    orgId: req.orgId,
+                  }
+
+                  let insertPartResult = await knex.insert(insertPart).returning(['*']).transacting(trx).into('task_assigned_part');
+
+
+                }
+
+              }
+
+            }
+
 
             // CREATE PM TASK CLOSE
             assetResults.push(assetResult[0]);
@@ -881,7 +925,7 @@ const taskGroupController = {
           .innerJoin('asset_category_master', 'pm_master2.assetCategoryId', 'asset_category_master.id')
           //.innerJoin('task_group_schedule', 'pm_master2.id', 'task_group_schedule.pmId')
           .innerJoin('companies', 'pm_master2.companyId', 'companies.id')
-         
+
           .where(qb => {
             qb.where(filters)
             qb.where({ 'pm_master2.orgId': req.orgId });
@@ -901,8 +945,8 @@ const taskGroupController = {
               qb.where('pm_master2.name', 'iLIKE', `%${pmPlanName}%`)
             }
             if (startDate && endDate) {
-              qb.whereBetween('pm_master2.createdAt',[startTime,endTime])
-             // qb.where('task_group_schedule.endDate', '<=', endDate)
+              qb.whereBetween('pm_master2.createdAt', [startTime, endTime])
+              // qb.where('task_group_schedule.endDate', '<=', endDate)
             }
             // if (startDate && endDate) {
             //   qb.where('task_group_schedule.startDate', '>=', startDate)
@@ -916,7 +960,7 @@ const taskGroupController = {
           .innerJoin('asset_category_master', 'pm_master2.assetCategoryId', 'asset_category_master.id')
           //.innerJoin('task_group_schedule', 'pm_master2.id', 'task_group_schedule.pmId')
           .innerJoin('companies', 'pm_master2.companyId', 'companies.id')
-         .select([
+          .select([
             'asset_category_master.*',
             'pm_master2.*',
             'pm_master2.id as id',
@@ -936,7 +980,7 @@ const taskGroupController = {
             if (assetCategoryId) {
               qb.whereIn('pm_master2.assetCategoryId', assetCategoryId)
             }
-            
+
             if (pmNo) {
               qb.where('pm_master2.displayId', pmNo)
 
@@ -946,8 +990,8 @@ const taskGroupController = {
               qb.where('pm_master2.name', 'iLIKE', `%${pmPlanName}%`)
             }
             if (startDate && endDate) {
-              qb.whereBetween('pm_master2.createdAt',[startTime,endTime])
-             // qb.where('task_group_schedule.endDate', '<=', endDate)
+              qb.whereBetween('pm_master2.createdAt', [startTime, endTime])
+              // qb.where('task_group_schedule.endDate', '<=', endDate)
             }
             if (endDate) {
               //  qb.where({ 'task_group_schedule.endDate': endDate })
@@ -2401,7 +2445,7 @@ const taskGroupController = {
       let { startDateTime, endDateTime, repeatFrequency, repeatOn, repeatPeriod } = newData;
       const { teamId, mainUserId, additionalUsers } = newData;
 
-     let repeat = repeatOn.length ? repeatOn.join(',') : [];
+      let repeat = repeatOn.length ? repeatOn.join(',') : [];
 
       let currentDate = moment().format("YYYY-MM-DD");
       //return res.json(currentDate)  
