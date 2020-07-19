@@ -3219,7 +3219,7 @@ const partsController = {
 
                     }
 
-                    newBal2 = bal2+opening;
+                    newBal2 = bal2 + opening;
                     totalIn2 += i2;
                     totalOut2 += Math.abs(o2);
 
@@ -3245,6 +3245,55 @@ const partsController = {
 
             return res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    getPmAssignParts: async (req, res) => {
+        try {
+            let pagination = {};
+            let rows;
+            let { workOrderId } = req.body;
+
+
+            [rows] = await Promise.all([
+                knex.from('task_assigned_part')
+                    .leftJoin('part_master', 'task_assigned_part.partId','part_master.id')
+                    .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
+                    .leftJoin('companies', 'part_master.companyId', 'companies.id')
+                    .select([
+                        'part_master.id as partId',
+                        'task_assigned_part.quantity as Quantity',
+                        'task_assigned_part.taskId as TaskId',
+                        'part_master.partName as PartName',
+                        'part_master.partCode as PartCode',
+                        'part_category_master.categoryName as Category',
+                        'part_master.isActive as status',
+                        'part_master.displayId as PNo',
+                        "companies.companyName",
+                        "companies.companyId",
+                        "task_assigned_part.status as Action"
+
+                    ])
+                    .where({ 'task_assigned_part.orgId': req.orgId, 'task_assigned_part.workOrderId': workOrderId, 'part_category_master.orgId': req.orgId })
+                    .orderBy('task_assigned_part.createdAt', 'desc')
+            ])
+
+            pagination.data = rows;
+
+
+            return res.status(200).json({
+                data: {
+                    parts: pagination
+                },
+                message: 'Parts List!'
+            })
+
+        } catch (err) {
+            console.log('[controllers][parts][getParts] :  Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
             });
         }
     }
