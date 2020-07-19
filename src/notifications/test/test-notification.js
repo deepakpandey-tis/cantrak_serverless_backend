@@ -1,7 +1,5 @@
 const _ = require('lodash');
-const AWS = require('aws-sdk');
 const notification = require('../core/notification');
-const { template } = require('lodash');
 
 const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY', 'SMS'];
 
@@ -38,7 +36,7 @@ const testNotification = {
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `${process.env.SITE_URL}/admin/dashboard/home`,
+                    url: `/user/dashboard/home`,
                     primaryKey: Date.now()
                 }
             },
@@ -46,7 +44,7 @@ const testNotification = {
                 {
                     action: "explore",
                     title: "Open Home Page",
-                    url: `${process.env.SITE_URL}/admin/dashboard/home`
+                    url: `/user/dashboard/home`
                 }
             ]
         }
