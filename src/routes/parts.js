@@ -262,4 +262,14 @@ roleMiddleware.parseUserPermission,
 resourceAccessMiddleware.isPartAccessible,
 partsController.stockSummaryReport)
 
+/*PM ASSIGNED PART */
+
+router.post('/get-pm-assigned-part-list', 
+authMiddleware.isAuthenticated, 
+roleMiddleware.parseUserPermission, 
+resourceAccessMiddleware.isPartAccessible, 
+partsController.getPmAssignedPartList)
+
+
+
 module.exports = router;

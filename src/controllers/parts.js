@@ -3219,7 +3219,7 @@ const partsController = {
 
                     }
 
-                    newBal2 = bal2+opening;
+                    newBal2 = bal2 + opening;
                     totalIn2 += i2;
                     totalOut2 += Math.abs(o2);
 
@@ -3247,6 +3247,114 @@ const partsController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
+    },
+
+    /* GET ASSIGNED PART LIST */
+    getPmAssignedPartList: async (req, res) => {
+
+        try {
+
+            let reqData = req.query;
+            let total, rows;
+
+            let pagination = {};
+            let per_page = reqData.per_page || 10;
+            let page = reqData.current_page || 1;
+            if (page < 1) page = 1;
+            let offset = (page - 1) * per_page;
+            let filters = {}
+            if (req.body.status) {
+                filters['task_assigned_part.status'] = req.body.status;
+            }
+            if (req.body.partId) {
+                filters['part_master.displayId'] = req.body.partId
+            }
+            if (req.body.serviceOrderId) {
+                filters['service_orders.displayId'] = req.body.serviceOrderId
+            }
+            [total, rows] = await Promise.all([
+                knex('task_assigned_part')
+                    .leftJoin('part_master', 'task_assigned_part.partId', 'part_master.id')
+                    //.leftJoin('service_orders', 'assigned_parts.entityId', 'service_orders.id')
+                    .select([
+                        'task_assigned_part.*',
+                        'part_master.id',
+                        'part_master.displayId as PNo',
+                        'part_master.partName',
+                        'part_master.minimumQuantity',
+
+                    ])
+                    .where({
+                        'task_assigned_part.orgId': req.orgId,
+                    })
+                    .where(qb => {
+                        if (!_.isEmpty(filters)) {
+                            qb.where(filters)
+                        }
+                        if (req.body.partName) {
+                            qb.where('part_master.partName', 'ilike', `%${req.body.partName}%`)
+                        }
+                    }),
+                knex('task_assigned_part')
+                    .leftJoin('part_master', 'task_assigned_part.partId', 'part_master.id')
+                    .select([
+                        'task_assigned_part.*',
+                        'part_master.partCategory',
+                        'part_master.id',
+                        'part_master.displayId as PNo',
+                        'part_master.partName',
+                        'part_master.minimumQuantity',
+                    ])
+                    .where({ 'task_assigned_part.orgId': req.orgId })
+                    .where(qb => {
+                        if (!_.isEmpty(filters)) {
+                            qb.where(filters)
+                        }
+                        if (req.body.partName) {
+                            qb.where('part_master.partName', 'ilike', `%${req.body.partName}%`)
+                        }
+                    })
+                    .offset(offset)
+                    .limit(per_page)
+            ])
+            // .distinct(['part_master.id'])
+            const Parallel = require('async-parallel')
+            const partsWithTotalQuantity = await Parallel.map(rows, async (part) => {
+                let { id } = part;
+                let quantity = await knex('part_ledger').where({ partId: id, orgId: req.orgId }).select('quantity')
+                let totalParts = 0
+                for (let i = 0; i < quantity.length; i++) {
+                    const element = quantity[i];
+                    totalParts += Number(element.quantity);
+                }
+                return { ...part, totalParts }
+            })
+
+
+            let count = total.length;
+            pagination.total = count;
+            pagination.per_page = per_page;
+            pagination.offset = offset;
+            pagination.to = offset + rows.length;
+            pagination.last_page = Math.ceil(count / per_page);
+            pagination.current_page = page;
+            pagination.from = offset;
+            pagination.data = partsWithTotalQuantity;
+            return res.status(200).json({
+                data: {
+                    assignedPart: pagination
+                },
+                message: 'Pm Assigned Part List!'
+            })
+
+
+        } catch (err) {
+
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+
     }
 }
 
