@@ -4,7 +4,6 @@ const createError = require('http-errors');
 const path = require('path');
 const i18n = require('i18n');
 const indexRouter = require('./routes/index');
-const emailHelper = require('./helpers/email');
 
 
 /**
@@ -128,11 +127,28 @@ module.exports.emailQueueProcessor = (event, context) => {
   const recordsFromSQS = event.Records;
   const currentRecord = recordsFromSQS[0];    // Since we have kept the batchSize to only 1
   console.log('Current Record:', JSON.stringify(currentRecord));
-  const mailOptions = JSON.parse(currentRecord.body);
 
-  (async () => {
-    await emailHelper.sendEmail(mailOptions);
-  })();
+  let messageType = 'EMAIL';
+
+  if (currentRecord.messageAttributes && currentRecord.messageAttributes.messageType) {
+    messageType = currentRecord.messageAttributes.messageType;
+  }
+
+  if (messageType === 'EMAIL') {
+    (async () => {
+      const emailHelper = require('./helpers/email');
+      const mailOptions = JSON.parse(currentRecord.body);
+      await emailHelper.sendEmail(mailOptions);
+    })();
+  }
+
+  if (messageType === 'NOTIFICATION') {
+    (async () => {
+      const notificationHandler = require('./notifications/core/notification');
+      const notificationOptions = JSON.parse(currentRecord.body);
+      await notificationHandler.processQueue(notificationOptions);
+    })();
+  }
 
   return;
 };
