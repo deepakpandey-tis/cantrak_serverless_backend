@@ -13,7 +13,7 @@ const testNotification = {
             console.log('[notifications][test][test-notification][send]: Data:', data);
 
             if (SHOULD_QUEUE) {
-                await notification.queue(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, testNotification);
+                await notification.queue(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, __filename);
                 console.log('[notifications][test][test-notification][send]: All Notifications Queued');
             } else {
                 await notification.send(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, testNotification);
