@@ -267,21 +267,22 @@ const notification = {
         }
     },
 
-    queue: async (sender, receiver, dataPayload, channels, notificationClass) => {
+    queue: async (sender, receiver, dataPayload, channels, notificationClassPath) => {
         try {
-            console.log('[notifications][core][notification][queue]: Queuing Notification:', notificationClass);
+            console.log('[notifications][core][notification][queue]: Queuing Notification:', notificationClassPath);
             await sendSQSMessage(JSON.stringify({
-                sender, receiver, dataPayload, channels, notificationClass
+                sender, receiver, dataPayload, channels, notificationClassPath
             }));
         } catch (err) {
             console.log('[notifications][core][notification][queue]: Error:', err);
         }
     },
 
-    processQueue: async ({ sender, receiver, dataPayload, channels, notificationClass }) => {
+    processQueue: async ({ sender, receiver, dataPayload, channels, notificationClassPath }) => {
 
         try {
-            console.log('[notifications][core][notification][processQueue]: Processing Notification Queue:', notificationClass);
+            console.log('[notifications][core][notification][processQueue]: Processing Notification Queue:', notificationClassPath);
+            const notificationClass = require(notificationClassPath);
             await notification.send(sender, receiver, dataPayload, channels, notificationClass);
 
         } catch (err) {
