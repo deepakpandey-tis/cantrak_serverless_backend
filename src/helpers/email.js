@@ -62,6 +62,10 @@ const sendSQSMessage = async (messageBody) => {
             "createdAt": {
                 DataType: "String",
                 StringValue: createdAt
+            },
+            "messageType": {
+                DataType: "String",
+                StringValue: "EMAIL"
             }
         },
         MessageBody: messageBody,

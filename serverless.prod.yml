@@ -56,8 +56,8 @@ functions:
           path: /{proxy+}
           method: ANY
           # cors: true
-  emailSender:
-    handler: src/app.emailQueueProcessor
+  queueProcessor:
+    handler: src/app.queueProcessor
     batchSize: 1                           # Using a batchSize of 1, so that messages succeed or fail on their own.
     reservedConcurrency: 10                # <-- Concurrency control
     events:

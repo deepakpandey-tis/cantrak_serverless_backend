@@ -270,6 +270,14 @@ router.post(
   partsController.getPmAssignParts
 );
 
+router.post(
+  "/requested-part-pm",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPartAccessible,
+  partsController.requestedPartForPm
+)
+
 /*PM ASSIGNED PART */
 
 // router.post('/get-pm-assigned-part-list', 
