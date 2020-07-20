@@ -3257,9 +3257,10 @@ const partsController = {
 
             [rows] = await Promise.all([
                 knex.from('task_assigned_part')
-                    .leftJoin('part_master', 'task_assigned_part.partId','part_master.id')
+                    .leftJoin('part_master', 'task_assigned_part.partId', 'part_master.id')
                     .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
                     .leftJoin('companies', 'part_master.companyId', 'companies.id')
+                    .leftJoin('pm_task', 'task_assigned_part.taskId', 'pm_task.id')
                     .select([
                         'part_master.id as partId',
                         'task_assigned_part.quantity as Quantity',
@@ -3271,8 +3272,9 @@ const partsController = {
                         'part_master.displayId as PNo',
                         "companies.companyName",
                         "companies.companyId",
-                        "task_assigned_part.status as Action"
-
+                        "task_assigned_part.status as Status",
+                        'pm_task.id as taskId',
+                        'pm_task.taskName as taskName'
                     ])
                     .where({ 'task_assigned_part.orgId': req.orgId, 'task_assigned_part.workOrderId': workOrderId, 'part_category_master.orgId': req.orgId })
                     .orderBy('task_assigned_part.createdAt', 'desc')
