@@ -1,10 +1,61 @@
 const _ = require('lodash');
+const AWS = require('aws-sdk');
 const inAppNotification = require('../core/in-app-notification');
 const emailNotification = require('../core/email-notification');
 const webPushNotification = require('../core/web-push-notification');
 const smsNotification = require('../core/sms-notification');
 
 const notificationUsageTracker = require('../core/notification-usage-tracker');
+
+
+
+
+const sendSQSMessage = async (messageBody) => {
+
+    AWS.config.update({
+        accessKeyId: process.env.NOTIFIER_ACCESS_KEY_ID,
+        secretAccessKey: process.env.NOTIFIER_SECRET_ACCESS_KEY,
+        region: process.env.REGION || "us-east-1"
+    });
+
+
+    const createdAt = new Date().toISOString();
+
+    let params = {
+        DelaySeconds: 2,
+        MessageAttributes: {
+            "title": {
+                DataType: "String",
+                StringValue: "Notification Message Body"
+            },
+            "createdAt": {
+                DataType: "String",
+                StringValue: createdAt
+            },
+            "messageType": {
+                DataType: "String",
+                StringValue: "NOTIFICATION"
+            }
+        },
+        MessageBody: messageBody,
+        // MessageDeduplicationId: "TheWhistler",  // Required for FIFO queues
+        // MessageId: "Group1",  // Required for FIFO queues
+        QueueUrl: process.env.SQS_MAIL_QUEUE_URL
+    };
+
+    return new Promise(async (resolve, reject) => {
+        const sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
+        sqs.sendMessage(params, (err, data) => {
+            if (err) {
+                console.log("SQS Message POST Error", err);
+                reject(err)
+            } else {
+                console.log("SQS Message POST Success", data.MessageId);
+                resolve(data);
+            }
+        });
+    })
+};
 
 
 
@@ -16,7 +67,7 @@ async function handleInAppNotification(sender, receiver, dataPayload, notificati
 
             let data = await notificationClass.sendInAppNotification(sender, receiver, dataPayload);
             console.log('[notifications][core][notification][send]: Data for InApp Notification:', data);
-    
+
             await inAppNotification.send({
                 orgId: data.orgId,
                 senderId: data.senderId,
@@ -25,7 +76,7 @@ async function handleInAppNotification(sender, receiver, dataPayload, notificati
                 actions: data.actions
             });
             console.log('[notifications][core][notification][send]: InApp Notification sent.');
-    
+
         } else {
             console.log('[notifications][core][notification][send]: No methods found to send in app notification.');
         }
@@ -173,40 +224,35 @@ const notification = {
                 switch (channel) {
                     case 'IN_APP':
                         await handleInAppNotification(sender, receiver, dataPayload, notificationClass);
-                        await notificationUsageTracker.increaseCount(sender.orgId, channel);
                         break;
 
                     case 'EMAIL':
                         await handleEmailNotification(sender, receiver, dataPayload, notificationClass);
-                        await notificationUsageTracker.increaseCount(sender.orgId, channel);
                         break;
 
                     case 'WEB_PUSH':
                         await handleWebPushNotification(sender, receiver, dataPayload, notificationClass);
-                        await notificationUsageTracker.increaseCount(sender.orgId, channel);
                         break;
 
                     case 'SOCKET_NOTIFY':
                         await handleSocketNotification(sender, receiver, dataPayload, notificationClass);
-                        await notificationUsageTracker.increaseCount(sender.orgId, channel);
                         break;
 
                     case 'LINE_NOTIFY':
                         await handleLineNotification(sender, receiver, dataPayload, notificationClass);
-                        await notificationUsageTracker.increaseCount(sender.orgId, channel);
                         break;
 
                     case 'SMS':
                         await handleSMSNotification(sender, receiver, dataPayload, notificationClass);
-                        await notificationUsageTracker.increaseCount(sender.orgId, channel);
                         break;
 
                     default:
                         console.log('[notifications][core][notification][send]: Given Notification channel not available:', channel);
                 }
 
-            });
+                await notificationUsageTracker.increaseCount(sender.orgId, channel);
 
+            });
 
         } catch (err) {
             console.log('[notifications][core][notification][send]:  Error', err);
@@ -220,6 +266,29 @@ const notification = {
             return { code: 'UNKNOWN_ERROR', message: err.message, error: err };
         }
     },
+
+    queue: async (sender, receiver, dataPayload, channels, notificationClass) => {
+        try {
+            console.log('[notifications][core][notification][queue]: Queuing Notification:', notificationClass);
+            await sendSQSMessage(JSON.stringify({
+                sender, receiver, dataPayload, channels, notificationClass
+            }));
+        } catch (err) {
+            console.log('[notifications][core][notification][queue]: Error:', err);
+        }
+    },
+
+    processQueue: async ({ sender, receiver, dataPayload, channels, notificationClass }) => {
+
+        try {
+            console.log('[notifications][core][notification][processQueue]: Processing Notification Queue:', notificationClass);
+            await notification.send(sender, receiver, dataPayload, channels, notificationClass);
+
+        } catch (err) {
+            console.log('[notifications][core][notification][processQueue]: Error:', err);
+        }
+
+    }
 
 };
 

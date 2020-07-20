@@ -2,6 +2,7 @@ const _ = require('lodash');
 const notification = require('../core/notification');
 
 const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY', 'SMS'];
+const SHOULD_QUEUE = true;
 
 const testNotification = {
     send: async (sender, receiver, data, allowedChannels = ALLOWED_CHANNELS) => {
@@ -11,9 +12,14 @@ const testNotification = {
             // console.log('[notifications][test][test-notification][send]: Receiver:', receiver);
             console.log('[notifications][test][test-notification][send]: Data:', data);
 
-            await notification.send(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, testNotification);
+            if (SHOULD_QUEUE) {
+                await notification.queue(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, testNotification);
+                console.log('[notifications][test][test-notification][send]: All Notifications Queued');
+            } else {
+                await notification.send(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, testNotification);
+                console.log('[notifications][test][test-notification][send]: All Notifications Sent');
+            }
 
-            console.log('[notifications][test][test-notification][send]: All Notifications Sent');
 
         } catch (err) {
             console.log('[notifications][test][test-notification][send]:  Error', err);
