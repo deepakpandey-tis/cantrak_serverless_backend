@@ -131,7 +131,7 @@ module.exports.emailQueueProcessor = (event, context) => {
   let messageType = 'EMAIL';
 
   if (currentRecord.messageAttributes && currentRecord.messageAttributes.messageType) {
-    messageType = currentRecord.messageAttributes.messageType;
+    messageType = currentRecord.messageAttributes.messageType.stringValue;
   }
   console.log('[app][queueProcessor]', 'Message Type:', messageType);
 
