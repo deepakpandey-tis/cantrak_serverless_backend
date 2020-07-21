@@ -375,7 +375,7 @@ const taskGroupController = {
   createPmTaskgroupSchedule: async (req, res) => {
 
     try {
-    
+
       let createTemplateTask = null;
       let createTemplate = null;
       let createPM = null;
@@ -384,7 +384,8 @@ const taskGroupController = {
       let taskSchedule = null;
       let assignedAdditionalUser = null;
       let assetResults = [];
-      let createPmTask=[];
+      let createPmTask = [];
+      let partResult = [];
       let payload = _.omit(req.body, ['additionalUsers']);
 
 
@@ -394,7 +395,7 @@ const taskGroupController = {
 
       if (!(payload.startDateTime >= currentDate)) {
 
-        console.log(currentDate, "currreeeetttttttttttttt")
+        console.log(currentDate, "current Date")
         return res.status(400).json({
           errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid start date" }]
         })
@@ -403,7 +404,7 @@ const taskGroupController = {
 
       if (!(payload.endDateTime >= currentDate)) {
 
-        console.log(currentDate, "currreeeetttttttttttttt")
+        console.log(currentDate, "Current Date")
         return res.status(400).json({
           errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid end date" }]
         })
@@ -691,13 +692,15 @@ const taskGroupController = {
             // let insertPmTaskResult = await knex.insert(InsertPmTaskPayload).returning(['*']).transacting(trx).into('pm_task');
             // createPmTask = insertPmTaskResult;
 
-            for (let da of payload.tasks) {
+            for (let k = 0; k < payload.tasks.length; k++) {
+
+              //   //for (let da of payload.tasks) {
 
               let InsertPmTaskPayload = {
 
-                taskName: da.taskName,
-                taskNameAlternate: da.taskNameAlternate,
-                taskSerialNumber: da.taskSerialNumber,
+                taskName: payload.tasks[k].taskName,
+                taskNameAlternate: payload.tasks[k].taskNameAlternate,
+                taskSerialNumber: payload.tasks[k].taskSerialNumber,
                 taskGroupId: createPmTaskGroup.id,
                 taskGroupScheduleAssignAssetId: assetResult[0].id,
                 createdAt: currentTime,
@@ -710,22 +713,46 @@ const taskGroupController = {
               let insertPmTaskResult = await knex.insert(InsertPmTaskPayload).returning(['*']).transacting(trx).into('pm_task');
 
               createPmTask.push(insertPmTaskResult)
-              if (da.attachPart == undefined) {
+              if (payload.tasks[k].linkedParts == undefined) {
 
               } else {
 
-                for (let part of da.attachPart) {
-                  let insertPart = {
+                // let partPayload = payload.tasks[k].linkedParts.map(ta => ({
+
+                //   taskId: insertPmTaskResult[0].id,
+                //   partId: ta.partId,
+                //   quantity: ta.quantity,
+                //   createdAt: currentTime,
+                //   updatedAt: currentTime,
+                //   orgId: req.orgId,
+                // }))
+
+                for (let part of payload.tasks[k].linkedParts) {
+                  let partPayload = {
                     taskId: insertPmTaskResult[0].id,
                     partId: part.partId,
-                    quantity: part.desiredQuantity,
+                    quantity: part.quantity,
                     createdAt: currentTime,
                     updatedAt: currentTime,
                     orgId: req.orgId,
+                    workOrderId: assetResult[0].id
                   }
 
-                  let insertPartResult = await knex.insert(insertPart).returning(['*']).transacting(trx).into('task_assigned_part');
+                  let check = await knex.from('task_assigned_part').where({
+                    taskId: insertPmTaskResult[0].id,
+                    partId: part.partId,
+                    quantity: part.quantity,
+                    orgId: req.orgId,
+                  })
 
+                  if (check && check.length) {
+
+                  } else {
+
+                    let insertPartResult = await knex.insert(partPayload).returning(['*']).transacting(trx).into('task_assigned_part');
+
+                    partResult.push(insertPartResult)
+                  }
 
                 }
 
@@ -786,6 +813,7 @@ const taskGroupController = {
           taskScheduleData: taskSchedule,
           assetResultData: assetResults,
           createdPmTasks: createPmTask,
+          partResult: partResult
         },
         message: "Create Pm Task Group Schedule Successfully!"
       });
@@ -2379,8 +2407,8 @@ const taskGroupController = {
           })
           .orderBy('asset_category_master.categoryName', sortPayload.orderBy)
           .orderBy('task_group_templates.updatedAt', 'desc')
-          
-        ])
+
+      ])
 
       let count = total.length;
       pagination.total = count;

@@ -4,7 +4,6 @@ const createError = require('http-errors');
 const path = require('path');
 const i18n = require('i18n');
 const indexRouter = require('./routes/index');
-const emailHelper = require('./helpers/email');
 
 
 /**
@@ -121,18 +120,38 @@ module.exports.s3hook = (event, context) => {
 
 
 // EMAIL HANDLER (Triggered From SQS)
-module.exports.emailQueueProcessor = (event, context) => {
+module.exports.queueProcessor = (event, context) => {
   // console.log('Event:', JSON.stringify(event));
   // console.log('Context:', JSON.stringify(context));
 
   const recordsFromSQS = event.Records;
   const currentRecord = recordsFromSQS[0];    // Since we have kept the batchSize to only 1
   console.log('Current Record:', JSON.stringify(currentRecord));
-  const mailOptions = JSON.parse(currentRecord.body);
 
-  (async () => {
-    await emailHelper.sendEmail(mailOptions);
-  })();
+  let messageType = 'EMAIL';
+
+  if (currentRecord.messageAttributes && currentRecord.messageAttributes.messageType) {
+    messageType = currentRecord.messageAttributes.messageType.stringValue;
+  }
+  console.log('[app][queueProcessor]', 'Message Type:', messageType);
+
+
+  if (messageType === 'EMAIL') {
+    (async () => {
+      const emailHelper = require('./helpers/email');
+      const mailOptions = JSON.parse(currentRecord.body);
+      await emailHelper.sendEmail(mailOptions);
+    })();
+  }
+
+  if (messageType === 'NOTIFICATION') {
+    (async () => {
+      console.log('[app][queueProcessor]', 'Received message is notification.')
+      const notificationHandler = require('./notifications/core/notification');
+      const notificationOptions = JSON.parse(currentRecord.body);
+      await notificationHandler.processQueue(notificationOptions);
+    })();
+  }
 
   return;
 };
