@@ -2248,15 +2248,25 @@ const partsController = {
             if (page < 1) page = 1;
             let offset = (page - 1) * per_page;
             let filters = {}
+            if (req.body.entityType) {
+                filters['assigned_parts.entityType'] = req.body.entityType;
+            } else {
+                filters['assigned_parts.entityType'] = 'service_orders';
+            }
             if (req.body.status) {
                 filters['assigned_parts.status'] = req.body.status;
             }
             if (req.body.partId) {
                 filters['part_master.displayId'] = req.body.partId
             }
-            if (req.body.serviceOrderId) {
+            if (req.body.serviceOrderId && filters['assigned_parts.entityType']=='service_orders') {
+                filters['service_orders.displayId'] = req.body.serviceOrderId
+            }else if (req.body.serviceOrderId && filters['assigned_parts.entityType']=='task_assigned_part') {
+                filters['task_group_schedule_assign_assets.displayId'] = req.body.serviceOrderId
+            }else if (req.body.serviceOrderId) {
                 filters['service_orders.displayId'] = req.body.serviceOrderId
             }
+
             [total, rows] = await Promise.all([
                 knex('assigned_parts')
                     .leftJoin('part_master', 'assigned_parts.partId', 'part_master.id')
@@ -2280,10 +2290,7 @@ const partsController = {
                     ])
                     .where({
                         'part_master.orgId': req.orgId,
-                        'assigned_parts.entityType': 'service_orders'
-                    })
-                    .orWhere({
-                        'assigned_parts.entityType': 'task_assigned_part'
+                        // 'assigned_parts.entityType': 'service_orders'
                     })
                     .where(qb => {
                         if (!_.isEmpty(filters)) {
@@ -2293,6 +2300,7 @@ const partsController = {
                             qb.where('part_master.partName', 'ilike', `%${req.body.partName}%`)
                         }
                     }),
+                    
                 knex('assigned_parts')
                     .leftJoin('part_master', 'assigned_parts.partId', 'part_master.id')
                     .leftJoin('service_orders', 'assigned_parts.entityId', 'service_orders.id')
@@ -2315,10 +2323,14 @@ const partsController = {
                         "task_group_schedule_assign_assets.displayId as TGAA",
 
                     ])
-                    .where({ 'part_master.orgId': req.orgId, 'assigned_parts.entityType': 'service_orders' })
-                    .orWhere({
-                        'assigned_parts.entityType': 'task_assigned_part'
+                    .where({
+                        'part_master.orgId': req.orgId,
+                        // 'assigned_parts.entityType': 'service_orders'
                     })
+                    //  .orWhere({ 
+                    //     'part_master.orgId': req.orgId, 
+                    //     'assigned_parts.entityType': 'task_assigned_part'
+                    // })
                     .where(qb => {
                         if (!_.isEmpty(filters)) {
                             qb.where(filters)
@@ -3370,7 +3382,7 @@ const partsController = {
                 console.log(partInfo, "data information");
 
                 assignedStatus = await knex('assigned_parts').insert({ unitCost: partInfo.unitCost, quantity: partInfo.Quantity, status: 'in progress', orgId: req.orgId, createdAt: currentTime.getTime(), updatedAt: currentTime.getTime(), partId: partInfo.pid, entityId: taskAssignedPartId, entityType: 'task_assigned_part' }).returning(['*']);
-               
+
                 updatedTaskPart = await knex('task_assigned_part').update({ status: 3 }).where({ id: taskAssignedPartId, orgId: req.orgId }).returning(['*'])
 
                 return res.status(200).json({
