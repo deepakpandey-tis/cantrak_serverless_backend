@@ -2262,8 +2262,10 @@ const partsController = {
                     .leftJoin('part_master', 'assigned_parts.partId', 'part_master.id')
                     .leftJoin('service_orders', 'assigned_parts.entityId', 'service_orders.id')
                     .leftJoin('task_assigned_part', 'assigned_parts.entityId', 'task_assigned_part.id')
+                    .leftJoin('task_group_schedule_assign_assets', 'task_assigned_part.workOrderId', 'task_group_schedule_assign_assets.id')
                     .select([
                         'assigned_parts.id as approvalId',
+                        'assigned_parts.entityType as enType',
                         'part_master.id',
                         'part_master.displayId as PNo',
                         'part_master.partName',
@@ -2272,8 +2274,9 @@ const partsController = {
                         'assigned_parts.quantity as requestedParts',
                         'assigned_parts.status as approvalStatus',
                         'assigned_parts.entityId',
-                        'service_orders.displayId as SO No',
-                        'task_assigned_part.id as TPID'
+                        'service_orders.displayId as SONo',
+                        "task_group_schedule_assign_assets.id as workOrderId",
+                        "task_group_schedule_assign_assets.displayId as TGAA",
                     ])
                     .where({
                         'part_master.orgId': req.orgId,
@@ -2294,6 +2297,7 @@ const partsController = {
                     .leftJoin('part_master', 'assigned_parts.partId', 'part_master.id')
                     .leftJoin('service_orders', 'assigned_parts.entityId', 'service_orders.id')
                     .leftJoin('task_assigned_part', 'assigned_parts.entityId', 'task_assigned_part.id')
+                    .leftJoin('task_group_schedule_assign_assets', 'task_assigned_part.workOrderId', 'task_group_schedule_assign_assets.id')
                     .select(['assigned_parts.id as approvalId',
                         'part_master.partCategory',
                         'part_master.id',
@@ -2304,8 +2308,12 @@ const partsController = {
                         'assigned_parts.quantity as requestedParts',
                         'assigned_parts.status as approvalStatus',
                         'assigned_parts.entityId',
-                        'service_orders.displayId as SO No',
-                        'task_assigned_part.id as TPID'
+                        'assigned_parts.entityType as enType',
+                        'service_orders.displayId as SONo',
+                        'task_assigned_part.id as TPID',
+                        "task_group_schedule_assign_assets.id as workOrderId",
+                        "task_group_schedule_assign_assets.displayId as TGAA",
+
                     ])
                     .where({ 'part_master.orgId': req.orgId, 'assigned_parts.entityType': 'service_orders' })
                     .orWhere({
@@ -2365,15 +2373,15 @@ const partsController = {
             let recDate = new Date(payload.receiveDate).getTime()
             // let issueDate = new Date(payload.issueDate).getTime();
             let getInfoData = await knex("assigned_parts")
-                    .select(
-                        "assigned_parts.entityId as Id"                       
-                    )
-                    .where({
-                        id: approvalId,
-                        entityType: "task_assigned_part"
-                    }).first();
+                .select(
+                    "assigned_parts.entityId as Id"
+                )
+                .where({
+                    id: approvalId,
+                    entityType: "task_assigned_part"
+                }).first();
 
-                    console.log("getInfoData", getInfoData);
+            console.log("getInfoData", getInfoData);
 
             const update = await knex('assigned_parts').update({ status: 'approved' }).where({ orgId: req.orgId, id: approvalId }).returning(['*'])
             let assignedResult = update[0];
@@ -2398,7 +2406,7 @@ const partsController = {
                 // issueDate: issueDate,
             }
             let partLedger = await knex.insert(ledgerObject).returning(['*']).into('part_ledger');
-            
+
             // update task_assigned_parts_in pm
             const updateAssignParts = await knex('task_assigned_part').update({ status: 1 }).where({ orgId: req.orgId, id: getInfoData.Id }).returning(['*'])
 
@@ -2443,6 +2451,10 @@ const partsController = {
         try {
             let { approvalId } = req.body;
             const declined = await knex('assigned_parts').update({ status: 'declined' }).where({ id: approvalId, orgId: req.orgId }).returning(['*'])
+            getInfoData = await knex('assigned_parts').select('*').where({ id: approvalId, entityType: 'task_assigned_part' }).returning(['*']).first();
+
+            updateAssignParts = await knex('task_assigned_part').update({ status: 2 }).where({ orgId: req.orgId, id: getInfoData.entityId })
+
             return res.status(200).json({
                 data: {
                     declined: declined
@@ -3356,9 +3368,10 @@ const partsController = {
                     .where('task_assigned_part.id', taskAssignedPartId)
                     .first()
                 console.log(partInfo, "data information");
-                
 
                 assignedStatus = await knex('assigned_parts').insert({ unitCost: partInfo.unitCost, quantity: partInfo.Quantity, status: 'in progress', orgId: req.orgId, createdAt: currentTime.getTime(), updatedAt: currentTime.getTime(), partId: partInfo.pid, entityId: taskAssignedPartId, entityType: 'task_assigned_part' }).returning(['*']);
+               
+                updatedTaskPart = await knex('task_assigned_part').update({ status: 3 }).where({ id: taskAssignedPartId, orgId: req.orgId }).returning(['*'])
 
                 return res.status(200).json({
                     data: {
