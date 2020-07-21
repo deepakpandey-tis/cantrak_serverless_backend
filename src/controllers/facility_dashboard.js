@@ -49,7 +49,7 @@ const facilityDashboardController = {
         let currentDate = new Date().getTime();
         let currentStartTime = new Date(startNewDate).getTime();
         let currentEndTime = new Date(endNewDate).getTime();
-        if (facilityName || status) {
+        if ((facilityName && facilityName.length > 0) || (status && status.length > 0)) {
           console.log("if selected");
           totalFacilityBookings = await knex
             .from("entity_bookings")
