@@ -2,7 +2,7 @@ const _ = require('lodash');
 const notification = require('../core/notification');
 
 const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY', 'SMS'];
-const SHOULD_QUEUE = true;
+const SHOULD_QUEUE = process.env.IS_OFFLINE ? false : true;
 
 const testNotification = {
     send: async (sender, receiver, data, allowedChannels = ALLOWED_CHANNELS) => {
