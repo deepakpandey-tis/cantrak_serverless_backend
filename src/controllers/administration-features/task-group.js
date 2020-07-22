@@ -1758,7 +1758,31 @@ const taskGroupController = {
         }
       })
 
-      let templateTask = await knex('template_task').where({ templateId: payload.templateId, orgId: req.orgId });
+      let templateTask = await knex('template_task').where({ templateId: payload.templateId, orgId: req.orgId }).orderBy("taskSerialNumber", 'asc');
+
+
+      // let i = 0;
+      // let assignedPart = await Parallel.map(templateTask, async data => {
+
+
+      //   index = i;
+      //   i++;
+      //   let partResult = await knex('task_assigned_part')
+      //     .leftJoin('part_master', 'task_assigned_part.partId', 'part_master.id')
+      //     .select([
+      //       'task_assigned_part.*',
+      //       'part_master.partName'
+
+      //     ])
+      //     .where({ 'task_assigned_part.taskId': data.id, 'task_assigned_part.orgId': req.orgId });
+
+      //   return {
+      //     ...partResult,
+      //     index: index
+      //   }
+
+
+      // })
 
       for (let task of templateTask) {
 
@@ -1773,6 +1797,9 @@ const taskGroupController = {
         if (partResult.length) {
 
           assignedPart.push(partResult);
+
+        } else {
+          assignedPart.push([]);
 
         }
 
@@ -2286,7 +2313,13 @@ const taskGroupController = {
         .orderBy('taskSerialNumber', 'asc');
 
 
+      // const tasks2 = await knex('template_task').where({ templateId: req.body.id, orgId: req.orgId }).select('taskName', 'id', 'taskNameAlternate', 'taskSerialNumber')
+      // .orderBy('id', 'asc');
+
+
       let assignedPart = [];
+
+
 
       for (let task of tasks) {
 
@@ -2301,6 +2334,9 @@ const taskGroupController = {
         if (partResult.length) {
 
           assignedPart.push(partResult);
+
+        } else {
+          assignedPart.push([]);
 
         }
 
@@ -2372,8 +2408,10 @@ const taskGroupController = {
       if (tasks.length) {
 
         for (let ta of tasks) {
-          let delPart = await knex('task_assigned_part').where({ taskId: ta.id, orgId: req.orgId }).del();
+          if (ta.id) {
+            let delPart = await knex('task_assigned_part').where({ taskId: ta.id, orgId: req.orgId }).del();
 
+          }
         }
 
       }
