@@ -6,15 +6,15 @@ const trimmer = require('../middlewares/trimmer');
 
 const knex = require('../db/knex');
 
-const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SMS'];
-// const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH'];
+// const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SMS'];
+const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH'];
 
 
 router.get('/', async (req, res) => {
     try {
 
         let sender = await knex.from('users').where({ id: 406 }).first();
-        let receiver = await knex.from('users').where({ id: 750 }).first();
+        let receiver = await knex.from('users').where({ id: 455 }).first();
 
         let data = {
             payload: {
