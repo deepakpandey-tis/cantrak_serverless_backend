@@ -40,6 +40,9 @@ router.post('/get-all-units', authMiddleware.isAuthenticated, userMiddleware.cus
 router.post('/get-units-list', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
     facilityBookingController.getAllUnitList);
 
+router.post('/checked-in-facility',authMiddleware.isAuthenticated,userMiddleware.customerInfo,
+    facilityBookingController.checkInFacility)
+
 
 
 module.exports = router;

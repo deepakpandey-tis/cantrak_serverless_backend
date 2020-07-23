@@ -24,6 +24,15 @@ AWS.config.update({
 
 const parcelManagementController = {
 
+  addParcel:async(req,res)=>{
+    try{
+      let addParcelResult = null
+      
+    }catch(err){
+
+    }
+  },
+
   getStorageList:async(req,res)=>{
     try{
       
