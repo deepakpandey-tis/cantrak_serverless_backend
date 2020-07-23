@@ -88,7 +88,7 @@ const assetController = {
             })
             .first()
             .where({ 'asset_master.orgId': req.orgId }),
-            
+
           knex("asset_master")
             .leftJoin(
               "asset_category_master",
@@ -106,7 +106,7 @@ const assetController = {
               "asset_location.buildingId",
               "buildings_and_phases.id"
             )
-           
+
             .leftJoin(
               "property_units",
               "asset_location.unitId",
@@ -130,7 +130,7 @@ const assetController = {
               "buildings_and_phases.description as building",
               'property_units.unitNumber'
             ])
-            .where({'asset_master.orgId': req.orgId })
+            .where({ 'asset_master.orgId': req.orgId })
             .where('asset_location.endDate', null)
             .where(qb => {
               if (assetName) {
@@ -276,6 +276,19 @@ const assetController = {
             .offset(offset).limit(per_page)
         ])
 
+
+        const Parallel = require('async-parallel');
+
+
+        rows = await Parallel.map(rows, async da => {
+
+          let desiredQuantity = 1;
+          return {
+            ...da,
+            desiredQuantity
+          }
+        })
+        
         let count = total.length;
         pagination.total = count;
         pagination.per_page = per_page;
@@ -321,6 +334,20 @@ const assetController = {
             .distinct('part_master.id')
             .offset(offset).limit(per_page)
         ])
+
+
+        const Parallel = require('async-parallel');
+
+
+        rows = await Parallel.map(rows, async da => {
+
+          let desiredQuantity = 1;
+          return {
+            ...da,
+            desiredQuantity
+          }
+        })
+
 
         let count = total.length;
         pagination.total = count;
