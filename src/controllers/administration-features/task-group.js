@@ -155,8 +155,9 @@ const taskGroupController = {
   createPMTemplate: async (req, res) => {
     try {
       let taskGroupTemplate = null;
-      let insertedTasks = null
+      let insertedTasks = [];
       let taskGroupTemplateSchedule = null;
+      let partResult = [];
       //let assignedAdditionalUser = null;
       let payload = _.omit(req.body, ['teamId', 'repeatFrequency', 'repeatPeriod', 'repeatOn', 'tasks', 'mainUserId', 'additionalUsers', 'startDate', 'endDate'])
       const schema = Joi.object().keys({
@@ -220,18 +221,91 @@ const taskGroupController = {
       let taskGroupTemplateResult = await knex('task_group_templates').insert(tgtInsert).returning(['*'])
       taskGroupTemplate = taskGroupTemplateResult[0]
 
-      // Insert tasks into template_task
-      let insertPaylaod = req.body.tasks.map(v => ({
-        taskName: v.taskName,
-        templateId: taskGroupTemplate.id,
-        createdAt: currentTime,
-        createdBy: req.body.mainUserId ? req.body.mainUserId : null,
-        orgId: req.orgId,
-        taskSerialNumber: v.taskSerialNumber,
-        taskNameAlternate: v.taskNameAlternate,
-        updatedAt: currentTime
-      }))
-      insertedTasks = await knex('template_task').insert(insertPaylaod).returning(['*'])
+      // // Insert tasks into template_task
+      // let insertPaylaod = req.body.tasks.map(v => ({
+      //   taskName: v.taskName,
+      //   templateId: taskGroupTemplate.id,
+      //   createdAt: currentTime,
+      //   createdBy: req.body.mainUserId ? req.body.mainUserId : null,
+      //   orgId: req.orgId,
+      //   taskSerialNumber: v.taskSerialNumber,
+      //   taskNameAlternate: v.taskNameAlternate,
+      //   updatedAt: currentTime
+      // }))
+      // insertedTasks = await knex('template_task').insert(insertPaylaod).returning(['*'])
+
+
+
+
+      /*insert part */
+
+      for (let k = 0; k < req.body.tasks.length; k++) {
+
+        //   //for (let da of payload.tasks) {
+
+        let insertPaylaod = {
+
+          taskName: req.body.tasks[k].taskName,
+          templateId: taskGroupTemplate.id,
+          createdAt: currentTime,
+          createdBy: req.body.mainUserId ? req.body.mainUserId : null,
+          orgId: req.orgId,
+          taskSerialNumber: req.body.tasks[k].taskSerialNumber,
+          taskNameAlternate: req.body.tasks[k].taskNameAlternate,
+          updatedAt: currentTime
+
+        }
+
+        let taskResult = await knex('template_task').insert(insertPaylaod).returning(['*'])
+
+        insertedTasks.push(taskResult);
+
+        if (req.body.tasks[k].linkedParts == undefined) {
+
+        } else {
+
+          // let partPayload = payload.tasks[k].linkedParts.map(ta => ({
+
+          //   taskId: insertPmTaskResult[0].id,
+          //   partId: ta.partId,
+          //   quantity: ta.quantity,
+          //   createdAt: currentTime,
+          //   updatedAt: currentTime,
+          //   orgId: req.orgId,
+          // }))
+
+          for (let part of req.body.tasks[k].linkedParts) {
+            let partPayload = {
+              taskId: taskResult[0].id,
+              partId: part.partId,
+              quantity: part.quantity,
+              createdAt: currentTime,
+              updatedAt: currentTime,
+              orgId: req.orgId,
+              //workOrderId: assetResult[0].id
+            }
+
+            let check = await knex.from('task_assigned_part').where({
+              taskId: taskResult[0].id,
+              partId: part.partId,
+              quantity: part.quantity,
+              orgId: req.orgId,
+            })
+
+            if (check && check.length) {
+
+            } else {
+
+              let insertPartResult = await knex.insert(partPayload).returning(['*']).into('task_assigned_part');
+
+              partResult.push(insertPartResult)
+            }
+
+          }
+
+        }
+
+      }
 
       // Insert into task_group_template_schedule
       let insertTTData = {
@@ -298,7 +372,8 @@ const taskGroupController = {
           tasks: insertedTasks,
           taskGroupTemplateSchedule,
           assignedAdditionalUser,
-          assignedServiceTeam
+          assignedServiceTeam,
+          partResult
         },
         mesaage: 'Task Group Template added successfully!'
       })
@@ -1583,6 +1658,7 @@ const taskGroupController = {
     try {
       let reqData = req.query;
       let payload = req.body
+      let assignedPart = [];
 
       const schema = Joi.object().keys({
         templateId: Joi.string().required()
@@ -1619,6 +1695,7 @@ const taskGroupController = {
             'task_group_templates.*',
             'template_task.*',
             'task_group_template_schedule.*',
+            //'template_task.id as taskId'
             //'assigned_service_team.*'
           ])
           .where({ "task_group_templates.id": payload.templateId, "task_group_templates.orgId": req.orgId })
@@ -1668,6 +1745,8 @@ const taskGroupController = {
           additional_user = addUser.additional_user;
         }
 
+
+
         return {
           ...row,
           id,
@@ -1679,10 +1758,58 @@ const taskGroupController = {
         }
       })
 
+      let templateTask = await knex('template_task').where({ templateId: payload.templateId, orgId: req.orgId }).orderBy("taskSerialNumber", 'asc');
+
+
+      // let i = 0;
+      // let assignedPart = await Parallel.map(templateTask, async data => {
+
+
+      //   index = i;
+      //   i++;
+      //   let partResult = await knex('task_assigned_part')
+      //     .leftJoin('part_master', 'task_assigned_part.partId', 'part_master.id')
+      //     .select([
+      //       'task_assigned_part.*',
+      //       'part_master.partName'
+
+      //     ])
+      //     .where({ 'task_assigned_part.taskId': data.id, 'task_assigned_part.orgId': req.orgId });
+
+      //   return {
+      //     ...partResult,
+      //     index: index
+      //   }
+
+
+      // })
+
+      for (let task of templateTask) {
+
+        let partResult = await knex('task_assigned_part')
+          .leftJoin('part_master', 'task_assigned_part.partId', 'part_master.id')
+          .select([
+            'task_assigned_part.*',
+            'part_master.partName'
+
+          ])
+          .where({ 'task_assigned_part.taskId': task.id, 'task_assigned_part.orgId': req.orgId });
+        if (partResult.length) {
+
+          assignedPart.push(partResult);
+
+        } else {
+          assignedPart.push([]);
+
+        }
+
+      }
+
 
       return res.status(200).json({
         data: {
-          taskTemplateCompleteData: pagination
+          taskTemplateCompleteData: pagination,
+          assignedPart
         },
         message: 'Task Template Complete Data List Successfully!'
       })
@@ -2185,6 +2312,36 @@ const taskGroupController = {
       const tasks = await knex('template_task').where({ templateId: req.body.id, orgId: req.orgId }).select('taskName', 'id', 'taskNameAlternate', 'taskSerialNumber')
         .orderBy('taskSerialNumber', 'asc');
 
+
+      // const tasks2 = await knex('template_task').where({ templateId: req.body.id, orgId: req.orgId }).select('taskName', 'id', 'taskNameAlternate', 'taskSerialNumber')
+      // .orderBy('id', 'asc');
+
+
+      let assignedPart = [];
+
+
+
+      for (let task of tasks) {
+
+        let partResult = await knex('task_assigned_part')
+          .leftJoin('part_master', 'task_assigned_part.partId', 'part_master.id')
+          .select([
+            'task_assigned_part.*',
+            'part_master.partName'
+
+          ])
+          .where({ 'task_assigned_part.taskId': task.id, 'task_assigned_part.orgId': req.orgId });
+        if (partResult.length) {
+
+          assignedPart.push(partResult);
+
+        } else {
+          assignedPart.push([]);
+
+        }
+
+      }
+
       // Get the team and main user
       let team = await knex('assigned_service_team')
         .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
@@ -2215,7 +2372,8 @@ const taskGroupController = {
           ...taskGroup,
           tasks,
           ...team[0],
-          additionalUsers: additionalUsers.map(v => v.id)
+          additionalUsers: additionalUsers.map(v => v.id),
+          assignedPart
         },
         message: 'Task Group Details'
       })
@@ -2236,13 +2394,26 @@ const taskGroupController = {
       let deletedTasks = req.body.deletedTasks
       let additionalUsers = req.body.additionalUsers;
       let taskGroupCatId = req.body.assetCategoryId;
-      let currentTime = new Date().getTime()
+      let currentTime = new Date().getTime();
+      let partResult = [];
 
       // Delete Tasks
       if (deletedTasks.length) {
         for (let task of deletedTasks) {
           let delTask = await knex('template_task').where({ id: task.id }).del();
         }
+      }
+
+
+      if (tasks.length) {
+
+        for (let ta of tasks) {
+          if (ta.id) {
+            let delPart = await knex('task_assigned_part').where({ taskId: ta.id, orgId: req.orgId }).del();
+
+          }
+        }
+
       }
       // additionalUsers: ["59", "60"]
       // assetCategoryId: "1"
@@ -2307,6 +2478,47 @@ const taskGroupController = {
               orgId: req.orgId
             }).returning('*')
           updatedTasks.push(updatedTaskResult[0])
+
+
+
+          if (task.linkedParts == undefined) {
+
+          } else {
+
+            for (let part of task.linkedParts) {
+              let partPayload = {
+                taskId: task.id,
+                partId: part.partId,
+                quantity: part.quantity,
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                orgId: req.orgId,
+                //workOrderId: assetResult[0].id
+              }
+
+              // let check = await knex.from('task_assigned_part').where({
+              //   taskId: task.id,
+              //   partId: part.partId,
+              //   quantity: part.quantity,
+              //   orgId: req.orgId,
+              // })
+
+              // if (check && check.length) {
+
+              // } else {
+
+              let insertPartResult = await knex.insert(partPayload).returning(['*']).into('task_assigned_part');
+
+              partResult.push(insertPartResult)
+              //            }
+
+            }
+
+          }
+
+
+
+
         } else {
           updatedTaskResult = await knex('template_task')
             .insert({
@@ -2318,7 +2530,46 @@ const taskGroupController = {
               updatedAt: currentTime,
               orgId: req.orgId
             }).returning('*')
-          updatedTasks.push(updatedTaskResult[0])
+          updatedTasks.push(updatedTaskResult[0]);
+
+
+          if (task.linkedParts == undefined) {
+
+          } else {
+
+            for (let part of task.linkedParts) {
+              let partPayload = {
+                taskId: updatedTaskResult[0].id,
+                partId: part.partId,
+                quantity: part.quantity,
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                orgId: req.orgId,
+                //workOrderId: assetResult[0].id
+              }
+
+              // let check = await knex.from('task_assigned_part').where({
+              //   taskId: task.id,
+              //   partId: part.partId,
+              //   quantity: part.quantity,
+              //   orgId: req.orgId,
+              // })
+
+              // if (check && check.length) {
+
+              // } else {
+
+              let insertPartResult = await knex.insert(partPayload).returning(['*']).into('task_assigned_part');
+
+              partResult.push(insertPartResult)
+              //            }
+
+            }
+
+          }
+
+
+
         }
 
       }
@@ -2350,7 +2601,8 @@ const taskGroupController = {
           resultScheduleData,
           updatedTeam,
           updatedTasks,
-          updatedUsers
+          updatedUsers,
+          partResult
         }
       })
 

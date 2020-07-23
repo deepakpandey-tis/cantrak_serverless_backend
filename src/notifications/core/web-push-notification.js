@@ -21,19 +21,31 @@ const webPushNotification = {
             let subscriptions = await knex.from('push_subscribers').where({ userId: receiverId });
 
             // let notification = {
-            //     title: 'TIS - New Notification',
-            //     body: 'Thanks for Subscribing Push Notification from TIS. We will notify you with only those messages which concerns you!',
-            //     icon: 'assets/icons/icon-512x512.png',
-            //     image: 'assets/icons/icon-512x512.png',
+            //     title: "Test Notification",
+            //     body: "Hi!!, This is a test notification to all users from TrainingAdmin",
+            //     icon: "http://localhost:8080/assets/icons/icon-512x512.png",
+            //     image: "http://localhost:8080/assets/icons/icon-512x512.png",
             //     data: {
-            //         dateOfArrival: Date.now(),
-            //         url: `${process.env.SITE_URL}/admin/dashboard/home`,
-            //         primaryKey: 1
+            //         "dateOfArrival": 1595423932171,
+            //         "url": "http://localhost:4200/admin/dashboard/home",
+            //         "primaryKey": 1595423932171
             //     },
             //     actions: [{
-            //         action: "explore",
-            //         title: "Open Web App"
-            //     }]
+            //         "action": "explore",
+            //         "icon": "",
+            //         "placeholder": null,
+            //         "title": "Open Home Page",
+            //         "type": "button"
+            //     }],
+            //     badge: "",
+            //     dir: "auto",
+            //     lang: "",
+            //     renotify: false,
+            //     requireInteraction: false,
+            //     silent: false,
+            //     tag: "",
+            //     timestamp: 1595423934239,
+            //     vibrate: [200, 100, 200, 100, 200, 100, 400]
             // };
 
             let notification = {
@@ -41,9 +53,10 @@ const webPushNotification = {
                 body: body,
                 icon: icon,
                 image: image,
-                vibrate: [100, 50, 100],
+                vibrate: [200, 100, 200, 100, 200, 100, 400],
                 data: extraData,
-                actions: actions
+                actions: actions,
+                requireInteraction: true
             };
 
             const options = {
@@ -58,6 +71,11 @@ const webPushNotification = {
                     console.log(`[notifications][core][web-push-notification] :Sending Notification For User: ${receiverId} on Endpoint: `, subscription.endpoint, ', Sent:', res);
                 } catch (err) {
                     console.error(`[notifications][core][web-push-notification] :Sending Notification For User: ${receiverId} on Endpoint: `, subscription.endpoint, ', Failed:', err);
+
+                    if (err.statusCode == 404 || err.statusCode == 410) {
+                        await knex.del().from('push_subscribers').where({ id: subs.id });
+                        console.error(`[notifications][core][web-push-notification] :Deleting Expired Subscription: `, subs);
+                    }
                 }
             });
 
