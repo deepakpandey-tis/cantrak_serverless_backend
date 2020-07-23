@@ -694,8 +694,8 @@ const facilityDashboardController = {
               "facility_master.name",
               "users.name as bookedUser",
             ])
-            .where({ "entity_bookings.orgId": orgId })
-            .where("entity_bookings.isBookingCancelled", true)
+            .where({  "entity_bookings.orgId": orgId,"entity_bookings.isBookingCancelled": true})
+            // .where("entity_bookings.isBookingCancelled", true)
             .whereIn("facility_master.name", facilityName)
             .whereBetween("entity_bookings.createdAt", [
               currentStartTime,
@@ -732,8 +732,8 @@ const facilityDashboardController = {
               "facility_master.name",
               "users.name as bookedUser",
             ])
-            .where({ "entity_bookings.orgId": orgId })
-            .where("entity_bookings.isBookingCancelled", true)
+            .where({ "entity_bookings.orgId": orgId,"entity_bookings.isBookingCancelled": true })
+            // .where("entity_bookings.isBookingCancelled", true)
             .whereBetween("entity_bookings.createdAt", [
               currentStartTime,
               currentEndTime,
@@ -1207,6 +1207,7 @@ const facilityDashboardController = {
       let confirmed
       let pending
       let {queryStartDate,queryEndDate,facilityName,status} = req.body
+      console.log("pie chart",queryStartDate,queryEndDate)
       let startNewDate = moment(reqData.queryStartDate)
         .startOf("date")
         .format();
@@ -1217,6 +1218,7 @@ const facilityDashboardController = {
       let currentStartTime = new Date(startNewDate).getTime();
       let currentEndTime = new Date(endNewDate).getTime();
       if(facilityName ){
+        console.log("if selected for cancelled")
         approved = await knex
         .from("entity_bookings")
         .leftJoin(
@@ -1343,6 +1345,7 @@ const facilityDashboardController = {
           }
         });
       }else{
+        console.log("else selected for cancelled")
        approved = await knex
         .from("entity_bookings")
         .leftJoin(
@@ -1471,81 +1474,81 @@ const facilityDashboardController = {
       });
     }
   },
-  getPieChartForBookings: async (req, res) => {
-    try {
-      let orgId = req.orgId;
-      let bookings = null;
-      var getDaysArray = function (start, end) {
-        let dt = start;
-        let arr = [];
-        for (; dt <= end; dt.setDate(dt.getDate() + 1)) {
-          arr.push(new Date(dt));
-        }
-        return arr;
-      };
-      var dates = getDaysArray(
-        new Date(req.body.queryStartDate),
-        new Date(req.body.queryEndDate)
-      );
-      let final = [];
-      for (let d of dates) {
-        let startNewDate = moment(d).startOf("date").format();
-        let endNewDate = moment(d).endOf("date", "day").format();
-        let currentStartTime = new Date(startNewDate).getTime();
-        let currentEndTime = new Date(endNewDate).getTime();
-        bookings = await knex
-          .from("entity_bookings")
-          .leftJoin(
-            "facility_master",
-            "entity_bookings.entityId",
-            "facility_master.id"
-          )
-          .leftJoin("users", "entity_bookings.bookedBy", "users.id")
-          .select([
-            "entity_bookings.entityId",
-            "entity_bookings.bookingStartDateTime",
-            "entity_bookings.bookingEndDateTime",
-            "entity_bookings.createdAt",
-            "facility_master.id",
-          ])
-          .where({ "entity_bookings.orgId": orgId })
-          .whereBetween("entity_bookings.createdAt", [
-            currentStartTime,
-            currentEndTime,
-          ])
-          .distinct("entity_bookings.id")
-          .orderBy("entity_bookings.id", "desc");
+  // getPieChartForBookings: async (req, res) => {
+  //   try {
+  //     let orgId = req.orgId;
+  //     let bookings = null;
+  //     var getDaysArray = function (start, end) {
+  //       let dt = start;
+  //       let arr = [];
+  //       for (; dt <= end; dt.setDate(dt.getDate() + 1)) {
+  //         arr.push(new Date(dt));
+  //       }
+  //       return arr;
+  //     };
+  //     var dates = getDaysArray(
+  //       new Date(req.body.queryStartDate),
+  //       new Date(req.body.queryEndDate)
+  //     );
+  //     let final = [];
+  //     for (let d of dates) {
+  //       let startNewDate = moment(d).startOf("date").format();
+  //       let endNewDate = moment(d).endOf("date", "day").format();
+  //       let currentStartTime = new Date(startNewDate).getTime();
+  //       let currentEndTime = new Date(endNewDate).getTime();
+  //       bookings = await knex
+  //         .from("entity_bookings")
+  //         .leftJoin(
+  //           "facility_master",
+  //           "entity_bookings.entityId",
+  //           "facility_master.id"
+  //         )
+  //         .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+  //         .select([
+  //           "entity_bookings.entityId",
+  //           "entity_bookings.bookingStartDateTime",
+  //           "entity_bookings.bookingEndDateTime",
+  //           "entity_bookings.createdAt",
+  //           "facility_master.id",
+  //         ])
+  //         .where({ "entity_bookings.orgId": orgId })
+  //         .whereBetween("entity_bookings.createdAt", [
+  //           currentStartTime,
+  //           currentEndTime,
+  //         ])
+  //         .distinct("entity_bookings.id")
+  //         .orderBy("entity_bookings.id", "desc");
 
-        let grouped = _.groupBy(bookings, "id");
+  //       let grouped = _.groupBy(bookings, "id");
 
-        final.push(grouped);
-      }
-      let finalData = _.flatten(
-        final
-          .filter((v) => !_.isEmpty(v))
-          .map((v) => _.keys(v).map((p) => ({ [p]: v[p].length })))
-      ).reduce((a, p) => {
-        let l = _.keys(p)[0];
-        if (a[l]) {
-          a[l] += p[l];
-        } else {
-          a[l] = p[l];
-        }
-        return a;
-      }, {});
-      return res.status(200).json({
-        data: finalData,
-      });
-    } catch (err) {
-      console.log(
-        "[controllers][facility_dashboard][getBookingCount] :  Error",
-        err
-      );
-      res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
-      });
-    }
-  },
+  //       final.push(grouped);
+  //     }
+  //     let finalData = _.flatten(
+  //       final
+  //         .filter((v) => !_.isEmpty(v))
+  //         .map((v) => _.keys(v).map((p) => ({ [p]: v[p].length })))
+  //     ).reduce((a, p) => {
+  //       let l = _.keys(p)[0];
+  //       if (a[l]) {
+  //         a[l] += p[l];
+  //       } else {
+  //         a[l] = p[l];
+  //       }
+  //       return a;
+  //     }, {});
+  //     return res.status(200).json({
+  //       data: finalData,
+  //     });
+  //   } catch (err) {
+  //     console.log(
+  //       "[controllers][facility_dashboard][getBookingCount] :  Error",
+  //       err
+  //     );
+  //     res.status(500).json({
+  //       errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+  //     });
+  //   }
+  // },
   getBookingForAverageDuration: async (req, res) => {
     try {
       let orgId = req.orgId;

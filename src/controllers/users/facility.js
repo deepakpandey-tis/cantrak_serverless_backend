@@ -281,6 +281,8 @@ const facilityBookingController = {
                         'floor_and_zones.floorZoneCode',
                         'floor_and_zones.description as floorName',
                         'facility_master.isActive',
+                        'facility_master.checkInType',
+                        'facility_master.preCheckinTime',
                         'entity_fees_master.currency as currency'
                     ])
                     // .where(qb => {
@@ -1373,6 +1375,33 @@ const facilityBookingController = {
             })
         }
     },
+    checkInFacility:async(req,res)=>{
+        try{
+            orgId = req.orgId
+            let facilityId = req.body.id
+            const currentTime = new Date().getTime()
+
+            let updateData = {
+                checkedInAt :currentTime,
+                isCheckedIn:true,
+
+            }
+
+            let result = await knex("entity_bookings")
+            .update(updateData)
+            .returning(["*"])
+            .where({id:facilityId,orgId:orgId,isBookingConfirmed:true})
+
+            return res
+        .status(200)
+        .json({ message: "Checked In!", data: result });
+
+        }catch(err){
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }],
+              });
+        }
+    }
 
 }
 
