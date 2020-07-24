@@ -1348,7 +1348,7 @@ const dashboardController = {
       let grouped = _.groupBy(problems, "categoryCode");
 
 
-    
+
 
       // let problemWise = _.keys(grouped).map(category => ({totalServiceRequests:grouped[category].length,category}))
       final.push(grouped); //totalServiceRequest: problems.length })
@@ -1384,6 +1384,62 @@ const dashboardController = {
       });
     }
   }
+  ,
+  /* GET ALL ALLOW COMPANY LIST */
+
+  getAllowAllCompanyList: async (req, res) => {
+
+    try {
+
+      let projectIds = [];
+      const accessibleProjects = req.userProjectResources;
+
+      if (accessibleProjects.length) {
+        for (let pro of accessibleProjects) {
+
+          if (pro.projects.length) {
+
+            for (let projectId of pro.projects) {
+              console.log("project=========", pro.projects, "===========================================")
+
+              projectIds.push(projectId);
+            }
+          }
+        }
+      }
+
+      projectIds = _.uniqBy(projectIds);
+
+      let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
+        .whereIn('projects.id', projectIds)
+        .where({ orgId: req.orgId });
+
+      let companyIds = companyResult.map(v => v.companyId);
+
+
+      let companyData = await knex.from('companies').select(['id', '"companyName"', '"companyId"'])
+        .whereIn('companies.id', companyIds)
+        .where({ orgId: req.orgId });
+
+
+      return res.status(200).json({
+        data: {
+          ...companyData,
+          companyIds
+        },
+        message : "Company List Successfully!"
+      });
+
+    } catch (err) {
+      console.log("[controllers][dashboard][getAssesList] : Error", err);
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+
+
+  }
+
 };
 
 module.exports = dashboardController;
