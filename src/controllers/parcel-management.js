@@ -27,6 +27,12 @@ const parcelManagementController = {
   addParcel:async(req,res)=>{
     try{
       let addParcelResult = null
+      let insertedImages = [];
+      
+
+      const schema = Joi.object.keys({
+        
+      })
       
     }catch(err){
 
@@ -83,29 +89,42 @@ getCompanyListHavingPropertyUnit:async(req,res)=>{
 
 addParcelRequest: async (req, res) => {
   try {
+    let orgId = req.orgId
     let payLoad = _.omit(req.body, [
-      "images",
-      "reqName",
-      "reqMobile",
-      "reqEmail",
-      "delvName",
-      "delvMobile",
-      "delvEmail",
+      "pickedUpType",
+      "parcelName",
+      "courierId",
+      "parcelType",
+      "description",
+      "parcelCondition",
+      "companyId",
+      "projectId",
+      "buildingPhaseId",
+      "florZoneId",
+      "unitId",
+      "recipient",
+      "sender",
+      "parcelStatus",
+      "parcelPriority"
     ]);
+    // let payload = req.body
     await knex.transaction(async (trx) => {
       const schema = Joi.object().keys({
-        addParcelId: Joi.number().required(),
+        pickedUpType: Joi.string().required(),
         parcelName: Joi.string().required(),
         courierId: Joi.number().required(),
-        storageId: Joi.number().required(),
+        parcelType: Joi.number().required(),
         description: Joi.string().required(),
-        areaName: Joi.string().allow("").optional(),
-        company: Joi.string().required(),
-        project: Joi.string().required(),
-        building: Joi.string().required(),
-        floor: Joi.string().required(),
-        unit: Joi.string().required(),
-        userId: Joi.string().allow("").optional(),
+        parcelCondition: Joi.string().required(),
+        companyId: Joi.string().required(),
+        projectId: Joi.string().required(),
+        buildingPhaseId: Joi.string().required(),
+        floorZoneId: Joi.string().required(),
+        unitId: Joi.string().required(),
+        recipient:Joi.string.required(),
+        sender: Joi.string().required(),
+        parcelStatus: Joi.number().required(),
+        parcelPriority: Joi.number().required()
       });
 
       const result = Joi.validate(payLoad,schema)
@@ -119,6 +138,27 @@ addParcelRequest: async (req, res) => {
           })
       }
       const currentTime = new Date().getTime();
+
+
+      const insertData = {
+        ...payLoad,
+        orgId:orgId,
+        createdBy:req.me.id,
+        createdAt:currentTime,
+        updatedAt:currentTime
+      }
+
+      let addResult = await knex('parcel_management')
+      .insert(insertData)
+      .returning(['*'])
+
+      res.status(200).json({
+        data:addResult,
+        message:"Parcel added"
+      },
+      
+      )
+
 
 
     });
