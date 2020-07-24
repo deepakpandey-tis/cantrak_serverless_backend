@@ -631,6 +631,14 @@ const courierStorageController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-  }
+  },
+  // getCarrier:async(req,res)=>{
+  //   try{
+  //     let orgId = req.orgId
+  //     let carrier = await knex
+  //     .from("courier")
+  //     .
+  //   }catch(err){}
+  // }
 };
 module.exports = courierStorageController;

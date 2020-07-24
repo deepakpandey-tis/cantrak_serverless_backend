@@ -6,6 +6,9 @@ const authMiddleware = require('../middlewares/auth');
 
 
 router.get('/companylist-having-property-units',authMiddleware.isAuthenticated,parcelManageController.getCompanyListHavingPropertyUnit)
-router.post('/add-parcel-management',authMiddleware.isAuthenticated,parcelManageController.addParcelRequest)
+
+router.post('/add-parcel',authMiddleware.isAuthenticated,parcelManageController.addParcelRequest)
+
+router.post('/get-parcel-list',authMiddleware.isAuthenticated,parcelManageController.getParcelList)
 
 module.exports = router
