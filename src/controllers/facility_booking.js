@@ -47,8 +47,8 @@ const facilityBookingController = {
           floorZoneId: Joi.string().required(),
           description: Joi.string().required(),
           enableCheckIn: Joi.boolean().required(),
-          checkInType:Joi.string().optional(),
-          preCheckinTime: Joi.string().optional()
+          checkInType:Joi.string().allow('').optional(),
+          preCheckinTime: Joi.string().allow('').optional()
           // "descriptionAlternateLang": Joi.string().required(),
         });
 

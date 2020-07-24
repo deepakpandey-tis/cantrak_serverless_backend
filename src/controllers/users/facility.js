@@ -1378,7 +1378,7 @@ const facilityBookingController = {
     checkInFacility:async(req,res)=>{
         try{
             orgId = req.orgId
-            let facilityId = req.body.id
+            let bookingId = req.body.bookingId
             const currentTime = new Date().getTime()
 
             let updateData = {
@@ -1390,7 +1390,7 @@ const facilityBookingController = {
             let result = await knex("entity_bookings")
             .update(updateData)
             .returning(["*"])
-            .where({id:facilityId,orgId:orgId,isBookingConfirmed:true})
+            .where({id:bookingId,orgId:orgId,isBookingConfirmed:true})
 
             return res
         .status(200)

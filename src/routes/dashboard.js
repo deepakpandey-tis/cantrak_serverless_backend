@@ -52,7 +52,17 @@ roleMiddleware.parseUserPermission,
 dashboardController.getPieChartForIncidentTypes
 )
 
+
+router.post('/get-allow-all-company-list',
+authMiddleware.isAuthenticated,
+roleMiddleware.parseUserPermission,
+dashboardController.getAllowAllCompanyList
+);
+
+
 router.post('/get-pie-chart-for-all-incident-types',authMiddleware.isAuthenticated,roleMiddleware.parseUserPermission,dashboardController.getPieChartForAllIncidentTypes)
+
+
 
 module.exports = router;
 

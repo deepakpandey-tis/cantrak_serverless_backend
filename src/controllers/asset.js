@@ -289,10 +289,39 @@ const assetController = {
       });
     }
   },
-  
+
   getAssetList: async (req, res) => {
     // name, model, area, category
     try {
+
+
+
+      let projectIds = [];
+      const accessibleProjects = req.userProjectResources;
+
+      if (accessibleProjects.length) {
+        for (let pro of accessibleProjects) {
+
+          if (pro.projects.length) {
+
+            for (let projectId of pro.projects) {
+              console.log("project=========", pro.projects, "===========================================")
+
+              projectIds.push(projectId);
+            }
+          }
+        }
+      }
+
+      projectIds = _.uniqBy(projectIds);
+
+      let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
+        .whereIn('projects.id', projectIds)
+        .where({ orgId: req.orgId });
+
+      let companyIds = companyResult.map(v => v.companyId);
+
+      companyIds = _.uniqBy(companyIds);
 
       let reqData = req.query;
 
@@ -422,6 +451,7 @@ const assetController = {
                 qb.where('asset_master.projectId', project)
               }
             })
+            .whereIn('asset_master.companyId', companyIds)
             .first()
             .where({ 'asset_master.orgId': req.orgId }),
           knex("asset_master")
@@ -505,6 +535,7 @@ const assetController = {
                 qb.where('asset_master.projectId', project)
               }
             })
+            .whereIn('asset_master.companyId', companyIds)
             .orderBy("asset_master.id", "desc")
             .offset(offset)
             .limit(per_page)
@@ -553,7 +584,11 @@ const assetController = {
 
       return res.status(200).json({
         data: {
-          asset: pagination
+          asset: pagination,
+          accessibleProjects,
+          companyIds,
+          companyResult,
+          projectIds,
         },
         message: 'Asset List!'
       })
@@ -2734,7 +2769,7 @@ const assetController = {
                 .select("id")
                 .where({ assetCode: assetData.A, assetName: assetData.B, orgId: req.orgId });
 
-              if (checkExist.length < 1) {
+             // if (checkExist.length < 1) {
 
                 let currentTime = new Date().getTime();
 
@@ -2776,12 +2811,12 @@ const assetController = {
                   success++;
                 }
 
-              } else {
-                fail++;
-                let values = _.values(assetData)
-                values.unshift('Asset name with corresponding asset code already exists.')
-                errors.push(values);
-              }
+              // } else {
+              //   fail++;
+              //   let values = _.values(assetData)
+              //   values.unshift('Asset name with corresponding asset code already exists.')
+              //   errors.push(values);
+              // }
             }
           }
           let message = null;

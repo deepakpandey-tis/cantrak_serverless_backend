@@ -13,6 +13,32 @@ const partsController = {
     getParts: async (req, res) => {
         try {
 
+            let projectIds = [];
+            const accessibleProjects = req.userProjectResources;
+
+            if (accessibleProjects.length) {
+                for (let pro of accessibleProjects) {
+
+                    if (pro.projects.length) {
+
+                        for (let projectId of pro.projects) {
+                            console.log("project=========", pro.projects, "===========================================")
+
+                            projectIds.push(projectId);
+                        }
+                    }
+                }
+            }
+
+            projectIds = _.uniqBy(projectIds);
+
+            let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
+                .whereIn('projects.id', projectIds)
+                .where({ orgId: req.orgId });
+
+            let companyIds = companyResult.map(v => v.companyId);
+
+
             let partData = null;
             let reqData = req.query;
             let total, rows
@@ -51,6 +77,7 @@ const partsController = {
                                 qb.where({ 'part_master.companyId': company })
                             }
                         })
+                        .whereIn('part_master.companyId', companyIds)
                         .groupBy(['part_master.id'])
                         .distinct('part_master.id'),
                     //.first(),
@@ -93,6 +120,7 @@ const partsController = {
                                 qb.where({ 'part_master.companyId': company })
                             }
                         })
+                        .whereIn('part_master.companyId', companyIds)
                         .orderBy('part_master.createdAt', 'desc')
                         .groupBy(['part_master.id', 'companies.companyId', 'companies.companyName', 'part_category_master.id'])
                         .distinct('part_master.id')
@@ -120,6 +148,7 @@ const partsController = {
                 [total, rows] = await Promise.all([
                     knex.from("part_master")
                         .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id').where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
+                        .whereIn('part_master.companyId', companyIds)
                         .groupBy(['part_master.id'])
                         .distinct('part_master.id'),
                     //.first(),
@@ -144,6 +173,7 @@ const partsController = {
                             "companies.companyId",
                         ])
                         .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
+                        .whereIn('part_master.companyId', companyIds)
                         .orderBy('part_master.createdAt', 'desc')
                         .groupBy(['part_master.id', 'companies.companyId', 'companies.companyName', 'part_category_master.id'])
                         .distinct('part_master.id')
@@ -164,7 +194,12 @@ const partsController = {
 
             return res.status(200).json({
                 data: {
-                    parts: pagination
+                    parts: pagination,
+                    accessibleProjects,
+                    companyIds,
+                    companyResult,
+                    projectIds,
+
                 },
                 message: 'Parts List!'
             })
@@ -1847,7 +1882,7 @@ const partsController = {
                                     partName: partData.B,
                                     orgId: req.orgId
                                 });
-                            if (checkExist.length < 1) {
+                           // if (checkExist.length < 1) {
 
                                 let min = null;
                                 if (partData.H) {
@@ -1891,12 +1926,12 @@ const partsController = {
                                 if (resultData && resultData.length) {
                                     success++;
                                 }
-                            } else {
-                                fail++;
-                                let values = _.values(partData)
-                                values.unshift('Part name with corresponding part code already exists.')
-                                errors.push(values);
-                            }
+                            // } else {
+                            //     fail++;
+                            //     let values = _.values(partData)
+                            //     values.unshift('Part name with corresponding part code already exists.')
+                            //     errors.push(values);
+                            // }
 
                         }
                     }
