@@ -104,7 +104,7 @@ const parcelManagementController = {
           trackingNumber: Joi.string().required(),
           carrierId: Joi.number().required(),
           parcelType: Joi.number().required(),
-          description: Joi.string().required(),
+          description: Joi.string().allow('').optional(),
           parcelCondition: Joi.string().required(),
           companyId: Joi.string().required(),
           projectId: Joi.string().required(),
