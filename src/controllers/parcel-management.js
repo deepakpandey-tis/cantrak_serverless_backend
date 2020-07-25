@@ -186,7 +186,8 @@ const parcelManagementController = {
   },
   getParcelList:async(req,res)=>{
     try{
-      let reqData
+      let reqData = req.query
+      console.log("requested data",reqData)
       let total ,rows
 
       let pagination = {};
@@ -211,7 +212,7 @@ const parcelManagementController = {
             .from("parcel_management")
             .leftJoin("property_units","parcel_management.unitId","property_units.id")
             .leftJoin("users","parcel_management.createdBy","users.id")
-            .where("parcel_management.orgId",orgId)
+            .where("parcel_management.orgId",req.orgId)
             .where((qb)=>{
               if(unitId){
                 qb.where(
@@ -247,7 +248,7 @@ const parcelManagementController = {
               "parcel_management.createdAt",
               // "parcel_management."
             ])
-            .where("parcel_management.orgId",orgId)
+            .where("parcel_management.orgId",req.orgId)
             .where((qb)=>{
               if(unitId){
                 qb.where(
@@ -290,7 +291,7 @@ const parcelManagementController = {
             .from("parcel_management")
             .leftJoin("property_units","parcel_management.unitId","property_units.id")
             .leftJoin("users","parcel_management.createdBy","users.id")
-            .where("parcel_management.orgId",orgId)
+            .where("parcel_management.orgId",req.orgId)
             .groupBy([
               "parcel_management.id",
               "property_units.id",
@@ -310,7 +311,7 @@ const parcelManagementController = {
               "parcel_management.createdAt",
               // "parcel_management."
             ])
-            .where("parcel_management.orgId",orgId)
+            .where("parcel_management.orgId",req.orgId)
             .groupBy([
               "parcel_management.id",
               "property_units.id",
@@ -332,6 +333,8 @@ const parcelManagementController = {
           pagination.from = offset;
           pagination.data = rows;
       }
+      // console.log("pagination",pagination)
+
       return res.status(200).json({
         data: {
           parcel: pagination,
