@@ -1078,7 +1078,7 @@ const partsController = {
 
                     });
                     result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'issueBy', 'issueTo', 'returnedBy', 'description', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId', 'storeAdjustmentBy', 'name1', 'email1','mobile1','name','email','mobile' ])
+                    partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId', 'storeAdjustmentBy', 'name1', 'email1', 'mobile1', 'name', 'email', 'mobile'])
 
 
                     // Issue To Manage with Manually and Select from list
@@ -1226,6 +1226,7 @@ const partsController = {
         }
 
     },
+
     searchParts: async (req, res) => {
 
         try {
@@ -1882,50 +1883,50 @@ const partsController = {
                                     partName: partData.B,
                                     orgId: req.orgId
                                 });
-                           // if (checkExist.length < 1) {
+                            // if (checkExist.length < 1) {
 
-                                let min = null;
-                                if (partData.H) {
-                                    min = partData.H;
-                                }
+                            let min = null;
+                            if (partData.H) {
+                                min = partData.H;
+                            }
 
-                                let insertData = {
-                                    orgId: req.orgId,
-                                    partCode: partData.A,
-                                    partName: partData.B,
-                                    unitOfMeasure: partData.C,
-                                    partCategory: partCategoryId,
-                                    companyId: companyId,
-                                    createdAt: currentTime,
-                                    updatedAt: currentTime,
-                                    minimumQuantity: min,
-                                }
+                            let insertData = {
+                                orgId: req.orgId,
+                                partCode: partData.A,
+                                partName: partData.B,
+                                unitOfMeasure: partData.C,
+                                partCategory: partCategoryId,
+                                companyId: companyId,
+                                createdAt: currentTime,
+                                updatedAt: currentTime,
+                                minimumQuantity: min,
+                            }
 
-                                resultData = await knex.insert(insertData).returning(['*']).into('part_master');
+                            resultData = await knex.insert(insertData).returning(['*']).into('part_master');
 
 
-                                if (isNaN(partData.G)) {
-                                    fail++;
-                                    let values = _.values(partData)
-                                    values.unshift('Unit cost is not a number.')
-                                    errors.push(values);
-                                    continue;
-                                }
+                            if (isNaN(partData.G)) {
+                                fail++;
+                                let values = _.values(partData)
+                                values.unshift('Unit cost is not a number.')
+                                errors.push(values);
+                                continue;
+                            }
 
-                                if (isNaN(partData.F)) {
-                                    fail++;
-                                    let values = _.values(partData)
-                                    values.unshift('Quantity is not a number.')
-                                    errors.push(values);
-                                    continue;
-                                }
+                            if (isNaN(partData.F)) {
+                                fail++;
+                                let values = _.values(partData)
+                                values.unshift('Quantity is not a number.')
+                                errors.push(values);
+                                continue;
+                            }
 
-                                let quantityData = { partId: resultData[0].id, unitCost: partData.G, quantity: partData.F, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId };
-                                let partQuantityResult = await knex.insert(quantityData).returning(['*']).into('part_ledger');
+                            let quantityData = { partId: resultData[0].id, unitCost: partData.G, quantity: partData.F, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId };
+                            let partQuantityResult = await knex.insert(quantityData).returning(['*']).into('part_ledger');
 
-                                if (resultData && resultData.length) {
-                                    success++;
-                                }
+                            if (resultData && resultData.length) {
+                                success++;
+                            }
                             // } else {
                             //     fail++;
                             //     let values = _.values(partData)
@@ -1951,6 +1952,11 @@ const partsController = {
                             fail +
                             " ) due to validation!";
                     }
+
+
+                    const update = await knex('part_master').update({ isActive: true }).where({ orgId: req.orgId, id: approvalId, isActive : true }).returning(['*'])
+
+
                     //let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
                     return res.status(200).json({
                         message: message,
@@ -3542,6 +3548,88 @@ const partsController = {
                     },
                     message: "Request has been sent successfully!"
                 });
+            }
+
+        } catch (err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    partLedgerMigration: async (req, res) => {
+        try {
+
+            const currentTime = new Date();
+            let insertDataObj;
+            let issueByData;
+            let issueToData;
+            // Get assigned parts to PM - Work Order
+            let assignedPartLedger = await knex('part_ledger_temp').select('*').where({ orgId: req.orgId })
+            //  console.log("data ledger", assignedPartLedger);
+            for (let ledger of assignedPartLedger) {
+
+                issueByData = await knex('adjust_part_users').where({ name: assignedPartLedger.issueBy, orgId: req.orgId }).returning(['*']);
+
+                if (issueByData && issueByData.length) {
+                    requestedByResult = issueByData;
+                    issueById = requestedByResult[0].id;
+                } else {
+                    requestedByResult = await knex('adjust_part_users').insert({
+                        name: assignedPartLedger.issueBy,
+                        createdAt: assignedPartLedger.createdAt,
+                        updatedAt: assignedPartLedger.updatedAt,
+                        orgId: req.orgId
+                    }).returning(['*'])
+                    issueById = requestedByResult[0].id;
+                }
+
+
+                issueToData = await knex('adjust_part_users').where({ name: assignedPartLedger.issueTo, orgId: req.orgId }).returning(['*']);
+
+                if (issueToData && issueToData.length) {
+                    requestedToResult = issueToData;
+                    issueToId = requestedToResult[0].id;
+                } else {
+                    requestedToResult = await knex('adjust_part_users').insert({
+                        name: assignedPartLedger.issueTo,
+                        createdAt: assignedPartLedger.createdAt,
+                        updatedAt: assignedPartLedger.updatedAt,
+                        orgId: req.orgId
+                    }).returning(['*'])
+                    issueToId = requestedToResult[0].id;
+                }
+
+                insertDataObj = {
+                    "partId": assignedPartLedger.partId,
+                    "unitCost": assignedPartLedger.unitCost,
+                    "quantity": assignedPartLedger.quantity,
+                    "isPartAdded": assignedPartLedger.isPartAdded,
+                    "createdAt": assignedPartLedger.createdAt,
+                    "updatedAt": assignedPartLedger.updatedAt,
+                    "adjustType": assignedPartLedger.adjustType,
+                    "serviceOrderNo": assignedPartLedger.serviceOrderNo,
+                    "workOrderId": assignedPartLedger.workOrderId,
+                    "description": assignedPartLedger.description,
+                    "approved": assignedPartLedger.approved,
+                    "approvedBy": assignedPartLedger.approvedBy,
+                    "orgId": assignedPartLedger.orgId,
+                    "receiveBy": assignedPartLedger.receiveBy,
+                    "receiveDate": assignedPartLedger.receiveDate,
+                    "deductBy": assignedPartLedger.deductBy,
+                    "deductDate": assignedPartLedger.deductDate,
+                    "building": assignedPartLedger.building,
+                    "floor": assignedPartLedger.floor,
+                    "taskAssignPartId": assignedPartLedger.taskAssignPartId,
+                    "storeAdjustmentBy": assignedPartLedger.storeAdjustmentBy,
+                    "companyId": assignedPartLedger.companyId,
+                    "receiveFrom": assignedPartLedger.receiveFrom,
+                    "issueDate": assignedPartLedger.issueDate,
+                    "issueBy": issueById,
+                    "issueTo": issueToId
+                }
+                console.log("part ledger=========", ledger, "=============");
+                partResult = await knex('part_ledger').insert(insertDataObj).returning(['*']);
+
             }
 
         } catch (err) {
