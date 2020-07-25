@@ -13,6 +13,32 @@ const partsController = {
     getParts: async (req, res) => {
         try {
 
+            let projectIds = [];
+            const accessibleProjects = req.userProjectResources;
+
+            if (accessibleProjects.length) {
+                for (let pro of accessibleProjects) {
+
+                    if (pro.projects.length) {
+
+                        for (let projectId of pro.projects) {
+                            console.log("project=========", pro.projects, "===========================================")
+
+                            projectIds.push(projectId);
+                        }
+                    }
+                }
+            }
+
+            projectIds = _.uniqBy(projectIds);
+
+            let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
+                .whereIn('projects.id', projectIds)
+                .where({ orgId: req.orgId });
+
+            let companyIds = companyResult.map(v => v.companyId);
+
+
             let partData = null;
             let reqData = req.query;
             let total, rows
@@ -51,6 +77,7 @@ const partsController = {
                                 qb.where({ 'part_master.companyId': company })
                             }
                         })
+                        .whereIn('part_master.companyId', companyIds)
                         .groupBy(['part_master.id'])
                         .distinct('part_master.id'),
                     //.first(),
@@ -93,6 +120,7 @@ const partsController = {
                                 qb.where({ 'part_master.companyId': company })
                             }
                         })
+                        .whereIn('part_master.companyId', companyIds)
                         .orderBy('part_master.createdAt', 'desc')
                         .groupBy(['part_master.id', 'companies.companyId', 'companies.companyName', 'part_category_master.id'])
                         .distinct('part_master.id')
@@ -120,6 +148,7 @@ const partsController = {
                 [total, rows] = await Promise.all([
                     knex.from("part_master")
                         .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id').where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
+                        .whereIn('part_master.companyId', companyIds)
                         .groupBy(['part_master.id'])
                         .distinct('part_master.id'),
                     //.first(),
@@ -144,6 +173,7 @@ const partsController = {
                             "companies.companyId",
                         ])
                         .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
+                        .whereIn('part_master.companyId', companyIds)
                         .orderBy('part_master.createdAt', 'desc')
                         .groupBy(['part_master.id', 'companies.companyId', 'companies.companyName', 'part_category_master.id'])
                         .distinct('part_master.id')
@@ -164,7 +194,12 @@ const partsController = {
 
             return res.status(200).json({
                 data: {
-                    parts: pagination
+                    parts: pagination,
+                    accessibleProjects,
+                    companyIds,
+                    companyResult,
+                    projectIds,
+
                 },
                 message: 'Parts List!'
             })
@@ -820,7 +855,9 @@ const partsController = {
 
             let partStock = null;
 
+
             await knex.transaction(async (trx) => {
+                const currentTime1 = new Date().getTime();
                 let partStockPayload = _.omit(req.body, 'date');
                 console.log('[controllers][part][stock]', partStockPayload);
                 // validate keys
@@ -905,6 +942,12 @@ const partsController = {
                     partStockPayload.receiveDate = new Date(partStockPayload.receiveDate).getTime();
 
                 } else if (partStockPayload.adjustType == "10" || partStockPayload.adjustType == "11") {
+                    let issueById;
+                    let issueToId;
+
+                    partStockPayloadNew = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor'])
+
+
                     const schema = Joi.object().keys({
                         partId: Joi.string().required(),
                         unitCost: Joi.number().allow("").allow(null).optional(),
@@ -915,11 +958,71 @@ const partsController = {
                         isPartAdded: Joi.string().required(),
                         issueBy: Joi.string().allow("").allow(null).optional(),
                         issueTo: Joi.string().allow("").allow(null).optional(),
+                        name: Joi.string().allow("").allow(null).optional(),
+                        email: Joi.string().allow("").allow(null).optional(),
+                        mobile: Joi.string().allow("").allow(null).optional(),
+                        name1: Joi.string().allow("").allow(null).optional(),
+                        email1: Joi.string().allow("").allow(null).optional(),
+                        mobile1: Joi.string().allow("").allow(null).optional(),
                         companyId: Joi.string().allow("").allow(null).optional(),
                         companyId2: Joi.string().allow("").allow(null).optional(),
                         receiveFrom: Joi.string().allow("").allow(null).optional(),
-
                     });
+
+                    // Issue By Id Manage with Manually and Select from list
+
+                    if (partStockPayload.name && partStockPayload.email) {
+
+                        let requestByData = await knex('adjust_part_users').where({ name: partStockPayload.name, mobile: partStockPayload.mobile, email: partStockPayload.email, orgId: req.orgId }).returning(['*']);
+
+                        if (requestByData && requestByData.length) {
+
+                            requestedByResult = requestByData;
+                            issueById = requestedByResult[0].id;
+                        } else {
+
+                            requestedByResult = await knex('adjust_part_users').insert({
+                                name: partStockPayload.name,
+                                mobile: partStockPayload.mobile,
+                                email: partStockPayload.email,
+                                createdAt: currentTime1,
+                                updatedAt: currentTime1,
+                                orgId: req.orgId
+                            }).returning(['*'])
+                            issueById = requestedByResult[0].id;
+                        }
+                    } else {
+                        issueById = partStockPayload.issueBy;
+                    }
+
+
+                    // Issue To Manage with Manually and Select from list
+
+                    if (partStockPayload.name1 && partStockPayload.email1) {
+
+                        let requestByData = await knex('adjust_part_users').where({ name: partStockPayload.name1, mobile: partStockPayload.mobile1, email: partStockPayload.email1, orgId: req.orgId }).returning(['*']);
+
+                        if (requestByData && requestByData.length) {
+
+                            requestedByResult = requestByData;
+                            issueToId = requestedByResult[0].id;
+                        } else {
+
+                            requestedByResult = await knex('adjust_part_users').insert({
+                                name: partStockPayload.name1,
+                                mobile: partStockPayload.mobile1,
+                                email: partStockPayload.email1,
+                                createdAt: currentTime1,
+                                updatedAt: currentTime1,
+                                orgId: req.orgId
+                            }).returning(['*'])
+                            issueToId = requestedByResult[0].id;
+                        }
+                    } else {
+                        issueToId = partStockPayload.issueTo;
+                    }
+
+
                     result = Joi.validate(_.omit(partStockPayload, 'storeAdjustmentBy', 'returnedBy', 'serviceOrderNo', 'description', 'date', 'receiveBy', 'receiveDate', 'deductBy', 'deductDate', 'building', 'floor'), schema);
                     partStockPayload = _.omit(partStockPayload, ['serviceOrderNo',
                         "receiveDate",
@@ -930,9 +1033,19 @@ const partsController = {
                         "returnedBy",
                         'companyId',
                         'companyId2',
-                        'deductDate'
+                        'deductDate',
+                        'issueBy',
+                        'issueTo',
+                        'name',
+                        'email',
+                        'mobile',
+                        'name1',
+                        'email1',
+                        'mobile1'
                     ])
-                    partStockPayload.companyId = req.body.companyId2;
+                    // partStockPayload.companyId = req.body.companyId2;
+                    partStockPayload.issueBy = issueById;
+                    partStockPayload.issueTo = issueToId;
 
 
 
@@ -956,9 +1069,46 @@ const partsController = {
                         storeAdjustmentBy: Joi.string().allow("").allow(null).optional(),
                         companyId: Joi.string().allow("").allow(null).optional(),
                         companyId2: Joi.string().allow("").allow(null).optional(),
+                        name: Joi.string().allow("").allow(null).optional(),
+                        email: Joi.string().allow("").allow(null).optional(),
+                        mobile: Joi.string().allow("").allow(null).optional(),
+                        name1: Joi.string().allow("").allow(null).optional(),
+                        email1: Joi.string().allow("").allow(null).optional(),
+                        mobile1: Joi.string().allow("").allow(null).optional(),
+
                     });
                     result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'issueBy', 'issueTo', 'returnedBy', 'description', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId'])
+                    partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'building', 'floor', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId', 'storeAdjustmentBy', 'name1', 'email1','mobile1','name','email','mobile' ])
+
+
+                    // Issue To Manage with Manually and Select from list
+                    let storeAdjustmentByNew;
+
+                    if (partStockPayload.name1 && partStockPayload.email1) {
+
+                        let requestByData = await knex('adjust_part_users').where({ name: partStockPayload.name1, mobile: partStockPayload.mobile1, email: partStockPayload.email1, orgId: req.orgId }).returning(['*']);
+
+                        if (requestByData && requestByData.length) {
+
+                            requestedByResult = requestByData;
+                            storeAdjustmentByNew = requestedByResult[0].id;
+                        } else {
+
+                            requestedByResult = await knex('adjust_part_users').insert({
+                                name: partStockPayload.name1,
+                                mobile: partStockPayload.mobile1,
+                                email: partStockPayload.email1,
+                                createdAt: currentTime1,
+                                updatedAt: currentTime1,
+                                orgId: req.orgId
+                            }).returning(['*'])
+                            storeAdjustmentByNew = requestedByResult[0].id;
+                        }
+                    } else {
+                        storeAdjustmentByNew = partStockPayload.issueTo;
+                    }
+
+                    partStockPayload.storeAdjustmentBy = storeAdjustmentByNew;
 
                 }
                 else if (partStockPayload.adjustType == "5") {
@@ -1242,6 +1392,7 @@ const partsController = {
                     'part_master.additionalPartDetails as additionalPartDetails'])
                 .returning('*')
                 .where({ partCode: payload.partCode })
+
             if (partResult.length > 0) {
 
                 let partLedgerResult = await knex.from('part_ledger')
@@ -1731,7 +1882,7 @@ const partsController = {
                                     partName: partData.B,
                                     orgId: req.orgId
                                 });
-                            if (checkExist.length < 1) {
+                           // if (checkExist.length < 1) {
 
                                 let min = null;
                                 if (partData.H) {
@@ -1775,12 +1926,12 @@ const partsController = {
                                 if (resultData && resultData.length) {
                                     success++;
                                 }
-                            } else {
-                                fail++;
-                                let values = _.values(partData)
-                                values.unshift('Part name with corresponding part code already exists.')
-                                errors.push(values);
-                            }
+                            // } else {
+                            //     fail++;
+                            //     let values = _.values(partData)
+                            //     values.unshift('Part name with corresponding part code already exists.')
+                            //     errors.push(values);
+                            // }
 
                         }
                     }
@@ -2259,11 +2410,11 @@ const partsController = {
             if (req.body.partId) {
                 filters['part_master.displayId'] = req.body.partId
             }
-            if (req.body.serviceOrderId && filters['assigned_parts.entityType']=='service_orders') {
+            if (req.body.serviceOrderId && filters['assigned_parts.entityType'] == 'service_orders') {
                 filters['service_orders.displayId'] = req.body.serviceOrderId
-            }else if (req.body.serviceOrderId && filters['assigned_parts.entityType']=='task_assigned_part') {
+            } else if (req.body.serviceOrderId && filters['assigned_parts.entityType'] == 'task_assigned_part') {
                 filters['task_group_schedule_assign_assets.displayId'] = req.body.serviceOrderId
-            }else if (req.body.serviceOrderId) {
+            } else if (req.body.serviceOrderId) {
                 filters['service_orders.displayId'] = req.body.serviceOrderId
             }
 
@@ -2300,7 +2451,7 @@ const partsController = {
                             qb.where('part_master.partName', 'ilike', `%${req.body.partName}%`)
                         }
                     }),
-                    
+
                 knex('assigned_parts')
                     .leftJoin('part_master', 'assigned_parts.partId', 'part_master.id')
                     .leftJoin('service_orders', 'assigned_parts.entityId', 'service_orders.id')

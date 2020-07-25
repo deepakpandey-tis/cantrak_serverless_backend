@@ -16,8 +16,21 @@ const _ = require("lodash");
 const dashboardController = {
   getDashboardData: async (req, res) => {
     try {
+
       let orgId = req.orgId;
       let accessibleProjects = req.userProjectResources[0].projects;
+      let payload = req.body;
+      let projectResult = [];
+      let projectIds = [];
+      if (payload.companyIds.length) {
+
+        projectResult = await knex.from('projects').select(['id', 'companyId', 'projectName', 'project as projectCode'])
+          .whereIn('projects.companyId', payload.companyIds)
+          .where({ orgId: req.orgId });
+
+      }
+      projectIds = projectResult.map(v => v.id);
+      projectIds = _.uniqBy(projectIds);
 
       let prioritySeq = await knex("incident_priority")
         .max("sequenceNo")
@@ -41,34 +54,45 @@ const dashboardController = {
           .from("service_requests")
           .select("service_requests.serviceStatusCode as status")
           .distinct("service_requests.id")
-          .whereIn("service_requests.projectId", accessibleProjects)
-          .where({ serviceStatusCode: "US", orgId: orgId, "moderationStatus": true })
-          .orWhere({ serviceStatusCode: "O", orgId: orgId, "moderationStatus": true }),
+          .where({ "moderationStatus": true, orgId: req.orgId })
+          .whereIn("service_requests.projectId", projectIds)
+          .whereIn("serviceStatusCode", ["US", "O"])
+        ,
+        //.whereIn("service_requests.projectId", accessibleProjects)
+        // .where({ serviceStatusCode: "US", orgId: orgId, "moderationStatus": true })
+        //.orWhere({ serviceStatusCode: "O", orgId: orgId, "moderationStatus": true }),
         knex
           .from("service_requests")
           .select("service_requests.serviceStatusCode as status")
           .distinct("service_requests.id")
-          .whereIn("service_requests.projectId", accessibleProjects)
-          .where({ serviceStatusCode: "A", orgId: orgId })
-          .orWhere({ serviceStatusCode: "IP", orgId: orgId })
-          .orWhere({ serviceStatusCode: "OH", orgId: orgId }),
+          .where({ orgId: req.orgId })
+          .whereIn("service_requests.projectId", projectIds)
+          .whereIn("serviceStatusCode", ["A", "IP", "OH"]),
+
+        //.whereIn("service_requests.projectId", accessibleProjects)
+        ///.where({ serviceStatusCode: "A", orgId: orgId })
+        //.orWhere({ serviceStatusCode: "IP", orgId: orgId })
+        //.orWhere({ serviceStatusCode: "OH", orgId: orgId }),
         knex
           .from("service_requests")
           .select("service_requests.serviceStatusCode as status")
           .distinct("service_requests.id")
-          .whereIn("service_requests.projectId", accessibleProjects)
+          .where({ orgId: req.orgId })
+          .whereIn("service_requests.projectId", projectIds)
+          //.whereIn("service_requests.projectId", accessibleProjects)
           .where({
-            serviceStatusCode: "US",
-            orgId: orgId,
             priority: priorityValue,
+            orgId: orgId,
             "moderationStatus": true
           })
-          .orWhere({
-            serviceStatusCode: "O",
-            orgId: orgId,
-            priority: priorityValue,
-            "moderationStatus": true
-          }),
+          .whereIn("serviceStatusCode", ["US", "O"]),
+
+        // .orWhere({
+        //   serviceStatusCode: "O",
+        //   orgId: orgId,
+        //   priority: priorityValue,
+        //   "moderationStatus": true
+        // }),
         //.where({ serviceStatusCode: 'O', orgId, priority: priorityValue })
         // .whereIn('service_requests.projectId', accessibleProjects)
         //.distinct('service_requests.id')
@@ -76,28 +100,30 @@ const dashboardController = {
           .from("service_requests")
           .select("service_requests.serviceStatusCode as status")
           .distinct("service_requests.id")
-          .whereIn("service_requests.projectId", accessibleProjects)
+          .whereIn("service_requests.projectId", projectIds)
+          //.whereIn("service_requests.projectId", accessibleProjects)
           .where({
-            serviceStatusCode: "A",
+            // serviceStatusCode: "A",
             orgId: orgId,
             priority: priorityValue
           })
-          .orWhere({
-            serviceStatusCode: "IP",
-            orgId: orgId,
-            priority: priorityValue
-          })
-          .orWhere({
-            serviceStatusCode: "OH",
-            orgId: orgId,
-            priority: priorityValue
-          })
+          .whereIn("serviceStatusCode", ["A", "IP", "OH"]),
+        // .orWhere({
+        //   serviceStatusCode: "IP",
+        //   orgId: orgId,
+        //   priority: priorityValue
+        // })
+        // .orWhere({
+        //   serviceStatusCode: "OH",
+        //   orgId: orgId,
+        //   priority: priorityValue
+        // })
       ]);
 
-      let open_service_requests = openRequests.length ? openRequests.length : 0;
-      let open_service_orders = openOrders.length ? openOrders.length : 0;
-      let open_service_requests_high_priority = srhp.length ? srhp.length : 0;
-      let open_service_orders_high_priority = sohp.length ? sohp.length : 0;
+      let open_service_requests = projectIds.length ? openRequests.length : 0;
+      let open_service_orders = projectIds.length ? openOrders.length : 0;
+      let open_service_requests_high_priority = projectIds.length ? srhp.length : 0;
+      let open_service_orders_high_priority = projectIds.length ? sohp.length : 0;
 
       return res.status(200).json({
         data: {
@@ -106,7 +132,10 @@ const dashboardController = {
           open_service_requests_high_priority,
           open_service_orders_high_priority,
           priorityValue,
-          ooooooooooooooooooooooo: openRequests
+          o: openRequests,
+          projectResult,
+          projectIds,
+          openRequests
         },
         message: "Dashboard data"
       });
@@ -154,6 +183,19 @@ const dashboardController = {
       let currentDate = moment().format("YYYY-MM-DD");
 
       let result;
+
+      let payload = req.body;
+      let projectResult = [];
+      let projectIds = [];
+      if (payload.companyIds.length) {
+
+        projectResult = await knex.from('projects').select(['id', 'companyId', 'projectName', 'project as projectCode'])
+          .whereIn('projects.companyId', payload.companyIds)
+          .where({ orgId: req.orgId });
+
+      }
+      projectIds = projectResult.map(v => v.id);
+      projectIds = _.uniqBy(projectIds);
 
       if (roles.includes("superAdmin") || roles.includes("orgAdmin")) {
         result = await knex
@@ -231,6 +273,7 @@ const dashboardController = {
             "teams.teamName as teamName",
             "users.name as user_name"
           ])
+          .whereIn('service_requests.projectId', projectIds)
           .where({ "service_requests.orgId": req.orgId })
           .where("service_appointments.appointedDate", "=", currentDate)
           .where({
@@ -279,6 +322,19 @@ const dashboardController = {
       // let startNewDate = moment(currentDate).startOf('date').format();
       // let endNewDate = moment(currentDate).endOf('date', 'day').format();
       let result;
+
+      let payload = req.body;
+      let projectResult = [];
+      let projectIds = [];
+      if (payload.companyIds.length) {
+
+        projectResult = await knex.from('projects').select(['id', 'companyId', 'projectName', 'project as projectCode'])
+          .whereIn('projects.companyId', payload.companyIds)
+          .where({ orgId: req.orgId });
+
+      }
+      projectIds = projectResult.map(v => v.id);
+      projectIds = _.uniqBy(projectIds);
 
       if (roles.includes("superAdmin") || roles.includes("orgAdmin")) {
         result = await knex
@@ -425,6 +481,7 @@ const dashboardController = {
             "teams.teamName as teamCode"
           )
           .whereBetween("o.appointedDate", [startNewDate, endNewDate])
+          .whereIn('s.projectId', projectIds)
           .where({
             "assigned_service_team.userId": id,
             "assigned_service_team.entityType": "survey_orders"
@@ -487,6 +544,21 @@ const dashboardController = {
         .format();
       let currentTime = new Date(startDate).getTime();
       let result;
+
+      let payload = req.body;
+      let projectResult = [];
+      let projectIds = [];
+      if (payload.companyIds.length) {
+
+        projectResult = await knex.from('projects').select(['id', 'companyId', 'projectName', 'project as projectCode'])
+          .whereIn('projects.companyId', payload.companyIds)
+          .where({ orgId: req.orgId });
+
+      }
+      projectIds = projectResult.map(v => v.id);
+      projectIds = _.uniqBy(projectIds);
+
+
       let orgId = req.orgId;
       if (roles.includes("superAdmin") || roles.includes("orgAdmin")) {
         result = await knex
@@ -575,6 +647,7 @@ const dashboardController = {
             "assigned_service_team.userId": id,
             "assigned_service_team.entityType": "pm_task_groups"
           })
+          .whereIn('pm_task_groups.companyId',payload.companyIds)
           // .orWhere({ 'assigned_service_additional_users.userId': id, 'assigned_service_additional_users.entityType': 'pm_task_groups' })
           .whereBetween("task_group_schedule_assign_assets.pmDate", [
             startDate,
@@ -1348,7 +1421,7 @@ const dashboardController = {
       let grouped = _.groupBy(problems, "categoryCode");
 
 
-    
+
 
       // let problemWise = _.keys(grouped).map(category => ({totalServiceRequests:grouped[category].length,category}))
       final.push(grouped); //totalServiceRequest: problems.length })
@@ -1384,6 +1457,64 @@ const dashboardController = {
       });
     }
   }
+  ,
+  /* GET ALL ALLOW COMPANY LIST */
+
+  getAllowAllCompanyList: async (req, res) => {
+
+    try {
+
+      let projectIds = [];
+      const accessibleProjects = req.userProjectResources;
+
+      if (accessibleProjects.length) {
+        for (let pro of accessibleProjects) {
+
+          if (pro.projects.length) {
+
+            for (let projectId of pro.projects) {
+              console.log("project=========", pro.projects, "===========================================")
+
+              projectIds.push(projectId);
+            }
+          }
+        }
+      }
+
+      projectIds = _.uniqBy(projectIds);
+
+      let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
+        .whereIn('projects.id', projectIds)
+        .where({ orgId: req.orgId });
+
+      let companyIds = companyResult.map(v => v.companyId);
+
+      companyIds = _.uniqBy(companyIds);
+
+      let companyData = await knex.from('companies').select(['id', 'companyName', 'companyId'])
+        .whereIn('companies.id', companyIds)
+        .orderBy("companies.companyName", 'asc')
+        .where({ orgId: req.orgId });
+
+
+      return res.status(200).json({
+        data: {
+          companyData,
+          companyIds
+        },
+        message: "Company List Successfully!"
+      });
+
+    } catch (err) {
+      console.log("[controllers][dashboard][getAssesList] : Error", err);
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+
+
+  }
+
 };
 
 module.exports = dashboardController;
