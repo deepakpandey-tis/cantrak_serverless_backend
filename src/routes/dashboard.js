@@ -8,7 +8,7 @@ const roleMiddleware = require('../middlewares/role')
 router.get('/top-asset-problem', dashboardController.getTopAssetProblem)
 
 /*GET DASHBOARD CARD DATA */
-router.get('/get-card-data', authMiddleware.isAuthenticated,
+router.post('/get-card-data', authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
     dashboardController.getDashboardData)
 
@@ -50,18 +50,15 @@ router.post('/get-pie-chart-for-incident-types',
 authMiddleware.isAuthenticated,
 roleMiddleware.parseUserPermission,
 dashboardController.getPieChartForIncidentTypes
-)
+);
 
+router.post('/get-pie-chart-for-all-incident-types',authMiddleware.isAuthenticated,roleMiddleware.parseUserPermission,dashboardController.getPieChartForAllIncidentTypes)
 
-router.post('/get-allow-all-company-list',
+router.get('/get-allow-all-company-list',
 authMiddleware.isAuthenticated,
 roleMiddleware.parseUserPermission,
 dashboardController.getAllowAllCompanyList
 );
-
-
-router.post('/get-pie-chart-for-all-incident-types',authMiddleware.isAuthenticated,roleMiddleware.parseUserPermission,dashboardController.getPieChartForAllIncidentTypes)
-
 
 
 module.exports = router;
