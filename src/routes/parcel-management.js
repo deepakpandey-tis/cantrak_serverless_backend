@@ -11,4 +11,6 @@ router.post('/add-parcel',authMiddleware.isAuthenticated,parcelManageController.
 
 router.post('/get-parcel-list',authMiddleware.isAuthenticated,parcelManageController.getParcelList)
 
+router.post('/get-parcel-details',authMiddleware.isAuthenticated,parcelManageController.getParcelDetails)
+
 module.exports = router
