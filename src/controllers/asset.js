@@ -2836,6 +2836,9 @@ const assetController = {
               " ) due to validation!";
           }
           //let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
+         
+          const update = await knex('asset_master').update({ isActive: true }).where({ orgId: req.orgId, id: approvalId, isActive : true }).returning(['*'])
+         
           return res.status(200).json({
             message: message,
             errors

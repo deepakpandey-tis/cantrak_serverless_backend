@@ -647,7 +647,7 @@ const dashboardController = {
             "assigned_service_team.userId": id,
             "assigned_service_team.entityType": "pm_task_groups"
           })
-          .whereIn('pm_task_groups.companyId',payload.companyIds)
+          .whereIn('pm_task_groups.companyId', payload.companyIds)
           // .orWhere({ 'assigned_service_additional_users.userId': id, 'assigned_service_additional_users.entityType': 'pm_task_groups' })
           .whereBetween("task_group_schedule_assign_assets.pmDate", [
             startDate,
@@ -692,6 +692,20 @@ const dashboardController = {
         new Date(reqData.startDate),
         new Date(reqData.endDate)
       );
+
+      let projectResult = [];
+      let projectIds = [];
+      if (reqData.formData.companyIds.length) {
+
+        projectResult = await knex.from('projects').select(['id', 'companyId', 'projectName', 'project as projectCode'])
+          .whereIn('projects.companyId', reqData.formData.companyIds)
+          .where({ orgId: req.orgId });
+
+      }
+      projectIds = projectResult.map(v => v.id);
+      projectIds = _.uniqBy(projectIds);
+
+
       let final = [];
       for (let d of dates) {
         let startNewDate = moment(d)
@@ -703,6 +717,8 @@ const dashboardController = {
 
         let currentStartTime = new Date(startNewDate).getTime();
         let currentEndTime = new Date(endNewDate).getTime();
+
+
 
         [totalServiceRequest, totalServiceOrder] = await Promise.all([
           knex
@@ -753,6 +769,7 @@ const dashboardController = {
               currentEndTime
             ])
             .where({ "service_requests.isCreatedFromSo": false })
+            .whereIn('service_requests.projectId', projectIds)
             .distinct("service_requests.id")
             .orderBy("service_requests.id", "desc"),
           // .offset(offset).limit(per_page)
@@ -773,7 +790,8 @@ const dashboardController = {
               currentStartTime,
               currentEndTime
             ])
-            .whereIn("service_requests.projectId", accessibleProjects)
+            //.whereIn("service_requests.projectId", accessibleProjects)
+            .whereIn("service_requests.projectId", projectIds)
         ]);
 
         final.push({
@@ -785,7 +803,8 @@ const dashboardController = {
 
       res.status(200).json({
         data: { final },
-        message: "records"
+        message: "records",
+        projectIds
       });
     } catch (err) {
       res.status(500).json({
@@ -796,6 +815,20 @@ const dashboardController = {
 
   getMainDataForPieChart: async (req, res) => {
     try {
+
+      let reqData = req.body;
+      let projectResult = [];
+      let projectIds = [];
+      if (reqData.formData.companyIds.length) {
+
+        projectResult = await knex.from('projects').select(['id', 'companyId', 'projectName', 'project as projectCode'])
+          .whereIn('projects.companyId', reqData.formData.companyIds)
+          .where({ orgId: req.orgId });
+
+      }
+      projectIds = projectResult.map(v => v.id);
+      projectIds = _.uniqBy(projectIds);
+
       // let startDate = moment(req.body.startDate).format('L'); // TODO
       // let endDate = moment(req.body.endDate).format('L') // TODO
       let currentDate = moment().format("L");
@@ -887,6 +920,7 @@ const dashboardController = {
             "assigned_service_additional_users.entityType":
               "service_appointments"
           })
+          .whereIn("service_requests.projectId", projectIds)
           .distinct("service_requests.id")
           .orderBy("service_requests.id", "desc");
       }
@@ -1045,6 +1079,7 @@ const dashboardController = {
             "assigned_service_additional_users.userId": id,
             "assigned_service_additional_users.entityType": "survey_orders"
           })
+          .whereIn("s.projectId", projectIds)
           .groupBy([
             "o.id",
             "s.description",
@@ -1153,6 +1188,7 @@ const dashboardController = {
             startNewDate,
             endNewDate
           ])
+          .whereIn('pm_task_groups.companyId', reqData.formData.companyIds)
           .orderBy("task_group_schedule_assign_assets.id", "desc");
       }
 
