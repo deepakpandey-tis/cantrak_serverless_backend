@@ -863,33 +863,181 @@ const partsController = {
                 // validate keys
                 let result;
                 if (partStockPayload.adjustType == "1" || partStockPayload.adjustType == "3") {
+
+                    let issueById;
+                    let issueToId;
+                    let receiveBy;
+                    let returnBy;
+
                     const schema = Joi.object().keys({
                         partId: Joi.string().required(),
                         unitCost: Joi.number().allow("").allow(null).optional(),
                         unitCost: Joi.string().allow("").allow(null).optional(),
                         quantity: Joi.number().required(),
                         adjustType: Joi.string().required(),
-                        serviceOrderNo: Joi.string().required(),
+                        serviceOrderNo: Joi.number().allow("").allow(null).optional(),
                         isPartAdded: Joi.string().required(),
                         issueBy: Joi.string().allow("").allow(null).optional(),
                         issueTo: Joi.string().allow("").allow(null).optional(),
+                        name: Joi.string().allow("").allow(null).optional(),
+                        email: Joi.string().allow("").allow(null).optional(),
+                        mobile: Joi.string().allow("").allow(null).optional(),
+                        name1: Joi.string().allow("").allow(null).optional(),
+                        email1: Joi.string().allow("").allow(null).optional(),
+                        mobile1: Joi.string().allow("").allow(null).optional(),
                         returnedBy: Joi.string().allow("").allow(null).optional(),
                         companyId: Joi.string().allow("").allow(null).optional(),
                         companyId2: Joi.string().allow("").allow(null).optional(),
-
-
+                        receiveBy: Joi.string().allow("").allow(null).optional(),
                     });
-                    result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'storeAdjustmentBy', 'description', 'date', 'workOrderId', 'receiveBy', 'receiveDate', 'deductBy', 'deductDate', 'building', 'floor'), schema);
+
+
+
+                    result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'storeAdjustmentBy', 'description', 'date', 'workOrderId', 'receiveDate', 'deductBy', 'deductDate', 'building', 'floor'), schema);
 
                     if (partStockPayload.adjustType == "1") {
 
-                        partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId2', 'storeAdjustmentBy', 'returnedBy', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor'])
+                        // Issue By Id Manage with Manually and Select from list
+
+                        if (partStockPayload.name && partStockPayload.email) {
+
+                            let requestByData = await knex('adjust_part_users').where({ name: partStockPayload.name, mobile: partStockPayload.mobile, email: partStockPayload.email, orgId: req.orgId }).returning(['*']);
+
+                            if (requestByData && requestByData.length) {
+
+                                requestedByResult = requestByData;
+                                issueById = requestedByResult[0].id;
+                            } else {
+
+                                requestedByResult = await knex('adjust_part_users').insert({
+                                    name: partStockPayload.name,
+                                    mobile: partStockPayload.mobile,
+                                    email: partStockPayload.email,
+                                    createdAt: currentTime1,
+                                    updatedAt: currentTime1,
+                                    orgId: req.orgId
+                                }).returning(['*'])
+                                issueById = requestedByResult[0].id;
+                            }
+                        } else {
+                            issueById = partStockPayload.issueBy;
+                        }
+
+
+                        // Issue To Manage with Manually and Select from list
+
+                        if (partStockPayload.name1 && partStockPayload.email1) {
+
+                            let requestByData = await knex('adjust_part_users').where({ name: partStockPayload.name1, mobile: partStockPayload.mobile1, email: partStockPayload.email1, orgId: req.orgId }).returning(['*']);
+
+                            if (requestByData && requestByData.length) {
+
+                                requestedByResult = requestByData;
+                                issueToId = requestedByResult[0].id;
+                            } else {
+
+                                requestedByResult = await knex('adjust_part_users').insert({
+                                    name: partStockPayload.name1,
+                                    mobile: partStockPayload.mobile1,
+                                    email: partStockPayload.email1,
+                                    createdAt: currentTime1,
+                                    updatedAt: currentTime1,
+                                    orgId: req.orgId
+                                }).returning(['*'])
+                                issueToId = requestedByResult[0].id;
+                            }
+                        } else {
+                            issueToId = partStockPayload.issueTo;
+                        }
+
+                        partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId2', 'storeAdjustmentBy', 'returnedBy', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor', 'issueBy',
+                            'issueTo',
+                            'name',
+                            'email',
+                            'mobile',
+                            'name1',
+                            'email1',
+                            'mobile1'])
+
+                        partStockPayload.issueBy = issueById;
+                        partStockPayload.issueTo = issueToId;
+
 
                     } else if (partStockPayload.adjustType == "3") {
-                        partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId2', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor'])
+                        // Issue By Id Manage with Manually and Select from list
+
+                        if (partStockPayload.name && partStockPayload.email) {
+
+                            let requestByData = await knex('adjust_part_users').where({ name: partStockPayload.name, mobile: partStockPayload.mobile, email: partStockPayload.email, orgId: req.orgId }).returning(['*']);
+
+                            if (requestByData && requestByData.length) {
+
+                                requestedByResult = requestByData;
+                                returnBy = requestedByResult[0].id;
+                            } else {
+
+                                requestedByResult = await knex('adjust_part_users').insert({
+                                    name: partStockPayload.name,
+                                    mobile: partStockPayload.mobile,
+                                    email: partStockPayload.email,
+                                    createdAt: currentTime1,
+                                    updatedAt: currentTime1,
+                                    orgId: req.orgId
+                                }).returning(['*'])
+                                returnBy = requestedByResult[0].id;
+                            }
+                        } else {
+                            returnBy = partStockPayload.returnedBy;
+                        }
+
+
+                        // Issue To Manage with Manually and Select from list
+
+                        if (partStockPayload.name1 && partStockPayload.email1) {
+
+                            let requestByData = await knex('adjust_part_users').where({ name: partStockPayload.name1, mobile: partStockPayload.mobile1, email: partStockPayload.email1, orgId: req.orgId }).returning(['*']);
+
+                            if (requestByData && requestByData.length) {
+
+                                requestedByResult = requestByData;
+                                receiveBy = requestedByResult[0].id;
+                            } else {
+
+                                requestedByResult = await knex('adjust_part_users').insert({
+                                    name: partStockPayload.name1,
+                                    mobile: partStockPayload.mobile1,
+                                    email: partStockPayload.email1,
+                                    createdAt: currentTime1,
+                                    updatedAt: currentTime1,
+                                    orgId: req.orgId
+                                }).returning(['*'])
+                                receiveBy = requestedByResult[0].id;
+                            }
+                        } else {
+                            receiveBy = partStockPayload.receiveBy;
+                        }
+
+                        partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId2', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor', 'name',
+                            'email',
+                            'mobile',
+                            'name1',
+                            'email1',
+                            'mobile1',
+                            'companyId',
+                            'serviceOrderNo'])
+
+                        partStockPayload.returnedBy = returnBy;
+                        partStockPayload.receiveBy = receiveBy;
+                        partStockPayload.companyId = null;
+                        partStockPayload.serviceOrderNo = null;
 
                     } else {
-                        partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'storeAdjustmentBy', 'issueBy', 'returnedBy', 'issueTo', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor'])
+                        partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'storeAdjustmentBy', 'issueBy', 'returnedBy', 'issueTo', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'building', 'floor', 'name',
+                            'email',
+                            'mobile',
+                            'name1',
+                            'email1',
+                            'mobile1'])
 
                     }
 
@@ -1954,7 +2102,7 @@ const partsController = {
                     }
 
 
-                    const update = await knex('part_master').update({ isActive: true }).where({ orgId: req.orgId, id: approvalId, isActive : true }).returning(['*'])
+                    const update = await knex('part_master').update({ isActive: true }).where({ orgId: req.orgId, id: approvalId, isActive: true }).returning(['*'])
 
 
                     //let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
@@ -3563,24 +3711,29 @@ const partsController = {
             let insertDataObj;
             let issueByData;
             let issueToData;
+            let receiveToData;
             // Get assigned parts to PM - Work Order
-            let assignedPartLedger = await knex('part_ledger_temp').select('*').where({ orgId: req.orgId })
+            let assignedLedger = await knex('part_ledger_temp').select('*').where({ orgId: req.orgId })
             //  console.log("data ledger", assignedPartLedger);
-            for (let ledger of assignedPartLedger) {
-
+            for (let assignedPartLedger of assignedLedger) {
+                console.log("data ledger", assignedPartLedger);
                 issueByData = await knex('adjust_part_users').where({ name: assignedPartLedger.issueBy, orgId: req.orgId }).returning(['*']);
 
                 if (issueByData && issueByData.length) {
                     requestedByResult = issueByData;
                     issueById = requestedByResult[0].id;
                 } else {
-                    requestedByResult = await knex('adjust_part_users').insert({
-                        name: assignedPartLedger.issueBy,
-                        createdAt: assignedPartLedger.createdAt,
-                        updatedAt: assignedPartLedger.updatedAt,
-                        orgId: req.orgId
-                    }).returning(['*'])
-                    issueById = requestedByResult[0].id;
+                    if (assignedPartLedger.issueBy) {
+                        requestedByResult = await knex('adjust_part_users').insert({
+                            name: assignedPartLedger.issueBy,
+                            createdAt: assignedPartLedger.createdAt,
+                            updatedAt: assignedPartLedger.updatedAt,
+                            orgId: req.orgId
+                        }).returning(['*'])
+                        issueById = requestedByResult[0].id;
+                    } else {
+                        issueById = null;
+                    }
                 }
 
 
@@ -3590,13 +3743,37 @@ const partsController = {
                     requestedToResult = issueToData;
                     issueToId = requestedToResult[0].id;
                 } else {
-                    requestedToResult = await knex('adjust_part_users').insert({
-                        name: assignedPartLedger.issueTo,
-                        createdAt: assignedPartLedger.createdAt,
-                        updatedAt: assignedPartLedger.updatedAt,
-                        orgId: req.orgId
-                    }).returning(['*'])
-                    issueToId = requestedToResult[0].id;
+                    if (assignedPartLedger.issueTo) {
+                        requestedToResult = await knex('adjust_part_users').insert({
+                            name: assignedPartLedger.issueTo,
+                            createdAt: assignedPartLedger.createdAt,
+                            updatedAt: assignedPartLedger.updatedAt,
+                            orgId: req.orgId
+                        }).returning(['*'])
+                        issueToId = requestedToResult[0].id;
+                    } else {
+                        issueToId = null;
+                    }
+                }
+
+
+                receiveToData = await knex('adjust_part_users').where({ name: assignedPartLedger.receiveBy, orgId: req.orgId }).returning(['*']);
+
+                if (receiveToData && receiveToData.length) {
+                    requestedToResult = receiveToData;
+                    receiveId = requestedToResult[0].id;
+                } else {
+                    if (assignedPartLedger.issueTo) {
+                        requestedToResult = await knex('adjust_part_users').insert({
+                            name: assignedPartLedger.issueTo,
+                            createdAt: assignedPartLedger.createdAt,
+                            updatedAt: assignedPartLedger.updatedAt,
+                            orgId: req.orgId
+                        }).returning(['*'])
+                        receiveId = requestedToResult[0].id;
+                    } else {
+                        receiveId = null;
+                    }
                 }
 
                 insertDataObj = {
@@ -3613,7 +3790,7 @@ const partsController = {
                     "approved": assignedPartLedger.approved,
                     "approvedBy": assignedPartLedger.approvedBy,
                     "orgId": assignedPartLedger.orgId,
-                    "receiveBy": assignedPartLedger.receiveBy,
+                    "receiveBy": receiveId,
                     "receiveDate": assignedPartLedger.receiveDate,
                     "deductBy": assignedPartLedger.deductBy,
                     "deductDate": assignedPartLedger.deductDate,
@@ -3627,7 +3804,7 @@ const partsController = {
                     "issueBy": issueById,
                     "issueTo": issueToId
                 }
-                console.log("part ledger=========", ledger, "=============");
+                console.log("part ledger=========", assignedPartLedger, "=============");
                 partResult = await knex('part_ledger').insert(insertDataObj).returning(['*']);
 
             }
