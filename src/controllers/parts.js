@@ -3802,7 +3802,8 @@ const partsController = {
                     "receiveFrom": assignedPartLedger.receiveFrom,
                     "issueDate": assignedPartLedger.issueDate,
                     "issueBy": issueById,
-                    "issueTo": issueToId
+                    "issueTo": issueToId,
+                    "returnedBy": assignedPartLedger.returnedBy
                 }
                 console.log("part ledger=========", assignedPartLedger, "=============");
                 partResult = await knex('part_ledger').insert(insertDataObj).returning(['*']);
