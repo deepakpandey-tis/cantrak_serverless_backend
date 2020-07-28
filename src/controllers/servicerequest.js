@@ -3671,7 +3671,8 @@ const serviceRequestController = {
 
       for (let md of mapData) {
 
-        totalServiceOrder += Number(md.serviceOrder)
+        //totalServiceOrder += Number(md.serviceOrder)
+        totalServiceOrder = sr.length;
         arr.push({
           totalServiceOrder,
           serviceOrder: md.serviceOrder,

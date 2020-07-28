@@ -3503,7 +3503,12 @@ const partsController = {
                 let totalIn2 = 0;
                 let totalOut2 = 0;
                 let partArr = [];
+                let dateArr = [];
                 for (let d2 of _.orderBy(stockResult, 'partName')) {
+
+
+                    let dateForBalance;
+                    dateForBalance = moment(+d2.createdAt).format("YYYY-MM-DD");
 
                     let balance = await knex.from('part_ledger')
                         .sum('quantity as quantity')
@@ -3528,7 +3533,28 @@ const partsController = {
 
                     if (d2.partCode == lastValue) {
                         // console.log("yesss",lastValue)
-                        openingBalance = 0;
+
+                        let lastDate = dateArr[dateArr.length - 1];
+                        let dateForBalance2 = moment(+d2.createdAt).format("YYYY-MM-DD");
+                        let startOfDate = moment(dateForBalance2).startOf('date').format();
+                        let startOfTime = new Date(startOfDate).getTime();
+
+                        if (dateForBalance2 == lastDate) {
+
+                            openingBalance = 0;
+
+                        } else {
+
+                            let balance2 = await knex.from('part_ledger')
+                                .sum('quantity as quantity')
+                                .where('part_ledger.createdAt', '<', startOfTime)
+                                .where({ partId: d2.partId, orgId: req.orgId }).first();
+
+                            newBal2 = 0;
+                            openingBalance = balance2.quantity;
+
+                        }
+
 
                     } else {
 
@@ -3538,6 +3564,7 @@ const partsController = {
                     }
 
                     partArr.push(d2.partCode);
+                    dateArr.push(dateForBalance);
 
 
 
@@ -3572,6 +3599,12 @@ const partsController = {
 
                         opening = openingBalance;
 
+                        if (opening) {
+
+                        } else {
+                            opening = 0;
+                        }
+
                     }
 
                     newBal2 = bal2 + opening;
@@ -3589,6 +3622,7 @@ const partsController = {
                         toDate,
                         fromTime,
                         toTime,
+                        dateArr
 
                     },
                     message: "Stock Summary Successfully!"
