@@ -18,9 +18,17 @@ const FacilityTypeController = {
     try {
       let userId = req.me.id;
       let orgId = req.orgId;
+      let facilityTypeResult = null
+      let images = [];
+
 
       await knex.transaction(async (trx) => {
-        const payload = req.body;
+        let payload = req.body;
+        payload = _.omit(req.body, [
+          "iconUrl",
+          "logoFile"
+          
+        ]);
         console.log("[Controllers][FacilityType][add]", payload);
 
         const schema = Joi.object().keys({
@@ -76,6 +84,31 @@ const FacilityTypeController = {
           .into("facility_type_master");
 
         incident = incidentResult[0];
+        facilityTypeResult = incidentResult[0]
+
+        let imagesData = req.body.logoFile;
+        console.log("imagesData", imagesData);
+        if (imagesData && imagesData.length > 0) {
+          // console.log("imagesData",imagesData)
+          for (let image of imagesData) {
+            // console.log("image and parcel result",image,parcelResult.id)
+            let d = await knex("images")
+              .insert({
+                entityType: "facility_type_image",
+                entityId: facilityTypeResult.id,
+                s3Url: image.s3Url,
+                name: image.filename,
+                title: image.title,
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                orgId: req.orgId,
+              })
+              .returning(["*"]);
+            // .transacting(trx)
+            // .into("images");
+            images.push(d[0]);
+          }
+        }
 
         trx.commit;
       });
@@ -173,7 +206,7 @@ const FacilityTypeController = {
       try{
         let sortPayload = req.body;
         if (!sortPayload.sortBy && !sortPayload.orderBy) {
-          sortPayload.sortBy = "facilityTypeName";
+          sortPayload.sortBy = "facility_type_master.facilityTypeName";
           sortPayload.orderBy = "asc";
         }
 
@@ -218,7 +251,7 @@ const FacilityTypeController = {
                     qb.orWhere("facility_type_master.facilityTypeName","iLIKE",`%${searchValue}%`)
                 }
             })
-            .orderBy(sortPayload.sortBy,sortPayload.orderBy)
+            // .orderBy(sortPayload.sortBy,sortPayload.orderBy)
             .offset(offset)
             .limit(per_page)
         ]);
@@ -246,6 +279,7 @@ const FacilityTypeController = {
     try{
       let facilityTypeDetail = null;
       let orgId = req.orgId;
+      let images ;
 
       await knex.transaction(async(trx)=>{
         let payload = req.body
@@ -260,17 +294,26 @@ const FacilityTypeController = {
             ],
           });
         }
-        let facilityTypeResult = await knex("facility_type_master")
+        let [facilityTypeResult,facilityTypeImages] = await Promise.all([
+        knex
+        .from("facility_type_master")
         .select("facility_type_master.*")
-        .where({ id: payload.id, orgId: orgId })
+        .where({ id: payload.id, orgId: orgId }),
+        knex
+        .from("images")
+        .where({ entityId: payload.id, entityType: "facility_type_image" }),
+
+      ])
 
         facilityTypeDetail = _.omit(facilityTypeResult[0],["createdAt", "updatedAt"]);
+        images = facilityTypeImages
         trx.commit;
-
+      
       })
       return res.status(200).json({
         data: {
           facilityTypeDetail: facilityTypeDetail,
+          images
         },
         message: "Facility Type Details !!",
       });
