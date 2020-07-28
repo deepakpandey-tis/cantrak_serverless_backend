@@ -83,7 +83,7 @@ const parcelManagementController = {
       let images = [];
       let orgId = req.orgId;
       let payLoad = req.body;
-      console.log("payload data for image",payLoad)
+      console.log("payload data for image", payLoad);
       let pickedUpType = req.body.pickedUpType;
       payLoad = _.omit(req.body, [
         "image",
@@ -138,7 +138,7 @@ const parcelManagementController = {
 
         parcelResult = addResult[0];
 
-        console.log("parcel result id",parcelResult.id)
+        console.log("parcel result id", parcelResult.id);
 
         let noOrgUserDataPayload = req.body.non_org_user_data;
 
@@ -170,7 +170,7 @@ const parcelManagementController = {
         // }
 
         let imagesData = req.body.image;
-        console.log("imagesData",imagesData)
+        console.log("imagesData", imagesData);
         if (imagesData && imagesData.length > 0) {
           // console.log("imagesData",imagesData)
           for (let image of imagesData) {
@@ -186,9 +186,9 @@ const parcelManagementController = {
                 updatedAt: currentTime,
                 orgId: req.orgId,
               })
-              .returning(["*"])
-              // .transacting(trx)
-              // .into("images");
+              .returning(["*"]);
+            // .transacting(trx)
+            // .into("images");
             images.push(d[0]);
           }
         }
@@ -227,6 +227,7 @@ const parcelManagementController = {
 
       let { unitId, trackingNumber, tenant, status } = req.body;
 
+      console.log("request body",req.body)
       if (unitId || trackingNumber || tenant || status) {
         try {
           [total, rows] = await Promise.all([
@@ -480,7 +481,7 @@ const parcelManagementController = {
             "buildings_and_phases.description as buildingName",
             "floor_and_zones.floorZoneCode",
             "floor_and_zones.description as floorName",
-            "users.name as tenantName"
+            "users.name as tenantName",
           ])
           .where("parcel_management.id", payload.id)
           .first(),
@@ -491,12 +492,12 @@ const parcelManagementController = {
       ]);
 
       return res.status(200).json({
-        parcelDetails:{
+        parcelDetails: {
           ...parcelDetails,
-          parcelImages
+          parcelImages,
         },
-        message:"Parcel Details !"
-      })
+        message: "Parcel Details !",
+      });
     } catch (err) {
       console.log("controller[parcel-management][parcelDetails]");
 
@@ -504,6 +505,29 @@ const parcelManagementController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
     }
+  },
+  updateParcelDetails: async (req, res) => {
+    try {
+      let parcel = null;
+      let insertedImages = [];
+
+      await knex.transaction(async (trx) => {
+        let parcelPayload = req.body;
+        const schema = Joi.object().keys({
+          pickedUpType: Joi.string().required(),
+          trackingNumber: Joi.string().required(),
+          carrierId: Joi.number().required(),
+          parcelType: Joi.number().required(),
+          description: Joi.string().allow("").optional(),
+          parcelCondition: Joi.string().required(),
+          parcelStatus: Joi.number().required(),
+          parcelPriority: Joi.number().required(),
+        });
+        let currentTime = new Date().getTime();
+
+
+      });
+    } catch (err) {}
   },
 };
 module.exports = parcelManagementController;
