@@ -3712,8 +3712,9 @@ const partsController = {
             let issueByData;
             let issueToData;
             let receiveToData;
+            let partResult;
             // Get assigned parts to PM - Work Order
-            let assignedLedger = await knex('part_ledger_temp').select('*').where({ orgId: req.orgId })
+            let assignedLedger = await knex('part_ledger_temp').select('*').where({ isPartAdded: true })
             //  console.log("data ledger", assignedPartLedger);
             for (let assignedPartLedger of assignedLedger) {
                 console.log("data ledger", assignedPartLedger);
@@ -3806,9 +3807,19 @@ const partsController = {
                     "returnedBy": assignedPartLedger.returnedBy
                 }
                 console.log("part ledger=========", assignedPartLedger, "=============");
+                // let partLedgerExits = await knex('part_ledger').select('*').where({ orgId: req.orgId })
+                // if (partLedgerExits) {
+                // } else {
                 partResult = await knex('part_ledger').insert(insertDataObj).returning(['*']);
-
+                // }
             }
+
+            return res.status(200).json({
+                data: {
+                    data: partResult
+                },
+                message: "Data migration has been updated successfully!"
+            });
 
         } catch (err) {
             return res.status(500).json({
