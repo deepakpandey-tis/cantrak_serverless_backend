@@ -24,6 +24,8 @@ const facilityBookingController = {
       let addedBookingCriteriaResult = [];
       let message;
       let bookingQuotaResult = [];
+
+      console.log("reuested data for add facilility",req.body)
       await knex.transaction(async (trx) => {
         const payload = _.omit(req.body, [
           "rules_and_regulations",
@@ -48,7 +50,9 @@ const facilityBookingController = {
           description: Joi.string().required(),
           enableCheckIn: Joi.boolean().required(),
           checkInType:Joi.string().allow('').optional(),
-          preCheckinTime: Joi.string().allow('').optional()
+          enablePreCheckIn:Joi.boolean().required(),
+          preCheckinTime: Joi.string().allow('').optional(),
+          qrCode:Joi.string().allow('').optional()
           // "descriptionAlternateLang": Joi.string().required(),
         });
 
@@ -562,6 +566,7 @@ const facilityBookingController = {
             "facility_master.enableCheckIn",
             "facility_master.checkInType",
             "facility_master.preCheckinTime",
+            "facility_master.enablePreCheckIn",
             "facility_type_master.id as facilityTypeId",
             "facility_type_master.facilityTypeName",
             "companies.companyId",

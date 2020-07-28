@@ -272,6 +272,8 @@ const facilityBookingController = {
                         'entity_bookings.*',
                         'facility_master.id as facilityId',
                         'facility_master.name as facilityName',
+                        'facility_master.enablePreCheckIn',
+                        'facility_master.qrCode',
                         'companies.companyId as companyCode',
                         'companies.companyName',
                         'projects.project as projectCode',
