@@ -3712,12 +3712,13 @@ const partsController = {
             let issueByData;
             let issueToData;
             let receiveToData;
+            let partResult;
             // Get assigned parts to PM - Work Order
-            let assignedLedger = await knex('part_ledger_temp').select('*').where({ orgId: req.orgId })
+            let assignedLedger = await knex('part_ledger_temp').select('*').where({ isPartAdded: true })
             //  console.log("data ledger", assignedPartLedger);
             for (let assignedPartLedger of assignedLedger) {
                 console.log("data ledger", assignedPartLedger);
-                issueByData = await knex('adjust_part_users').where({ name: assignedPartLedger.issueBy, orgId: req.orgId }).returning(['*']);
+                issueByData = await knex('adjust_part_users').where({ name: assignedPartLedger.issueBy, orgId: assignedPartLedger.orgId }).returning(['*']);
 
                 if (issueByData && issueByData.length) {
                     requestedByResult = issueByData;
@@ -3728,7 +3729,7 @@ const partsController = {
                             name: assignedPartLedger.issueBy,
                             createdAt: assignedPartLedger.createdAt,
                             updatedAt: assignedPartLedger.updatedAt,
-                            orgId: req.orgId
+                            orgId: assignedPartLedger.orgId
                         }).returning(['*'])
                         issueById = requestedByResult[0].id;
                     } else {
@@ -3737,7 +3738,7 @@ const partsController = {
                 }
 
 
-                issueToData = await knex('adjust_part_users').where({ name: assignedPartLedger.issueTo, orgId: req.orgId }).returning(['*']);
+                issueToData = await knex('adjust_part_users').where({ name: assignedPartLedger.issueTo, orgId: assignedPartLedger.orgId }).returning(['*']);
 
                 if (issueToData && issueToData.length) {
                     requestedToResult = issueToData;
@@ -3748,7 +3749,7 @@ const partsController = {
                             name: assignedPartLedger.issueTo,
                             createdAt: assignedPartLedger.createdAt,
                             updatedAt: assignedPartLedger.updatedAt,
-                            orgId: req.orgId
+                            orgId: assignedPartLedger.orgId
                         }).returning(['*'])
                         issueToId = requestedToResult[0].id;
                     } else {
@@ -3757,7 +3758,7 @@ const partsController = {
                 }
 
 
-                receiveToData = await knex('adjust_part_users').where({ name: assignedPartLedger.receiveBy, orgId: req.orgId }).returning(['*']);
+                receiveToData = await knex('adjust_part_users').where({ name: assignedPartLedger.receiveBy, orgId: assignedPartLedger.orgId }).returning(['*']);
 
                 if (receiveToData && receiveToData.length) {
                     requestedToResult = receiveToData;
@@ -3768,7 +3769,7 @@ const partsController = {
                             name: assignedPartLedger.issueTo,
                             createdAt: assignedPartLedger.createdAt,
                             updatedAt: assignedPartLedger.updatedAt,
-                            orgId: req.orgId
+                            orgId: assignedPartLedger.orgId
                         }).returning(['*'])
                         receiveId = requestedToResult[0].id;
                     } else {
@@ -3806,9 +3807,19 @@ const partsController = {
                     "returnedBy": assignedPartLedger.returnedBy
                 }
                 console.log("part ledger=========", assignedPartLedger, "=============");
+                // let partLedgerExits = await knex('part_ledger').select('*').where({ orgId: req.orgId })
+                // if (partLedgerExits) {
+                // } else {
                 partResult = await knex('part_ledger').insert(insertDataObj).returning(['*']);
-
+                // }
             }
+
+            return res.status(200).json({
+                data: {
+                    data: partResult
+                },
+                message: "Data migration has been updated successfully!"
+            });
 
         } catch (err) {
             return res.status(500).json({
