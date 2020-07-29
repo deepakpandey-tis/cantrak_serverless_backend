@@ -3600,6 +3600,8 @@ const serviceRequestController = {
         ])
         .distinct('service_requests.id')
 
+      sr = _.uniqBy(sr, "S Id");
+
 
       const Parallel = require('async-parallel')
       let srWithTenant = await Parallel.map(sr, async pd => {
