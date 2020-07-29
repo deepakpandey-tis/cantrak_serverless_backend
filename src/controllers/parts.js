@@ -3195,7 +3195,9 @@ const partsController = {
                     .leftJoin('projects', 'buildings_and_phases.projectId', 'projects.id')
                     .leftJoin('floor_and_zones', 'part_ledger.floor', 'floor_and_zones.id')
                     .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
-
+                    .leftJoin('adjust_part_users as re', 'part_ledger.receiveBy', 're.id')
+                    .leftJoin('adjust_part_users as ib', 'part_ledger.issueBy', 'ib.id')
+                    .leftJoin('adjust_part_users as it', 'part_ledger.issueTo', 'it.id')
                     .select([
                         'part_ledger.*',
                         'part_master.partName',
@@ -3208,7 +3210,10 @@ const partsController = {
                         'projects.projectName',
                         'floor_and_zones.floorZoneCode',
                         'floor_and_zones.description as floorDescripton',
-                        'adjust_type.adjustType as adjustTypeName'
+                        'adjust_type.adjustType as adjustTypeName',
+                        're.name as receiveByName',
+                        'ib.name as issueByName',
+                        'it.name as issueToName'
 
                     ])
                     .where(qb => {
@@ -3261,9 +3266,15 @@ const partsController = {
 
                     let stockData = await knex.from('part_ledger')
                         .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
+                        .leftJoin('adjust_part_users as re', 'part_ledger.receiveBy', 're.id')
+                        .leftJoin('adjust_part_users as ib', 'part_ledger.issueBy', 'ib.id')
+                        .leftJoin('adjust_part_users as it', 'part_ledger.issueTo', 'it.id')
                         .select([
                             'part_ledger.*',
-                            'adjust_type.adjustType as adjustTypeName'
+                            'adjust_type.adjustType as adjustTypeName',
+                            're.name as receiveByName',
+                            'ib.name as issueByName',
+                            'it.name as issueToName'
                         ])
                         .where(qb => {
 
