@@ -3490,7 +3490,8 @@ const serviceRequestController = {
     try {
       const payload = req.body;
       console.log("service request report priority", payload.priority)
-      const accessibleProjects = req.userProjectResources[0].projects
+      const accessibleProjects = req.userProjectResources[0].projects;
+
       let sr = await knex.from("service_requests")
         .leftJoin(
           "property_units",
@@ -3543,9 +3544,12 @@ const serviceRequestController = {
           "service_requests.completedOn"
 
         ])
+        .orderBy('service_requests.createdAt', 'desc')
         .where({ "service_requests.orgId": req.orgId, 'service_requests.moderationStatus': true })
         .where({ 'service_requests.isCreatedFromSo': false })
-        .whereNot('status.descriptionEng', 'Cancel')
+        // .where({ "service_requests.orgId": req.orgId, 'service_requests.moderationStatus': true })
+        // .where({ 'service_requests.isCreatedFromSo': false })
+        // //.whereNot('status.descriptionEng', 'Cancel')
         .where(qb => {
 
           if (payload.fromDate && payload.toDate) {
@@ -3558,10 +3562,10 @@ const serviceRequestController = {
             qb.whereIn('buildings_and_phases.id', payload.buildingId)
           }
           if (payload.companyId) {
-            qb.where('companies.id', payload.companyId)
+            qb.where('service_requests.companyId', payload.companyId)
           }
           if (payload.projectId) {
-            qb.where('projects.id', payload.projectId)
+            qb.where('service_request.projectId', payload.projectId)
           }
           if (payload.categoryId) {
             console.log("CategoryID", payload.categoryId);
@@ -3585,17 +3589,16 @@ const serviceRequestController = {
           "property_units.id",
           "buildings_and_phases.id",
           "service_problems.id",
-          // "requested_by.id",
+          "requested_by.id",
           "assigned_service_team.id",
           "teams.teamId",
           "mainUsers.id",
           "incident_categories.id",
           "service_orders.id",
-          'requested_by.id'
-
+          "companies.id",
+          "projects.id"
         ])
         .distinct('service_requests.id')
-        .orderBy('service_requests.createdAt', 'desc')
 
 
       const Parallel = require('async-parallel')
@@ -3624,7 +3627,7 @@ const serviceRequestController = {
       let filterStatus = sr.filter(v => v.Status != "Cancel")
 
 
-      let serviceIds = filterStatus.map(it => it.id);
+      let serviceIds = sr.map(it => it.id);
 
       let serviceProblem = await knex.from('service_problems')
         .leftJoin('service_requests', 'service_problems.serviceRequestId', 'service_requests.id')
@@ -3690,7 +3693,8 @@ const serviceRequestController = {
           service_requests: srWithTenant,
           problemData: _.orderBy(arr, "totalServiceOrder", "asc"),
           sr,
-          serviceIds
+          serviceIds,
+
         }
       })
     } catch (err) {
