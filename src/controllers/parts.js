@@ -1283,8 +1283,8 @@ const partsController = {
                     let partInfoData = await knex('part_master').where({ id: partStockPayload.partId, orgId: req.orgId }).returning(['*']).first();
                     let companyMasterId = partInfoData.companyId;
 
-                    result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'description', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'deductTo', 'name', 'email', 'mobile','name1','email1','mobile1'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy','receiveDate', 'deductBy', 'deductDate', 'deductTo', 'building', 'floor','name', 'email', 'mobile','name1','email1','mobile1'])
+                    result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'description', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'deductTo', 'name', 'email', 'mobile', 'name1', 'email1', 'mobile1'), schema);
+                    partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'receiveDate', 'deductBy', 'deductDate', 'deductTo', 'building', 'floor', 'name', 'email', 'mobile', 'name1', 'email1', 'mobile1'])
                     //partStockPayload.receiveDate = new Date(partStockPayload.receiveDate).getTime();
                     partStockPayload.companyId = companyMasterId;
 
@@ -3881,7 +3881,7 @@ const partsController = {
 
             if (fromDate && toDate) {
 
-                let fromNewDate = moment(fromDate).startOf('date').format();
+                let fromNewDate = moment(fromDate).startOf('date').format("YYYY-MM-DD 00:00:00");
                 let toNewDate = moment(toDate).endOf('date', 'days').format();
                 let fromTime = new Date(fromNewDate).getTime();
                 let toTime = new Date(toNewDate).getTime();
@@ -3943,7 +3943,7 @@ const partsController = {
                     .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
 
 
-                let fromDateEnd = moment(fromTime).startOf('date').format();
+                let fromDateEnd = moment(fromTime).startOf('date').format('YYYY-MM-DD 00:00:00');
                 let fromTimeEnd = new Date(fromDateEnd).getTime();
 
 
@@ -3956,7 +3956,7 @@ const partsController = {
                 let totalOut2 = 0;
                 let partArr = [];
                 let dateArr = [];
-                for (let d2 of _.orderBy(stockResult, 'partName')) {
+                for (let d2 of _.orderBy(stockResult, 'partId')) {
 
 
                     let dateForBalance;
@@ -4079,7 +4079,9 @@ const partsController = {
                         toDate,
                         fromTime,
                         toTime,
-                        dateArr
+                        dateArr,
+                        fromNewDate,
+                        toNewDate
 
                     },
                     message: "Stock Summary Successfully!"

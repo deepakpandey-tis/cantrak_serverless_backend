@@ -1990,7 +1990,9 @@ const taskGroupController = {
           'pm_task.taskName as taskName',
           'status.descriptionEng as status',
           'pm_task.taskNameAlternate',
-          'pm_task.taskSerialNumber'
+          'pm_task.taskSerialNumber',
+          'pm_task.result',
+
         ])
         .where({
           'pm_task.taskGroupScheduleAssignAssetId': payload.taskGroupScheduleAssignAssetId,
