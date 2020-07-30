@@ -376,7 +376,7 @@ const facilityDashboardController = {
       let orgId = req.orgId;
       let { facilityName } = req.body;
       totalFacilityBookings = null;
-      console.log("requested for total", req.body);
+      console.log("requested for total booking1", req.body);
       var getDaysArray = function (start, end) {
         let dt = start;
         let arr = [];
