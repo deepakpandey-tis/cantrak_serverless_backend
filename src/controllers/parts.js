@@ -2543,7 +2543,7 @@ const partsController = {
                     }
 
 
-                    const update = await knex('part_master').update({ isActive: true }).where({ orgId: req.orgId, id: approvalId, isActive: true }).returning(['*'])
+                    const update = await knex('part_master').update({ isActive: true }).where({ orgId: req.orgId, isActive: true }).returning(['*'])
 
 
                     //let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
