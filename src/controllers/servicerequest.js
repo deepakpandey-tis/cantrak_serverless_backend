@@ -3568,6 +3568,7 @@ const serviceRequestController = {
           .where({ 'service_requests.isCreatedFromSo': false })
           .where(qb => {
 
+
             if (payload.fromDate && payload.toDate) {
               qb.whereBetween('service_requests.createdAt', [payload.fromDate, payload.toDate])
             }
@@ -3959,7 +3960,8 @@ const serviceRequestController = {
       //   ])
       //   .distinct('service_requests.id')
 
-      // sr = _.uniqBy(sr, "S Id");
+      sr = _.uniqBy(sr, "id");
+
 
 
       const Parallel = require('async-parallel')
@@ -3980,8 +3982,6 @@ const serviceRequestController = {
           }
         }
 
-
-
       })
 
 
@@ -3989,6 +3989,8 @@ const serviceRequestController = {
 
 
       let serviceIds = srWithTenant.map(it => it.id);
+
+      serviceIds = _.uniqBy(serviceIds);
 
       let serviceProblem = await knex.from('service_problems')
         .leftJoin('service_requests', 'service_problems.serviceRequestId', 'service_requests.id')
@@ -4020,6 +4022,8 @@ const serviceRequestController = {
         .whereIn('service_problems.serviceRequestId', serviceIds)
         .where({ 'service_problems.orgId': req.orgId })
         .orderBy('incident_type.typeCode', 'asc');
+
+        
 
       let mapData = _.chain(serviceProblem).groupBy('categoryId').map((value, key) => ({
         category: key,
