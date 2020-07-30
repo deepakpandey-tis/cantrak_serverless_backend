@@ -91,7 +91,11 @@ router.post('/get-service-order-id-by-service-request-id-asset', authMiddleware.
 router.post('/get-service-request-id-by-service-order-id', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isCMAccessible, serviceRequestController.getServiceRequestIdByServiceOrderId)
 router.post('/get-service-request-id-by-service-order-id-asset', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isAssetAccessible, serviceRequestController.getServiceRequestIdByServiceOrderId)
 
-router.post('/get-service-request-for-report', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isCMAccessible, serviceRequestController.getServiceRequestForReport)
+router.post('/get-service-request-for-report',
+	authMiddleware.isAuthenticated,
+	roleMiddleware.parseUserPermission,
+	resourceAccessMiddleware.isCMAccessible,
+	serviceRequestController.getServiceRequestForReport)
 
 router.get('/get-all-requested-by-list', authMiddleware.isAuthenticated, serviceRequestController.getAllRequestedByList)
 
