@@ -428,6 +428,9 @@ const partsController = {
                 trx.commit;
             });
 
+
+            const update = await knex('part_master').update({ isActive: true }).where({ orgId: req.orgId, isActive: true }).returning(['*'])
+
             res.status(200).json({
                 data: {
                     part: { ...part, ...quantityObject, attributes: attribs, files, images }
@@ -1276,18 +1279,63 @@ const partsController = {
                         //deductDate: Joi.string().required(),
                         building: Joi.string().allow("").allow(null).optional(),
                         floor: Joi.string().allow("").allow(null).optional(),
-                        receiveBy: Joi.string().required(),
+                        receiveBy: Joi.string().allow("").allow(null).optional(),
                         receiveDate: Joi.string().allow("").allow(null).optional(),
                         companyId: Joi.string().allow("").allow(null).optional(),
                         companyId2: Joi.string().allow("").allow(null).optional(),
+                        name1: Joi.string().allow("").allow(null).optional(),
+                        email1: Joi.string().allow("").allow(null).optional(),
+                        mobile1: Joi.string().allow("").allow(null).optional(),
                     });
                     let partInfoData = await knex('part_master').where({ id: partStockPayload.partId, orgId: req.orgId }).returning(['*']).first();
                     let companyMasterId = partInfoData.companyId;
 
-                    result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'description', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'deductTo', 'name', 'email', 'mobile', 'name1', 'email1', 'mobile1'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'receiveDate', 'deductBy', 'deductDate', 'deductTo', 'building', 'floor', 'name', 'email', 'mobile', 'name1', 'email1', 'mobile1'])
+                    result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'description', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'deductTo', 'name', 'email', 'mobile'), schema);
                     //partStockPayload.receiveDate = new Date(partStockPayload.receiveDate).getTime();
+                    if (partStockPayload.name1 && partStockPayload.email1) {
+
+                        let requestByData = await knex('adjust_part_users').where({ name: partStockPayload.name1, mobile: partStockPayload.mobile1, email: partStockPayload.email1, orgId: req.orgId }).returning(['*']);
+
+                        if (requestByData && requestByData.length) {
+
+                            requestedByResult = requestByData;
+                            receiveBy = requestedByResult[0].id;
+                        } else {
+
+                            requestedByResult = await knex('adjust_part_users').insert({
+                                name: partStockPayload.name1,
+                                mobile: partStockPayload.mobile1,
+                                email: partStockPayload.email1,
+                                createdAt: currentTime1,
+                                updatedAt: currentTime1,
+                                orgId: req.orgId
+                            }).returning(['*'])
+                            receiveBy = requestedByResult[0].id;
+                        }
+                    } else {
+                        let usersData = await knex('users').where({ id: partStockPayload.receiveBy, orgId: req.orgId }).returning(['*']).first();
+                        let receiveByData = await knex('adjust_part_users').where({ name: usersData.name, mobile: usersData.mobileNo, email: usersData.email, orgId: usersData.orgId }).returning(['*']);
+
+                        if (receiveByData && receiveByData.length) {
+                            receiveByDataResult = receiveByData;
+                            receiveBy = receiveByDataResult[0].id;
+                        } else {
+                            receiveByDataResult = await knex('adjust_part_users').insert({
+                                name: usersData.name,
+                                mobile: usersData.mobileNo,
+                                email: usersData.email,
+                                createdAt: currentTime1,
+                                updatedAt: currentTime1,
+                                orgId: usersData.orgId
+                            }).returning(['*'])
+                            receiveBy = receiveByDataResult[0].id;
+                        }
+                        //receiveBy = partStockPayload.receiveBy;
+                    }
+                    partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'receiveBy', 'companyId', 'companyId2', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'receiveDate', 'deductBy', 'deductDate', 'deductTo', 'building', 'floor', 'name', 'email', 'mobile', 'name1', 'email1', 'mobile1'])
+
                     partStockPayload.companyId = companyMasterId;
+                    partStockPayload.receiveBy = receiveBy;
 
                 } else if (partStockPayload.adjustType == "10") {
                     let issueById;
