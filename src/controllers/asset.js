@@ -2837,7 +2837,7 @@ const assetController = {
           }
           //let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
          
-          const update = await knex('asset_master').update({ isActive: true }).where({ orgId: req.orgId, id: approvalId, isActive : true }).returning(['*'])
+          const update = await knex('asset_master').update({ isActive: true }).where({ orgId: req.orgId,  isActive : true }).returning(['*'])
          
           return res.status(200).json({
             message: message,
