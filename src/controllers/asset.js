@@ -251,6 +251,8 @@ const assetController = {
 
       attribs = _.uniqBy(attribs, 'attributeName')
 
+      const update = await knex('asset_master').update({ isActive: true }).where({ orgId: req.orgId, isActive: true }).returning(['*'])
+
       res.status(200).json({
         data: {
           asset: { ...asset, attributes: attribs, images, files, location }
