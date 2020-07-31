@@ -403,7 +403,7 @@ const facilityDashboardController = {
         let currentEndTime = new Date(endNewDate).getTime();
 
         // [totalFacilityBookings] = await Promise.all([
-        if (facilityName) {
+        if (facilityName && facilityName.length > 0) {
           console.log("if selected for total", facilityName);
           totalFacilityBookings = await knex
             .from("entity_bookings")
@@ -526,7 +526,7 @@ const facilityDashboardController = {
         let currentEndTime = new Date(endNewDate).getTime();
 
         // [totalFacilityBookings] = await Promise.all([
-        if (facilityName) {
+        if (facilityName && facilityName.length > 0) {
           console.log("if selected for total", facilityName);
           totalFacilityBookings = await knex
             .from("entity_bookings")
@@ -669,7 +669,7 @@ const facilityDashboardController = {
         let currentEndTime = new Date(endNewDate).getTime();
 
         // [totalFacilityBookings] = await Promise.all([
-        if (facilityName) {
+        if (facilityName && facilityName.length > 0) {
           console.log("if selected for total", facilityName);
           totalFacilityBookings = await knex
             .from("entity_bookings")
@@ -765,7 +765,7 @@ const facilityDashboardController = {
     try {
       let reqData = req.body;
       let orgId = req.orgId;
-      let { facilityName } = req.body;
+      let {facilityName} = req.body
       totalFacilityBookings = null;
       console.log("requested for total", req.body);
       var getDaysArray = function (start, end) {
@@ -794,7 +794,7 @@ const facilityDashboardController = {
         let currentEndTime = new Date(endNewDate).getTime();
 
         // [totalFacilityBookings] = await Promise.all([
-        if (facilityName) {
+        if (facilityName && facilityName.length > 0) {
           console.log("if selected for total", facilityName);
           totalFacilityBookings = await knex
             .from("entity_bookings")
@@ -927,7 +927,7 @@ const facilityDashboardController = {
         let currentEndTime = new Date(endNewDate).getTime();
 
         // [totalFacilityBookings] = await Promise.all([
-        if (facilityName) {
+        if (facilityName && facilityName.length > 0) {
           console.log("if selected for total", facilityName);
           totalFacilityBookings = await knex
             .from("entity_bookings")
@@ -1217,7 +1217,7 @@ const facilityDashboardController = {
 
       let currentStartTime = new Date(startNewDate).getTime();
       let currentEndTime = new Date(endNewDate).getTime();
-      if(facilityName ){
+      if(facilityName && facilityName.length>0 ){
         console.log("if selected for cancelled")
         approved = await knex
         .from("entity_bookings")
@@ -1250,11 +1250,12 @@ const facilityDashboardController = {
           currentStartTime,
           currentEndTime,
         ])
-        .where((qb)=>{
-          if (facilityName) {
-            qb.whereIn("facility_master.name", facilityName);
-          }
-        })
+        .whereIn("facility_master.name", facilityName)
+        // .where((qb)=>{
+        //   if (facilityName) {
+        //     qb.whereIn("facility_master.name", facilityName);
+        //   }
+        // })
        cancelled = await knex
         .from("entity_bookings")
         .leftJoin(
@@ -1277,11 +1278,13 @@ const facilityDashboardController = {
           currentStartTime,
           currentEndTime,
         ])
-        .where((qb)=>{
-          if (facilityName) {
-            qb.whereIn("facility_master.name", facilityName);
-          }
-        })
+        .whereIn("facility_master.name", facilityName)
+
+        // .where((qb)=>{
+        //   if (facilityName) {
+        //     qb.whereIn("facility_master.name", facilityName);
+        //   }
+        // })
        confirmed = await knex
         .from("entity_bookings")
         .leftJoin(
@@ -1308,11 +1311,13 @@ const facilityDashboardController = {
           currentStartTime,
           currentEndTime,
         ])
-        .where((qb)=>{
-          if (facilityName) {
-            qb.whereIn("facility_master.name", facilityName);
-          }
-        })
+        .whereIn("facility_master.name", facilityName)
+
+        // .where((qb)=>{
+        //   if (facilityName) {
+        //     qb.whereIn("facility_master.name", facilityName);
+        //   }
+        // })
         ;
        pending = await knex
         .from("entity_bookings")
@@ -1339,13 +1344,15 @@ const facilityDashboardController = {
           currentStartTime,
           currentEndTime,
         ])
-        .where((qb)=>{
-          if (facilityName) {
-            qb.whereIn("facility_master.name", facilityName);
-          }
-        });
+        .whereIn("facility_master.name", facilityName)
+
+        // .where((qb)=>{
+        //   if (facilityName) {
+        //     qb.whereIn("facility_master.name", facilityName);
+        //   }
+        // });
       }else{
-        console.log("else selected for cancelled")
+        console.log("else selected for cancelled approved",currentEndTime,currentStartTime)
        approved = await knex
         .from("entity_bookings")
         .leftJoin(
@@ -1553,6 +1560,8 @@ const facilityDashboardController = {
     try {
       let orgId = req.orgId;
       let reqData = req.body;
+      let {facilityName} = req.body
+      let bookingDuration
 
       let startNewDate = moment(reqData.queryStartDate)
         .startOf("date")
@@ -1563,8 +1572,29 @@ const facilityDashboardController = {
 
       let currentStartTime = new Date(startNewDate).getTime();
       let currentEndTime = new Date(endNewDate).getTime();
-
-      let bookingDuration = await knex
+      if(facilityName && facilityName.length > 0){
+        bookingDuration = await knex
+        .from("entity_bookings")
+        .leftJoin(
+          "facility_master",
+          "entity_bookings.entityId",
+          "facility_master.id"
+        )
+        .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+        .select([
+          "entity_bookings.entityId",
+          "entity_bookings.bookingStartDateTime",
+          "entity_bookings.bookingEndDateTime",
+          "entity_bookings.createdAt",
+        ])
+        .where({ "entity_bookings.orgId": orgId })
+        .whereBetween("entity_bookings.createdAt", [
+          currentStartTime,
+          currentEndTime,
+        ])
+        .whereIn("facility_master.name",facilityName)
+      }else{
+       bookingDuration = await knex
         .from("entity_bookings")
         .leftJoin(
           "facility_master",
@@ -1583,6 +1613,7 @@ const facilityDashboardController = {
           currentStartTime,
           currentEndTime,
         ]);
+      }
       return res.status(200).json({
         data: bookingDuration,
       });
