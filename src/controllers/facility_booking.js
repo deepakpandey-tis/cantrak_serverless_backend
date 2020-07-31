@@ -5436,29 +5436,12 @@ const facilityBookingController = {
       });
     }
   },
-  // getFacilityReportDetailById:async(req,res)=>{
-  //   console.log("requested id",req)
+  // getFacilityListByProject:async(req,res)=>{
   //   try{
-  //     // let sortPayload = req.body;
-  //     let orgId = req.orgId
-  //     let id = req.body
-  //     let reportResult = await knex("facility_report_master")
-  //     .select(["facility_report_master.*"])
-  //     .where("facility_report_master.orgId",orgId)
-  //     .where("facility_report_master.id",id)
+  //     let payload = req.body
 
-  //     return res.status(200).send({
-  //       data: {
-  //         facilityReport: reportResult,
-  //       },
-  //       message: "Facility Report Detail!",
-  //     });
-
-  //   }catch(err){
-  //     return res.status(500).json({
-  //       errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-  //     });
-  //   }
+      
+  //   }catch(err){}
   // }
 };
 
