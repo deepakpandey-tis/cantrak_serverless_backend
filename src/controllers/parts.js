@@ -1166,7 +1166,7 @@ const partsController = {
 
                     // Issue By Id Manage with Manually and Select from list
 
-                    if (partStockPayload.name ||  partStockPayload.email || partStockPayload.mobile) {
+                    if (partStockPayload.name || partStockPayload.email || partStockPayload.mobile) {
 
                         let deductByData = await knex('adjust_part_users').where({ name: partStockPayload.name, mobile: partStockPayload.mobile, email: partStockPayload.email, orgId: req.orgId }).returning(['*']);
 
@@ -1295,7 +1295,7 @@ const partsController = {
 
                     result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'description', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'deductTo', 'name', 'email', 'mobile', 'name1', 'email1', 'mobile1'), schema);
                     partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'receiveDate', 'deductBy', 'deductDate', 'deductTo', 'building', 'floor', 'name', 'email', 'mobile', 'name1', 'email1', 'mobile1'])
-                   // result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'description', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'deductTo', 'name', 'email', 'mobile'), schema);
+                    // result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'description', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'deductTo', 'name', 'email', 'mobile'), schema);
                     //partStockPayload.receiveDate = new Date(partStockPayload.receiveDate).getTime();
                     if (partStockPayload.name1 || partStockPayload.email1 || partStockPayload.mobile1) {
 
@@ -1306,7 +1306,7 @@ const partsController = {
                         //     .orWhere({ mobile: partStockPayload.mobile1 })
                         //     .orWhere({ email: partStockPayload.email1 })
                         //     .returning(['*']);
-                        console.log("requestDate-Type-6",requestByData);
+                        console.log("requestDate-Type-6", requestByData);
                         if (requestByData && requestByData.length) {
 
                             requestedByResult = requestByData;
@@ -3945,7 +3945,7 @@ const partsController = {
 
             if (fromDate && toDate) {
 
-                let fromNewDate = moment(fromDate).startOf('date').format("YYYY-MM-DD");
+                let fromNewDate = moment(fromDate).startOf('date').format();
                 let toNewDate = moment(toDate).endOf('date', 'days').format();
                 let fromTime = new Date(fromNewDate).getTime();
                 let toTime = new Date(toNewDate).getTime();
@@ -4007,9 +4007,8 @@ const partsController = {
                     .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
 
 
-                let fromDateEnd = moment(fromTime).startOf('date').format('YYYY-MM-DD');
+                let fromDateEnd = moment(fromTime).startOf('date').format();
                 let fromTimeEnd = new Date(fromDateEnd).getTime();
-
 
 
                 /*Export Data open */

@@ -1,9 +1,9 @@
 const { Router } = require("express")
 
 const router = Router()
-const authMiddleware  = require('../../middlewares/auth')
-const roleMiddleware  = require('../../middlewares/role')
-const resourceAccessMiddleware  = require('../../middlewares/resourceAccessMiddleware')
+const authMiddleware = require('../../middlewares/auth')
+const roleMiddleware = require('../../middlewares/role')
+const resourceAccessMiddleware = require('../../middlewares/resourceAccessMiddleware')
 const taskGroupController = require('../../controllers/administration-features/task-group')
 
 // CREATE TASK GROUP TEMPLATE
@@ -14,7 +14,7 @@ router.post(
   resourceAccessMiddleware.isPMAccessible,
   taskGroupController.createTaskGroupTemplate
 );
- 
+
 // GET LIST TASK TEMPLATE
 router.post(
   "/get-group-template-list",
@@ -216,23 +216,42 @@ router.get(
   taskGroupController.exportTaskGroupTemplateData
 );
 
-router.post('/edit-work-order-date',authMiddleware.isAuthenticated,taskGroupController.editWorkOrderDate)
-router.post('/delete-work-order',authMiddleware.isAuthenticated,taskGroupController.deleteWorkOrder)
-router.post('/cancel-work-order',authMiddleware.isAuthenticated,taskGroupController.cancelWorkOrder)
+router.post('/edit-work-order-date', authMiddleware.isAuthenticated, taskGroupController.editWorkOrderDate)
+router.post('/delete-work-order', authMiddleware.isAuthenticated, taskGroupController.deleteWorkOrder)
+router.post('/cancel-work-order', authMiddleware.isAuthenticated, taskGroupController.cancelWorkOrder)
 
 
 router.post('/pm-location-detail', authMiddleware.isAuthenticated, taskGroupController.pmLocationDetail)
 
 router.post('/generate-work-date', authMiddleware.isAuthenticated, taskGroupController.generateWorkDate)
 
-router.get('/pm-schedule-report',authMiddleware.isAuthenticated, taskGroupController.pmScheduleReport)
+router.get('/pm-schedule-report', authMiddleware.isAuthenticated, taskGroupController.pmScheduleReport)
 
+/*Single task status update */
 router.post(
   "/task-perform",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPMAccessible,
   taskGroupController.taskPerform
+);
+
+/* All task status update */
+router.post(
+  "/all-task-perform",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  taskGroupController.allTaskPerform
+);
+
+
+router.post(
+  "/task-feedback",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  taskGroupController.taskFeedback
 );
 
 module.exports = router
