@@ -337,6 +337,7 @@ const assetController = {
         company,
         project,
         asNo,
+        assetCode,
       } = req.body;
       let pagination = {};
       let per_page = reqData.per_page || 10;
@@ -436,6 +437,13 @@ const assetController = {
                   `%${assetModel}%`
                 );
               }
+              if (assetCode) {
+                qb.where(
+                  "asset_master.assetCode",
+                  "iLIKE",
+                  `%${assetCode}%`
+                );
+              }
               if (category) {
                 qb.where(
                   "asset_category_master.categoryName",
@@ -495,7 +503,8 @@ const assetController = {
               "companies.companyId",
               "projects.project",
               "projects.projectName",
-              "asset_master.displayId as AsNo"
+              "asset_master.displayId as AsNo",
+              "asset_master.assetCode"
             ])
             .where({ 'asset_master.orgId': req.orgId })
             .where(qb => {
@@ -518,6 +527,13 @@ const assetController = {
                   "asset_master.model",
                   "iLIKE",
                   `%${assetModel}%`
+                );
+              }
+              if (assetCode) {
+                qb.where(
+                  "asset_master.assetCode",
+                  "iLIKE",
+                  `%${assetCode}%`
                 );
               }
               if (category) {
@@ -1171,6 +1187,7 @@ const assetController = {
           "asset_location.houseId as houseId",
           "companies.companyId as companyCode",
           "projects.project as projectCode",
+          
         ])
         .where({ assetId: id, 'asset_location.orgId': req.orgId }).orderBy('asset_location.startDate', 'desc');
       //   .where({ orgId: req.orgId });
