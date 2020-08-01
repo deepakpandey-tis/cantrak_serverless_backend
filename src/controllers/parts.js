@@ -905,12 +905,15 @@ const partsController = {
 
                             // Issue By Id Manage with Manually and Select from list
 
-                            if (partStockPayload.name && partStockPayload.email) {
+                            if (partStockPayload.name || partStockPayload.email || partStockPayload.mobile) {
 
-                                let requestByData = await knex('adjust_part_users').where({ name: partStockPayload.name, mobile: partStockPayload.mobile, email: partStockPayload.email, orgId: req.orgId }).returning(['*']);
+                                let requestByData = await knex('adjust_part_users')
+                                    .where({ name: partStockPayload.name, orgId: req.orgId })
+                                    .orWhere({ mobile: partStockPayload.mobile })
+                                    .orWhere({ email: partStockPayload.email })
+                                    .returning(['*']);
 
                                 if (requestByData && requestByData.length) {
-
                                     requestedByResult = requestByData;
                                     issueById = requestedByResult[0].id;
                                 } else {
@@ -950,7 +953,7 @@ const partsController = {
 
                             // Issue To Manage with Manually and Select from list
 
-                            if (partStockPayload.name1 && partStockPayload.email1) {
+                            if (partStockPayload.name1 || partStockPayload.email1 || partStockPayload.mobile1) {
 
                                 let requestByData = await knex('adjust_part_users').where({ name: partStockPayload.name1, mobile: partStockPayload.mobile1, email: partStockPayload.email1, orgId: req.orgId }).returning(['*']);
 
@@ -1007,7 +1010,7 @@ const partsController = {
                         } else if (partStockPayload.adjustType == "3") {
                             // Issue By Id Manage with Manually and Select from list
 
-                            if (partStockPayload.name && partStockPayload.email) {
+                            if (partStockPayload.name || partStockPayload.email || partStockPayload.mobile) {
 
                                 let requestByData = await knex('adjust_part_users').where({ name: partStockPayload.name, mobile: partStockPayload.mobile, email: partStockPayload.email, orgId: req.orgId }).returning(['*']);
 
@@ -1052,7 +1055,7 @@ const partsController = {
 
                             // Issue To Manage with Manually and Select from list
 
-                            if (partStockPayload.name1 && partStockPayload.email1) {
+                            if (partStockPayload.name1 || partStockPayload.email1 || partStockPayload.mobile1) {
 
                                 let requestByData = await knex('adjust_part_users').where({ name: partStockPayload.name1, mobile: partStockPayload.mobile1, email: partStockPayload.email1, orgId: req.orgId }).returning(['*']);
 
@@ -1163,7 +1166,7 @@ const partsController = {
 
                     // Issue By Id Manage with Manually and Select from list
 
-                    if (partStockPayload.name && partStockPayload.email) {
+                    if (partStockPayload.name ||  partStockPayload.email || partStockPayload.mobile) {
 
                         let deductByData = await knex('adjust_part_users').where({ name: partStockPayload.name, mobile: partStockPayload.mobile, email: partStockPayload.email, orgId: req.orgId }).returning(['*']);
 
@@ -1207,7 +1210,7 @@ const partsController = {
 
                     // Issue To Manage with Manually and Select from list
 
-                    if (partStockPayload.name1 && partStockPayload.email1) {
+                    if (partStockPayload.name1 || partStockPayload.email1 || partStockPayload.mobile1) {
 
                         let deductToData = await knex('adjust_part_users').where({ name: partStockPayload.name1, mobile: partStockPayload.mobile1, email: partStockPayload.email1, orgId: req.orgId }).returning(['*']);
 
@@ -1294,10 +1297,16 @@ const partsController = {
                     partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'receiveDate', 'deductBy', 'deductDate', 'deductTo', 'building', 'floor', 'name', 'email', 'mobile', 'name1', 'email1', 'mobile1'])
                    // result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'description', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'deductTo', 'name', 'email', 'mobile'), schema);
                     //partStockPayload.receiveDate = new Date(partStockPayload.receiveDate).getTime();
-                    if (partStockPayload.name1 && partStockPayload.email1) {
+                    if (partStockPayload.name1 || partStockPayload.email1 || partStockPayload.mobile1) {
 
                         let requestByData = await knex('adjust_part_users').where({ name: partStockPayload.name1, mobile: partStockPayload.mobile1, email: partStockPayload.email1, orgId: req.orgId }).returning(['*']);
 
+                        // let requestByData = await knex('adjust_part_users')
+                        //     .where({ name: partStockPayload.name1, orgId: req.orgId })
+                        //     .orWhere({ mobile: partStockPayload.mobile1 })
+                        //     .orWhere({ email: partStockPayload.email1 })
+                        //     .returning(['*']);
+                        console.log("requestDate-Type-6",requestByData);
                         if (requestByData && requestByData.length) {
 
                             requestedByResult = requestByData;
@@ -1376,7 +1385,7 @@ const partsController = {
 
                         // Issue By Id Manage with Manually and Select from list
 
-                        if (partStockPayload.name && partStockPayload.email) {
+                        if (partStockPayload.name || partStockPayload.email || partStockPayload.mobile) {
 
                             let requestByData = await knex('adjust_part_users').where({ name: partStockPayload.name, mobile: partStockPayload.mobile, email: partStockPayload.email, orgId: req.orgId }).returning(['*']);
 
@@ -1420,7 +1429,7 @@ const partsController = {
 
                         // Issue To Manage with Manually and Select from list
 
-                        if (partStockPayload.name1 && partStockPayload.email1) {
+                        if (partStockPayload.name1 || partStockPayload.email1 || partStockPayload.mobile1) {
 
                             let requestByData = await knex('adjust_part_users').where({ name: partStockPayload.name1, mobile: partStockPayload.mobile1, email: partStockPayload.email1, orgId: req.orgId }).returning(['*']);
 
@@ -1532,7 +1541,7 @@ const partsController = {
                     //console.log("validWOMaster", validWOMaster);
                     if (validWOMaster) {
 
-                        if (partStockPayload.name1 && partStockPayload.email1) {
+                        if (partStockPayload.name1 || partStockPayload.email1 || partStockPayload.mobile1) {
 
                             let receiveByData = await knex('adjust_part_users').where({ name: partStockPayload.name1, mobile: partStockPayload.mobile1, email: partStockPayload.email1, orgId: req.orgId }).returning(['*']);
 
@@ -1643,7 +1652,7 @@ const partsController = {
                     // Issue To Manage with Manually and Select from list
                     let storeAdjustmentByNew;
 
-                    if (partStockPayload.name1 && partStockPayload.email1) {
+                    if (partStockPayload.name1 || partStockPayload.email1 || partStockPayload.mobile1) {
 
                         let requestByData = await knex('adjust_part_users').where({ name: partStockPayload.name1, mobile: partStockPayload.mobile1, email: partStockPayload.email1, orgId: req.orgId }).returning(['*']);
 
@@ -1722,13 +1731,12 @@ const partsController = {
                     });
 
                     result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'issueBy', 'returnedBy', 'description', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'deductTo'), schema);
-                    partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'issueBy', 'returnedBy', 'deductBy', 'deductDate', 'deductTo', 'building', 'floor', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId', 'storeAdjustmentBy', 'name1', 'email1', 'mobile1', 'name', 'email', 'mobile'])
 
 
                     // Issue To Manage with Manually and Select from list
                     let storeAdjustmentByNew;
 
-                    if (partStockPayload.name1 && partStockPayload.email1) {
+                    if (partStockPayload.name1 || partStockPayload.email1 || partStockPayload.mobile1) {
 
                         let requestByData = await knex('adjust_part_users').where({ name: partStockPayload.name1, mobile: partStockPayload.mobile1, email: partStockPayload.email1, orgId: req.orgId }).returning(['*']);
 
@@ -1768,6 +1776,8 @@ const partsController = {
                             storeAdjustmentByNew = issueToDataResult[0].id;
                         }
                     }
+
+                    partStockPayload = _.omit(partStockPayload, ['receiveFrom', 'companyId', 'companyId2', 'issueBy', 'issueTo', 'returnedBy', 'deductBy', 'deductDate', 'deductTo', 'building', 'floor', 'date', 'serviceOrderNo', 'receiveBy', 'receiveDate', 'workOrderId', 'storeAdjustmentBy', 'name1', 'email1', 'mobile1', 'name', 'email', 'mobile'])
 
                     let partInfoData = await knex('part_master').where({ id: partStockPayload.partId, orgId: req.orgId }).returning(['*']).first();
                     let companyMasterId = partInfoData.companyId;
@@ -3566,6 +3576,7 @@ const partsController = {
                         'part_master.partName',
                         'part_master.partCode',
                         'part_master.unitOfMeasure',
+                        'part_master.displayId as PNo',
                         'part_category_master.categoryName as partCategory',
                         'buildings_and_phases.buildingPhaseCode',
                         'buildings_and_phases.description as buildingDescription',
@@ -3703,6 +3714,7 @@ const partsController = {
 
 
                     return {
+                        PNo: st.PNo,
                         partId: st.partId,
                         partCode: st.partCode,
                         partName: st.partName,
@@ -3933,7 +3945,7 @@ const partsController = {
 
             if (fromDate && toDate) {
 
-                let fromNewDate = moment(fromDate).startOf('date').format("YYYY-MM-DD 00:00:00");
+                let fromNewDate = moment(fromDate).startOf('date').format("YYYY-MM-DD");
                 let toNewDate = moment(toDate).endOf('date', 'days').format();
                 let fromTime = new Date(fromNewDate).getTime();
                 let toTime = new Date(toNewDate).getTime();
@@ -3995,7 +4007,7 @@ const partsController = {
                     .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
 
 
-                let fromDateEnd = moment(fromTime).startOf('date').format('YYYY-MM-DD 00:00:00');
+                let fromDateEnd = moment(fromTime).startOf('date').format('YYYY-MM-DD');
                 let fromTimeEnd = new Date(fromDateEnd).getTime();
 
 

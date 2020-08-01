@@ -1241,7 +1241,8 @@ const taskGroupController = {
             ),
             "task_group_schedule.repeatPeriod as repeatPeriod",
             "task_group_schedule.repeatOn as repeatOn",
-            "task_group_schedule.repeatFrequency as repeatFrequency"
+            "task_group_schedule.repeatFrequency as repeatFrequency",
+            "task_group_schedule_assign_assets.status"
           ])
           .where({
             "task_group_schedule.taskGroupId": payload.taskGroupId,
@@ -3141,7 +3142,110 @@ const taskGroupController = {
     }
 
 
-  }
+  },
+
+  /** update task status with result  */
+  taskPerform: async (req, res) => {
+    try {
+      const payload = req.body;
+      const schema = Joi.object().keys({
+        taskGroupId: Joi.string().required(),
+        //taskId: Joi.string().required(),
+        result: Joi.number().required(),
+        status: Joi.string().required(),
+        userId: Joi.string().required(),
+        //cancelReason: Joi.string().allow("").allow(null).optional(),
+        //workOrderId: Joi.string().required(),
+        //workOrderDate: Joi.date().required()
+
+      })
+      const result = Joi.validate(_.omit(payload, "taskArr"), schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+
+      let workOrderDate;
+      let workOrderId;
+      if (payload.taskArr.length) {
+
+        workOrderDate = payload.taskArr[0].pmDate;
+        workOrderId = payload.taskArr[0].workOrderId;
+
+      }
+
+      payload.workOrderDate = workOrderDate;
+      payload.workOrderId = workOrderId;
+
+      // Get all the tasks of the work order and check if those tasks have status cmtd
+      // then 
+      let currentTime = new Date().getTime()
+      // We need to check whther all the tasks have been updated or not
+      let taskUpdated = [];
+      if (payload.status === 'COM') {
+
+        for (let t of payload.taskArr) {
+
+          // check id completedAt i.e current date is greater than pmDate then update completedAt and completedBy
+          let taskUpdate = await knex('pm_task').update({ result: payload.result, status: payload.status, completedAt: currentTime, completedBy: payload.userId }).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
+          taskUpdated.push(taskUpdate);
+        }
+        let workResult = await knex('pm_task').where({ taskGroupScheduleAssignAssetId: payload.workOrderId, orgId: req.orgId });
+        let workComplete = await knex('pm_task').where({ taskGroupScheduleAssignAssetId: payload.workOrderId, orgId: req.orgId, status: "COM" });
+
+        if (workResult.length == workComplete.length) {
+
+          let scheduleStatus = null;
+
+          let workDate = moment(payload.workOrderDate).format('YYYY-MM-DD');
+          let currnetDate = moment().format('YYYY-MM-DD');
+          if (workDate == currnetDate || workDate > currnetDate) {
+            scheduleStatus = "on"
+          } else if (workDate < currnetDate) {
+            scheduleStatus = "off"
+          }
+
+          let workOrder = await knex('task_group_schedule_assign_assets').update({ status: payload.status, updatedAt: currentTime, scheduleStatus: scheduleStatus }).where({ id: payload.workOrderId, orgId: req.orgId }).returning(['*'])
+
+        }
+
+
+      } else {
+
+        await knex('task_group_schedule_assign_assets').update({ status: payload.status, updatedAt: currentTime, }).where({ id: payload.workOrderId, orgId: req.orgId }).returning(['*'])
+
+        if (payload.status === 'C') {
+          taskUpdated = await knex('pm_task').update({ status: payload.status, cancelReason: payload.status }).where({ taskGroupId: payload.taskGroupId, id: payload.taskId, orgId: req.orgId }).returning(['*'])
+        } else {
+
+          for (let t of payload.taskArr) {
+
+            taskUpdate = await knex('pm_task').update({ status: payload.status, result: payload.result }).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
+
+            taskUpdated.push(taskUpdate);
+
+          }
+        }
+
+      }
+
+      return res.status(200).json({
+        data: {
+          taskUpdated
+        },
+        message: 'Task updated'
+      })
+    } catch (err) {
+      console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
+
 }
 
 module.exports = taskGroupController
