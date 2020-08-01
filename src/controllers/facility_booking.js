@@ -724,9 +724,7 @@ const facilityBookingController = {
         bookingStartTime ||
         bookingEndTime
       ) {
-        // if(facilityName.length>0 || tenantName.length)
         try {
-          // console.log("facility name length",facilityName.length,tenantName.length)
           facilityReportResult = await knex
             .from("entity_bookings")
             .leftJoin(
@@ -774,59 +772,53 @@ const facilityBookingController = {
 
             //   .whereBetween("entity_bookings.createdAt", [createStartTime, createdEndTime])
             .where((qb) => {
-              // if (facilityName) {
-              //   qb.where(
-              //     "facility_master.name",
-              // "iLIKE",
-              //     `%${facilityName}%`
-              //   );
-              // }
-              if (facilityName) {
-                console.log("Facility name 755",facilityName)
+             
+              if (facilityName && facilityName.length) {
+                console.log("Facility name 756",facilityName)
                 qb.whereIn( "facility_master.id", facilityName );
-                qb.whereBetween("entity_bookings.createdAt", [
-                  createStartTime,
-                  createdEndTime,
-                ]);
+                // qb.whereBetween("entity_bookings.createdAt", [
+                //   createStartTime,
+                //   createdEndTime,
+                // ]);
               }
               if (unitNo) {
                 qb.where("entity_bookings.unitId", unitNo);
-                qb.whereBetween("entity_bookings.createdAt", [
-                  createStartTime,
-                  createdEndTime,
-                ]);
+                // qb.whereBetween("entity_bookings.createdAt", [
+                //   createStartTime,
+                //   createdEndTime,
+                // ]);
               }
               if (companyId) {
                 qb.where("entity_bookings.companyId", companyId);
-                qb.whereBetween("entity_bookings.createdAt", [
-                  createStartTime,
-                  createdEndTime,
-                ]);
+                // qb.whereBetween("entity_bookings.createdAt", [
+                //   createStartTime,
+                //   createdEndTime,
+                // ]);
 
                 // qb.orWhere("entity_bookings.companyId",'')
               }
               if (projectId) {
                 qb.where("facility_master.projectId", projectId);
-                qb.whereBetween("entity_bookings.createdAt", [
-                  createStartTime,
-                  createdEndTime,
-                ]);
+                // qb.whereBetween("entity_bookings.createdAt", [
+                //   createStartTime,
+                //   createdEndTime,
+                // ]);
               }
               if (buildingPhaseId) {
                 qb.where("facility_master.buildingPhaseId", buildingPhaseId);
-                qb.whereBetween("entity_bookings.createdAt", [
-                  createStartTime,
-                  createdEndTime,
-                ]);
+                // qb.whereBetween("entity_bookings.createdAt", [
+                //   createStartTime,
+                //   createdEndTime,
+                // ]);
               }
 
-              if (tenantName) {
+              if (tenantName && tenantName.length) {
                 console.log("tenant name", tenantName);
                 qb.whereIn("users.name", tenantName);
-                qb.whereBetween("entity_bookings.createdAt", [
-                  createStartTime,
-                  createdEndTime,
-                ]);
+                // qb.whereBetween("entity_bookings.createdAt", [
+                //   createStartTime,
+                //   createdEndTime,
+                // ]);
               }
               if (createStartTime && createdEndTime) {
                 qb.where("entity_bookings.createdAt", ">=", createStartTime);
@@ -844,7 +836,7 @@ const facilityBookingController = {
                   bookingEndTime
                 );
               }
-              if (status) {
+              if (status && status.length) {
                 console.log("Status of status", Status);
                 if (Status == "Pending") {
                   console.log("Pending", status);
@@ -874,7 +866,7 @@ const facilityBookingController = {
 
                   // qb.where("entity_bookings.isBookingCancelled", false);
                 }
-                if (Status == "Confirmed") {
+                if (Status == 'Confirmed') {
                   console.log("Confirmed", status);
                   qb.where({
                     "entity_bookings.isBookingConfirmed": true,
@@ -897,7 +889,7 @@ const facilityBookingController = {
                   ]);
                 }
                 if (Status == "Approved Pending Cancelled Confirmed") {
-                  // console.log("All status",status)
+                  console.log("All status",status)
 
                   qb.where("entity_bookings.isBookingConfirmed", false);
                   qb.orWhere("entity_bookings.isBookingConfirmed", true);
@@ -1089,7 +1081,17 @@ const facilityBookingController = {
               }
             })
             .where("entity_bookings.orgId", req.orgId)
-            .orderBy("entity_bookings.id", "asc");
+            .groupBy([
+              "entity_bookings.id",
+              "facility_master.id",
+              "companies.id",
+              "users.id",
+              "property_units.id",
+              "property_unit_type_master.id"
+              
+            ])
+            .orderBy("entity_bookings.id", "asc")
+            .distinct("entity_bookings.id");
         } catch (err) {
           console.log("[controllers][facilityBooking][list] :  Error", err);
           return res.status(500).json({
@@ -1097,56 +1099,6 @@ const facilityBookingController = {
           });
         }
       }
-      // else if((tenantName && tenantName.length === 0) || (facilityName && facilityName.length === 0)){
-      //   console.log("tenant name 0",tenantName,facilityName)
-      //   try{
-      //     facilityReportResult = await knex
-      //     .from("entity_bookings")
-      //     .leftJoin( "facility_master",
-      //     "entity_bookings.entityId",
-      //     "facility_master.id")
-      //     .leftJoin("companies", "entity_bookings.companyId", "companies.id")
-      //       .leftJoin("users", "entity_bookings.bookedBy", "users.id")
-      //       .leftJoin(
-      //         "property_units",
-      //         "entity_bookings.unitId",
-      //         "property_units.id"
-      //       )
-      //       .leftJoin(
-      //         "property_unit_type_master",
-      //         "property_units.propertyUnitType",
-      //         "property_unit_type_master.id"
-      //       )
-      //       .where("entity_bookings.orgId", req.orgId)
-      //       .select([
-      //         "entity_bookings.*",
-      //         "users.name as bookedUser",
-      //         "users.userName",
-      //         "facility_master.name as Facility",
-      //         "companies.companyName as Company",
-      //         "property_units.unitNumber",
-      //         "property_units.type as unitType",
-      //         "property_units.description",
-      //         "property_unit_type_master.propertyUnitTypeCode",
-      //         "property_unit_type_master.descriptionEng",
-      //       ])
-      //       .whereBetween("entity_bookings.bookingStartDateTime", [bookingStartTime, bookingEndTime])
-      //       .groupBy([
-      //         "entity_bookings.id",
-      //         "facility_master.id",
-      //         "companies.id",
-      //         "users.name",
-      //         "property_units.unitNumber",
-      //         "property_units.type",
-      //         "property_units.description",
-      //         "property_unit_type_master.propertyUnitTypeCode",
-      //         "property_unit_type_master.descriptionEng",
-      //       ])
-      //       .orderBy("entity_bookings.id", "asc");
-
-      //   }catch(err){}
-
-      // }
       else {
         console.log("else returned");
         facilityReportResult = await knex
