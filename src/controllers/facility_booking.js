@@ -3907,14 +3907,6 @@ const facilityBookingController = {
 
       let availableSeats = 0;
 
-      // let startOfDay = moment(+payload.bookingStartDateTime).startOf('day').valueOf();
-      // let endOfDay = moment(+payload.bookingStartDateTime).endOf('day').valueOf();
-
-      // let bookingData = await knex('entity_bookings').sum('noOfSeats as totalBookedSeats')
-      //     .where('entity_bookings.bookingStartDateTime', '>=', startOfDay)
-      //     .where('entity_bookings.bookingEndDateTime', '<=', endOfDay)
-      //     .where({ 'entityId': payload.facilityId, 'isBookingCancelled': false, 'entityType': 'facility_master', 'orgId': req.orgId }).first();
-
       let bookingData = await knex("entity_bookings")
         .sum("noOfSeats as totalBookedSeats")
         .where("entity_bookings.bookingEndDateTime", ">", bookingStartTime)
@@ -4066,7 +4058,6 @@ const facilityBookingController = {
         monthlyRemaining: Number(monthlyRemainingLimit),
         monthlyBookedSeats: Number(monthlyBookedSeat),
       };
-      //let bookedSeat = totalBookedSeat;
 
       let QuotaData = {
         remainingLimit,
@@ -4137,65 +4128,7 @@ const facilityBookingController = {
       });
     }
   },
-  // getFacilityBookedCancelledList: async (req, res) => {
-  //   try {
-  //     let payload = req.body;
-  //     let { startDate, endDate ,facilityId} = req.body;
-  //     console.log("Start Date",req.body)
-  //     if (startDate && endDate) {
-  //       startNewDate = moment(startDate).startOf("time").format();
-  //       endNewDate = moment(endDate).endOf("time").format();
-  //       startTime = new Date(startNewDate).getTime();
-  //       endTime = new Date(endNewDate).getTime();
-  //     }
-  //     const schema = Joi.object().keys({
-  //       startDate: Joi.date().required(),
-  //       endDate: Joi.date().required(),
-  //       facilityId: Joi.number().required(),
-  //       offset: Joi.number().required(),
-  //       currentTime: Joi.date().required(),
-  //       timezone: Joi.string().required(),
-  //     });
-
-  //     const result = Joi.validate(payload, schema);
-  //     if (result && result.hasOwnProperty("error") && result.error) {
-  //       return res.status(400).json({
-  //         errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
-  //       });
-  //     }
-  //     moment.tz.setDefault(payload.timezone);
-
-  //     let startTime = moment(+payload.startDate).seconds(0).milliseconds(0).valueOf();
-  //     let endTime = moment(+payload.endDate).seconds(0).milliseconds(0).valueOf();
-
-  //     let listResult = await knex("entity_bookings")
-  //       .leftJoin(
-  //         "facility_master",
-  //         "entity_bookings.entityId",
-  //         "facility_master.id"
-  //       )
-  //       .leftJoin("users", "entity_bookings.bookedBy", "users.id")
-  //       .select([
-  //         "entity_bookings.*",
-  //         "facility_master.name",
-  //         "users.name as bookedUser",
-  //       ])
-  //       .where("entity_bookings.bookingStartDateTime", "<", startDate)
-  //       .where("entity_bookings.bookingEndDateTime", ">", endDate)
-  //       .where("entity_bookings.isBookingCancelled", "=", true)
-  //       .where("entity_bookings.entityId", "=", facilityId);
-  //     return res.status(200).json({
-  //       data: {
-  //         booking: listResult,
-  //       },
-  //       message: "Facility booked List!",
-  //     });
-  //   } catch (err) {
-  //     res.status(500).json({
-  //       errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }],
-  //     });
-  //   }
-  // },
+  
   getFacilityBookedCancelledList: async (req, res) => {
     try {
       let payload = req.body;
@@ -4225,7 +4158,6 @@ const facilityBookingController = {
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
         });
       }
-      // console.log("payload timezone",payload.timezone)
 
       moment.tz.setDefault(payload.timezone);
       let currentTime = moment();
@@ -4243,9 +4175,6 @@ const facilityBookingController = {
         .milliseconds(0)
         .valueOf();
       console.log("bookingStartTime", bookingStartTime, bookingEndTime);
-
-      // .where("facility_close_date.endDate", ">", bookingStartTime)
-      // .where("facility_close_date.startDate", "<", bookingEndTime)
 
       let listResult = await knex("entity_bookings")
         .leftJoin(
@@ -4359,7 +4288,6 @@ const facilityBookingController = {
   },
   facilityBookedListByFacilityName: async (req, res) => {
     try {
-      // let payload = req.body
       let bookingListResult = await knex("entity_bookings")
         .leftJoin(
           "facility_master",
@@ -4374,26 +4302,9 @@ const facilityBookingController = {
           "entity_bookings.noOfSeats",
           "entity_bookings.feesPaid",
           "entity_bookings.bookedAt",
-          // "entity_bookings.*",
           "facility_master.name",
           "users.name as bookedUser",
         ]);
-      // let facilityName=[]
-      // let allDataFromBooking=[]
-      // bookingListResult.forEach(data=>{
-      //   facilityName.push(data.name)
-      // })let unique = [...new Set(myArray)];
-
-      // bookingListResult.forEach(eachBooking=>{
-      //   facilityName.forEach(eachBookingName=>{
-      //     if(eachBooking.name==eachBookingName){
-      //       let eachBookingName=[];
-      //       eachBookingName.push(eachBooking);
-      //       allDataFromBooking.push(eachBookingName)
-      //       eachBookingName=[];
-      //     }
-      //   })
-      // })
 
       let swimmingpool = [];
       let teniss = [];
@@ -4424,12 +4335,9 @@ const facilityBookingController = {
           meetingRoom.push(data);
         }
       });
-      // let facilityName = await knex("facility_master")
-      // .select(["facility_master.name"])
-
+     
       res.status(200).json({
         data: {
-          //  AllDataFromBooking: allDataFromBooking,
           Swimmingpool: swimmingpool,
           Teniss: teniss,
           MaleOnsen: maleOnsen,
@@ -4451,9 +4359,7 @@ const facilityBookingController = {
   },
   facilityBookedListByUnit: async (req, res) => {
     try {
-      // let {} =req.body
       let payload = req.body;
-      // let reqData = req.query
       let {
         facilityName,
         status,
@@ -4550,20 +4456,7 @@ const facilityBookingController = {
             .where((qb) => {
               if (facilityName) {
                 qb.whereIn("facility_master.name", facilityName);
-                // qb.where(
-                //   "entity_bookings.bookingStartDateTime",
-                //   ">=",
-                //   bookingStartTime
-                // );
-                // qb.where(
-                //   "entity_bookings.bookingStartDateTime",
-                //   "<=",
-                //   bookingEndTime
-                // );
               }
-              // if (tenantName) {
-              //   qb.where("users.name", "iLIKE", `%${tenantName}%`);
-              // }
               if (tenantName) {
                 console.log("tenant name", tenantName);
                 qb.whereIn("users.name", tenantName);
@@ -5436,13 +5329,44 @@ const facilityBookingController = {
       });
     }
   },
-  // getFacilityListByProject:async(req,res)=>{
-  //   try{
-  //     let payload = req.body
+  getFacilityListByProject:async(req,res)=>{
+    try{
+      let payload = req.body
+      let {projectId} = req.body
+      let facilityList;
+      let orgId = req.orgId
 
+      if(projectId){
+      facilityList = await knex
+      .from("facility_master")
+      .select([
+        "facility_master.id",
+        "facility_master.name",
+      ])
+      .where("facility_master.projectId",projectId)
+      .where({"facility_master.orgId":orgId,"facility_master.isActive":true})
+    }else{
+      facilityList = await knex
+      .from("facility_master")
+      .select([
+        "facility_master.id",
+        "facility_master.name",
+      ])
+      .where({"facility_master.orgId":orgId,"facility_master.isActive":true})
+
+    }
+    return res.status(200).json({
+      data: {
+        facilityList,
+      },
+    });
       
-  //   }catch(err){}
-  // }
+    }catch(err){
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  }
 };
 
 module.exports = facilityBookingController;

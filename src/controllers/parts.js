@@ -3944,7 +3944,7 @@ const partsController = {
 
             if (fromDate && toDate) {
 
-                let fromNewDate = moment(fromDate).startOf('date').format("YYYY-MM-DD 00:00:00");
+                let fromNewDate = moment(fromDate).startOf('date').format("YYYY-MM-DD");
                 let toNewDate = moment(toDate).endOf('date', 'days').format();
                 let fromTime = new Date(fromNewDate).getTime();
                 let toTime = new Date(toNewDate).getTime();
@@ -4006,7 +4006,7 @@ const partsController = {
                     .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
 
 
-                let fromDateEnd = moment(fromTime).startOf('date').format('YYYY-MM-DD 00:00:00');
+                let fromDateEnd = moment(fromTime).startOf('date').format('YYYY-MM-DD');
                 let fromTimeEnd = new Date(fromDateEnd).getTime();
 
 
