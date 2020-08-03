@@ -1986,6 +1986,7 @@ const taskGroupController = {
       // TASK OPEN
       tasks = await knex('pm_task')
         .leftJoin("service_status AS status", "pm_task.status", "status.statusCode")
+        .leftJoin('task_feedbacks', 'pm_task.id', 'task_feedbacks.taskId')
         .select([
           'pm_task.id as taskId',
           'pm_task.taskName as taskName',
@@ -1993,6 +1994,7 @@ const taskGroupController = {
           'pm_task.taskNameAlternate',
           'pm_task.taskSerialNumber',
           'pm_task.result',
+          'task_feedbacks.description as feedbackDescription'
 
         ])
         .where({
@@ -3144,7 +3146,7 @@ const taskGroupController = {
 
   },
 
-  /** update task status with result  */
+  /** Single update task status with result  */
   taskPerform: async (req, res) => {
     try {
       const payload = req.body;
@@ -3245,6 +3247,138 @@ const taskGroupController = {
       });
     }
   },
+
+  /** All update task status with result  */
+  allTaskPerform: async (req, res) => {
+    try {
+      const payload = req.body;
+      const schema = Joi.object().keys({
+        taskGroupId: Joi.string().required(),
+        //taskId: Joi.string().required(),
+        //result: Joi.number().required(),
+        //status: Joi.string().required(),
+        userId: Joi.string().required(),
+        //workOrderId: Joi.string().required(),
+        //workOrderDate: Joi.date().required()
+
+      })
+      const result = Joi.validate(_.omit(payload, "taskArr"), schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+
+      let workOrderDate;
+      let workOrderId;
+      if (payload.taskArr.length) {
+
+        workOrderDate = payload.taskArr[0].pmDate;
+        workOrderId = payload.taskArr[0].workOrderId;
+
+      }
+
+      payload.workOrderDate = workOrderDate;
+      payload.workOrderId = workOrderId;
+      payload.status = 'COM';
+      payload.result = 1;
+
+      let currentTime = new Date().getTime()
+      let taskUpdated = [];
+      if (payload.status === 'COM') {
+
+        for (let t of payload.taskArr) {
+
+          if (t.result == 2 || t.result == 3) {
+
+          } else {
+
+            let taskUpdate = await knex('pm_task').update({ result:payload.result,status: payload.status, completedAt: currentTime, completedBy: payload.userId }).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
+            taskUpdated.push(taskUpdate);
+          }
+        }
+        let workResult = await knex('pm_task').where({ taskGroupScheduleAssignAssetId: payload.workOrderId, orgId: req.orgId });
+        let workComplete = await knex('pm_task').where({ taskGroupScheduleAssignAssetId: payload.workOrderId, orgId: req.orgId, status: "COM" });
+
+        if (workResult.length == workComplete.length) {
+
+          let scheduleStatus = null;
+
+          let workDate = moment(payload.workOrderDate).format('YYYY-MM-DD');
+          let currnetDate = moment().format('YYYY-MM-DD');
+          if (workDate == currnetDate || workDate > currnetDate) {
+            scheduleStatus = "on"
+          } else if (workDate < currnetDate) {
+            scheduleStatus = "off"
+          }
+
+          let workOrder = await knex('task_group_schedule_assign_assets').update({ status: payload.status, updatedAt: currentTime, scheduleStatus: scheduleStatus }).where({ id: payload.workOrderId, orgId: req.orgId }).returning(['*'])
+
+        }
+
+
+      }
+
+      return res.status(200).json({
+        data: {
+          taskUpdated
+        },
+        message: 'Task updated'
+      })
+    } catch (err) {
+      console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
+
+  /**task feedback */
+  taskFeedback: async (req, res) => {
+    try {
+      const payload = req.body;
+      console.log("Payload Data", payload);
+
+      const schema = Joi.object().keys({
+        taskId: Joi.string().required(),
+        taskGroupScheduleId: Joi.string().required(),
+        taskGroupId: Joi.string().required(),
+        assetId: Joi.string().required(),
+        description: Joi.string().required(),
+        //workOrderId: Joi.string().required()
+      })
+      const result = Joi.validate(payload, schema);
+
+
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+      let curentTime = new Date().getTime()
+      //let fbs = req.body.map(v => ({ ...v, createdAt: curentTime, updatedAt: curentTime, orgId: req.orgId }))
+      let fbs = { ...payload, createdAt: curentTime, updatedAt: curentTime, orgId: req.orgId };
+
+      const addedFeedback = await knex('task_feedbacks').insert(fbs).returning(['*'])
+      return res.status(200).json({
+        data: {
+          addedFeedback
+        },
+        message: 'Feedback added successfully!'
+      })
+
+    } catch (err) {
+      console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
+
 
 }
 
