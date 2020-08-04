@@ -278,11 +278,11 @@ router.post(
   partsController.requestedPartForPm
 )
 
-// router.get(  
-//   "/part-ledger-migration",
-//   authMiddleware.isAuthenticated,
-//   partsController.partLedgerMigration
-// )
+router.get(  
+  "/part-ledger-migration",
+  authMiddleware.isAuthenticated,
+  partsController.partLedgerMigration
+)
 
 /*PM ASSIGNED PART */
 
