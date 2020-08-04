@@ -52,7 +52,7 @@ const facilityBookingController = {
           checkInType: Joi.string().allow("").optional(),
           enablePreCheckIn: Joi.boolean().required(),
           preCheckinTime: Joi.string().allow("").optional(),
-          qrCode: Joi.string().allow("").optional(),
+          // qrCode: Joi.string().allow("").optional(),
           // "descriptionAlternateLang": Joi.string().required(),
         });
 
@@ -94,7 +94,7 @@ const facilityBookingController = {
         } else {
           message = "Facility added successfully!";
         }
-
+        let qrCode = "org-" + req.orgId + "-facility-" + req.body.facilityId
         let currentTime = new Date().getTime();
         let descriptionAlternateLang = req.body.descriptionAlternateLang
           ? req.body.descriptionAlternateLang
@@ -103,6 +103,7 @@ const facilityBookingController = {
         let addedFacilityResultData = await knex("facility_master")
           .update({
             ...payload,
+            qrCode,
             descriptionAlternateLang,
             updatedAt: currentTime,
             createdAt: currentTime,
@@ -836,8 +837,8 @@ const facilityBookingController = {
                   bookingEndTime
                 );
               }
-              if (status && status.length) {
-                console.log("Status of status", Status);
+              // if (status && status.length) {
+                // console.log("Status of status", Status);
                 if (Status == "Pending") {
                   console.log("Pending", status);
                   qb.where("entity_bookings.isBookingConfirmed", false);
@@ -867,7 +868,7 @@ const facilityBookingController = {
                   // qb.where("entity_bookings.isBookingCancelled", false);
                 }
                 if (Status == 'Confirmed') {
-                  console.log("Confirmed", status);
+                  console.log("Confirmed1", status);
                   qb.where({
                     "entity_bookings.isBookingConfirmed": true,
                     "entity_bookings.isBookingCancelled": false,
@@ -1078,7 +1079,7 @@ const facilityBookingController = {
                     createdEndTime,
                   ]);
                 }
-              }
+              // }
             })
             .where("entity_bookings.orgId", req.orgId)
             .groupBy([

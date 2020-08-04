@@ -4260,127 +4260,127 @@ const partsController = {
         }
     },
     partLedgerMigration: async (req, res) => {
-        // try {
+        try {
 
-        //     const currentTime = new Date();
-        //     let insertDataObj;
-        //     let issueByData;
-        //     let issueToData;
-        //     let receiveToData;
-        //     let partResult;
-        //     // Get assigned parts to PM - Work Order
-        //     let assignedLedger = await knex('part_ledger_temp').select('*').where({ isPartAdded: true })
-        //     //  console.log("data ledger", assignedPartLedger);
-        //     for (let assignedPartLedger of assignedLedger) {
-        //         console.log("data ledger", assignedPartLedger);
-        //         issueByData = await knex('adjust_part_users').where({ name: assignedPartLedger.issueBy, orgId: assignedPartLedger.orgId }).returning(['*']);
+            const currentTime = new Date();
+            let insertDataObj;
+            let issueByData;
+            let issueToData;
+            let receiveToData;
+            let partResult;
+            // Get assigned parts to PM - Work Order
+            let assignedLedger = await knex('part_ledger_temp').select('*').where({ isPartAdded: true })
+            //  console.log("data ledger", assignedPartLedger);
+            for (let assignedPartLedger of assignedLedger) {
+                console.log("data ledger", assignedPartLedger);
+                issueByData = await knex('adjust_part_users').where({ name: assignedPartLedger.issueBy, orgId: assignedPartLedger.orgId }).returning(['*']);
 
-        //         if (issueByData && issueByData.length) {
-        //             requestedByResult = issueByData;
-        //             issueById = requestedByResult[0].id;
-        //         } else {
-        //             if (assignedPartLedger.issueBy) {
-        //                 requestedByResult = await knex('adjust_part_users').insert({
-        //                     name: assignedPartLedger.issueBy,
-        //                     createdAt: assignedPartLedger.createdAt,
-        //                     updatedAt: assignedPartLedger.updatedAt,
-        //                     orgId: assignedPartLedger.orgId
-        //                 }).returning(['*'])
-        //                 issueById = requestedByResult[0].id;
-        //             } else {
-        //                 issueById = null;
-        //             }
-        //         }
-
-
-        //         issueToData = await knex('adjust_part_users').where({ name: assignedPartLedger.issueTo, orgId: assignedPartLedger.orgId }).returning(['*']);
-
-        //         if (issueToData && issueToData.length) {
-        //             requestedToResult = issueToData;
-        //             issueToId = requestedToResult[0].id;
-        //         } else {
-        //             if (assignedPartLedger.issueTo) {
-        //                 requestedToResult = await knex('adjust_part_users').insert({
-        //                     name: assignedPartLedger.issueTo,
-        //                     createdAt: assignedPartLedger.createdAt,
-        //                     updatedAt: assignedPartLedger.updatedAt,
-        //                     orgId: assignedPartLedger.orgId
-        //                 }).returning(['*'])
-        //                 issueToId = requestedToResult[0].id;
-        //             } else {
-        //                 issueToId = null;
-        //             }
-        //         }
+                if (issueByData && issueByData.length) {
+                    requestedByResult = issueByData;
+                    issueById = requestedByResult[0].id;
+                } else {
+                    if (assignedPartLedger.issueBy) {
+                        requestedByResult = await knex('adjust_part_users').insert({
+                            name: assignedPartLedger.issueBy,
+                            createdAt: assignedPartLedger.createdAt,
+                            updatedAt: assignedPartLedger.updatedAt,
+                            orgId: assignedPartLedger.orgId
+                        }).returning(['*'])
+                        issueById = requestedByResult[0].id;
+                    } else {
+                        issueById = null;
+                    }
+                }
 
 
-        //         receiveToData = await knex('adjust_part_users').where({ name: assignedPartLedger.receiveBy, orgId: assignedPartLedger.orgId }).returning(['*']);
+                issueToData = await knex('adjust_part_users').where({ name: assignedPartLedger.issueTo, orgId: assignedPartLedger.orgId }).returning(['*']);
 
-        //         if (receiveToData && receiveToData.length) {
-        //             requestedToResult = receiveToData;
-        //             receiveId = requestedToResult[0].id;
-        //         } else {
-        //             if (assignedPartLedger.issueTo) {
-        //                 requestedToResult = await knex('adjust_part_users').insert({
-        //                     name: assignedPartLedger.issueTo,
-        //                     createdAt: assignedPartLedger.createdAt,
-        //                     updatedAt: assignedPartLedger.updatedAt,
-        //                     orgId: assignedPartLedger.orgId
-        //                 }).returning(['*'])
-        //                 receiveId = requestedToResult[0].id;
-        //             } else {
-        //                 receiveId = null;
-        //             }
-        //         }
+                if (issueToData && issueToData.length) {
+                    requestedToResult = issueToData;
+                    issueToId = requestedToResult[0].id;
+                } else {
+                    if (assignedPartLedger.issueTo) {
+                        requestedToResult = await knex('adjust_part_users').insert({
+                            name: assignedPartLedger.issueTo,
+                            createdAt: assignedPartLedger.createdAt,
+                            updatedAt: assignedPartLedger.updatedAt,
+                            orgId: assignedPartLedger.orgId
+                        }).returning(['*'])
+                        issueToId = requestedToResult[0].id;
+                    } else {
+                        issueToId = null;
+                    }
+                }
 
-        //         insertDataObj = {
-        //             "partId": assignedPartLedger.partId,
-        //             "unitCost": assignedPartLedger.unitCost,
-        //             "quantity": assignedPartLedger.quantity,
-        //             "isPartAdded": assignedPartLedger.isPartAdded,
-        //             "createdAt": assignedPartLedger.createdAt,
-        //             "updatedAt": assignedPartLedger.updatedAt,
-        //             "adjustType": assignedPartLedger.adjustType,
-        //             "serviceOrderNo": assignedPartLedger.serviceOrderNo,
-        //             "workOrderId": assignedPartLedger.workOrderId,
-        //             "description": assignedPartLedger.description,
-        //             "approved": assignedPartLedger.approved,
-        //             "approvedBy": assignedPartLedger.approvedBy,
-        //             "orgId": assignedPartLedger.orgId,
-        //             "receiveBy": receiveId,
-        //             "receiveDate": assignedPartLedger.receiveDate,
-        //             "deductBy": assignedPartLedger.deductBy,
-        //             "deductDate": assignedPartLedger.deductDate,
-        //             "building": assignedPartLedger.building,
-        //             "floor": assignedPartLedger.floor,
-        //             "taskAssignPartId": assignedPartLedger.taskAssignPartId,
-        //             "storeAdjustmentBy": assignedPartLedger.storeAdjustmentBy,
-        //             "companyId": assignedPartLedger.companyId,
-        //             "receiveFrom": assignedPartLedger.receiveFrom,
-        //             "issueDate": assignedPartLedger.issueDate,
-        //             "issueBy": issueById,
-        //             "issueTo": issueToId,
-        //             "returnedBy": assignedPartLedger.returnedBy
-        //         }
-        //         console.log("part ledger=========", assignedPartLedger, "=============");
-        //         // let partLedgerExits = await knex('part_ledger').select('*').where({ orgId: req.orgId })
-        //         // if (partLedgerExits) {
-        //         // } else {
-        //         partResult = await knex('part_ledger').insert(insertDataObj).returning(['*']);
-        //         // }
-        //     }
 
-        //     return res.status(200).json({
-        //         data: {
-        //             data: partResult
-        //         },
-        //         message: "Data migration has been updated successfully!"
-        //     });
+                receiveToData = await knex('adjust_part_users').where({ name: assignedPartLedger.receiveBy, orgId: assignedPartLedger.orgId }).returning(['*']);
 
-        // } catch (err) {
-        //     return res.status(500).json({
-        //         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-        //     });
-        // }
+                if (receiveToData && receiveToData.length) {
+                    requestedToResult = receiveToData;
+                    receiveId = requestedToResult[0].id;
+                } else {
+                    if (assignedPartLedger.issueTo) {
+                        requestedToResult = await knex('adjust_part_users').insert({
+                            name: assignedPartLedger.issueTo,
+                            createdAt: assignedPartLedger.createdAt,
+                            updatedAt: assignedPartLedger.updatedAt,
+                            orgId: assignedPartLedger.orgId
+                        }).returning(['*'])
+                        receiveId = requestedToResult[0].id;
+                    } else {
+                        receiveId = null;
+                    }
+                }
+
+                insertDataObj = {
+                    "partId": assignedPartLedger.partId,
+                    "unitCost": assignedPartLedger.unitCost,
+                    "quantity": assignedPartLedger.quantity,
+                    "isPartAdded": assignedPartLedger.isPartAdded,
+                    "createdAt": assignedPartLedger.createdAt,
+                    "updatedAt": assignedPartLedger.updatedAt,
+                    "adjustType": assignedPartLedger.adjustType,
+                    "serviceOrderNo": assignedPartLedger.serviceOrderNo,
+                    "workOrderId": assignedPartLedger.workOrderId,
+                    "description": assignedPartLedger.description,
+                    "approved": assignedPartLedger.approved,
+                    "approvedBy": assignedPartLedger.approvedBy,
+                    "orgId": assignedPartLedger.orgId,
+                    "receiveBy": receiveId,
+                    "receiveDate": assignedPartLedger.receiveDate,
+                    "deductBy": assignedPartLedger.deductBy,
+                    "deductDate": assignedPartLedger.deductDate,
+                    "building": assignedPartLedger.building,
+                    "floor": assignedPartLedger.floor,
+                    "taskAssignPartId": assignedPartLedger.taskAssignPartId,
+                    "storeAdjustmentBy": assignedPartLedger.storeAdjustmentBy,
+                    "companyId": assignedPartLedger.companyId,
+                    "receiveFrom": assignedPartLedger.receiveFrom,
+                    "issueDate": assignedPartLedger.issueDate,
+                    "issueBy": issueById,
+                    "issueTo": issueToId,
+                    "returnedBy": assignedPartLedger.returnedBy
+                }
+                console.log("part ledger=========", assignedPartLedger, "=============");
+                // let partLedgerExits = await knex('part_ledger').select('*').where({ orgId: req.orgId })
+                // if (partLedgerExits) {
+                // } else {
+                partResult = await knex('part_ledger').insert(insertDataObj).returning(['*']);
+                // }
+            }
+
+            return res.status(200).json({
+                data: {
+                    data: partResult
+                },
+                message: "Data migration has been updated successfully!"
+            });
+
+        } catch (err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
     }
 }
 
