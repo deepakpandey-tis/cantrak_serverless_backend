@@ -1530,7 +1530,7 @@ const dashboardController = {
       let companyData = await knex.from('companies').select(['id', 'companyName', 'companyId'])
         .whereIn('companies.id', companyIds)
         .orderBy("companies.companyName", 'asc')
-        .where({ orgId: req.orgId });
+        .where({isActive:true ,orgId: req.orgId });
 
 
       return res.status(200).json({
