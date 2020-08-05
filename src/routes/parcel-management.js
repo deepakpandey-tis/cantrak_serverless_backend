@@ -13,4 +13,6 @@ router.post('/get-parcel-list',authMiddleware.isAuthenticated,parcelManageContro
 
 router.post('/get-parcel-details',authMiddleware.isAuthenticated,parcelManageController.getParcelDetails)
 
+router.post('/get-pending-parcel-list',authMiddleware.isAuthenticated,parcelManageController.getPendingParcelList)
+
 module.exports = router

@@ -1103,7 +1103,6 @@ const partsController = {
                                 'email1',
                                 'mobile1',
                                 'companyId',
-                                'serviceOrderNo',
                                 "deductTo",
                                 "returnedBy"])
 
