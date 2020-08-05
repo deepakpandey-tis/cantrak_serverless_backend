@@ -1420,7 +1420,7 @@ const serviceOrderController = {
                 let assignedPartPayload = req.body;
                 let schema = Joi.object().keys({
                     partId: Joi.string().required(),
-                    unitCost: Joi.string().required(),
+                    //unitCost: Joi.string().required(),
                     unitCost: Joi.number().required(),
                     quantity: Joi.number().required(),
                     status: Joi.string().required(),

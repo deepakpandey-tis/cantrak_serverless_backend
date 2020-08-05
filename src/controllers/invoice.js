@@ -245,7 +245,7 @@ const invoiceController = {
             // // }
             let remarkNotes;
 
-            let teamsResult = await knex.raw(`select "service_orders"."id" as "SOId","users"."name" as "assignedTo","teams"."teamName" as "teamName" from "service_orders" left join "assigned_service_team" on "service_orders"."id" = "assigned_service_team"."entityId" left join "teams" on "assigned_service_team"."teamId" = "teams"."teamId" left join "users" on "assigned_service_team"."userId" = "users"."id" where "service_orders"."id" = ${serviceOrderId} and "assigned_service_team"."entityType"='service_orders' limit 1`)
+            let teamsResult = await knex.raw(`select "service_orders"."id" as "SOId","service_orders"."displayId" as "SONo","users"."name" as "assignedTo","teams"."teamName" as "teamName" from "service_orders" left join "assigned_service_team" on "service_orders"."id" = "assigned_service_team"."entityId" left join "teams" on "assigned_service_team"."teamId" = "teams"."teamId" left join "users" on "assigned_service_team"."userId" = "users"."id" where "service_orders"."id" = ${serviceOrderId} and "assigned_service_team"."entityType"='service_orders' limit 1`)
             let othersUserData = await knex.raw(`select "assigned_service_additional_users"."userId" as "userId","users"."name" as "addUsers" from "assigned_service_additional_users" left join "users" on "assigned_service_additional_users"."userId" = "users"."id" where "assigned_service_additional_users"."entityId" = ${serviceOrderId} and "assigned_service_additional_users"."entityType"='service_orders'`)
 
             console.log("results", teamsResult.rows);
