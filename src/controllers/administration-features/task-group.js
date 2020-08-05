@@ -252,7 +252,9 @@ const taskGroupController = {
           orgId: req.orgId,
           taskSerialNumber: req.body.tasks[k].taskSerialNumber,
           taskNameAlternate: req.body.tasks[k].taskNameAlternate,
-          updatedAt: currentTime
+          updatedAt: currentTime,
+          duration: req.body.tasks[k].duration,
+          hourlyRate: req.body.tasks[k].hourlyRate,
 
         }
 
@@ -782,6 +784,8 @@ const taskGroupController = {
                 updatedAt: currentTime,
                 orgId: req.orgId,
                 status: 'O',
+                duration: payload.tasks[k].duration,
+                hourlyRate: payload.tasks[k].hourlyRate,
 
               }
 
@@ -1994,14 +1998,28 @@ const taskGroupController = {
           'pm_task.taskNameAlternate',
           'pm_task.taskSerialNumber',
           'pm_task.result',
-          'task_feedbacks.description as feedbackDescription'
+          'task_feedbacks.description as feedbackDescription',
+          'pm_task.duration',
+          'pm_task.hourlyRate'
 
         ])
         .where({
           'pm_task.taskGroupScheduleAssignAssetId': payload.taskGroupScheduleAssignAssetId,
           'pm_task.orgId': req.orgId
         })
-        .orderBy('pm_task.taskSerialNumber', 'asc')
+        .orderBy('pm_task.taskSerialNumber', 'asc');
+
+      tasks = tasks.map(v => {
+
+        let standardCost = 0;
+        standardCost = Number(v.duration) * Number(v.hourlyRate);
+
+        return {
+          ...v,
+          standardCost
+        }
+
+      })
 
       // let statuses = tasks.filter(t => t.status !== "CMTD")
       // if (statuses.length === 0) {
@@ -2314,7 +2332,8 @@ const taskGroupController = {
       let taskGroup = taskGroupResult[0]
 
 
-      const tasks = await knex('template_task').where({ templateId: req.body.id, orgId: req.orgId }).select('taskName', 'id', 'taskNameAlternate', 'taskSerialNumber')
+      const tasks = await knex('template_task').where({ templateId: req.body.id, orgId: req.orgId })
+        .select('taskName', 'id', 'taskNameAlternate', 'taskSerialNumber', 'duration', 'hourlyRate')
         .orderBy('taskSerialNumber', 'asc');
 
 
@@ -2475,7 +2494,9 @@ const taskGroupController = {
             .update({
               taskName: task.taskName,
               taskNameAlternate: task.taskNameAlternate,
-              taskSerialNumber: task.taskSerialNumber
+              taskSerialNumber: task.taskSerialNumber,
+              duration: task.duration,
+              hourlyRate: task.hourlyRate,
             })
             .where({
               templateId: id,
@@ -2533,7 +2554,9 @@ const taskGroupController = {
               templateId: id,
               createdAt: currentTime,
               updatedAt: currentTime,
-              orgId: req.orgId
+              orgId: req.orgId,
+              duration: task.duration,
+              hourlyRate: task.hourlyRate,
             }).returning('*')
           updatedTasks.push(updatedTaskResult[0]);
 
