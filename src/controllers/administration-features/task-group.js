@@ -3180,18 +3180,19 @@ const taskGroupController = {
       payload.workOrderDate = workOrderDate;
       payload.workOrderId = workOrderId;
 
-      // Get all the tasks of the work order and check if those tasks have status cmtd
-      // then 
       let currentTime = new Date().getTime()
-      // We need to check whther all the tasks have been updated or not
       let taskUpdated = [];
       if (payload.status === 'COM') {
 
         for (let t of payload.taskArr) {
 
-          // check id completedAt i.e current date is greater than pmDate then update completedAt and completedBy
-          let taskUpdate = await knex('pm_task').update({ result: payload.result, status: payload.status, completedAt: currentTime, completedBy: payload.userId }).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
-          taskUpdated.push(taskUpdate);
+          if (t.status == "Completed") {
+
+          } else {
+
+            let taskUpdate = await knex('pm_task').update({ result: payload.result, status: payload.status, completedAt: currentTime, completedBy: payload.userId }).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
+            taskUpdated.push(taskUpdate);
+          }
         }
         let workResult = await knex('pm_task').where({ taskGroupScheduleAssignAssetId: payload.workOrderId, orgId: req.orgId });
         let workComplete = await knex('pm_task').where({ taskGroupScheduleAssignAssetId: payload.workOrderId, orgId: req.orgId, status: "COM" });
@@ -3223,9 +3224,15 @@ const taskGroupController = {
 
           for (let t of payload.taskArr) {
 
-            taskUpdate = await knex('pm_task').update({ status: payload.status, result: payload.result }).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
+            if (t.status == "Completed") {
 
-            taskUpdated.push(taskUpdate);
+            } else {
+
+              taskUpdate = await knex('pm_task').update({ status: payload.status, result: payload.result }).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
+
+              taskUpdated.push(taskUpdate);
+
+            }
 
           }
         }
@@ -3293,7 +3300,7 @@ const taskGroupController = {
 
           } else {
 
-            let taskUpdate = await knex('pm_task').update({ result:payload.result,status: payload.status, completedAt: currentTime, completedBy: payload.userId }).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
+            let taskUpdate = await knex('pm_task').update({ result: payload.result, status: payload.status, completedAt: currentTime, completedBy: payload.userId }).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
             taskUpdated.push(taskUpdate);
           }
         }
@@ -3339,6 +3346,7 @@ const taskGroupController = {
   taskFeedback: async (req, res) => {
     try {
       const payload = req.body;
+      let addedFeedback;
       console.log("Payload Data", payload);
 
       const schema = Joi.object().keys({
@@ -3359,9 +3367,36 @@ const taskGroupController = {
       }
       let curentTime = new Date().getTime()
       //let fbs = req.body.map(v => ({ ...v, createdAt: curentTime, updatedAt: curentTime, orgId: req.orgId }))
-      let fbs = { ...payload, createdAt: curentTime, updatedAt: curentTime, orgId: req.orgId };
 
-      const addedFeedback = await knex('task_feedbacks').insert(fbs).returning(['*'])
+      let checkFeedback;
+
+      checkFeedback = await knex.from('task_feedbacks')
+        .where({
+          taskId: payload.taskId,
+          taskGroupScheduleId: payload.taskGroupScheduleId,
+          taskGroupId: payload.taskGroupId,
+          assetId: payload.assetId,
+          orgId: req.orgId
+        }).first();
+
+      if (checkFeedback) {
+
+        let updateData = { ...payload, updatedAt: curentTime, orgId: req.orgId };
+
+        addedFeedback = await knex('task_feedbacks').update(updateData).where({
+          taskId: payload.taskId,
+          taskGroupScheduleId: payload.taskGroupScheduleId,
+          taskGroupId: payload.taskGroupId,
+          assetId: payload.assetId,
+          orgId: req.orgId
+        }).returning(['*']);
+
+      } else {
+
+        let fbs = { ...payload, createdAt: curentTime, updatedAt: curentTime, orgId: req.orgId };
+        addedFeedback = await knex('task_feedbacks').insert(fbs).returning(['*']);
+      }
+
       return res.status(200).json({
         data: {
           addedFeedback
