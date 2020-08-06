@@ -780,6 +780,11 @@ const facilityDashboardController = {
               "entity_bookings.isBookingCancelled": false,
               "entity_bookings.confirmedType": 1,
             })
+            // .orWhere({
+            //   "entity_bookings.isBookingConfirmed": true,
+            //   "entity_bookings.isBookingCancelled": false,
+            //   "entity_bookings.confirmedType": null,
+            // })
             .whereBetween("entity_bookings.createdAt", [
               currentStartTime,
               currentEndTime,
