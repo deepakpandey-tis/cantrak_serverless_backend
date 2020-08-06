@@ -227,7 +227,7 @@ const parcelManagementController = {
 
       let { unitId, trackingNumber, tenant, status } = req.body;
 
-      console.log("request body",req.body)
+      console.log("request body", req.body);
       if (unitId || trackingNumber || tenant || status) {
         try {
           [total, rows] = await Promise.all([
@@ -418,131 +418,226 @@ const parcelManagementController = {
       });
     }
   },
-  getPendingParcelList:async(req,res) => {
-    try{
-      let reqData = req.query;
-      console.log("requested data", reqData);
-      let total, rows;
+  // getPendingParcelList: async (req, res) => {
+  //   try {
+  //     let reqData = req.query;
+  //     console.log("requested data", reqData);
+  //     let total, rows;
 
-      let pagination = {};
-      let per_page = reqData.per_page || 10;
-      let page = reqData.current_page || 1;
-      if (page < 1) page = 1;
-      let offset = (page - 1) * per_page;
-      let filters = {};
+  //     let pagination = {};
+  //     let per_page = reqData.per_page || 10;
+  //     let page = reqData.current_page || 1;
+  //     if (page < 1) page = 1;
+  //     let offset = (page - 1) * per_page;
+  //     let filters = {};
 
-      let { unitId, trackingNumber, tenant, status } = req.body;
+  //     let { unitId, trackingNumber, tenant, status } = req.body;
 
-      console.log("request body",req.body)
-      if (unitId || trackingNumber || tenant) {
+  //     console.log("request body", req.body);
+  //     if (unitId || trackingNumber || tenant) {
+  //       try {
+  //         [total, rows] = await Promise.all([
+  //           knex
+  //             .count("* as count")
+  //             .from("parcel_management")
+  //             .leftJoin(
+  //               "parcel_user_tis",
+  //               "parcel_management.id",
+  //               "parcel_user_tis.parcelId"
+  //             )
+  //             .leftJoin(
+  //               "parcel_user_non_tis",
+  //               "parcel_management.id",
+  //               "parcel_user_non_tis.parcelId"
+  //             )
+  //             .leftJoin(
+  //               "property_units",
+  //               "parcel_user_tis.unitId",
+  //               "property_units.id"
+  //             )
+  //             .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+  //             .where("parcel_management.orgId", req.orgId)
+  //             .where("parcel_management.parcelStatus", 1)
+  //             .where((qb) => {
+  //               if (unitId) {
+  //                 qb.where("property_units.id", unitId);
+  //               }
+  //               if (trackingNumber) {
+  //                 qb.where("parcel_management.trackingNumber", trackingNumber);
+  //               }
+  //               if (tenant) {
+  //                 qb.where("users.id", tenant);
+  //               }
+  //               if (status) {
+  //                 qb.where("parcel_management.parcelStatus", status);
+  //               }
+  //             })
+  //             .groupBy([
+  //               "parcel_management.id",
+  //               "property_units.id",
+  //               "users.id",
+  //               "parcel_user_tis.unitId",
+  //             ]),
+  //           knex
+  //             .from("parcel_management")
+  //             .leftJoin(
+  //               "parcel_user_tis",
+  //               "parcel_management.id",
+  //               "parcel_user_tis.parcelId"
+  //             )
+  //             .leftJoin(
+  //               "parcel_user_non_tis",
+  //               "parcel_management.id",
+  //               "parcel_user_non_tis.parcelId"
+  //             )
+  //             .leftJoin(
+  //               "property_units",
+  //               "parcel_user_tis.unitId",
+  //               "property_units.id"
+  //             )
+  //             .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+  //             .select([
+  //               "parcel_management.id",
+  //               "parcel_user_tis.unitId",
+  //               "parcel_management.trackingNumber",
+  //               "parcel_management.parcelStatus",
+  //               "users.name as tenant",
+  //               "parcel_management.createdAt",
+  //               "parcel_management.pickedUpType",
+  //             ])
+  //             .where("parcel_management.orgId", req.orgId)
+  //             .where("parcel_management.parcelStatus", 1)
+  //             .where((qb) => {
+  //               if (unitId) {
+  //                 qb.where("property_units.id", unitId);
+  //               }
+  //               if (trackingNumber) {
+  //                 qb.where("parcel_management.trackingNumber", trackingNumber);
+  //               }
+  //               if (tenant) {
+  //                 qb.where("users.id", tenant);
+  //               }
+  //               if (status) {
+  //                 qb.where("parcel_management.parcelStatus", status);
+  //               }
+  //             })
+  //             .orderBy("parcel_management.id", "asc")
+  //             .offset(offset)
+  //             .limit(per_page),
+  //         ]);
+
+  //         let count = total.length;
+
+  //         pagination.total = count;
+  //         pagination.per_page = per_page;
+  //         pagination.offset = offset;
+  //         pagination.to = offset + rows.length;
+  //         pagination.last_page = Math.ceil(count / per_page);
+  //         pagination.current_page = page;
+  //         pagination.from = offset;
+  //         pagination.data = rows;
+  //       } catch (err) {
+  //         console.log(err);
+  //       }
+  //     } else {
+  //       [total, rows] = await Promise.all([
+  //         knex
+  //           .count("* as count")
+  //           .from("parcel_management")
+  //           .leftJoin(
+  //             "parcel_user_tis",
+  //             "parcel_management.id",
+  //             "parcel_user_tis.parcelId"
+  //           )
+  //           .leftJoin(
+  //             "parcel_user_non_tis",
+  //             "parcel_management.id",
+  //             "parcel_user_non_tis.parcelId"
+  //           )
+  //           .leftJoin(
+  //             "property_units",
+  //             "parcel_user_tis.unitId",
+  //             "property_units.id"
+  //           )
+  //           .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+  //           .where("parcel_management.orgId", req.orgId)
+  //           .where("parcel_management.parcelStatus", 1)
+  //           .groupBy(["parcel_management.id", "property_units.id", "users.id"]),
+  //         knex
+  //           .from("parcel_management")
+  //           .leftJoin(
+  //             "parcel_user_tis",
+  //             "parcel_management.id",
+  //             "parcel_user_tis.parcelId"
+  //           )
+  //           .leftJoin(
+  //             "parcel_user_non_tis",
+  //             "parcel_management.id",
+  //             "parcel_user_non_tis.parcelId"
+  //           )
+  //           .leftJoin(
+  //             "property_units",
+  //             "parcel_user_tis.unitId",
+  //             "property_units.id"
+  //           )
+  //           .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+  //           .select([
+  //             "parcel_management.id",
+  //             "parcel_user_tis.unitId",
+  //             "parcel_management.trackingNumber",
+  //             "parcel_management.parcelStatus",
+  //             "users.name as tenant",
+  //             "parcel_management.createdAt",
+  //             "parcel_management.pickedUpType",
+  //           ])
+  //           .where("parcel_management.orgId", req.orgId)
+  //           .where("parcel_management.parcelStatus", 1)
+  //           .groupBy([
+  //             "parcel_management.id",
+  //             "property_units.id",
+  //             "users.id",
+  //             "parcel_user_tis.unitId",
+  //           ])
+  //           .orderBy("parcel_management.id", "asc")
+  //           .offset(offset)
+  //           .limit(per_page),
+  //       ]);
+
+  //       let count = total.length;
+
+  //       pagination.total = count;
+  //       pagination.per_page = per_page;
+  //       pagination.offset = offset;
+  //       pagination.to = offset + rows.length;
+  //       pagination.last_page = Math.ceil(count / per_page);
+  //       pagination.current_page = page;
+  //       pagination.from = offset;
+  //       pagination.data = rows;
+  //     }
+
+  //     return res.status(200).json({
+  //       data: {
+  //         parcel: pagination,
+  //       },
+  //       message: "parcel List!",
+  //     });
+  //   } catch (err) {
+  //     console.log("[controllers][parcel_management][list] :  Error", err);
+  //     return res.status(500).json({
+  //       errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+  //     });
+  //   }
+  // },
+
+  getPendingParcelList: async (req, res) => {
+    try {
+      let payload = req.body;
+      let parcelList;
+      let { unitId, tenantId, buildingPhaseId, trackingNumber } = req.body;
+      console.log("parcel payload",unitId,tenantId,buildingPhaseId,trackingNumber)
+      if (unitId || tenantId || buildingPhaseId || trackingNumber) {
         try {
-          [total, rows] = await Promise.all([
-            knex
-              .count("* as count")
-              .from("parcel_management")
-              .leftJoin(
-                "parcel_user_tis",
-                "parcel_management.id",
-                "parcel_user_tis.parcelId"
-              )
-              .leftJoin(
-                "parcel_user_non_tis",
-                "parcel_management.id",
-                "parcel_user_non_tis.parcelId"
-              )
-              .leftJoin(
-                "property_units",
-                "parcel_user_tis.unitId",
-                "property_units.id"
-              )
-              .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
-              .where("parcel_management.orgId", req.orgId)
-              .where("parcel_management.parcelStatus",1)
-              .where((qb) => {
-                if (unitId) {
-                  qb.where("property_units.id", unitId);
-                }
-                if (trackingNumber) {
-                  qb.where("parcel_management.trackingNumber", trackingNumber);
-                }
-                if (tenant) {
-                  qb.where("users.id", tenant);
-                }
-                if (status) {
-                  qb.where("parcel_management.parcelStatus", status);
-                }
-              })
-              .groupBy([
-                "parcel_management.id",
-                "property_units.id",
-                "users.id",
-                "parcel_user_tis.unitId",
-              ]),
-            knex
-              .from("parcel_management")
-              .leftJoin(
-                "parcel_user_tis",
-                "parcel_management.id",
-                "parcel_user_tis.parcelId"
-              )
-              .leftJoin(
-                "parcel_user_non_tis",
-                "parcel_management.id",
-                "parcel_user_non_tis.parcelId"
-              )
-              .leftJoin(
-                "property_units",
-                "parcel_user_tis.unitId",
-                "property_units.id"
-              )
-              .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
-              .select([
-                "parcel_management.id",
-                "parcel_user_tis.unitId",
-                "parcel_management.trackingNumber",
-                "parcel_management.parcelStatus",
-                "users.name as tenant",
-                "parcel_management.createdAt",
-                "parcel_management.pickedUpType",
-              ])
-              .where("parcel_management.orgId", req.orgId)
-              .where("parcel_management.parcelStatus",1)
-              .where((qb) => {
-                if (unitId) {
-                  qb.where("property_units.id", unitId);
-                }
-                if (trackingNumber) {
-                  qb.where("parcel_management.trackingNumber", trackingNumber);
-                }
-                if (tenant) {
-                  qb.where("users.id", tenant);
-                }
-                if (status) {
-                  qb.where("parcel_management.parcelStatus", status);
-                }
-              })
-              .orderBy("parcel_management.id", "asc")
-              .offset(offset)
-              .limit(per_page),
-          ]);
-
-          let count = total.length;
-
-          pagination.total = count;
-          pagination.per_page = per_page;
-          pagination.offset = offset;
-          pagination.to = offset + rows.length;
-          pagination.last_page = Math.ceil(count / per_page);
-          pagination.current_page = page;
-          pagination.from = offset;
-          pagination.data = rows;
-        } catch (err) {
-          console.log(err);
-        }
-      } else {
-        [total, rows] = await Promise.all([
-          knex
-            .count("* as count")
+          parcelList = await knex
             .from("parcel_management")
             .leftJoin(
               "parcel_user_tis",
@@ -560,27 +655,11 @@ const parcelManagementController = {
               "property_units.id"
             )
             .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
-            .where("parcel_management.orgId", req.orgId)
-            .where("parcel_management.parcelStatus",1)
-            .groupBy(["parcel_management.id", "property_units.id", "users.id"]),
-          knex
-            .from("parcel_management")
             .leftJoin(
-              "parcel_user_tis",
-              "parcel_management.id",
-              "parcel_user_tis.parcelId"
+              "buildings_and_phases",
+              "parcel_user_tis.buildingPhaseId",
+              "buildings_and_phases.id"
             )
-            .leftJoin(
-              "parcel_user_non_tis",
-              "parcel_management.id",
-              "parcel_user_non_tis.parcelId"
-            )
-            .leftJoin(
-              "property_units",
-              "parcel_user_tis.unitId",
-              "property_units.id"
-            )
-            .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
             .select([
               "parcel_management.id",
               "parcel_user_tis.unitId",
@@ -589,47 +668,111 @@ const parcelManagementController = {
               "users.name as tenant",
               "parcel_management.createdAt",
               "parcel_management.pickedUpType",
+              "buildings_and_phases.buildingPhaseCode",
+              "buildings_and_phases.description as buildingName",
             ])
             .where("parcel_management.orgId", req.orgId)
-            .where("parcel_management.parcelStatus",1)
+            .where("parcel_management.parcelStatus", 1)
+            .where((qb) => {
+              if (unitId) {
+                qb.where("property_units.id", unitId);
+              }
+              if (trackingNumber) {
+                qb.where("parcel_management.trackingNumber", trackingNumber);
+              }
+              if (tenantId) {
+                qb.where("users.id", tenantId);
+              }
+              if (buildingPhaseId) {
+                qb.where("parcel_user_tis.buildingPhaseId", buildingPhaseId);
+              }
+            })
             .groupBy([
               "parcel_management.id",
               "property_units.id",
               "users.id",
               "parcel_user_tis.unitId",
+              "buildings_and_phases.buildingPhaseCode",
+              "buildings_and_phases.description"
             ])
-            .orderBy("parcel_management.id", "asc")
-            .offset(offset)
-            .limit(per_page),
-        ]);
-
-        let count = total.length;
-
-        pagination.total = count;
-        pagination.per_page = per_page;
-        pagination.offset = offset;
-        pagination.to = offset + rows.length;
-        pagination.last_page = Math.ceil(count / per_page);
-        pagination.current_page = page;
-        pagination.from = offset;
-        pagination.data = rows;
+            .orderBy("parcel_management.id", "asc");
+        } catch (err) {
+          console.log("[controllers][parcel_management][list] :  Error", err);
+          return res.status(500).json({
+            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+          });
+        }
+      } else {
+        parcelList = await knex
+          .from("parcel_management")
+          .leftJoin(
+            "parcel_user_tis",
+            "parcel_management.id",
+            "parcel_user_tis.parcelId"
+          )
+          .leftJoin(
+            "parcel_user_non_tis",
+            "parcel_management.id",
+            "parcel_user_non_tis.parcelId"
+          )
+          .leftJoin(
+            "property_units",
+            "parcel_user_tis.unitId",
+            "property_units.id"
+          )
+          .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+          .leftJoin(
+            "buildings_and_phases",
+            "parcel_user_tis.buildingPhaseId",
+            "buildings_and_phases.id"
+          )
+          .select([
+            "parcel_management.id",
+            "parcel_user_tis.unitId",
+            "parcel_management.trackingNumber",
+            "parcel_management.parcelStatus",
+            "users.name as tenant",
+            "parcel_management.createdAt",
+            "parcel_management.pickedUpType",
+            "buildings_and_phases.buildingPhaseCode",
+            "buildings_and_phases.description as buildingName",
+          ])
+          .where("parcel_management.orgId", req.orgId)
+          .where("parcel_management.parcelStatus", 1)
+          .groupBy([
+            "parcel_management.id",
+            "property_units.id",
+            "users.id",
+            "parcel_user_tis.unitId",
+            "buildings_and_phases.buildingPhaseCode",
+            "buildings_and_phases.description"
+          ])
+          .orderBy("parcel_management.id", "asc");
       }
+
+      const Parallel = require('async-parallel')
+      parcelList = await Parallel.map(parcelList, async pd=>{
+        let imageResult = await knex.from('images').select('s3Url', 'title', 'name')
+        .where({ "entityId": pd.id, "entityType": 'parcel_management', orgId: req.orgId }).first()
+        return {
+          ...pd,
+          uploadedImages:imageResult
+        }
+      })
 
       return res.status(200).json({
         data: {
-          parcel: pagination,
+          parcel: parcelList,
         },
         message: "parcel List!",
       });
-
-    }catch(err){
+    } catch (err) {
       console.log("[controllers][parcel_management][list] :  Error", err);
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
     }
   },
-
   /*Parcel Details */
   getParcelDetails: async (req, res) => {
     try {
@@ -735,10 +878,38 @@ const parcelManagementController = {
           parcelPriority: Joi.number().required(),
         });
         let currentTime = new Date().getTime();
-
-
       });
     } catch (err) {}
+  },
+  getTrackingNumberList: async (req, res) => {
+    try {
+      let trackingNumberList = await knex
+        .from("parcel_management")
+        .leftJoin(
+          "parcel_user_tis",
+          "parcel_management.id",
+          "parcel_user_tis.parcelId"
+        )
+        .leftJoin(
+          "parcel_user_non_tis",
+          "parcel_management.id",
+          "parcel_user_non_tis.parcelId"
+        )
+        .select(["parcel_management.id", "parcel_management.trackingNumber"])
+        .where("parcel_management.orgId", req.orgId)
+        .where("parcel_management.parcelStatus", 1);
+
+      return res.status(200).json({
+        data: {
+          trackingNumber: trackingNumberList,
+          message: "Tracking Number list",
+        },
+      });
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
   },
 };
 module.exports = parcelManagementController;
