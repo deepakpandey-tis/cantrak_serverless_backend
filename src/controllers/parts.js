@@ -1293,7 +1293,7 @@ const partsController = {
                     let companyMasterId = partInfoData.companyId;
 
                     result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'description', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'deductTo', 'name', 'email', 'mobile', 'name1', 'email1', 'mobile1'), schema);
-                   // result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'description', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'deductTo', 'name', 'email', 'mobile'), schema);
+                    // result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'storeAdjustmentBy', 'issueBy', 'issueTo', 'returnedBy', 'description', 'receiveDate', 'workOrderId', 'deductBy', 'deductDate', 'deductTo', 'name', 'email', 'mobile'), schema);
                     //partStockPayload.receiveDate = new Date(partStockPayload.receiveDate).getTime();
                     if (partStockPayload.name1 || partStockPayload.email1 || partStockPayload.mobile1) {
 
@@ -4009,8 +4009,240 @@ const partsController = {
                 let fromTimeEnd = new Date(fromDateEnd).getTime();
 
 
+                const Parallel = require('async-parallel');
+
+                const final = await Parallel.map(_.uniqBy(stockResult, 'partId'), async (st) => {
+
+
+                    let openingQuantity = await knex.from('part_ledger')
+                        .sum('quantity as quantity')
+                        .where('part_ledger.createdAt', '<', fromTimeEnd)
+                        .where({ partId: st.partId, orgId: req.orgId }).first();
+
+                    let openingBalance;
+                    if (openingQuantity.quantity) {
+                        openingBalance = openingQuantity.quantity;
+                    }
+
+
+                    let stockPostive = await knex.from('part_ledger').sum('quantity as positveValue')
+                        .leftJoin('part_master', 'part_ledger.partId', 'part_master.id')
+                        .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
+                        .leftJoin('buildings_and_phases', 'part_ledger.building', 'buildings_and_phases.id')
+                        .leftJoin('projects', 'buildings_and_phases.projectId', 'projects.id')
+                        .leftJoin('floor_and_zones', 'part_ledger.floor', 'floor_and_zones.id')
+                        .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
+
+                        // .select([
+                        //     'part_ledger.*',
+                        //     'part_master.partName',
+                        //     'part_master.partCode',
+                        //     'part_master.unitOfMeasure',
+                        //     'part_category_master.categoryName as partCategory',
+                        //     'buildings_and_phases.buildingPhaseCode',
+                        //     'buildings_and_phases.description as buildingDescription',
+                        //     'projects.project as projectCode',
+                        //     'projects.projectName',
+                        //     'floor_and_zones.floorZoneCode',
+                        //     'floor_and_zones.description as floorDescripton',
+                        //     'adjust_type.adjustType as adjustTypeName',
+                        //     'part_master.minimumQuantity'
+
+                        // ])
+                        .where(qb => {
+                            if (payload.partId) {
+
+                                qb.where('part_ledger.partId', payload.partId)
+                            }
+
+                            if (payload.partCode) {
+
+                                qb.where('part_master.partCode', 'iLIKE', `%${payload.partCode}%`)
+                            }
+
+                            if (payload.partName) {
+
+                                qb.where('part_master.partName', 'iLIKE', `%${payload.partName}%`)
+                            }
+
+                            if (payload.partCategory) {
+
+                                qb.where('part_master.partCategory', payload.partCategory)
+                            }
+
+                            if (payload.adjustType) {
+
+                                qb.where('part_ledger.adjustType', payload.adjustType)
+                            }
+
+                        })
+                        //.where('part_ledger.quantity', '>', 0)
+                        .where({ 'part_ledger.partId': st.partId, 'part_ledger.orgId': req.orgId })
+                        .whereBetween('part_ledger.createdAt', [fromTime, toTime])
+                        .groupBy('part_ledger.partId')
+                        .first();
+                    //.orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
+
+
+                    let stockNegative = await knex.from('part_ledger').sum('quantity as negativeValue')
+                        .leftJoin('part_master', 'part_ledger.partId', 'part_master.id')
+                        .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
+                        .leftJoin('buildings_and_phases', 'part_ledger.building', 'buildings_and_phases.id')
+                        .leftJoin('projects', 'buildings_and_phases.projectId', 'projects.id')
+                        .leftJoin('floor_and_zones', 'part_ledger.floor', 'floor_and_zones.id')
+                        .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
+
+                        // .select([
+                        //     'part_ledger.*',
+                        //     'part_master.partName',
+                        //     'part_master.partCode',
+                        //     'part_master.unitOfMeasure',
+                        //     'part_category_master.categoryName as partCategory',
+                        //     'buildings_and_phases.buildingPhaseCode',
+                        //     'buildings_and_phases.description as buildingDescription',
+                        //     'projects.project as projectCode',
+                        //     'projects.projectName',
+                        //     'floor_and_zones.floorZoneCode',
+                        //     'floor_and_zones.description as floorDescripton',
+                        //     'adjust_type.adjustType as adjustTypeName',
+                        //     'part_master.minimumQuantity'
+
+                        // ])
+                        .where(qb => {
+                            if (payload.partId) {
+
+                                qb.where('part_ledger.partId', payload.partId)
+                            }
+
+                            if (payload.partCode) {
+
+                                qb.where('part_master.partCode', 'iLIKE', `%${payload.partCode}%`)
+                            }
+
+                            if (payload.partName) {
+
+                                qb.where('part_master.partName', 'iLIKE', `%${payload.partName}%`)
+                            }
+
+                            if (payload.partCategory) {
+
+                                qb.where('part_master.partCategory', payload.partCategory)
+                            }
+
+                            if (payload.adjustType) {
+
+                                qb.where('part_ledger.adjustType', payload.adjustType)
+                            }
+
+                        })
+                        .where('part_ledger.quantity', '<', 0)
+                        .where({ 'part_ledger.partId': st.partId, 'part_ledger.orgId': req.orgId })
+                        .whereBetween('part_ledger.createdAt', [fromTime, toTime])
+                        .groupBy('part_ledger.partId').first();
+
+                    let avgResult = await knex.from('part_ledger').avg('quantity as avgCost')
+                        // .leftJoin('part_master', 'part_ledger.partId', 'part_master.id')
+                        // .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
+                        // .leftJoin('buildings_and_phases', 'part_ledger.building', 'buildings_and_phases.id')
+                        // .leftJoin('projects', 'buildings_and_phases.projectId', 'projects.id')
+                        // .leftJoin('floor_and_zones', 'part_ledger.floor', 'floor_and_zones.id')
+                        // .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
+
+                        // .select([
+                        //     'part_ledger.*',
+                        //     'part_master.partName',
+                        //     'part_master.partCode',
+                        //     'part_master.unitOfMeasure',
+                        //     'part_category_master.categoryName as partCategory',
+                        //     'buildings_and_phases.buildingPhaseCode',
+                        //     'buildings_and_phases.description as buildingDescription',
+                        //     'projects.project as projectCode',
+                        //     'projects.projectName',
+                        //     'floor_and_zones.floorZoneCode',
+                        //     'floor_and_zones.description as floorDescripton',
+                        //     'adjust_type.adjustType as adjustTypeName',
+                        //     'part_master.minimumQuantity'
+
+                        // ])
+                        // .where(qb => {
+                        //     if (payload.partId) {
+
+                        //         qb.where('part_ledger.partId', payload.partId)
+                        //     }
+
+                        //     if (payload.partCode) {
+
+                        //         qb.where('part_master.partCode', 'iLIKE', `%${payload.partCode}%`)
+                        //     }
+
+                        //     if (payload.partName) {
+
+                        //         qb.where('part_master.partName', 'iLIKE', `%${payload.partName}%`)
+                        //     }
+
+                        //     if (payload.partCategory) {
+
+                        //         qb.where('part_master.partCategory', payload.partCategory)
+                        //     }
+
+                        //     if (payload.adjustType) {
+
+                        //         qb.where('part_ledger.adjustType', payload.adjustType)
+                        //     }
+
+                        // })
+                        .where({ 'part_ledger.partId': st.partId, 'part_ledger.orgId': req.orgId })
+                        .whereBetween('part_ledger.createdAt', [fromTime, toTime])
+                        .groupBy('part_ledger.partId').first();
+
+
+                    let i = 0;
+                    let o = 0;
+                    let balance = 0;
+                    let openingBalance2 = 0;
+
+                    if (openingBalance) {
+                        openingBalance2 = openingBalance;
+                    }
+
+                    if (stockPostive != undefined) {
+                        i = stockPostive.positveValue;
+                    }
+
+                    if (stockNegative != undefined) {
+                        o = stockNegative.negativeValue;
+                    }
+
+                    balance = Number(openingBalance2) + Number(i);
+
+                    if (openingBalance2 == "" || openingBalance2 == 0) {
+                        openingBalance2 = "-";
+                    }
+
+                    let avgCost = 0;
+
+                    if (avgResult != undefined) {
+
+                        avgCost = (avgResult.avgCost).toFixed(2);
+
+                    }
+
+                    return {
+                        ...st,
+                        openingBalance: openingBalance2,
+                        in: i,
+                        out: o,
+                        balance: balance,
+                        avgCost: avgCost
+                    }
+
+
+                })
+
+
+
                 /*Export Data open */
-                let updatedStockDataWithInAndOut2 = [];
+                /*     let updatedStockDataWithInAndOut2 = [];
                 let newBal2 = 0;
                 let s2 = 0;
                 let totalIn2 = 0;
@@ -4031,8 +4263,7 @@ const partsController = {
                     let openingBalance;
                     if (balance.quantity) {
                         openingBalance = balance.quantity;
-
-                    }
+                    } 
 
                     //newBal2 = balance.quantity;
 
@@ -4130,19 +4361,22 @@ const partsController = {
                     }
 
                     updatedStockDataWithInAndOut2.push({ ...d2, in: i2, out: o2, balance: newBal2, totalIn: totalIn2, totalOut: totalOut2, openingBalance: openingBalance })
-                }
+                } */
                 /*Export Data close */
+
 
                 res.status(200).json({
                     data: {
-                        stockSummary: updatedStockDataWithInAndOut2,
+                       // stockSummary: updatedStockDataWithInAndOut2,
+                        stockSummary: _.orderBy(final,"partCode"),
                         fromDate,
                         toDate,
                         fromTime,
                         toTime,
-                        dateArr,
+                        //dateArr,
                         fromNewDate,
-                        toNewDate
+                        toNewDate,
+                        // final
 
                     },
                     message: "Stock Summary Successfully!"
