@@ -253,8 +253,8 @@ const taskGroupController = {
           taskSerialNumber: req.body.tasks[k].taskSerialNumber,
           taskNameAlternate: req.body.tasks[k].taskNameAlternate,
           updatedAt: currentTime,
-          duration: req.body.tasks[k].duration,
-          hourlyRate: req.body.tasks[k].hourlyRate,
+          duration: req.body.tasks[k].duration ? req.body.tasks[k].duration : 0.0,
+          hourlyRate: req.body.tasks[k].hourlyRate ? req.body.tasks[k].hourlyRate : 0.0,
 
         }
 
@@ -784,8 +784,8 @@ const taskGroupController = {
                 updatedAt: currentTime,
                 orgId: req.orgId,
                 status: 'O',
-                duration: payload.tasks[k].duration,
-                hourlyRate: payload.tasks[k].hourlyRate,
+                duration: payload.tasks[k].duration ? payload.tasks[k].duration : 0.0,
+                hourlyRate: payload.tasks[k].hourlyRate ? payload.tasks[k].hourlyRate : 0.0,
 
               }
 
