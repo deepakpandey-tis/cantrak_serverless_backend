@@ -215,7 +215,7 @@ const serviceOrderController = {
                 unit,
                 serviceType,
                 serviceOrderId,
-                building, tenantName, priority, company, project,serviceRequestIdForShared } = req.body
+                building, tenantName, priority, company, project, serviceRequestIdForShared } = req.body
 
             let reqData = req.query;
             let total, rows
@@ -2656,7 +2656,9 @@ const serviceOrderController = {
                     "service_orders.id as SO Id",
                     "property_units.id as unitId",
                     "service_orders.orderDueDate",
-                    'c.name as createdBy'
+                    'c.name as createdBy',
+                    'service_requests.displayId as srNo',
+                    'service_orders.displayId as soNo'
 
                 ])
                 .groupBy([
@@ -3133,7 +3135,7 @@ const serviceOrderController = {
                 let workDoneChartData = _.flatten(
                     final
                         .filter(v => !_.isEmpty(v))
-                        .map(v => _.keys(v).map(p => ({ [p]: (v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length)})))
+                        .map(v => _.keys(v).map(p => ({ [p]: (v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length) })))
                 ).reduce((a, p) => {
                     let l = _.keys(p)[0];
                     if (a[l]) {
@@ -3163,7 +3165,7 @@ const serviceOrderController = {
                     return {
                         ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder,
                         totalWorkDone: totalWorkDone, totalPercentage: (totalPercentage).toFixed(2), chartData, reportType: "SR", buildingType,
-                        workDoneChartData,totalServiceRequest : serviceProblem2.length, totalDone:filterProblem.length
+                        workDoneChartData, totalServiceRequest: serviceProblem2.length, totalDone: filterProblem.length
                     };
 
                 })
@@ -3427,7 +3429,7 @@ const serviceOrderController = {
                 let workDoneChartData = _.flatten(
                     final
                         .filter(v => !_.isEmpty(v))
-                        .map(v => _.keys(v).map(p => ({ [p]: ( v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length) })))
+                        .map(v => _.keys(v).map(p => ({ [p]: (v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length) })))
                 ).reduce((a, p) => {
                     let l = _.keys(p)[0];
                     if (a[l]) {
@@ -3455,7 +3457,7 @@ const serviceOrderController = {
                     return {
                         ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder,
                         totalWorkDone: totalWorkDone, totalPercentage: (totalPercentage).toFixed(2), chartData, reportType: "SO", buildingType,
-                        workDoneChartData,totalServiceRequest : serviceProblem2.length, totalDone:filterProblem.length
+                        workDoneChartData, totalServiceRequest: serviceProblem2.length, totalDone: filterProblem.length
                     };
 
                 })
