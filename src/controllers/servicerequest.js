@@ -3561,7 +3561,10 @@ const serviceRequestController = {
             "mainUsers.name as mainUser",
             "service_orders.id as SO Id",
             "property_units.id as unitId",
-            "service_requests.completedOn"
+            "service_requests.completedOn",
+            "service_requests.displayId as srNo",
+            "service_orders.displayId as soNo"
+
           ])
           .orderBy('service_requests.createdAt', 'desc')
           .where({ "service_requests.orgId": req.orgId, 'service_requests.moderationStatus': true })
@@ -4023,7 +4026,7 @@ const serviceRequestController = {
         .where({ 'service_problems.orgId': req.orgId })
         .orderBy('incident_type.typeCode', 'asc');
 
-        
+
 
       let mapData = _.chain(serviceProblem).groupBy('categoryId').map((value, key) => ({
         category: key,
