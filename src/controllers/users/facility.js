@@ -6,6 +6,7 @@ const _ = require("lodash");
 const emailHelper = require('../../helpers/email')
 
 const facilityHelper = require('../../helpers/facility');
+const QRCODE = require("qrcode");
 
 
 var arrayCompare = require("array-compare");
@@ -77,11 +78,37 @@ const facilityBookingController = {
                     "courier.courierName",
                     "parcel_management.senderName",
                     "parcel_management.receivedDate",
+                    "parcel_management.qrCode"
 
                 ])
                 .where({ 'parcel_management.orgId': req.orgId })
                 .where({ 'parcel_user_tis.tenantId': id })
                 .where({ 'parcel_management.parcelStatus': parcelStatus })
+
+            const Parallel = require("async-parallel");
+            resultData = await Parallel.map(resultData, async (pd) => {
+
+                let qrCode = "";
+                if (pd.qrCode) {
+                    qrCode = await QRCODE.toDataURL(pd.qrCode);
+                }
+
+                let imageResult = await knex
+                    .from("images")
+                    .select("s3Url", "title", "name")
+                    .where({
+                        entityId: pd.id,
+                        entityType: "parcel_management",
+                        orgId: req.orgId,
+                    }).first();
+
+                return {
+                    ...pd,
+                    uploadedImages: imageResult,
+                    qrCode
+
+                };
+            });
 
 
             res.status(200).json({
@@ -89,6 +116,85 @@ const facilityBookingController = {
                     parcelListData: resultData
                 },
                 message: "Parcel list successfully!"
+            })
+
+        } catch (err) {
+
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+
+        }
+
+    },
+
+    getUserParcelDetails: async (req, res) => {
+        try {
+            let id = req.me.id;
+            let { parcelId } = req.body;
+            let resultData;
+            let parcelStatus;
+
+            resultData = await knex.from('parcel_management')
+                .leftJoin(
+                    "parcel_user_tis",
+                    "parcel_management.id",
+                    "parcel_user_tis.parcelId"
+                )
+                .leftJoin(
+                    "parcel_user_non_tis",
+                    "parcel_management.id",
+                    "parcel_user_non_tis.parcelId"
+                )
+                .leftJoin(
+                    "property_units",
+                    "parcel_user_tis.unitId",
+                    "property_units.id"
+                )
+                .leftJoin(
+                    "courier",
+                    "parcel_management.carrierId",
+                    "courier.id"
+                )
+                .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+                .select([
+                    "parcel_management.id",
+                    "parcel_management.parcelCondition",
+                    "parcel_management.parcelType",
+                    "parcel_user_tis.unitId",
+                    "parcel_management.trackingNumber",
+                    "parcel_management.parcelStatus",
+                    "users.name as tenant",
+                    "parcel_management.createdAt",
+                    "parcel_management.pickedUpType",
+                    "property_units.unitNumber",
+                    "parcel_management.description",
+                    "courier.courierName",
+                    "parcel_management.senderName",
+                    "parcel_management.receivedDate",
+                    "parcel_management.pickedUpAt",
+                ])
+                .where({ 'parcel_management.orgId': req.orgId })
+                .where({ 'parcel_management.id': parcelId })
+                .first()
+
+
+            let imageResult = await knex
+                .from("images")
+                .select("s3Url", "title", "name")
+                .where({
+                    entityId: parcelId,
+                    entityType: "parcel_management",
+                    orgId: req.orgId,
+                })
+
+            res.status(200).json({
+                data: {
+                    parcelDetails: {
+                        ...resultData, imageResult
+                    }
+                },
+                message: "Parcel details successfully!"
             })
 
         } catch (err) {

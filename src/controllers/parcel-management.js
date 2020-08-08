@@ -174,13 +174,19 @@ const parcelManagementController = {
    
 
     console.log("parcel result id for qr code", parcelResult.id);
+    let updateResult = await knex('parcel_management')
+    .update({ qrCode: qrCode })
+    .returning(["*"])
+    .transacting(trx)
+    .where({ id: parcelResult.id });
+
 
     // let insertResult = await knex.raw(`update "parcel_management" set "qrCode" = ${qrCode} where "id" = ${parcelResult.id} `)
 
     // console.log("inserted result qr",insertResult)
 
-    // let insertResult = await knex
-    // .update(insertQrCode)
+    // let updateResult = await knex
+    // .update({qrCode : qrCode})
     // .where({id:parcelResult.id})
     // .returning(["*"])
     // .into("parcel_management");
