@@ -3205,16 +3205,31 @@ const taskGroupController = {
 
       let currentTime = new Date().getTime()
       let taskUpdated = [];
+      let updateResult;
       if (payload.status === 'COM') {
 
         for (let t of payload.taskArr) {
 
-          if (t.status == "Completed") {
+          if (t.result == 2 || t.result == 3) {
 
           } else {
 
-            let taskUpdate = await knex('pm_task').update({ result: payload.result, status: payload.status, completedAt: currentTime, completedBy: payload.userId }).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
-            taskUpdated.push(taskUpdate);
+
+            if (t.status == "Completed") {
+
+            } else {
+
+              if (t.desireStatus) {
+
+                updateResult = t.desireStatus;
+
+              } else {
+                updateResult = payload.result;
+              }
+
+              let taskUpdate = await knex('pm_task').update({ result: updateResult, status: payload.status, completedAt: currentTime, completedBy: payload.userId }).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
+              taskUpdated.push(taskUpdate);
+            }
           }
         }
         let workResult = await knex('pm_task').where({ taskGroupScheduleAssignAssetId: payload.workOrderId, orgId: req.orgId });
@@ -3247,14 +3262,30 @@ const taskGroupController = {
 
           for (let t of payload.taskArr) {
 
-            if (t.status == "Completed") {
+
+            if (t.result == 2 || t.result == 3) {
 
             } else {
 
-              taskUpdate = await knex('pm_task').update({ status: payload.status, result: payload.result }).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
 
-              taskUpdated.push(taskUpdate);
+              if (t.status == "Completed") {
 
+              } else {
+
+
+                if (t.desireStatus) {
+
+                  updateResult = t.desireStatus;
+
+                } else {
+                  updateResult = payload.result;
+                }
+
+                taskUpdate = await knex('pm_task').update({ status: payload.status, result: updateResult }).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
+
+                taskUpdated.push(taskUpdate);
+
+              }
             }
 
           }
@@ -3285,8 +3316,8 @@ const taskGroupController = {
       const schema = Joi.object().keys({
         taskGroupId: Joi.string().required(),
         //taskId: Joi.string().required(),
-        //result: Joi.number().required(),
-        //status: Joi.string().required(),
+        result: Joi.number().required(),
+        status: Joi.string().required(),
         userId: Joi.string().required(),
         //workOrderId: Joi.string().required(),
         //workOrderDate: Joi.date().required()
@@ -3310,11 +3341,13 @@ const taskGroupController = {
 
       payload.workOrderDate = workOrderDate;
       payload.workOrderId = workOrderId;
-      payload.status = 'COM';
-      payload.result = 1;
+      //payload.status = 'COM';
+      //payload.result = 1;
 
-      let currentTime = new Date().getTime()
+      let currentTime = new Date().getTime();
       let taskUpdated = [];
+      let updateResult;
+
       if (payload.status === 'COM') {
 
         for (let t of payload.taskArr) {
@@ -3323,8 +3356,23 @@ const taskGroupController = {
 
           } else {
 
-            let taskUpdate = await knex('pm_task').update({ result: payload.result, status: payload.status, completedAt: currentTime, completedBy: payload.userId }).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
-            taskUpdated.push(taskUpdate);
+            if (t.status == "Completed") {
+
+            } else {
+
+
+
+              if (t.desireStatus) {
+
+                updateResult = t.desireStatus;
+
+              } else {
+                updateResult = payload.result;
+              }
+
+              let taskUpdate = await knex('pm_task').update({ result: updateResult, status: payload.status, completedAt: currentTime, completedBy: payload.userId }).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
+              taskUpdated.push(taskUpdate);
+            }
           }
         }
         let workResult = await knex('pm_task').where({ taskGroupScheduleAssignAssetId: payload.workOrderId, orgId: req.orgId });
