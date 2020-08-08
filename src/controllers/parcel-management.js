@@ -1,10 +1,12 @@
 const Joi = require("@hapi/joi");
 const moment = require("moment");
-const uuidv4 = require("uuid/v4");
+// const uuidv4 = require("uuid/v4");
 var jwt = require("jsonwebtoken");
 const _ = require("lodash");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
+const uuid = require("uuid/v4");
+
 
 const knex = require("../db/knex");
 
@@ -80,6 +82,7 @@ const parcelManagementController = {
       let parcelResult = null;
       let noOrgUserData = [];
       let orgUserData = [];
+      // let qrUpdateResult ;
       let images = [];
       let orgId = req.orgId;
       let payLoad = req.body;
@@ -115,6 +118,7 @@ const parcelManagementController = {
             ],
           });
         }
+        // let qrCode = "org-" + req.orgId + "-parcel-" + payload.id
         const currentTime = new Date().getTime();
 
         const insertData = {
@@ -138,6 +142,7 @@ const parcelManagementController = {
 
         parcelResult = addResult[0];
 
+        
         console.log("parcel result id", parcelResult.id);
 
         let noOrgUserDataPayload = req.body.non_org_user_data;
@@ -165,9 +170,22 @@ const parcelManagementController = {
           orgId: req.orgId,
         });
 
-        // if(pickedUpType == 1){
-        //   let parcelNonUserData = await knex("")
-        // }
+        let qrCode = 'org-' + req.orgId + '-parcel-' + parcelResult.id
+        
+   
+
+    console.log("parcel result id for qr code", parcelResult.id);
+
+    // let insertResult = await knex.raw(`update "parcel_management" set "qrCode" = ${qrCode} where "id" = ${parcelResult.id} `)
+
+    // console.log("inserted result qr",insertResult)
+
+    // let insertResult = await knex
+    // .update(insertQrCode)
+    // .where({id:parcelResult.id})
+    // .returning(["*"])
+    // .into("parcel_management");
+       
 
         let imagesData = req.body.image;
         console.log("imagesData", imagesData);
@@ -297,6 +315,7 @@ const parcelManagementController = {
                 "users.name as tenant",
                 "parcel_management.createdAt",
                 "parcel_management.pickedUpType",
+                "parcel_management.pickedUpAt"
               ])
               .where("parcel_management.orgId", req.orgId)
               .where((qb) => {
@@ -380,6 +399,7 @@ const parcelManagementController = {
               "users.name as tenant",
               "parcel_management.createdAt",
               "parcel_management.pickedUpType",
+              "parcel_management.pickedUpAt"
             ])
             .where("parcel_management.orgId", req.orgId)
             .groupBy([
@@ -911,5 +931,79 @@ const parcelManagementController = {
       });
     }
   },
+
+  deliverParcel:async(req,res)=>{
+    try{
+      // let payload = req.body
+      let insertedImages = [];
+      let id = req.body.id
+      let parcelResult = null
+      // let {parcelStatus,description}
+
+      const payload = _.omit(req.body,[
+        "id",
+        "image"
+      ])
+
+      const schema = Joi.object().keys({
+        parcelStatus:Joi.string().required(),
+        description:Joi.string().allow("").optional()
+      })
+      const result = Joi.validate(payload, schema);
+
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message },
+          ],
+        });
+      }
+      const currentTime = new Date().getTime()
+
+
+      let deliverParcelResult = await knex('parcel_management')
+      .update({
+        ...payload,
+        updatedAt:currentTime,
+        pickedUpAt:currentTime
+      })
+      .where('parcel_management.id',id)
+      .where('parcel_management.orgId',req.orgId)
+      .returning(['*'])
+
+          
+
+      const images = req.body.images
+      insertedImages = []
+      for (let img of image){
+        let insertedImage = await knex('images')
+        .update({
+          // entityType: "parcel_management",
+          s3Url: img.s3Url,
+          name: img.filename,
+          title: img.title,
+          orgId: req.orgId,
+          updatedAt: currentTime,
+          createdAt: currentTime,
+          uuid: uuid(),
+        })
+        .where('images.entityType',parcel_management)
+        .where('images.entityId',id)
+        insertedImages.push(insertedImage[0])
+      }
+
+      return res.status(200).json({
+        data:{
+          deliverParcel:deliverParcelResult,
+          addedImages:insertedImages
+        }
+      })
+
+      // let insertData = {
+      //   updatedAt : currentTime,
+
+      // }
+    }catch(err){}
+  }
 };
 module.exports = parcelManagementController;
