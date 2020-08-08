@@ -2827,7 +2827,9 @@ const partsController = {
                         "assigned_parts.quantity as quantity",
                         "assigned_parts.unitCost as unitCost",
                         "assigned_parts.status as status",
-                        "assigned_parts.id as apId"
+                        "assigned_parts.id as apId",
+                        "part_master.displayId as pNo",
+
                     ])
                     .where({
                         "assigned_parts.entityId": serviceOrderId,
@@ -2846,7 +2848,9 @@ const partsController = {
                         "assigned_parts.quantity as quantity",
                         "assigned_parts.unitCost as unitCost",
                         "assigned_parts.status as status",
-                        "assigned_parts.id as apId"
+                        "assigned_parts.id as apId",
+                        "part_master.displayId as pNo",
+
                     ])
                     .where({
                         "assigned_parts.entityId": serviceOrderId,
@@ -2909,7 +2913,9 @@ const partsController = {
                         "assigned_parts.quantity as quantity",
                         "assigned_parts.unitCost as unitCost",
                         "assigned_parts.status as status",
-                        "assigned_parts.id as apId"
+                        "assigned_parts.id as apId",
+                        "part_master.displayId as pNo",
+
                     ])
                     .where({
                         entityId: serviceOrderId,
@@ -2928,7 +2934,9 @@ const partsController = {
                         "assigned_parts.quantity as quantity",
                         "assigned_parts.unitCost as unitCost",
                         "assigned_parts.status as status",
-                        "assigned_parts.id as apId"
+                        "assigned_parts.id as apId",
+                        "part_master.displayId as pNo",
+
 
                     ])
                     .where({
@@ -2990,7 +2998,9 @@ const partsController = {
                         "part_master.partCode as partCode",
                         "assigned_parts.quantity as quantity",
                         "assigned_parts.unitCost as unitCost",
-                        "assigned_parts.id as apId"
+                        "assigned_parts.id as apId",
+                        "part_master.displayId as pNo",
+
                     ])
                     .where({
                         entityId: quotationId,
@@ -3008,7 +3018,9 @@ const partsController = {
                         "part_master.partCode as partCode",
                         "assigned_parts.quantity as quantity",
                         "assigned_parts.unitCost as unitCost",
-                        "assigned_parts.id as apId"
+                        "assigned_parts.id as apId",
+                        "part_master.displayId as pNo",
+
                     ])
                     .where({
                         entityId: quotationId,
@@ -4076,7 +4088,7 @@ const partsController = {
                             }
 
                         })
-                        //.where('part_ledger.quantity', '>', 0)
+                        .where('part_ledger.quantity', '>', 0)
                         .where({ 'part_ledger.partId': st.partId, 'part_ledger.orgId': req.orgId })
                         .whereBetween('part_ledger.createdAt', [fromTime, toTime])
                         .groupBy('part_ledger.partId')
@@ -4140,60 +4152,67 @@ const partsController = {
                         .whereBetween('part_ledger.createdAt', [fromTime, toTime])
                         .groupBy('part_ledger.partId').first();
 
-                    let avgResult = await knex.from('part_ledger').avg('quantity as avgCost')
-                        // .leftJoin('part_master', 'part_ledger.partId', 'part_master.id')
-                        // .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
-                        // .leftJoin('buildings_and_phases', 'part_ledger.building', 'buildings_and_phases.id')
-                        // .leftJoin('projects', 'buildings_and_phases.projectId', 'projects.id')
-                        // .leftJoin('floor_and_zones', 'part_ledger.floor', 'floor_and_zones.id')
-                        // .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
+                    let avgResult = await knex.from('part_ledger')
+                        .leftJoin('part_master', 'part_ledger.partId', 'part_master.id')
+                        .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
+                        .leftJoin('buildings_and_phases', 'part_ledger.building', 'buildings_and_phases.id')
+                        .leftJoin('projects', 'buildings_and_phases.projectId', 'projects.id')
+                        .leftJoin('floor_and_zones', 'part_ledger.floor', 'floor_and_zones.id')
+                        .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
+                        .select([
+                            'part_ledger.*',
+                            // 'part_master.partName',
+                            // 'part_master.partCode',
+                            // 'part_master.unitOfMeasure',
+                            // 'part_category_master.categoryName as partCategory',
+                            // 'buildings_and_phases.buildingPhaseCode',
+                            // 'buildings_and_phases.description as buildingDescription',
+                            // 'projects.project as projectCode',
+                            // 'projects.projectName',
+                            // 'floor_and_zones.floorZoneCode',
+                            // 'floor_and_zones.description as floorDescripton',
+                            // 'adjust_type.adjustType as adjustTypeName',
+                            // 'part_master.minimumQuantity'
+                        ])
+                        .where(qb => {
+                            if (payload.partId) {
 
-                        // .select([
-                        //     'part_ledger.*',
-                        //     'part_master.partName',
-                        //     'part_master.partCode',
-                        //     'part_master.unitOfMeasure',
-                        //     'part_category_master.categoryName as partCategory',
-                        //     'buildings_and_phases.buildingPhaseCode',
-                        //     'buildings_and_phases.description as buildingDescription',
-                        //     'projects.project as projectCode',
-                        //     'projects.projectName',
-                        //     'floor_and_zones.floorZoneCode',
-                        //     'floor_and_zones.description as floorDescripton',
-                        //     'adjust_type.adjustType as adjustTypeName',
-                        //     'part_master.minimumQuantity'
+                                qb.where('part_ledger.partId', payload.partId)
+                            }
 
-                        // ])
-                        // .where(qb => {
-                        //     if (payload.partId) {
+                            if (payload.partCode) {
 
-                        //         qb.where('part_ledger.partId', payload.partId)
-                        //     }
+                                qb.where('part_master.partCode', 'iLIKE', `%${payload.partCode}%`)
+                            }
 
-                        //     if (payload.partCode) {
+                            if (payload.partName) {
 
-                        //         qb.where('part_master.partCode', 'iLIKE', `%${payload.partCode}%`)
-                        //     }
+                                qb.where('part_master.partName', 'iLIKE', `%${payload.partName}%`)
+                            }
 
-                        //     if (payload.partName) {
+                            if (payload.partCategory) {
 
-                        //         qb.where('part_master.partName', 'iLIKE', `%${payload.partName}%`)
-                        //     }
+                                qb.where('part_master.partCategory', payload.partCategory)
+                            }
 
-                        //     if (payload.partCategory) {
+                            if (payload.adjustType) {
 
-                        //         qb.where('part_master.partCategory', payload.partCategory)
-                        //     }
+                                qb.where('part_ledger.adjustType', payload.adjustType)
+                            }
 
-                        //     if (payload.adjustType) {
-
-                        //         qb.where('part_ledger.adjustType', payload.adjustType)
-                        //     }
-
-                        // })
+                        })
+                        .where('part_ledger.quantity', '>', 0)
                         .where({ 'part_ledger.partId': st.partId, 'part_ledger.orgId': req.orgId })
-                        .whereBetween('part_ledger.createdAt', [fromTime, toTime])
-                        .groupBy('part_ledger.partId').first();
+                        .whereBetween('part_ledger.createdAt', [fromTime, toTime]);
+
+                        avgResult = avgResult.filter(v=> v.unitCost!=0 || v.unitCost!="");
+                    
+                        let totalUnitCost = 0;
+                    for (let av of avgResult) {
+
+                        totalUnitCost += av.unitCost;
+                    }
+
 
 
                     let i = 0;
@@ -4213,7 +4232,7 @@ const partsController = {
                         o = stockNegative.negativeValue;
                     }
 
-                    balance = Number(openingBalance2) + Number(i);
+                    balance = (Number(openingBalance2) + Number(i)) + Number(o);
 
                     if (openingBalance2 == "" || openingBalance2 == 0) {
                         openingBalance2 = "-";
@@ -4221,11 +4240,8 @@ const partsController = {
 
                     let avgCost = 0;
 
-                    if (avgResult != undefined) {
+                    avgCost = totalUnitCost / avgResult.length;
 
-                        avgCost = (avgResult.avgCost).toFixed(2);
-
-                    }
 
                     return {
                         ...st,
@@ -4233,7 +4249,7 @@ const partsController = {
                         in: i,
                         out: o,
                         balance: balance,
-                        avgCost: avgCost
+                        avgCost: (avgCost).toFixed(2)
                     }
 
 
@@ -4367,8 +4383,8 @@ const partsController = {
 
                 res.status(200).json({
                     data: {
-                       // stockSummary: updatedStockDataWithInAndOut2,
-                        stockSummary: _.orderBy(final,"partCode"),
+                        // stockSummary: updatedStockDataWithInAndOut2,
+                        stockSummary: _.orderBy(final, "partCode"),
                         fromDate,
                         toDate,
                         fromTime,
