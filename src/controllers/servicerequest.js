@@ -2438,7 +2438,8 @@ const serviceRequestController = {
             "asset_master.model as model",
             "asset_category_master.categoryName as categoryName",
             "companies.companyName as companyName",
-            "assigned_assets.id as aid"
+            "assigned_assets.id as aid",
+            "asset_master.displayId"
           ])
           .where({
             entityType: "service_requests",
@@ -2478,7 +2479,9 @@ const serviceRequestController = {
             "asset_master.model as model",
             "asset_category_master.categoryName as categoryName",
             "companies.companyName as companyName",
-            "assigned_assets.id as aid"
+            "assigned_assets.id as aid",
+            "asset_master.displayId"
+
           ])
           .where({
             entityType: "service_requests",
