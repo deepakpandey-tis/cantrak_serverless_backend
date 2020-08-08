@@ -634,7 +634,7 @@ const parcelManagementController = {
       let payload = req.body;
       let parcelList;
       let { unitId, tenantId, buildingPhaseId, trackingNumber } = req.body;
-      console.log("parcel payload",unitId,tenantId,buildingPhaseId,trackingNumber)
+      console.log("parcel payload", unitId, tenantId, buildingPhaseId, trackingNumber)
       if (unitId || tenantId || buildingPhaseId || trackingNumber) {
         try {
           parcelList = await knex
@@ -751,12 +751,12 @@ const parcelManagementController = {
       }
 
       const Parallel = require('async-parallel')
-      parcelList = await Parallel.map(parcelList, async pd=>{
+      parcelList = await Parallel.map(parcelList, async pd => {
         let imageResult = await knex.from('images').select('s3Url', 'title', 'name')
-        .where({ "entityId": pd.id, "entityType": 'parcel_management', orgId: req.orgId }).first()
+          .where({ "entityId": pd.id, "entityType": 'parcel_management', orgId: req.orgId }).first()
         return {
           ...pd,
-          uploadedImages:imageResult
+          uploadedImages: imageResult
         }
       })
 
@@ -879,7 +879,7 @@ const parcelManagementController = {
         });
         let currentTime = new Date().getTime();
       });
-    } catch (err) {}
+    } catch (err) { }
   },
   getTrackingNumberList: async (req, res) => {
     try {

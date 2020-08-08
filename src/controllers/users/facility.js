@@ -23,6 +23,84 @@ const WEEK_DAYS = [SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDA
 
 const facilityBookingController = {
 
+    getUserParcelList: async (req, res) => {
+
+        try {
+            let id = req.me.id;
+            let propertyUnitFinalResult = null;
+            //let resourceProject = req.userProjectResources[0].projects;
+            let { listType } = req.body;
+            let resultData;
+            console.log("listType", listType);
+            let parcelStatus;
+            if (listType == "pending") {
+                parcelStatus = '1';
+            }
+            if (listType == "picked") {
+                parcelStatus = '2';
+            }
+
+            resultData = await knex.from('parcel_management')
+                .leftJoin(
+                    "parcel_user_tis",
+                    "parcel_management.id",
+                    "parcel_user_tis.parcelId"
+                )
+                .leftJoin(
+                    "parcel_user_non_tis",
+                    "parcel_management.id",
+                    "parcel_user_non_tis.parcelId"
+                )
+                .leftJoin(
+                    "property_units",
+                    "parcel_user_tis.unitId",
+                    "property_units.id"
+                )
+                .leftJoin(
+                    "courier",
+                    "parcel_management.carrierId",
+                    "courier.id"
+                )
+                .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+                .select([
+                    "parcel_management.id",
+                    "parcel_management.parcelCondition",
+                    "parcel_management.parcelType",
+                    "parcel_user_tis.unitId",
+                    "parcel_management.trackingNumber",
+                    "parcel_management.parcelStatus",
+                    "users.name as tenant",
+                    "parcel_management.createdAt",
+                    "parcel_management.pickedUpType",
+                    "property_units.unitNumber",
+                    "parcel_management.description",
+                    "courier.courierName",
+                    "parcel_management.senderName",
+                    "parcel_management.receivedDate",
+
+                ])
+                .where({ 'parcel_management.orgId': req.orgId })
+                .where({ 'parcel_user_tis.tenantId': id })
+                .where({ 'parcel_management.parcelStatus': parcelStatus })
+
+
+            res.status(200).json({
+                data: {
+                    parcelListData: resultData
+                },
+                message: "Parcel list successfully!"
+            })
+
+        } catch (err) {
+
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+
+        }
+
+    },
+
     /*GET USER FACILITY LIST */
     getUserFacilityList: async (req, res) => {
 
