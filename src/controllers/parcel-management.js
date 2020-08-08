@@ -784,11 +784,7 @@ const parcelManagementController = {
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
-<<<<<<< HEAD
-    } catch (err) { }
-=======
     }
->>>>>>> 3b1a37a8db1e7702899ed451cd85e57017796941
   },
   getTrackingNumberList: async (req, res) => {
     try {
