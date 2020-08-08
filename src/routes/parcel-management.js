@@ -3,6 +3,7 @@ const router = express.Router();
 
 const parcelManageController = require('../controllers/parcel-management');
 const authMiddleware = require('../middlewares/auth');
+const parcelManagementController = require('../controllers/parcel-management');
 
 
 router.get('/companylist-having-property-units',authMiddleware.isAuthenticated,parcelManageController.getCompanyListHavingPropertyUnit)
@@ -16,5 +17,9 @@ router.post('/get-parcel-details',authMiddleware.isAuthenticated,parcelManageCon
 router.post('/get-pending-parcel-list',authMiddleware.isAuthenticated,parcelManageController.getPendingParcelList)
 
 router.get('/get-tracking-number-list',authMiddleware.isAuthenticated,parcelManageController.getTrackingNumberList)
+
+router.post('/update-parcel-status',authMiddleware.isAuthenticated,parcelManageController.deliverParcel)
+
+router.post('/update-parcel-details',authMiddleware.isAuthenticated,parcelManagementController.updateParcelDetails)
 
 module.exports = router

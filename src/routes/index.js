@@ -69,6 +69,7 @@ const parcelManagementRouter = require("./parcel-management");
 const facilityDashboardRouter = require("./facility_dashboard");
 const facilityTypeMaster = require("./administration-features/facility-type");
 const notificationRouter = require('./notifications');
+const parcelNotificationRouter = require('./parcel-notification');
 
 /* GET home page. */
 router.get("/", async (req, res, next) => {
@@ -160,5 +161,7 @@ router.use("/administration-features/facility-type",facilityTypeMaster)
 
 
 router.use("/notifications", notificationRouter)
+
+router.use("/parcel",parcelNotificationRouter)
 
 module.exports = router;
