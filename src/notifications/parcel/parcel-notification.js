@@ -14,7 +14,7 @@ const parcelNotification = {
                 await notification.queue(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, __filename);
                 console.log('[notifications][parcel][parcel-notification][send]: All Notifications Queued');
             } else {
-                await notification.send(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, testNotification);
+                await notification.send(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, parcelNotification);
                 console.log('[notifications][parcel][parcel-notification][send]: All Notifications Sent');
             }
 
@@ -40,6 +40,36 @@ const parcelNotification = {
 
         return data;
     },
+    sendInAppNotification: async (sender, receiver, data) => {
+
+        data = {
+            orgId: sender.orgId,
+            senderId: sender.id,
+            receiverId: receiver.id,
+            payload: {
+                ...data,
+                subject: 'Test Notification',
+                body: `Hi!!, This is a test notification to all users from ${sender.name}`,
+                icon: 'assets/icons/icon-512x512.png',
+                image: 'assets/icons/icon-512x512.png',
+                extraData: {
+                    dateOfArrival: Date.now(),
+                    url: `/user/dashboard/home`,
+                    primaryKey: Date.now()
+                }
+            },
+            actions: [
+                {
+                    action: "explore",
+                    title: "Open",
+                }
+            ]
+        }
+
+        return data;
+    },
+
+
     sendWebPushNotification: async (sender, receiver, data) => {
 
         data = {

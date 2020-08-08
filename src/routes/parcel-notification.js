@@ -19,7 +19,7 @@ router.get('/parcel-notification',async(req,res)=>{
             payload: {
             }
         };
-        await testNotification.send(sender, receiver, data, ALLOWED_CHANNELS);
+        await parcelNotification.send(sender, receiver, data, ALLOWED_CHANNELS);
 
         let a;
 
