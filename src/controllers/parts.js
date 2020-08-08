@@ -4242,6 +4242,12 @@ const partsController = {
 
                     avgCost = totalUnitCost / avgResult.length;
 
+                    if(avgCost){
+
+                    } else {
+                        avgCost = 0;
+                    }
+
 
                     return {
                         ...st,
