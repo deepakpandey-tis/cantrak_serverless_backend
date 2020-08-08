@@ -10,6 +10,9 @@ const userMiddleware = require("../../middlewares/userMiddleware");
 
 const router = Router();
 
+router.post('/get-user-parcel-listing', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+facilityBookingController.getUserParcelList);
+
 /* USER FACILITY LIST */
 router.post('/get-user-facility-list', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
     facilityBookingController.getUserFacilityList);

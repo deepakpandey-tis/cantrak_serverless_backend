@@ -23,6 +23,84 @@ const WEEK_DAYS = [SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDA
 
 const facilityBookingController = {
 
+    getUserParcelList: async (req, res) => {
+
+        try {
+            let id = req.me.id;
+            let propertyUnitFinalResult = null;
+            //let resourceProject = req.userProjectResources[0].projects;
+            let { listType } = req.body;
+            let resultData;
+            console.log("listType", listType);
+            let parcelStatus;
+            if (listType == "pending") {
+                parcelStatus = '1';
+            }
+            if (listType == "picked") {
+                parcelStatus = '2';
+            }
+
+            resultData = await knex.from('parcel_management')
+                .leftJoin(
+                    "parcel_user_tis",
+                    "parcel_management.id",
+                    "parcel_user_tis.parcelId"
+                )
+                .leftJoin(
+                    "parcel_user_non_tis",
+                    "parcel_management.id",
+                    "parcel_user_non_tis.parcelId"
+                )
+                .leftJoin(
+                    "property_units",
+                    "parcel_user_tis.unitId",
+                    "property_units.id"
+                )
+                .leftJoin(
+                    "courier",
+                    "parcel_management.carrierId",
+                    "courier.id"
+                )
+                .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+                .select([
+                    "parcel_management.id",
+                    "parcel_management.parcelCondition",
+                    "parcel_management.parcelType",
+                    "parcel_user_tis.unitId",
+                    "parcel_management.trackingNumber",
+                    "parcel_management.parcelStatus",
+                    "users.name as tenant",
+                    "parcel_management.createdAt",
+                    "parcel_management.pickedUpType",
+                    "property_units.unitNumber",
+                    "parcel_management.description",
+                    "courier.courierName",
+                    "parcel_management.senderName",
+                    "parcel_management.receivedDate",
+
+                ])
+                .where({ 'parcel_management.orgId': req.orgId })
+                .where({ 'parcel_user_tis.tenantId': id })
+                .where({ 'parcel_management.parcelStatus': parcelStatus })
+
+
+            res.status(200).json({
+                data: {
+                    parcelListData: resultData
+                },
+                message: "Parcel list successfully!"
+            })
+
+        } catch (err) {
+
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+
+        }
+
+    },
+
     /*GET USER FACILITY LIST */
     getUserFacilityList: async (req, res) => {
 
@@ -75,7 +153,7 @@ const facilityBookingController = {
                         qb.where('entity_open_close_times.closeTime', '<=', endDateTime)
                     }
                 })
-                .where({ 'facility_master.orgId': req.orgId, 'facility_master.moderationStatus': true, 'facility_master.status' : true })
+                .where({ 'facility_master.orgId': req.orgId, 'facility_master.moderationStatus': true, 'facility_master.status': true })
                 .whereIn('facility_master.projectId', projectArray)
                 .orderBy('facility_master.id', 'desc')
                 .groupBy('facility_master.id', 'companies.id', 'projects.id', 'buildings_and_phases.id', 'floor_and_zones.id')
@@ -89,6 +167,8 @@ const facilityBookingController = {
                 let imageResult = await knex.from('images').select('s3Url', 'title', 'name')
                     .where({ "entityId": pd.id, "entityType": 'facility_master' })
 
+                let iconResult = await knex.from('images').select('s3Url', 'title', 'name')
+                    .where({ "entityId": pd.facilityTypeId, "entityType": 'facility_type_icon' }).first();
 
                 let currentTime = new Date().getTime();
                 let startDate = moment(currentTime).startOf('date').format();
@@ -127,6 +207,7 @@ const facilityBookingController = {
                 return {
                     ...pd,
                     uploadedImages: imageResult,
+                    uploadedIcons: iconResult,
                     todayTotalBooking,
                     charges,
                     sortBy
@@ -228,11 +309,16 @@ const facilityBookingController = {
 
             ])
 
+
+            let iconResult = await knex.from('images').select('s3Url', 'title', 'name')
+                .where({ "entityId": facilityDetails.facilityTypeId, "entityType": 'facility_type_icon' }).first();
+
+
             return res.status(200).json({
 
                 facilityDetails: {
                     ...facilityDetails, openingClosingDetail: _.uniqBy(openingClosingDetail, 'day'), ruleRegulationDetail: ruleRegulationDetail,
-                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'), bookingQuota
+                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'), bookingQuota, iconResult
                 },
                 message: "Facility Details Successfully!"
             })
@@ -272,6 +358,7 @@ const facilityBookingController = {
                         'entity_bookings.*',
                         'facility_master.id as facilityId',
                         'facility_master.name as facilityName',
+                        'facility_master.facilityTypeId',
                         'facility_master.enablePreCheckIn',
                         'facility_master.qrCode',
                         'companies.companyId as companyCode',
@@ -319,6 +406,7 @@ const facilityBookingController = {
                     .select([
                         'entity_bookings.*',
                         'facility_master.id as facilityId',
+                        'facility_master.facilityTypeId',
                         'facility_master.name as facilityName',
                         'companies.companyId as companyCode',
                         'companies.companyName',
@@ -355,8 +443,13 @@ const facilityBookingController = {
             resultData = await Parallel.map(resultData, async pd => {
                 let imageResult = await knex.from('images').select('s3Url', 'title', 'name')
                     .where({ "entityId": pd.facilityId, "entityType": 'facility_master', orgId: req.orgId })
+
+                let iconResult = await knex.from('images').select('s3Url', 'title', 'name')
+                    .where({ "entityId": pd.facilityTypeId, "entityType": 'facility_type_icon' }).first();
+
                 return {
                     ...pd,
+                    uploadedIcons: iconResult,
                     uploadedImages: imageResult
                 }
             })
@@ -1377,31 +1470,31 @@ const facilityBookingController = {
             })
         }
     },
-    checkInFacility:async(req,res)=>{
-        try{
+    checkInFacility: async (req, res) => {
+        try {
             orgId = req.orgId
             let bookingId = req.body.bookingId
             const currentTime = new Date().getTime()
 
             let updateData = {
-                checkedInAt :currentTime,
-                isCheckedIn:true,
+                checkedInAt: currentTime,
+                isCheckedIn: true,
 
             }
 
             let result = await knex("entity_bookings")
-            .update(updateData)
-            .returning(["*"])
-            .where({id:bookingId,orgId:orgId,isBookingConfirmed:true})
+                .update(updateData)
+                .returning(["*"])
+                .where({ id: bookingId, orgId: orgId, isBookingConfirmed: true })
 
             return res
-        .status(200)
-        .json({ message: "Checked In!", data: result });
+                .status(200)
+                .json({ message: "Checked In!", data: result });
 
-        }catch(err){
+        } catch (err) {
             res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }],
-              });
+            });
         }
     }
 
