@@ -485,6 +485,7 @@ const parcelManagementController = {
               "parcel_management.pickedUpType",
               "buildings_and_phases.buildingPhaseCode",
               "buildings_and_phases.description as buildingName",
+              "parcel_user_non_tis.name"
             ])
             .where("parcel_management.orgId", req.orgId)
             .where("parcel_management.parcelStatus", 1)
@@ -511,7 +512,8 @@ const parcelManagementController = {
               "users.id",
               "parcel_user_tis.unitId",
               "buildings_and_phases.buildingPhaseCode",
-              "buildings_and_phases.description"
+              "buildings_and_phases.description",
+              "parcel_user_non_tis.name"
             ])
             .orderBy("parcel_management.id", "asc");
         } catch (err) {
@@ -554,6 +556,8 @@ const parcelManagementController = {
             "parcel_management.pickedUpType",
             "buildings_and_phases.buildingPhaseCode",
             "buildings_and_phases.description as buildingName",
+            "parcel_user_non_tis.name"
+
           ])
           .where("parcel_management.orgId", req.orgId)
           .where("parcel_management.parcelStatus", 1)
@@ -563,7 +567,8 @@ const parcelManagementController = {
             "users.id",
             "parcel_user_tis.unitId",
             "buildings_and_phases.buildingPhaseCode",
-            "buildings_and_phases.description"
+            "buildings_and_phases.description",
+            "parcel_user_non_tis.name"
           ])
           .orderBy("parcel_management.id", "asc");
       }
@@ -830,10 +835,13 @@ const parcelManagementController = {
       let id = req.body.id
       let parcelResult = null
       // let {parcelStatus,description}
+      // console.log("requested data for image",req.body)
 
       const payload = _.omit(req.body,[
         "id",
-        "image"
+        "image",
+        "signImage",
+        "signName"
       ])
 
       const schema = Joi.object().keys({
@@ -858,15 +866,16 @@ const parcelManagementController = {
         updatedAt:currentTime,
         pickedUpAt:currentTime
       })
-      .where('parcel_management.id',id)
+      .whereIn('parcel_management.id',id)
       .where('parcel_management.orgId',req.orgId)
       .returning(['*'])
 
           
 
-      const images = req.body.images
+      const images = req.body.image
+      // console.log("uploaded image",images)
       insertedImages = []
-      for (let img of image){
+      for (let img of images){
         let insertedImage = await knex('images')
         .update({
           // entityType: "parcel_management",
@@ -882,6 +891,16 @@ const parcelManagementController = {
         .where('images.entityId',id)
         insertedImages.push(insertedImage[0])
       }
+      // const signImage = req.body.signImage
+      // signInsertImage = []
+      // for(let img of signImage){
+      //   let insertedSignImage = await knex('images')
+      //   .insert({
+      //      entityType: "parcel_management",
+
+
+      //   })
+      // }
 
       return res.status(200).json({
         data:{
