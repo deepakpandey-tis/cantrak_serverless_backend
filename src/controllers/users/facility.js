@@ -64,6 +64,8 @@ const facilityBookingController = {
                 )
                 .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
                 .select([
+                    "parcel_user_tis.*",
+                    "parcel_user_non_tis.*",
                     "parcel_management.id",
                     "parcel_management.parcelCondition",
                     "parcel_management.parcelType",
@@ -88,9 +90,10 @@ const facilityBookingController = {
             const Parallel = require("async-parallel");
             resultData = await Parallel.map(resultData, async (pd) => {
 
-                let qrCode = "";
-                if (pd.qrCode) {
-                    qrCode = await QRCODE.toDataURL(pd.qrCode);
+                let qrCode1 = 'org-' + req.orgId + '-parcel-' + pd.id
+                let qrCode;
+                if (qrCode1) {
+                    qrCode = await QRCODE.toDataURL(qrCode1);
                 }
 
                 let imageResult = await knex
@@ -158,6 +161,8 @@ const facilityBookingController = {
                 )
                 .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
                 .select([
+                    "parcel_user_tis.*",
+                    "parcel_user_non_tis.*",
                     "parcel_management.id",
                     "parcel_management.parcelCondition",
                     "parcel_management.parcelType",
