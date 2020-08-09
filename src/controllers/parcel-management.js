@@ -448,9 +448,9 @@ const parcelManagementController = {
     try {
       let payload = req.body;
       let parcelList;
-      let { unitId, tenantId, buildingPhaseId, trackingNumber,qrCode } = req.body;
-      console.log("parcel payload",unitId,tenantId,buildingPhaseId,trackingNumber,qrCode)
-      if (unitId || tenantId || buildingPhaseId || trackingNumber || qrCode) {
+      let { unitId, tenantId, buildingPhaseId, trackingNumber,id } = req.body;
+      console.log("parcel payload",unitId,tenantId,buildingPhaseId,trackingNumber,id)
+      if (unitId || tenantId || buildingPhaseId || trackingNumber || id) {
         try {
           parcelList = await knex
             .from("parcel_management")
@@ -501,8 +501,8 @@ const parcelManagementController = {
               if (buildingPhaseId) {
                 qb.where("parcel_user_tis.buildingPhaseId", buildingPhaseId);
               }
-              if(qrCode){
-                qb.where("parcel_management.qrCode",qrCode)
+              if(id){
+                qb.where("parcel_management.id",id)
               }
             })
             .groupBy([
