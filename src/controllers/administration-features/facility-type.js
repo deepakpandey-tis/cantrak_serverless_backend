@@ -110,6 +110,25 @@ const FacilityTypeController = {
           }
         }
 
+        let iconData = req.body.iconUrl
+        console.log("iconData",iconData)
+
+        if(iconData && iconData.length > 0){
+          for (let icon of iconData){
+            let d = await knex("images")
+            .insert({
+              entityType:"facility_type_icon",
+              entityId: facilityTypeResult.id,
+                s3Url: icon.s3Url,
+                name: icon.filename,
+                title: icon.title,
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                orgId: req.orgId,
+            })
+          }
+        }
+
         trx.commit;
       });
       res.status(200).json({

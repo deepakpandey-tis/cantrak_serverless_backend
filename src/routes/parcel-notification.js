@@ -9,11 +9,11 @@ const knex = require('../db/knex');
 const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH'];
 
 
-router.get('/parcel-notification',async(req,res)=>{
+router.post('/parcel-notification',async(req,res)=>{
     try{
-        console.log("requested body",req.body)
+        console.log("requested body for notification for user",req.body)
         let sender = await knex.from('users').where({ id: 406 }).first();
-        let receiver = await knex.from('users').where({ id: 750 }).first();
+        let receiver = await knex.from('users').where({ id: req.body.id }).first();
 
         let data = {
             payload: {
