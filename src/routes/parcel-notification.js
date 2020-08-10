@@ -11,8 +11,8 @@ const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH'];
 
 router.post('/parcel-notification',async(req,res)=>{
     try{
-        console.log("requested body",req.body)
-        let sender = await knex.from('users').where({ id: req.me.id }).first();
+        console.log("requested body for notification for user",req.body)
+        let sender = await knex.from('users').where({ id: 406 }).first();
         let receiver = await knex.from('users').where({ id: req.body.id }).first();
 
         let data = {
