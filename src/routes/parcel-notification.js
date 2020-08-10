@@ -12,7 +12,7 @@ const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH'];
 router.post('/parcel-notification',async(req,res)=>{
     try{
         console.log("requested body",req.body)
-        let sender = await knex.from('users').where({ id: req.orgId }).first();
+        let sender = await knex.from('users').where({ id: req.me.id }).first();
         let receiver = await knex.from('users').where({ id: req.body.id }).first();
 
         let data = {
