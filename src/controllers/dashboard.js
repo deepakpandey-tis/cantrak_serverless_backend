@@ -25,7 +25,15 @@ const dashboardController = {
       if (payload.companyIds.length) {
 
         projectResult = await knex.from('projects').select(['id', 'companyId', 'projectName', 'project as projectCode'])
-          .whereIn('projects.companyId', payload.companyIds)
+          .where(qb => {
+
+            if (payload.companyIds.includes("all")) {
+
+            } else {
+              qb.whereIn('projects.companyId', payload.companyIds);
+            }
+
+          })
           .where({ orgId: req.orgId });
 
       }
@@ -190,7 +198,16 @@ const dashboardController = {
       if (payload.companyIds.length) {
 
         projectResult = await knex.from('projects').select(['id', 'companyId', 'projectName', 'project as projectCode'])
-          .whereIn('projects.companyId', payload.companyIds)
+          .where(qb => {
+
+            if (payload.companyIds.includes("all")) {
+
+            } else {
+              qb.whereIn('projects.companyId', payload.companyIds);
+            }
+
+          })
+          //.whereIn('projects.companyId', payload.companyIds)
           .where({ orgId: req.orgId });
 
       }
@@ -329,7 +346,16 @@ const dashboardController = {
       if (payload.companyIds.length) {
 
         projectResult = await knex.from('projects').select(['id', 'companyId', 'projectName', 'project as projectCode'])
-          .whereIn('projects.companyId', payload.companyIds)
+          .where(qb => {
+
+            if (payload.companyIds.includes("all")) {
+
+            } else {
+              qb.whereIn('projects.companyId', payload.companyIds);
+            }
+
+          })
+          //.whereIn('projects.companyId', payload.companyIds)
           .where({ orgId: req.orgId });
 
       }
@@ -551,7 +577,16 @@ const dashboardController = {
       if (payload.companyIds.length) {
 
         projectResult = await knex.from('projects').select(['id', 'companyId', 'projectName', 'project as projectCode'])
-          .whereIn('projects.companyId', payload.companyIds)
+          .where(qb => {
+
+            if (payload.companyIds.includes("all")) {
+
+            } else {
+              qb.whereIn('projects.companyId', payload.companyIds);
+            }
+
+          })
+          //.whereIn('projects.companyId', payload.companyIds)
           .where({ orgId: req.orgId });
 
       }
@@ -698,7 +733,16 @@ const dashboardController = {
       if (reqData.formData.companyIds.length) {
 
         projectResult = await knex.from('projects').select(['id', 'companyId', 'projectName', 'project as projectCode'])
-          .whereIn('projects.companyId', reqData.formData.companyIds)
+          .where(qb => {
+
+            if (reqData.formData.companyIds.includes("all")) {
+
+            } else {
+              qb.whereIn('projects.companyId', reqData.formData.companyIds);
+            }
+
+          })
+          //.whereIn('projects.companyId', reqData.formData.companyIds)
           .where({ orgId: req.orgId });
 
       }
@@ -822,7 +866,16 @@ const dashboardController = {
       if (reqData.formData.companyIds.length) {
 
         projectResult = await knex.from('projects').select(['id', 'companyId', 'projectName', 'project as projectCode'])
-          .whereIn('projects.companyId', reqData.formData.companyIds)
+          .where(qb => {
+
+            if (reqData.formData.companyIds.includes("all")) {
+
+            } else {
+              qb.whereIn('projects.companyId', reqData.formData.companyIds);
+            }
+
+          })
+          //.whereIn('projects.companyId', reqData.formData.companyIds)
           .where({ orgId: req.orgId });
 
       }
@@ -1530,7 +1583,7 @@ const dashboardController = {
       let companyData = await knex.from('companies').select(['id', 'companyName', 'companyId'])
         .whereIn('companies.id', companyIds)
         .orderBy("companies.companyName", 'asc')
-        .where({isActive:true ,orgId: req.orgId });
+        .where({ isActive: true, orgId: req.orgId });
 
 
       return res.status(200).json({
