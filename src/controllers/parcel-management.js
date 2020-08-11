@@ -687,6 +687,7 @@ const parcelManagementController = {
     try {
       let parcel = null;
       let insertedImages = [];
+      let id = req.body.id
 
       let parcelResult = null;
       let noOrgUserData = [];
@@ -766,14 +767,15 @@ const parcelManagementController = {
       if (imagesData && imagesData.length > 0) {
         for (let image of imagesData) {
           let d = await knex("images")
-            .update({
-              s3Url: image.s3Url,
-              name: image.filename,
-              title: image.title,
-              updatedAt: currentTime,
+            .insert({
+              ...image,
+              entityId: id,
+              entityType:'parcel_management',
+              createdAt: currentTime,
+                updatedAt: currentTime,
+                orgId: req.orgId
             })
-            .where({entityType:parcel_management,entityId:payload.id})
-            .returning(["*"]);
+            
           images.push(d[0]);
         }
       }
