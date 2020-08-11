@@ -90,8 +90,14 @@ const facilityBookingController = {
           .first();
 
         if (checkUpdate && checkUpdate.moderationStatus == true) {
+
           message = "Facility updated successfully!";
+
         } else {
+          let updateStatus = await knex('facility_master')
+          .update({status:false})
+          .where({ id: req.body.facilityId })
+          .returning(['*'])
           message = "Facility added successfully!";
         }
         let qrCode = "org-" + req.orgId + "-facility-" + req.body.facilityId
@@ -112,7 +118,7 @@ const facilityBookingController = {
             bookingStatus: req.body.statuses.bookingStatus,
             moderationStatus: true,
             multipleSeatsLimit: req.body.statuses.multipleSeatsLimit,
-            status: false,
+            // status: false,
             uuid: uuid(),
           })
           .where({ id: req.body.facilityId })
@@ -120,6 +126,7 @@ const facilityBookingController = {
         addedFacilityResult = addedFacilityResultData[0];
 
         // Insert Rules
+
 
         let rulesPayload = req.body.rules_and_regulations;
 
@@ -2306,6 +2313,7 @@ const facilityBookingController = {
           cancelledAt: currentTime,
           cancelledBy: req.me.id,
           isBookingCancelled: true,
+          cancelledType:0
         })
         .where({ id: bookingId })
         .returning(["*"]);
@@ -2810,7 +2818,8 @@ const facilityBookingController = {
                     entityId: payload.facilityId,
                     entityType: "facility_master",
                     orgId: req.orgId,
-                  });
+                  })
+                  .where("entity_bookings.isBookingCancelled",false);
 
                 if (checkBooking.length) {
                   for (booked of checkBooking) {
@@ -2819,6 +2828,7 @@ const facilityBookingController = {
                       cancelledBy: req.me.id,
                       cancelledAt: currentTime,
                       cancellationReason: closeReason,
+                      cancelledType:1
                     };
 
                     let cancelResult = await knex("entity_bookings")
@@ -4145,7 +4155,8 @@ const facilityBookingController = {
         .where("entity_bookings.bookingStartDateTime", "<", bookingEndTime)
         .where("entity_bookings.bookingEndDateTime", ">", bookingStartTime)
         .where("entity_bookings.isBookingCancelled", "=", true)
-        .where("entity_bookings.entityId", "=", facilityId);
+        .where("entity_bookings.entityId", "=", facilityId)
+        .where("entity_bookings.cancelledType",1);
 
       return res.status(200).json({
         data: {
