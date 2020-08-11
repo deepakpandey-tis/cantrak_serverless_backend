@@ -3357,7 +3357,10 @@ const serviceRequestController = {
         })
       }
 
-      const srId = await knex('service_requests').select('*').where({ displayId: id, orgId: req.orgId }).first()
+      const srId = await knex('service_requests').select('*').where({
+        displayId: id, companyId: req.body.companyId,
+        orgId: req.orgId
+      }).first()
       //const houseId = srId.houseId;
       //console.log('HOUSEID :**************************: ',houseId)
 
