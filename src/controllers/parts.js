@@ -4197,8 +4197,11 @@ const partsController = {
 
                             if (payload.adjustType) {
 
-                                qb.where('part_ledger.adjustType', payload.adjustType)
+                                //qb.where('part_ledger.adjustType', payload.adjustType)
                             }
+
+                                qb.whereIn('part_ledger.adjustType',[4,6])
+
 
                         })
                         .where('part_ledger.quantity', '>', 0)

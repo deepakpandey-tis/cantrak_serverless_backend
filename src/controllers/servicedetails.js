@@ -1866,7 +1866,30 @@ const serviceDetailsController = {
         }
       })
     }
+  },
+
+  getServiceId() {
+
+    // try {
+    //   let displayId = req.query.displayId;
+
+    //   let result = await knex('service_requests').select('id').where({ displayId: displayId }).first();
+
+    //   return res.status(200).json({
+    //     data: result
+    //   })
+
+    // }
+    // catch (err) {
+    //   return res.status(200).json({
+    //     data: {
+    //       update: false
+    //     }
+    //   })
+    // }
+
   }
+
 };
 
 module.exports = serviceDetailsController;
