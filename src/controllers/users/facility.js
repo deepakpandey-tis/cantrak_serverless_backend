@@ -35,10 +35,10 @@ const facilityBookingController = {
             console.log("listType", listType);
             let parcelStatus;
             if (listType == "pending") {
-                parcelStatus = '1';
+                parcelStatus = ['1'];
             }
             if (listType == "picked") {
-                parcelStatus = '2';
+                parcelStatus = ['2','3','4','5'];
             }
 
             resultData = await knex.from('parcel_management')
@@ -78,14 +78,13 @@ const facilityBookingController = {
                     "property_units.unitNumber",
                     "parcel_management.description",
                     "courier.courierName",
-                    "parcel_management.senderName",
                     "parcel_management.receivedDate",
                     "parcel_management.qrCode"
 
                 ])
                 .where({ 'parcel_management.orgId': req.orgId })
                 .where({ 'parcel_user_tis.tenantId': id })
-                .where({ 'parcel_management.parcelStatus': parcelStatus })
+                .whereIn('parcel_management.parcelStatus', parcelStatus )
 
             const Parallel = require("async-parallel");
             resultData = await Parallel.map(resultData, async (pd) => {
@@ -175,7 +174,6 @@ const facilityBookingController = {
                     "property_units.unitNumber",
                     "parcel_management.description",
                     "courier.courierName",
-                    "parcel_management.senderName",
                     "parcel_management.receivedDate",
                     "parcel_management.pickedUpAt",
                 ])

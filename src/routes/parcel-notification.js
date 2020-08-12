@@ -6,15 +6,18 @@ const trimmer = require('../middlewares/trimmer');
 
 const knex = require('../db/knex');
 const authMiddleware = require("../middlewares/auth");
+// const { CloudFrontCustomizations } = require("aws-sdk/lib/services/cloudfront");
 
 const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH'];
 
 
-router.post('/parcel-notification', async(req,res)=>{
+router.post('/parcel-notification',authMiddleware.isAuthenticated, async(req,res)=>{
     try{
-        console.log("requested body for notification for user",req.body)
-        let sender = await knex.from('users').where({ id: 406 }).first();
+        // console.log("org user",req.me.id)
+        console.log("requested tenant id",req.body.id)
+        let sender = await knex.from('users').where({ id: req.me.id }).first();
         let receiver = await knex.from('users').where({ id: req.body.id }).first();
+        console.log("reciever",receiver)
 
         let data = {
             payload: {
