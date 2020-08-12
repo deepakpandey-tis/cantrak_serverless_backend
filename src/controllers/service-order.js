@@ -2662,7 +2662,7 @@ const serviceOrderController = {
                     'service_requests.displayId as srNo',
                     'service_orders.displayId as soNo',
                     'service_orders.createdAt',
-                    'service_orders.completedOn'
+                    'service_requests.completedOn'
                 ])
                 .groupBy([
                     "service_requests.id",
@@ -2710,7 +2710,7 @@ const serviceOrderController = {
                     }
 
                     if (payload.completeFromDate && payload.completeToDate) {
-                        qb.whereBetween('service_orders.completedOn', [payload.completeFromDate, payload.completeToDate])
+                        qb.whereBetween('service_requests.completedOn', [payload.completeFromDate, payload.completeToDate])
                     }
 
                     if (payload.createFromDate && payload.createToDate) {
