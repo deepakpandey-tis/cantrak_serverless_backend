@@ -724,6 +724,7 @@ const parcelManagementController = {
           parcelStatus: Joi.number().required(),
           parcelPriority: Joi.number().required(),
         });
+        
         const result = Joi.validate(parcelPayload, schema);
         console.log("result", result);
 

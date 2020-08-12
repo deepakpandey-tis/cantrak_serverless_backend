@@ -15,7 +15,8 @@ router.post('/parcel-notification', async(req,res)=>{
         console.log("requested body for notification for user",req.body)
         let sender = await knex.from('users').where({ id: 406 }).first();
         let receiver = await knex.from('users').where({ id: req.body.id }).first();
-
+        console.log("requested body receiver",receiver)
+        
         let data = {
             payload: {
             }

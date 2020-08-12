@@ -289,6 +289,20 @@ const quotationsController = {
         quotationsDetails.assets = [];
         quotationsDetails.charges = [];
 
+        // Description IN Invoice
+        commentsData = await knex("remarks_master")
+          .select(
+            "remarks_master.description"
+          )
+          .where({
+            "remarks_master.entityId": quotationRequestId,
+            "remarks_master.entityType": "quotations_notes",
+            "remarks_master.orgId": req.orgId
+          })
+          .orderBy('id', 'desc')
+          .limit('1')
+          .first();
+        quotationsDetails.comments = commentsData;
         teamResult = { quotation: quotationsDetails };
       });
 
@@ -740,7 +754,7 @@ const quotationsController = {
             "companies.companyName",
             "companies.companyId",
             "projects.project"
-            
+
           ])
           .orderBy('quotations.id', 'desc')
           .offset(offset)
@@ -1614,7 +1628,22 @@ const quotationsController = {
       propertyInfo.locationTags = tags;
       console.log("locationResult", tags);
 
-      userInfo = { ...tenantInfo, requesterInfo, propertyInfo, serviceMaster: quotationMaster }
+      // Description IN Invoice
+      commentsData = await knex("remarks_master")
+        .select(
+          "remarks_master.description"
+        )
+        .where({
+          "remarks_master.entityId": quotationId,
+          "remarks_master.entityType": "quotations_notes",
+          "remarks_master.orgId": req.orgId
+        })
+        .orderBy('id', 'desc')
+        .limit('1')
+        .first();
+
+
+      userInfo = { ...tenantInfo, requesterInfo, propertyInfo, serviceMaster: quotationMaster, comments: commentsData }
       pagination.data = rows;
       pagination.tenant = userInfo;
       // pagination.propertyDetails = userInfo;
