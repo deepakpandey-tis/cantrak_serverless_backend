@@ -78,7 +78,7 @@ const quotationsController = {
 
       // validate keys
       const schema = Joi.object().keys({
-        serviceRequestId: Joi.string().allow('').optional(),
+       // serviceRequestId: Joi.string().allow('').allow(null).optional(),
         company: Joi.number().required(),
         project: Joi.number().required(),
         building: Joi.number().required(),
@@ -92,7 +92,7 @@ const quotationsController = {
         // quotationData: Joi.array().required()
       });
 
-      const result = Joi.validate(quotationPayload, schema);
+      const result = Joi.validate(_.omit(quotationPayload,"serviceRequestId"), schema);
       console.log(
         "[controllers][quotations][updateQuotation]: JOi Result",
         result
@@ -111,7 +111,21 @@ const quotationsController = {
       let serId = 0
 
       if (quotationPayload.serviceRequestId) {
-        serId = quotationPayload.serviceRequestId
+
+        let srResult = await knex('service_requests').select('*').where({
+          displayId: quotationPayload.serviceRequestId, companyId: quotationPayload.company,
+          orgId: req.orgId
+        }).first();
+
+        if (srResult) {
+          serId = srResult.id;
+        } else {
+
+          serId = 0;
+
+        }
+
+        //serId = quotationPayload.serviceRequestId
       }
 
       let quotationValidityDate;
@@ -226,6 +240,7 @@ const quotationsController = {
           )
           .leftJoin("organisation_user_roles", "astm.userId", "=", "organisation_user_roles.userId")
           .leftJoin("organisation_roles", "organisation_user_roles.roleId", "=", "organisation_roles.id")
+          .leftJoin("service_requests",'quotations.serviceRequestId','service_requests.id')
           .select(
             "quotations.id as quotationId",
             "quotations.serviceRequestId as serviceRequestId",
@@ -258,6 +273,7 @@ const quotationsController = {
             "property_units.description as propertyUnitDescription",
             "quotations.displayId as displayId",
             "property_units.type",
+            'service_requests.displayId as srNo'
           )
           .where({ "quotations.id": quotationRequestId });
         console.log(
@@ -740,7 +756,7 @@ const quotationsController = {
             "companies.companyName",
             "companies.companyId",
             "projects.project"
-            
+
           ])
           .orderBy('quotations.id', 'desc')
           .offset(offset)
