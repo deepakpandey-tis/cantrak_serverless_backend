@@ -1090,12 +1090,14 @@ const assetController = {
 
       assetData = await knex('asset_master').where({ 'asset_master.id': id })
         .leftJoin('asset_category_master', 'asset_master.assetCategoryId', 'asset_category_master.id')
+        .leftJoin('asset_master as pA','asset_master.parentAssetId','pA.id')
         //.leftJoin('part_master','asset_master.partId','part_master.id')
         //.leftJoin('vendor_master','asset_master.assignedVendors','vendor_master.id')
         //.leftJoin('companies','asset_master.companyId','companies.id')
         .select([
           'asset_master.*',
           'asset_category_master.categoryName',
+          'pA.displayId as parentNo'
           //  'part_master.partCode',
           //'part_master.partName'
           //  'vendor_master.name as assignedVendor'
@@ -1240,9 +1242,11 @@ const assetController = {
       //   }serviceOrders
       // }
 
+
       res.status(200).json({
         data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, partData, images, assetLocation, qrcode, serviceOrders: service_orders, teamName: team ? team.teamName : '', UserName: user ? user.name : '' } },
-        message: "Asset Details"
+        message: "Asset Details",
+        
       });
 
 
@@ -2923,7 +2927,7 @@ const assetController = {
             'floor_and_zones.id as floorId',
             'property_units.unitNumber as unitNumber',
             'property_units.id as unitId',
-            'property_units.id as houseId',
+            'property_units.houseId as houseId',
             "asset_master.displayId"
           ])
           .where({
@@ -2951,12 +2955,12 @@ const assetController = {
             'floor_and_zones.id as floorId',
             'property_units.unitNumber as unitNumber',
             'property_units.id as unitId',
-            'property_units.id as houseId',
+            'property_units.houseId as houseId',
             "asset_master.displayId"
 
           ])
           .where({
-            "asset_location.houseId": houseId,
+           "asset_location.houseId": houseId,
             "asset_master.orgId": req.orgId,
             "asset_location.endDate": null,
           }).offset(offset).limit(per_page)
@@ -3005,7 +3009,7 @@ const assetController = {
           "projects.projectName as projectName",
           "buildings_and_phases.buildingPhaseCode as buildingPhaseCode",
           "property_units.unitNumber as unitNumber",
-          "property_units.id as houseId",
+          "property_units.houseId as houseId",
           "asset_location.createdAt as createdAt",
           "asset_location.updatedAt as updatedAt",
           "asset_master.displayId"
@@ -3132,7 +3136,7 @@ const assetController = {
             'floor_and_zones.id as floorId',
             'property_units.unitNumber as unitNumber',
             'property_units.id as unitId',
-            'property_units.id as houseId',
+            'property_units.houseId as houseId',
             'asset_master.displayId',
 
           ]).distinct(['asset_location.assetId'])
@@ -3152,7 +3156,7 @@ const assetController = {
             'buildings_and_phases.buildingPhaseCode as buildingPhaseCode',
             'floor_and_zones.floorZoneCode as floorZoneCode',
             'property_units.unitNumber as unitNumber',
-            'property_units.id as houseId',
+            'property_units.houseId as houseId',
             'asset_master.displayId',
 
           ])

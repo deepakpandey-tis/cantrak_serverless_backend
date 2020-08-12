@@ -2660,8 +2660,9 @@ const serviceOrderController = {
                     "service_orders.orderDueDate",
                     'c.name as createdBy',
                     'service_requests.displayId as srNo',
-                    'service_orders.displayId as soNo'
-
+                    'service_orders.displayId as soNo',
+                    'service_orders.createdAt',
+                    'service_orders.completedOn'
                 ])
                 .groupBy([
                     "service_requests.id",

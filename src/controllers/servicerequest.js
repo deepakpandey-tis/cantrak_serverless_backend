@@ -3461,7 +3461,7 @@ const serviceRequestController = {
   getServiceOrderIdByServiceRequestId: async (req, res) => {
     try {
       const serviceRequestId = req.body.serviceRequestId;
-      const serviceOrderId = await knex('service_orders').select('id').where({ serviceRequestId: serviceRequestId }).first()
+      const serviceOrderId = await knex('service_orders').select('id','displayId').where({ serviceRequestId: serviceRequestId }).first()
       return res.status(200).json({
         data: {
           serviceOrderId
