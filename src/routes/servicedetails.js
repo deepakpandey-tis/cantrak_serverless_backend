@@ -86,4 +86,7 @@ router.post('/source-of-request-status', authMiddleware.isAuthenticated, service
 router.get('/get-priority', authMiddleware.isAuthenticated, serviceDetailsController.getPriority);
 router.post('/update-service-order-date', authMiddleware.isAuthenticated, serviceDetailsController.updateSODate);
 
+router.get('/get-service-id', authMiddleware.isAuthenticated, serviceDetailsController.getServiceId);
+
+
 module.exports = router;

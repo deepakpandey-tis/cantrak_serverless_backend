@@ -548,6 +548,7 @@ const serviceDetailsController = {
             "property_types.descriptionEng as propertyDescription",
             'status.descriptionEng as Status',
             "service_requests.displayId as SRS",
+            "companies.id as comId"
 
           )
           .where({
@@ -1866,7 +1867,31 @@ const serviceDetailsController = {
         }
       })
     }
+  },
+
+  getServiceId: async (req, res) => {
+
+    try {
+      let displayId = req.query.displayId;
+
+      let result;
+     
+       result = await knex.from('service_requests').select('id').where({ displayId: displayId ,orgId:req.orgId}).first();
+
+      return res.status(200).json({
+        data: result
+      })
+
+    } catch (err) {
+      return res.status(200).json({
+        data: {
+          update: false
+        }
+      })
+    }
+
   }
+
 };
 
 module.exports = serviceDetailsController;

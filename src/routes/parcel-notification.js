@@ -5,11 +5,12 @@ const parcelNotification = require('../notifications/parcel/parcel-notification'
 const trimmer = require('../middlewares/trimmer');
 
 const knex = require('../db/knex');
+const authMiddleware = require("../middlewares/auth");
 
 const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH'];
 
 
-router.post('/parcel-notification',async(req,res)=>{
+router.post('/parcel-notification', async(req,res)=>{
     try{
         console.log("requested body for notification for user",req.body)
         let sender = await knex.from('users').where({ id: 406 }).first();
