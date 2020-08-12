@@ -248,10 +248,10 @@ const parcelManagementController = {
       let offset = (page - 1) * per_page;
       let filters = {};
 
-      let { unitId, trackingNumber, tenant, status } = req.body;
+      let { unitId, trackingNumber, tenant, status,companyId,projectId,buildingPhaseId } = req.body;
 
       console.log("request body", req.body);
-      if (unitId || trackingNumber || tenant || status) {
+      if (unitId || trackingNumber || tenant || status || companyId || projectId || buildingPhaseId) {
         try {
           [total, rows] = await Promise.all([
             knex
@@ -273,6 +273,9 @@ const parcelManagementController = {
                 "property_units.id"
               )
               .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+              .leftJoin("companies","parcel_user_tis.companyId","companies.id")
+              .leftJoin("projects","parcel_user_tis","projects.id")
+              .leftJoin("buildings_and_phases","parcel_user_tis.buildingPhaseId","buildings_and_phases")
               .where("parcel_management.orgId", req.orgId)
               .where((qb) => {
                 if (unitId) {
@@ -286,6 +289,14 @@ const parcelManagementController = {
                 }
                 if (status) {
                   qb.where("parcel_management.parcelStatus", status);
+                }
+                if(companyId){
+                  qb.where("parcel_user_tis.companyId",companyId)
+                }
+                if(projectId){
+                  qb.where("parcel_user_tis.projectId",projectId)
+                }if(buildingPhaseId){
+                  qb.where("parcel_user_tis.buildingPhaseId",buildingPhaseId)
                 }
               })
               .groupBy([
