@@ -357,6 +357,8 @@ const parcelManagementController = {
               .select([
                 "parcel_management.id",
                 "parcel_user_tis.unitId",
+                "property_units.unitNumber",
+                "parcel_user_tis.parcelId",
                 "parcel_management.trackingNumber",
                 "parcel_management.parcelStatus",
                 "users.name as tenant",
@@ -466,6 +468,8 @@ const parcelManagementController = {
             .select([
               "parcel_management.id",
               "parcel_user_tis.unitId",
+              "property_units.unitNumber",
+              "parcel_user_tis.parcelId",
               "parcel_management.trackingNumber",
               "parcel_management.parcelStatus",
               "users.name as tenant",
@@ -479,6 +483,7 @@ const parcelManagementController = {
               "property_units.id",
               "users.id",
               "parcel_user_tis.unitId",
+              "parcel_user_tis.parcelId"
             ])
             .orderBy("parcel_management.id", "asc")
             .offset(offset)
