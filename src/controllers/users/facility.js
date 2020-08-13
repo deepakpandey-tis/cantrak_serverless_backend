@@ -38,7 +38,7 @@ const facilityBookingController = {
                 parcelStatus = ['1'];
             }
             if (listType == "picked") {
-                parcelStatus = ['2','3','4','5'];
+                parcelStatus = ['2'];
             }
 
             resultData = await knex.from('parcel_management')
