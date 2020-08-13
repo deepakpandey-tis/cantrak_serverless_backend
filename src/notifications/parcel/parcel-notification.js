@@ -34,7 +34,7 @@ const parcelNotification = {
             payload: {
                 ...data,
                 subject: 'Parcel Notification',
-                body: `Hi!!, You have received a parcel,Please come and collect ${sender.name}`,
+                body: `Hi!!, You have received a parcel,Please Pick up your parcel ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
@@ -46,7 +46,7 @@ const parcelNotification = {
             actions: [
                 {
                     action: "explore",
-                    title: "Open",
+                    title: "Parcel Pending",
                     url:`/user/parcel`
                 }
             ]
