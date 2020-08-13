@@ -47,6 +47,7 @@ const parcelNotification = {
                 {
                     action: "explore",
                     title: "Open",
+                    url:`/user/parcel`
                 }
             ]
         }
