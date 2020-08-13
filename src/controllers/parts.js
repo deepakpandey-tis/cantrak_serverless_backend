@@ -1813,12 +1813,26 @@ const partsController = {
 
                 let unitCost;
                 if (partStockPayload.unitCost) {
-                    unitCost = partStockPayload.unitCost
+                    if (partStockPayload.adjustType == 11 || partStockPayload.adjustType == 1 || partStockPayload.adjustType == 2 ||  partStockPayload.adjustType == 3 || partStockPayload.adjustType == 5 || partStockPayload.adjustType == 10) {
+                        let ledgerResult = await knex.from('part_ledger').where({ partId: partStockPayload.partId }).whereNot({ unitCost: 0 })
+                            .select('unitCost')
+                            .orderBy('id', 'desc')
+                            .limit('1')
+                            .first()
+                        console.log("ledgerResult", ledgerResult);
+                        unitCost = ledgerResult.unitCost;
+                    } else {
+                        unitCost = partStockPayload.unitCost
+                        console.log("ledgerResult++partStockPayload.unitCost", partStockPayload.unitCost);
+                    }
+
                 } else {
-                    let ledgerResult = await knex.from('part_ledger').where({ partId: partStockPayload.partId })
+                    let ledgerResult = await knex.from('part_ledger').where({ partId: partStockPayload.partId }).whereNot({ unitCost: 0 })
                         .select('unitCost')
                         .orderBy('id', 'desc')
+                        .limit('1')
                         .first()
+                    console.log("ledgerResult", ledgerResult);
                     unitCost = ledgerResult.unitCost;
                 }
 
@@ -4200,7 +4214,7 @@ const partsController = {
                                 //qb.where('part_ledger.adjustType', payload.adjustType)
                             }
 
-                                qb.whereIn('part_ledger.adjustType',[4,6])
+                            qb.whereIn('part_ledger.adjustType', [4, 6])
 
 
                         })
@@ -4208,9 +4222,9 @@ const partsController = {
                         .where({ 'part_ledger.partId': st.partId, 'part_ledger.orgId': req.orgId })
                         .whereBetween('part_ledger.createdAt', [fromTime, toTime]);
 
-                        avgResult = avgResult.filter(v=> v.unitCost!=0 || v.unitCost!="");
-                    
-                        let totalUnitCost = 0;
+                    avgResult = avgResult.filter(v => v.unitCost != 0 || v.unitCost != "");
+
+                    let totalUnitCost = 0;
                     for (let av of avgResult) {
 
                         totalUnitCost += av.unitCost;
@@ -4245,7 +4259,7 @@ const partsController = {
 
                     avgCost = totalUnitCost / avgResult.length;
 
-                    if(avgCost){
+                    if (avgCost) {
 
                     } else {
                         avgCost = 0;
