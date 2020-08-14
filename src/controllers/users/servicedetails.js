@@ -358,6 +358,7 @@ const serviceDetailsController = {
             let DataResult = null;
             let userId = req.me.id;
             let orgId = req.orgId;
+            let requestResult;
 
             await knex.transaction(async trx => {
                 // Insert in users table,
@@ -365,7 +366,7 @@ const serviceDetailsController = {
 
                 // Get HouseId By Service Request Id
 
-                const requestResult = await knex("service_requests")
+                requestResult = await knex("service_requests")
                     .where({
                         "service_requests.isActive": "true",
                         "service_requests.id": incidentRequestPayload.id,
@@ -476,7 +477,7 @@ const serviceDetailsController = {
 
             res.status(200).json({
                 data: {
-                    generalDetails: generalDetails
+                    generalDetails: { ...generalDetails, srNo: requestResult[0].displayId }
                 },
                 message: "General details list successfully !"
             });

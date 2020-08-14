@@ -1592,6 +1592,7 @@ const serviceDetailsController = {
             "service_requests.cancellationReason as cancellationReason",
             "service_requests.cancelledOn as sCancelledOn",
             "u.name as cancelledBy",
+            "displayId as srNo"
           )
 
         console.log(

@@ -519,7 +519,8 @@ const quotationsController = {
                         "authUser.name as createdBy",
                         "organisation_roles.name as userRole",
                         "quotations.invoiceData as invoiceData",
-                        "quotations.quotationValidityDate as validityDate"
+                        "quotations.quotationValidityDate as validityDate",
+                        "quotations.displayId",
                     )
                     .where({ "quotations.id": quotationRequestId });
                 console.log(
@@ -591,7 +592,9 @@ const quotationsController = {
                         "part_master.partCode as partCode",
                         "assigned_parts.quantity as quantity",
                         "assigned_parts.unitCost as unitCost",
-                        "assigned_parts.id as apId"
+                        "assigned_parts.id as apId",
+                        "part_master.displayId",
+
                     ])
                     .where({
                         entityId: quotationId,
@@ -609,7 +612,9 @@ const quotationsController = {
                         "part_master.partCode as partCode",
                         "assigned_parts.quantity as quantity",
                         "assigned_parts.unitCost as unitCost",
-                        "assigned_parts.id as apId"
+                        "assigned_parts.id as apId",
+                        "part_master.displayId",
+
                     ])
                     .where({
                         entityId: quotationId,
