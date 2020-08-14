@@ -34,7 +34,7 @@ const parcelAcceptanceNotification = {
             receiverId: receiver.id,
             payload: {
                 ...data,
-                subject: 'Parcel Notification',
+                subject: 'Parcel Acceptation',
                 body: `Hi!!, You have received a parcel,Please accept for picked up the parcels. ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
@@ -47,7 +47,7 @@ const parcelAcceptanceNotification = {
             actions: [
                 {
                     action: "explore",
-                    title: "Parcel Pending",
+                    title: "Parcel Acceptation",
                     url:`/user/parcel/parcel-confirmation/${parcelId}`
                 }
             ]
@@ -80,7 +80,7 @@ const parcelAcceptanceNotification = {
             senderId: sender.id,
             receiverId: receiver.id,
             payload: {
-                subject: 'Parcel Notification',
+                subject: 'Acceptation',
                 body: `Hi!!, You have received a parcel,Please accept for picked up the parcels.  ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
