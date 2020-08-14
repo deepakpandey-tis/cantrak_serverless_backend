@@ -33,8 +33,8 @@ const parcelNotification = {
             receiverId: receiver.id,
             payload: {
                 ...data,
-                subject: 'Test Notification',
-                body: `Hi!!, You have received a parcel,Please come and collect ${sender.name}`,
+                subject: 'Parcel Notification',
+                body: `Hi!!, You have received a parcel,Please Pick up your parcel ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
@@ -46,7 +46,8 @@ const parcelNotification = {
             actions: [
                 {
                     action: "explore",
-                    title: "Open",
+                    title: "Parcel Pending",
+                    url:`/user/parcel`
                 }
             ]
         }
@@ -63,7 +64,7 @@ const parcelNotification = {
             },
             payload: {
                 ...data,
-                subject: 'Test Email Notification',
+                subject: 'Parcel Email Notification',
             }
         };
 
@@ -78,7 +79,7 @@ const parcelNotification = {
             senderId: sender.id,
             receiverId: receiver.id,
             payload: {
-                subject: 'Test Notification',
+                subject: 'Parcel Notification',
                 body: `Hi!!, You have received a parcel,please come and collect ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',

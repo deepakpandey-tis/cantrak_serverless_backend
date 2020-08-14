@@ -38,7 +38,7 @@ const facilityBookingController = {
                 parcelStatus = ['1'];
             }
             if (listType == "picked") {
-                parcelStatus = ['2','3','4','5'];
+                parcelStatus = ['2'];
             }
 
             resultData = await knex.from('parcel_management')
@@ -84,7 +84,7 @@ const facilityBookingController = {
                 ])
                 .where({ 'parcel_management.orgId': req.orgId })
                 .where({ 'parcel_user_tis.tenantId': id })
-                .whereIn('parcel_management.parcelStatus', parcelStatus )
+                .whereIn('parcel_management.parcelStatus', parcelStatus)
 
             const Parallel = require("async-parallel");
             resultData = await Parallel.map(resultData, async (pd) => {
@@ -181,6 +181,11 @@ const facilityBookingController = {
                 .where({ 'parcel_management.id': parcelId })
                 .first()
 
+            let qrCode1 = 'org-' + req.orgId + '-parcel-' + parcelId
+            let qrCode;
+            if (qrCode1) {
+                qrCode = await QRCODE.toDataURL(qrCode1);
+            }
 
             let imageResult = await knex
                 .from("images")
@@ -194,7 +199,7 @@ const facilityBookingController = {
             res.status(200).json({
                 data: {
                     parcelDetails: {
-                        ...resultData, imageResult
+                        ...resultData, imageResult, qrCode
                     }
                 },
                 message: "Parcel details successfully!"
@@ -208,6 +213,47 @@ const facilityBookingController = {
 
         }
 
+    },
+
+    cancelParcel: async (req, res) => {
+        try {
+            const parcelId = req.body.parcelId;
+            const status = await knex("parcel_management")
+                .update({ parcelStatus: '5' })
+                .where({ id: parcelId });
+            return res.status(200).json({
+                data: {
+                    status: "CANCELLED"
+                },
+                message: "Parcel Cancelled Successfully!"
+            });
+        } catch (err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    approveParcel: async (req, res) => {
+        try {
+            let parcelId = req.body.parcelId;
+            const currentTime = new Date().getTime();
+            console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7', req.body)
+
+            const status = await knex("parcel_management")
+                .update({ parcelStatus: '2', receivedDate: currentTime, receivedBy: req.me.id })
+                .where({ id: parcelId });
+
+            return res.status(200).json({
+                data: {
+                    status: "Picked"
+                },
+                message: "Parcel accepted successfully!"
+            });
+        } catch (err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
     },
 
     /*GET USER FACILITY LIST */
