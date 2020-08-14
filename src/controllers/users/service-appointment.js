@@ -263,7 +263,7 @@ const serviceAppointmentController = {
                 ],
             });
         }
-    },   
+    },
     getServiceOrderList: async (req, res) => {
         try {
             //const serviceOrders = await knex('service_orders').select();
@@ -443,7 +443,9 @@ const serviceAppointmentController = {
                             'u.name as Created By',
                             'status.descriptionEng as Status',
                             'service_orders.createdAt as Date Created',
-                            'service_requests.houseId as houseId'
+                            'service_requests.houseId as houseId',
+                            "service_orders.displayId as soNo",
+                            "service_requests.displayId as srNo"
                         ]).where((qb) => {
                             qb.where({ 'service_orders.orgId': req.orgId });
                             //qb.whereIn('service_requests.projectId', accessibleProjects)
@@ -482,7 +484,11 @@ const serviceAppointmentController = {
                             'u.name as Created By',
                             'status.descriptionEng as Status',
                             'service_orders.createdAt as Date Created',
-                            'service_requests.houseId as houseId'
+                            'service_requests.houseId as houseId',
+                            "service_orders.displayId as soNo",
+                            "service_requests.displayId as srNo"
+
+
 
 
                         ]).where((qb) => {
@@ -541,7 +547,11 @@ const serviceAppointmentController = {
                                 'u.name as Created By',
                                 'status.descriptionEng as Status',
                                 'service_orders.createdAt as Date Created',
-                                'service_requests.houseId as houseId'
+                                'service_requests.houseId as houseId',
+                                "service_orders.displayId as soNo",
+                                "service_requests.displayId as srNo"
+
+
                             ])
                             .groupBy([
                                 "service_requests.id",
@@ -585,7 +595,11 @@ const serviceAppointmentController = {
                                 "orderDueDate as Due Date",
                                 "status.descriptionEng as Status",
                                 "service_orders.createdAt as Date Created",
-                                'service_requests.houseId as houseId'
+                                'service_requests.houseId as houseId',
+                                "service_orders.displayId as soNo",
+                                "service_requests.displayId as srNo"
+
+
 
                             ])
                             .offset(offset)
@@ -637,7 +651,11 @@ const serviceAppointmentController = {
                                 "status.descriptionEng as Status",
                                 "u.name as Created By",
                                 "service_orders.createdAt as Date Created",
-                                'service_requests.houseId as houseId'
+                                'service_requests.houseId as houseId',
+                                "service_orders.displayId as soNo",
+                                "service_requests.displayId as srNo"
+
+
 
                             ])
                             .where(qb => {
@@ -718,7 +736,11 @@ const serviceAppointmentController = {
                                 'service_requests.houseId as houseId',
                                 "orderDueDate as Due Date",
                                 "status.descriptionEng as Status",
-                                "service_orders.createdAt as Date Created"
+                                "service_orders.createdAt as Date Created",
+                                "service_orders.displayId as soNo",
+                                "service_requests.displayId as srNo"
+
+
                             ])
                             .where(qb => {
                                 qb.where({ "service_orders.orgId": req.orgId });
@@ -816,7 +838,8 @@ const serviceAppointmentController = {
                         "asset_master.assetName as assetName",
                         "asset_master.model as model",
                         "asset_category_master.categoryName as categoryName",
-                        "companies.companyName as companyName"
+                        "companies.companyName as companyName",
+                        "asset_master.displayId"
                     ])
                     .where({
                         entityType: "service_requests",
@@ -854,7 +877,9 @@ const serviceAppointmentController = {
                         "asset_master.assetName as assetName",
                         "asset_master.model as model",
                         "asset_category_master.categoryName as categoryName",
-                        "companies.companyName as companyName"
+                        "companies.companyName as companyName",
+                        "asset_master.displayId"
+
                     ])
                     .where({
                         entityType: "service_requests",
@@ -937,7 +962,9 @@ const serviceAppointmentController = {
                         "part_master.partCode as partCode",
                         "assigned_parts.quantity as quantity",
                         "assigned_parts.unitCost as unitCost",
-                        "assigned_parts.status as status"
+                        "assigned_parts.status as status",
+                        "part_master.displayId",
+
                     ])
                     .where({
                         "assigned_parts.entityId": serviceOrderId,
@@ -955,7 +982,9 @@ const serviceAppointmentController = {
                         "part_master.partCode as partCode",
                         "assigned_parts.quantity as quantity",
                         "assigned_parts.unitCost as unitCost",
-                        "assigned_parts.status as status"
+                        "assigned_parts.status as status",
+                        "part_master.displayId",
+
                     ])
                     .where({
                         "assigned_parts.entityId": serviceOrderId,
