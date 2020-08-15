@@ -181,6 +181,7 @@ const facilityBookingController = {
                 .where({ 'parcel_management.id': parcelId })
                 .first()
 
+                console.log("...resultData",resultData)
             let qrCode1 = 'org-' + req.orgId + '-parcel-' + parcelId
             let qrCode;
             if (qrCode1) {

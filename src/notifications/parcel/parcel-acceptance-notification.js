@@ -40,15 +40,16 @@ const parcelAcceptanceNotification = {
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `/user/parcel/parcel-confirmation/${parcelId}`,
-                    primaryKey: Date.now()
+                    url: `/user/parcel/parcel-confirmation?parcels=1,2,3`,
+                    primaryKey: Date.now(),
+                    parcelIds:parcelId
                 }
             },
             actions: [
                 {
                     action: "explore",
                     title: "Parcel Acceptation",
-                    url:`/user/parcel/parcel-confirmation/${parcelId}`
+                    url:`/user/parcel/parcel-confirmation`
                 }
             ]
         }
