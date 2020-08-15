@@ -81,14 +81,16 @@ const serviceAppointmentController = {
                             'users.name as createdBy',
                             'service_appointments.appointedDate as appointedDate',
                             'service_appointments.createdAt as dateCreated',
-                            'service_appointments.status as status'
+                            'service_appointments.status as status',
+                            'service_orders.displayId as soNo'
+
                         ])
                         .where(qb => {
                             if (serviceAppointmentId) {
                                 qb.where('service_appointments.id', serviceAppointmentId)
                             }
                             if (serviceOrderId) {
-                                qb.where('service_appointments.serviceOrderId', serviceOrderId)
+                                qb.where('service_orders.displayId', serviceOrderId)
                             }
                             if (status) {
                                 qb.where('service_appointments.status', status)
@@ -139,8 +141,10 @@ const serviceAppointmentController = {
                             'users.name as createdBy',
                             'service_appointments.appointedDate as appointedDate',
                             'service_appointments.createdAt as dateCreated',
-                            'service_appointments.status as status'
-                        ]).where({ 'service_appointments.orgId': req.orgId })
+                            'service_appointments.status as status',
+                            'service_orders.displayId as soNo'
+                        ])
+                        .where({ 'service_appointments.orgId': req.orgId })
                         .whereIn("service_appointments.serviceOrderId", serviceOrderIds)
                         .groupBy(['service_appointments.id', 'service_requests.id', 'service_orders.id', 'users.id'])
                         .offset(offset).limit(per_page)

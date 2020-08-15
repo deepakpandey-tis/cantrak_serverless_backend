@@ -34,10 +34,10 @@ const facilityBookingController = {
             let resultData;
             console.log("listType", listType);
             let parcelStatus;
-            if (listType == "pending") {
+            if (listType == "1") {
                 parcelStatus = ['1'];
             }
-            if (listType == "picked") {
+            if (listType == "2") {
                 parcelStatus = ['2'];
             }
 
@@ -130,7 +130,7 @@ const facilityBookingController = {
 
     },
 
-    getUserParcelDetails: async (req, res) => {
+    getParcelDetails: async (req, res) => {
         try {
             let id = req.me.id;
             let { parcelId } = req.body;
@@ -216,12 +216,105 @@ const facilityBookingController = {
 
     },
 
+    getParcelApprovalList: async (req, res) => {
+        try {
+            let id = req.me.id;
+            let parcelIds = req.body.parcelId;
+            let newParcel = parcelIds.split(',');
+
+            console.log("parcels", newParcel);
+            let resultData;
+            let parcelStatus;
+
+            resultData = await knex.from('parcel_management')
+                .leftJoin(
+                    "parcel_user_tis",
+                    "parcel_management.id",
+                    "parcel_user_tis.parcelId"
+                )
+                .leftJoin(
+                    "parcel_user_non_tis",
+                    "parcel_management.id",
+                    "parcel_user_non_tis.parcelId"
+                )
+                .leftJoin(
+                    "property_units",
+                    "parcel_user_tis.unitId",
+                    "property_units.id"
+                )
+                .leftJoin(
+                    "courier",
+                    "parcel_management.carrierId",
+                    "courier.id"
+                )
+                .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+                .select([
+                    "parcel_user_tis.*",
+                    "parcel_user_non_tis.*",
+                    "parcel_management.id",
+                    "parcel_management.parcelCondition",
+                    "parcel_management.parcelType",
+                    "parcel_user_tis.unitId",
+                    "parcel_management.trackingNumber",
+                    "parcel_management.parcelStatus",
+                    "users.name as tenant",
+                    "parcel_management.createdAt",
+                    "parcel_management.pickedUpType",
+                    "property_units.unitNumber",
+                    "parcel_management.description",
+                    "courier.courierName",
+                    "parcel_management.receivedDate",
+                    "parcel_management.pickedUpAt",
+                ])
+                .where({ 'parcel_management.orgId': req.orgId })
+                .whereIn('parcel_management.id', newParcel)
+
+
+            const Parallel = require("async-parallel");
+            resultData = await Parallel.map(resultData, async (pd) => {
+                let imageResult = await knex
+                    .from("images")
+                    .select("s3Url", "title", "name")
+                    .where({
+                        entityType: "parcel_management",
+                        orgId: req.orgId,
+                        entityId: pd.id
+                    })
+
+                return {
+                    ...pd,
+                    uploadedImages: imageResult
+
+                };
+            });
+
+
+
+            res.status(200).json({
+                data: {
+                    resultData
+                },
+                message: "Parcel details successfully!"
+            })
+
+        } catch (err) {
+
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+
+        }
+
+    },
+
     cancelParcel: async (req, res) => {
         try {
             const parcelId = req.body.parcelId;
+            let newParcel = parcelId.split(',');
+
             const status = await knex("parcel_management")
                 .update({ parcelStatus: '5' })
-                .where({ id: parcelId });
+                .whereIn('parcel_management.id', newParcel);
             return res.status(200).json({
                 data: {
                     status: "CANCELLED"
@@ -237,12 +330,14 @@ const facilityBookingController = {
     approveParcel: async (req, res) => {
         try {
             let parcelId = req.body.parcelId;
+            let newParcel = parcelId.split(',');
+
             const currentTime = new Date().getTime();
             console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7', req.body)
 
             const status = await knex("parcel_management")
                 .update({ parcelStatus: '2', receivedDate: currentTime, receivedBy: req.me.id })
-                .where({ id: parcelId });
+                .whereIn('parcel_management.id', newParcel);
 
             return res.status(200).json({
                 data: {
