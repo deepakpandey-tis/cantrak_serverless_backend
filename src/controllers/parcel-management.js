@@ -571,7 +571,7 @@ const parcelManagementController = {
             .where("parcel_management.parcelStatus", 1)
             .where((qb) => {
               if (unitId) {
-                qb.where("property_units.id", unitId);
+                qb.where("property_units.unitNumber", unitId);
               }
               if (trackingNumber) {
                 qb.where("parcel_management.trackingNumber", trackingNumber);
@@ -583,7 +583,7 @@ const parcelManagementController = {
                 qb.where("parcel_user_tis.buildingPhaseId", buildingPhaseId);
               }
               if (id) {
-                qb.where("parcel_management.id", id);
+                qb.where("property_units.unitNumber", id);
               }
             })
             .groupBy([
