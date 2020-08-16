@@ -86,10 +86,13 @@ const facilityBookingController = {
                 .where({ 'parcel_user_tis.tenantId': id })
                 .whereIn('parcel_management.parcelStatus', parcelStatus)
 
+                console.log("...resultData",resultData[0].unitNumber)
+                let unitNumber = resultData[0].unitNumber
+
             const Parallel = require("async-parallel");
             resultData = await Parallel.map(resultData, async (pd) => {
 
-                let qrCode1 = 'org-' + req.orgId + '-parcel-' + pd.id
+                let qrCode1 = 'org~' + req.orgId + '~unitNumber~' + unitNumber + '~parcel~' + pd.id
                 let qrCode;
                 if (qrCode1) {
                     qrCode = await QRCODE.toDataURL(qrCode1);

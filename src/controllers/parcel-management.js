@@ -92,6 +92,7 @@ const parcelManagementController = {
         "img_url",
         "non_org_user_data",
         "org_user_data",
+        "newParcelId"
       ]);
       console.log("payloa data", payLoad);
       // let payload = req.body
@@ -133,7 +134,8 @@ const parcelManagementController = {
         );
 
         let addResult = await knex
-          .insert(insertData)
+          .update(insertData)
+          .where({id:req.body.newParcelId})
           .returning(["*"])
           .transacting(trx)
           .into("parcel_management");
@@ -222,6 +224,23 @@ const parcelManagementController = {
       console.log("[controllers][parcel_management][addParcel] :  Error", err);
       //trx.rollback
       res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
+  generateParcelId: async (req, res) => {
+    try {
+      const generatedId = await knex("parcel_management")
+        .insert({ createdAt: new Date().getTime() })
+        .returning(["*"]);
+      return res.status(200).json({
+        data: {
+          id: generatedId[0].id,
+        },
+      });
+    } catch (err) {
+      console.log("[controllers][parcelManagement][list] :  Error", err);
+      return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
     }
