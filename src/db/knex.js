@@ -26,7 +26,7 @@ module.exports = require('knex')({
     },
     debug: process.env.NODE_ENV === 'local' ? true : false,
     pool: {
-        min: 0,
+        min: 1,
         max: 5,
         afterCreate: async (conn, done) => {
             // await conn.query('SET timezone="UTC";');

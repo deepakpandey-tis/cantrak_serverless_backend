@@ -24,4 +24,6 @@ router.post('/update-parcel-status',authMiddleware.isAuthenticated,parcelManageC
 
 router.post('/update-parcel-details',authMiddleware.isAuthenticated,parcelManagementController.updateParcelDetails)
 
+router.post('/get-parcel-status',authMiddleware.isAuthenticated,parcelManageController.getParcelStatusForCheckOut)
+
 module.exports = router
