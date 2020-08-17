@@ -16,6 +16,7 @@ const AWS = require("aws-sdk");
 const XLSX = require("xlsx");
 const fs = require("fs");
 const https = require("https");
+const { whereIn } = require("../db/knex");
 
 AWS.config.update({
   accessKeyId: process.env.ACCESS_KEY_ID,
@@ -1060,5 +1061,42 @@ const parcelManagementController = {
       // }
     } catch (err) {}
   },
+
+  getParcelStatusForCheckOut:async(req,res)=>{
+    try{
+      let parcelId = req.body.parcelId
+
+      let parcelStatus = await knex
+      .from('parcel_management')
+      .leftJoin(
+        "parcel_user_tis",
+        "parcel_management.id",
+        "parcel_user_tis.parcelId"
+      )
+      .leftJoin(
+        "parcel_user_non_tis",
+        "parcel_management.id",
+        "parcel_user_non_tis.parcelId"
+      )
+      .select([
+        "parcel_management.id",
+        "parcel_management.parcelStatus"
+      ])
+      .where("parcel_management.orgId",req.orgId)
+      whereIn("parcel_management.id",parcelId)
+
+      return res.status(200).json({
+        data: {
+          parcelStatus: parcelStatus,
+          message: "Parcel Status",
+        },
+      });
+
+    }catch(err){
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  }
 };
 module.exports = parcelManagementController;
