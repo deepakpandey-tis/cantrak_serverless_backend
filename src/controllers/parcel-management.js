@@ -16,6 +16,7 @@ const AWS = require("aws-sdk");
 const XLSX = require("xlsx");
 const fs = require("fs");
 const https = require("https");
+const { whereIn } = require("../db/knex");
 
 AWS.config.update({
   accessKeyId: process.env.ACCESS_KEY_ID,
@@ -800,6 +801,7 @@ const parcelManagementController = {
             "floor_and_zones.floorZoneCode",
             "floor_and_zones.description as floorName",
             "users.name as tenantName",
+            "property_units.unitNumber"
           ])
           .where("parcel_management.id", payload.id)
           .first(),
@@ -845,7 +847,8 @@ const parcelManagementController = {
           "id",
           "img_url",
           "non_org_user_data",
-          "org_user_data"
+          "org_user_data",
+          "newParcelId"
         );
 
         const schema = Joi.object().keys({
@@ -995,6 +998,7 @@ const parcelManagementController = {
       const schema = Joi.object().keys({
         parcelStatus: Joi.string().required(),
         description: Joi.string().allow("").optional(),
+        signature: Joi.string().allow("").optional()
       });
       const result = Joi.validate(payload, schema);
 
@@ -1057,5 +1061,42 @@ const parcelManagementController = {
       // }
     } catch (err) {}
   },
+
+  getParcelStatusForCheckOut:async(req,res)=>{
+    try{
+      let parcelId = req.body.parcelId
+
+      let parcelStatus = await knex
+      .from('parcel_management')
+      .leftJoin(
+        "parcel_user_tis",
+        "parcel_management.id",
+        "parcel_user_tis.parcelId"
+      )
+      .leftJoin(
+        "parcel_user_non_tis",
+        "parcel_management.id",
+        "parcel_user_non_tis.parcelId"
+      )
+      .select([
+        "parcel_management.id",
+        "parcel_management.parcelStatus"
+      ])
+      .where("parcel_management.orgId",req.orgId)
+      whereIn("parcel_management.id",parcelId)
+
+      return res.status(200).json({
+        data: {
+          parcelStatus: parcelStatus,
+          message: "Parcel Status",
+        },
+      });
+
+    }catch(err){
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  }
 };
 module.exports = parcelManagementController;
