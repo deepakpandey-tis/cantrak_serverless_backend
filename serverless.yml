@@ -76,6 +76,8 @@ functions:
         event: s3:*
   queueProcessor:
     handler: src/app.queueProcessor
+    memorySize: 1024
+    timeout: 150
     batchSize: 1                           # Using a batchSize of 1, so that messages succeed or fail on their own.
     reservedConcurrency: 10                # <-- Concurrency control
     events:

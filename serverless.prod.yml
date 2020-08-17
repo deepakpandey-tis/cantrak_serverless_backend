@@ -59,6 +59,8 @@ functions:
   queueProcessor:
     handler: src/app.queueProcessor
     batchSize: 1                           # Using a batchSize of 1, so that messages succeed or fail on their own.
+    memorySize: 1024
+    timeout: 150
     reservedConcurrency: 10                # <-- Concurrency control
     events:
       - sqs: arn:aws:sqs:us-east-1:037792882519:mail-queue
