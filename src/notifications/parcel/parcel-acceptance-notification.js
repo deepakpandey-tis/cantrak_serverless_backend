@@ -49,7 +49,7 @@ const parcelAcceptanceNotification = {
                 {
                     action: "explore",
                     title: "Parcel Acceptation",
-                    url:`/user/parcel/parcel-confirmation`
+                    url:`/user/parcel/parcel-confirmation/${parcelId}`
                 }
             ]
         }

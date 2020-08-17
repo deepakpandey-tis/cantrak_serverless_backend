@@ -86,11 +86,12 @@ const facilityBookingController = {
                 .where({ 'parcel_user_tis.tenantId': id })
                 .whereIn('parcel_management.parcelStatus', parcelStatus)
 
-                console.log("...resultData",resultData[0].unitNumber)
-                let unitNumber = resultData[0].unitNumber
-
+               
             const Parallel = require("async-parallel");
             resultData = await Parallel.map(resultData, async (pd) => {
+                console.log("...resultData",pd.unitNumber)
+                let unitNumber = pd.unitNumber
+
 
                 let qrCode1 = 'org~' + req.orgId + '~unitNumber~' + unitNumber + '~parcel~' + pd.id
                 let qrCode;
