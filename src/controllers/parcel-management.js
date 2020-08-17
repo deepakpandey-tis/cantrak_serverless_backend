@@ -800,6 +800,7 @@ const parcelManagementController = {
             "floor_and_zones.floorZoneCode",
             "floor_and_zones.description as floorName",
             "users.name as tenantName",
+            "property_units.unitNumber"
           ])
           .where("parcel_management.id", payload.id)
           .first(),
@@ -845,7 +846,8 @@ const parcelManagementController = {
           "id",
           "img_url",
           "non_org_user_data",
-          "org_user_data"
+          "org_user_data",
+          "newParcelId"
         );
 
         const schema = Joi.object().keys({
@@ -995,6 +997,7 @@ const parcelManagementController = {
       const schema = Joi.object().keys({
         parcelStatus: Joi.string().required(),
         description: Joi.string().allow("").optional(),
+        signature: Joi.string().allow("").optional()
       });
       const result = Joi.validate(payload, schema);
 
