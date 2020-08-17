@@ -92,6 +92,7 @@ const parcelManagementController = {
         "img_url",
         "non_org_user_data",
         "org_user_data",
+        "newParcelId"
       ]);
       console.log("payloa data", payLoad);
       // let payload = req.body
@@ -133,7 +134,8 @@ const parcelManagementController = {
         );
 
         let addResult = await knex
-          .insert(insertData)
+          .update(insertData)
+          .where({id:req.body.newParcelId})
           .returning(["*"])
           .transacting(trx)
           .into("parcel_management");
@@ -226,6 +228,23 @@ const parcelManagementController = {
       });
     }
   },
+  generateParcelId: async (req, res) => {
+    try {
+      const generatedId = await knex("parcel_management")
+        .insert({ createdAt: new Date().getTime() })
+        .returning(["*"]);
+      return res.status(200).json({
+        data: {
+          id: generatedId[0].id,
+        },
+      });
+    } catch (err) {
+      console.log("[controllers][parcelManagement][list] :  Error", err);
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
 
   /*parcel list */
 
@@ -294,6 +313,7 @@ const parcelManagementController = {
                 "parcel_user_tis.buildingPhaseId",
                 "buildings_and_phases.id"
               )
+              .leftJoin()
               .where("parcel_management.orgId", req.orgId)
               .where((qb) => {
                 if (unitId) {
@@ -396,6 +416,23 @@ const parcelManagementController = {
               .offset(offset)
               .limit(per_page),
           ]);
+          // console.log("rows",rows)
+          // const Parallel = require("async-parallel");
+          // rows = await Parallel.map(rows, async (pd) => {
+          //   let imageResult = await knex
+          //     .from("images")
+          //     .select("s3Url", "title", "name")
+          //     .where({
+          //       entityId: pd.id,
+          //       entityType: "parcel_management",
+          //       orgId: req.orgId,
+          //     })
+          //     .first();
+          //   return {
+          //     ...pd,
+          //     uploadedImages: imageResult,
+          //   };
+          // });
 
           let count = total.length;
 
@@ -489,6 +526,23 @@ const parcelManagementController = {
             .offset(offset)
             .limit(per_page),
         ]);
+        // console.log("rows",rows)
+        // const Parallel = require("async-parallel");
+        // rows = await Parallel.map(rows, async (pd) => {
+        //   let imageResult = await knex
+        //     .from("images")
+        //     .select("s3Url", "title", "name")
+        //     .where({
+        //       entityId: pd.id,
+        //       entityType: "parcel_management",
+        //       orgId: req.orgId,
+        //     })
+        //     .first();
+        //   return {
+        //     ...pd,
+        //     uploadedImages: imageResult,
+        //   };
+        // });
 
         let count = total.length;
 
