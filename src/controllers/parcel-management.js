@@ -985,7 +985,7 @@ const parcelManagementController = {
       let id = req.body.id;
       let parcelResult = null;
       // let {parcelStatus,description}
-      // console.log("requested data for image",req.body)
+      console.log("requested data for image",req.body)
 
       const payload = _.omit(req.body, [
         "id",
@@ -997,6 +997,7 @@ const parcelManagementController = {
       const schema = Joi.object().keys({
         parcelStatus: Joi.string().required(),
         description: Joi.string().allow("").optional(),
+        signature: Joi.string().allow("").optional()
       });
       const result = Joi.validate(payload, schema);
 
