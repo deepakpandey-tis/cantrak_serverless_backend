@@ -985,7 +985,7 @@ const parcelManagementController = {
       let id = req.body.id;
       let parcelResult = null;
       // let {parcelStatus,description}
-      console.log("requested data for image",req.body)
+      // console.log("requested data for image",req.body)
 
       const payload = _.omit(req.body, [
         "id",
