@@ -2438,7 +2438,8 @@ const serviceRequestController = {
             "asset_master.model as model",
             "asset_category_master.categoryName as categoryName",
             "companies.companyName as companyName",
-            "assigned_assets.id as aid"
+            "assigned_assets.id as aid",
+            "asset_master.displayId"
           ])
           .where({
             entityType: "service_requests",
@@ -2478,7 +2479,9 @@ const serviceRequestController = {
             "asset_master.model as model",
             "asset_category_master.categoryName as categoryName",
             "companies.companyName as companyName",
-            "assigned_assets.id as aid"
+            "assigned_assets.id as aid",
+            "asset_master.displayId"
+
           ])
           .where({
             entityType: "service_requests",
@@ -3354,7 +3357,10 @@ const serviceRequestController = {
         })
       }
 
-      const srId = await knex('service_requests').select('*').where({ id: id, orgId: req.orgId }).first()
+      const srId = await knex('service_requests').select('*').where({
+        displayId: id, companyId: req.body.companyId,
+        orgId: req.orgId
+      }).first()
       //const houseId = srId.houseId;
       //console.log('HOUSEID :**************************: ',houseId)
 
@@ -3455,7 +3461,7 @@ const serviceRequestController = {
   getServiceOrderIdByServiceRequestId: async (req, res) => {
     try {
       const serviceRequestId = req.body.serviceRequestId;
-      const serviceOrderId = await knex('service_orders').select('id').where({ serviceRequestId: serviceRequestId }).first()
+      const serviceOrderId = await knex('service_orders').select('id','displayId').where({ serviceRequestId: serviceRequestId }).first()
       return res.status(200).json({
         data: {
           serviceOrderId

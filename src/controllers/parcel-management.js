@@ -7,7 +7,6 @@ const multer = require("multer");
 const multerS3 = require("multer-s3");
 const uuid = require("uuid/v4");
 
-
 const knex = require("../db/knex");
 
 const bcrypt = require("bcrypt");
@@ -93,6 +92,7 @@ const parcelManagementController = {
         "img_url",
         "non_org_user_data",
         "org_user_data",
+        "newParcelId"
       ]);
       console.log("payloa data", payLoad);
       // let payload = req.body
@@ -134,7 +134,8 @@ const parcelManagementController = {
         );
 
         let addResult = await knex
-          .insert(insertData)
+          .update(insertData)
+          .where({id:req.body.newParcelId})
           .returning(["*"])
           .transacting(trx)
           .into("parcel_management");
@@ -142,7 +143,6 @@ const parcelManagementController = {
 
         parcelResult = addResult[0];
 
-        
         console.log("parcel result id", parcelResult.id);
 
         let noOrgUserDataPayload = req.body.non_org_user_data;
@@ -169,22 +169,24 @@ const parcelManagementController = {
           orgId: req.orgId,
         });
 
-        let qrCode = 'org-' + req.orgId + '-parcel-' + parcelResult.id
-        
-   
+        let qrCode = "org-" + req.orgId + "-parcel-" + parcelResult.id;
 
-    console.log("parcel result id for qr code", parcelResult.id);
+        console.log("parcel result id for qr code", parcelResult.id);
+        let updateResult = await knex("parcel_management")
+          .update({ qrCode: qrCode })
+          .returning(["*"])
+          .transacting(trx)
+          .where({ id: parcelResult.id });
 
-    // let insertResult = await knex.raw(`update "parcel_management" set "qrCode" = ${qrCode} where "id" = ${parcelResult.id} `)
+        // let insertResult = await knex.raw(`update "parcel_management" set "qrCode" = ${qrCode} where "id" = ${parcelResult.id} `)
 
-    // console.log("inserted result qr",insertResult)
+        // console.log("inserted result qr",insertResult)
 
-    // let insertResult = await knex
-    // .update(insertQrCode)
-    // .where({id:parcelResult.id})
-    // .returning(["*"])
-    // .into("parcel_management");
-       
+        // let updateResult = await knex
+        // .update({qrCode : qrCode})
+        // .where({id:parcelResult.id})
+        // .returning(["*"])
+        // .into("parcel_management");
 
         let imagesData = req.body.image;
         console.log("imagesData", imagesData);
@@ -226,13 +228,30 @@ const parcelManagementController = {
       });
     }
   },
+  generateParcelId: async (req, res) => {
+    try {
+      const generatedId = await knex("parcel_management")
+        .insert({ createdAt: new Date().getTime() })
+        .returning(["*"]);
+      return res.status(200).json({
+        data: {
+          id: generatedId[0].id,
+        },
+      });
+    } catch (err) {
+      console.log("[controllers][parcelManagement][list] :  Error", err);
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
 
   /*parcel list */
 
   getParcelList: async (req, res) => {
     try {
       let reqData = req.query;
-      console.log("requested data", reqData);
+      console.log("requested data parcel", reqData);
       let total, rows;
 
       let pagination = {};
@@ -242,10 +261,26 @@ const parcelManagementController = {
       let offset = (page - 1) * per_page;
       let filters = {};
 
-      let { unitId, trackingNumber, tenant, status } = req.body;
+      let {
+        unitId,
+        trackingNo,
+        tenantId,
+        status,
+        companyId,
+        projectId,
+        buildingPhaseId,
+      } = req.body;
 
       console.log("request body", req.body);
-      if (unitId || trackingNumber || tenant || status) {
+      if (
+        unitId ||
+        trackingNo ||
+        tenantId ||
+        status ||
+        companyId ||
+        projectId ||
+        buildingPhaseId
+      ) {
         try {
           [total, rows] = await Promise.all([
             knex
@@ -267,19 +302,41 @@ const parcelManagementController = {
                 "property_units.id"
               )
               .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+              .leftJoin(
+                "companies",
+                "parcel_user_tis.companyId",
+                "companies.id"
+              )
+              .leftJoin("projects", "parcel_user_tis.projectId", "projects.id")
+              .leftJoin(
+                "buildings_and_phases",
+                "parcel_user_tis.buildingPhaseId",
+                "buildings_and_phases.id"
+              )
+              .leftJoin()
               .where("parcel_management.orgId", req.orgId)
               .where((qb) => {
                 if (unitId) {
                   qb.where("property_units.id", unitId);
                 }
-                if (trackingNumber) {
-                  qb.where("parcel_management.trackingNumber", trackingNumber);
+                if (trackingNo) {
+                  qb.where("parcel_management.trackingNumber", trackingNo);
                 }
-                if (tenant) {
-                  qb.where("users.id", tenant);
+                if (tenantId) {
+                  qb.where("users.id", tenantId);
                 }
                 if (status) {
                   qb.where("parcel_management.parcelStatus", status);
+                }
+                if (companyId) {
+                  console.log("company id", companyId);
+                  qb.where("parcel_user_tis.companyId", companyId);
+                }
+                if (projectId) {
+                  qb.where("parcel_user_tis.projectId", projectId);
+                }
+                if (buildingPhaseId) {
+                  qb.where("parcel_user_tis.buildingPhaseId", buildingPhaseId);
                 }
               })
               .groupBy([
@@ -306,35 +363,76 @@ const parcelManagementController = {
                 "property_units.id"
               )
               .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+              .leftJoin(
+                "companies",
+                "parcel_user_tis.companyId",
+                "companies.id"
+              )
+              .leftJoin("projects", "parcel_user_tis.projectId", "projects.id")
+              .leftJoin(
+                "buildings_and_phases",
+                "parcel_user_tis.buildingPhaseId",
+                "buildings_and_phases.id"
+              )
               .select([
                 "parcel_management.id",
                 "parcel_user_tis.unitId",
+                "property_units.unitNumber",
+                "parcel_user_tis.parcelId",
                 "parcel_management.trackingNumber",
                 "parcel_management.parcelStatus",
                 "users.name as tenant",
                 "parcel_management.createdAt",
                 "parcel_management.pickedUpType",
-                "parcel_management.pickedUpAt"
+                "parcel_management.pickedUpAt",
               ])
               .where("parcel_management.orgId", req.orgId)
               .where((qb) => {
                 if (unitId) {
                   qb.where("property_units.id", unitId);
                 }
-                if (trackingNumber) {
-                  qb.where("parcel_management.trackingNumber", trackingNumber);
+                if (trackingNo) {
+                  console.log("tracking number",trackingNo)
+                  qb.where("parcel_management.trackingNumber", trackingNo);
                 }
-                if (tenant) {
-                  qb.where("users.id", tenant);
+                if (tenantId) {
+                  qb.where("users.id", tenantId);
                 }
                 if (status) {
                   qb.where("parcel_management.parcelStatus", status);
+                }
+                if (companyId) {
+                  console.log("company id", companyId);
+                  qb.where("parcel_user_tis.companyId", companyId);
+                }
+                if (projectId) {
+                  qb.where("parcel_user_tis.projectId", projectId);
+                }
+                if (buildingPhaseId) {
+                  qb.where("parcel_user_tis.buildingPhaseId", buildingPhaseId);
                 }
               })
               .orderBy("parcel_management.id", "asc")
               .offset(offset)
               .limit(per_page),
           ]);
+          // console.log("rows",rows)
+          // const Parallel = require("async-parallel");
+          // rows = await Parallel.map(rows, async (pd) => {
+          //   let imageResult = await knex
+          //     .from("images")
+          //     .select("s3Url", "title", "name")
+          //     .where({
+          //       entityId: pd.id,
+          //       entityType: "parcel_management",
+          //       orgId: req.orgId,
+          //     })
+          //     .first();
+          //   return {
+          //     ...pd,
+          //     uploadedImages: imageResult,
+          //   };
+          // });
 
           let count = total.length;
 
@@ -370,6 +468,13 @@ const parcelManagementController = {
               "property_units.id"
             )
             .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+            .leftJoin("companies", "parcel_user_tis.companyId", "companies.id")
+            .leftJoin("projects", "parcel_user_tis.projectId", "projects.id")
+            .leftJoin(
+              "buildings_and_phases",
+              "parcel_user_tis.buildingPhaseId",
+              "buildings_and_phases.id"
+            )
             .where("parcel_management.orgId", req.orgId)
             .groupBy(["parcel_management.id", "property_units.id", "users.id"]),
           knex
@@ -390,15 +495,24 @@ const parcelManagementController = {
               "property_units.id"
             )
             .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+            .leftJoin("companies", "parcel_user_tis.companyId", "companies.id")
+            .leftJoin("projects", "parcel_user_tis.projectId", "projects.id")
+            .leftJoin(
+              "buildings_and_phases",
+              "parcel_user_tis.buildingPhaseId",
+              "buildings_and_phases.id"
+            )
             .select([
               "parcel_management.id",
               "parcel_user_tis.unitId",
+              "property_units.unitNumber",
+              "parcel_user_tis.parcelId",
               "parcel_management.trackingNumber",
               "parcel_management.parcelStatus",
               "users.name as tenant",
               "parcel_management.createdAt",
               "parcel_management.pickedUpType",
-              "parcel_management.pickedUpAt"
+              "parcel_management.pickedUpAt",
             ])
             .where("parcel_management.orgId", req.orgId)
             .groupBy([
@@ -406,11 +520,29 @@ const parcelManagementController = {
               "property_units.id",
               "users.id",
               "parcel_user_tis.unitId",
+              "parcel_user_tis.parcelId"
             ])
             .orderBy("parcel_management.id", "asc")
             .offset(offset)
             .limit(per_page),
         ]);
+        // console.log("rows",rows)
+        // const Parallel = require("async-parallel");
+        // rows = await Parallel.map(rows, async (pd) => {
+        //   let imageResult = await knex
+        //     .from("images")
+        //     .select("s3Url", "title", "name")
+        //     .where({
+        //       entityId: pd.id,
+        //       entityType: "parcel_management",
+        //       orgId: req.orgId,
+        //     })
+        //     .first();
+        //   return {
+        //     ...pd,
+        //     uploadedImages: imageResult,
+        //   };
+        // });
 
         let count = total.length;
 
@@ -437,14 +569,21 @@ const parcelManagementController = {
       });
     }
   },
- 
+
   getPendingParcelList: async (req, res) => {
     try {
       let payload = req.body;
       let parcelList;
-      let { unitId, tenantId, buildingPhaseId, trackingNumber,qrCode } = req.body;
-      console.log("parcel payload",unitId,tenantId,buildingPhaseId,trackingNumber,qrCode)
-      if (unitId || tenantId || buildingPhaseId || trackingNumber || qrCode) {
+      let { unitId, tenantId, buildingPhaseId, trackingNumber, id } = req.body;
+      console.log(
+        "parcel payload",
+        unitId,
+        tenantId,
+        buildingPhaseId,
+        trackingNumber,
+        id
+      );
+      if (unitId || tenantId || buildingPhaseId || trackingNumber || id) {
         try {
           parcelList = await knex
             .from("parcel_management")
@@ -475,16 +614,18 @@ const parcelManagementController = {
               "parcel_management.trackingNumber",
               "parcel_management.parcelStatus",
               "users.name as tenant",
+              "users.id as tenantId",
               "parcel_management.createdAt",
               "parcel_management.pickedUpType",
               "buildings_and_phases.buildingPhaseCode",
               "buildings_and_phases.description as buildingName",
+              "parcel_user_non_tis.name",
             ])
             .where("parcel_management.orgId", req.orgId)
             .where("parcel_management.parcelStatus", 1)
             .where((qb) => {
               if (unitId) {
-                qb.where("property_units.id", unitId);
+                qb.where("property_units.unitNumber", unitId);
               }
               if (trackingNumber) {
                 qb.where("parcel_management.trackingNumber", trackingNumber);
@@ -495,8 +636,8 @@ const parcelManagementController = {
               if (buildingPhaseId) {
                 qb.where("parcel_user_tis.buildingPhaseId", buildingPhaseId);
               }
-              if(qrCode){
-                qb.where("parcel_management.qrCode",qrCode)
+              if (id) {
+                qb.where("property_units.unitNumber", id);
               }
             })
             .groupBy([
@@ -505,7 +646,8 @@ const parcelManagementController = {
               "users.id",
               "parcel_user_tis.unitId",
               "buildings_and_phases.buildingPhaseCode",
-              "buildings_and_phases.description"
+              "buildings_and_phases.description",
+              "parcel_user_non_tis.name",
             ])
             .orderBy("parcel_management.id", "asc");
         } catch (err) {
@@ -544,10 +686,12 @@ const parcelManagementController = {
             "parcel_management.trackingNumber",
             "parcel_management.parcelStatus",
             "users.name as tenant",
+            "users.id as tenantId",
             "parcel_management.createdAt",
             "parcel_management.pickedUpType",
             "buildings_and_phases.buildingPhaseCode",
             "buildings_and_phases.description as buildingName",
+            "parcel_user_non_tis.name",
           ])
           .where("parcel_management.orgId", req.orgId)
           .where("parcel_management.parcelStatus", 1)
@@ -557,20 +701,28 @@ const parcelManagementController = {
             "users.id",
             "parcel_user_tis.unitId",
             "buildings_and_phases.buildingPhaseCode",
-            "buildings_and_phases.description"
+            "buildings_and_phases.description",
+            "parcel_user_non_tis.name",
           ])
           .orderBy("parcel_management.id", "asc");
       }
 
-      const Parallel = require('async-parallel')
-      parcelList = await Parallel.map(parcelList, async pd=>{
-        let imageResult = await knex.from('images').select('s3Url', 'title', 'name')
-        .where({ "entityId": pd.id, "entityType": 'parcel_management', orgId: req.orgId }).first()
+      const Parallel = require("async-parallel");
+      parcelList = await Parallel.map(parcelList, async (pd) => {
+        let imageResult = await knex
+          .from("images")
+          .select("s3Url", "title", "name")
+          .where({
+            entityId: pd.id,
+            entityType: "parcel_management",
+            orgId: req.orgId,
+          })
+          .first();
         return {
           ...pd,
-          uploadedImages:imageResult
-        }
-      })
+          uploadedImages: imageResult,
+        };
+      });
 
       return res.status(200).json({
         data: {
@@ -676,6 +828,7 @@ const parcelManagementController = {
     try {
       let parcel = null;
       let insertedImages = [];
+      let id = req.body.id;
 
       let parcelResult = null;
       let noOrgUserData = [];
@@ -686,10 +839,14 @@ const parcelManagementController = {
       await knex.transaction(async (trx) => {
         const payload = req.body;
 
-        parcelPayload = _.omit(payload,"image","id",
-        "img_url",
-        "non_org_user_data",
-        "org_user_data")
+        parcelPayload = _.omit(
+          payload,
+          "image",
+          "id",
+          "img_url",
+          "non_org_user_data",
+          "org_user_data"
+        );
 
         const schema = Joi.object().keys({
           pickedUpType: Joi.string().required(),
@@ -701,6 +858,7 @@ const parcelManagementController = {
           parcelStatus: Joi.number().required(),
           parcelPriority: Joi.number().required(),
         });
+        
         const result = Joi.validate(parcelPayload, schema);
         console.log("result", result);
 
@@ -722,54 +880,52 @@ const parcelManagementController = {
         };
 
         let updateResult = await knex
-        .update(insertData)
-        .where({id:payload.id})
-        .returning(["*"])
-        .transacting(trx)
-        .into("parcel_management");
-      // console.log("add parcel result", addResult);
-      parcelResult = updateResult[0]
+          .update(insertData)
+          .where({ id: payload.id })
+          .returning(["*"])
+          .transacting(trx)
+          .into("parcel_management");
+        // console.log("add parcel result", addResult);
+        parcelResult = updateResult[0];
 
-      let noOrgUserDataPayload = req.body.non_org_user_data;
+        let noOrgUserDataPayload = req.body.non_org_user_data;
 
-      noOrgUserData = await knex("parcel_user_non_tis")
-        .update({
-          ...noOrgUserDataPayload,
-          updatedAt: currentTime,
-          
-        })
-        .where({parcelId:payload.id})
-        .returning(["*"]);
+        noOrgUserData = await knex("parcel_user_non_tis")
+          .update({
+            ...noOrgUserDataPayload,
+            updatedAt: currentTime,
+          })
+          .where({ parcelId: payload.id })
+          .returning(["*"]);
 
-      let orgUserDataPayload = req.body.org_user_data;
+        let orgUserDataPayload = req.body.org_user_data;
 
-      orgUserData = await knex("parcel_user_tis").update({
-        ...orgUserDataPayload,
-        updatedAt: currentTime,
-      })
-      .where({parcelId:payload.id})
-      .returning(['*'])
+        orgUserData = await knex("parcel_user_tis")
+          .update({
+            ...orgUserDataPayload,
+            updatedAt: currentTime,
+          })
+          .where({ parcelId: payload.id })
+          .returning(["*"]);
 
-      let imagesData = req.body.image;
-      console.log("imagesData", imagesData);
-      if (imagesData && imagesData.length > 0) {
-        for (let image of imagesData) {
-          let d = await knex("images")
-            .update({
-              s3Url: image.s3Url,
-              name: image.filename,
-              title: image.title,
+        let imagesData = req.body.image;
+        console.log("imagesData", imagesData);
+        if (imagesData && imagesData.length > 0) {
+          for (let image of imagesData) {
+            let d = await knex("images").insert({
+              ...image,
+              entityId: id,
+              entityType: "parcel_management",
+              createdAt: currentTime,
               updatedAt: currentTime,
-            })
-            .where({entityType:parcel_management,entityId:payload.id})
-            .returning(["*"]);
-          images.push(d[0]);
+              orgId: req.orgId,
+            });
+
+            images.push(d[0]);
+          }
         }
-      }
 
-      trx.commit;
-
-
+        trx.commit;
       });
 
       res.status(200).json({
@@ -779,7 +935,10 @@ const parcelManagementController = {
         message: "Parcel updated Successfully !",
       });
     } catch (err) {
-      console.log("[controllers][parcel_management][updateParcel] :  Error", err);
+      console.log(
+        "[controllers][parcel_management][updateParcel] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
@@ -817,78 +976,86 @@ const parcelManagementController = {
     }
   },
 
-  deliverParcel:async(req,res)=>{
-    try{
+  deliverParcel: async (req, res) => {
+    try {
       // let payload = req.body
       let insertedImages = [];
-      let id = req.body.id
-      let parcelResult = null
+      let id = req.body.id;
+      let parcelResult = null;
       // let {parcelStatus,description}
+      // console.log("requested data for image",req.body)
 
-      const payload = _.omit(req.body,[
+      const payload = _.omit(req.body, [
         "id",
-        "image"
-      ])
+        "image",
+        "signImage",
+        "signName",
+      ]);
 
       const schema = Joi.object().keys({
-        parcelStatus:Joi.string().required(),
-        description:Joi.string().allow("").optional()
-      })
+        parcelStatus: Joi.string().required(),
+        description: Joi.string().allow("").optional(),
+      });
       const result = Joi.validate(payload, schema);
 
       if (result && result.hasOwnProperty("error") && result.error) {
         return res.status(400).json({
-          errors: [
-            { code: "VALIDATION_ERROR", message: result.error.message },
-          ],
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
         });
       }
-      const currentTime = new Date().getTime()
+      const currentTime = new Date().getTime();
 
-
-      let deliverParcelResult = await knex('parcel_management')
-      .update({
-        ...payload,
-        updatedAt:currentTime,
-        pickedUpAt:currentTime
-      })
-      .where('parcel_management.id',id)
-      .where('parcel_management.orgId',req.orgId)
-      .returning(['*'])
-
-          
-
-      const images = req.body.images
-      insertedImages = []
-      for (let img of image){
-        let insertedImage = await knex('images')
+      let deliverParcelResult = await knex("parcel_management")
         .update({
-          // entityType: "parcel_management",
-          s3Url: img.s3Url,
-          name: img.filename,
-          title: img.title,
-          orgId: req.orgId,
+          ...payload,
           updatedAt: currentTime,
-          createdAt: currentTime,
-          uuid: uuid(),
+          pickedUpAt: currentTime,
         })
-        .where('images.entityType',parcel_management)
-        .where('images.entityId',id)
-        insertedImages.push(insertedImage[0])
+        .whereIn("parcel_management.id", id)
+        .where("parcel_management.orgId", req.orgId)
+        .returning(["*"]);
+
+      const images = req.body.image;
+      // console.log("uploaded image",images)
+      insertedImages = [];
+      for (let img of images) {
+        let insertedImage = await knex("images")
+          .update({
+            // entityType: "parcel_management",
+            s3Url: img.s3Url,
+            name: img.filename,
+            title: img.title,
+            orgId: req.orgId,
+            updatedAt: currentTime,
+            createdAt: currentTime,
+            uuid: uuid(),
+          })
+          .where("images.entityType", parcel_management)
+          .where("images.entityId", id);
+        insertedImages.push(insertedImage[0]);
       }
+      // const signImage = req.body.signImage
+      // signInsertImage = []
+      // for(let img of signImage){
+      //   let insertedSignImage = await knex('images')
+      //   .insert({
+      //      entityType: "parcel_management",
+
+      //   })
+      // }
 
       return res.status(200).json({
-        data:{
-          deliverParcel:deliverParcelResult,
-          addedImages:insertedImages
-        }
-      })
+        data: {
+          deliverParcel: deliverParcelResult,
+          addedImages: insertedImages,
+        },
+      });
 
       // let insertData = {
       //   updatedAt : currentTime,
 
       // }
-    }catch(err){}
-  }
+    } catch (err) {}
+  },
 };
 module.exports = parcelManagementController;

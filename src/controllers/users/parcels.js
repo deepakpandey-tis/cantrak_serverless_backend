@@ -3,15 +3,15 @@ const Joi = require("@hapi/joi");
 const moment = require("moment-timezone");
 // const momentWithTZ = require("moment");
 const _ = require("lodash");
-const emailHelper = require('../../helpers/email')
-
+ 
 
 var arrayCompare = require("array-compare");
 
-const parcelController = {
+const parcelsController = {
 
     /*GET USER FACILITY LIST */
-    getParcelList: async (req, res) => {
+
+    getUserParcelList: async (req, res) => {
 
         try {
             let id = req.me.id;
@@ -19,6 +19,7 @@ const parcelController = {
             //let resourceProject = req.userProjectResources[0].projects;
             let { listType } = req.body;
             let resultData;
+            console.log("listType", listType);
 
             console.log("customerHouseInfo", req.me.houseIds);
             let houseIdArray = req.me.houseIds;
@@ -69,11 +70,11 @@ const parcelController = {
             resultData = await Parallel.map(resultData, async pd => {
 
                 let imageResult = await knex.from('images').select('s3Url', 'title', 'name')
-                    .where({ "entityId": pd.id, "entityType": 'facility_master' })
+                    .where({ "entityId": pd.id, "entityType": 'parcel_management' })
 
                 return {
                     ...pd,
-                    uploadedImages: imageResult,                 
+                    uploadedImages: imageResult,
                     sortBy
                 }
 
@@ -83,7 +84,7 @@ const parcelController = {
                 data: {
                     facilityData: _.orderBy(resultData, 'sortBy', 'desc')
                 },
-                message: "Facility list successfully!"
+                message: "Parcel list successfully!"
             })
 
         } catch (err) {
@@ -100,4 +101,4 @@ const parcelController = {
 
 
 
-module.exports = parcelController;
+module.exports = parcelsController;

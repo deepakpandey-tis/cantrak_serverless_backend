@@ -4,7 +4,7 @@ const notification = require('../core/notification');
 const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY', 'SMS'];
 const SHOULD_QUEUE = process.env.IS_OFFLINE ? false : true;
 
-const parcelNotification = {
+const parcelAcceptanceNotification = {
     send:async (sender, receiver, data, allowedChannels = ALLOWED_CHANNELS) =>{
         try{
 
@@ -14,7 +14,7 @@ const parcelNotification = {
                 await notification.queue(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, __filename);
                 console.log('[notifications][parcel][parcel-notification][send]: All Notifications Queued');
             } else {
-                await notification.send(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, parcelNotification);
+                await notification.send(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, parcelAcceptanceNotification);
                 console.log('[notifications][parcel][parcel-notification][send]: All Notifications Sent');
             }
 
@@ -26,28 +26,30 @@ const parcelNotification = {
         }
     },
     sendInAppNotification: async (sender, receiver, data) => {
-
+        // console.log("data of parcel",data.payload.parcelId)
+        let parcelId = data.payload.parcelId
         data = {
             orgId: sender.orgId,
             senderId: sender.id,
             receiverId: receiver.id,
             payload: {
                 ...data,
-                subject: 'Parcel Notification',
-                body: `Hi!!, You have received a parcel,Please Pick up your parcel ${sender.name}`,
+                subject: 'Parcel Acceptation',
+                body: `Hi!!, You have received a parcel,Please accept for picked up the parcels. ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `/user/parcel`,
-                    primaryKey: Date.now()
+                    url: `/user/parcel/parcel-confirmation?parcels=1,2,3`,
+                    primaryKey: Date.now(),
+                    parcelIds:parcelId
                 }
             },
             actions: [
                 {
                     action: "explore",
-                    title: "Parcel Pending",
-                    url:`/user/parcel`
+                    title: "Parcel Acceptation",
+                    url:`/user/parcel/parcel-confirmation/${parcelId}`
                 }
             ]
         }
@@ -79,13 +81,13 @@ const parcelNotification = {
             senderId: sender.id,
             receiverId: receiver.id,
             payload: {
-                subject: 'Parcel Notification',
-                body: `Hi!!, You have received a parcel,please come and collect ${sender.name}`,
+                subject: 'Acceptation',
+                body: `Hi!!, You have received a parcel,Please accept for picked up the parcels.  ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `${process.env.SITE_URL}/user/parcel`,
+                    url: `${process.env.SITE_URL}/user/parcel/parcel-confirmation/${parcelId}`,
                     primaryKey: Date.now()
                 }
             },
@@ -93,7 +95,7 @@ const parcelNotification = {
                 {
                     action: "explore",
                     title: "User parcel Page",
-                    url: `${process.env.SITE_URL}/user/parcel`
+                    url: `${process.env.SITE_URL}/user/parcel/parcel-confirmation/${parcelId}`
                 }
             ]
         }
@@ -110,4 +112,4 @@ const parcelNotification = {
         return data;
     }
 }
-module.exports = parcelNotification;
+module.exports = parcelAcceptanceNotification;

@@ -1090,12 +1090,14 @@ const assetController = {
 
       assetData = await knex('asset_master').where({ 'asset_master.id': id })
         .leftJoin('asset_category_master', 'asset_master.assetCategoryId', 'asset_category_master.id')
+        .leftJoin('asset_master as pA','asset_master.parentAssetId','pA.id')
         //.leftJoin('part_master','asset_master.partId','part_master.id')
         //.leftJoin('vendor_master','asset_master.assignedVendors','vendor_master.id')
         //.leftJoin('companies','asset_master.companyId','companies.id')
         .select([
           'asset_master.*',
           'asset_category_master.categoryName',
+          'pA.displayId as parentNo'
           //  'part_master.partCode',
           //'part_master.partName'
           //  'vendor_master.name as assignedVendor'
@@ -1187,7 +1189,7 @@ const assetController = {
           "asset_location.houseId as houseId",
           "companies.companyId as companyCode",
           "projects.project as projectCode",
-          
+
         ])
         .where({ assetId: id, 'asset_location.orgId': req.orgId }).orderBy('asset_location.startDate', 'desc');
       //   .where({ orgId: req.orgId });
@@ -1240,9 +1242,11 @@ const assetController = {
       //   }serviceOrders
       // }
 
+
       res.status(200).json({
         data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, partData, images, assetLocation, qrcode, serviceOrders: service_orders, teamName: team ? team.teamName : '', UserName: user ? user.name : '' } },
-        message: "Asset Details"
+        message: "Asset Details",
+        
       });
 
 
@@ -2788,47 +2792,47 @@ const assetController = {
                 .select("id")
                 .where({ assetCode: assetData.A, assetName: assetData.B, orgId: req.orgId });
 
-             // if (checkExist.length < 1) {
+              // if (checkExist.length < 1) {
 
-                let currentTime = new Date().getTime();
+              let currentTime = new Date().getTime();
 
-                let installDate = '';
-                let expireDate = '';
-                if (assetData.I) {
-                  installDate = moment(assetData.I).format()
-                }
-                if (assetData.J) {
-                  expireDate = moment(assetData.J).format()
-                }
+              let installDate = '';
+              let expireDate = '';
+              if (assetData.I) {
+                installDate = moment(assetData.I).format()
+              }
+              if (assetData.J) {
+                expireDate = moment(assetData.J).format()
+              }
 
-                let insertData = {
-                  orgId: req.orgId,
-                  assetCode: assetData.A,
-                  assetName: assetData.B,
-                  unitOfMeasure: assetData.C,
-                  model: assetData.D,
-                  price: assetData.G,
-                  companyId: companyId,
-                  assetCategoryId,
-                  createdAt: currentTime,
-                  updatedAt: currentTime,
-                  assignedTeams: teamId,
-                  parentAssetId: parentId,
-                  assetSerial: assetData.H,
-                  installationDate: installDate,
-                  warrentyExpiration: expireDate,
-                  barcode: assetData.K,
-                  locationId: locationId,
-                  assignedUsers: assetData.N,
-                  assignedVendors: assetData.P,
-                  additionalInformation: assetData.Q
-                }
+              let insertData = {
+                orgId: req.orgId,
+                assetCode: assetData.A,
+                assetName: assetData.B,
+                unitOfMeasure: assetData.C,
+                model: assetData.D,
+                price: assetData.G,
+                companyId: companyId,
+                assetCategoryId,
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                assignedTeams: teamId,
+                parentAssetId: parentId,
+                assetSerial: assetData.H,
+                installationDate: installDate,
+                warrentyExpiration: expireDate,
+                barcode: assetData.K,
+                locationId: locationId,
+                assignedUsers: assetData.N,
+                assignedVendors: assetData.P,
+                additionalInformation: assetData.Q
+              }
 
-                resultData = await knex.insert(insertData).returning(['*']).into('asset_master');
+              resultData = await knex.insert(insertData).returning(['*']).into('asset_master');
 
-                if (resultData && resultData.length) {
-                  success++;
-                }
+              if (resultData && resultData.length) {
+                success++;
+              }
 
               // } else {
               //   fail++;
@@ -2855,9 +2859,9 @@ const assetController = {
               " ) due to validation!";
           }
           //let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
-         
-          const update = await knex('asset_master').update({ isActive: true }).where({ orgId: req.orgId,  isActive : true }).returning(['*'])
-         
+
+          const update = await knex('asset_master').update({ isActive: true }).where({ orgId: req.orgId, isActive: true }).returning(['*'])
+
           return res.status(200).json({
             message: message,
             errors
@@ -2923,7 +2927,8 @@ const assetController = {
             'floor_and_zones.id as floorId',
             'property_units.unitNumber as unitNumber',
             'property_units.id as unitId',
-            'property_units.id as houseId'
+            'property_units.houseId as houseId',
+            "asset_master.displayId"
           ])
           .where({
             "asset_location.houseId": houseId,
@@ -2950,10 +2955,12 @@ const assetController = {
             'floor_and_zones.id as floorId',
             'property_units.unitNumber as unitNumber',
             'property_units.id as unitId',
-            'property_units.id as houseId'
+            'property_units.houseId as houseId',
+            "asset_master.displayId"
+
           ])
           .where({
-            "asset_location.houseId": houseId,
+           "asset_location.houseId": houseId,
             "asset_master.orgId": req.orgId,
             "asset_location.endDate": null,
           }).offset(offset).limit(per_page)
@@ -3002,9 +3009,10 @@ const assetController = {
           "projects.projectName as projectName",
           "buildings_and_phases.buildingPhaseCode as buildingPhaseCode",
           "property_units.unitNumber as unitNumber",
-          "property_units.id as houseId",
+          "property_units.houseId as houseId",
           "asset_location.createdAt as createdAt",
-          "asset_location.updatedAt as updatedAt"
+          "asset_location.updatedAt as updatedAt",
+          "asset_master.displayId"
         ])
         .where({ serviceRequestId })
         .orderBy("asset_location.createdAt", "desc");
@@ -3128,7 +3136,9 @@ const assetController = {
             'floor_and_zones.id as floorId',
             'property_units.unitNumber as unitNumber',
             'property_units.id as unitId',
-            'property_units.id as houseId'
+            'property_units.houseId as houseId',
+            'asset_master.displayId',
+
           ]).distinct(['asset_location.assetId'])
           .where({ 'asset_master.orgId': req.orgId }),
         knex('asset_master')
@@ -3146,7 +3156,9 @@ const assetController = {
             'buildings_and_phases.buildingPhaseCode as buildingPhaseCode',
             'floor_and_zones.floorZoneCode as floorZoneCode',
             'property_units.unitNumber as unitNumber',
-            'property_units.id as houseId'
+            'property_units.houseId as houseId',
+            'asset_master.displayId',
+
           ])
           .distinct(['asset_location.assetId'])
           .where({ 'asset_master.orgId': req.orgId })

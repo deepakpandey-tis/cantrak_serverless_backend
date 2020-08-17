@@ -2252,7 +2252,8 @@ const serviceOrderController = {
                         'service_appointments.appointedDate as appointedDate',
                         'service_appointments.appointedTime as appointedTime',
                         'service_appointments.createdAt as dateCreated',
-                        'service_appointments.status as status'
+                        'service_appointments.status as status',
+
                     ]).where({ 'service_appointments.orgId': req.orgId, 'service_appointments.serviceOrderId': serviceOrderId })
                     .groupBy(['service_appointments.id', 'service_requests.id', 'service_orders.id', 'users.id']),
 
@@ -2268,7 +2269,8 @@ const serviceOrderController = {
                         'service_appointments.appointedDate as appointedDate',
                         'service_appointments.appointedTime as appointedTime',
                         'service_appointments.createdAt as dateCreated',
-                        'service_appointments.status as status'
+                        'service_appointments.status as status',
+                        "service_orders.displayId as soNo"
                     ]).where({ 'service_appointments.orgId': req.orgId, 'service_appointments.serviceOrderId': serviceOrderId })
                     .groupBy(['service_appointments.id', 'service_requests.id', 'service_orders.id', 'users.id'])
                     .offset(offset).limit(per_page)
@@ -2658,8 +2660,9 @@ const serviceOrderController = {
                     "service_orders.orderDueDate",
                     'c.name as createdBy',
                     'service_requests.displayId as srNo',
-                    'service_orders.displayId as soNo'
-
+                    'service_orders.displayId as soNo',
+                    'service_orders.createdAt',
+                    'service_requests.completedOn'
                 ])
                 .groupBy([
                     "service_requests.id",
@@ -2679,6 +2682,7 @@ const serviceOrderController = {
                 ])
                 .where(qb => {
                     qb.where({ "service_requests.orgId": req.orgId })
+
                     if (payload.fromDate && payload.toDate) {
                         qb.whereBetween('service_orders.orderDueDate', [payload.fromDate, payload.toDate])
                     }
@@ -2703,6 +2707,14 @@ const serviceOrderController = {
 
                     if (payload.requestBy) {
                         qb.where('service_requests.requestedBy', payload.requestBy)
+                    }
+
+                    if (payload.completeFromDate && payload.completeToDate) {
+                        qb.whereBetween('service_requests.completedOn', [payload.completeFromDate, payload.completeToDate])
+                    }
+
+                    if (payload.createFromDate && payload.createToDate) {
+                        qb.whereBetween('service_orders.createdAt', [payload.createFromDate, payload.createToDate])
                     }
                 })
                 .whereIn('service_requests.projectId', accessibleProjects)

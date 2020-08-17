@@ -6,6 +6,7 @@ const _ = require("lodash");
 const emailHelper = require('../../helpers/email')
 
 const facilityHelper = require('../../helpers/facility');
+const QRCODE = require("qrcode");
 
 
 var arrayCompare = require("array-compare");
@@ -22,6 +23,338 @@ const SATURDAY = 'Sat';
 const WEEK_DAYS = [SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY];
 
 const facilityBookingController = {
+
+    getUserParcelList: async (req, res) => {
+
+        try {
+            let id = req.me.id;
+            let propertyUnitFinalResult = null;
+            //let resourceProject = req.userProjectResources[0].projects;
+            let { listType } = req.body;
+            let resultData;
+            console.log("listType", listType);
+            let parcelStatus;
+            if (listType == "1") {
+                parcelStatus = ['1'];
+            }
+            if (listType == "2") {
+                parcelStatus = ['2'];
+            }
+
+            resultData = await knex.from('parcel_management')
+                .leftJoin(
+                    "parcel_user_tis",
+                    "parcel_management.id",
+                    "parcel_user_tis.parcelId"
+                )
+                .leftJoin(
+                    "parcel_user_non_tis",
+                    "parcel_management.id",
+                    "parcel_user_non_tis.parcelId"
+                )
+                .leftJoin(
+                    "property_units",
+                    "parcel_user_tis.unitId",
+                    "property_units.id"
+                )
+                .leftJoin(
+                    "courier",
+                    "parcel_management.carrierId",
+                    "courier.id"
+                )
+                .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+                .select([
+                    "parcel_user_tis.*",
+                    "parcel_user_non_tis.*",
+                    "parcel_management.id",
+                    "parcel_management.parcelCondition",
+                    "parcel_management.parcelType",
+                    "parcel_user_tis.unitId",
+                    "parcel_management.trackingNumber",
+                    "parcel_management.parcelStatus",
+                    "users.name as tenant",
+                    "parcel_management.createdAt",
+                    "parcel_management.pickedUpType",
+                    "property_units.unitNumber",
+                    "parcel_management.description",
+                    "courier.courierName",
+                    "parcel_management.receivedDate",
+                    "parcel_management.qrCode"
+
+                ])
+                .where({ 'parcel_management.orgId': req.orgId })
+                .where({ 'parcel_user_tis.tenantId': id })
+                .whereIn('parcel_management.parcelStatus', parcelStatus)
+
+               
+            const Parallel = require("async-parallel");
+            resultData = await Parallel.map(resultData, async (pd) => {
+                console.log("...resultData",pd.unitNumber)
+                let unitNumber = pd.unitNumber
+
+
+                let qrCode1 = 'org~' + req.orgId + '~unitNumber~' + unitNumber + '~parcel~' + pd.id
+                let qrCode;
+                if (qrCode1) {
+                    qrCode = await QRCODE.toDataURL(qrCode1);
+                }
+
+                let imageResult = await knex
+                    .from("images")
+                    .select("s3Url", "title", "name")
+                    .where({
+                        entityId: pd.id,
+                        entityType: "parcel_management",
+                        orgId: req.orgId,
+                    }).first();
+
+                return {
+                    ...pd,
+                    uploadedImages: imageResult,
+                    qrCode
+
+                };
+            });
+
+
+            res.status(200).json({
+                data: {
+                    parcelListData: resultData
+                },
+                message: "Parcel list successfully!"
+            })
+
+        } catch (err) {
+
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+
+        }
+
+    },
+
+    getParcelDetails: async (req, res) => {
+        try {
+            let id = req.me.id;
+            let { parcelId } = req.body;
+            let resultData;
+            let parcelStatus;
+
+            resultData = await knex.from('parcel_management')
+                .leftJoin(
+                    "parcel_user_tis",
+                    "parcel_management.id",
+                    "parcel_user_tis.parcelId"
+                )
+                .leftJoin(
+                    "parcel_user_non_tis",
+                    "parcel_management.id",
+                    "parcel_user_non_tis.parcelId"
+                )
+                .leftJoin(
+                    "property_units",
+                    "parcel_user_tis.unitId",
+                    "property_units.id"
+                )
+                .leftJoin(
+                    "courier",
+                    "parcel_management.carrierId",
+                    "courier.id"
+                )
+                .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+                .select([
+                    "parcel_user_tis.*",
+                    "parcel_user_non_tis.*",
+                    "parcel_management.id",
+                    "parcel_management.parcelCondition",
+                    "parcel_management.parcelType",
+                    "parcel_user_tis.unitId",
+                    "parcel_management.trackingNumber",
+                    "parcel_management.parcelStatus",
+                    "users.name as tenant",
+                    "parcel_management.createdAt",
+                    "parcel_management.pickedUpType",
+                    "property_units.unitNumber",
+                    "parcel_management.description",
+                    "courier.courierName",
+                    "parcel_management.receivedDate",
+                    "parcel_management.pickedUpAt",
+                ])
+                .where({ 'parcel_management.orgId': req.orgId })
+                .where({ 'parcel_management.id': parcelId })
+                .first()
+
+                console.log("...resultData",resultData)
+            let qrCode1 = 'org-' + req.orgId + '-parcel-' + parcelId
+            let qrCode;
+            if (qrCode1) {
+                qrCode = await QRCODE.toDataURL(qrCode1);
+            }
+
+            let imageResult = await knex
+                .from("images")
+                .select("s3Url", "title", "name")
+                .where({
+                    entityId: parcelId,
+                    entityType: "parcel_management",
+                    orgId: req.orgId,
+                })
+
+            res.status(200).json({
+                data: {
+                    parcelDetails: {
+                        ...resultData, imageResult, qrCode
+                    }
+                },
+                message: "Parcel details successfully!"
+            })
+
+        } catch (err) {
+
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+
+        }
+
+    },
+
+    getParcelApprovalList: async (req, res) => {
+        try {
+            let id = req.me.id;
+            let parcelIds = req.body.parcelId;
+            let newParcel = parcelIds.split(',');
+
+            console.log("parcels", newParcel);
+            let resultData;
+            let parcelStatus;
+
+            resultData = await knex.from('parcel_management')
+                .leftJoin(
+                    "parcel_user_tis",
+                    "parcel_management.id",
+                    "parcel_user_tis.parcelId"
+                )
+                .leftJoin(
+                    "parcel_user_non_tis",
+                    "parcel_management.id",
+                    "parcel_user_non_tis.parcelId"
+                )
+                .leftJoin(
+                    "property_units",
+                    "parcel_user_tis.unitId",
+                    "property_units.id"
+                )
+                .leftJoin(
+                    "courier",
+                    "parcel_management.carrierId",
+                    "courier.id"
+                )
+                .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+                .select([
+                    "parcel_user_tis.*",
+                    "parcel_user_non_tis.*",
+                    "parcel_management.id",
+                    "parcel_management.parcelCondition",
+                    "parcel_management.parcelType",
+                    "parcel_user_tis.unitId",
+                    "parcel_management.trackingNumber",
+                    "parcel_management.parcelStatus",
+                    "users.name as tenant",
+                    "parcel_management.createdAt",
+                    "parcel_management.pickedUpType",
+                    "property_units.unitNumber",
+                    "parcel_management.description",
+                    "courier.courierName",
+                    "parcel_management.receivedDate",
+                    "parcel_management.pickedUpAt",
+                ])
+                .where({ 'parcel_management.orgId': req.orgId })
+                .whereIn('parcel_management.id', newParcel)
+
+
+            const Parallel = require("async-parallel");
+            resultData = await Parallel.map(resultData, async (pd) => {
+                let imageResult = await knex
+                    .from("images")
+                    .select("s3Url", "title", "name")
+                    .where({
+                        entityType: "parcel_management",
+                        orgId: req.orgId,
+                        entityId: pd.id
+                    })
+
+                return {
+                    ...pd,
+                    uploadedImages: imageResult
+
+                };
+            });
+
+
+
+            res.status(200).json({
+                data: {
+                    resultData
+                },
+                message: "Parcel details successfully!"
+            })
+
+        } catch (err) {
+
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+
+        }
+
+    },
+
+    cancelParcel: async (req, res) => {
+        try {
+            const parcelId = req.body.parcelId;
+            let newParcel = parcelId.split(',');
+
+            const status = await knex("parcel_management")
+                .update({ parcelStatus: '5' })
+                .whereIn('parcel_management.id', newParcel);
+            return res.status(200).json({
+                data: {
+                    status: "CANCELLED"
+                },
+                message: "Parcel Cancelled Successfully!"
+            });
+        } catch (err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    approveParcel: async (req, res) => {
+        try {
+            let parcelId = req.body.parcelId;
+            let newParcel = parcelId.split(',');
+
+            const currentTime = new Date().getTime();
+            console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7', req.body)
+
+            const status = await knex("parcel_management")
+                .update({ parcelStatus: '2', receivedDate: currentTime, receivedBy: req.me.id })
+                .whereIn('parcel_management.id', newParcel);
+
+            return res.status(200).json({
+                data: {
+                    status: "Picked"
+                },
+                message: "Parcel accepted successfully!"
+            });
+        } catch (err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
 
     /*GET USER FACILITY LIST */
     getUserFacilityList: async (req, res) => {
@@ -75,7 +408,7 @@ const facilityBookingController = {
                         qb.where('entity_open_close_times.closeTime', '<=', endDateTime)
                     }
                 })
-                .where({ 'facility_master.orgId': req.orgId, 'facility_master.moderationStatus': true, 'facility_master.status' : true })
+                .where({ 'facility_master.orgId': req.orgId, 'facility_master.moderationStatus': true, 'facility_master.status': true })
                 .whereIn('facility_master.projectId', projectArray)
                 .orderBy('facility_master.id', 'desc')
                 .groupBy('facility_master.id', 'companies.id', 'projects.id', 'buildings_and_phases.id', 'floor_and_zones.id')
@@ -89,6 +422,8 @@ const facilityBookingController = {
                 let imageResult = await knex.from('images').select('s3Url', 'title', 'name')
                     .where({ "entityId": pd.id, "entityType": 'facility_master' })
 
+                let iconResult = await knex.from('images').select('s3Url', 'title', 'name')
+                    .where({ "entityId": pd.facilityTypeId, "entityType": 'facility_type_icon' }).first();
 
                 let currentTime = new Date().getTime();
                 let startDate = moment(currentTime).startOf('date').format();
@@ -127,6 +462,7 @@ const facilityBookingController = {
                 return {
                     ...pd,
                     uploadedImages: imageResult,
+                    uploadedIcons: iconResult,
                     todayTotalBooking,
                     charges,
                     sortBy
@@ -228,11 +564,16 @@ const facilityBookingController = {
 
             ])
 
+
+            let iconResult = await knex.from('images').select('s3Url', 'title', 'name')
+                .where({ "entityId": facilityDetails.facilityTypeId, "entityType": 'facility_type_icon' }).first();
+
+
             return res.status(200).json({
 
                 facilityDetails: {
                     ...facilityDetails, openingClosingDetail: _.uniqBy(openingClosingDetail, 'day'), ruleRegulationDetail: ruleRegulationDetail,
-                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'), bookingQuota
+                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'), bookingQuota, iconResult
                 },
                 message: "Facility Details Successfully!"
             })
@@ -272,6 +613,7 @@ const facilityBookingController = {
                         'entity_bookings.*',
                         'facility_master.id as facilityId',
                         'facility_master.name as facilityName',
+                        'facility_master.facilityTypeId',
                         'facility_master.enablePreCheckIn',
                         'facility_master.qrCode',
                         'companies.companyId as companyCode',
@@ -319,6 +661,7 @@ const facilityBookingController = {
                     .select([
                         'entity_bookings.*',
                         'facility_master.id as facilityId',
+                        'facility_master.facilityTypeId',
                         'facility_master.name as facilityName',
                         'companies.companyId as companyCode',
                         'companies.companyName',
@@ -355,8 +698,13 @@ const facilityBookingController = {
             resultData = await Parallel.map(resultData, async pd => {
                 let imageResult = await knex.from('images').select('s3Url', 'title', 'name')
                     .where({ "entityId": pd.facilityId, "entityType": 'facility_master', orgId: req.orgId })
+
+                let iconResult = await knex.from('images').select('s3Url', 'title', 'name')
+                    .where({ "entityId": pd.facilityTypeId, "entityType": 'facility_type_icon' }).first();
+
                 return {
                     ...pd,
+                    uploadedIcons: iconResult,
                     uploadedImages: imageResult
                 }
             })
@@ -1377,31 +1725,31 @@ const facilityBookingController = {
             })
         }
     },
-    checkInFacility:async(req,res)=>{
-        try{
+    checkInFacility: async (req, res) => {
+        try {
             orgId = req.orgId
             let bookingId = req.body.bookingId
             const currentTime = new Date().getTime()
 
             let updateData = {
-                checkedInAt :currentTime,
-                isCheckedIn:true,
+                checkedInAt: currentTime,
+                isCheckedIn: true,
 
             }
 
             let result = await knex("entity_bookings")
-            .update(updateData)
-            .returning(["*"])
-            .where({id:bookingId,orgId:orgId,isBookingConfirmed:true})
+                .update(updateData)
+                .returning(["*"])
+                .where({ id: bookingId, orgId: orgId, isBookingConfirmed: true })
 
             return res
-        .status(200)
-        .json({ message: "Checked In!", data: result });
+                .status(200)
+                .json({ message: "Checked In!", data: result });
 
-        }catch(err){
+        } catch (err) {
             res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERRROR", message: err.message }],
-              });
+            });
         }
     }
 
