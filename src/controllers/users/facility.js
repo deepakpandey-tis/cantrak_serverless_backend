@@ -210,7 +210,7 @@ const facilityBookingController = {
                 })
 
                 let pickUpRemarks = await knex
-                .from("images")
+                .from("remarks_master")
                 .select("description")
                 .where({
                     entityId: parcelId,
