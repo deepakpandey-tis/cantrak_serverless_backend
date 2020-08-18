@@ -94,7 +94,6 @@ const facilityBookingController = {
                 console.log("...resultData",pd.unitNumber)
                 let unitNumber = pd.unitNumber
 
-
                 let qrCode1 = 'org~' + req.orgId + '~unitNumber~' + unitNumber + '~parcel~' + pd.id
                 let qrCode;
                 if (qrCode1) {
@@ -106,8 +105,7 @@ const facilityBookingController = {
                     .select("s3Url", "title", "name")
                     .where({
                         entityId: pd.id,
-                        entityType: "parcel_management",
-                        orgId: req.orgId,
+                        entityType: "parcel_management"
                     }).first();
 
                 return {
@@ -195,8 +193,7 @@ const facilityBookingController = {
                 .select("s3Url", "title", "name")
                 .where({
                     entityId: parcelId,
-                    entityType: "parcel_management",
-                    orgId: req.orgId,
+                    entityType: "parcel_management"
                 })
 
 
@@ -205,8 +202,7 @@ const facilityBookingController = {
                 .select("s3Url", "title", "name")
                 .where({
                     entityId: parcelId,
-                    entityType: "pickup_parcel",
-                    orgId: req.orgId,
+                    entityType: "pickup_parcel"
                 })
 
                 let pickUpRemarks = await knex
@@ -216,7 +212,7 @@ const facilityBookingController = {
                     entityId: parcelId,
                     entityType: "pickup_parcel_remarks",
                     orgId: req.orgId,
-                })
+                }).first();
 
             res.status(200).json({
                 data: {
@@ -332,15 +328,16 @@ const facilityBookingController = {
         try {
             const parcelId = req.body.parcelId;
             let newParcel = parcelId.split(',');
+            const currentTime = new Date().getTime();
 
             const status = await knex("parcel_management")
-                .update({ parcelStatus: '5' })
+                .update({ parcelStatus: '5', updatedAt: currentTime})
                 .whereIn('parcel_management.id', newParcel);
             return res.status(200).json({
                 data: {
                     status: "CANCELLED"
                 },
-                message: "Parcel Cancelled Successfully!"
+                message: "Parcel has been cancelled!"
             });
         } catch (err) {
             return res.status(500).json({
