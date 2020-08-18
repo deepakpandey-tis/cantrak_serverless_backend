@@ -288,6 +288,8 @@ const notification = {
             const notificationClass = require(notificationClassPath);
             await notification.send(sender, receiver, dataPayload, channels, notificationClass);
 
+            console.log('[notifications][core][notification][processQueue]: Processing Notification Queue: Done...');
+
         } catch (err) {
             console.log('[notifications][core][notification][processQueue]: Error:', err);
         }
