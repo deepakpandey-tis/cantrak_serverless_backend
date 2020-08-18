@@ -120,7 +120,7 @@ module.exports.s3hook = (event, context) => {
 
 
 // EMAIL HANDLER (Triggered From SQS)
-module.exports.queueProcessor = (event, context) => {
+module.exports.queueProcessor = async (event, context) => {
   // console.log('Event:', JSON.stringify(event));
   // console.log('Context:', JSON.stringify(context));
 
@@ -137,21 +137,23 @@ module.exports.queueProcessor = (event, context) => {
 
 
   if (messageType === 'EMAIL') {
-    (async () => {
-      const emailHelper = require('./helpers/email');
-      const mailOptions = JSON.parse(currentRecord.body);
-      await emailHelper.sendEmail(mailOptions);
-    })();
+
+    const emailHelper = require('./helpers/email');
+    const mailOptions = JSON.parse(currentRecord.body);
+    await emailHelper.sendEmail(mailOptions);
+
+    console.log('[app][queueProcessor]: Email Sent Successfully');
+
   }
 
   if (messageType === 'NOTIFICATION') {
-    (async () => {
-      console.log('[app][queueProcessor]', 'Received message is notification.')
-      const notificationHandler = require('./notifications/core/notification');
-      const notificationOptions = JSON.parse(currentRecord.body);
-      await notificationHandler.processQueue(notificationOptions);
-    })();
+    console.log('[app][queueProcessor]', 'Received message is notification.');
+    const notificationHandler = require('./notifications/core/notification');
+    const notificationOptions = JSON.parse(currentRecord.body);
+    await notificationHandler.processQueue(notificationOptions);
+
+    console.log('[app][queueProcessor]: Notification Sent Successfully');
   }
 
-  return;
+  return true;
 };

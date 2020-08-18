@@ -10,6 +10,8 @@ router.get('/companylist-having-property-units',authMiddleware.isAuthenticated,p
 
 router.post('/add-parcel',authMiddleware.isAuthenticated,parcelManageController.addParcelRequest)
 
+router.get('/generate-parcel-id', authMiddleware.isAuthenticated, parcelManageController.generateParcelId)
+
 router.post('/get-parcel-list',authMiddleware.isAuthenticated,parcelManageController.getParcelList)
 
 router.post('/get-parcel-details',authMiddleware.isAuthenticated,parcelManageController.getParcelDetails)
@@ -21,5 +23,7 @@ router.get('/get-tracking-number-list',authMiddleware.isAuthenticated,parcelMana
 router.post('/update-parcel-status',authMiddleware.isAuthenticated,parcelManageController.deliverParcel)
 
 router.post('/update-parcel-details',authMiddleware.isAuthenticated,parcelManagementController.updateParcelDetails)
+
+router.post('/get-parcel-status',authMiddleware.isAuthenticated,parcelManageController.getParcelStatusForCheckOut)
 
 module.exports = router

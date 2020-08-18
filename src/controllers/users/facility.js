@@ -85,11 +85,16 @@ const facilityBookingController = {
                 .where({ 'parcel_management.orgId': req.orgId })
                 .where({ 'parcel_user_tis.tenantId': id })
                 .whereIn('parcel_management.parcelStatus', parcelStatus)
+                .orderBy('parcel_management.id', 'desc')
 
+
+               
             const Parallel = require("async-parallel");
             resultData = await Parallel.map(resultData, async (pd) => {
+                console.log("...resultData",pd.unitNumber)
+                let unitNumber = pd.unitNumber
 
-                let qrCode1 = 'org-' + req.orgId + '-parcel-' + pd.id
+                let qrCode1 = 'org~' + req.orgId + '~unitNumber~' + unitNumber + '~parcel~' + pd.id
                 let qrCode;
                 if (qrCode1) {
                     qrCode = await QRCODE.toDataURL(qrCode1);
@@ -100,8 +105,7 @@ const facilityBookingController = {
                     .select("s3Url", "title", "name")
                     .where({
                         entityId: pd.id,
-                        entityType: "parcel_management",
-                        orgId: req.orgId,
+                        entityType: "parcel_management"
                     }).first();
 
                 return {
@@ -176,30 +180,44 @@ const facilityBookingController = {
                     "courier.courierName",
                     "parcel_management.receivedDate",
                     "parcel_management.pickedUpAt",
+                    "parcel_management.signature"
                 ])
                 .where({ 'parcel_management.orgId': req.orgId })
                 .where({ 'parcel_management.id': parcelId })
                 .first()
 
-            let qrCode1 = 'org-' + req.orgId + '-parcel-' + parcelId
-            let qrCode;
-            if (qrCode1) {
-                qrCode = await QRCODE.toDataURL(qrCode1);
-            }
-
+                console.log("...resultData",resultData)
+            
             let imageResult = await knex
                 .from("images")
                 .select("s3Url", "title", "name")
                 .where({
                     entityId: parcelId,
-                    entityType: "parcel_management",
-                    orgId: req.orgId,
+                    entityType: "parcel_management"
                 })
+
+
+                let pickUpImageResult = await knex
+                .from("images")
+                .select("s3Url", "title", "name")
+                .where({
+                    entityId: parcelId,
+                    entityType: "pickup_parcel"
+                })
+
+                let pickUpRemarks = await knex
+                .from("remarks_master")
+                .select("description")
+                .where({
+                    entityId: parcelId,
+                    entityType: "pickup_parcel_remarks",
+                    orgId: req.orgId,
+                }).first();
 
             res.status(200).json({
                 data: {
                     parcelDetails: {
-                        ...resultData, imageResult, qrCode
+                        ...resultData, imageResult, pickUpImageResult,pickUpRemarks
                     }
                 },
                 message: "Parcel details successfully!"
@@ -310,15 +328,16 @@ const facilityBookingController = {
         try {
             const parcelId = req.body.parcelId;
             let newParcel = parcelId.split(',');
+            const currentTime = new Date().getTime();
 
             const status = await knex("parcel_management")
-                .update({ parcelStatus: '5' })
+                .update({ parcelStatus: '5', updatedAt: currentTime})
                 .whereIn('parcel_management.id', newParcel);
             return res.status(200).json({
                 data: {
                     status: "CANCELLED"
                 },
-                message: "Parcel Cancelled Successfully!"
+                message: "Parcel has been cancelled!"
             });
         } catch (err) {
             return res.status(500).json({

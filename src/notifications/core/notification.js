@@ -219,7 +219,7 @@ const notification = {
 
             const Parallel = require('async-parallel');
 
-            Parallel.each(channels, async channel => {
+            await Parallel.each(channels, async channel => {
 
                 switch (channel) {
                     case 'IN_APP':
@@ -250,9 +250,12 @@ const notification = {
                         console.log('[notifications][core][notification][send]: Given Notification channel not available:', channel);
                 }
 
+                console.log(`[notifications][core][notification][send]: Increasing notification count for OrgId : ${sender.orgId}, Channel: `, channel);
                 await notificationUsageTracker.increaseCount(sender.orgId, channel);
 
             });
+
+            console.log('[notifications][core][notification][send]: Notification Sent on all of the given channels:', channels);
 
         } catch (err) {
             console.log('[notifications][core][notification][send]:  Error', err);
@@ -284,6 +287,8 @@ const notification = {
             console.log('[notifications][core][notification][processQueue]: Processing Notification Queue:', notificationClassPath);
             const notificationClass = require(notificationClassPath);
             await notification.send(sender, receiver, dataPayload, channels, notificationClass);
+
+            console.log('[notifications][core][notification][processQueue]: Processing Notification Queue: Done...');
 
         } catch (err) {
             console.log('[notifications][core][notification][processQueue]: Error:', err);
