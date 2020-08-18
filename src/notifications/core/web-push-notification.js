@@ -64,7 +64,7 @@ const webPushNotification = {
             };
 
             const Parallel = require("async-parallel");
-            Parallel.each(subscriptions, async (subs) => {
+            await Parallel.each(subscriptions, async (subs) => {
                 let subscription = subs.subscription;
                 try {
                     const res = await sendWebPush(subscription, notification, options);
