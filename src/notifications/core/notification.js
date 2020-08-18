@@ -219,7 +219,7 @@ const notification = {
 
             const Parallel = require('async-parallel');
 
-            Parallel.each(channels, async channel => {
+            await Parallel.each(channels, async channel => {
 
                 switch (channel) {
                     case 'IN_APP':
