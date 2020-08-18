@@ -314,7 +314,7 @@ const parcelManagementController = {
                 "parcel_user_tis.buildingPhaseId",
                 "buildings_and_phases.id"
               )
-              .leftJoin()
+              .leftJoin("images", "parcel_management.id", "images.entityId")
               .where("parcel_management.orgId", req.orgId)
               .where((qb) => {
                 if (unitId) {
@@ -375,6 +375,7 @@ const parcelManagementController = {
                 "parcel_user_tis.buildingPhaseId",
                 "buildings_and_phases.id"
               )
+              .leftJoin("images", "parcel_management.id", "images.entityId")
               .select([
                 "parcel_management.id",
                 "parcel_user_tis.unitId",
@@ -386,6 +387,10 @@ const parcelManagementController = {
                 "parcel_management.createdAt",
                 "parcel_management.pickedUpType",
                 "parcel_management.pickedUpAt",
+                "parcel_management.receivedDate",
+                "buildings_and_phases.buildingPhaseCode",
+                "buildings_and_phases.description",
+                "images.s3Url",
               ])
               .where("parcel_management.orgId", req.orgId)
               .where((qb) => {
@@ -476,6 +481,7 @@ const parcelManagementController = {
               "parcel_user_tis.buildingPhaseId",
               "buildings_and_phases.id"
             )
+            .leftJoin("images", "parcel_management.id", "images.entityId")
             .where("parcel_management.orgId", req.orgId)
             .groupBy(["parcel_management.id", "property_units.id", "users.id"]),
           knex
@@ -503,6 +509,7 @@ const parcelManagementController = {
               "parcel_user_tis.buildingPhaseId",
               "buildings_and_phases.id"
             )
+            .leftJoin("images", "parcel_management.id", "images.entityId")
             .select([
               "parcel_management.id",
               "parcel_user_tis.unitId",
@@ -514,6 +521,10 @@ const parcelManagementController = {
               "parcel_management.createdAt",
               "parcel_management.pickedUpType",
               "parcel_management.pickedUpAt",
+              "parcel_management.receivedDate",
+              "buildings_and_phases.buildingPhaseCode",
+              "buildings_and_phases.description",
+              "images.s3Url",
             ])
             .where("parcel_management.orgId", req.orgId)
             .groupBy([
@@ -522,6 +533,9 @@ const parcelManagementController = {
               "users.id",
               "parcel_user_tis.unitId",
               "parcel_user_tis.parcelId",
+              "buildings_and_phases.buildingPhaseCode",
+              "buildings_and_phases.description",
+              "images.s3Url"
             ])
             .orderBy("parcel_management.id", "asc")
             .offset(offset)
@@ -577,7 +591,7 @@ const parcelManagementController = {
       let parcelList;
       let { unitId, tenantId, buildingPhaseId, trackingNumber, id } = req.body;
       console.log(
-        "parcel payload",
+        "parcel payload for filter",
         unitId,
         tenantId,
         buildingPhaseId,
@@ -621,6 +635,7 @@ const parcelManagementController = {
               "buildings_and_phases.buildingPhaseCode",
               "buildings_and_phases.description as buildingName",
               "parcel_user_non_tis.name",
+              "property_units.unitNumber",
             ])
             .where("parcel_management.orgId", req.orgId)
             .where("parcel_management.parcelStatus", 1)
@@ -693,6 +708,7 @@ const parcelManagementController = {
             "buildings_and_phases.buildingPhaseCode",
             "buildings_and_phases.description as buildingName",
             "parcel_user_non_tis.name",
+            "property_units.unitNumber",
           ])
           .where("parcel_management.orgId", req.orgId)
           .where("parcel_management.parcelStatus", 1)
@@ -753,7 +769,7 @@ const parcelManagementController = {
         });
       }
 
-      let [parcelDetails, parcelImages] = await Promise.all([
+      let [parcelDetails, parcelImages, pickedUpImages] = await Promise.all([
         knex
           .from("parcel_management")
           .leftJoin(
@@ -784,6 +800,7 @@ const parcelManagementController = {
             "parcel_user_tis.floorZoneId",
             "floor_and_zones.id"
           )
+          .leftJoin("courier", "parcel_management.carrierId", "courier.id")
           .select([
             "parcel_management.*",
             "parcel_user_tis.*",
@@ -802,19 +819,25 @@ const parcelManagementController = {
             "floor_and_zones.description as floorName",
             "users.name as tenantName",
             "property_units.unitNumber",
+            "courier.courierName",
+            // "parcel_management.signature",
           ])
           .where("parcel_management.id", payload.id)
           .first(),
         knex
           .from("images")
           .where({ entityId: payload.id, entityType: "parcel_management" }),
-        // .where("parcel_management.orgId", req.orgId)
+
+        knex
+          .from("images")
+          .where({ entityId: payload.id, entityType: "pickup_parcel" }),
       ]);
 
       return res.status(200).json({
         parcelDetails: {
           ...parcelDetails,
           parcelImages,
+          pickedUpImages,
         },
         message: "Parcel Details !",
       });
@@ -835,6 +858,7 @@ const parcelManagementController = {
       let parcelResult = null;
       let noOrgUserData = [];
       let orgUserData = [];
+      parcelRemarks = [];
       // let qrUpdateResult ;
       let images = [];
       let orgId = req.orgId;
@@ -985,19 +1009,21 @@ const parcelManagementController = {
       let insertedImages = [];
       let id = req.body.id;
       let parcelResult = null;
+      let parcelRemarks = [];
       // let {parcelStatus,description}
-      // console.log("requested data for image",req.body)
+      console.log("requested data for image", req.body);
 
       const payload = _.omit(req.body, [
         "id",
         "image",
         "signImage",
         "signName",
+        "description",
       ]);
 
       const schema = Joi.object().keys({
         parcelStatus: Joi.string().required(),
-        description: Joi.string().allow("").optional(),
+        // description: Joi.string().allow("").optional(),
         signature: Joi.string().allow("").optional(),
       });
       const result = Joi.validate(payload, schema);
@@ -1013,45 +1039,49 @@ const parcelManagementController = {
         .update({
           ...payload,
           updatedAt: currentTime,
-          pickedUpAt: currentTime,
+          // pickedUpAt: currentTime,
+          receivedDate: currentTime,
         })
         .whereIn("parcel_management.id", id)
         .where("parcel_management.orgId", req.orgId)
         .returning(["*"]);
 
-      const images = req.body.image;
-      // console.log("uploaded image",images)
-      insertedImages = [];
-      for (let img of images) {
-        let insertedImage = await knex("images")
-          .update({
-            // entityType: "parcel_management",
-            s3Url: img.s3Url,
-            name: img.filename,
-            title: img.title,
-            orgId: req.orgId,
-            updatedAt: currentTime,
-            createdAt: currentTime,
-            uuid: uuid(),
-          })
-          .where("images.entityType", parcel_management)
-          .where("images.entityId", id);
-        insertedImages.push(insertedImage[0]);
+      let description = req.body.description;
+      let idLength = req.body.id.length;
+      for (let i = 0; i < idLength; i++) {
+        parcelRemarks = await knex("remarks_master").insert({
+          description: description,
+          entityId: req.body.id[i],
+          entityType: "pickup_parcel_remarks",
+          createdAt: currentTime,
+          updatedAt: currentTime,
+          orgId: req.orgId,
+        });
       }
-      // const signImage = req.body.signImage
-      // signInsertImage = []
-      // for(let img of signImage){
-      //   let insertedSignImage = await knex('images')
-      //   .insert({
-      //      entityType: "parcel_management",
 
-      //   })
+      // const images = req.body.image;
+      // insertedImages = [];
+      // for (let img of images) {
+      //   let insertedImage = await knex("images")
+      //     .update({
+      //       s3Url: img.s3Url,
+      //       name: img.filename,
+      //       title: img.title,
+      //       orgId: req.orgId,
+      //       updatedAt: currentTime,
+      //       createdAt: currentTime,
+      //       uuid: uuid(),
+      //     })
+      //     .where("images.entityType", parcel_management)
+      //     .where("images.entityId", id);
+      //   insertedImages.push(insertedImage[0]);
       // }
 
       return res.status(200).json({
         data: {
           deliverParcel: deliverParcelResult,
           addedImages: insertedImages,
+          parcelRemarks,
         },
       });
 
@@ -1064,7 +1094,7 @@ const parcelManagementController = {
 
   getParcelStatusForCheckOut: async (req, res) => {
     try {
-      console.log("request",req.body)
+      console.log("request", req.body);
       let parcelId = req.body.parcelId;
 
       let parcelStatus = await knex
