@@ -49,7 +49,7 @@ const parcelAcceptanceNotification = {
                 {
                     action: "explore",
                     title: "Parcel Acceptation",
-                    url:`/user/parcel/parcel-confirmation?parcels=${parcelId}`
+                    url:`/user/parcel/parcel-confirmation?parcels=${parcelId[0]}`
                 }
             ]
         }
@@ -87,7 +87,7 @@ const parcelAcceptanceNotification = {
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `${process.env.SITE_URL}/user/parcel/parcel-confirmation/${parcelId}`,
+                    url: `${process.env.SITE_URL}/user/parcel/parcel-confirmation/${parcelId[0]}`,
                     primaryKey: Date.now()
                 }
             },
@@ -95,7 +95,7 @@ const parcelAcceptanceNotification = {
                 {
                     action: "explore",
                     title: "User parcel Page",
-                    url: `${process.env.SITE_URL}/user/parcel/parcel-confirmation/${parcelId}`
+                    url: `${process.env.SITE_URL}/user/parcel/parcel-confirmation/${parcelId[0]}`
                 }
             ]
         }
