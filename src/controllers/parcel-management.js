@@ -16,6 +16,7 @@ const AWS = require("aws-sdk");
 const XLSX = require("xlsx");
 const fs = require("fs");
 const https = require("https");
+const { whereIn } = require("../db/knex");
 
 AWS.config.update({
   accessKeyId: process.env.ACCESS_KEY_ID,
@@ -92,7 +93,7 @@ const parcelManagementController = {
         "img_url",
         "non_org_user_data",
         "org_user_data",
-        "newParcelId"
+        "newParcelId",
       ]);
       console.log("payloa data", payLoad);
       // let payload = req.body
@@ -135,7 +136,7 @@ const parcelManagementController = {
 
         let addResult = await knex
           .update(insertData)
-          .where({id:req.body.newParcelId})
+          .where({ id: req.body.newParcelId })
           .returning(["*"])
           .transacting(trx)
           .into("parcel_management");
@@ -392,7 +393,7 @@ const parcelManagementController = {
                   qb.where("property_units.id", unitId);
                 }
                 if (trackingNo) {
-                  console.log("tracking number",trackingNo)
+                  console.log("tracking number", trackingNo);
                   qb.where("parcel_management.trackingNumber", trackingNo);
                 }
                 if (tenantId) {
@@ -520,7 +521,7 @@ const parcelManagementController = {
               "property_units.id",
               "users.id",
               "parcel_user_tis.unitId",
-              "parcel_user_tis.parcelId"
+              "parcel_user_tis.parcelId",
             ])
             .orderBy("parcel_management.id", "asc")
             .offset(offset)
@@ -800,6 +801,7 @@ const parcelManagementController = {
             "floor_and_zones.floorZoneCode",
             "floor_and_zones.description as floorName",
             "users.name as tenantName",
+            "property_units.unitNumber",
           ])
           .where("parcel_management.id", payload.id)
           .first(),
@@ -845,7 +847,8 @@ const parcelManagementController = {
           "id",
           "img_url",
           "non_org_user_data",
-          "org_user_data"
+          "org_user_data",
+          "newParcelId"
         );
 
         const schema = Joi.object().keys({
@@ -858,7 +861,7 @@ const parcelManagementController = {
           parcelStatus: Joi.number().required(),
           parcelPriority: Joi.number().required(),
         });
-        
+
         const result = Joi.validate(parcelPayload, schema);
         console.log("result", result);
 
@@ -995,6 +998,7 @@ const parcelManagementController = {
       const schema = Joi.object().keys({
         parcelStatus: Joi.string().required(),
         description: Joi.string().allow("").optional(),
+        signature: Joi.string().allow("").optional(),
       });
       const result = Joi.validate(payload, schema);
 
@@ -1056,6 +1060,32 @@ const parcelManagementController = {
 
       // }
     } catch (err) {}
+  },
+
+  getParcelStatusForCheckOut: async (req, res) => {
+    try {
+      console.log("request",req.body)
+      let parcelId = req.body.parcelId;
+
+      let parcelStatus = await knex
+        .from("parcel_management")
+        .select(["parcel_management.id", "parcel_management.parcelStatus"])
+        .where("parcel_management.parcelStatus", 2)
+        .orWhere("parcel_management.parcelStatus", 5)
+        .where("parcel_management.orgId", req.orgId);
+      whereIn("parcel_management.id", req.body.id);
+
+      return res.status(200).json({
+        data: {
+          parcelStatus: parcelStatus,
+          message: "Parcel Status",
+        },
+      });
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
   },
 };
 module.exports = parcelManagementController;

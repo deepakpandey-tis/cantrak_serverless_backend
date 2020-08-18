@@ -85,6 +85,8 @@ const facilityBookingController = {
                 .where({ 'parcel_management.orgId': req.orgId })
                 .where({ 'parcel_user_tis.tenantId': id })
                 .whereIn('parcel_management.parcelStatus', parcelStatus)
+                .orderBy('parcel_management.id', 'desc')
+
 
                
             const Parallel = require("async-parallel");
@@ -180,18 +182,14 @@ const facilityBookingController = {
                     "courier.courierName",
                     "parcel_management.receivedDate",
                     "parcel_management.pickedUpAt",
+                    "parcel_management.signature"
                 ])
                 .where({ 'parcel_management.orgId': req.orgId })
                 .where({ 'parcel_management.id': parcelId })
                 .first()
 
                 console.log("...resultData",resultData)
-            let qrCode1 = 'org-' + req.orgId + '-parcel-' + parcelId
-            let qrCode;
-            if (qrCode1) {
-                qrCode = await QRCODE.toDataURL(qrCode1);
-            }
-
+            
             let imageResult = await knex
                 .from("images")
                 .select("s3Url", "title", "name")
@@ -201,10 +199,29 @@ const facilityBookingController = {
                     orgId: req.orgId,
                 })
 
+
+                let pickUpImageResult = await knex
+                .from("images")
+                .select("s3Url", "title", "name")
+                .where({
+                    entityId: parcelId,
+                    entityType: "pickup_parcel",
+                    orgId: req.orgId,
+                })
+
+                let pickUpRemarks = await knex
+                .from("remarks_master")
+                .select("description")
+                .where({
+                    entityId: parcelId,
+                    entityType: "pickup_parcel_remarks",
+                    orgId: req.orgId,
+                })
+
             res.status(200).json({
                 data: {
                     parcelDetails: {
-                        ...resultData, imageResult, qrCode
+                        ...resultData, imageResult, pickUpImageResult,pickUpRemarks
                     }
                 },
                 message: "Parcel details successfully!"
