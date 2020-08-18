@@ -250,7 +250,7 @@ const notification = {
                         console.log('[notifications][core][notification][send]: Given Notification channel not available:', channel);
                 }
 
-                console.log(`[notifications][core][notification][send]: Increasing notification count for OrgId : ${orgId}, Channel: `, channel);
+                console.log(`[notifications][core][notification][send]: Increasing notification count for OrgId : ${sender.orgId}, Channel: `, channel);
                 await notificationUsageTracker.increaseCount(sender.orgId, channel);
 
             });
