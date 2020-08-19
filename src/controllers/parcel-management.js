@@ -432,7 +432,7 @@ const parcelManagementController = {
               .where({
                 entityId: pd.id,
                 entityType: "parcel_management",
-                orgId: req.orgId,
+                // orgId: req.orgId,
               })
               .first();
             return {
@@ -551,7 +551,7 @@ const parcelManagementController = {
             .where({
               entityId: pd.id,
               entityType: "parcel_management",
-              orgId: req.orgId,
+              // orgId: req.orgId,
             })
             .first();
           return {
