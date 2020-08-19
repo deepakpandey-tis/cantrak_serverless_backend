@@ -26,7 +26,7 @@ const parcelAcceptanceNotification = {
         }
     },
     sendInAppNotification: async (sender, receiver, data) => {
-        console.log("data of parcel",data.payload.parcelId)
+        console.log("data of parcel for acceptance",sender,receiver,data)
         let parcelId = data.payload.parcelId
         data = {
             orgId: sender.orgId,
@@ -49,7 +49,7 @@ const parcelAcceptanceNotification = {
                 {
                     action: "explore",
                     title: "Parcel Acceptation",
-                    url:`/user/parcel/parcel-confirmation?parcels=${parcelId[0]}`
+                    url:`/user/parcel/parcel-confirmation?parcels=${parcelId}`
                 }
             ]
         }
@@ -87,7 +87,7 @@ const parcelAcceptanceNotification = {
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `${process.env.SITE_URL}/user/parcel/parcel-confirmation/${parcelId[0]}`,
+                    url: `${process.env.SITE_URL}/user/parcel/parcel-confirmation/${parcelId}`,
                     primaryKey: Date.now()
                 }
             },
@@ -95,7 +95,7 @@ const parcelAcceptanceNotification = {
                 {
                     action: "explore",
                     title: "User parcel Page",
-                    url: `${process.env.SITE_URL}/user/parcel/parcel-confirmation/${parcelId[0]}`
+                    url: `${process.env.SITE_URL}/user/parcel/parcel-confirmation/${parcelId}`
                 }
             ]
         }
