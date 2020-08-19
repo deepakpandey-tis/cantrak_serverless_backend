@@ -138,7 +138,7 @@ const quotationsController = {
             } else {
                 quotationValidityDate = moment().add('days', 15).valueOf();
             }
-
+            let tagResult = [];
 
             await knex.transaction(async trx => {
 
@@ -191,6 +191,8 @@ const quotationsController = {
                         .returning(["*"])
                         .transacting(trx)
                         .into("location_tags");
+
+                    tagResult.push(locationResult)
                 }
 
 
@@ -205,7 +207,8 @@ const quotationsController = {
 
             return res.status(200).json({
                 data: {
-                    quotationsResponse
+                    quotationsResponse,
+                    tagResult
                 },
                 message: "Quotations updated successfully !"
             });
