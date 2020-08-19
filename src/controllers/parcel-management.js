@@ -423,23 +423,23 @@ const parcelManagementController = {
               .offset(offset)
               .limit(per_page),
           ]);
-          // console.log("rows",rows)
-          // const Parallel = require("async-parallel");
-          // rows = await Parallel.map(rows, async (pd) => {
-          //   let imageResult = await knex
-          //     .from("images")
-          //     .select("s3Url", "title", "name")
-          //     .where({
-          //       entityId: pd.id,
-          //       entityType: "parcel_management",
-          //       orgId: req.orgId,
-          //     })
-          //     .first();
-          //   return {
-          //     ...pd,
-          //     uploadedImages: imageResult,
-          //   };
-          // });
+          console.log("rows",rows)
+          const Parallel = require("async-parallel");
+          rows = await Parallel.map(rows, async (pd) => {
+            let imageResult = await knex
+              .from("images")
+              .select("s3Url", "title", "name")
+              .where({
+                entityId: pd.id,
+                entityType: "parcel_management",
+                orgId: req.orgId,
+              })
+              .first();
+            return {
+              ...pd,
+              uploadedImages: imageResult,
+            };
+          });
 
           let count = total.length;
 
@@ -542,23 +542,23 @@ const parcelManagementController = {
             .offset(offset)
             .limit(per_page),
         ]);
-        // console.log("rows",rows)
-        // const Parallel = require("async-parallel");
-        // rows = await Parallel.map(rows, async (pd) => {
-        //   let imageResult = await knex
-        //     .from("images")
-        //     .select("s3Url", "title", "name")
-        //     .where({
-        //       entityId: pd.id,
-        //       entityType: "parcel_management",
-        //       orgId: req.orgId,
-        //     })
-        //     .first();
-        //   return {
-        //     ...pd,
-        //     uploadedImages: imageResult,
-        //   };
-        // });
+        console.log("rows",rows)
+        const Parallel = require("async-parallel");
+        rows = await Parallel.map(rows, async (pd) => {
+          let imageResult = await knex
+            .from("images")
+            .select("s3Url", "title", "name")
+            .where({
+              entityId: pd.id,
+              entityType: "parcel_management",
+              orgId: req.orgId,
+            })
+            .first();
+          return {
+            ...pd,
+            uploadedImages: imageResult,
+          };
+        });
 
         let count = total.length;
 
@@ -1107,8 +1107,8 @@ const parcelManagementController = {
         .where("parcel_management.parcelStatus", 2)
         .orWhere("parcel_management.parcelStatus", 5)
         .where("parcel_management.orgId", req.orgId);
-      whereIn("parcel_management.id", req.body.id);
-
+      whereIn("parcel_management.id", parcelId)
+      .first()
       return res.status(200).json({
         data: {
           parcelStatus: parcelStatus,
