@@ -105,7 +105,7 @@ const testNotification = {
 
     sendSocketNotification: async (sender, receiver, data) => {
         data = {
-            
+
         }
         return data;
     },
@@ -113,8 +113,9 @@ const testNotification = {
 
     sendLineNotification: async (sender, receiver, data) => {
         data = {
-
-        }
+            receiverId: receiver.id,
+            message: `Hi ${receiver.name} this is simple text message send to test the notification`
+        };
 
         return data;
     },
