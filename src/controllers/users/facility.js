@@ -212,7 +212,7 @@ const facilityBookingController = {
                     entityId: parcelId,
                     entityType: "pickup_parcel_remarks",
                     orgId: req.orgId,
-                })
+                }).first();
 
             res.status(200).json({
                 data: {

@@ -28,11 +28,11 @@ router.post('/add-quotation-part', authMiddleware.isAuthenticated, roleMiddlewar
 router.post('/add-quotation-asset', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
     resourceAccessMiddleware.isCMAccessible, quotationController.addQuotationAsset)
 router.post('/get-quotation-list', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible, quotationController.getQuotationList)
-// Quotation Data Export
+        resourceAccessMiddleware.isCMAccessible, quotationController.getQuotationList)
+    // Quotation Data Export
 router.post('/export-quotation', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
     resourceAccessMiddleware.isCMAccessible, quotationController.exportQuotation)
-    
+
 router.post('/update-quotation-notes', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
     resourceAccessMiddleware.isCMAccessible, quotationController.updateQuotationNotes)
 router.post('/get-quotation-notes-list', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
@@ -50,5 +50,7 @@ router.post('/update-quotations-invoice', authMiddleware.isAuthenticated, roleMi
 router.post('/delete-quotation', authMiddleware.isAuthenticated, quotationController.deleteQuotation)
 
 router.post('/update-quotation-status', authMiddleware.isAuthenticated, quotationController.updateQuotationsStatus);
+
+router.post('/get-tags-quotation', authMiddleware.isAuthenticated, quotationController.getTagsQuotation);
 
 module.exports = router;

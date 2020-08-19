@@ -107,6 +107,7 @@ const parcelManagementController = {
           parcelCondition: Joi.string().required(),
           parcelStatus: Joi.number().required(),
           parcelPriority: Joi.number().required(),
+          barcode:Joi.string().allow("").optional()
         });
 
         const result = Joi.validate(payLoad, schema);
@@ -314,7 +315,7 @@ const parcelManagementController = {
                 "parcel_user_tis.buildingPhaseId",
                 "buildings_and_phases.id"
               )
-              .leftJoin("images", "parcel_management.id", "images.entityId")
+              // .leftJoin("images", "parcel_management.id", "images.entityId")
               .where("parcel_management.orgId", req.orgId)
               .where((qb) => {
                 if (unitId) {
@@ -375,7 +376,7 @@ const parcelManagementController = {
                 "parcel_user_tis.buildingPhaseId",
                 "buildings_and_phases.id"
               )
-              .leftJoin("images", "parcel_management.id", "images.entityId")
+              // .leftJoin("images", "parcel_management.id", "images.entityId")
               .select([
                 "parcel_management.id",
                 "parcel_user_tis.unitId",
@@ -390,7 +391,7 @@ const parcelManagementController = {
                 "parcel_management.receivedDate",
                 "buildings_and_phases.buildingPhaseCode",
                 "buildings_and_phases.description",
-                "images.s3Url",
+                // "images.s3Url",
               ])
               .where("parcel_management.orgId", req.orgId)
               .where((qb) => {
@@ -481,7 +482,7 @@ const parcelManagementController = {
               "parcel_user_tis.buildingPhaseId",
               "buildings_and_phases.id"
             )
-            .leftJoin("images", "parcel_management.id", "images.entityId")
+            // .leftJoin("images", "parcel_management.id", "images.entityId")
             .where("parcel_management.orgId", req.orgId)
             .groupBy(["parcel_management.id", "property_units.id", "users.id"]),
           knex
@@ -524,7 +525,7 @@ const parcelManagementController = {
               "parcel_management.receivedDate",
               "buildings_and_phases.buildingPhaseCode",
               "buildings_and_phases.description",
-              "images.s3Url",
+              // "images.s3Url",
             ])
             .where("parcel_management.orgId", req.orgId)
             .groupBy([
@@ -535,7 +536,7 @@ const parcelManagementController = {
               "parcel_user_tis.parcelId",
               "buildings_and_phases.buildingPhaseCode",
               "buildings_and_phases.description",
-              "images.s3Url"
+              // "images.s3Url"
             ])
             .orderBy("parcel_management.id", "asc")
             .offset(offset)
@@ -820,6 +821,7 @@ const parcelManagementController = {
             "users.name as tenantName",
             "property_units.unitNumber",
             "courier.courierName",
+            "parcel_management.barcode"
             // "parcel_management.signature",
           ])
           .where("parcel_management.id", payload.id)
@@ -862,6 +864,7 @@ const parcelManagementController = {
       // let qrUpdateResult ;
       let images = [];
       let orgId = req.orgId;
+      console.log("update parcel payload",req.body)
       await knex.transaction(async (trx) => {
         const payload = req.body;
 
@@ -884,6 +887,7 @@ const parcelManagementController = {
           parcelCondition: Joi.string().required(),
           parcelStatus: Joi.number().required(),
           parcelPriority: Joi.number().required(),
+          barcode: Joi.string().allow("").optional()
         });
 
         const result = Joi.validate(parcelPayload, schema);
