@@ -4,6 +4,8 @@ const inAppNotification = require('../core/in-app-notification');
 const emailNotification = require('../core/email-notification');
 const webPushNotification = require('../core/web-push-notification');
 const smsNotification = require('../core/sms-notification');
+const lineNotification = require('../core/line-notification');
+
 
 const notificationUsageTracker = require('../core/notification-usage-tracker');
 
@@ -172,7 +174,11 @@ async function handleLineNotification(sender, receiver, dataPayload, notificatio
             let data = await notificationClass.sendLineNotification(sender, receiver, dataPayload);
             console.log('[notifications][core][notification][send]: Data for Line Notification:', data);
 
-
+            await lineNotification.send({
+                receiverId: data.receiverId,
+                message: data.message
+            });
+            console.log('[notifications][core][notification][send]: Line Notification sent.');
 
         } else {
             console.log('[notifications][core][notification][send]: No methods found to send line notification.');

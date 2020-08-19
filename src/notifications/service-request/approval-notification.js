@@ -4,24 +4,24 @@ const notification = require('../core/notification');
 const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY', 'SMS'];
 const SHOULD_QUEUE = process.env.IS_OFFLINE ? false : true;
 
-const parcelNotification = {
+const approvalNotification = {
     send:async (sender, receiver, data, allowedChannels = ALLOWED_CHANNELS) =>{
         try{
 
-            console.log('[notifications][parcel][parcel-notification][send]: Data:', data);
+            console.log('[notifications][service-request][approval-notification][send]: Data:', data);
 
             if (SHOULD_QUEUE) {
                 await notification.queue(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, __filename);
-                console.log('[notifications][parcel][parcel-notification][send]: All Notifications Queued');
+                console.log('[notifications][service-request][approval-notification][send]: All Notifications Queued');
             } else {
-                await notification.send(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, parcelNotification);
-                console.log('[notifications][parcel][parcel-notification][send]: All Notifications Sent');
+                await notification.send(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, approvalNotification);
+                console.log('[notifications][service-request][approval-notification][send]: All Notifications Sent');
             }
 
 
 
         }catch(err){
-            console.log('[notifications][parcel][parcel-notification][send]:  Error', err);
+            console.log('[notifications][service-request][approval-notification][send]:  Error', err);
             return { code: 'UNKNOWN_ERROR', message: err.message, error: err };
         }
     },
@@ -30,24 +30,24 @@ const parcelNotification = {
         data = {
             orgId: sender.orgId,
             senderId: sender.id,
-            receiverId: receiver.id,
+            receiverId: receiver,
             payload: {
                 ...data,
-                subject: 'Parcel Notification',
-                body: `Hi!!, You have received a parcel,Please Pick up your parcel.`,
+                subject: 'Service Request Notification',
+                body: `Hi!!, You have assigned new service request ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `/user/parcel`,
+                    url: `/user/appointments/service`,
                     primaryKey: Date.now()
                 }
             },
             actions: [
                 {
                     action: "explore",
-                    title: "Parcel Pending",
-                    url:`/user/parcel`
+                    title: "Service Request",
+                    url:`/user/appointments/service`
                 }
             ]
         }
@@ -80,7 +80,7 @@ const parcelNotification = {
             receiverId: receiver.id,
             payload: {
                 subject: 'Parcel Notification',
-                body: `Hi!!, You have received a parcel,please come and collect.`,
+                body: `Hi!!, You have received a parcel,please come and collect ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
@@ -110,4 +110,4 @@ const parcelNotification = {
         return data;
     }
 }
-module.exports = parcelNotification;
+module.exports = approvalNotification;

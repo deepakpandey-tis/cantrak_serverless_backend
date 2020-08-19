@@ -6,6 +6,7 @@ const moment = require('moment');
 const uuidv4 = require('uuid/v4');
 var jwt = require('jsonwebtoken');
 const _ = require('lodash');
+const superagent = require('superagent');
 
 
 const entranceController = {
@@ -124,6 +125,10 @@ const entranceController = {
                     });
                 }
 
+                let socialAccounts = await knex('social_accounts').where({ userId: loginResult.id });
+
+                loginResult.socialAccounts = socialAccounts;
+
                 /*LAST LOGIN UPDATE OPEN */
                 let currentTime = new Date().getTime();
                 let updateLastLogin = await knex('users').update({ "lastLogin": currentTime }).where({ id: loginResult.id });
@@ -133,7 +138,7 @@ const entranceController = {
 
                 if (checkResult) {
                     login.user.organisationName = checkResult.organisationName;
-                } else{
+                } else {
                     login.user.organisationName = "";
                 }
 
@@ -513,6 +518,162 @@ const entranceController = {
 
         }
 
+    },
+
+    authorizeLineAccount: async (req, res) => {
+        try {
+
+            let payload = req.body;
+
+            const schema = Joi.object().keys({
+                code: Joi.string().required(),
+                state: Joi.string().required(),
+                redirectUrl: Joi.string().required(),
+            })
+            const result = Joi.validate(payload, schema);
+
+            if (result && result.hasOwnProperty('error') && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: 'VALIDATION_ERROR', message: result.error.message }
+                    ],
+                });
+            }
+
+            console.log('[controllers][entrance][authorizeLineAccount]', payload);
+
+            try {
+                let lineAuth = await superagent.post(`https://api.line.me/oauth2/v2.1/token`)
+                    .set('Content-Type', `application/x-www-form-urlencoded`)
+                    .type('form')
+                    .send({ 'grant_type': 'authorization_code' })
+                    .send({ 'code': payload.code })
+                    .send({ 'redirect_uri': payload.redirectUrl })
+                    .send({ 'client_id': '1654799092' })
+                    .send({ 'client_secret': 'dff3b322f991f04de4687b5b77cf4e2e' });
+
+                let body = lineAuth.text;
+
+                body = JSON.parse(body);
+                console.log('[controllers][entrance][authorizeLineAccount]: LineAuth Response', body);
+
+
+                let decodedIdToken = jwt.decode(body.id_token);
+                console.log('[controllers][entrance][authorizeLineAccount]: Decoded id token', decodedIdToken);
+
+                // Get User Profile
+                // https://api.line.me/v2/profile
+
+                let lineProfile = await superagent.get(`https://api.line.me/v2/profile`)
+                    .set('Authorization', `Bearer ${body.access_token}`);
+
+                lineProfile = JSON.parse(lineProfile.text);
+                console.log('[controllers][entrance][authorizeLineAccount]: Line Profile', lineProfile);
+
+                // Check if this users id is already in the db for line social account
+
+                let lineAccount = await knex('social_accounts').where({ userId: req.me.id }).first();
+
+                if (!lineAccount) {
+
+                    let insertData = {
+                        accountName: 'LINE',
+                        userId: req.me.id,
+                        details: JSON.stringify(lineProfile),
+                        createdAt: new Date().getTime(),
+                        updatedAt: new Date().getTime(),
+                    }
+
+                    const result = await knex.insert(insertData).returning(['*']).into('social_accounts');
+                    lineAccount = result && result[0] ? result[0] : result;
+                }
+
+                let result = await knex('social_accounts').update({
+                    details: JSON.stringify(lineProfile),
+                    updatedAt: new Date().getTime()
+                }).where({ id: lineAccount.id }).returning(['*']);
+
+                lineAccount = result && result[0] ? result[0] : result;
+
+                let user = await knex('users').where({ id: req.me.id }).first();
+
+                let socialAccounts = await knex('social_accounts').where({ userId: req.me.id });
+
+                user.socialAccounts = socialAccounts;
+
+
+                // Now send some message to line channel for this user...
+                // https://api.line.me/v2/bot/message/multicast
+
+                await superagent.post(`https://api.line.me/v2/bot/message/multicast`)
+                    .set('Content-Type', `application/json`)
+                    .set('Authorization', `Bearer XABQBlz8gAwLhc6lVAOqAxGJRqiA4Hmvp98/jF+Dry7/towFojWx1OKDLak48UuJceyyhvwFO/Cbp2sUr/IscsjZTCtVZSdIxFKksTYhueZ1GQgQw6CDT2By9acXiUJkqT6lTqVKoUbijg9c9s9m5gdB04t89/1O/w1cDnyilFU=`)
+                    .send({
+                        "to": [
+                            lineProfile.userId
+                        ],
+                        "messages": [
+                            {
+                                "type": "text",
+                                "text": `Hello, ${lineProfile.displayName}, Welcome.\nYou have linked your line account to ServiceMind successfully. We will notify you on this channel with important notifications only from now on.`
+                            }
+                        ]
+                    });
+
+                res.status(200).json({
+                    data: {
+                        isAuthorizedSuccessfully: true,
+                        user: user
+                    }
+                });
+            } catch (err) {
+                res.status(200).json({
+                    data: {
+                        isAuthorizedSuccessfully: false,
+                        error: err
+                    }
+                });
+            }
+
+        } catch (err) {
+
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err }
+                ],
+            });
+
+        }
+    },
+
+    removeLineAccount: async (req, res) => {
+        try {
+
+            await knex('social_accounts')
+                .where({ accountName: 'LINE', userId: req.me.id })
+                .del();
+
+            let user = await knex('users').where({ id: req.me.id }).first();
+
+            let socialAccounts = await knex('social_accounts').where({ userId: req.me.id });
+
+            user.socialAccounts = socialAccounts;
+
+            res.status(200).json({
+                data: {
+                    user: user
+                }
+            });
+
+        } catch (err) {
+
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err }
+                ],
+            });
+
+        }
     }
 };
 

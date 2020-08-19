@@ -419,27 +419,27 @@ const parcelManagementController = {
                   qb.where("parcel_user_tis.buildingPhaseId", buildingPhaseId);
                 }
               })
-              .orderBy("parcel_management.id", "asc")
+              .orderBy("parcel_management.createdAt", "desc")
               .offset(offset)
               .limit(per_page),
           ]);
-          // console.log("rows",rows)
-          // const Parallel = require("async-parallel");
-          // rows = await Parallel.map(rows, async (pd) => {
-          //   let imageResult = await knex
-          //     .from("images")
-          //     .select("s3Url", "title", "name")
-          //     .where({
-          //       entityId: pd.id,
-          //       entityType: "parcel_management",
-          //       orgId: req.orgId,
-          //     })
-          //     .first();
-          //   return {
-          //     ...pd,
-          //     uploadedImages: imageResult,
-          //   };
-          // });
+          console.log("rows",rows)
+          const Parallel = require("async-parallel");
+          rows = await Parallel.map(rows, async (pd) => {
+            let imageResult = await knex
+              .from("images")
+              .select("s3Url", "title", "name")
+              .where({
+                entityId: pd.id,
+                entityType: "parcel_management",
+                // orgId: req.orgId,
+              })
+              .first();
+            return {
+              ...pd,
+              uploadedImages: imageResult,
+            };
+          });
 
           let count = total.length;
 
@@ -538,27 +538,27 @@ const parcelManagementController = {
               "buildings_and_phases.description",
               // "images.s3Url"
             ])
-            .orderBy("parcel_management.id", "asc")
+            .orderBy("parcel_management.createdAt", "desc")
             .offset(offset)
             .limit(per_page),
         ]);
-        // console.log("rows",rows)
-        // const Parallel = require("async-parallel");
-        // rows = await Parallel.map(rows, async (pd) => {
-        //   let imageResult = await knex
-        //     .from("images")
-        //     .select("s3Url", "title", "name")
-        //     .where({
-        //       entityId: pd.id,
-        //       entityType: "parcel_management",
-        //       orgId: req.orgId,
-        //     })
-        //     .first();
-        //   return {
-        //     ...pd,
-        //     uploadedImages: imageResult,
-        //   };
-        // });
+        console.log("rows",rows)
+        const Parallel = require("async-parallel");
+        rows = await Parallel.map(rows, async (pd) => {
+          let imageResult = await knex
+            .from("images")
+            .select("s3Url", "title", "name")
+            .where({
+              entityId: pd.id,
+              entityType: "parcel_management",
+              // orgId: req.orgId,
+            })
+            .first();
+          return {
+            ...pd,
+            uploadedImages: imageResult,
+          };
+        });
 
         let count = total.length;
 
@@ -666,7 +666,7 @@ const parcelManagementController = {
               "buildings_and_phases.description",
               "parcel_user_non_tis.name",
             ])
-            .orderBy("parcel_management.id", "asc");
+            .orderBy("parcel_management.createdAt", "desc");
         } catch (err) {
           console.log("[controllers][parcel_management][list] :  Error", err);
           return res.status(500).json({
@@ -722,7 +722,7 @@ const parcelManagementController = {
             "buildings_and_phases.description",
             "parcel_user_non_tis.name",
           ])
-          .orderBy("parcel_management.id", "asc");
+          .orderBy("parcel_management.createdAt", "desc");
       }
 
       const Parallel = require("async-parallel");
@@ -822,7 +822,6 @@ const parcelManagementController = {
             "property_units.unitNumber",
             "courier.courierName",
             "parcel_management.barcode"
-            // "parcel_management.signature",
           ])
           .where("parcel_management.id", payload.id)
           .first(),
@@ -1107,8 +1106,8 @@ const parcelManagementController = {
         .where("parcel_management.parcelStatus", 2)
         .orWhere("parcel_management.parcelStatus", 5)
         .where("parcel_management.orgId", req.orgId);
-      whereIn("parcel_management.id", req.body.id);
-
+      whereIn("parcel_management.id", parcelId)
+      .first()
       return res.status(200).json({
         data: {
           parcelStatus: parcelStatus,
