@@ -26,7 +26,7 @@ const parcelAcceptanceNotification = {
         }
     },
     sendInAppNotification: async (sender, receiver, data) => {
-        console.log("data of parcel",data.payload.parcelId)
+        console.log("data of parcel for acceptance",sender,receiver,data)
         let parcelId = data.payload.parcelId
         data = {
             orgId: sender.orgId,
@@ -35,7 +35,7 @@ const parcelAcceptanceNotification = {
             payload: {
                 ...data,
                 subject: 'Parcel Acceptation',
-                body: `Hi!!, You have received a parcel,Please accept for picked up the parcels. ${sender.name}`,
+                body: `Hi!!, You have received a parcel,Please accept for picked up the parcels.`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
@@ -49,7 +49,7 @@ const parcelAcceptanceNotification = {
                 {
                     action: "explore",
                     title: "Parcel Acceptation",
-                    url:`/user/parcel/parcel-confirmation?parcels=${parcelId[0]}`
+                    url:`/user/parcel/parcel-confirmation?parcels=${parcelId}`
                 }
             ]
         }
@@ -82,12 +82,12 @@ const parcelAcceptanceNotification = {
             receiverId: receiver.id,
             payload: {
                 subject: 'Acceptation',
-                body: `Hi!!, You have received a parcel,Please accept for picked up the parcels.  ${sender.name}`,
+                body: `Hi!!, You have received a parcel,Please accept for picked up the parcels.`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `${process.env.SITE_URL}/user/parcel/parcel-confirmation/${parcelId[0]}`,
+                    url: `${process.env.SITE_URL}/user/parcel/parcel-confirmation/${parcelId}`,
                     primaryKey: Date.now()
                 }
             },
@@ -95,7 +95,7 @@ const parcelAcceptanceNotification = {
                 {
                     action: "explore",
                     title: "User parcel Page",
-                    url: `${process.env.SITE_URL}/user/parcel/parcel-confirmation/${parcelId[0]}`
+                    url: `${process.env.SITE_URL}/user/parcel/parcel-confirmation/${parcelId}`
                 }
             ]
         }
