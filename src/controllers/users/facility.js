@@ -294,7 +294,6 @@ const facilityBookingController = {
                     .select("s3Url", "title", "name")
                     .where({
                         entityType: "parcel_management",
-                        orgId: req.orgId,
                         entityId: pd.id
                     })
 
