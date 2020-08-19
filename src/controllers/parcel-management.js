@@ -419,7 +419,7 @@ const parcelManagementController = {
                   qb.where("parcel_user_tis.buildingPhaseId", buildingPhaseId);
                 }
               })
-              .orderBy("parcel_management.id", "asc")
+              .orderBy("parcel_management.createdAt", "desc")
               .offset(offset)
               .limit(per_page),
           ]);
@@ -538,7 +538,7 @@ const parcelManagementController = {
               "buildings_and_phases.description",
               // "images.s3Url"
             ])
-            .orderBy("parcel_management.id", "asc")
+            .orderBy("parcel_management.createdAt", "desc")
             .offset(offset)
             .limit(per_page),
         ]);
@@ -666,7 +666,7 @@ const parcelManagementController = {
               "buildings_and_phases.description",
               "parcel_user_non_tis.name",
             ])
-            .orderBy("parcel_management.id", "asc");
+            .orderBy("parcel_management.createdAt", "desc");
         } catch (err) {
           console.log("[controllers][parcel_management][list] :  Error", err);
           return res.status(500).json({
@@ -722,7 +722,7 @@ const parcelManagementController = {
             "buildings_and_phases.description",
             "parcel_user_non_tis.name",
           ])
-          .orderBy("parcel_management.id", "asc");
+          .orderBy("parcel_management.createdAt", "desc");
       }
 
       const Parallel = require("async-parallel");
@@ -822,7 +822,6 @@ const parcelManagementController = {
             "property_units.unitNumber",
             "courier.courierName",
             "parcel_management.barcode"
-            // "parcel_management.signature",
           ])
           .where("parcel_management.id", payload.id)
           .first(),
