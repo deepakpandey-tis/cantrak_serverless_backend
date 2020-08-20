@@ -4,12 +4,14 @@ const moment = require("moment")
 
 const knex = require('../db/knex');
 const XLSX = require('xlsx');
+const serviceRequestNotification = require('../notifications/service-request/approval-notification');
 
 
 
 const serviceOrderController = {
     addServiceOrder: async(req, res) => {
         try {
+           
             let serviceOrder = null;
             let images = null
             let serviceOrderPayload = req.body;
@@ -17,6 +19,7 @@ const serviceOrderController = {
             let assignedServiceAdditionalUsers;
 
             await knex.transaction(async trx => {
+                      let ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY'];
 
                     images = req.body.images
                     let serviceRequestId = req.body.serviceRequestId
@@ -135,6 +138,25 @@ const serviceOrderController = {
                     assignedServiceTeamSR = assignedServiceTeamResultSR[0]
                         //Service Request Team Management End
 
+
+                        // Send Notifications to Main User
+                        
+                         // Adding Notification in service request approval 
+
+                            let sender = await knex.from('users').where({ id: req.me.id }).first();
+                            let receiver = await knex.from('users').where({ id: mainUserId }).first();
+                            
+                            console.log("requested mainUserId id for notification",mainUserId);
+                            
+                            //  console.log("receiver tenant",receiver)
+                    
+                            let dataNos = {
+                                payload: {
+                                }
+                            };
+
+                            await serviceRequestNotification.send(sender, receiver, dataNos, ALLOWED_CHANNELS);
+
                     if (assignedServiceAdditionalUsers && assignedServiceAdditionalUsers.length) {
                         for (user of assignedServiceAdditionalUsers) {
                             await knex
@@ -162,7 +184,12 @@ const serviceOrderController = {
                                 .transacting(trx)
                                 .into("assigned_service_additional_users");
                             //additionalUsersResultantArray.push(userResult[0])
+                            
+                            let receiver1 = await knex.from('users').where({ id: user }).first();
+                            await serviceRequestNotification.send(sender, receiver1, dataNos, ALLOWED_CHANNELS);
+                        
                         }
+                        // Send Notifications to Additional Users
                     }
 
                 })

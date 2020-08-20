@@ -19,6 +19,7 @@ const imageHelper = require("../helpers/image");
 
 
 
+
 const serviceRequestController = {
     addServiceRequest: async(req, res) => {
         try {
@@ -3304,6 +3305,9 @@ const serviceRequestController = {
                     .update({ serviceStatusCode: updateStatus, updatedAt: currentTime })
                     .where({ id: serviceRequestId });
             }
+
+
+          
 
             // await knex("service_requests")
             //   .update({ serviceStatusCode: updateStatus, updatedAt: currentTime })
