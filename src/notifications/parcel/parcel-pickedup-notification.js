@@ -60,7 +60,7 @@ const parcelPickedUpNotification = {
     sendEmailNotification: async (sender, receiver, data) => {
         data = {
             receiverEmail: receiver.email,
-            template: 'test-email.ejs',
+            template: 'parcel-notification.ejs',
             templateData: {
                 fullName: receiver.name
             },
