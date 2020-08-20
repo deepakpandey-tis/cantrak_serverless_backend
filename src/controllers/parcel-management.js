@@ -597,10 +597,18 @@ const parcelManagementController = {
         tenantId,
         buildingPhaseId,
         trackingNumber,
-        id
+        id,
+        parcelId
       );
       if (unitId || tenantId || buildingPhaseId || trackingNumber || id) {
         try {
+          let parcelType = await knex 
+          .from("parcel_management")
+          .select("parcel_management.pickedUpType")
+          .where("parcel_management.id",parcelId)
+
+          // console.log("parcelType",parcelType)
+          
           parcelList = await knex
             .from("parcel_management")
             .leftJoin(
@@ -654,7 +662,8 @@ const parcelManagementController = {
                 qb.where("parcel_user_tis.buildingPhaseId", buildingPhaseId);
               }
               if (id) {
-                qb.where("property_units.unitNumber", id);
+
+                qb.where({"property_units.unitNumber": id,"parcel_management.pickedUpType":parcelType});
               }
             })
             .groupBy([
