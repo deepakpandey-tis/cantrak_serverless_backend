@@ -600,13 +600,16 @@ const parcelManagementController = {
         id,
         parcelId
       );
-      if (unitId || tenantId || buildingPhaseId || trackingNumber || id) {
+      if (unitId || tenantId || buildingPhaseId || trackingNumber || id || parcelId) {
         try {
-          let parcelType = await knex 
+          let parcelType
+
+          if(parcelId){
+          parcelType = await knex 
           .from("parcel_management")
           .select("parcel_management.pickedUpType")
           .where("parcel_management.id",parcelId)
-
+        }
           // console.log("parcelType",parcelType)
           
           parcelList = await knex

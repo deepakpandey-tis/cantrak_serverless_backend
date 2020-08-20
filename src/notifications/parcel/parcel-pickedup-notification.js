@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const notification = require('../core/notification');
 
-const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY', 'SMS'];
+const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY'];
 const SHOULD_QUEUE = process.env.IS_OFFLINE ? false : true;
 
 const parcelPickedUpNotification = {
@@ -35,7 +35,7 @@ const parcelPickedUpNotification = {
             payload: {
                 ...data,
                 subject: 'Parcel Picked Up',
-                body: `Hi!!, "Your parcel picked up.`,
+                body: `Hi!!, Your parcel picked up.`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
@@ -103,6 +103,14 @@ const parcelPickedUpNotification = {
         return data;
     },
 
+    sendLineNotification: async (sender, receiver, data) => {
+        data = {
+            receiverId: receiver.id,
+            message: `Hi ${receiver.name} Your parcel picked up.`
+        };
+
+        return data;
+    },
     sendSMSNotification: async (sender, receiver, data) => {
         data = {
             receiverMobileNumber: receiver.mobileNo,
