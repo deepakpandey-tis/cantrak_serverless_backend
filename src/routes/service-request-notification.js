@@ -8,7 +8,7 @@ const knex = require('../db/knex');
 const authMiddleware = require("../middlewares/auth");
 // const { CloudFrontCustomizations } = require("aws-sdk/lib/services/cloudfront");
 
-const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH'];
+const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH', 'LINE_NOTIFY'];
 
 
 router.post('/approval-notification',authMiddleware.isAuthenticated, async(req,res)=>{
@@ -16,7 +16,8 @@ router.post('/approval-notification',authMiddleware.isAuthenticated, async(req,r
         // console.log("org user",req.me.id)
         console.log("requested tenant id for notification",req.body.id)
         let sender = await knex.from('users').where({ id: req.me.id }).first();
-        let receiver = req.body.mainUserId;
+        let receiver = await knex.from('users').where({ id: req.body.mainUserId }).first();
+        
         console.log("requested mainUserId id for notification",req.body.mainUserId);
         console.log("requested additionalUsers id for notification",req.body.additionalUsers);
         
