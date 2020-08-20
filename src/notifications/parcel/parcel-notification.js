@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const notification = require('../core/notification');
 
-const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY', 'SMS'];
+const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY'];
 const SHOULD_QUEUE = process.env.IS_OFFLINE ? false : true;
 
 const parcelNotification = {
@@ -100,11 +100,19 @@ const parcelNotification = {
 
         return data;
     },
+    sendLineNotification: async (sender, receiver, data) => {
+        data = {
+            receiverId: receiver.id,
+            message: `Hi ${receiver.name} You have received a parcel,please come and collect.`
+        };
+
+        return data;
+    },
 
     sendSMSNotification: async (sender, receiver, data) => {
         data = {
             receiverMobileNumber: receiver.mobileNo,
-            textMessage: `Hi ${receiver.name} this is simple text message send to test the notification`
+            textMessage: `Hi ${receiver.name} You have received a parcel,please come and collect.`
         }
 
         return data;

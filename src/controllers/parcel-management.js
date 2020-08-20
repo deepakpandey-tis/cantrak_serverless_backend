@@ -590,7 +590,7 @@ const parcelManagementController = {
     try {
       let payload = req.body;
       let parcelList;
-      let { unitId, tenantId, buildingPhaseId, trackingNumber, id } = req.body;
+      let { unitId, tenantId, buildingPhaseId, trackingNumber, id,parcelId } = req.body;
       console.log(
         "parcel payload for filter",
         unitId,
