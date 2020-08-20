@@ -118,7 +118,8 @@ router.post('/outgoing-parcel-notification',authMiddleware.isAuthenticated, asyn
 
         let data = {
             payload: {
-                parcelId:req.body.parcelId
+                parcelId:req.body.parcelId,
+                orgId:req.orgId
             }
         };
         await outgoingParcelNotification.send(sender, receiver, data, ALLOWED_CHANNELS);
