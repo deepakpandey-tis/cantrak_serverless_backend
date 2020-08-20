@@ -9,89 +9,93 @@ const roleMiddleware = require('../../middlewares/role')
 const resourceAccessMiddleware = require('../../middlewares/resourceAccessMiddleware')
 
 router.post('/add-building-phase',
-  authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
-  buildingPhaseController.addBuildingPhase)
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    resourceAccessMiddleware.isPropertySetupAccessible,
+    buildingPhaseController.addBuildingPhase)
 
 router.post('/update-building-phase',
-  authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
-  buildingPhaseController.updateBuildingPhase)
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    resourceAccessMiddleware.isPropertySetupAccessible,
+    buildingPhaseController.updateBuildingPhase)
 
 router.post('/view-building-phase',
-  authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
-  buildingPhaseController.viewBuildingPhase)
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    resourceAccessMiddleware.isPropertySetupAccessible,
+    buildingPhaseController.viewBuildingPhase)
 
 router.post('/delete-building-phase',
-  authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
-  buildingPhaseController.deleteBuildingPhase)
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    resourceAccessMiddleware.isPropertySetupAccessible,
+    buildingPhaseController.deleteBuildingPhase)
 
 router.post('/get-building-phase-by-project-id',
-  authMiddleware.isAuthenticated,
-  buildingPhaseController.getBuildingPhaseListByProjectId)
+    authMiddleware.isAuthenticated,
+    buildingPhaseController.getBuildingPhaseListByProjectId)
 
 router.post('/get-building-phase-list',
-  authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
-  buildingPhaseController.getBuildingPhaseList)
-// Export Building Phase
+        authMiddleware.isAuthenticated,
+        roleMiddleware.parseUserPermission,
+        resourceAccessMiddleware.isPropertySetupAccessible,
+        buildingPhaseController.getBuildingPhaseList)
+    // Export Building Phase
 router.get('/export-building-phase',
-  authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
-  buildingPhaseController.exportBuildingPhase)
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    resourceAccessMiddleware.isPropertySetupAccessible,
+    buildingPhaseController.exportBuildingPhase)
 
 router.get('/get-buildings-phases-all-list',
-  authMiddleware.isAuthenticated,
-  buildingPhaseController.getBuildingPhaseAllList)
+    authMiddleware.isAuthenticated,
+    buildingPhaseController.getBuildingPhaseAllList)
 
-router.get('/get-building-phase',authMiddleware.isAuthenticated,buildingPhaseController.getBuildingPhase)
+router.get('/get-building-phase', authMiddleware.isAuthenticated, buildingPhaseController.getBuildingPhase)
 
 
 
 /**IMPORT Building DATA */
 let tempraryDirectory = null;
 if (process.env.IS_OFFLINE) {
-  tempraryDirectory = 'tmp/';
+    tempraryDirectory = 'tmp/';
 } else {
-  tempraryDirectory = '/tmp/';
+    tempraryDirectory = '/tmp/';
 }
 var multer = require('multer');
 var storage = multer.diskStorage({
-  destination: tempraryDirectory,
-  filename: function (req, file, cb) {
-    let ext = path.extname(file.originalname)
-    if (ext == '.csv') {
-      time = Date.now();
-      cb(null, 'buildingPhaseData-' + time + ext);
-    } else {
-      return false
+    destination: tempraryDirectory,
+    filename: function(req, file, cb) {
+        let ext = path.extname(file.originalname)
+        if (ext == '.csv') {
+            time = Date.now();
+            cb(null, 'buildingPhaseData-' + time + ext);
+        } else {
+            return false
+        }
     }
-  }
 });
 var upload = multer({ storage: storage });
 router.post(
-  "/import-building-data",
-  // upload.single("file"),
-  authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
-  buildingPhaseController.importBuildingData
+    "/import-building-data",
+    // upload.single("file"),
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    resourceAccessMiddleware.isPropertySetupAccessible,
+    buildingPhaseController.importBuildingData
 );
 
 
 router.get('/get-building-phase-all-list-having-property-units',
-  roleMiddleware.parseUserPermission,
-  buildingPhaseController.getBuildingPhaseAllListHavingPropertyUnits
-) 
-router.post('/get-building-phase-by-Id',authMiddleware.isAuthenticated,buildingPhaseController.getBuildingPhaseById)
+    roleMiddleware.parseUserPermission,
+    buildingPhaseController.getBuildingPhaseAllListHavingPropertyUnits
+)
+router.post('/get-building-phase-by-Id', authMiddleware.isAuthenticated, buildingPhaseController.getBuildingPhaseById)
 
+router.get('/get-unit-list-by-building-id',
+    roleMiddleware.parseUserPermission,
+    buildingPhaseController.getUnitListByBuildingId
+)
 
 module.exports = router

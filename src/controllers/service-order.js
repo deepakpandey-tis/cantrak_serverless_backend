@@ -8,7 +8,7 @@ const XLSX = require('xlsx');
 
 
 const serviceOrderController = {
-    addServiceOrder: async (req, res) => {
+    addServiceOrder: async(req, res) => {
         try {
             let serviceOrder = null;
             let images = null
@@ -18,81 +18,19 @@ const serviceOrderController = {
 
             await knex.transaction(async trx => {
 
-                images = req.body.images
-                let serviceRequestId = req.body.serviceRequestId
-                await knex('service_requests').update({ serviceStatusCode: 'A' }).where({ id: serviceRequestId })
-                let serviceRequest = { id: req.body.serviceRequestId };
-                serviceOrderPayload = _.omit(serviceOrderPayload, ['serviceRequest', 'teamId', 'mainUserId', 'additionalUsers', 'images'])
-
-                const schema = Joi.object().keys({
-                    serviceRequestId: Joi.number().required(),
-                    orderDueDate: Joi.date().allow("").optional()
-                })
-
-                let result = Joi.validate(serviceOrderPayload, schema);
-                console.log('[controllers][serviceOrder][addServiceOrder]: JOi Result', result);
-
-                if (result && result.hasOwnProperty('error') && result.error) {
-                    return res.status(400).json({
-                        errors: [
-                            { code: 'VALIDATION_ERROR', message: result.error.message }
-                        ],
-                    });
-                }
-
-
-
-                let currentTime = new Date().getTime();
-                let newDueDate;
-                if (serviceOrderPayload.orderDueDate) {
-                    newDueDate = new Date(serviceOrderPayload.orderDueDate).getTime();
-                } else {
-                    newDueDate = new Date().getTime();
-                }
-
-                let propertyUnit = await knex
-                    .select(['companyId'])
-                    .where({ id: serviceOrderPayload.serviceRequestId })
-                    .into("service_requests").first();
-
-                // Insert into service_orders
-
-                let inserServiceOrderPayload = {
-                    ...serviceOrderPayload,
-                    orderDueDate: newDueDate,
-                    companyId: propertyUnit.companyId,
-                    createdAt: currentTime,
-                    updatedAt: currentTime,
-                    orgId: req.orgId
-                };
-
-                let serviceOrderResults = await knex.insert(inserServiceOrderPayload).returning(['*']).transacting(trx).into('service_orders')
-                serviceOrder = serviceOrderResults[0]
-
-                // if new service request id that means direct serviceOrder
-
-
-                let currentUser = req.me;
-
-                if (currentUser && currentUser.roles && currentUser.roles.includes("admin") || currentUser.roles.includes("superAdmin")) {
-                    // i am admin i can overwrite things here
-                    let serviceRequestPayload = req.body.serviceRequest;
-                    let serviceRequestId = req.body.serviceRequestId;
+                    images = req.body.images
+                    let serviceRequestId = req.body.serviceRequestId
+                    await knex('service_requests').update({ serviceStatusCode: 'A' }).where({ id: serviceRequestId })
+                    let serviceRequest = { id: req.body.serviceRequestId };
+                    serviceOrderPayload = _.omit(serviceOrderPayload, ['serviceRequest', 'teamId', 'mainUserId', 'additionalUsers', 'images'])
 
                     const schema = Joi.object().keys({
                         serviceRequestId: Joi.number().required(),
-                        description: Joi.string().required(),
-                        requestFor: Joi.string().required(),
-                        houseId: Joi.string().required(),
-                        commonId: Joi.string().required(),
-                        serviceType: Joi.string().required(),
-                        requestedBy: Joi.string().required(),
-                        priority: Joi.string().required(),
-                        location: Joi.string().required()
-                    });
+                        orderDueDate: Joi.date().allow("").optional()
+                    })
 
-                    const result = Joi.validate({ serviceRequestId, ...serviceRequestPayload }, schema);
-                    console.log('[controllers][service][request]: JOi Result', result);
+                    let result = Joi.validate(serviceOrderPayload, schema);
+                    console.log('[controllers][serviceOrder][addServiceOrder]: JOi Result', result);
 
                     if (result && result.hasOwnProperty('error') && result.error) {
                         return res.status(400).json({
@@ -102,71 +40,133 @@ const serviceOrderController = {
                         });
                     }
 
-                    // Insert in service_requests table,
-                    const currentTime = new Date().getTime();
-
-                    const updateServiceReq = await knex.update({ description: serviceRequestPayload.description, requestFor: serviceRequestPayload.requestFor, houseId: serviceRequestPayload.houseId, commonId: serviceRequestPayload.commonId, serviceType: serviceRequestPayload.serviceType, requestedBy: serviceRequestPayload.requestedBy, priority: serviceRequestPayload.priority, location: serviceRequestPayload.location, updatedAt: currentTime, isActive: true, moderationStatus: true, serviceStatusCode: "O" }).where({ id: serviceRequestId }).returning(['*']).transacting(trx).into('service_requests');
-
-                    console.log('[controllers][service][request]: Update Data', updateServiceReq);
-
-                    serviceRequest = updateServiceReq[0];
-                }
 
 
-                if (images && images.length) {
-                    images = req.body.images.map(image => ({ ...image, createdAt: currentTime, updatedAt: currentTime, entityId: serviceOrder.id, entityType: 'service_orders', orgId: req.orgId }));
-                    let addedImages = await knex.insert(images).returning(['*']).transacting(trx).into('images')
-                    images = addedImages
-                }
-
-                // Insert into assigned_service_team table
-                let { teamId, mainUserId, additionalUsers } = req.body;
-                assignedServiceAdditionalUsers = additionalUsers
-
-                //Service Order Team Management
-                const assignedServiceTeamPayload = { teamId, userId: mainUserId, entityId: serviceOrder.id, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }
-                let assignedServiceTeamResult = await knex.insert(assignedServiceTeamPayload).returning(['*']).transacting(trx).into('assigned_service_team')
-                let assignedServiceTeam = assignedServiceTeamResult[0]
-                //Service Order Team Management End
-
-                // Service Request Team Management
-                const assignedServiceTeamPayloadSR = { teamId, userId: mainUserId, entityId: serviceRequestId, entityType: 'service_requests', createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }
-                let assignedServiceTeamResultSR = await knex.insert(assignedServiceTeamPayloadSR).returning(['*']).transacting(trx).into('assigned_service_team')
-                assignedServiceTeamSR = assignedServiceTeamResultSR[0]
-                //Service Request Team Management End
-
-                if (assignedServiceAdditionalUsers && assignedServiceAdditionalUsers.length) {
-                    for (user of assignedServiceAdditionalUsers) {
-                        await knex
-                            .insert({
-                                userId: user,
-                                entityId: serviceOrder.id,
-                                entityType: "service_orders",
-                                createdAt: currentTime,
-                                updatedAt: currentTime,
-                                orgId: req.orgId
-                            })
-                            .returning(["*"])
-                            .transacting(trx)
-                            .into("assigned_service_additional_users");
-                        await knex
-                            .insert({
-                                userId: user,
-                                entityId: serviceRequestId,
-                                entityType: "service_requests",
-                                createdAt: currentTime,
-                                updatedAt: currentTime,
-                                orgId: req.orgId
-                            })
-                            .returning(["*"])
-                            .transacting(trx)
-                            .into("assigned_service_additional_users");
-                        //additionalUsersResultantArray.push(userResult[0])
+                    let currentTime = new Date().getTime();
+                    let newDueDate;
+                    if (serviceOrderPayload.orderDueDate) {
+                        newDueDate = new Date(serviceOrderPayload.orderDueDate).getTime();
+                    } else {
+                        newDueDate = new Date().getTime();
                     }
-                }
 
-            })
-            // updated table for triggers
+                    let propertyUnit = await knex
+                        .select(['companyId'])
+                        .where({ id: serviceOrderPayload.serviceRequestId })
+                        .into("service_requests").first();
+
+                    // Insert into service_orders
+
+                    let inserServiceOrderPayload = {
+                        ...serviceOrderPayload,
+                        orderDueDate: newDueDate,
+                        companyId: propertyUnit.companyId,
+                        createdAt: currentTime,
+                        updatedAt: currentTime,
+                        orgId: req.orgId
+                    };
+
+                    let serviceOrderResults = await knex.insert(inserServiceOrderPayload).returning(['*']).transacting(trx).into('service_orders')
+                    serviceOrder = serviceOrderResults[0]
+
+                    // if new service request id that means direct serviceOrder
+
+
+                    let currentUser = req.me;
+
+                    if (currentUser && currentUser.roles && currentUser.roles.includes("admin") || currentUser.roles.includes("superAdmin")) {
+                        // i am admin i can overwrite things here
+                        let serviceRequestPayload = req.body.serviceRequest;
+                        let serviceRequestId = req.body.serviceRequestId;
+
+                        const schema = Joi.object().keys({
+                            serviceRequestId: Joi.number().required(),
+                            description: Joi.string().required(),
+                            requestFor: Joi.string().required(),
+                            houseId: Joi.string().required(),
+                            commonId: Joi.string().required(),
+                            serviceType: Joi.string().required(),
+                            requestedBy: Joi.string().required(),
+                            priority: Joi.string().required(),
+                            location: Joi.string().required()
+                        });
+
+                        const result = Joi.validate({ serviceRequestId, ...serviceRequestPayload }, schema);
+                        console.log('[controllers][service][request]: JOi Result', result);
+
+                        if (result && result.hasOwnProperty('error') && result.error) {
+                            return res.status(400).json({
+                                errors: [
+                                    { code: 'VALIDATION_ERROR', message: result.error.message }
+                                ],
+                            });
+                        }
+
+                        // Insert in service_requests table,
+                        const currentTime = new Date().getTime();
+
+                        const updateServiceReq = await knex.update({ description: serviceRequestPayload.description, requestFor: serviceRequestPayload.requestFor, houseId: serviceRequestPayload.houseId, commonId: serviceRequestPayload.commonId, serviceType: serviceRequestPayload.serviceType, requestedBy: serviceRequestPayload.requestedBy, priority: serviceRequestPayload.priority, location: serviceRequestPayload.location, updatedAt: currentTime, isActive: true, moderationStatus: true, serviceStatusCode: "O" }).where({ id: serviceRequestId }).returning(['*']).transacting(trx).into('service_requests');
+
+                        console.log('[controllers][service][request]: Update Data', updateServiceReq);
+
+                        serviceRequest = updateServiceReq[0];
+                    }
+
+
+                    if (images && images.length) {
+                        images = req.body.images.map(image => ({...image, createdAt: currentTime, updatedAt: currentTime, entityId: serviceOrder.id, entityType: 'service_orders', orgId: req.orgId }));
+                        let addedImages = await knex.insert(images).returning(['*']).transacting(trx).into('images')
+                        images = addedImages
+                    }
+
+                    // Insert into assigned_service_team table
+                    let { teamId, mainUserId, additionalUsers } = req.body;
+                    assignedServiceAdditionalUsers = additionalUsers
+
+                    //Service Order Team Management
+                    const assignedServiceTeamPayload = { teamId, userId: mainUserId, entityId: serviceOrder.id, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }
+                    let assignedServiceTeamResult = await knex.insert(assignedServiceTeamPayload).returning(['*']).transacting(trx).into('assigned_service_team')
+                    let assignedServiceTeam = assignedServiceTeamResult[0]
+                        //Service Order Team Management End
+
+                    // Service Request Team Management
+                    const assignedServiceTeamPayloadSR = { teamId, userId: mainUserId, entityId: serviceRequestId, entityType: 'service_requests', createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }
+                    let assignedServiceTeamResultSR = await knex.insert(assignedServiceTeamPayloadSR).returning(['*']).transacting(trx).into('assigned_service_team')
+                    assignedServiceTeamSR = assignedServiceTeamResultSR[0]
+                        //Service Request Team Management End
+
+                    if (assignedServiceAdditionalUsers && assignedServiceAdditionalUsers.length) {
+                        for (user of assignedServiceAdditionalUsers) {
+                            await knex
+                                .insert({
+                                    userId: user,
+                                    entityId: serviceOrder.id,
+                                    entityType: "service_orders",
+                                    createdAt: currentTime,
+                                    updatedAt: currentTime,
+                                    orgId: req.orgId
+                                })
+                                .returning(["*"])
+                                .transacting(trx)
+                                .into("assigned_service_additional_users");
+                            await knex
+                                .insert({
+                                    userId: user,
+                                    entityId: serviceRequestId,
+                                    entityType: "service_requests",
+                                    createdAt: currentTime,
+                                    updatedAt: currentTime,
+                                    orgId: req.orgId
+                                })
+                                .returning(["*"])
+                                .transacting(trx)
+                                .into("assigned_service_additional_users");
+                            //additionalUsersResultantArray.push(userResult[0])
+                        }
+                    }
+
+                })
+                // updated table for triggers
 
             await knex
                 .update({ isActive: true })
@@ -189,15 +189,17 @@ const serviceOrderController = {
             });
         }
     },
-    getServiceOrderList: async (req, res) => {
+    getServiceOrderList: async(req, res) => {
         try {
             //const serviceOrders = await knex('service_orders').select();
             console.log('ORG ID: ************************************************: ', req.orgId)
-            let { serviceRequestId,
+            let {
+                serviceRequestId,
                 description,
                 serviceOrderStatus,
                 archive,
-                location, assignedBy,
+                location,
+                assignedBy,
                 serviceStartTime,
                 serviceStopTime,
                 createdAt,
@@ -215,7 +217,13 @@ const serviceOrderController = {
                 unit,
                 serviceType,
                 serviceOrderId,
-                building, tenantName, priority, company, project, serviceRequestIdForShared } = req.body
+                building,
+                tenantName,
+                priority,
+                company,
+                project,
+                serviceRequestIdForShared
+            } = req.body
 
             let reqData = req.query;
             let total, rows
@@ -331,9 +339,9 @@ const serviceOrderController = {
             let dueFromDate, dueToDate
             if (dueFrom && dueTo) {
                 dueFromDate = new Date(moment(dueFrom).startOf('day')).getTime()
-                // dueFromDate = moment(dueFrom).format();
-                // dueToDate = moment(dueTo).format();
-                // console.log(dueFromDate)
+                    // dueFromDate = moment(dueFrom).format();
+                    // dueToDate = moment(dueTo).format();
+                    // console.log(dueFromDate)
                 dueToDate = new Date(moment(dueTo).startOf('day')).getTime()
 
             } else if (dueFrom && !dueTo) {
@@ -373,454 +381,454 @@ const serviceOrderController = {
 
                 [total, rows] = await Promise.all([
                     knex.from('service_orders')
-                        .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                        .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                        .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                        .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
-                        .leftJoin('users', 'assigned_service_team.userId', 'users.id')
-                        .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
-                        .leftJoin("users AS u", "service_requests.createdBy", "u.id")
-                        .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
-                        .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
-                        .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
-                        .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
-                        // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-                        // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
-                        .leftJoin('companies', 'service_orders.companyId', 'companies.id')
-                        .leftJoin('projects', 'property_units.projectId', 'projects.id')
+                    .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                    .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                    .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                    .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
+                    .leftJoin('users', 'assigned_service_team.userId', 'users.id')
+                    .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
+                    .leftJoin("users AS u", "service_requests.createdBy", "u.id")
+                    .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                    .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+                    .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+                    .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
+                    // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+                    // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+                    .leftJoin('companies', 'service_orders.companyId', 'companies.id')
+                    .leftJoin('projects', 'property_units.projectId', 'projects.id')
 
-                        .select([
-                            'service_orders.id as So Id',
-                            'service_requests.description as Description',
-                            'service_requests.location as Location',
-                            'service_requests.id as Sr Id',
-                            'incident_categories.descriptionEng as Problem',
-                            'priority as Priority',
-                            'orderDueDate as Due Date',
-                            'u.name as Created By',
-                            'status.descriptionEng as Status',
-                            'service_orders.createdAt as Date Created',
-                            'service_requests.houseId as houseId',
-                            "buildings_and_phases.description as Building Name",
-                            "users.userName as Assigned Main User",
-                            "teams.teamName as Team Name",
-                            "requested_by.name as Requested By",
-                            "property_units.unitNumber as Unit Number",
-                            "property_units.id as unitId",
-                            "service_orders.displayId as SO#",
-                            "service_requests.displayId as SR#",
-                            "companies.companyName",
-                            "companies.companyId",
-                            "projects.project",
-                            "projects.projectName",
+                    .select([
+                        'service_orders.id as So Id',
+                        'service_requests.description as Description',
+                        'service_requests.location as Location',
+                        'service_requests.id as Sr Id',
+                        'incident_categories.descriptionEng as Problem',
+                        'priority as Priority',
+                        'orderDueDate as Due Date',
+                        'u.name as Created By',
+                        'status.descriptionEng as Status',
+                        'service_orders.createdAt as Date Created',
+                        'service_requests.houseId as houseId',
+                        "buildings_and_phases.description as Building Name",
+                        "users.userName as Assigned Main User",
+                        "teams.teamName as Team Name",
+                        "requested_by.name as Requested By",
+                        "property_units.unitNumber as Unit Number",
+                        "property_units.id as unitId",
+                        "service_orders.displayId as SO#",
+                        "service_requests.displayId as SR#",
+                        "companies.companyName",
+                        "companies.companyId",
+                        "projects.project",
+                        "projects.projectName",
 
-                            // "assignUser.name as Tenant Name"
+                        // "assignUser.name as Tenant Name"
 
 
-                        ]).where((qb) => {
-                            qb.where({ 'service_orders.orgId': req.orgId });
-                            qb.whereIn('service_requests.projectId', accessibleProjects)
-                            if (filters) {
-                                qb.where(filters);
-                            }
-                            if (completedFromDate && completedToDate) {
-                                qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
-                            }
-                            if (dueFromDate && dueToDate) {
-                                qb.whereBetween('service_orders.orderDueDate', [dueFromDate, dueToDate])
-                            }
-                            if (createdFromDate && createdToDate) {
-                                qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
-                            }
-                            if (unit) {
-                                qb.where('property_units.unitNumber', 'ilike', `%${unit}%`)
-                            }
-                            if (building) {
-                                qb.where('buildings_and_phases.description', 'ilike', `%${building}%`)
-                            }
+                    ]).where((qb) => {
+                        qb.where({ 'service_orders.orgId': req.orgId });
+                        qb.whereIn('service_requests.projectId', accessibleProjects)
+                        if (filters) {
+                            qb.where(filters);
+                        }
+                        if (completedFromDate && completedToDate) {
+                            qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
+                        }
+                        if (dueFromDate && dueToDate) {
+                            qb.whereBetween('service_orders.orderDueDate', [dueFromDate, dueToDate])
+                        }
+                        if (createdFromDate && createdToDate) {
+                            qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
+                        }
+                        if (unit) {
+                            qb.where('property_units.unitNumber', 'ilike', `%${unit}%`)
+                        }
+                        if (building) {
+                            qb.where('buildings_and_phases.description', 'ilike', `%${building}%`)
+                        }
 
-                            if (description) {
-                                qb.where('service_requests.description', 'iLIKE', `%${description}%`)
-                            }
-                            if (requestedBy) {
-                                qb.where('requested_by.name', 'ilike', `%${requestedBy}%`)
-                            }
-                            // if (tenantName) {
-                            //     qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
-                            // }
-                            if (priority) {
-                                qb.where('service_requests.priority', 'ilike', `%${priority}%`)
-                            }
+                        if (description) {
+                            qb.where('service_requests.description', 'iLIKE', `%${description}%`)
+                        }
+                        if (requestedBy) {
+                            qb.where('requested_by.name', 'ilike', `%${requestedBy}%`)
+                        }
+                        // if (tenantName) {
+                        //     qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
+                        // }
+                        if (priority) {
+                            qb.where('service_requests.priority', 'ilike', `%${priority}%`)
+                        }
 
-                        }).groupBy([
-                            'buildings_and_phases.id',
-                            'teams.teamId',
-                            'requested_by.id',
-                            'property_units.id',
-                            'service_requests.id',
-                            'service_orders.id',
-                            'service_problems.id',
-                            'incident_categories.id',
-                            'assigned_service_team.id',
-                            'users.id', 'u.id',
-                            "companies.id",
-                            "projects.id",
-                            // "assignUser.id",
-                            // "user_house_allocation.id",
-                            'status.id', 'users.id']),
+                    }).groupBy([
+                        'buildings_and_phases.id',
+                        'teams.teamId',
+                        'requested_by.id',
+                        'property_units.id',
+                        'service_requests.id',
+                        'service_orders.id',
+                        'service_problems.id',
+                        'incident_categories.id',
+                        'assigned_service_team.id',
+                        'users.id', 'u.id',
+                        "companies.id",
+                        "projects.id",
+                        // "assignUser.id",
+                        // "user_house_allocation.id",
+                        'status.id', 'users.id'
+                    ]),
 
                     knex.from('service_orders')
-                        .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                        .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                        .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                        .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
-                        .leftJoin('users', 'assigned_service_team.userId', 'users.id')
-                        .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
-                        .leftJoin("users AS u", "service_requests.createdBy", "u.id")
-                        .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
-                        .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
-                        //.leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
-                        // .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
-                        // .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
-                        // .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
-                        .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
-                        .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
-                        // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-                        // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
-                        .leftJoin('companies', 'service_orders.companyId', 'companies.id')
-                        .leftJoin('projects', 'property_units.projectId', 'projects.id')
+                    .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                    .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                    .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                    .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
+                    .leftJoin('users', 'assigned_service_team.userId', 'users.id')
+                    .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
+                    .leftJoin("users AS u", "service_requests.createdBy", "u.id")
+                    .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                    .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+                    //.leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+                    // .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
+                    // .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                    // .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+                    .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+                    .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
+                    // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+                    // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+                    .leftJoin('companies', 'service_orders.companyId', 'companies.id')
+                    .leftJoin('projects', 'property_units.projectId', 'projects.id')
 
-                        .select([
-                            'service_orders.id as So Id',
-                            'service_requests.description as Description',
-                            'service_requests.location as Location',
-                            'service_requests.id as Sr Id',
-                            'incident_categories.descriptionEng as Problem',
-                            'priority as Priority',
-                            'service_requests.createdBy as Created By',
-                            'orderDueDate as Due Date',
-                            'u.name as Created By',
-                            'status.descriptionEng as Status',
-                            'service_orders.createdAt as Date Created',
-                            'service_requests.houseId as houseId',
-                            "buildings_and_phases.description as Building Name",
-                            "users.userName as Assigned Main User",
-                            "teams.teamName as Team Name",
-                            "requested_by.name as Requested By",
-                            "property_units.unitNumber as Unit Number",
-                            "property_units.id as unitId",
-                            "service_orders.displayId as SO#",
-                            "service_requests.displayId as SR#",
-                            "companies.companyName",
-                            "companies.companyId",
-                            "projects.project",
-                            "projects.projectName",
+                    .select([
+                        'service_orders.id as So Id',
+                        'service_requests.description as Description',
+                        'service_requests.location as Location',
+                        'service_requests.id as Sr Id',
+                        'incident_categories.descriptionEng as Problem',
+                        'priority as Priority',
+                        'service_requests.createdBy as Created By',
+                        'orderDueDate as Due Date',
+                        'u.name as Created By',
+                        'status.descriptionEng as Status',
+                        'service_orders.createdAt as Date Created',
+                        'service_requests.houseId as houseId',
+                        "buildings_and_phases.description as Building Name",
+                        "users.userName as Assigned Main User",
+                        "teams.teamName as Team Name",
+                        "requested_by.name as Requested By",
+                        "property_units.unitNumber as Unit Number",
+                        "property_units.id as unitId",
+                        "service_orders.displayId as SO#",
+                        "service_requests.displayId as SR#",
+                        "companies.companyName",
+                        "companies.companyId",
+                        "projects.project",
+                        "projects.projectName",
 
-                            // "assignUser.name as Tenant Name"
+                        // "assignUser.name as Tenant Name"
 
-                        ]).where((qb) => {
-                            qb.where({ 'service_orders.orgId': req.orgId })
-                            qb.whereIn('service_requests.projectId', accessibleProjects)
-                            if (filters) {
-                                qb.where(filters);
-                            }
-                            if (completedFromDate && completedToDate) {
-                                qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
-                            }
-                            if (dueFromDate && dueToDate) {
-                                qb.whereBetween('service_orders.orderDueDate', [dueFromDate, dueToDate])
-                            }
-                            if (createdFromDate && createdToDate) {
-                                qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
-                            }
-                            if (unit) {
-                                qb.where('property_units.unitNumber', 'ilike', `%${unit}%`)
-                            }
-                            if (building) {
-                                qb.where('buildings_and_phases.description', 'ilike', `%${building}%`)
-                            }
-                            if (description) {
-                                qb.where('service_requests.description', 'iLIKE', `%${description}%`)
-                            }
-                            if (requestedBy) {
-                                qb.where('requested_by.name', 'ilike', `%${requestedBy}%`)
-                            }
-                            // if (tenantName) {
-                            //     qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
-                            // }
-                            if (priority) {
-                                qb.where('service_requests.priority', 'ilike', `%${priority}%`)
-                            }
+                    ]).where((qb) => {
+                        qb.where({ 'service_orders.orgId': req.orgId })
+                        qb.whereIn('service_requests.projectId', accessibleProjects)
+                        if (filters) {
+                            qb.where(filters);
+                        }
+                        if (completedFromDate && completedToDate) {
+                            qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
+                        }
+                        if (dueFromDate && dueToDate) {
+                            qb.whereBetween('service_orders.orderDueDate', [dueFromDate, dueToDate])
+                        }
+                        if (createdFromDate && createdToDate) {
+                            qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
+                        }
+                        if (unit) {
+                            qb.where('property_units.unitNumber', 'ilike', `%${unit}%`)
+                        }
+                        if (building) {
+                            qb.where('buildings_and_phases.description', 'ilike', `%${building}%`)
+                        }
+                        if (description) {
+                            qb.where('service_requests.description', 'iLIKE', `%${description}%`)
+                        }
+                        if (requestedBy) {
+                            qb.where('requested_by.name', 'ilike', `%${requestedBy}%`)
+                        }
+                        // if (tenantName) {
+                        //     qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
+                        // }
+                        if (priority) {
+                            qb.where('service_requests.priority', 'ilike', `%${priority}%`)
+                        }
 
 
-                        }).offset(offset).limit(per_page).orderBy('service_orders.id', 'desc')
+                    }).offset(offset).limit(per_page).orderBy('service_orders.id', 'desc')
                 ])
-            }
-            else if (_.isEmpty(filters)) {
+            } else if (_.isEmpty(filters)) {
                 [total, rows] = await Promise.all([
                     knex
 
-                        .from("service_orders")
-                        .leftJoin(
-                            "service_requests",
-                            "service_orders.serviceRequestId",
-                            "service_requests.id"
-                        )
-                        .leftJoin(
-                            "service_problems",
-                            "service_requests.id",
-                            "service_problems.serviceRequestId"
-                        )
-                        .leftJoin(
-                            "incident_categories",
-                            "service_problems.categoryId",
-                            "incident_categories.id"
-                        )
-                        .leftJoin(
-                            "assigned_service_team",
-                            "service_requests.id",
-                            "assigned_service_team.entityId"
-                        )
-                        .leftJoin(
-                            "users",
-                            "assigned_service_team.userId",
-                            "users.id"
-                        )
-                        .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
-                        .leftJoin("users AS u", "service_requests.createdBy", "u.id")
-                        .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
-                        .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
-                        .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
-                        .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
-                        // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-                        // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
-                        .leftJoin('companies', 'service_orders.companyId', 'companies.id')
-                        .leftJoin('projects', 'property_units.projectId', 'projects.id')
+                    .from("service_orders")
+                    .leftJoin(
+                        "service_requests",
+                        "service_orders.serviceRequestId",
+                        "service_requests.id"
+                    )
+                    .leftJoin(
+                        "service_problems",
+                        "service_requests.id",
+                        "service_problems.serviceRequestId"
+                    )
+                    .leftJoin(
+                        "incident_categories",
+                        "service_problems.categoryId",
+                        "incident_categories.id"
+                    )
+                    .leftJoin(
+                        "assigned_service_team",
+                        "service_requests.id",
+                        "assigned_service_team.entityId"
+                    )
+                    .leftJoin(
+                        "users",
+                        "assigned_service_team.userId",
+                        "users.id"
+                    )
+                    .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
+                    .leftJoin("users AS u", "service_requests.createdBy", "u.id")
+                    .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                    .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+                    .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+                    .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
+                    // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+                    // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+                    .leftJoin('companies', 'service_orders.companyId', 'companies.id')
+                    .leftJoin('projects', 'property_units.projectId', 'projects.id')
 
-                        .select([
-                            "service_orders.id as So Id",
-                            "service_requests.description as Description",
-                            "service_requests.location as Location",
-                            "service_requests.id as Sr Id",
-                            "incident_categories.descriptionEng as Problem",
-                            "priority as Priority",
-                            "orderDueDate as Due Date",
-                            "status.descriptionEng as Status",
-                            "u.name as Created By",
-                            "service_orders.createdAt as Date Created",
-                            'service_requests.houseId as houseId',
-                            "buildings_and_phases.description as Building Name",
-                            "users.userName as Assigned Main User",
-                            "teams.teamName as Team Name",
-                            "requested_by.name as Requested By",
-                            "property_units.unitNumber as Unit Number",
-                            "property_units.id as unitId",
-                            "service_orders.displayId as SO#",
-                            "service_requests.displayId as SR#",
-                            "companies.companyName",
-                            "companies.companyId",
-                            "projects.project",
-                            "projects.projectName",
+                    .select([
+                        "service_orders.id as So Id",
+                        "service_requests.description as Description",
+                        "service_requests.location as Location",
+                        "service_requests.id as Sr Id",
+                        "incident_categories.descriptionEng as Problem",
+                        "priority as Priority",
+                        "orderDueDate as Due Date",
+                        "status.descriptionEng as Status",
+                        "u.name as Created By",
+                        "service_orders.createdAt as Date Created",
+                        'service_requests.houseId as houseId',
+                        "buildings_and_phases.description as Building Name",
+                        "users.userName as Assigned Main User",
+                        "teams.teamName as Team Name",
+                        "requested_by.name as Requested By",
+                        "property_units.unitNumber as Unit Number",
+                        "property_units.id as unitId",
+                        "service_orders.displayId as SO#",
+                        "service_requests.displayId as SR#",
+                        "companies.companyName",
+                        "companies.companyId",
+                        "projects.project",
+                        "projects.projectName",
 
-                            // "assignUser.name as Tenant Name"
-                        ])
-                        .where(qb => {
-                            qb.where({ "service_orders.orgId": req.orgId });
-                            qb.whereIn('service_requests.projectId', accessibleProjects)
+                        // "assignUser.name as Tenant Name"
+                    ])
+                    .where(qb => {
+                        qb.where({ "service_orders.orgId": req.orgId });
+                        qb.whereIn('service_requests.projectId', accessibleProjects)
 
 
-                            if (filters) {
-                                qb.where(filters);
-                            }
-                            if (completedFromDate && completedToDate) {
-                                qb.whereBetween("service_orders.completedOn", [
-                                    completedFromDate,
-                                    completedToDate
-                                ]);
-                            }
-                            if (dueFromDate && dueToDate) {
-                                qb.whereBetween("service_orders.orderDueDate", [
-                                    dueFromDate,
-                                    dueToDate
-                                ]);
-                            }
-                            if (createdFromDate && createdToDate) {
-                                qb.whereBetween("service_orders.createdAt", [
-                                    createdFromDate,
-                                    createdToDate
-                                ]);
-                            }
-                            if (unit) {
-                                qb.where('property_units.unitNumber', 'ilike', `%${unit}%`)
-                            }
-                            if (building) {
-                                qb.where('buildings_and_phases.description', 'ilike', `%${building}%`)
-                            }
-                            if (description) {
-                                qb.where('service_requests.description', 'iLIKE', `%${description}%`)
-                            }
+                        if (filters) {
+                            qb.where(filters);
+                        }
+                        if (completedFromDate && completedToDate) {
+                            qb.whereBetween("service_orders.completedOn", [
+                                completedFromDate,
+                                completedToDate
+                            ]);
+                        }
+                        if (dueFromDate && dueToDate) {
+                            qb.whereBetween("service_orders.orderDueDate", [
+                                dueFromDate,
+                                dueToDate
+                            ]);
+                        }
+                        if (createdFromDate && createdToDate) {
+                            qb.whereBetween("service_orders.createdAt", [
+                                createdFromDate,
+                                createdToDate
+                            ]);
+                        }
+                        if (unit) {
+                            qb.where('property_units.unitNumber', 'ilike', `%${unit}%`)
+                        }
+                        if (building) {
+                            qb.where('buildings_and_phases.description', 'ilike', `%${building}%`)
+                        }
+                        if (description) {
+                            qb.where('service_requests.description', 'iLIKE', `%${description}%`)
+                        }
 
-                            // if(tenantName){
-                            //     qb.where('assignUser.name','ilike',`%${tenantName}%`)
-                            // }
-                            if (requestedBy) {
-                                qb.where('requested_by.name', 'ilike', `%${requestedBy}%`)
-                            }
-                            if (priority) {
-                                qb.where('service_requests.priority', 'ilike', `%${priority}%`)
-                            }
+                        // if(tenantName){
+                        //     qb.where('assignUser.name','ilike',`%${tenantName}%`)
+                        // }
+                        if (requestedBy) {
+                            qb.where('requested_by.name', 'ilike', `%${requestedBy}%`)
+                        }
+                        if (priority) {
+                            qb.where('service_requests.priority', 'ilike', `%${priority}%`)
+                        }
 
-                        })
-                        .groupBy([
-                            "service_requests.id",
-                            "service_orders.id",
-                            "service_problems.id",
-                            "incident_categories.id",
-                            "assigned_service_team.id",
-                            "users.id",
-                            "u.id",
-                            "status.id",
-                            'buildings_and_phases.id',
-                            'teams.teamId',
-                            'requested_by.id',
-                            'property_units.id',
-                            "companies.id",
-                            "projects.id",
-                            // "assignUser.id",
-                            // "user_house_allocation.id"
+                    })
+                    .groupBy([
+                        "service_requests.id",
+                        "service_orders.id",
+                        "service_problems.id",
+                        "incident_categories.id",
+                        "assigned_service_team.id",
+                        "users.id",
+                        "u.id",
+                        "status.id",
+                        'buildings_and_phases.id',
+                        'teams.teamId',
+                        'requested_by.id',
+                        'property_units.id',
+                        "companies.id",
+                        "projects.id",
+                        // "assignUser.id",
+                        // "user_house_allocation.id"
 
-                        ]),
+                    ]),
                     knex
-                        .from("service_orders")
-                        .leftJoin(
-                            "service_requests",
-                            "service_orders.serviceRequestId",
-                            "service_requests.id"
-                        )
-                        .leftJoin(
-                            "service_problems",
-                            "service_requests.id",
-                            "service_problems.serviceRequestId"
-                        )
-                        .leftJoin(
-                            "incident_categories",
-                            "service_problems.categoryId",
-                            "incident_categories.id"
-                        )
-                        .leftJoin(
-                            "assigned_service_team",
-                            "service_requests.id",
-                            "assigned_service_team.entityId"
-                        )
-                        .leftJoin(
-                            "users",
-                            "assigned_service_team.userId",
-                            "users.id"
-                        )
-                        .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
-                        .leftJoin("users AS u", "service_requests.createdBy", "u.id")
-                        .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
-                        .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
-                        .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
-                        .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
-                        // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-                        // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
-                        .leftJoin('companies', 'service_orders.companyId', 'companies.id')
-                        .leftJoin('projects', 'property_units.projectId', 'projects.id')
+                    .from("service_orders")
+                    .leftJoin(
+                        "service_requests",
+                        "service_orders.serviceRequestId",
+                        "service_requests.id"
+                    )
+                    .leftJoin(
+                        "service_problems",
+                        "service_requests.id",
+                        "service_problems.serviceRequestId"
+                    )
+                    .leftJoin(
+                        "incident_categories",
+                        "service_problems.categoryId",
+                        "incident_categories.id"
+                    )
+                    .leftJoin(
+                        "assigned_service_team",
+                        "service_requests.id",
+                        "assigned_service_team.entityId"
+                    )
+                    .leftJoin(
+                        "users",
+                        "assigned_service_team.userId",
+                        "users.id"
+                    )
+                    .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
+                    .leftJoin("users AS u", "service_requests.createdBy", "u.id")
+                    .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                    .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+                    .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+                    .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
+                    // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+                    // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+                    .leftJoin('companies', 'service_orders.companyId', 'companies.id')
+                    .leftJoin('projects', 'property_units.projectId', 'projects.id')
 
-                        .select([
-                            "service_orders.id as So Id",
-                            "service_requests.description as Description",
-                            "service_requests.location as Location",
-                            "service_requests.id as Sr Id",
-                            "incident_categories.descriptionEng as Problem",
-                            "priority as Priority",
-                            "u.name as Created By",
-                            'service_requests.houseId as houseId',
-                            "orderDueDate as Due Date",
-                            "status.descriptionEng as Status",
-                            "service_orders.createdAt as Date Created",
-                            "buildings_and_phases.description as Building Name",
-                            "users.userName as Assigned Main User",
-                            "teams.teamName as Team Name",
-                            "requested_by.name as Requested By",
-                            "property_units.unitNumber as Unit Number",
-                            "property_units.id as unitId",
-                            "service_orders.displayId as SO#",
-                            "service_requests.displayId as SR#",
-                            "companies.companyName",
-                            "companies.companyId",
-                            "projects.project",
-                            "projects.projectName",
+                    .select([
+                        "service_orders.id as So Id",
+                        "service_requests.description as Description",
+                        "service_requests.location as Location",
+                        "service_requests.id as Sr Id",
+                        "incident_categories.descriptionEng as Problem",
+                        "priority as Priority",
+                        "u.name as Created By",
+                        'service_requests.houseId as houseId',
+                        "orderDueDate as Due Date",
+                        "status.descriptionEng as Status",
+                        "service_orders.createdAt as Date Created",
+                        "buildings_and_phases.description as Building Name",
+                        "users.userName as Assigned Main User",
+                        "teams.teamName as Team Name",
+                        "requested_by.name as Requested By",
+                        "property_units.unitNumber as Unit Number",
+                        "property_units.id as unitId",
+                        "service_orders.displayId as SO#",
+                        "service_requests.displayId as SR#",
+                        "companies.companyName",
+                        "companies.companyId",
+                        "projects.project",
+                        "projects.projectName",
 
-                            // "assignUser.name as Tenant Name"
+                        // "assignUser.name as Tenant Name"
 
-                        ])
-                        .where(qb => {
-                            qb.where({ "service_orders.orgId": req.orgId });
-                            qb.whereIn('service_requests.projectId', accessibleProjects)
+                    ])
+                    .where(qb => {
+                        qb.where({ "service_orders.orgId": req.orgId });
+                        qb.whereIn('service_requests.projectId', accessibleProjects)
 
 
-                            if (filters) {
-                                qb.where(filters);
-                            }
-                            if (completedFromDate && completedToDate) {
-                                qb.whereBetween("service_orders.completedOn", [
-                                    completedFromDate,
-                                    completedToDate
-                                ]);
-                            }
-                            if (dueFromDate && dueToDate) {
-                                qb.whereBetween("service_orders.orderDueDate", [
-                                    dueFromDate,
-                                    dueToDate
-                                ]);
-                            }
-                            if (createdFromDate && createdToDate) {
-                                qb.whereBetween("service_orders.createdAt", [
-                                    createdFromDate,
-                                    createdToDate
-                                ]);
-                            }
-                            if (unit) {
-                                qb.where('property_units.unitNumber', 'ilike', `%${unit}%`)
-                            }
-                            if (building) {
-                                qb.where('buildings_and_phases.description', 'ilike', `%${building}%`)
-                            }
-                            if (description) {
-                                qb.where('service_requests.description', 'iLIKE', `%${description}%`)
-                            }
-                            // if (tenantName) {
-                            //     qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
-                            // }
-                            if (requestedBy) {
-                                qb.where('requested_by.name', 'ilike', `%${requestedBy}%`)
-                            }
-                            if (priority) {
-                                qb.where('service_requests.priority', 'ilike', `%${priority}%`)
-                            }
+                        if (filters) {
+                            qb.where(filters);
+                        }
+                        if (completedFromDate && completedToDate) {
+                            qb.whereBetween("service_orders.completedOn", [
+                                completedFromDate,
+                                completedToDate
+                            ]);
+                        }
+                        if (dueFromDate && dueToDate) {
+                            qb.whereBetween("service_orders.orderDueDate", [
+                                dueFromDate,
+                                dueToDate
+                            ]);
+                        }
+                        if (createdFromDate && createdToDate) {
+                            qb.whereBetween("service_orders.createdAt", [
+                                createdFromDate,
+                                createdToDate
+                            ]);
+                        }
+                        if (unit) {
+                            qb.where('property_units.unitNumber', 'ilike', `%${unit}%`)
+                        }
+                        if (building) {
+                            qb.where('buildings_and_phases.description', 'ilike', `%${building}%`)
+                        }
+                        if (description) {
+                            qb.where('service_requests.description', 'iLIKE', `%${description}%`)
+                        }
+                        // if (tenantName) {
+                        //     qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
+                        // }
+                        if (requestedBy) {
+                            qb.where('requested_by.name', 'ilike', `%${requestedBy}%`)
+                        }
+                        if (priority) {
+                            qb.where('service_requests.priority', 'ilike', `%${priority}%`)
+                        }
 
-                        }).groupBy([
-                            "service_requests.id",
-                            "service_orders.id",
-                            "service_problems.id",
-                            "incident_categories.id",
-                            "assigned_service_team.id",
-                            "users.id",
-                            "u.id",
-                            "status.id",
-                            'buildings_and_phases.id',
-                            'teams.teamId',
-                            'requested_by.id',
-                            'property_units.id',
-                            "companies.id",
-                            "projects.id",
-                            // "assignUser.id",
-                            // "user_house_allocation.id"
-                        ])
-                        .offset(offset)
-                        .limit(per_page).orderBy('service_orders.id', 'desc')
+                    }).groupBy([
+                        "service_requests.id",
+                        "service_orders.id",
+                        "service_problems.id",
+                        "incident_categories.id",
+                        "assigned_service_team.id",
+                        "users.id",
+                        "u.id",
+                        "status.id",
+                        'buildings_and_phases.id',
+                        'teams.teamId',
+                        'requested_by.id',
+                        'property_units.id',
+                        "companies.id",
+                        "projects.id",
+                        // "assignUser.id",
+                        // "user_house_allocation.id"
+                    ])
+                    .offset(offset)
+                    .limit(per_page).orderBy('service_orders.id', 'desc')
                 ]);
                 // [total, rows] = await Promise.all([
                 //     knex
@@ -957,249 +965,249 @@ const serviceOrderController = {
                 [total, rows] = await Promise.all([
                     knex
 
-                        .from("service_orders")
-                        .leftJoin(
-                            "service_requests",
-                            "service_orders.serviceRequestId",
-                            "service_requests.id"
-                        )
-                        .leftJoin(
-                            "service_problems",
-                            "service_requests.id",
-                            "service_problems.serviceRequestId"
-                        )
-                        .leftJoin(
-                            "incident_categories",
-                            "service_problems.categoryId",
-                            "incident_categories.id"
-                        )
-                        .leftJoin(
-                            "assigned_service_team",
-                            "service_requests.id",
-                            "assigned_service_team.entityId"
-                        )
-                        .leftJoin(
-                            "users",
-                            "assigned_service_team.userId",
-                            "users.id"
-                        )
-                        .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
-                        .leftJoin("users AS u", "service_requests.createdBy", "u.id")
-                        .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
-                        .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
-                        .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
-                        .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
-                        // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-                        // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
-                        .leftJoin('companies', 'service_orders.companyId', 'companies.id')
-                        .leftJoin('projects', 'property_units.projectId', 'projects.id')
+                    .from("service_orders")
+                    .leftJoin(
+                        "service_requests",
+                        "service_orders.serviceRequestId",
+                        "service_requests.id"
+                    )
+                    .leftJoin(
+                        "service_problems",
+                        "service_requests.id",
+                        "service_problems.serviceRequestId"
+                    )
+                    .leftJoin(
+                        "incident_categories",
+                        "service_problems.categoryId",
+                        "incident_categories.id"
+                    )
+                    .leftJoin(
+                        "assigned_service_team",
+                        "service_requests.id",
+                        "assigned_service_team.entityId"
+                    )
+                    .leftJoin(
+                        "users",
+                        "assigned_service_team.userId",
+                        "users.id"
+                    )
+                    .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
+                    .leftJoin("users AS u", "service_requests.createdBy", "u.id")
+                    .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                    .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+                    .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+                    .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
+                    // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+                    // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+                    .leftJoin('companies', 'service_orders.companyId', 'companies.id')
+                    .leftJoin('projects', 'property_units.projectId', 'projects.id')
 
-                        .select([
-                            "service_orders.id as So Id",
-                            "service_requests.description as Description",
-                            "service_requests.location as Location",
-                            "service_requests.id as Sr Id",
-                            "incident_categories.descriptionEng as Problem",
-                            "priority as Priority",
-                            "orderDueDate as Due Date",
-                            "status.descriptionEng as Status",
-                            "u.name as Created By",
-                            "service_orders.createdAt as Date Created",
-                            'service_requests.houseId as houseId',
-                            "buildings_and_phases.description as Building Name",
-                            "users.userName as Assigned Main User",
-                            "teams.teamName as Team Name",
-                            "requested_by.name as Requested By",
-                            "property_units.unitNumber as Unit Number",
-                            "property_units.id as unitId",
-                            "service_orders.displayId as SO#",
-                            "service_requests.displayId as SR#",
-                            "companies.companyName",
-                            "companies.companyId",
-                            "projects.project",
-                            "projects.projectName",
+                    .select([
+                        "service_orders.id as So Id",
+                        "service_requests.description as Description",
+                        "service_requests.location as Location",
+                        "service_requests.id as Sr Id",
+                        "incident_categories.descriptionEng as Problem",
+                        "priority as Priority",
+                        "orderDueDate as Due Date",
+                        "status.descriptionEng as Status",
+                        "u.name as Created By",
+                        "service_orders.createdAt as Date Created",
+                        'service_requests.houseId as houseId',
+                        "buildings_and_phases.description as Building Name",
+                        "users.userName as Assigned Main User",
+                        "teams.teamName as Team Name",
+                        "requested_by.name as Requested By",
+                        "property_units.unitNumber as Unit Number",
+                        "property_units.id as unitId",
+                        "service_orders.displayId as SO#",
+                        "service_requests.displayId as SR#",
+                        "companies.companyName",
+                        "companies.companyId",
+                        "projects.project",
+                        "projects.projectName",
 
-                            // "assignUser.name as Tenant Name"
-                        ])
-                        .where(qb => {
-                            qb.where({ "service_orders.orgId": req.orgId });
-                            qb.whereIn('service_requests.projectId', accessibleProjects)
+                        // "assignUser.name as Tenant Name"
+                    ])
+                    .where(qb => {
+                        qb.where({ "service_orders.orgId": req.orgId });
+                        qb.whereIn('service_requests.projectId', accessibleProjects)
 
 
-                            if (filters) {
-                                qb.where(filters);
-                            }
-                            if (completedFromDate && completedToDate) {
-                                qb.whereBetween("service_orders.completedOn", [
-                                    completedFromDate,
-                                    completedToDate
-                                ]);
-                            }
-                            if (dueFromDate && dueToDate) {
-                                qb.whereBetween("service_orders.orderDueDate", [
-                                    dueFromDate,
-                                    dueToDate
-                                ]);
-                            }
-                            if (createdFromDate && createdToDate) {
-                                qb.whereBetween("service_orders.createdAt", [
-                                    createdFromDate,
-                                    createdToDate
-                                ]);
-                            }
-                            if (unit) {
-                                qb.where('property_units.unitNumber', 'ilike', `%${unit}%`)
-                            }
-                            if (building) {
-                                qb.where('buildings_and_phases.description', 'ilike', `%${building}%`)
-                            }
-                            if (description) {
-                                qb.where('service_requests.description', 'iLIKE', `%${description}%`)
-                            }
-                            // if (tenantName) {
-                            //     qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
-                            // }
+                        if (filters) {
+                            qb.where(filters);
+                        }
+                        if (completedFromDate && completedToDate) {
+                            qb.whereBetween("service_orders.completedOn", [
+                                completedFromDate,
+                                completedToDate
+                            ]);
+                        }
+                        if (dueFromDate && dueToDate) {
+                            qb.whereBetween("service_orders.orderDueDate", [
+                                dueFromDate,
+                                dueToDate
+                            ]);
+                        }
+                        if (createdFromDate && createdToDate) {
+                            qb.whereBetween("service_orders.createdAt", [
+                                createdFromDate,
+                                createdToDate
+                            ]);
+                        }
+                        if (unit) {
+                            qb.where('property_units.unitNumber', 'ilike', `%${unit}%`)
+                        }
+                        if (building) {
+                            qb.where('buildings_and_phases.description', 'ilike', `%${building}%`)
+                        }
+                        if (description) {
+                            qb.where('service_requests.description', 'iLIKE', `%${description}%`)
+                        }
+                        // if (tenantName) {
+                        //     qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
+                        // }
 
-                            if (requestedBy) {
-                                qb.where('requested_by.name', 'ilike', `%${requestedBy}%`)
-                            }
-                            if (priority) {
-                                qb.where('service_requests.priority', 'ilike', `%${priority}%`)
-                            }
+                        if (requestedBy) {
+                            qb.where('requested_by.name', 'ilike', `%${requestedBy}%`)
+                        }
+                        if (priority) {
+                            qb.where('service_requests.priority', 'ilike', `%${priority}%`)
+                        }
 
-                        })
-                        .groupBy([
-                            "service_requests.id",
-                            "service_orders.id",
-                            "service_problems.id",
-                            "incident_categories.id",
-                            "assigned_service_team.id",
-                            "users.id",
-                            "u.id",
-                            "status.id",
-                            'buildings_and_phases.id',
-                            'teams.teamId',
-                            'requested_by.id',
-                            'property_units.id',
-                            "companies.id",
-                            "projects.id",
-                            // "assignUser.id",
-                            // "user_house_allocation.id"
+                    })
+                    .groupBy([
+                        "service_requests.id",
+                        "service_orders.id",
+                        "service_problems.id",
+                        "incident_categories.id",
+                        "assigned_service_team.id",
+                        "users.id",
+                        "u.id",
+                        "status.id",
+                        'buildings_and_phases.id',
+                        'teams.teamId',
+                        'requested_by.id',
+                        'property_units.id',
+                        "companies.id",
+                        "projects.id",
+                        // "assignUser.id",
+                        // "user_house_allocation.id"
 
-                        ]),
+                    ]),
                     knex
-                        .from("service_orders")
-                        .leftJoin(
-                            "service_requests",
-                            "service_orders.serviceRequestId",
-                            "service_requests.id"
-                        )
-                        .leftJoin(
-                            "service_problems",
-                            "service_requests.id",
-                            "service_problems.serviceRequestId"
-                        )
-                        .leftJoin(
-                            "incident_categories",
-                            "service_problems.categoryId",
-                            "incident_categories.id"
-                        )
-                        .leftJoin(
-                            "assigned_service_team",
-                            "service_requests.id",
-                            "assigned_service_team.entityId"
-                        )
-                        .leftJoin(
-                            "users",
-                            "assigned_service_team.userId",
-                            "users.id"
-                        )
-                        .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
-                        .leftJoin("users AS u", "service_requests.createdBy", "u.id")
-                        .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
-                        .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
-                        .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
-                        .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
-                        // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-                        // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
-                        .leftJoin('companies', 'service_orders.companyId', 'companies.id')
-                        .leftJoin('projects', 'property_units.projectId', 'projects.id')
+                    .from("service_orders")
+                    .leftJoin(
+                        "service_requests",
+                        "service_orders.serviceRequestId",
+                        "service_requests.id"
+                    )
+                    .leftJoin(
+                        "service_problems",
+                        "service_requests.id",
+                        "service_problems.serviceRequestId"
+                    )
+                    .leftJoin(
+                        "incident_categories",
+                        "service_problems.categoryId",
+                        "incident_categories.id"
+                    )
+                    .leftJoin(
+                        "assigned_service_team",
+                        "service_requests.id",
+                        "assigned_service_team.entityId"
+                    )
+                    .leftJoin(
+                        "users",
+                        "assigned_service_team.userId",
+                        "users.id"
+                    )
+                    .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
+                    .leftJoin("users AS u", "service_requests.createdBy", "u.id")
+                    .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                    .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+                    .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+                    .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
+                    // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+                    // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+                    .leftJoin('companies', 'service_orders.companyId', 'companies.id')
+                    .leftJoin('projects', 'property_units.projectId', 'projects.id')
 
-                        .select([
-                            "service_orders.id as So Id",
-                            "service_requests.description as Description",
-                            "service_requests.location as Location",
-                            "service_requests.id as Sr Id",
-                            "incident_categories.descriptionEng as Problem",
-                            "priority as Priority",
-                            "u.name as Created By",
-                            'service_requests.houseId as houseId',
-                            "orderDueDate as Due Date",
-                            "status.descriptionEng as Status",
-                            "service_orders.createdAt as Date Created",
-                            "buildings_and_phases.description as Building Name",
-                            "users.userName as Assigned Main User",
-                            "teams.teamName as Team Name",
-                            "requested_by.name as Requested By",
-                            "property_units.unitNumber as Unit Number",
-                            "property_units.id as unitId",
-                            "service_orders.displayId as SO#",
-                            "service_requests.displayId as SR#",
-                            "companies.companyName",
-                            "companies.companyId",
-                            "projects.project",
-                            "projects.projectName",
-                            // "assignUser.name as Tenant Name"
+                    .select([
+                        "service_orders.id as So Id",
+                        "service_requests.description as Description",
+                        "service_requests.location as Location",
+                        "service_requests.id as Sr Id",
+                        "incident_categories.descriptionEng as Problem",
+                        "priority as Priority",
+                        "u.name as Created By",
+                        'service_requests.houseId as houseId',
+                        "orderDueDate as Due Date",
+                        "status.descriptionEng as Status",
+                        "service_orders.createdAt as Date Created",
+                        "buildings_and_phases.description as Building Name",
+                        "users.userName as Assigned Main User",
+                        "teams.teamName as Team Name",
+                        "requested_by.name as Requested By",
+                        "property_units.unitNumber as Unit Number",
+                        "property_units.id as unitId",
+                        "service_orders.displayId as SO#",
+                        "service_requests.displayId as SR#",
+                        "companies.companyName",
+                        "companies.companyId",
+                        "projects.project",
+                        "projects.projectName",
+                        // "assignUser.name as Tenant Name"
 
-                        ])
-                        .where(qb => {
-                            qb.where({ "service_orders.orgId": req.orgId });
-                            qb.whereIn('service_requests.projectId', accessibleProjects)
+                    ])
+                    .where(qb => {
+                        qb.where({ "service_orders.orgId": req.orgId });
+                        qb.whereIn('service_requests.projectId', accessibleProjects)
 
 
-                            if (filters) {
-                                qb.where(filters);
-                            }
-                            if (completedFromDate && completedToDate) {
-                                qb.whereBetween("service_orders.completedOn", [
-                                    completedFromDate,
-                                    completedToDate
-                                ]);
-                            }
-                            if (dueFromDate && dueToDate) {
-                                qb.whereBetween("service_orders.orderDueDate", [
-                                    dueFromDate,
-                                    dueToDate
-                                ]);
-                            }
-                            if (createdFromDate && createdToDate) {
-                                qb.whereBetween("service_orders.createdAt", [
-                                    createdFromDate,
-                                    createdToDate
-                                ]);
-                            }
-                            if (unit) {
-                                qb.where('property_units.unitNumber', 'ilike', `%${unit}%`)
-                            }
-                            if (building) {
-                                qb.where('buildings_and_phases.description', 'ilike', `%${building}%`)
-                            }
-                            if (description) {
-                                qb.where('service_requests.description', 'iLIKE', `%${description}%`)
-                            }
-                            // if (tenantName) {
-                            //     qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
-                            // }
-                            if (requestedBy) {
-                                qb.where('requested_by.name', 'ilike', `%${requestedBy}%`)
-                            }
-                            if (priority) {
-                                qb.where('service_requests.priority', 'ilike', `%${priority}%`)
-                            }
+                        if (filters) {
+                            qb.where(filters);
+                        }
+                        if (completedFromDate && completedToDate) {
+                            qb.whereBetween("service_orders.completedOn", [
+                                completedFromDate,
+                                completedToDate
+                            ]);
+                        }
+                        if (dueFromDate && dueToDate) {
+                            qb.whereBetween("service_orders.orderDueDate", [
+                                dueFromDate,
+                                dueToDate
+                            ]);
+                        }
+                        if (createdFromDate && createdToDate) {
+                            qb.whereBetween("service_orders.createdAt", [
+                                createdFromDate,
+                                createdToDate
+                            ]);
+                        }
+                        if (unit) {
+                            qb.where('property_units.unitNumber', 'ilike', `%${unit}%`)
+                        }
+                        if (building) {
+                            qb.where('buildings_and_phases.description', 'ilike', `%${building}%`)
+                        }
+                        if (description) {
+                            qb.where('service_requests.description', 'iLIKE', `%${description}%`)
+                        }
+                        // if (tenantName) {
+                        //     qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
+                        // }
+                        if (requestedBy) {
+                            qb.where('requested_by.name', 'ilike', `%${requestedBy}%`)
+                        }
+                        if (priority) {
+                            qb.where('service_requests.priority', 'ilike', `%${priority}%`)
+                        }
 
-                        })
-                        .offset(offset)
-                        .limit(per_page).orderBy('service_orders.id', 'desc')
+                    })
+                    .offset(offset)
+                    .limit(per_page).orderBy('service_orders.id', 'desc')
                 ]);
 
             }
@@ -1281,7 +1289,7 @@ const serviceOrderController = {
             });
         }
     },
-    getServiceOrderDetails: async (req, res) => {
+    getServiceOrderDetails: async(req, res) => {
         try {
 
             await knex.transaction(async trx => {
@@ -1327,7 +1335,7 @@ const serviceOrderController = {
             });
         }
     },
-    updateServiceOrder: async (req, res) => {
+    updateServiceOrder: async(req, res) => {
         try {
             await knex.transaction(async trx => {
                 let serviceOrder = null;
@@ -1411,7 +1419,7 @@ const serviceOrderController = {
             });
         }
     },
-    addServiceOrderPart: async (req, res) => {
+    addServiceOrderPart: async(req, res) => {
         try {
             let assignedPart = null;
 
@@ -1444,7 +1452,7 @@ const serviceOrderController = {
 
                 let assignedPartInsertPayload = _.omit(assignedPartPayload, ['serviceOrderId'])
 
-                let insertData = { ...assignedPartInsertPayload, entityId: assignedPartPayload.serviceOrderId, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }
+                let insertData = {...assignedPartInsertPayload, entityId: assignedPartPayload.serviceOrderId, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }
                 let partResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('assigned_parts')
                 assignedPart = partResult[0]
                 trx.commit
@@ -1467,7 +1475,7 @@ const serviceOrderController = {
             });
         }
     },
-    addServiceOrderAsset: async (req, res) => {
+    addServiceOrderAsset: async(req, res) => {
         try {
             let assignedAsset = null;
 
@@ -1498,7 +1506,7 @@ const serviceOrderController = {
 
                 let assignedAssetInsertPayload = _.omit(assignedAssetPayload, ['serviceOrderId'])
 
-                let insertData = { ...assignedAssetInsertPayload, entityId: assignedAssetPayload.serviceOrderId, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }
+                let insertData = {...assignedAssetInsertPayload, entityId: assignedAssetPayload.serviceOrderId, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }
                 let assetResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('assigned_assets')
                 assignedAsset = assetResult[0]
                 trx.commit
@@ -1521,7 +1529,7 @@ const serviceOrderController = {
             });
         }
     },
-    deleteServiceOrderPart: async (req, res) => {
+    deleteServiceOrderPart: async(req, res) => {
         try {
             let serviceOrder = null;
             let partResult = null;
@@ -1552,7 +1560,7 @@ const serviceOrderController = {
                 if (String(serviceOrder.serviceOrderStatus).toUpperCase() === 'CMTD') {
                     // Now soft delete and return
                     let updatedPart = await knex.update({ status: 'CMTD', updatedAt: currentTime }).where({ partId: partPayload.partId, entityId: partPayload.serviceOrderId, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_parts')
-                    //partResult = updatedPartResult[0]
+                        //partResult = updatedPartResult[0]
                     trx.commit;
                     return res.status(200).json({
                         data: {
@@ -1582,7 +1590,7 @@ const serviceOrderController = {
             });
         }
     },
-    deleteServiceOrderAsset: async (req, res) => {
+    deleteServiceOrderAsset: async(req, res) => {
         try {
             let serviceOrder = null;
             let partResult = null;
@@ -1613,7 +1621,7 @@ const serviceOrderController = {
                 if (String(serviceOrder.serviceOrderStatus).toUpperCase() === 'CMTD') {
                     // Now soft delete and return
                     let updatedAsset = await knex.update({ status: 'CMTD', updatedAt: currentTime }).where({ assetId: assetPayload.assetId, entityId: assetPayload.serviceOrderId, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_assets')
-                    //partResult = updatedPartResult[0]
+                        //partResult = updatedPartResult[0]
                     trx.commit;
                     return res.status(200).json({
                         data: {
@@ -1643,15 +1651,17 @@ const serviceOrderController = {
             });
         }
     },
-    exportServiceOrder: async (req, res) => {
+    exportServiceOrder: async(req, res) => {
 
         try {
 
-            let { serviceRequestId,
+            let {
+                serviceRequestId,
                 description,
                 serviceOrderStatus,
                 archive,
-                location, assignedBy,
+                location,
+                assignedBy,
                 serviceStartTime,
                 serviceStopTime,
                 createdAt,
@@ -1667,7 +1677,8 @@ const serviceOrderController = {
                 createdFrom,
                 createdTo,
                 unit,
-                serviceType } = req.body
+                serviceType
+            } = req.body
 
             let reqData = req.query;
             let total, rows
@@ -1802,182 +1813,181 @@ const serviceOrderController = {
 
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from('service_orders')
-                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                        .innerJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
-                        .innerJoin('users', 'assigned_service_team.userId', 'users.id')
-                        .select([
-                            'service_orders.id as So Id',
-                            'service_requests.description as Description',
-                            'service_requests.location as Location',
-                            'service_requests.id as Sr Id',
-                            'incident_categories.descriptionEng as Problem',
-                            'priority as Priority',
-                            'service_orders.createdBy as Created By',
-                            'orderDueDate as Due Date',
-                            'serviceOrderStatus as Status',
-                            'service_orders.createdAt as Date Created'
-                        ]).where((qb) => {
+                    .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                    .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                    .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                    .innerJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
+                    .innerJoin('users', 'assigned_service_team.userId', 'users.id')
+                    .select([
+                        'service_orders.id as So Id',
+                        'service_requests.description as Description',
+                        'service_requests.location as Location',
+                        'service_requests.id as Sr Id',
+                        'incident_categories.descriptionEng as Problem',
+                        'priority as Priority',
+                        'service_orders.createdBy as Created By',
+                        'orderDueDate as Due Date',
+                        'serviceOrderStatus as Status',
+                        'service_orders.createdAt as Date Created'
+                    ]).where((qb) => {
 
-                            if (filters) {
-                                qb.where(filters);
-                            }
-                            if (completedFromDate && completedToDate) {
-                                qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
-                            }
-                            if (dueFromDate && dueToDate) {
-                                qb.whereBetween('service_orders.orderDueDate', [dueFromDate, dueToDate])
-                            }
-                            if (createdFromDate && createdToDate) {
-                                qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
-                            }
+                        if (filters) {
+                            qb.where(filters);
+                        }
+                        if (completedFromDate && completedToDate) {
+                            qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
+                        }
+                        if (dueFromDate && dueToDate) {
+                            qb.whereBetween('service_orders.orderDueDate', [dueFromDate, dueToDate])
+                        }
+                        if (createdFromDate && createdToDate) {
+                            qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
+                        }
 
-                        }).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id', 'assigned_service_team.id', 'users.id']),
+                    }).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id', 'assigned_service_team.id', 'users.id']),
                     knex.from('service_orders')
-                        .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                        .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                        .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                        .innerJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
-                        .innerJoin('users', 'assigned_service_team.userId', 'users.id')
-                        .select([
-                            'service_orders.id as So Id',
-                            'service_requests.description as Description',
-                            'service_requests.location as Location',
-                            'service_requests.id as Sr Id',
-                            'incident_categories.descriptionEng as Problem',
-                            'priority as Priority',
-                            'service_orders.createdBy as Created By',
-                            'orderDueDate as Due Date',
-                            'serviceOrderStatus as Status',
-                            'service_orders.createdAt as Date Created'
+                    .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                    .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                    .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                    .innerJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
+                    .innerJoin('users', 'assigned_service_team.userId', 'users.id')
+                    .select([
+                        'service_orders.id as So Id',
+                        'service_requests.description as Description',
+                        'service_requests.location as Location',
+                        'service_requests.id as Sr Id',
+                        'incident_categories.descriptionEng as Problem',
+                        'priority as Priority',
+                        'service_orders.createdBy as Created By',
+                        'orderDueDate as Due Date',
+                        'serviceOrderStatus as Status',
+                        'service_orders.createdAt as Date Created'
 
-                        ]).where((qb) => {
+                    ]).where((qb) => {
 
-                            if (filters) {
-                                qb.where(filters);
-                            }
-                            if (completedFromDate && completedToDate) {
-                                qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
-                            }
-                            if (dueFromDate && dueToDate) {
-                                qb.whereBetween('service_orders.orderDueDate', [dueFromDate, dueToDate])
-                            }
-                            if (createdFromDate && createdToDate) {
-                                qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
-                            }
+                        if (filters) {
+                            qb.where(filters);
+                        }
+                        if (completedFromDate && completedToDate) {
+                            qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
+                        }
+                        if (dueFromDate && dueToDate) {
+                            qb.whereBetween('service_orders.orderDueDate', [dueFromDate, dueToDate])
+                        }
+                        if (createdFromDate && createdToDate) {
+                            qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
+                        }
 
-                        }).offset(offset).limit(per_page)
+                    }).offset(offset).limit(per_page)
                 ])
+            } else
+            if (_.isEmpty(filters)) {
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from('service_orders')
+                    .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                    .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                    .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                    .select([
+                        'service_orders.id as So Id',
+                        'service_requests.description as Description',
+                        'location as Location',
+                        'service_requests.id as Sr Id',
+                        'incident_categories.descriptionEng as Problem',
+                        'priority as Priority',
+                        'service_orders.createdBy as Created By',
+                        'orderDueDate as Due Date',
+                        'serviceOrderStatus as Status',
+                        'service_orders.createdAt as Date Created'
+                    ]).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id']),
+                    knex.from('service_orders')
+                    .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                    .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                    .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                    .select([
+                        'service_orders.id as So Id',
+                        'service_requests.description as Description',
+                        'location as Location',
+                        'service_requests.id as Sr Id',
+                        'incident_categories.descriptionEng as Problem',
+                        'priority as Priority',
+                        'service_orders.createdBy as Created By',
+                        'orderDueDate as Due Date',
+                        'serviceOrderStatus as Status',
+                        'service_orders.createdAt as Date Created'
+                    ]).offset(offset).limit(per_page)
+                ])
+            } else {
+                [total, rows] = await Promise.all([
+                    knex.count('* as count').from('service_orders')
+                    .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                    .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                    .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                    .innerJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
+                    .innerJoin('users', 'assigned_service_team.userId', 'users.id')
+                    .select([
+                        'service_orders.id as So Id',
+                        'service_requests.description as Description',
+                        'service_requests.location as Location',
+                        'service_requests.id as Sr Id',
+                        'incident_categories.descriptionEng as Problem',
+                        'priority as Priority',
+                        'service_orders.createdBy as Created By',
+                        'orderDueDate as Due Date',
+                        'serviceOrderStatus as Status',
+                        'service_orders.createdAt as Date Created'
+                    ]).where((qb) => {
+
+                        if (filters) {
+                            qb.where(filters);
+                        }
+                        if (completedFromDate && completedToDate) {
+                            qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
+                        }
+                        if (dueFromDate && dueToDate) {
+                            qb.whereBetween('service_orders.orderDueDate', [dueFromDate, dueToDate])
+                        }
+                        if (createdFromDate && createdToDate) {
+                            qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
+                        }
+
+                    }).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id', 'assigned_service_team.id', 'users.id']),
+                    knex.from('service_orders')
+                    .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                    .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
+                    .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
+                    .innerJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
+                    .innerJoin('users', 'assigned_service_team.userId', 'users.id')
+                    .select([
+                        'service_orders.id as So Id',
+                        'service_requests.description as Description',
+                        'service_requests.location as Location',
+                        'service_requests.id as Sr Id',
+                        'incident_categories.descriptionEng as Problem',
+                        'priority as Priority',
+                        'service_orders.createdBy as Created By',
+                        'orderDueDate as Due Date',
+                        'serviceOrderStatus as Status',
+                        'service_orders.createdAt as Date Created'
+
+                    ]).where((qb) => {
+
+                        if (filters) {
+                            qb.where(filters);
+                        }
+                        if (completedFromDate && completedToDate) {
+                            qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
+                        }
+                        if (dueFromDate && dueToDate) {
+                            qb.whereBetween('service_orders.orderDueDate', [dueFromDate, dueToDate])
+                        }
+                        if (createdFromDate && createdToDate) {
+                            qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
+                        }
+
+                    }).offset(offset).limit(per_page)
+                ])
+
             }
-            else
-                if (_.isEmpty(filters)) {
-                    [total, rows] = await Promise.all([
-                        knex.count('* as count').from('service_orders')
-                            .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                            .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                            .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                            .select([
-                                'service_orders.id as So Id',
-                                'service_requests.description as Description',
-                                'location as Location',
-                                'service_requests.id as Sr Id',
-                                'incident_categories.descriptionEng as Problem',
-                                'priority as Priority',
-                                'service_orders.createdBy as Created By',
-                                'orderDueDate as Due Date',
-                                'serviceOrderStatus as Status',
-                                'service_orders.createdAt as Date Created'
-                            ]).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id']),
-                        knex.from('service_orders')
-                            .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                            .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                            .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                            .select([
-                                'service_orders.id as So Id',
-                                'service_requests.description as Description',
-                                'location as Location',
-                                'service_requests.id as Sr Id',
-                                'incident_categories.descriptionEng as Problem',
-                                'priority as Priority',
-                                'service_orders.createdBy as Created By',
-                                'orderDueDate as Due Date',
-                                'serviceOrderStatus as Status',
-                                'service_orders.createdAt as Date Created'
-                            ]).offset(offset).limit(per_page)
-                    ])
-                } else {
-                    [total, rows] = await Promise.all([
-                        knex.count('* as count').from('service_orders')
-                            .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                            .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                            .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                            .innerJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
-                            .innerJoin('users', 'assigned_service_team.userId', 'users.id')
-                            .select([
-                                'service_orders.id as So Id',
-                                'service_requests.description as Description',
-                                'service_requests.location as Location',
-                                'service_requests.id as Sr Id',
-                                'incident_categories.descriptionEng as Problem',
-                                'priority as Priority',
-                                'service_orders.createdBy as Created By',
-                                'orderDueDate as Due Date',
-                                'serviceOrderStatus as Status',
-                                'service_orders.createdAt as Date Created'
-                            ]).where((qb) => {
-
-                                if (filters) {
-                                    qb.where(filters);
-                                }
-                                if (completedFromDate && completedToDate) {
-                                    qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
-                                }
-                                if (dueFromDate && dueToDate) {
-                                    qb.whereBetween('service_orders.orderDueDate', [dueFromDate, dueToDate])
-                                }
-                                if (createdFromDate && createdToDate) {
-                                    qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
-                                }
-
-                            }).groupBy(['service_requests.id', 'service_orders.id', 'service_problems.id', 'incident_categories.id', 'assigned_service_team.id', 'users.id']),
-                        knex.from('service_orders')
-                            .innerJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                            .innerJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
-                            .innerJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                            .innerJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
-                            .innerJoin('users', 'assigned_service_team.userId', 'users.id')
-                            .select([
-                                'service_orders.id as So Id',
-                                'service_requests.description as Description',
-                                'service_requests.location as Location',
-                                'service_requests.id as Sr Id',
-                                'incident_categories.descriptionEng as Problem',
-                                'priority as Priority',
-                                'service_orders.createdBy as Created By',
-                                'orderDueDate as Due Date',
-                                'serviceOrderStatus as Status',
-                                'service_orders.createdAt as Date Created'
-
-                            ]).where((qb) => {
-
-                                if (filters) {
-                                    qb.where(filters);
-                                }
-                                if (completedFromDate && completedToDate) {
-                                    qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
-                                }
-                                if (dueFromDate && dueToDate) {
-                                    qb.whereBetween('service_orders.orderDueDate', [dueFromDate, dueToDate])
-                                }
-                                if (createdFromDate && createdToDate) {
-                                    qb.whereBetween('service_orders.createdAt', [createdFromDate, createdToDate])
-                                }
-
-                            }).offset(offset).limit(per_page)
-                    ])
-
-                }
 
             var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
             var ws = XLSX.utils.json_to_sheet(rows);
@@ -2000,7 +2010,7 @@ const serviceOrderController = {
             })
         }
     },
-    getServiceOrderAssignedAssets: async (req, res) => {
+    getServiceOrderAssignedAssets: async(req, res) => {
         try {
             let { serviceOrderId } = req.body;
             let reqData = req.query;
@@ -2013,73 +2023,73 @@ const serviceOrderController = {
             let offset = (page - 1) * per_page;
             [total, rows] = await Promise.all([
                 knex("assigned_assets")
-                    .leftJoin(
-                        "asset_master",
-                        "assigned_assets.assetId",
-                        "asset_master.id"
-                    )
-                    .leftJoin(
-                        "asset_category_master",
-                        "asset_master.assetCategoryId",
-                        "asset_category_master.id"
-                    )
-                    // .leftJoin(
-                    //   "assigned_assets",
-                    //   "asset_master.id",
-                    //   "assigned_assets.assetId"
-                    // )
-                    .leftJoin("companies", "asset_master.companyId", "companies.id")
-                    .select([
-                        "asset_master.id as id",
-                        "asset_master.assetName as assetName",
-                        "asset_master.model as model",
-                        "asset_category_master.categoryName as categoryName",
-                        "companies.companyName as companyName"
-                    ])
-                    .where({
-                        entityType: "service_orders",
-                        entityId: serviceOrderId,
-                        "asset_master.orgId": req.orgId
-                    }),
+                .leftJoin(
+                    "asset_master",
+                    "assigned_assets.assetId",
+                    "asset_master.id"
+                )
+                .leftJoin(
+                    "asset_category_master",
+                    "asset_master.assetCategoryId",
+                    "asset_category_master.id"
+                )
+                // .leftJoin(
+                //   "assigned_assets",
+                //   "asset_master.id",
+                //   "assigned_assets.assetId"
+                // )
+                .leftJoin("companies", "asset_master.companyId", "companies.id")
+                .select([
+                    "asset_master.id as id",
+                    "asset_master.assetName as assetName",
+                    "asset_master.model as model",
+                    "asset_category_master.categoryName as categoryName",
+                    "companies.companyName as companyName"
+                ])
+                .where({
+                    entityType: "service_orders",
+                    entityId: serviceOrderId,
+                    "asset_master.orgId": req.orgId
+                }),
 
                 knex("assigned_assets")
-                    .leftJoin(
-                        "asset_master",
-                        "assigned_assets.assetId",
-                        "asset_master.id"
-                    )
-                    .leftJoin(
-                        "asset_category_master",
-                        "asset_master.assetCategoryId",
-                        "asset_category_master.id"
-                    )
+                .leftJoin(
+                    "asset_master",
+                    "assigned_assets.assetId",
+                    "asset_master.id"
+                )
+                .leftJoin(
+                    "asset_category_master",
+                    "asset_master.assetCategoryId",
+                    "asset_category_master.id"
+                )
 
-                    .leftJoin("companies", "asset_master.companyId", "companies.id")
-                    // .leftJoin(
-                    //   "asset_category_master",
-                    //   "asset_master.assetCategoryId",
-                    //   "asset_category_master.id"
-                    // )
-                    // .leftJoin(
-                    //   "assigned_assets",
-                    //   "asset_master.id",
-                    //   "assigned_assets.entityId"
-                    // )
-                    // .leftJoin("companies", "asset_master.companyId", "companies.id")
-                    .select([
-                        "asset_master.id as id",
-                        "asset_master.assetName as assetName",
-                        "asset_master.model as model",
-                        "asset_category_master.categoryName as categoryName",
-                        "companies.companyName as companyName"
-                    ])
-                    .where({
-                        entityType: "service_orders",
-                        entityId: serviceOrderId,
-                        "asset_master.orgId": req.orgId
-                    })
-                    .limit(per_page)
-                    .offset(offset)
+                .leftJoin("companies", "asset_master.companyId", "companies.id")
+                // .leftJoin(
+                //   "asset_category_master",
+                //   "asset_master.assetCategoryId",
+                //   "asset_category_master.id"
+                // )
+                // .leftJoin(
+                //   "assigned_assets",
+                //   "asset_master.id",
+                //   "assigned_assets.entityId"
+                // )
+                // .leftJoin("companies", "asset_master.companyId", "companies.id")
+                .select([
+                    "asset_master.id as id",
+                    "asset_master.assetName as assetName",
+                    "asset_master.model as model",
+                    "asset_category_master.categoryName as categoryName",
+                    "companies.companyName as companyName"
+                ])
+                .where({
+                    entityType: "service_orders",
+                    entityId: serviceOrderId,
+                    "asset_master.orgId": req.orgId
+                })
+                .limit(per_page)
+                .offset(offset)
             ]);
 
             let count = total.length;
@@ -2103,7 +2113,7 @@ const serviceOrderController = {
             });
         }
     },
-    getNewServiceOrderId: async (req, res) => {
+    getNewServiceOrderId: async(req, res) => {
         try {
             const serviceOrder = await knex('service_orders').insert({}).returning(['*'])
             return res.status(200).json({
@@ -2118,7 +2128,7 @@ const serviceOrderController = {
             });
         }
     },
-    addServiceAppointment: async (req, res) => {
+    addServiceAppointment: async(req, res) => {
         try {
             let serviceAppointment = null;
             let additionalUsers = [];
@@ -2225,7 +2235,7 @@ const serviceOrderController = {
             });
         }
     },
-    getServiceAppointmentList: async (req, res) => {
+    getServiceAppointmentList: async(req, res) => {
         try {
             //const serviceOrders = await knex('service_orders').select();
             console.log('ORG ID: ************************************************: ', req.orgId)
@@ -2241,39 +2251,39 @@ const serviceOrderController = {
 
             [total, rows] = await Promise.all([
                 knex.count('* as count').from('service_appointments')
-                    .leftJoin('service_orders', 'service_appointments.serviceOrderId', 'service_orders.id')
-                    .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                    .leftJoin('users', 'service_appointments.createdBy', 'users.id')
-                    .select([
-                        'service_appointments.id as id',
-                        'service_appointments.serviceOrderId as serviceOrderId',
-                        'service_requests.priority as Priority',
-                        'users.name as createdBy',
-                        'service_appointments.appointedDate as appointedDate',
-                        'service_appointments.appointedTime as appointedTime',
-                        'service_appointments.createdAt as dateCreated',
-                        'service_appointments.status as status',
+                .leftJoin('service_orders', 'service_appointments.serviceOrderId', 'service_orders.id')
+                .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                .leftJoin('users', 'service_appointments.createdBy', 'users.id')
+                .select([
+                    'service_appointments.id as id',
+                    'service_appointments.serviceOrderId as serviceOrderId',
+                    'service_requests.priority as Priority',
+                    'users.name as createdBy',
+                    'service_appointments.appointedDate as appointedDate',
+                    'service_appointments.appointedTime as appointedTime',
+                    'service_appointments.createdAt as dateCreated',
+                    'service_appointments.status as status',
 
-                    ]).where({ 'service_appointments.orgId': req.orgId, 'service_appointments.serviceOrderId': serviceOrderId })
-                    .groupBy(['service_appointments.id', 'service_requests.id', 'service_orders.id', 'users.id']),
+                ]).where({ 'service_appointments.orgId': req.orgId, 'service_appointments.serviceOrderId': serviceOrderId })
+                .groupBy(['service_appointments.id', 'service_requests.id', 'service_orders.id', 'users.id']),
 
                 knex.from('service_appointments')
-                    .leftJoin('service_orders', 'service_appointments.serviceOrderId', 'service_orders.id')
-                    .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                    .leftJoin('users', 'service_appointments.createdBy', 'users.id')
-                    .select([
-                        'service_appointments.id as id',
-                        'service_appointments.serviceOrderId as serviceOrderId',
-                        'service_requests.priority as Priority',
-                        'users.name as createdBy',
-                        'service_appointments.appointedDate as appointedDate',
-                        'service_appointments.appointedTime as appointedTime',
-                        'service_appointments.createdAt as dateCreated',
-                        'service_appointments.status as status',
-                        "service_orders.displayId as soNo"
-                    ]).where({ 'service_appointments.orgId': req.orgId, 'service_appointments.serviceOrderId': serviceOrderId })
-                    .groupBy(['service_appointments.id', 'service_requests.id', 'service_orders.id', 'users.id'])
-                    .offset(offset).limit(per_page)
+                .leftJoin('service_orders', 'service_appointments.serviceOrderId', 'service_orders.id')
+                .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                .leftJoin('users', 'service_appointments.createdBy', 'users.id')
+                .select([
+                    'service_appointments.id as id',
+                    'service_appointments.serviceOrderId as serviceOrderId',
+                    'service_requests.priority as Priority',
+                    'users.name as createdBy',
+                    'service_appointments.appointedDate as appointedDate',
+                    'service_appointments.appointedTime as appointedTime',
+                    'service_appointments.createdAt as dateCreated',
+                    'service_appointments.status as status',
+                    "service_orders.displayId as soNo"
+                ]).where({ 'service_appointments.orgId': req.orgId, 'service_appointments.serviceOrderId': serviceOrderId })
+                .groupBy(['service_appointments.id', 'service_requests.id', 'service_orders.id', 'users.id'])
+                .offset(offset).limit(per_page)
             ])
 
             let count = total.length;
@@ -2301,7 +2311,7 @@ const serviceOrderController = {
             });
         }
     },
-    getServiceAppointmentDetails: async (req, res) => {
+    getServiceAppointmentDetails: async(req, res) => {
         try {
 
             await knex.transaction(async trx => {
@@ -2349,7 +2359,7 @@ const serviceOrderController = {
         }
     },
 
-    updateServiceOrderNotes: async (req, res) => {
+    updateServiceOrderNotes: async(req, res) => {
         // Define try/catch block
         try {
             let userId = req.me.id;
@@ -2412,7 +2422,7 @@ const serviceOrderController = {
                 //   });
                 let usernameRes = await knex('users').where({ id: notesData[0].createdBy }).select('name')
                 let username = usernameRes[0].name;
-                notesData = { ...notesData[0], createdBy: username }
+                notesData = {...notesData[0], createdBy: username }
 
                 /*INSERT IMAGE TABLE DATA OPEN */
 
@@ -2435,7 +2445,7 @@ const serviceOrderController = {
                     }
                 }
 
-                notesData = { ...notesData, s3Url: problemImagesData[0].s3Url }
+                notesData = {...notesData, s3Url: problemImagesData[0].s3Url }
 
 
                 trx.commit;
@@ -2457,7 +2467,7 @@ const serviceOrderController = {
             });
         }
     },
-    getServiceOrderNoteList: async (req, res) => {
+    getServiceOrderNoteList: async(req, res) => {
         try {
             let serviceOrderNoteList = null;
 
@@ -2501,7 +2511,7 @@ const serviceOrderController = {
             });
         }
     },
-    deleteServiceOrderRemark: async (req, res) => {
+    deleteServiceOrderRemark: async(req, res) => {
         try {
             let quotation = null;
             await knex.transaction(async trx => {
@@ -2553,7 +2563,7 @@ const serviceOrderController = {
             });
         }
     },
-    getServiceOrderDueDate: async (req, res) => {
+    getServiceOrderDueDate: async(req, res) => {
         try {
             const soId = req.body.soId;
             const so = await knex('service_orders').select('orderDueDate', 'displayId').where({ id: soId }).first();
@@ -2581,7 +2591,7 @@ const serviceOrderController = {
             });
         }
     },
-    updateAppointmentStatus: async (req, res) => {
+    updateAppointmentStatus: async(req, res) => {
         try {
             let serviceAppointmentId = req.body.data.serviceAppointmentId;
             let updateStatus = req.body.data.status;
@@ -2603,14 +2613,14 @@ const serviceOrderController = {
             });
         }
     },
-    getServiceOrderForReport: async (req, res) => {
+    getServiceOrderForReport: async(req, res) => {
         try {
             const payload = req.body;
             const accessibleProjects = req.userProjectResources[0].projects
             let sr = await knex.from("service_orders")
                 .leftJoin("service_requests", "service_orders.serviceRequestId", "service_requests.id")
 
-                .leftJoin(
+            .leftJoin(
                     "property_units",
                     "service_requests.houseId",
                     "property_units.id"
@@ -2638,7 +2648,7 @@ const serviceOrderController = {
                     "incident_categories.id"
                 ).leftJoin('users as c', 'service_requests.createdBy', 'c.id')
 
-                .select([
+            .select([
                     "service_requests.id as S Id",
                     "service_requests.houseId as houseId",
                     "service_requests.description as Description",
@@ -2725,18 +2735,32 @@ const serviceOrderController = {
             const Parallel = require('async-parallel')
             let srWithTenant = await Parallel.map(sr, async pd => {
 
+
+                let tagsResult = [];
+                tagsResult = await knex('location_tags')
+                    .leftJoin('location_tags_master', 'location_tags.locationTagId', 'location_tags_master.id')
+                    .where({ 'location_tags.entityId': pd['S Id'], 'location_tags.entityType': 'service_requests', 'location_tags.orgId': req.orgId });
+
+                tagsResult = _.uniqBy(tagsResult, 'title');
+                tagsResult = tagsResult.map(v => v.title);
+                let tag = tagsResult.toString();
+
+
                 let houseResult = await knex.from('user_house_allocation').select('userId').where({ houseId: pd.unitId }).first().orderBy('id', 'desc')
 
                 if (houseResult) {
                     let tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
                     return {
                         ...pd,
-                        "Tenant Name": tetantResult.name
+                        "Tenant Name": tetantResult.name,
+                        tags: tag
                     }
                 } else {
                     return {
                         ...pd,
-                        "Tenant Name": ''
+                        "Tenant Name": '',
+                        tags: tag
+
                     }
                 }
 
@@ -2810,7 +2834,7 @@ const serviceOrderController = {
     },
     // Get List of Satisfaction
 
-    getSatisfactionList: async (req, res) => {
+    getSatisfactionList: async(req, res) => {
         try {
             let pagination = {};
             let rows = await knex("satisfaction")
@@ -2840,7 +2864,7 @@ const serviceOrderController = {
         }
     },
     /*GET SERVICE ORDER REPORT */
-    getServiceOrderReport: async (req, res) => {
+    getServiceOrderReport: async(req, res) => {
 
         try {
 
@@ -2905,7 +2929,7 @@ const serviceOrderController = {
 
 
             return res.status(200).json({
-                data: { ...serviceOrderResult, partResult, printedBy: meData },
+                data: {...serviceOrderResult, partResult, printedBy: meData },
                 message: "Service Order Report Successfully!",
             });
 
@@ -2916,10 +2940,9 @@ const serviceOrderController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
-    }
-    ,
+    },
     /*GET PROBLEM CATEGORY REPORT */
-    getProblemCategoryReport: async (req, res) => {
+    getProblemCategoryReport: async(req, res) => {
 
         try {
 
@@ -3066,8 +3089,11 @@ const serviceOrderController = {
                 let mapData = _.chain(serviceProblem)
                     .groupBy("categoryId")
                     .map((value, key) => ({
-                        category: key, serviceOrder: value.length, value: value[0],
-                        allValue: value, workDone: value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length,
+                        category: key,
+                        serviceOrder: value.length,
+                        value: value[0],
+                        allValue: value,
+                        workDone: value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length,
                         percentage: (100 * value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / value.length).toFixed(2)
                     }))
                     .value()
@@ -3111,8 +3137,10 @@ const serviceOrderController = {
 
                 let chartData = _.flatten(
                     final
-                        .filter(v => !_.isEmpty(v))
-                        .map(v => _.keys(v).map(p => ({ [p]: (v[p].length) })))
+                    .filter(v => !_.isEmpty(v))
+                    .map(v => _.keys(v).map(p => ({
+                        [p]: (v[p].length)
+                    })))
                 ).reduce((a, p) => {
                     let l = _.keys(p)[0];
                     if (a[l]) {
@@ -3146,8 +3174,10 @@ const serviceOrderController = {
 
                 let workDoneChartData = _.flatten(
                     final
-                        .filter(v => !_.isEmpty(v))
-                        .map(v => _.keys(v).map(p => ({ [p]: (v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length) })))
+                    .filter(v => !_.isEmpty(v))
+                    .map(v => _.keys(v).map(p => ({
+                        [p]: (v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length)
+                    })))
                 ).reduce((a, p) => {
                     let l = _.keys(p)[0];
                     if (a[l]) {
@@ -3175,9 +3205,19 @@ const serviceOrderController = {
 
 
                     return {
-                        ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder,
-                        totalWorkDone: totalWorkDone, totalPercentage: (totalPercentage).toFixed(2), chartData, reportType: "SR", buildingType,
-                        workDoneChartData, totalServiceRequest: serviceProblem2.length, totalDone: filterProblem.length
+                        ...serviceResult[0],
+                        fromDate,
+                        toDate,
+                        serviceOrder: item,
+                        totalServiceOrder: totalServiceOrder,
+                        totalWorkDone: totalWorkDone,
+                        totalPercentage: (totalPercentage).toFixed(2),
+                        chartData,
+                        reportType: "SR",
+                        buildingType,
+                        workDoneChartData,
+                        totalServiceRequest: serviceProblem2.length,
+                        totalDone: filterProblem.length
                     };
 
                 })
@@ -3243,10 +3283,10 @@ const serviceOrderController = {
                         qb.where({ 'service_requests.moderationStatus': true, 'service_requests.orgId': req.orgId })
 
                     })
-                // .where({
-                //     'service_requests.companyId': payload.companyId, 'service_requests.projectId': payload.projectId,
-                //     'buildings_and_phases.id': payload.buildingId, 'service_requests.moderationStatus': true, 'service_requests.orgId': req.orgId
-                // });
+                    // .where({
+                    //     'service_requests.companyId': payload.companyId, 'service_requests.projectId': payload.projectId,
+                    //     'buildings_and_phases.id': payload.buildingId, 'service_requests.moderationStatus': true, 'service_requests.orgId': req.orgId
+                    // });
 
                 let serviceIds = serviceResult.map(it => it.serviceRequestId);
 
@@ -3375,8 +3415,11 @@ const serviceOrderController = {
                 let mapData = _.chain(serviceProblem)
                     .groupBy("categoryId")
                     .map((value, key) => ({
-                        category: key, serviceOrder: value.length, value: value[0],
-                        allValue: value, workDone: value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length,
+                        category: key,
+                        serviceOrder: value.length,
+                        value: value[0],
+                        allValue: value,
+                        workDone: value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length,
                         percentage: (100 * value.map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length / value.length).toFixed(2)
                     }))
                     .value()
@@ -3405,8 +3448,10 @@ const serviceOrderController = {
 
                 let chartData = _.flatten(
                     final
-                        .filter(v => !_.isEmpty(v))
-                        .map(v => _.keys(v).map(p => ({ [p]: (v[p].length) })))
+                    .filter(v => !_.isEmpty(v))
+                    .map(v => _.keys(v).map(p => ({
+                        [p]: (v[p].length)
+                    })))
                 ).reduce((a, p) => {
                     let l = _.keys(p)[0];
                     if (a[l]) {
@@ -3440,8 +3485,10 @@ const serviceOrderController = {
 
                 let workDoneChartData = _.flatten(
                     final
-                        .filter(v => !_.isEmpty(v))
-                        .map(v => _.keys(v).map(p => ({ [p]: (v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length) })))
+                    .filter(v => !_.isEmpty(v))
+                    .map(v => _.keys(v).map(p => ({
+                        [p]: (v[p].map(ite => ite.serviceStatusCode).filter(v => v == 'COM').length)
+                    })))
                 ).reduce((a, p) => {
                     let l = _.keys(p)[0];
                     if (a[l]) {
@@ -3467,9 +3514,19 @@ const serviceOrderController = {
 
 
                     return {
-                        ...serviceResult[0], fromDate, toDate, serviceOrder: item, totalServiceOrder: totalServiceOrder,
-                        totalWorkDone: totalWorkDone, totalPercentage: (totalPercentage).toFixed(2), chartData, reportType: "SO", buildingType,
-                        workDoneChartData, totalServiceRequest: serviceProblem2.length, totalDone: filterProblem.length
+                        ...serviceResult[0],
+                        fromDate,
+                        toDate,
+                        serviceOrder: item,
+                        totalServiceOrder: totalServiceOrder,
+                        totalWorkDone: totalWorkDone,
+                        totalPercentage: (totalPercentage).toFixed(2),
+                        chartData,
+                        reportType: "SO",
+                        buildingType,
+                        workDoneChartData,
+                        totalServiceRequest: serviceProblem2.length,
+                        totalDone: filterProblem.length
                     };
 
                 })

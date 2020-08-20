@@ -53,4 +53,9 @@ router.post('/update-quotation-status', authMiddleware.isAuthenticated, quotatio
 
 router.post('/get-tags-quotation', authMiddleware.isAuthenticated, quotationController.getTagsQuotation);
 
+router.post('/get-quotation-cost-report', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
+    resourceAccessMiddleware.isCMAccessible, quotationController.getQuotationCostReport);
+
+
+
 module.exports = router;
