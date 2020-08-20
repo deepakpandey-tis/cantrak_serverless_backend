@@ -610,7 +610,7 @@ const parcelManagementController = {
           .select("parcel_management.pickedUpType")
           .where("parcel_management.id",parcelId)
         }
-          // console.log("parcelType",parcelType)
+          // console.log("parcelType1",parcelType[0].pickedUpType)
           
           parcelList = await knex
             .from("parcel_management")
@@ -666,7 +666,7 @@ const parcelManagementController = {
               }
               if (id) {
 
-                qb.where({"property_units.unitNumber": id,"parcel_management.pickedUpType":parcelType});
+                qb.where({"property_units.unitNumber": id,"parcel_management.pickedUpType":parcelType[0].pickedUpType});
               }
             })
             .groupBy([
