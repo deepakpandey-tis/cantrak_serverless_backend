@@ -30,7 +30,7 @@ const approvalNotification = {
         data = {
             orgId: sender.orgId,
             senderId: sender.id,
-            receiverId: receiver,
+            receiverId: receiver.id,
             payload: {
                 ...data,
                 subject: 'Service Request Notification',
@@ -39,7 +39,7 @@ const approvalNotification = {
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `/user/appointments/service`,
+                    url: `/admin/service-order`,
                     primaryKey: Date.now()
                 }
             },
@@ -47,7 +47,7 @@ const approvalNotification = {
                 {
                     action: "explore",
                     title: "Service Request",
-                    url:`/user/appointments/service`
+                    url:`/admin/service-order`
                 }
             ]
         }
@@ -64,7 +64,7 @@ const approvalNotification = {
             },
             payload: {
                 ...data,
-                subject: 'Parcel Email Notification',
+                subject: 'Service Request Email Notification',
             }
         };
 
@@ -79,21 +79,21 @@ const approvalNotification = {
             senderId: sender.id,
             receiverId: receiver.id,
             payload: {
-                subject: 'Parcel Notification',
-                body: `Hi!!, You have received a parcel,please come and collect ${sender.name}`,
+                subject: 'Service Request Notification',
+                body: `Hi!!,  You have assigned new service request ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `${process.env.SITE_URL}/user/parcel`,
+                    url: `${process.env.SITE_URL}/admin/service-order`,
                     primaryKey: Date.now()
                 }
             },
             actions: [
                 {
                     action: "explore",
-                    title: "User parcel Page",
-                    url: `${process.env.SITE_URL}/user/parcel`
+                    title: "Service Request Page",
+                    url: `${process.env.SITE_URL}/admin/service-order`
                 }
             ]
         }
@@ -108,6 +108,15 @@ const approvalNotification = {
         }
 
         return data;
-    }
+    },
+
+    sendLineNotification: async (sender, receiver, data) => {
+        data = {
+            receiverId: receiver.id,
+            message: `Hi ${receiver.name} this is simple text message send to test the notification`
+        };
+
+        return data;
+    },
 }
 module.exports = approvalNotification;

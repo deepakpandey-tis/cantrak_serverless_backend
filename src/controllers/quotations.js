@@ -2321,12 +2321,22 @@ const quotationsController = {
                 let tag = tagsResult.toString();
 
                 let chargeTotalCost;
+                let chargeUnitPrice;
+                let chargeTotalPrice;
 
+                let j = 0;
                 for (let charge of chargeDataResult) {
+
+                    if (st.invoiceData) {
+                        chargeUnitPrice = st.invoiceData[0].charges[j].rate;
+                        chargeTotalPrice = st.invoiceData[0].charges[j].rate * st.invoiceData[0].charges[j].totalHours;
+
+                    }
+                    j++;
 
                     chargeTotalCost = charge.totalHours * charge.rate;
 
-                    updateChargeData.push({...charge, chargeTotalCost: chargeTotalCost, chargeUnitPrice: "", chargeTotalPrice: "" })
+                    updateChargeData.push({...charge, chargeTotalCost: chargeTotalCost, chargeUnitPrice: chargeUnitPrice, chargeTotalPrice: chargeTotalPrice })
 
                 }
 
