@@ -10,8 +10,11 @@ const userMiddleware = require("../../middlewares/userMiddleware");
 
 const router = Router();
 
-router.post('/get-user-parcel-listing', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
-facilityBookingController.getUserParcelList);
+router.post('/get-user-incoming-parcels', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+facilityBookingController.getIncomingParcelList);
+
+router.post('/get-user-outgoing-parcels', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+facilityBookingController.getOutgoingParcelList);
 
 router.post('/get-user-parcel-details', authMiddleware.isAuthenticated, userMiddleware.customerInfo,facilityBookingController.getParcelDetails);
 
