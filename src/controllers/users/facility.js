@@ -296,7 +296,6 @@ const facilityBookingController = {
                         entityType: "parcel_management",
                         entityId: pd.id
                     })
-
                 return {
                     ...pd,
                     uploadedImages: imageResult
