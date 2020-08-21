@@ -94,19 +94,20 @@ const parcelManagementController = {
         "non_org_user_data",
         "org_user_data",
         "newParcelId",
+        // "carrierId"
       ]);
       console.log("payloa data", payLoad);
       // let payload = req.body
       await knex.transaction(async (trx) => {
         const schema = Joi.object().keys({
           pickedUpType: Joi.string().required(),
-          trackingNumber: Joi.string().required(),
+          trackingNumber: Joi.string().allow("").optional(),
           carrierId: Joi.number().required(),
           parcelType: Joi.number().required(),
           description: Joi.string().allow("").optional(),
           parcelCondition: Joi.string().required(),
           parcelStatus: Joi.number().required(),
-          parcelPriority: Joi.number().required(),
+          parcelPriority: Joi.number().optional(),
           barcode:Joi.string().allow("").optional()
         });
 
@@ -900,7 +901,7 @@ const parcelManagementController = {
 
         const schema = Joi.object().keys({
           pickedUpType: Joi.string().required(),
-          trackingNumber: Joi.string().required(),
+          trackingNumber: Joi.string().allow("").optional(),
           carrierId: Joi.number().required(),
           parcelType: Joi.number().required(),
           description: Joi.string().allow("").optional(),
