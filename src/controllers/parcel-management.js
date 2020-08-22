@@ -392,7 +392,8 @@ const parcelManagementController = {
                 "parcel_management.receivedDate",
                 "buildings_and_phases.buildingPhaseCode",
                 "buildings_and_phases.description",
-                "parcel_user_non_tis.name"
+                "parcel_user_non_tis.name",
+                "parcel_management.updatedAt"
                 // "images.s3Url",
               ])
               .where("parcel_management.orgId", req.orgId)
@@ -527,7 +528,8 @@ const parcelManagementController = {
               "parcel_management.receivedDate",
               "buildings_and_phases.buildingPhaseCode",
               "buildings_and_phases.description",
-              "parcel_user_non_tis.name"
+              "parcel_user_non_tis.name",
+              "parcel_management.updatedAt"
 
               // "images.s3Url",
             ])
@@ -1125,10 +1127,10 @@ const parcelManagementController = {
       let parcelStatus = await knex
         .from("parcel_management")
         .select(["parcel_management.id", "parcel_management.parcelStatus"])
-        .where("parcel_management.parcelStatus", 2)
-        .orWhere("parcel_management.parcelStatus", 5)
-        .where("parcel_management.orgId", req.orgId);
-      whereIn("parcel_management.id", parcelId)
+        .where({"parcel_management.parcelStatus": 2})
+        .orWhere({"parcel_management.parcelStatus": 5})
+        .where({"parcel_management.orgId": req.orgId});
+      whereIn({"parcel_management.id": parcelId})
       .first()
       return res.status(200).json({
         data: {

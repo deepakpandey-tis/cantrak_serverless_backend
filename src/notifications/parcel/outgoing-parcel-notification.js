@@ -69,9 +69,8 @@ const outgoingParcelNotification = {
         if (qrCode1) {
             qrCode = await QRCODE.toDataURL(qrCode1);
         }
-        console.log("qr code1",qrCode)
-
         
+
         data = {
             receiverEmail: receiver.email,
             template: 'outgoing-parcel-notification.ejs',
