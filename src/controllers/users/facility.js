@@ -551,16 +551,25 @@ const facilityBookingController = {
 
             const Parallel = require("async-parallel");
             resultData = await Parallel.map(resultData, async (pd) => {
+                let unitNumber = pd.unitNumber
+
+                let qrCode1 = 'org~' + req.orgId + '~unitNumber~' + unitNumber + '~parcel~' + pd.id
+                let qrCode;
+                if (qrCode1) {
+                    qrCode = await QRCODE.toDataURL(qrCode1);
+                }
+
                 let imageResult = await knex
                     .from("images")
                     .select("s3Url", "title", "name")
                     .where({
                         entityType: "parcel_management",
                         entityId: pd.id
-                    })
+                    }).first();
                 return {
                     ...pd,
-                    uploadedImages: imageResult
+                    uploadedImages: imageResult,
+                    qrCode
 
                 };
             });
@@ -569,7 +578,7 @@ const facilityBookingController = {
 
             res.status(200).json({
                 data: {
-                    resultData
+                    parcelApprovalList:resultData
                 },
                 message: "Parcel details successfully!"
             })
