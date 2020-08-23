@@ -2935,6 +2935,7 @@ const partsController = {
                     "part_master.id",
                     "assigned_parts.partId"
                 )
+                .leftJoin('part_ledger_sum', 'part_master.id', 'part_ledger_sum.partId')
                 .select([
                     "part_master.partName as partName",
                     "part_master.id as id",
@@ -2944,6 +2945,8 @@ const partsController = {
                     "assigned_parts.status as status",
                     "assigned_parts.id as apId",
                     "part_master.displayId as pNo",
+                    "part_ledger_sum.avgCost as avgUnitPrice"
+
 
                 ])
                 .where({
@@ -2956,6 +2959,7 @@ const partsController = {
                     "part_master.id",
                     "assigned_parts.partId"
                 )
+                .leftJoin('part_ledger_sum', 'part_master.id', 'part_ledger_sum.partId')
                 .select([
                     "part_master.partName as partName",
                     "part_master.id as id",
@@ -2965,6 +2969,8 @@ const partsController = {
                     "assigned_parts.status as status",
                     "assigned_parts.id as apId",
                     "part_master.displayId as pNo",
+                    "part_ledger_sum.avgCost as avgUnitPrice"
+
 
 
                 ])
@@ -3021,6 +3027,7 @@ const partsController = {
                     "part_master.id",
                     "assigned_parts.partId"
                 )
+                .leftJoin('part_ledger_sum', 'part_master.id', 'part_ledger_sum.partId')
                 .select([
                     "part_master.partName as partName",
                     "part_master.id as id",
@@ -3029,6 +3036,8 @@ const partsController = {
                     "assigned_parts.unitCost as unitCost",
                     "assigned_parts.id as apId",
                     "part_master.displayId as pNo",
+                    "part_ledger_sum.avgCost as avgUnitPrice"
+
 
                 ])
                 .where({
@@ -3041,6 +3050,7 @@ const partsController = {
                     "part_master.id",
                     "assigned_parts.partId"
                 )
+                .leftJoin('part_ledger_sum', 'part_master.id', 'part_ledger_sum.partId')
                 .select([
                     "part_master.partName as partName",
                     "part_master.id as id",
@@ -3049,6 +3059,7 @@ const partsController = {
                     "assigned_parts.unitCost as unitCost",
                     "assigned_parts.id as apId",
                     "part_master.displayId as pNo",
+                    "part_ledger_sum.avgCost as avgUnitPrice"
 
                 ])
                 .where({
@@ -3061,24 +3072,24 @@ const partsController = {
 
             const Parallel = require('async-parallel');
 
-            rows = await Parallel.map(rows, async row => {
+            // rows = await Parallel.map(rows, async row => {
 
-                let ledgerResult = await knex.from('part_ledger')
-                    .where({ partId: row.id, orgId: req.orgId })
-                    .orderBy('createdAt', 'desc').first();
+            //     let ledgerResult = await knex.from('part_ledger')
+            //         .where({ partId: row.id, orgId: req.orgId })
+            //         .orderBy('createdAt', 'desc').first();
 
-                let avgUnitPrice = "";
+            //     let avgUnitPrice = "";
 
-                if (ledgerResult) {
-                    avgUnitPrice = ledgerResult.avgUnitPrice;
-                }
-
-
+            //     if (ledgerResult) {
+            //         avgUnitPrice = ledgerResult.avgUnitPrice;
+            //     }
 
 
-                return {...row, avgUnitPrice: avgUnitPrice };
 
-            })
+
+            //     return {...row, avgUnitPrice: avgUnitPrice };
+
+            // })
 
 
 

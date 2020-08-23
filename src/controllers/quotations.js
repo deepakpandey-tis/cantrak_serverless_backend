@@ -2160,7 +2160,9 @@ const quotationsController = {
 
                         } else {
 
-                            qb.whereIn('quotations.unitId', payload.unitId);
+
+                            let unit = payload.unitId.map(v => v.id);
+                            qb.whereIn('quotations.unitId', unit);
                         }
 
                     }
@@ -2170,7 +2172,9 @@ const quotationsController = {
                         if (payload.teamId.includes("all")) {
 
                         } else {
-                            qb.whereIn('teams.teamId', payload.teamId);
+
+                            let team = payload.teamId.map(v => v.teamId);
+                            qb.whereIn('teams.teamId', team);
                         }
                     }
 
@@ -2238,8 +2242,6 @@ const quotationsController = {
                         'assigned_parts.*',
                         'part_master.partName',
                         'part_master.partCode',
-                        //'assigned_parts.unitCost',
-                        //'assigned_parts.quantity',
                         'part_master.unitOfMeasure',
                     ])
                     .where(qb => {
@@ -2250,8 +2252,6 @@ const quotationsController = {
                         'assigned_parts.entityId': st.id,
                         'assigned_parts.entityType': 'quotations'
                     })
-                    //     //.whereBetween('part_ledger.createdAt', [fromTime, toTime])
-                    // .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc');
 
                 let chargeDataResult = await knex.from('assigned_service_charges')
                     .leftJoin('charge_master', 'assigned_service_charges.chargeId', 'charge_master.id')
@@ -2283,15 +2283,14 @@ const quotationsController = {
                 for (let d of partDataResult) {
 
                     if (st.invoiceData) {
-                        unitPrice = st.invoiceData[0].parts[i].unitCost;
-                        totalPrice = st.invoiceData[0].parts[i].quantity * st.invoiceData[0].parts[i].unitCost;
-
-                        console.log("==================", st.invoiceData[0].parts[i].unitCost, "=====================")
 
 
+                        if (st.invoiceData[0]) {
+
+                            unitPrice = st.invoiceData[0].parts[i].unitCost;
+                            totalPrice = st.invoiceData[0].parts[i].quantity * st.invoiceData[0].parts[i].unitCost;
+                        }
                     }
-
-                    // unitPrice = st.invoiceData[0].parts[i].unitCost;
                     i++;
 
                     totalCost = d.quantity * d.unitCost;
@@ -2310,7 +2309,10 @@ const quotationsController = {
                             if (payload.tags.includes('all')) {
 
                             } else {
-                                qb.whereIn('location_tags.locationTagId', payload.tags);
+
+                                let tag = payload.tags.map(v => v.id);
+
+                                qb.whereIn('location_tags.locationTagId', tag);
                             }
 
                         }
@@ -2318,7 +2320,8 @@ const quotationsController = {
 
                 tagsResult = _.uniqBy(tagsResult, 'title');
                 tagsResult = tagsResult.map(v => v.title);
-                let tag = tagsResult.toString();
+                let tag;
+                tag = tagsResult.toString();
 
                 let chargeTotalCost;
                 let chargeUnitPrice;
@@ -2327,10 +2330,17 @@ const quotationsController = {
                 let j = 0;
                 for (let charge of chargeDataResult) {
 
-                    if (st.invoiceData) {
-                        chargeUnitPrice = st.invoiceData[0].charges[j].rate;
-                        chargeTotalPrice = st.invoiceData[0].charges[j].rate * st.invoiceData[0].charges[j].totalHours;
 
+
+                    if (st.invoiceData) {
+
+                        if (st.invoiceData[0]) {
+
+
+
+                            chargeUnitPrice = st.invoiceData[0].charges[j].rate;
+                            chargeTotalPrice = st.invoiceData[0].charges[j].rate * st.invoiceData[0].charges[j].totalHours;
+                        }
                     }
                     j++;
 
