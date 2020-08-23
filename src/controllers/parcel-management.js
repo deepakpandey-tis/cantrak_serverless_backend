@@ -1153,7 +1153,7 @@ const parcelManagementController = {
         .where({ "parcel_management.parcelStatus": 2 })
         .orWhere({ "parcel_management.parcelStatus": 5 })
         .where({ "parcel_management.orgId": req.orgId })
-        .whereIn({ "parcel_management.id": parcelId });
+        .where({ "parcel_management.id": parcelId });
       return res.status(200).json({
         data: {
           parcelStatus: parcelStatus,
