@@ -108,7 +108,7 @@ const parcelManagementController = {
           parcelCondition: Joi.string().required(),
           parcelStatus: Joi.number().required(),
           parcelPriority: Joi.number().optional(),
-          barcode:Joi.string().allow("").optional()
+          barcode: Joi.string().allow("").optional(),
         });
 
         const result = Joi.validate(payLoad, schema);
@@ -393,7 +393,7 @@ const parcelManagementController = {
                 "buildings_and_phases.buildingPhaseCode",
                 "buildings_and_phases.description",
                 "parcel_user_non_tis.name",
-                "parcel_management.updatedAt"
+                "parcel_management.updatedAt",
                 // "images.s3Url",
               ])
               .where("parcel_management.orgId", req.orgId)
@@ -426,7 +426,7 @@ const parcelManagementController = {
               .offset(offset)
               .limit(per_page),
           ]);
-          console.log("rows",rows)
+          console.log("rows", rows);
           const Parallel = require("async-parallel");
           rows = await Parallel.map(rows, async (pd) => {
             let imageResult = await knex
@@ -529,7 +529,7 @@ const parcelManagementController = {
               "buildings_and_phases.buildingPhaseCode",
               "buildings_and_phases.description",
               "parcel_user_non_tis.name",
-              "parcel_management.updatedAt"
+              "parcel_management.updatedAt",
 
               // "images.s3Url",
             ])
@@ -542,14 +542,14 @@ const parcelManagementController = {
               "parcel_user_tis.parcelId",
               "buildings_and_phases.buildingPhaseCode",
               "buildings_and_phases.description",
-              "parcel_user_non_tis.name"
+              "parcel_user_non_tis.name",
               // "images.s3Url"
             ])
             .orderBy("parcel_management.createdAt", "desc")
             .offset(offset)
             .limit(per_page),
         ]);
-        console.log("rows",rows)
+        console.log("rows", rows);
         const Parallel = require("async-parallel");
         rows = await Parallel.map(rows, async (pd) => {
           let imageResult = await knex
@@ -597,7 +597,14 @@ const parcelManagementController = {
     try {
       let payload = req.body;
       let parcelList;
-      let { unitId, tenantId, buildingPhaseId, trackingNumber, id,parcelId } = req.body;
+      let {
+        unitId,
+        tenantId,
+        buildingPhaseId,
+        trackingNumber,
+        id,
+        parcelId,
+      } = req.body;
       console.log(
         "parcel payload for filter",
         unitId,
@@ -607,18 +614,25 @@ const parcelManagementController = {
         id,
         parcelId
       );
-      if (unitId || tenantId || buildingPhaseId || trackingNumber || id || parcelId) {
+      if (
+        unitId ||
+        tenantId ||
+        buildingPhaseId ||
+        trackingNumber ||
+        id ||
+        parcelId
+      ) {
         try {
-          let parcelType
+          let parcelType;
 
-          if(parcelId){
-          parcelType = await knex 
-          .from("parcel_management")
-          .select("parcel_management.pickedUpType")
-          .where("parcel_management.id",parcelId)
-        }
+          if (parcelId) {
+            parcelType = await knex
+              .from("parcel_management")
+              .select("parcel_management.pickedUpType")
+              .where("parcel_management.id", parcelId);
+          }
           // console.log("parcelType1",parcelType[0].pickedUpType)
-          
+
           parcelList = await knex
             .from("parcel_management")
             .leftJoin(
@@ -672,8 +686,10 @@ const parcelManagementController = {
                 qb.where("parcel_user_tis.buildingPhaseId", buildingPhaseId);
               }
               if (id && parcelId) {
-
-                qb.where({"property_units.unitNumber": id,"parcel_management.pickedUpType":parcelType[0].pickedUpType});
+                qb.where({
+                  "property_units.unitNumber": id,
+                  "parcel_management.pickedUpType": parcelType[0].pickedUpType,
+                });
               }
             })
             .groupBy([
@@ -789,7 +805,12 @@ const parcelManagementController = {
         });
       }
 
-      let [parcelDetails, parcelImages, pickedUpImages,pickedUpRemark] = await Promise.all([
+      let [
+        parcelDetails,
+        parcelImages,
+        pickedUpImages,
+        pickedUpRemark,
+      ] = await Promise.all([
         knex
           .from("parcel_management")
           .leftJoin(
@@ -840,7 +861,7 @@ const parcelManagementController = {
             "users.name as tenantName",
             "property_units.unitNumber",
             "courier.courierName",
-            "parcel_management.barcode"
+            "parcel_management.barcode",
           ])
           .where("parcel_management.id", payload.id)
           .first(),
@@ -852,9 +873,11 @@ const parcelManagementController = {
           .from("images")
           .where({ entityId: payload.id, entityType: "pickup_parcel" }),
 
-        knex 
-        .from('remarks_master')
-        .where({entityId:payload.id,entityType:"pickup_parcel_remarks",orgId:req.orgId})
+        knex.from("remarks_master").where({
+          entityId: payload.id,
+          entityType: "pickup_parcel_remarks",
+          orgId: req.orgId,
+        }),
       ]);
 
       return res.status(200).json({
@@ -862,7 +885,7 @@ const parcelManagementController = {
           ...parcelDetails,
           parcelImages,
           pickedUpImages,
-          pickedUpRemark
+          pickedUpRemark,
         },
         message: "Parcel Details !",
       });
@@ -887,7 +910,7 @@ const parcelManagementController = {
       // let qrUpdateResult ;
       let images = [];
       let orgId = req.orgId;
-      console.log("update parcel payload",req.body)
+      console.log("update parcel payload", req.body);
       await knex.transaction(async (trx) => {
         const payload = req.body;
 
@@ -910,7 +933,7 @@ const parcelManagementController = {
           parcelCondition: Joi.string().required(),
           parcelStatus: Joi.number().required(),
           parcelPriority: Joi.number().required(),
-          barcode: Joi.string().allow("").optional()
+          barcode: Joi.string().allow("").optional(),
         });
 
         const result = Joi.validate(parcelPayload, schema);
@@ -1127,11 +1150,10 @@ const parcelManagementController = {
       let parcelStatus = await knex
         .from("parcel_management")
         .select(["parcel_management.id", "parcel_management.parcelStatus"])
-        .where({"parcel_management.parcelStatus": 2})
-        .orWhere({"parcel_management.parcelStatus": 5})
-        .where({"parcel_management.orgId": req.orgId});
-      whereIn({"parcel_management.id": parcelId})
-      .first()
+        .where({ "parcel_management.parcelStatus": 2 })
+        .orWhere({ "parcel_management.parcelStatus": 5 })
+        .where({ "parcel_management.orgId": req.orgId })
+        .whereIn({ "parcel_management.id": parcelId });
       return res.status(200).json({
         data: {
           parcelStatus: parcelStatus,
