@@ -1147,14 +1147,19 @@ const parcelManagementController = {
       let parcelId = req.body.parcelId;
       console.log("request", parcelId);
 
-
       let parcelStatus = await knex
         .from("parcel_management")
         .select(["parcel_management.id", "parcel_management.parcelStatus"])
-        .where({ "parcel_management.orgId": req.orgId ,"parcel_management.id": parcelId})
-        .where({ "parcel_management.parcelStatus": 2 })
-        .orWhere({ "parcel_management.parcelStatus": 5 })
-        // .where({ "parcel_management.id": parcelId });
+        .where({
+          "parcel_management.orgId": req.orgId,
+          "parcel_management.id": parcelId,
+          "parcel_management.parcelStatus": 2
+        })
+        .orWhere({
+          "parcel_management.orgId": req.orgId,
+          "parcel_management.id": parcelId,
+          "parcel_management.parcelStatus": 5
+        });
       return res.status(200).json({
         data: {
           parcelStatus: parcelStatus,
