@@ -2382,7 +2382,269 @@ const quotationsController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
+    },
+
+    /*GET QUOTATION REGISTER REPORT */
+
+    getQuotationRegisterReport: async(req, res) => {
+
+        try {
+
+            let rows;
+            const accessibleProjects = req.userProjectResources[0].projects
+            let payload = req.body;
+            let result;
+
+            rows = await knex
+                .distinct('quotations.id')
+                .from("quotations")
+                .leftJoin('companies', 'quotations.companyId', 'companies.id')
+                .leftJoin('projects', 'quotations.projectId', 'projects.id')
+                .leftJoin('buildings_and_phases', 'quotations.buildingId', 'buildings_and_phases.id')
+                .leftJoin('floor_and_zones', 'quotations.floorId', 'floor_and_zones.id')
+                .leftJoin('property_units', 'quotations.unitId', 'property_units.id')
+                .leftJoin(
+                    "service_requests",
+                    "quotations.serviceRequestId",
+                    "service_requests.id"
+                )
+                .leftJoin(
+                    "service_orders",
+                    "service_requests.id",
+                    "service_orders.serviceRequestId"
+                )
+                .leftJoin(
+                    "assigned_service_team",
+                    "service_requests.id",
+                    "assigned_service_team.entityId"
+                )
+                .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                .leftJoin("users", "quotations.createdBy", "users.id")
+                .leftJoin(
+                    "service_problems",
+                    "service_requests.id",
+                    "service_problems.serviceRequestId"
+                )
+                .leftJoin(
+                    "requested_by",
+                    "service_requests.requestedBy",
+                    "requested_by.id"
+                )
+                .leftJoin(
+                    "incident_categories",
+                    "service_problems.categoryId",
+                    "incident_categories.id"
+                )
+                .leftJoin(
+                    "service_status AS status",
+                    "service_requests.serviceStatusCode",
+                    "status.statusCode"
+                )
+
+            //.leftJoin('user_house_allocation', 'quotations.unitId', 'user_house_allocation.houseId')
+            //.leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+
+            .select([
+                    "quotations.id as QId",
+                    "quotations.serviceRequestId as serviceRequestId",
+                    "service_requests.description as Description",
+                    "service_requests.id as SRID",
+                    "service_requests.priority as Priority",
+                    "users.name as Created By",
+                    "companies.companyName",
+                    "projects.projectName",
+                    "buildings_and_phases.buildingPhaseCode",
+                    "buildings_and_phases.description as buildingDescription",
+                    "floor_and_zones.floorZoneCode",
+                    "property_units.unitNumber",
+                    //"assignUser.name as Tenant Name",
+                    "quotations.quotationStatus as Status",
+                    "quotations.createdAt",
+                    "incident_categories.descriptionEng as problemDescription",
+                    "requested_by.name as requestedBy",
+                    //"user_house_allocation",
+                    "property_units.id as unitId",
+                    "quotations.displayId as Q No",
+                    "service_requests.displayId as srNo",
+                    "companies.companyId",
+                    "projects.project",
+                    "quotations.displayId as qNo",
+                    "quotations.id",
+                    "service_orders.displayId as soNo",
+                    "service_requests.createdAt as serviceCreatedDate",
+                    "quotations.approvedOn",
+                    "status.descriptionEng as ServiceStatus",
+                    "service_requests.completedOn"
+                ])
+                .where("quotations.orgId", req.orgId)
+                .where(qb => {
+
+                    if (payload.companyId) {
+
+                        if (payload.companyId == "all") {
+
+                        } else {
+                            qb.where('quotations.companyId', payload.companyId.id);
+                        }
+                    }
+                    if (payload.projectId) {
+
+                        if (payload.projectId == "all") {
+
+                        } else {
+
+                            qb.where('quotations.projectId', payload.projectId.id);
+                        }
+                    }
+
+                    if (payload.buildingId) {
+
+
+                        if (payload.buildingId == "all") {
+
+                        } else {
+
+                            qb.where('quotations.buildingId', payload.buildingId.id);
+                        }
+
+                    }
+
+                    if (payload.unitId && payload.unitId.length) {
+
+
+                        if (payload.unitId.includes("all")) {
+
+                        } else {
+
+
+                            let unit = payload.unitId.map(v => v.id);
+                            qb.whereIn('quotations.unitId', unit);
+                        }
+
+                    }
+
+                    if (payload.teamId && payload.teamId.length) {
+
+                        if (payload.teamId.includes("all")) {
+
+                        } else {
+
+                            let team = payload.teamId.map(v => v.teamId);
+                            qb.whereIn('teams.teamId', team);
+                        }
+                    }
+
+
+                    if (payload.serviceStatus && payload.serviceStatus.length) {
+
+                        if (payload.serviceStatus.includes("all")) {
+
+                        } else {
+
+                            qb.whereIn('status.statusCode', payload.serviceStatus);
+                        }
+                    }
+
+                    if (payload.quotationStatus && payload.quotationStatus.length) {
+
+                        if (payload.quotationStatus.includes("all")) {
+
+                        } else {
+
+                            qb.whereIn('quotations.quotationStatus', payload.quotationStatus);
+                        }
+                    }
+
+                    if (payload.fromDate && payload.toDate) {
+                        qb.whereBetween('service_requests.createdAt', [payload.fromDate, payload.toDate])
+                    }
+                })
+                .whereIn('quotations.projectId', accessibleProjects)
+                // .havingNotNull('quotations.quotationStatus')
+                .groupBy(["quotations.id", "service_requests.id", "users.id", "companies.companyName",
+                    "projects.projectName",
+                    "buildings_and_phases.buildingPhaseCode",
+                    "floor_and_zones.floorZoneCode",
+                    "property_units.unitNumber",
+                    "requested_by.id",
+                    "service_problems.id",
+                    "incident_categories.id",
+                    "incident_categories.descriptionEng",
+                    //"assignUser.id",
+                    // "assignUser.name",
+                    //"user_house_allocation.id",
+                    "buildings_and_phases.description",
+                    // "user_house_allocation.userId",
+                    "property_units.id",
+                    "companies.companyName",
+                    "companies.companyId",
+                    "projects.project",
+                    'service_orders.id',
+                    'status.id'
+                    //"quotations.invoiceData"
+                ])
+                .orderBy('quotations.id', 'desc');
+
+
+
+
+
+
+            const Parallel = require('async-parallel');
+            let a = 0;
+            const final = await Parallel.map(_.uniqBy(rows, 'id'), async(st) => {
+
+
+
+                let tagsResult = [];
+                tagsResult = await knex('location_tags')
+                    .leftJoin('location_tags_master', 'location_tags.locationTagId', 'location_tags_master.id')
+                    .where({ 'location_tags.entityId': st.id, 'location_tags.entityType': 'quotations', 'location_tags.orgId': req.orgId })
+                    .where(qb => {
+
+                        if (payload.tags && payload.tags.length) {
+
+                            if (payload.tags.includes('all')) {
+
+                            } else {
+
+                                let tag = payload.tags.map(v => v.id);
+
+                                qb.whereIn('location_tags.locationTagId', tag);
+                            }
+
+                        }
+                    })
+
+                tagsResult = _.uniqBy(tagsResult, 'title');
+                tagsResult = tagsResult.map(v => v.title);
+                let tag;
+                tag = tagsResult.toString();
+
+                return {
+                    ...st,
+                    tags: tag,
+
+                }
+            })
+
+
+            return res.status(200).json({
+                data: final,
+                message: "Quotation Cost Report successfully!"
+            });
+
+
+        } catch (err) {
+
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+
+
     }
+
 };
 
 module.exports = quotationsController;
