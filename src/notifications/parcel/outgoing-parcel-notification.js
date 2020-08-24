@@ -3,6 +3,8 @@ const notification = require('../core/notification');
 
 const ALLOWED_CHANNELS = ['EMAIL'];
 const SHOULD_QUEUE = process.env.IS_OFFLINE ? false : true;
+const QRCODE = require("qrcode");
+
 
 const outgoingParcelNotification = {
     send:async (sender, receiver, data, allowedChannels = ALLOWED_CHANNELS) =>{
@@ -58,12 +60,24 @@ const outgoingParcelNotification = {
     },
 
     sendEmailNotification: async (sender, receiver, data) => {
-        console.log("receiver detail",receiver)
+        console.log("receiver detail",data)
+        let unitNumber = receiver.unitNumber
+        let parcelId  = receiver.parcelId
+
+         let qrCode1 = 'org~' + data.orgId + '~unitNumber~' + unitNumber + '~parcel~' + parcelId
+        let qrCode;
+        if (qrCode1) {
+            qrCode = await QRCODE.toDataURL(qrCode1);
+        }
+        
+
         data = {
             receiverEmail: receiver.email,
             template: 'outgoing-parcel-notification.ejs',
             templateData: {
-                fullName: receiver.name
+                fullName: receiver.name,
+                qrCode : qrCode
+
             },
             payload: {
                 ...data,
@@ -104,6 +118,14 @@ const outgoingParcelNotification = {
         return data;
     },
 
+    sendLineNotification: async (sender, receiver, data) => {
+        data = {
+            receiverId: receiver.id,
+            message: `Hi ${receiver.name} You have received a parcel,Please accept for picked up the parcels.`
+        };
+
+        return data;
+    },
     sendSMSNotification: async (sender, receiver, data) => {
         data = {
             receiverMobileNumber: receiver.mobileNo,

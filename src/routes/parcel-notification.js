@@ -3,6 +3,8 @@ const { Router } = require("express")
 const router = Router();
 const parcelNotification = require('../notifications/parcel/parcel-notification');
 const trimmer = require('../middlewares/trimmer');
+const QRCODE = require("qrcode");
+
 
 const knex = require('../db/knex');
 const authMiddleware = require("../middlewares/auth");
@@ -115,10 +117,18 @@ router.post('/outgoing-parcel-notification',authMiddleware.isAuthenticated, asyn
         // let receiver = await knex.from('users').where({ id: req.body.id }).first();
         let receiver = req.body
         console.log("reciever tenant",receiver)
+        // let qrCode1 = 'org~' + data.orgId + '~unitNumber~' + unitNumber + '~parcel~' + parcelId
+        // let qrCode;
+        // if (qrCode1) {
+        //     qrCode = await QRCODE.toDataURL(qrCode1);
+        // }
+        // console.log("qr code1",qrCode)
 
         let data = {
             payload: {
-                parcelId:req.body.parcelId
+                parcelId:req.body.parcelId,
+                orgId:req.orgId,
+                // qrCode:qrCode
             }
         };
         await outgoingParcelNotification.send(sender, receiver, data, ALLOWED_CHANNELS);

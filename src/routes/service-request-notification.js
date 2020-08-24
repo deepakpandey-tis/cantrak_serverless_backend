@@ -8,25 +8,36 @@ const knex = require('../db/knex');
 const authMiddleware = require("../middlewares/auth");
 // const { CloudFrontCustomizations } = require("aws-sdk/lib/services/cloudfront");
 
-const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH', 'LINE_NOTIFY'];
+//const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH', 'LINE_NOTIFY'];
+const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY'];
 
 
-router.post('/approval-notification',authMiddleware.isAuthenticated, async(req,res)=>{
-    try{
+
+router.post('/approval-notification', authMiddleware.isAuthenticated, async (req, res) => {
+    try {
         // console.log("org user",req.me.id)
-        console.log("requested tenant id for notification",req.body.id)
+        console.log("requested tenant id for notification", req.body.id)
         let sender = await knex.from('users').where({ id: req.me.id }).first();
         let receiver = await knex.from('users').where({ id: req.body.mainUserId }).first();
-        
-        console.log("requested mainUserId id for notification",req.body.mainUserId);
-        console.log("requested additionalUsers id for notification",req.body.additionalUsers);
-        
-      //  console.log("receiver tenant",receiver)
+
+        let receiverAdditional = await knex.from('users').whereIn('users.id', req.body.additionalUsers);
+
+        console.log("requested mainUserId id for notification", req.body.mainUserId);
+        console.log("requested additionalUsers id for notification", req.body.additionalUsers);
+
+        const Parallel = require("async-parallel");
+        resultData = await Parallel.map(receiverAdditional, async (pd) => {
+            let receiver2 = await knex.from('users').where({ id: pd.id }).first();
+            await serviceRequestNotification.send(sender, receiver2, data, ALLOWED_CHANNELS);
+        })
+
+        //  console.log("receiver tenant",receiver)
 
         let data = {
             payload: {
             }
         };
+
         await serviceRequestNotification.send(sender, receiver, data, ALLOWED_CHANNELS);
 
         let a;
@@ -45,13 +56,13 @@ router.post('/approval-notification',authMiddleware.isAuthenticated, async(req,r
         });
 
 
-    }catch(err){
+    } catch (err) {
         res.status(200).json({ failed: true, error: err });
     }
 
-    router.post('/',trimmer,(req,res)=>{
+    router.post('/', trimmer, (req, res) => {
         return res.status(200).json(req.body)
     })
 }),
 
-module.exports = router
+    module.exports = router

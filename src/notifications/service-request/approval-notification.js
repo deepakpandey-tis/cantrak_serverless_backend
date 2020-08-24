@@ -104,7 +104,7 @@ const approvalNotification = {
     sendSMSNotification: async (sender, receiver, data) => {
         data = {
             receiverMobileNumber: receiver.mobileNo,
-            textMessage: `Hi ${receiver.name} this is simple text message send to test the notification`
+            textMessage: `Hi ${receiver.name} You have assigned new service request`
         }
 
         return data;
@@ -113,7 +113,7 @@ const approvalNotification = {
     sendLineNotification: async (sender, receiver, data) => {
         data = {
             receiverId: receiver.id,
-            message: `Hi ${receiver.name} this is simple text message send to test the notification`
+            message: `Hi ${receiver.name} You have assigned new service request.`
         };
 
         return data;

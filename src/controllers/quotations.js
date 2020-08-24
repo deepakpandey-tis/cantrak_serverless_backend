@@ -2043,7 +2043,7 @@ const quotationsController = {
             let result;
 
             rows = await knex
-                .distinct('quotations.id')
+                // .distinct('quotations.id')
                 .from("quotations")
                 .leftJoin('companies', 'quotations.companyId', 'companies.id')
                 .leftJoin('projects', 'quotations.projectId', 'projects.id')
@@ -2060,6 +2060,12 @@ const quotationsController = {
                 //   "service_requests.id",
                 //   "assigned_service_team.entityId"
                 // )
+                .leftJoin(
+                    "assigned_service_team",
+                    "service_requests.id",
+                    "assigned_service_team.entityId"
+                )
+                .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
                 .leftJoin("users", "quotations.createdBy", "users.id")
                 .leftJoin(
                     "service_problems",
@@ -2075,6 +2081,11 @@ const quotationsController = {
                     "incident_categories",
                     "service_problems.categoryId",
                     "incident_categories.id"
+                )
+                .leftJoin(
+                    "service_status AS status",
+                    "service_requests.serviceStatusCode",
+                    "status.statusCode"
                 )
 
             //.leftJoin('user_house_allocation', 'quotations.unitId', 'user_house_allocation.houseId')
@@ -2105,36 +2116,88 @@ const quotationsController = {
                     "companies.companyId",
                     "projects.project",
                     "quotations.displayId as qNo",
-                    "quotations.id"
+                    "quotations.id",
+                    'quotations.invoiceData'
 
                 ])
                 .where("quotations.orgId", req.orgId)
                 .where(qb => {
-                    // if (serviceId) {
-                    //     qb.where('service_requests.displayId', serviceId)
-                    // }
-                    // if (serviceId) {
-                    //     qb.where('service_requests.displayId', serviceId)
-                    // }
-                    // if (serviceIdForShared) {
-                    //     qb.where('quotations.serviceRequestId', serviceIdForShared)
-                    // }
-                    // if (quotationStatus) {
-                    //     qb.where('quotations.quotationStatus', quotationStatus)
-                    // }
 
-                    // if (quotationId) {
-                    //     qb.where('quotations.displayId', quotationId)
-                    // }
                     if (payload.companyId) {
-                        qb.where('quotations.companyId', payload.companyId.id)
+
+                        if (payload.companyId == "all") {
+
+                        } else {
+                            qb.where('quotations.companyId', payload.companyId.id);
+                        }
                     }
                     if (payload.projectId) {
-                        qb.where('quotations.projectId', payload.projectId.id)
+
+                        if (payload.projectId == "all") {
+
+                        } else {
+
+                            qb.where('quotations.projectId', payload.projectId.id);
+                        }
                     }
-                    // if (description) {
-                    //     qb.where('service_requests.description', 'iLIKE', `%${description}%`)
-                    // }
+
+                    if (payload.buildingId) {
+
+
+                        if (payload.buildingId == "all") {
+
+                        } else {
+
+                            qb.where('quotations.buildingId', payload.buildingId.id);
+                        }
+
+                    }
+
+                    if (payload.unitId && payload.unitId.length) {
+
+
+                        if (payload.unitId.includes("all")) {
+
+                        } else {
+
+
+                            let unit = payload.unitId.map(v => v.id);
+                            qb.whereIn('quotations.unitId', unit);
+                        }
+
+                    }
+
+                    if (payload.teamId && payload.teamId.length) {
+
+                        if (payload.teamId.includes("all")) {
+
+                        } else {
+
+                            let team = payload.teamId.map(v => v.teamId);
+                            qb.whereIn('teams.teamId', team);
+                        }
+                    }
+
+
+                    if (payload.serviceStatus && payload.serviceStatus.length) {
+
+                        if (payload.serviceStatus.includes("all")) {
+
+                        } else {
+
+                            qb.whereIn('status.statusCode', payload.serviceStatus);
+                        }
+                    }
+
+                    if (payload.quotationStatus && payload.quotationStatus.length) {
+
+                        if (payload.quotationStatus.includes("all")) {
+
+                        } else {
+
+                            qb.whereIn('quotations.quotationStatus', payload.quotationStatus);
+                        }
+                    }
 
                     if (payload.fromDate && payload.toDate) {
                         qb.whereBetween('service_requests.createdAt', [payload.fromDate, payload.toDate])
@@ -2159,18 +2222,19 @@ const quotationsController = {
                     "property_units.id",
                     "companies.companyName",
                     "companies.companyId",
-                    "projects.project"
-
+                    "projects.project",
+                    //"quotations.invoiceData"
                 ])
-                .orderBy('quotations.id', 'desc')
+                .orderBy('quotations.id', 'desc');
 
 
-            const Parallel = require('async-parallel')
+
+
+
+
+            const Parallel = require('async-parallel');
+            let a = 0;
             const final = await Parallel.map(_.uniqBy(rows, 'id'), async(st) => {
-
-
-                console.log("==============QUUUUUUUuuuuuuu====", st, "===WOOOOOOOOOO=============")
-
 
                 let partDataResult = await knex.from('assigned_parts')
                     .leftJoin('part_master', 'assigned_parts.partId', 'part_master.id')
@@ -2178,8 +2242,6 @@ const quotationsController = {
                         'assigned_parts.*',
                         'part_master.partName',
                         'part_master.partCode',
-                        //'assigned_parts.unitCost',
-                        //'assigned_parts.quantity',
                         'part_master.unitOfMeasure',
                     ])
                     .where(qb => {
@@ -2190,8 +2252,6 @@ const quotationsController = {
                         'assigned_parts.entityId': st.id,
                         'assigned_parts.entityType': 'quotations'
                     })
-                    //     //.whereBetween('part_ledger.createdAt', [fromTime, toTime])
-                    // .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc');
 
                 let chargeDataResult = await knex.from('assigned_service_charges')
                     .leftJoin('charge_master', 'assigned_service_charges.chargeId', 'charge_master.id')
@@ -2216,41 +2276,93 @@ const quotationsController = {
                 let updatePartData = [];
                 let updateChargeData = [];
                 let totalCost;
+                let unitPrice;
+                let totalPrice;
 
-
+                let i = 0;
                 for (let d of partDataResult) {
+
+                    if (st.invoiceData) {
+
+
+                        if (st.invoiceData[0]) {
+
+                            unitPrice = st.invoiceData[0].parts[i].unitCost;
+                            totalPrice = st.invoiceData[0].parts[i].quantity * st.invoiceData[0].parts[i].unitCost;
+                        }
+                    }
+                    i++;
 
                     totalCost = d.quantity * d.unitCost;
 
-                    updatePartData.push({...d, totalCost: totalCost, unitPrice: "", totalPrice: "" })
+                    updatePartData.push({...d, totalCost: totalCost, unitPrice: unitPrice, totalPrice: totalPrice })
                 }
 
                 let tagsResult = [];
                 tagsResult = await knex('location_tags')
                     .leftJoin('location_tags_master', 'location_tags.locationTagId', 'location_tags_master.id')
-                    .where({ 'location_tags.entityId': st.id, 'location_tags.entityType': 'quotations', 'location_tags.orgId': req.orgId });
+                    .where({ 'location_tags.entityId': st.id, 'location_tags.entityType': 'quotations', 'location_tags.orgId': req.orgId })
+                    .where(qb => {
+
+                        if (payload.tags && payload.tags.length) {
+
+                            if (payload.tags.includes('all')) {
+
+                            } else {
+
+                                let tag = payload.tags.map(v => v.id);
+
+                                qb.whereIn('location_tags.locationTagId', tag);
+                            }
+
+                        }
+                    })
 
                 tagsResult = _.uniqBy(tagsResult, 'title');
                 tagsResult = tagsResult.map(v => v.title);
-                let tag = tagsResult.toString();
+                let tag;
+                tag = tagsResult.toString();
 
                 let chargeTotalCost;
+                let chargeUnitPrice;
+                let chargeTotalPrice;
 
+                let j = 0;
                 for (let charge of chargeDataResult) {
+
+
+
+                    if (st.invoiceData) {
+
+                        if (st.invoiceData[0]) {
+
+
+
+                            chargeUnitPrice = st.invoiceData[0].charges[j].rate;
+                            chargeTotalPrice = st.invoiceData[0].charges[j].rate * st.invoiceData[0].charges[j].totalHours;
+                        }
+                    }
+                    j++;
 
                     chargeTotalCost = charge.totalHours * charge.rate;
 
-                    updateChargeData.push({...charge, chargeTotalCost: chargeTotalCost, chargeUnitPrice: "", chargeTotalPrice: "" })
+                    updateChargeData.push({...charge, chargeTotalCost: chargeTotalCost, chargeUnitPrice: chargeUnitPrice, chargeTotalPrice: chargeTotalPrice })
 
                 }
 
+
+                let totalRowSpan = 0;
+
+                totalRowSpan = Number(updatePartData.length) + Number(updateChargeData.length);
 
                 return {
                     partData: updatePartData,
                     createdAt: st.createdAt,
                     qNo: st.qNo,
                     tags: tag,
-                    chargeData: updateChargeData
+                    chargeData: updateChargeData,
+                    rowSpan: totalRowSpan,
+                    invoiceData: st.invoiceData
                 }
             })
 

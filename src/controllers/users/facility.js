@@ -24,22 +24,22 @@ const WEEK_DAYS = [SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDA
 
 const facilityBookingController = {
 
-    getUserParcelList: async (req, res) => {
+    getIncomingParcelList: async (req, res) => {
 
         try {
             let id = req.me.id;
-            let propertyUnitFinalResult = null;
             //let resourceProject = req.userProjectResources[0].projects;
             let { listType } = req.body;
             let resultData;
+            let resultPickUp;
             console.log("listType", listType);
-            let parcelStatus;
+            let parcelType;
             if (listType == "1") {
-                parcelStatus = ['1'];
-            }
-            if (listType == "2") {
-                parcelStatus = ['2'];
-            }
+                parcelType = "1";
+            }    
+            
+            
+            // READY FOR PICK-UP PARCELS
 
             resultData = await knex.from('parcel_management')
                 .leftJoin(
@@ -82,12 +82,9 @@ const facilityBookingController = {
                     "parcel_management.qrCode"
 
                 ])
-                .where({ 'parcel_management.orgId': req.orgId })
+                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '1',  'parcel_management.pickedUpType': parcelType })
                 .where({ 'parcel_user_tis.tenantId': id })
-                .whereIn('parcel_management.parcelStatus', parcelStatus)
                 .orderBy('parcel_management.id', 'desc')
-
-
                
             const Parallel = require("async-parallel");
             resultData = await Parallel.map(resultData, async (pd) => {
@@ -117,9 +114,274 @@ const facilityBookingController = {
             });
 
 
+
+            // PICKED-UP PARCELS
+
+            resultPickUp = await knex.from('parcel_management')
+                .leftJoin(
+                    "parcel_user_tis",
+                    "parcel_management.id",
+                    "parcel_user_tis.parcelId"
+                )
+                .leftJoin(
+                    "parcel_user_non_tis",
+                    "parcel_management.id",
+                    "parcel_user_non_tis.parcelId"
+                )
+                .leftJoin(
+                    "property_units",
+                    "parcel_user_tis.unitId",
+                    "property_units.id"
+                )
+                .leftJoin(
+                    "courier",
+                    "parcel_management.carrierId",
+                    "courier.id"
+                )
+                .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+                .select([
+                    "parcel_user_tis.*",
+                    "parcel_user_non_tis.*",
+                    "parcel_management.id",
+                    "parcel_management.parcelCondition",
+                    "parcel_management.parcelType",
+                    "parcel_user_tis.unitId",
+                    "parcel_management.trackingNumber",
+                    "parcel_management.parcelStatus",
+                    "users.name as tenant",
+                    "parcel_management.createdAt",
+                    "parcel_management.pickedUpType",
+                    "property_units.unitNumber",
+                    "parcel_management.description",
+                    "courier.courierName",
+                    "parcel_management.receivedDate",
+                    "parcel_management.qrCode"
+
+                ])
+                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '2', 'parcel_management.pickedUpType': parcelType })
+                .where({ 'parcel_user_tis.tenantId': id })
+                .orderBy('parcel_management.id', 'desc')
+               
+            //const Parallel = require("async-parallel");
+            resultPickUp = await Parallel.map(resultPickUp, async (pp) => {
+                console.log("...resultPickUp",pp.unitNumber)
+                let unitNumber = pp.unitNumber
+
+                let qrCode1 = 'org~' + req.orgId + '~unitNumber~' + unitNumber + '~parcel~' + pp.id
+                let qrCode;
+                if (qrCode1) {
+                    qrCode = await QRCODE.toDataURL(qrCode1);
+                }
+
+                let imageResult = await knex
+                    .from("images")
+                    .select("s3Url", "title", "name")
+                    .where({
+                        entityId: pp.id,
+                        entityType: "parcel_management"
+                    }).first();
+
+                return {
+                    ...pp,
+                    uploadedImages: imageResult,
+                    qrCode
+
+                };
+            });
+
+
+
+
             res.status(200).json({
                 data: {
-                    parcelListData: resultData
+                    parcelListData: resultData,
+                    parcelPickedData: resultPickUp
+                },
+                message: "Parcel list successfully!"
+            })
+
+        } catch (err) {
+
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+
+        }
+
+    },
+
+    getOutgoingParcelList: async (req, res) => {
+
+        try {
+            let id = req.me.id;
+            //let resourceProject = req.userProjectResources[0].projects;
+            let { listType } = req.body;
+            let resultData;
+            let resultPickUp;
+            console.log("listType", listType);
+            let parcelType;
+            if (listType == "2") {
+                parcelType = "2";
+            }    
+            
+            
+            // READY FOR PICK-UP PARCELS
+
+            resultData = await knex.from('parcel_management')
+                .leftJoin(
+                    "parcel_user_tis",
+                    "parcel_management.id",
+                    "parcel_user_tis.parcelId"
+                )
+                .leftJoin(
+                    "parcel_user_non_tis",
+                    "parcel_management.id",
+                    "parcel_user_non_tis.parcelId"
+                )
+                .leftJoin(
+                    "property_units",
+                    "parcel_user_tis.unitId",
+                    "property_units.id"
+                )
+                .leftJoin(
+                    "courier",
+                    "parcel_management.carrierId",
+                    "courier.id"
+                )
+                .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+                .select([
+                    "parcel_user_tis.*",
+                    "parcel_user_non_tis.*",
+                    "parcel_management.id",
+                    "parcel_management.parcelCondition",
+                    "parcel_management.parcelType",
+                    "parcel_user_tis.unitId",
+                    "parcel_management.trackingNumber",
+                    "parcel_management.parcelStatus",
+                    "users.name as tenant",
+                    "parcel_management.createdAt",
+                    "parcel_management.pickedUpType",
+                    "property_units.unitNumber",
+                    "parcel_management.description",
+                    "courier.courierName",
+                    "parcel_management.receivedDate",
+                    "parcel_management.qrCode"
+
+                ])
+                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '1',  'parcel_management.pickedUpType': parcelType })
+                .where({ 'parcel_user_tis.tenantId': id })
+                .orderBy('parcel_management.id', 'desc')
+               
+            const Parallel = require("async-parallel");
+            resultData = await Parallel.map(resultData, async (pd) => {
+                console.log("...resultData",pd.unitNumber)
+                let unitNumber = pd.unitNumber
+
+                let qrCode1 = 'org~' + req.orgId + '~unitNumber~' + unitNumber + '~parcel~' + pd.id
+                let qrCode;
+                if (qrCode1) {
+                    qrCode = await QRCODE.toDataURL(qrCode1);
+                }
+
+                let imageResult = await knex
+                    .from("images")
+                    .select("s3Url", "title", "name")
+                    .where({
+                        entityId: pd.id,
+                        entityType: "parcel_management"
+                    }).first();
+
+                return {
+                    ...pd,
+                    uploadedImages: imageResult,
+                    qrCode
+
+                };
+            });
+
+
+
+            // PICKED-UP PARCELS
+
+            resultPickUp = await knex.from('parcel_management')
+                .leftJoin(
+                    "parcel_user_tis",
+                    "parcel_management.id",
+                    "parcel_user_tis.parcelId"
+                )
+                .leftJoin(
+                    "parcel_user_non_tis",
+                    "parcel_management.id",
+                    "parcel_user_non_tis.parcelId"
+                )
+                .leftJoin(
+                    "property_units",
+                    "parcel_user_tis.unitId",
+                    "property_units.id"
+                )
+                .leftJoin(
+                    "courier",
+                    "parcel_management.carrierId",
+                    "courier.id"
+                )
+                .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+                .select([
+                    "parcel_user_tis.*",
+                    "parcel_user_non_tis.*",
+                    "parcel_management.id",
+                    "parcel_management.parcelCondition",
+                    "parcel_management.parcelType",
+                    "parcel_user_tis.unitId",
+                    "parcel_management.trackingNumber",
+                    "parcel_management.parcelStatus",
+                    "users.name as tenant",
+                    "parcel_management.createdAt",
+                    "parcel_management.pickedUpType",
+                    "property_units.unitNumber",
+                    "parcel_management.description",
+                    "courier.courierName",
+                    "parcel_management.receivedDate",
+                    "parcel_management.qrCode"
+
+                ])
+                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '2', 'parcel_management.pickedUpType': parcelType })
+                .where({ 'parcel_user_tis.tenantId': id })
+                .orderBy('parcel_management.id', 'desc')
+               
+            //const Parallel = require("async-parallel");
+            resultPickUp = await Parallel.map(resultPickUp, async (pp) => {
+                console.log("...resultPickUp",pp.unitNumber)
+                let unitNumber = pp.unitNumber
+
+                let qrCode1 = 'org~' + req.orgId + '~unitNumber~' + unitNumber + '~parcel~' + pp.id
+                let qrCode;
+                if (qrCode1) {
+                    qrCode = await QRCODE.toDataURL(qrCode1);
+                }
+
+                let imageResult = await knex
+                    .from("images")
+                    .select("s3Url", "title", "name")
+                    .where({
+                        entityId: pp.id,
+                        entityType: "parcel_management"
+                    }).first();
+
+                return {
+                    ...pp,
+                    uploadedImages: imageResult,
+                    qrCode
+
+                };
+            });
+
+
+
+
+            res.status(200).json({
+                data: {
+                    parcelListData: resultData,
+                    parcelPickedData: resultPickUp
                 },
                 message: "Parcel list successfully!"
             })
@@ -289,17 +551,25 @@ const facilityBookingController = {
 
             const Parallel = require("async-parallel");
             resultData = await Parallel.map(resultData, async (pd) => {
+                let unitNumber = pd.unitNumber
+
+                let qrCode1 = 'org~' + req.orgId + '~unitNumber~' + unitNumber + '~parcel~' + pd.id
+                let qrCode;
+                if (qrCode1) {
+                    qrCode = await QRCODE.toDataURL(qrCode1);
+                }
+
                 let imageResult = await knex
                     .from("images")
                     .select("s3Url", "title", "name")
                     .where({
                         entityType: "parcel_management",
                         entityId: pd.id
-                    })
-
+                    }).first();
                 return {
                     ...pd,
-                    uploadedImages: imageResult
+                    uploadedImages: imageResult,
+                    qrCode
 
                 };
             });
@@ -308,7 +578,7 @@ const facilityBookingController = {
 
             res.status(200).json({
                 data: {
-                    resultData
+                    parcelApprovalList:resultData
                 },
                 message: "Parcel details successfully!"
             })
