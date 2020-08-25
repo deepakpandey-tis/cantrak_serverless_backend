@@ -6,23 +6,17 @@ const _ = require("lodash");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const uuid = require("uuid/v4");
+const QRCODE = require("qrcode");
 
 const knex = require("../db/knex");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 
-const AWS = require("aws-sdk");
 const XLSX = require("xlsx");
 const fs = require("fs");
 const https = require("https");
 const { whereIn } = require("../db/knex");
-
-AWS.config.update({
-  accessKeyId: process.env.ACCESS_KEY_ID,
-  secretAccessKey: process.env.SECRET_ACCESS_KEY,
-  region: process.env.REGION || "us-east-1",
-});
 
 const parcelManagementController = {
   getCompanyListHavingPropertyUnit: async (req, res) => {
@@ -328,8 +322,46 @@ const parcelManagementController = {
                 if (tenantId) {
                   qb.where("users.id", tenantId);
                 }
+                // if (status) {
+                //   qb.where("parcel_management.parcelStatus", status);
+                // }
                 if (status) {
-                  qb.where("parcel_management.parcelStatus", status);
+                  console.log("value of status", status);
+                  if (status == 1) {
+                    qb.where({
+                      "parcel_management.parcelStatus": 1,
+                      "parcel_management.pickedUpType": 1,
+                    });
+                  }
+                  if (status == 2) {
+                    qb.where({
+                      "parcel_management.parcelStatus": 2,
+                      "parcel_management.pickedUpType": 1,
+                    });
+                  }
+                  if (status == 6) {
+                    console.log("value 6", status);
+                    qb.where({
+                      "parcel_management.parcelStatus": 1,
+                      "parcel_management.pickedUpType": 2,
+                    });
+                  }
+                  if (status == 7) {
+                    console.log("value 7", status);
+                    qb.where({
+                      "parcel_management.parcelStatus": 2,
+                      "parcel_management.pickedUpType": 2,
+                    });
+                  }
+                  if (status == 3) {
+                    qb.where({ "parcel_management.parcelStatus": 3 });
+                  }
+                  if (status == 4) {
+                    qb.where({ "parcel_management.parcelStatus": 4 });
+                  }
+                  if (status == 5) {
+                    qb.where({ "parcel_management.parcelStatus": 5 });
+                  }
                 }
                 if (companyId) {
                   console.log("company id", companyId);
@@ -408,8 +440,46 @@ const parcelManagementController = {
                 if (tenantId) {
                   qb.where("users.id", tenantId);
                 }
+                // if (status) {
+                //   qb.where("parcel_management.parcelStatus", status);
+                // }
                 if (status) {
-                  qb.where("parcel_management.parcelStatus", status);
+                  console.log("value of status", status);
+                  if (status == 1) {
+                    qb.where({
+                      "parcel_management.parcelStatus": 1,
+                      "parcel_management.pickedUpType": 1,
+                    });
+                  }
+                  if (status == 2) {
+                    qb.where({
+                      "parcel_management.parcelStatus": 2,
+                      "parcel_management.pickedUpType": 1,
+                    });
+                  }
+                  if (status == 6) {
+                    console.log("value 6", status);
+                    qb.where({
+                      "parcel_management.parcelStatus": 1,
+                      "parcel_management.pickedUpType": 2,
+                    });
+                  }
+                  if (status == 7) {
+                    console.log("value 7", status);
+                    qb.where({
+                      "parcel_management.parcelStatus": 2,
+                      "parcel_management.pickedUpType": 2,
+                    });
+                  }
+                  if (status == 3) {
+                    qb.where({ "parcel_management.parcelStatus": 3 });
+                  }
+                  if (status == 4) {
+                    qb.where({ "parcel_management.parcelStatus": 4 });
+                  }
+                  if (status == 5) {
+                    qb.where({ "parcel_management.parcelStatus": 5 });
+                  }
                 }
                 if (companyId) {
                   console.log("company id", companyId);
@@ -1109,24 +1179,6 @@ const parcelManagementController = {
         });
       }
 
-      // const images = req.body.image;
-      // insertedImages = [];
-      // for (let img of images) {
-      //   let insertedImage = await knex("images")
-      //     .update({
-      //       s3Url: img.s3Url,
-      //       name: img.filename,
-      //       title: img.title,
-      //       orgId: req.orgId,
-      //       updatedAt: currentTime,
-      //       createdAt: currentTime,
-      //       uuid: uuid(),
-      //     })
-      //     .where("images.entityType", parcel_management)
-      //     .where("images.entityId", id);
-      //   insertedImages.push(insertedImage[0]);
-      // }
-
       return res.status(200).json({
         data: {
           deliverParcel: deliverParcelResult,
@@ -1135,10 +1187,6 @@ const parcelManagementController = {
         },
       });
 
-      // let insertData = {
-      //   updatedAt : currentTime,
-
-      // }
     } catch (err) {}
   },
 
@@ -1153,12 +1201,12 @@ const parcelManagementController = {
         .where({
           "parcel_management.orgId": req.orgId,
           "parcel_management.id": parcelId,
-          "parcel_management.parcelStatus": 2
+          "parcel_management.parcelStatus": 2,
         })
         .orWhere({
           "parcel_management.orgId": req.orgId,
           "parcel_management.id": parcelId,
-          "parcel_management.parcelStatus": 5
+          "parcel_management.parcelStatus": 5,
         });
       return res.status(200).json({
         data: {
@@ -1172,5 +1220,90 @@ const parcelManagementController = {
       });
     }
   },
+  getQrCodeImageUrl: async (req, res) => {
+    try {
+      let unitNumber = req.body.unitNumber;
+      let parcelId = req.body.parcelId;
+      let orgId = req.orgId;
+
+      let qrCode1 = "org~" + orgId + "~unitNumber~" + unitNumber + "~parcel~" + parcelId;
+      let qrCode;
+      if (qrCode1) {
+        qrCode = await QRCODE.toDataURL(qrCode1);
+      }
+     
+     let fileName = "parcel.png" 
+      let base64Data;
+      if(qrCode){
+       base64Data = new Buffer.from(
+        qrCode.replace(/^data:([A-Za-z-+/]+);base64,/, "")
+      );
+      fs.writeFile("image.png", base64Data, "base64", (err) => {
+        console.log("error in file", err);
+      });
+    }
+      const AWS = require("aws-sdk");
+      var s3 = new AWS.S3();
+      var params = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: "parcel"+fileName,
+        Body: base64Data,
+        ContentType: "image/png",
+      };
+      // let uploadURL = await s3.getSignedUrl("putObject", params);
+      // if(process.env.IS_OFFLINE){
+      //  uploadURL = uploadURL
+      //  .replace("https://", "http://")
+      //  .replace(".com", ".com:8000");
+      // }
+      s3.putObject(params, function (err, data) {
+        if (err) {
+          console.log("Error at uploadImageOnS3Bucket function", err);
+          res.status(500).json({
+            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+          });
+        } else {
+          console.log("File uploaded Successfully");
+          let url = process.env.S3_BUCKET_URL+"/parcel/"+fileName;
+
+          console.log("url of image",url)
+
+          return res.status(200).json({
+            message: "Qr code Get Successfully!",
+            url: url,
+          });
+        }
+      });
+      // })
+    } catch (err) {
+      console.log("[controllers][generalsetup][exoportCompany] :  Error", err);
+    }
+  },
+
+  dispatchOutgoingParcel:async(req,res)=>{
+    try{
+      let parcelId = req.body.parcelId
+
+      const currentTime = new Date().getTime();
+      console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7', req.body)
+
+      const status = await knex('parcel_management')
+      .update({parcelStatus:'2',receivedDate: currentTime})
+      .where("parcel_management.id",parcelId)
+
+      return res.status(200).json({
+        data: {
+            status: "Dispatched"
+        },
+        message: "Parcel Dispatched successfully!"
+    });
+
+    }catch(err){
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+    });
+
+    }
+  }
 };
 module.exports = parcelManagementController;

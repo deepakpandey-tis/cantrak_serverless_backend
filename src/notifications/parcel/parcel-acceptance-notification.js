@@ -75,13 +75,14 @@ const parcelAcceptanceNotification = {
    
 
     sendWebPushNotification: async (sender, receiver, data) => {
-
+        console.log("web push parcel for acceptance",sender,receiver,data)
+        let parcelId = data.payload.parcelId
         data = {
             orgId: sender.orgId,
             senderId: sender.id,
             receiverId: receiver.id,
             payload: {
-                subject: 'Acceptation',
+                subject: 'Parcel Acceptation',
                 body: `Hi!!, You have received a parcel,Please accept for picked up the parcels.`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
@@ -94,7 +95,7 @@ const parcelAcceptanceNotification = {
             actions: [
                 {
                     action: "explore",
-                    title: "User parcel Page",
+                    title: "Parcel Acceptation",
                     url: `${process.env.SITE_URL}/user/parcel/parcel-confirmation/${parcelId}`
                 }
             ]

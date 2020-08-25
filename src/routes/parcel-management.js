@@ -26,4 +26,8 @@ router.post('/update-parcel-details',authMiddleware.isAuthenticated,parcelManage
 
 router.post('/get-parcel-status',authMiddleware.isAuthenticated,parcelManageController.getParcelStatusForCheckOut)
 
+router.post('/get-qr-code-url',authMiddleware.isAuthenticated,parcelManageController.getQrCodeImageUrl)
+
+router.post('/dispatch-outgoing-parcel',authMiddleware.isAuthenticated,parcelManageController.dispatchOutgoingParcel)
+
 module.exports = router
