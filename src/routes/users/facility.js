@@ -16,6 +16,13 @@ facilityBookingController.getIncomingParcelList);
 router.post('/get-user-outgoing-parcels', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
 facilityBookingController.getOutgoingParcelList);
 
+router.post('/get-user-picked-up-parcels', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+facilityBookingController.getPickedUpParcelList);
+
+router.post('/get-user-dispatched-parcels', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+facilityBookingController.getDispatchedParcelList);
+
+
 router.post('/get-user-parcel-details', authMiddleware.isAuthenticated, userMiddleware.customerInfo,facilityBookingController.getParcelDetails);
 
 router.post('/get-parcel-approval-list', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
