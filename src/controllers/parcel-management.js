@@ -1289,7 +1289,7 @@ const parcelManagementController = {
 
       const status = await knex('parcel_management')
       .update({parcelStatus:'2',receivedDate: currentTime})
-      .whereIn("parcel_management.id",parcelId)
+      .where("parcel_management.id",parcelId)
 
       return res.status(200).json({
         data: {
