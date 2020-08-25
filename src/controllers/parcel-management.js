@@ -1264,7 +1264,7 @@ const parcelManagementController = {
           });
         } else {
           console.log("File uploaded Successfully");
-          let url = process.env.S3_BUCKET_URL+"/parcel"+fileName;
+          let url = process.env.S3_BUCKET_URL+"/parcel/"+fileName;
 
           console.log("url of image",url)
 
