@@ -2935,7 +2935,7 @@ const partsController = {
                     "part_master.id",
                     "assigned_parts.partId"
                 )
-                .leftJoin('part_ledger_sum', 'part_master.id', 'part_ledger_sum.partId')
+                .leftJoin('part_ledger_sum', 'part_ledger_sum.partId', 'part_master.id')
                 .select([
                     "part_master.partName as partName",
                     "part_master.id as id",
@@ -2946,8 +2946,6 @@ const partsController = {
                     "assigned_parts.id as apId",
                     "part_master.displayId as pNo",
                     "part_ledger_sum.avgCost as avgUnitPrice"
-
-
                 ])
                 .where({
                     entityId: serviceOrderId,
@@ -2959,7 +2957,8 @@ const partsController = {
                     "part_master.id",
                     "assigned_parts.partId"
                 )
-                .leftJoin('part_ledger_sum', 'part_master.id', 'part_ledger_sum.partId')
+                .leftJoin('part_ledger_sum', 'part_ledger_sum.partId', 'part_master.id')
+                //.leftJoin('part_ledger_sum', 'part_master.id', 'part_ledger_sum.partId')
                 .select([
                     "part_master.partName as partName",
                     "part_master.id as id",
@@ -2970,9 +2969,6 @@ const partsController = {
                     "assigned_parts.id as apId",
                     "part_master.displayId as pNo",
                     "part_ledger_sum.avgCost as avgUnitPrice"
-
-
-
                 ])
                 .where({
                     entityId: serviceOrderId,
