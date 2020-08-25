@@ -1226,13 +1226,13 @@ const parcelManagementController = {
       let parcelId = req.body.parcelId;
       let orgId = req.orgId;
 
-      let qrCode1 = "org~" + orgId + "~unitNumber~" + 10 + "~parcel~" + 6;
+      let qrCode1 = "org~" + orgId + "~unitNumber~" + unitNumber + "~parcel~" + parcelId;
       let qrCode;
       if (qrCode1) {
         qrCode = await QRCODE.toDataURL(qrCode1);
       }
      
-      
+     let fileName = "parcel.png" 
       let base64Data;
       if(qrCode){
        base64Data = new Buffer.from(
@@ -1246,7 +1246,7 @@ const parcelManagementController = {
       var s3 = new AWS.S3();
       var params = {
         Bucket: process.env.S3_BUCKET_NAME,
-        Key: "parcel",
+        Key: "parcel"+fileName,
         Body: base64Data,
         ContentType: "image/png",
       };
@@ -1264,7 +1264,7 @@ const parcelManagementController = {
           });
         } else {
           console.log("File uploaded Successfully");
-          let url = process.env.S3_BUCKET_URL+"/parcel";
+          let url = process.env.S3_BUCKET_URL+"/parcel"+fileName;
 
           console.log("url of image",url)
 
@@ -1279,5 +1279,31 @@ const parcelManagementController = {
       console.log("[controllers][generalsetup][exoportCompany] :  Error", err);
     }
   },
+
+  dispatchOutgoingParcel:async(req,res)=>{
+    try{
+      let parcelId = req.body.parcelId
+
+      const currentTime = new Date().getTime();
+      console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7', req.body)
+
+      const status = await knex('parcel_management')
+      .update({parcelStatus:'2',receivedDate: currentTime})
+      .whereIn("parcel_management.id",parcelId)
+
+      return res.status(200).json({
+        data: {
+            status: "Dispatched"
+        },
+        message: "Parcel Dispatched successfully!"
+    });
+
+    }catch(err){
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+    });
+
+    }
+  }
 };
 module.exports = parcelManagementController;
