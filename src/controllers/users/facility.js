@@ -32,11 +32,14 @@ const facilityBookingController = {
             let { listType } = req.body;
             let resultData;
             let resultPickUp;
+            let totalNewParcel;
             console.log("listType", listType);
             let parcelType;
             if (listType == "1") {
                 parcelType = "1";
             }    
+            let parcelsId = [];
+
             
             
             // READY FOR PICK-UP PARCELS
@@ -85,10 +88,17 @@ const facilityBookingController = {
                 .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '1',  'parcel_management.pickedUpType': parcelType })
                 .where({ 'parcel_user_tis.tenantId': id })
                 .orderBy('parcel_management.id', 'desc')
-               
+
+                totalNewParcel = await knex('parcel_management').count('* as totalNewAddParcel')
+                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '1', 'parcel_management.pickedUpType': parcelType, 'parcel_management.parcelViewStatus': '1' }).first();
+               console.log("totalUnreadParcel",totalNewParcel);
+               let totalNewParcelAdded = totalNewParcel.totalNewAddParcel;
+
             const Parallel = require("async-parallel");
             resultData = await Parallel.map(resultData, async (pd) => {
                 console.log("...resultData",pd.unitNumber)
+                parcelsId = pd.id;
+
                 let unitNumber = pd.unitNumber
 
                 let qrCode1 = 'org~' + req.orgId + '~unitNumber~' + unitNumber + '~parcel~' + pd.id
@@ -108,8 +118,8 @@ const facilityBookingController = {
                 return {
                     ...pd,
                     uploadedImages: imageResult,
-                    qrCode
-
+                    qrCode,
+                    totalNewParcelAdded                     
                 };
             });
 
@@ -199,6 +209,15 @@ const facilityBookingController = {
                 },
                 message: "Parcel list successfully!"
             })
+
+            console.log("parcelsId",parcelsId);
+            // Update view status as view all outgoing parcel by user
+            await Parallel.map(resultData, async (up) => {
+                // Update view status as view all outgoing parcel by user
+                const updateParcelStatus = await knex("parcel_management")
+                    .update({ parcelViewStatus: '0'})
+                    .where({'parcel_management.id' : up.id});
+            });
 
         } catch (err) {
 
@@ -218,11 +237,14 @@ const facilityBookingController = {
             let { listType } = req.body;
             let resultData;
             let resultPickUp;
+            let totalNewParcel
             console.log("listType", listType);
             let parcelType;
             if (listType == "2") {
                 parcelType = "2";
-            }    
+            }
+            
+            let parcelsId = Array;
             
             
             // READY FOR PICK-UP PARCELS
@@ -271,9 +293,18 @@ const facilityBookingController = {
                 .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '1',  'parcel_management.pickedUpType': parcelType })
                 .where({ 'parcel_user_tis.tenantId': id })
                 .orderBy('parcel_management.id', 'desc')
+
+                totalNewParcel = await knex('parcel_management').count('* as totalNewAddParcel')
+                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '1', 'parcel_management.pickedUpType': parcelType, 'parcel_management.parcelViewStatus': '1' }).first();
+               console.log("totalUnreadParcel",totalNewParcel);
+               let totalNewParcelAdded = totalNewParcel.totalNewAddParcel;
+
                
             const Parallel = require("async-parallel");
             resultData = await Parallel.map(resultData, async (pd) => {
+
+                parcelsId = pd.id;
+
                 console.log("...resultData",pd.unitNumber)
                 let unitNumber = pd.unitNumber
 
@@ -294,7 +325,8 @@ const facilityBookingController = {
                 return {
                     ...pd,
                     uploadedImages: imageResult,
-                    qrCode
+                    qrCode,
+                    totalNewParcelAdded 
 
                 };
             });
@@ -385,6 +417,14 @@ const facilityBookingController = {
                 },
                 message: "Parcel list successfully!"
             })
+
+            console.log("parcelsId",parcelsId);
+            await Parallel.map(resultData, async (up) => {
+                // Update view status as view all outgoing parcel by user
+                const updateParcelStatus = await knex("parcel_management")
+                    .update({ parcelViewStatus: '0'})
+                    .where({'parcel_management.id' : up.id});
+            });
 
         } catch (err) {
 
