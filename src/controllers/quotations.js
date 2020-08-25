@@ -2597,6 +2597,7 @@ const quotationsController = {
 
 
                 let tagsResult = [];
+                let remarkResult;
                 tagsResult = await knex('location_tags')
                     .leftJoin('location_tags_master', 'location_tags.locationTagId', 'location_tags_master.id')
                     .where({ 'location_tags.entityId': st.id, 'location_tags.entityType': 'quotations', 'location_tags.orgId': req.orgId })
@@ -2621,9 +2622,34 @@ const quotationsController = {
                 let tag;
                 tag = tagsResult.toString();
 
+                remarkResult = await knex('remarks_master')
+                    .where({ entityId: st.id, entityType: "quotations_notes", orgId: req.orgId }).first();
+
+
+                let remarks = "";
+                if (remarkResult) {
+                    remarks = remarkResult.description;
+
+                }
+
+
+                /* GET TENANT NAME OPEN */
+                let tenantName = "";
+                let houseResult = await knex.from('user_house_allocation').select('userId').where({ houseId: st.unitId }).first().orderBy('id', 'desc')
+
+                if (houseResult) {
+                    let tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
+                    tenantName = tetantResult.name;
+                }
+                /* GET TENANT NAME CLOSE */
+
+
+
                 return {
                     ...st,
                     tags: tag,
+                    remarks: remarks,
+                    tenantName: tenantName,
 
                 }
             })
