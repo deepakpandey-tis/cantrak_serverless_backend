@@ -1,18 +1,9 @@
 const Joi = require("@hapi/joi");
-const moment = require("moment");
-const uuidv4 = require("uuid/v4");
-var jwt = require("jsonwebtoken");
 const _ = require("lodash");
 const XLSX = require("xlsx");
-
 const knex = require("../../db/knex");
-
-const bcrypt = require("bcrypt");
-const saltRounds = 10;
-const serviceRequest = require("../servicerequest");
 const fs = require("fs");
-const request = require("request");
-const path = require("path");
+
 
 const courierStorageController = {
   addCourier: async (req, res) => {
@@ -20,6 +11,7 @@ const courierStorageController = {
       let courier = null;
       let userId = req.me.id;
       let orgId = req.orgId;
+      console.log("request body",req.body)
 
       await knex.transaction(async (trx) => {
         const courierPayLoad = req.body;
@@ -29,7 +21,7 @@ const courierStorageController = {
           courierCode: Joi.string().required(),
           courierName: Joi.string().required(),
           mobileNo: Joi.string().required(),
-          website: Joi.string().optional(),
+          website: Joi.string().allow("").optional(),
           address: Joi.string().required(),
         });
         const result = Joi.validate(courierPayLoad, schema);
@@ -110,7 +102,7 @@ const courierStorageController = {
           courierCode: Joi.string().required(),
           courierName: Joi.string().required(),
           mobileNo: Joi.string().optional(),
-          website: Joi.string().optional(),
+          website: Joi.string().allow("").optional(),
           address: Joi.string().required(),
         });
         const result = Joi.validate(statusPaylaod, schema);
