@@ -3307,7 +3307,7 @@ const serviceRequestController = {
             }
 
 
-          
+
 
             // await knex("service_requests")
             //   .update({ serviceStatusCode: updateStatus, updatedAt: currentTime })
@@ -3853,7 +3853,6 @@ const serviceRequestController = {
                     // }
                     //qb.where(filters);
                     qb.whereIn('service_requests.projectId', accessibleProjects)
-
 
                 })
                 .groupBy([
