@@ -11,7 +11,7 @@ const authMiddleware = require("../middlewares/auth");
 const parcelAcceptanceNotification = require("../notifications/parcel/parcel-acceptance-notification");
 const parcelPickedUpNotification = require("../notifications/parcel/parcel-pickedup-notification");
 const outgoingParcelNotification = require("../notifications/parcel/outgoing-parcel-notification");
-// const { CloudFrontCustomizations } = require("aws-sdk/lib/services/cloudfront");
+
 
 const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY'];
 
@@ -128,6 +128,7 @@ router.post('/outgoing-parcel-notification',authMiddleware.isAuthenticated, asyn
             payload: {
                 parcelId:req.body.parcelId,
                 orgId:req.orgId,
+                // qrCode:req.body.url
                 // qrCode:qrCode
             }
         };
