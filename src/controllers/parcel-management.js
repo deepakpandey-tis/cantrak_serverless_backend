@@ -1186,7 +1186,6 @@ const parcelManagementController = {
           parcelRemarks,
         },
       });
-
     } catch (err) {}
   },
 
@@ -1226,27 +1225,28 @@ const parcelManagementController = {
       let parcelId = req.body.parcelId;
       let orgId = req.orgId;
 
-      let qrCode1 = "org~" + orgId + "~unitNumber~" + 10 + "~parcel~" + 6;
+      let qrCode1 =
+        "org~" + orgId + "~unitNumber~" + unitNumber + "~parcel~" + parcelId;
       let qrCode;
       if (qrCode1) {
         qrCode = await QRCODE.toDataURL(qrCode1);
       }
-     
-      
+
+      let fileName = "parcel.png";
       let base64Data;
-      if(qrCode){
-       base64Data = new Buffer.from(
-        qrCode.replace(/^data:([A-Za-z-+/]+);base64,/, "")
-      );
-      fs.writeFile("image.png", base64Data, "base64", (err) => {
-        console.log("error in file", err);
-      });
-    }
+      if (qrCode) {
+        base64Data = new Buffer.from(
+          qrCode.replace(/^data:([A-Za-z-+/]+);base64,/, "")
+        );
+        fs.writeFile("image.png", base64Data, "base64", (err) => {
+          console.log("error in file", err);
+        });
+      }
       const AWS = require("aws-sdk");
       var s3 = new AWS.S3();
       var params = {
         Bucket: process.env.S3_BUCKET_NAME,
-        Key: "parcel",
+        Key: "parcel" + fileName,
         Body: base64Data,
         ContentType: "image/png",
       };
@@ -1264,19 +1264,68 @@ const parcelManagementController = {
           });
         } else {
           console.log("File uploaded Successfully");
-          let url = process.env.S3_BUCKET_URL+"/parcel";
+          let url = process.env.S3_BUCKET_URL + "/parcel/" + fileName;
 
-          console.log("url of image",url)
+          console.log("url of image", url);
 
           return res.status(200).json({
-            message: "Qr code Get Successfully!",
-            url: url,
+            data: {
+              message: "Qr code Get Successfully!",
+              url: url,
+            },
           });
         }
       });
       // })
     } catch (err) {
       console.log("[controllers][generalsetup][exoportCompany] :  Error", err);
+    }
+  },
+
+  dispatchOutgoingParcel: async (req, res) => {
+    try {
+      let parcelId = req.body.parcelId;
+
+      const currentTime = new Date().getTime();
+      console.log(
+        "REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7",
+        req.body
+      );
+
+      const status = await knex("parcel_management")
+        .update({ parcelStatus: "2", receivedDate: currentTime })
+        .where("parcel_management.id", parcelId);
+
+      return res.status(200).json({
+        data: {
+          status: "Dispatched",
+        },
+        message: "Parcel Dispatched successfully!",
+      });
+    } catch (err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
+  approvePendingStatus: async (req, res) => {
+    try {
+      let parcelId = req.body.parcelId;
+
+      const pendingApproval = await knex("parcel_management")
+        .update({ isPendingForApproval: true })
+        .where("parcel_management.id", parcelId);
+
+      return res.status(200).json({
+        data: {
+          message: "Pending Approved",
+          pendingApproval: pendingApproval,
+        },
+      });
+    } catch (error) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
     }
   },
 };

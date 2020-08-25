@@ -76,6 +76,7 @@ const parcelAcceptanceNotification = {
 
     sendWebPushNotification: async (sender, receiver, data) => {
         console.log("web push parcel for acceptance",sender,receiver,data)
+        let parcelId = data.payload.parcelId
         data = {
             orgId: sender.orgId,
             senderId: sender.id,

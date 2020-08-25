@@ -87,6 +87,7 @@ const outgoingParcelNotification = {
     let unitNumber = receiver.unitNumber;
     let parcelId = receiver.parcelId;
 
+
     let qrCode1 =
       "org~" + data.orgId + "~unitNumber~" + unitNumber + "~parcel~" + parcelId;
     let qrCode;
@@ -94,66 +95,13 @@ const outgoingParcelNotification = {
       qrCode = await QRCODE.toDataURL(qrCode1);
     }
 
-    // s3Bucket.putObject(qrCode,function(err,data){
-    //     if (err) {
-    //         console.log(err);
-    //         console.log('Error uploading data: ', data);
-    //         } else {
-    //         console.log('succesfully uploaded the image!');
-    //         }
-    // })
-    let tempraryDirectory = null;
-    let bucketName = null;
-    if (process.env.IS_OFFLINE) {
-      bucketName = process.env.S3_BUCKET_NAME;
-      tempraryDirectory = "tmp/";
-    } else {
-      tempraryDirectory = "/tmp/";
-      bucketName = process.env.S3_BUCKET_NAME;
-    }
     
-    let base64Data;
-      if(qrCode){
-       base64Data = new Buffer.from(
-        qrCode.replace(/^data:([A-Za-z-+/]+);base64,/, "")
-      );
-      fs.writeFile("image.png", base64Data, "base64", (err) => {
-        console.log("error in file", err);
-      });
-    }
-      const AWS = require("aws-sdk");
-      var s3 = new AWS.S3();
-      var params = {
-        Bucket: process.env.S3_BUCKET_NAME,
-        Key: "parcel",
-        Body: base64Data,
-        ContentType: "image/png",
-      };
-      let url;
-    s3.putObject(params, function (err, data) {
-        if (err) {
-          console.log("Error at uploadImageOnS3Bucket function", err);
-        //   res.status(500).json({
-        //     errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
-        //   });
-        } else {
-          console.log("File uploaded Successfully");
-           url = process.env.S3_BUCKET_URL+"/parcel";
-
-          console.log("url of image",url)
-
-        //   return res.status(200).json({
-        //     message: "Qr code Get Successfully!",
-        //     url: url,
-        //   });
-        }
-      });
     data = {
       receiverEmail: receiver.email,
       template: "outgoing-parcel-notification.ejs",
       templateData: {
         fullName: receiver.name,
-        qrCode: url,
+        qrCode: receiver.url,
       },
       payload: {
         ...data,
