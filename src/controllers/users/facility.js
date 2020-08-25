@@ -684,7 +684,68 @@ const facilityBookingController = {
             });
 
         }
+    },
 
+    getUserPendingApprovalList: async (req, res) => {
+        try {
+            let id = req.me.id;          
+            let resultData;
+            let parcelsId = [];
+
+            resultData = await knex.from('parcel_management')
+                .leftJoin(
+                    "parcel_user_tis",
+                    "parcel_management.id",
+                    "parcel_user_tis.parcelId"
+                )
+                .leftJoin(
+                    "parcel_user_non_tis",
+                    "parcel_management.id",
+                    "parcel_user_non_tis.parcelId"
+                )
+                .leftJoin(
+                    "property_units",
+                    "parcel_user_tis.unitId",
+                    "property_units.id"
+                )
+                .leftJoin(
+                    "courier",
+                    "parcel_management.carrierId",
+                    "courier.id"
+                )
+                .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+                .select([
+                    "parcel_management.id"                    
+                ])
+                .where({ 'parcel_management.orgId': req.orgId })
+                .where({ 'parcel_management.isPendingForApproval' : true});
+
+
+            const Parallel = require("async-parallel");
+            resultData = await Parallel.map(resultData, async (pd) => {
+                parcelsId = pd.id;   
+                return {
+                    ...pd,             
+                    parcelsId
+                };
+            });
+
+
+
+            res.status(200).json({
+                data: {
+                    parcelPendingApprovalList:resultData
+                },
+                message: "Parcel details successfully!"
+            })
+
+        } catch (err) {
+
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+
+        }
     },
 
     cancelParcel: async (req, res) => {
@@ -694,7 +755,7 @@ const facilityBookingController = {
             const currentTime = new Date().getTime();
 
             const status = await knex("parcel_management")
-                .update({ parcelStatus: '5', updatedAt: currentTime})
+                .update({ parcelStatus: '5', updatedAt: currentTime, isPendingForApproval: false})
                 .whereIn('parcel_management.id', newParcel);
             return res.status(200).json({
                 data: {
@@ -717,7 +778,7 @@ const facilityBookingController = {
             console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7', req.body)
 
             const status = await knex("parcel_management")
-                .update({ parcelStatus: '2', receivedDate: currentTime, receivedBy: req.me.id })
+                .update({ parcelStatus: '2', receivedDate: currentTime, receivedBy: req.me.id, isPendingForApproval: false })
                 .whereIn('parcel_management.id', newParcel);
 
             return res.status(200).json({

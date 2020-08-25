@@ -22,6 +22,8 @@ facilityBookingController.getPickedUpParcelList);
 router.post('/get-user-dispatched-parcels', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
 facilityBookingController.getDispatchedParcelList);
 
+router.get('/get-user-pending-approval-list', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+facilityBookingController.getUserPendingApprovalList);
 
 router.post('/get-user-parcel-details', authMiddleware.isAuthenticated, userMiddleware.customerInfo,facilityBookingController.getParcelDetails);
 
