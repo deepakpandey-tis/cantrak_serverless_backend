@@ -122,90 +122,10 @@ const facilityBookingController = {
                     totalNewParcelAdded                     
                 };
             });
-
-
-
-            // PICKED-UP PARCELS
-
-            resultPickUp = await knex.from('parcel_management')
-                .leftJoin(
-                    "parcel_user_tis",
-                    "parcel_management.id",
-                    "parcel_user_tis.parcelId"
-                )
-                .leftJoin(
-                    "parcel_user_non_tis",
-                    "parcel_management.id",
-                    "parcel_user_non_tis.parcelId"
-                )
-                .leftJoin(
-                    "property_units",
-                    "parcel_user_tis.unitId",
-                    "property_units.id"
-                )
-                .leftJoin(
-                    "courier",
-                    "parcel_management.carrierId",
-                    "courier.id"
-                )
-                .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
-                .select([
-                    "parcel_user_tis.*",
-                    "parcel_user_non_tis.*",
-                    "parcel_management.id",
-                    "parcel_management.parcelCondition",
-                    "parcel_management.parcelType",
-                    "parcel_user_tis.unitId",
-                    "parcel_management.trackingNumber",
-                    "parcel_management.parcelStatus",
-                    "users.name as tenant",
-                    "parcel_management.createdAt",
-                    "parcel_management.pickedUpType",
-                    "property_units.unitNumber",
-                    "parcel_management.description",
-                    "courier.courierName",
-                    "parcel_management.receivedDate",
-                    "parcel_management.qrCode"
-
-                ])
-                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '2', 'parcel_management.pickedUpType': parcelType })
-                .where({ 'parcel_user_tis.tenantId': id })
-                .orderBy('parcel_management.id', 'desc')
-               
-            //const Parallel = require("async-parallel");
-            resultPickUp = await Parallel.map(resultPickUp, async (pp) => {
-                console.log("...resultPickUp",pp.unitNumber)
-                let unitNumber = pp.unitNumber
-
-                let qrCode1 = 'org~' + req.orgId + '~unitNumber~' + unitNumber + '~parcel~' + pp.id
-                let qrCode;
-                if (qrCode1) {
-                    qrCode = await QRCODE.toDataURL(qrCode1);
-                }
-
-                let imageResult = await knex
-                    .from("images")
-                    .select("s3Url", "title", "name")
-                    .where({
-                        entityId: pp.id,
-                        entityType: "parcel_management"
-                    }).first();
-
-                return {
-                    ...pp,
-                    uploadedImages: imageResult,
-                    qrCode
-
-                };
-            });
-
-
-
-
+           
             res.status(200).json({
                 data: {
-                    parcelListData: resultData,
-                    parcelPickedData: resultPickUp
+                    parcelListData: resultData
                 },
                 message: "Parcel list successfully!"
             })
@@ -331,8 +251,45 @@ const facilityBookingController = {
                 };
             });
 
+            res.status(200).json({
+                data: {
+                    parcelListData: resultData
+                },
+                message: "Parcel list successfully!"
+            })
 
+            console.log("parcelsId",parcelsId);
+            await Parallel.map(resultData, async (up) => {
+                // Update view status as view all outgoing parcel by user
+                const updateParcelStatus = await knex("parcel_management")
+                    .update({ parcelViewStatus: '0'})
+                    .where({'parcel_management.id' : up.id});
+            });
 
+        } catch (err) {
+
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+
+        }
+
+    },
+
+    getPickedUpParcelList: async (req, res) => {
+
+        try {
+            let id = req.me.id;
+            //let resourceProject = req.userProjectResources[0].projects;
+            let { listType } = req.body;
+            let resultPickUp;
+            let totalNewParcel;
+            console.log("listType", listType);
+            let parcelType;
+            if (listType == "1") {
+                parcelType = "1";
+            }    
+                      
             // PICKED-UP PARCELS
 
             resultPickUp = await knex.from('parcel_management')
@@ -378,9 +335,116 @@ const facilityBookingController = {
                 ])
                 .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '2', 'parcel_management.pickedUpType': parcelType })
                 .where({ 'parcel_user_tis.tenantId': id })
-                .orderBy('parcel_management.id', 'desc')
+                .orderBy('parcel_management.receivedDate', 'desc')
+                .limit(20)
                
-            //const Parallel = require("async-parallel");
+            const Parallel = require("async-parallel");
+            resultPickUp = await Parallel.map(resultPickUp, async (pp) => {
+                console.log("...resultPickUp",pp.unitNumber)
+                let unitNumber = pp.unitNumber
+
+                let qrCode1 = 'org~' + req.orgId + '~unitNumber~' + unitNumber + '~parcel~' + pp.id
+                let qrCode;
+                if (qrCode1) {
+                    qrCode = await QRCODE.toDataURL(qrCode1);
+                }
+
+                let imageResult = await knex
+                    .from("images")
+                    .select("s3Url", "title", "name")
+                    .where({
+                        entityId: pp.id,
+                        entityType: "parcel_management"
+                    }).first();
+
+                return {
+                    ...pp,
+                    uploadedImages: imageResult,
+                    qrCode
+
+                };
+            });
+
+            res.status(200).json({
+                data: {
+                    parcelPickedData: resultPickUp
+                },
+                message: "Parcel list successfully!"
+            })
+            
+        } catch (err) {
+
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+
+        }
+
+    },
+
+    getDispatchedParcelList: async (req, res) => {
+
+        try {
+            let id = req.me.id;
+            //let resourceProject = req.userProjectResources[0].projects;
+            let { listType } = req.body;
+            let resultPickUp;
+            let totalNewParcel
+            console.log("listType", listType);
+            let parcelType;
+            if (listType == "2") {
+                parcelType = "2";
+            }
+                        
+            // PICKED-UP PARCELS
+
+            resultPickUp = await knex.from('parcel_management')
+                .leftJoin(
+                    "parcel_user_tis",
+                    "parcel_management.id",
+                    "parcel_user_tis.parcelId"
+                )
+                .leftJoin(
+                    "parcel_user_non_tis",
+                    "parcel_management.id",
+                    "parcel_user_non_tis.parcelId"
+                )
+                .leftJoin(
+                    "property_units",
+                    "parcel_user_tis.unitId",
+                    "property_units.id"
+                )
+                .leftJoin(
+                    "courier",
+                    "parcel_management.carrierId",
+                    "courier.id"
+                )
+                .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+                .select([
+                    "parcel_user_tis.*",
+                    "parcel_user_non_tis.*",
+                    "parcel_management.id",
+                    "parcel_management.parcelCondition",
+                    "parcel_management.parcelType",
+                    "parcel_user_tis.unitId",
+                    "parcel_management.trackingNumber",
+                    "parcel_management.parcelStatus",
+                    "users.name as tenant",
+                    "parcel_management.createdAt",
+                    "parcel_management.pickedUpType",
+                    "property_units.unitNumber",
+                    "parcel_management.description",
+                    "courier.courierName",
+                    "parcel_management.receivedDate",
+                    "parcel_management.qrCode"
+
+                ])
+                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '2', 'parcel_management.pickedUpType': parcelType })
+                .where({ 'parcel_user_tis.tenantId': id })
+                .orderBy('parcel_management.receivedDate', 'desc')
+                .limit(20);
+               
+            const Parallel = require("async-parallel");
             resultPickUp = await Parallel.map(resultPickUp, async (pp) => {
                 console.log("...resultPickUp",pp.unitNumber)
                 let unitNumber = pp.unitNumber
@@ -408,23 +472,13 @@ const facilityBookingController = {
             });
 
 
-
-
             res.status(200).json({
                 data: {
-                    parcelListData: resultData,
                     parcelPickedData: resultPickUp
                 },
                 message: "Parcel list successfully!"
             })
-
-            console.log("parcelsId",parcelsId);
-            await Parallel.map(resultData, async (up) => {
-                // Update view status as view all outgoing parcel by user
-                const updateParcelStatus = await knex("parcel_management")
-                    .update({ parcelViewStatus: '0'})
-                    .where({'parcel_management.id' : up.id});
-            });
+           
 
         } catch (err) {
 
