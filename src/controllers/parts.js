@@ -2979,6 +2979,16 @@ const partsController = {
             ]);
 
 
+            const Parallel = require('async-parallel');
+
+            rows = await Parallel.map(rows, async st => {
+
+
+                return {...st, "unitCost": st.avgUnitPrice };
+
+            })
+
+
             let count = total.length;
             pagination.total = count;
             pagination.per_page = per_page;
@@ -3070,23 +3080,10 @@ const partsController = {
 
             // rows = await Parallel.map(rows, async row => {
 
-            //     let ledgerResult = await knex.from('part_ledger')
-            //         .where({ partId: row.id, orgId: req.orgId })
-            //         .orderBy('createdAt', 'desc').first();
 
-            //     let avgUnitPrice = "";
-
-            //     if (ledgerResult) {
-            //         avgUnitPrice = ledgerResult.avgUnitPrice;
-            //     }
-
-
-
-
-            //     return {...row, avgUnitPrice: avgUnitPrice };
+            //     return {...row, unitCost: row.avgUnitPrice };
 
             // })
-
 
 
             let count = total.length;
