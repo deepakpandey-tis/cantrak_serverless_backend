@@ -690,7 +690,8 @@ const facilityBookingController = {
         try {
             let id = req.me.id;          
             let resultData;
-            let parcelsId = [];
+            var array = [];
+            let approvalUrl;
 
             resultData = await knex.from('parcel_management')
                 .leftJoin(
@@ -720,23 +721,35 @@ const facilityBookingController = {
                 .where({ 'parcel_management.orgId': req.orgId })
                 .where({ 'parcel_management.isPendingForApproval' : true});
 
+                if(resultData.length > 0){
+                    let parcelIds;
+                    resultData.forEach(function(item) {
+                        parcelIds+=item.id+",";
+                    });
 
-            const Parallel = require("async-parallel");
-            resultData = await Parallel.map(resultData, async (pd) => {
-                parcelsId = pd.id;   
-                return {
-                    ...pd,             
-                    parcelsId
-                };
-            });
+                    let pId = parcelIds.replace(/,\s*$/, "");  
+                    let newPid = pId.replace("undefined","");
+                    
+                    console.log("newPid+++++", newPid);
+                    console.log("pid+++++", pId);
+                    console.log("resultArray+++++", parcelIds);
 
+                    approvalUrl = `${process.env.SITE_URL}/user/parcel/parcel-confirmation?parcels=${newPid}`;
+                    console.log("approvalUrl", approvalUrl);
 
+                }else{
+                    approvalUrl = "";
+                }
+                
+                let totalPendingApproval = resultData.length;
+                console.log("totalPending",totalPendingApproval);
 
             res.status(200).json({
                 data: {
-                    parcelPendingApprovalList:resultData
+                    parcelPendingApprovalList:approvalUrl,
+                    pendingParcelCount: totalPendingApproval
                 },
-                message: "Parcel details successfully!"
+                message: "Parcel approval url!"
             })
 
         } catch (err) {
