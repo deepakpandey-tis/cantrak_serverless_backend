@@ -1232,7 +1232,7 @@ const parcelManagementController = {
         base64Data = new Buffer.from(
           qrCode.replace(/^data:([A-Za-z-+/]+);base64,/, "")
         );
-        fs.writeFile("parcel.jpeg", base64Data, "base64", (err) => {
+        fs.writeFile("parcel.png", base64Data, "base64", (err) => {
           console.log("error in file", err);
 
         });
@@ -1244,7 +1244,7 @@ const parcelManagementController = {
           Bucket: process.env.S3_BUCKET_NAME,
           Key: "parcel/" + fileName,
           Body: file,
-          ContentType: "image/jpeg",
+          ContentType: "image/png",
         };
 
         s3.putObject(params, function (err, data) {
