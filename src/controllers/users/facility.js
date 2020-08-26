@@ -89,9 +89,18 @@ const facilityBookingController = {
                 .where({ 'parcel_user_tis.tenantId': id })
                 .orderBy('parcel_management.id', 'desc')
 
-                totalNewParcel = await knex('parcel_management').count('* as totalNewAddParcel')
-                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '1', 'parcel_management.pickedUpType': parcelType, 'parcel_management.parcelViewStatus': '1' }).first();
+                totalNewParcel = await knex.from('parcel_management')
+                .leftJoin(
+                    "parcel_user_tis",
+                    "parcel_management.id",
+                    "parcel_user_tis.parcelId"
+                )
+                .where({ 'parcel_user_tis.tenantId': id })
+                .count('* as totalNewAddParcel')
+                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.pickedUpType': parcelType, 'parcel_management.parcelViewStatus': '1' })
+                
                console.log("totalUnreadParcel",totalNewParcel);
+
                let totalNewParcelAdded = totalNewParcel.totalNewAddParcel;
 
             const Parallel = require("async-parallel");
@@ -214,9 +223,16 @@ const facilityBookingController = {
                 .where({ 'parcel_user_tis.tenantId': id })
                 .orderBy('parcel_management.id', 'desc')
 
-                totalNewParcel = await knex('parcel_management').count('* as totalNewAddParcel')
-                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '1', 'parcel_management.pickedUpType': parcelType, 'parcel_management.parcelViewStatus': '1' }).first();
-               console.log("totalUnreadParcel",totalNewParcel);
+                totalNewParcel = await knex.from('parcel_management')
+                .leftJoin(
+                    "parcel_user_tis",
+                    "parcel_management.id",
+                    "parcel_user_tis.parcelId"
+                )
+                .where({ 'parcel_user_tis.tenantId': id })
+                .count('* as totalNewAddParcel')
+                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.pickedUpType': parcelType, 'parcel_management.parcelViewStatus': '1' })
+                
                let totalNewParcelAdded = totalNewParcel.totalNewAddParcel;
 
                
@@ -690,7 +706,8 @@ const facilityBookingController = {
         try {
             let id = req.me.id;          
             let resultData;
-            let parcelsId = [];
+            var array = [];
+            let approvalUrl;
 
             resultData = await knex.from('parcel_management')
                 .leftJoin(
@@ -720,23 +737,35 @@ const facilityBookingController = {
                 .where({ 'parcel_management.orgId': req.orgId })
                 .where({ 'parcel_management.isPendingForApproval' : true});
 
+                if(resultData.length > 0){
+                    let parcelIds;
+                    resultData.forEach(function(item) {
+                        parcelIds+=item.id+",";
+                    });
 
-            const Parallel = require("async-parallel");
-            resultData = await Parallel.map(resultData, async (pd) => {
-                parcelsId = pd.id;   
-                return {
-                    ...pd,             
-                    parcelsId
-                };
-            });
+                    let pId = parcelIds.replace(/,\s*$/, "");  
+                    let newPid = pId.replace("undefined","");
+                    
+                    console.log("newPid+++++", newPid);
+                    console.log("pid+++++", pId);
+                    console.log("resultArray+++++", parcelIds);
 
+                    approvalUrl = `${process.env.SITE_URL}/user/parcel/parcel-confirmation?parcels=${newPid}`;
+                    console.log("approvalUrl", approvalUrl);
 
+                }else{
+                    approvalUrl = "";
+                }
+                
+                let totalPendingApproval = resultData.length;
+                console.log("totalPending",totalPendingApproval);
 
             res.status(200).json({
                 data: {
-                    parcelPendingApprovalList:resultData
+                    parcelPendingApprovalList:approvalUrl,
+                    pendingParcelCount: totalPendingApproval
                 },
-                message: "Parcel details successfully!"
+                message: "Parcel approval url!"
             })
 
         } catch (err) {
@@ -757,18 +786,21 @@ const facilityBookingController = {
             const status = await knex("parcel_management")
                 .update({ parcelStatus: '5', updatedAt: currentTime, isPendingForApproval: false})
                 .whereIn('parcel_management.id', newParcel);
+
             return res.status(200).json({
                 data: {
                     status: "CANCELLED"
                 },
                 message: "Parcel has been cancelled!"
             });
+
         } catch (err) {
             return res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
     },
+
     approveParcel: async (req, res) => {
         try {
             let parcelId = req.body.parcelId;
