@@ -89,9 +89,18 @@ const facilityBookingController = {
                 .where({ 'parcel_user_tis.tenantId': id })
                 .orderBy('parcel_management.id', 'desc')
 
-                totalNewParcel = await knex('parcel_management').count('* as totalNewAddParcel')
-                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.pickedUpType': parcelType, 'parcel_management.parcelViewStatus': '1' }).first();
+                totalNewParcel = await knex.from('parcel_management')
+                .leftJoin(
+                    "parcel_user_tis",
+                    "parcel_management.id",
+                    "parcel_user_tis.parcelId"
+                )
+                .where({ 'parcel_user_tis.tenantId': id })
+                .count('* as totalNewAddParcel')
+                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.pickedUpType': parcelType, 'parcel_management.parcelViewStatus': '1' })
+                
                console.log("totalUnreadParcel",totalNewParcel);
+
                let totalNewParcelAdded = totalNewParcel.totalNewAddParcel;
 
             const Parallel = require("async-parallel");
@@ -214,9 +223,16 @@ const facilityBookingController = {
                 .where({ 'parcel_user_tis.tenantId': id })
                 .orderBy('parcel_management.id', 'desc')
 
-                totalNewParcel = await knex('parcel_management').count('* as totalNewAddParcel')
-                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.pickedUpType': parcelType, 'parcel_management.parcelViewStatus': '1' }).first();
-               console.log("totalUnreadParcel",totalNewParcel);
+                totalNewParcel = await knex.from('parcel_management')
+                .leftJoin(
+                    "parcel_user_tis",
+                    "parcel_management.id",
+                    "parcel_user_tis.parcelId"
+                )
+                .where({ 'parcel_user_tis.tenantId': id })
+                .count('* as totalNewAddParcel')
+                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.pickedUpType': parcelType, 'parcel_management.parcelViewStatus': '1' })
+                
                let totalNewParcelAdded = totalNewParcel.totalNewAddParcel;
 
                
