@@ -10,10 +10,6 @@ const QRCODE = require("qrcode");
 
 const knex = require("../db/knex");
 
-const bcrypt = require("bcrypt");
-const saltRounds = 10;
-
-const XLSX = require("xlsx");
 const fs = require("fs");
 const https = require("https");
 const { whereIn } = require("../db/knex");
@@ -88,10 +84,8 @@ const parcelManagementController = {
         "non_org_user_data",
         "org_user_data",
         "newParcelId",
-        // "carrierId"
       ]);
       console.log("payloa data", payLoad);
-      // let payload = req.body
       await knex.transaction(async (trx) => {
         const schema = Joi.object().keys({
           pickedUpType: Joi.string().required(),
@@ -106,7 +100,6 @@ const parcelManagementController = {
         });
 
         const result = Joi.validate(payLoad, schema);
-        console.log("result", result);
 
         if (result && result.hasOwnProperty("error") && result.error) {
           return res.status(400).json({
@@ -136,11 +129,11 @@ const parcelManagementController = {
           .returning(["*"])
           .transacting(trx)
           .into("parcel_management");
-        console.log("add parcel result", addResult);
+        // console.log("add parcel result", addResult);
 
         parcelResult = addResult[0];
 
-        console.log("parcel result id", parcelResult.id);
+        // console.log("parcel result id", parcelResult.id);
 
         let noOrgUserDataPayload = req.body.non_org_user_data;
 
@@ -248,7 +241,7 @@ const parcelManagementController = {
   getParcelList: async (req, res) => {
     try {
       let reqData = req.query;
-      console.log("requested data parcel", reqData);
+      // console.log("requested data parcel", reqData);
       let total, rows;
 
       let pagination = {};
@@ -268,7 +261,7 @@ const parcelManagementController = {
         buildingPhaseId,
       } = req.body;
 
-      console.log("request body", req.body);
+      // console.log("request body", req.body);
       if (
         unitId ||
         trackingNo ||
@@ -1232,51 +1225,52 @@ const parcelManagementController = {
         qrCode = await QRCODE.toDataURL(qrCode1);
       }
 
-      let fileName = "parcel.png";
+      let fileName = "parcel-"+ parcelId +".png";
+      let filePath = fileName
       let base64Data;
       if (qrCode) {
         base64Data = new Buffer.from(
           qrCode.replace(/^data:([A-Za-z-+/]+);base64,/, "")
         );
-        fs.writeFile("image.png", base64Data, "base64", (err) => {
+        fs.writeFile("parcel.jpeg", base64Data, "base64", (err) => {
           console.log("error in file", err);
+
         });
       }
       const AWS = require("aws-sdk");
-      var s3 = new AWS.S3();
-      var params = {
-        Bucket: process.env.S3_BUCKET_NAME,
-        Key: "parcel" + fileName,
-        Body: base64Data,
-        ContentType: "image/png",
-      };
-      // let uploadURL = await s3.getSignedUrl("putObject", params);
-      // if(process.env.IS_OFFLINE){
-      //  uploadURL = uploadURL
-      //  .replace("https://", "http://")
-      //  .replace(".com", ".com:8000");
-      // }
-      s3.putObject(params, function (err, data) {
-        if (err) {
-          console.log("Error at uploadImageOnS3Bucket function", err);
-          res.status(500).json({
-            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
-          });
-        } else {
-          console.log("File uploaded Successfully");
-          let url = process.env.S3_BUCKET_URL + "/parcel/" + fileName;
+      fs.readFile(filePath, function(err,file){
+        var s3 = new AWS.S3();
+        var params = {
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: "parcel/" + fileName,
+          Body: file,
+          ContentType: "image/jpeg",
+        };
 
-          console.log("url of image", url);
+        s3.putObject(params, function (err, data) {
+          if (err) {
+            console.log("Error at uploadImageOnS3Bucket function", err);
+            res.status(500).json({
+              errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+            });
+          } else {
+            console.log("File uploaded Successfully");
+            let url = process.env.S3_BUCKET_URL + "/parcel/" + fileName;
+  
+            console.log("url of image", url);
+  
+        return res.status(200).json({
+          data: {
+            message: "Qr code Get Successfully!",
+            url: url,
+          },
+        });
+          }
+        });
 
-          return res.status(200).json({
-            data: {
-              message: "Qr code Get Successfully!",
-              url: url,
-            },
-          });
-        }
-      });
-      // })
+      })
+
+      
     } catch (err) {
       console.log("[controllers][generalsetup][exoportCompany] :  Error", err);
     }
