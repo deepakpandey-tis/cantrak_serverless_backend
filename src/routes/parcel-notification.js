@@ -51,7 +51,6 @@ router.post('/parcel-notification',authMiddleware.isAuthenticated, async(req,res
 
 router.post('/parcel-acceptance-notification',authMiddleware.isAuthenticated, async(req,res)=>{
     try{
-        // console.log("org user",req.me.id)
         console.log("requested tenant id for notification",req.body.id)
         let sender = await knex.from('users').where({ id: req.me.id }).first();
         let receiver = await knex.from('users').where({ id: req.body.id[0] }).first();
