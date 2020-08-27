@@ -9,5 +9,8 @@ const router = Router();
 router.get('/get-card-data', authMiddleware.isAuthenticated,
     userMiddleware.customerInfo, dashboardController.getDashboardData)
 
+/*GET BANNERS CARD DATA */
+router.get('/get-banners', authMiddleware.isAuthenticated,
+userMiddleware.customerInfo, dashboardController.getBannerList)
 
 module.exports = router;
