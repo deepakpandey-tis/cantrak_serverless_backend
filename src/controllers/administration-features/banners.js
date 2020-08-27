@@ -13,7 +13,87 @@ const fs = require("fs");
 const path = require("path");
 
 const bannersController = {
+
   addBanner: async (req, res) => {
+    // Define try/catch block
+    try {
+        let bannerImagesData = [];
+        
+        let userId = req.me.id;
+
+        await knex.transaction(async trx => {
+            let upNotesPayload = _.omit(req.body, ["images"]);
+            console.log("[controllers][remarks][updateRemarksNotes] : Request Body", upNotesPayload);
+
+            // validate keys
+            const schema = Joi.object().keys({
+                title: Joi.string().allow("").optional()
+            });
+            // validate params
+            const result = Joi.validate(upNotesPayload, schema);
+
+            if (result && result.hasOwnProperty("error") && result.error) {
+              console.log("result errors", result);
+                res.status(400).json({
+                    errors: [
+                        { code: "VALIDATION ERRORS", message: result.message.error }
+                    ]
+                });
+            }
+
+            const currentTime = new Date().getTime();
+           
+            /*INSERT IMAGE TABLE DATA OPEN */
+
+            if (req.body.images && req.body.images.length) {
+                let imagesData = req.body.images;
+                for (image of imagesData) {
+                    let d = await knex
+                        .insert({
+                            title: upNotesPayload.title,
+                            s3Url: image.s3Url,
+                            createdAt: currentTime,
+                            updatedAt: currentTime,
+                            orgId: req.orgId,
+                            createdBy: userId
+                        })
+                        .returning(["*"])
+                        .transacting(trx)
+                        .into("banners_master");
+                        bannerImagesData.push(d[0]);
+                }
+            }
+
+            /*INSERT FILE TABLE DATA OPEN */
+           
+            /*INSERT IMAGE TABLE DATA CLOSE */
+            if (bannerImagesData.length) {
+                notesData = { s3Url: bannerImagesData[0].s3Url }
+            }
+           else {
+                notesData = { s3Url: '' }
+            }
+
+            trx.commit;
+
+            res.status(200).json({
+                data: {
+                    bannerResponse: {
+                        notesData: [notesData]
+                    }
+                },
+                message: "Banners updated successfully !"
+            });
+        });
+    } catch (err) {
+        console.log("[controllers][banner][addBanner]:  : Error", err);
+
+        res.status(500).json({
+            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        });
+    }
+},
+  addBanners: async (req, res) => {
     try {
       let courier = null;
       let userId = req.me.id;
