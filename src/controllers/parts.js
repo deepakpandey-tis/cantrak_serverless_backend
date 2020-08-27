@@ -3079,12 +3079,12 @@ const partsController = {
 
             const Parallel = require('async-parallel');
 
-            // rows = await Parallel.map(rows, async row => {
+            rows = await Parallel.map(rows, async row => {
 
 
-            //     return {...row, unitCost: row.avgUnitPrice };
+                return {...row, unitCost: row.avgUnitPrice };
 
-            // })
+            })
 
 
             let count = total.length;
