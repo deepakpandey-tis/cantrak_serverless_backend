@@ -90,12 +90,12 @@ const parcelManagementController = {
         const schema = Joi.object().keys({
           pickedUpType: Joi.string().required(),
           trackingNumber: Joi.string().allow("").optional(),
-          carrierId: Joi.number().required(),
+          carrierId: Joi.number().allow(null).optional(),
           parcelType: Joi.number().required(),
           description: Joi.string().allow("").optional(),
           parcelCondition: Joi.string().required(),
           parcelStatus: Joi.number().required(),
-          parcelPriority: Joi.number().optional(),
+          parcelPriority: Joi.number().allow(null).optional(),
           barcode: Joi.string().allow("").optional(),
         });
 
@@ -990,12 +990,12 @@ const parcelManagementController = {
         const schema = Joi.object().keys({
           pickedUpType: Joi.string().required(),
           trackingNumber: Joi.string().allow("").optional(),
-          carrierId: Joi.number().required(),
+          carrierId: Joi.number().allow(null).optional(),
           parcelType: Joi.number().required(),
           description: Joi.string().allow("").optional(),
           parcelCondition: Joi.string().required(),
           parcelStatus: Joi.number().required(),
-          parcelPriority: Joi.number().required(),
+          parcelPriority: Joi.number().allow(null).optional(),
           barcode: Joi.string().allow("").optional(),
         });
 
