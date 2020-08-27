@@ -97,11 +97,12 @@ const facilityBookingController = {
                 )
                 .where({ 'parcel_user_tis.tenantId': id })
                 .count('* as totalNewAddParcel')
-                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.pickedUpType': parcelType, 'parcel_management.parcelViewStatus': '1' })
+                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.pickedUpType': parcelType, 'parcel_management.parcelViewStatus': '1' }).first();
                 
                console.log("totalUnreadParcel",totalNewParcel);
 
                let totalNewParcelAdded = totalNewParcel.totalNewAddParcel;
+               console.log("totalNewParcelAdded",totalNewParcelAdded);
 
             const Parallel = require("async-parallel");
             resultData = await Parallel.map(resultData, async (pd) => {
@@ -231,7 +232,7 @@ const facilityBookingController = {
                 )
                 .where({ 'parcel_user_tis.tenantId': id })
                 .count('* as totalNewAddParcel')
-                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.pickedUpType': parcelType, 'parcel_management.parcelViewStatus': '1' })
+                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.pickedUpType': parcelType, 'parcel_management.parcelViewStatus': '1' }).first();
                 
                let totalNewParcelAdded = totalNewParcel.totalNewAddParcel;
 
@@ -655,7 +656,7 @@ const facilityBookingController = {
                     "parcel_management.receivedDate",
                     "parcel_management.pickedUpAt",
                 ])
-                .where({ 'parcel_management.orgId': req.orgId })
+                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': 1  })
                 .whereIn('parcel_management.id', newParcel)
 
 
