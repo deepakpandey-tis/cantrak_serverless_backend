@@ -2228,10 +2228,6 @@ const quotationsController = {
                 .orderBy('quotations.id', 'desc');
 
 
-
-
-
-
             const Parallel = require('async-parallel');
             let a = 0;
             const final = await Parallel.map(_.uniqBy(rows, 'id'), async(st) => {
