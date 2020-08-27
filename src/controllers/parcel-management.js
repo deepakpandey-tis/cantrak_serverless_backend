@@ -1225,8 +1225,8 @@ const parcelManagementController = {
         qrCode = await QRCODE.toDataURL(qrCode1);
       }
 
-      let fileName = "parcel-"+ parcelId +".png";
-      let filePath = fileName
+      let fileName = "parcel-" + parcelId + ".png";
+      let filePath = fileName;
       let base64Data;
       if (qrCode) {
         base64Data = new Buffer.from(
@@ -1234,11 +1234,10 @@ const parcelManagementController = {
         );
         fs.writeFile("parcel.png", base64Data, "base64", (err) => {
           console.log("error in file", err);
-
         });
       }
       const AWS = require("aws-sdk");
-      fs.readFile(filePath, function(err,file){
+      fs.readFile(filePath, function (err, file) {
         var s3 = new AWS.S3();
         var params = {
           Bucket: process.env.S3_BUCKET_NAME,
@@ -1256,21 +1255,18 @@ const parcelManagementController = {
           } else {
             console.log("File uploaded Successfully");
             let url = process.env.S3_BUCKET_URL + "/parcel/" + fileName;
-  
+
             console.log("url of image", url);
-  
-        return res.status(200).json({
-          data: {
-            message: "Qr code Get Successfully!",
-            url: url,
-          },
-        });
+
+            return res.status(200).json({
+              data: {
+                message: "Qr code Get Successfully!",
+                url: url,
+              },
+            });
           }
         });
-
-      })
-
-      
+      });
     } catch (err) {
       console.log("[controllers][generalsetup][exoportCompany] :  Error", err);
     }
