@@ -90,12 +90,12 @@ const parcelManagementController = {
         const schema = Joi.object().keys({
           pickedUpType: Joi.string().required(),
           trackingNumber: Joi.string().allow("").optional(),
-          carrierId: Joi.number().required(),
+          carrierId: Joi.number().allow(null).optional(),
           parcelType: Joi.number().required(),
           description: Joi.string().allow("").optional(),
           parcelCondition: Joi.string().required(),
           parcelStatus: Joi.number().required(),
-          parcelPriority: Joi.number().optional(),
+          parcelPriority: Joi.number().allow(null).optional(),
           barcode: Joi.string().allow("").optional(),
         });
 
@@ -990,12 +990,12 @@ const parcelManagementController = {
         const schema = Joi.object().keys({
           pickedUpType: Joi.string().required(),
           trackingNumber: Joi.string().allow("").optional(),
-          carrierId: Joi.number().required(),
+          carrierId: Joi.number().allow(null).optional(),
           parcelType: Joi.number().required(),
           description: Joi.string().allow("").optional(),
           parcelCondition: Joi.string().required(),
           parcelStatus: Joi.number().required(),
-          parcelPriority: Joi.number().required(),
+          parcelPriority: Joi.number().allow(null).optional(),
           barcode: Joi.string().allow("").optional(),
         });
 
@@ -1025,7 +1025,6 @@ const parcelManagementController = {
           .returning(["*"])
           .transacting(trx)
           .into("parcel_management");
-        // console.log("add parcel result", addResult);
         parcelResult = updateResult[0];
 
         let noOrgUserDataPayload = req.body.non_org_user_data;
@@ -1284,7 +1283,7 @@ const parcelManagementController = {
 
       const status = await knex("parcel_management")
         .update({ parcelStatus: "2", receivedDate: currentTime })
-        .where("parcel_management.id", parcelId);
+        .whereIn("parcel_management.id", parcelId);
 
       return res.status(200).json({
         data: {
@@ -1304,7 +1303,7 @@ const parcelManagementController = {
 
       const pendingApproval = await knex("parcel_management")
         .update({ isPendingForApproval: true })
-        .where("parcel_management.id", parcelId);
+        .whereIn("parcel_management.id", parcelId);
 
       return res.status(200).json({
         data: {
