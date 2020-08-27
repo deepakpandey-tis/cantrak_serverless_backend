@@ -2228,10 +2228,6 @@ const quotationsController = {
                 .orderBy('quotations.id', 'desc');
 
 
-
-
-
-
             const Parallel = require('async-parallel');
             let a = 0;
             const final = await Parallel.map(_.uniqBy(rows, 'id'), async(st) => {
@@ -2278,6 +2274,7 @@ const quotationsController = {
                 let totalCost;
                 let unitPrice;
                 let totalPrice;
+                let unitCost;
 
                 let i = 0;
                 for (let d of partDataResult) {
@@ -2287,15 +2284,16 @@ const quotationsController = {
 
                         if (st.invoiceData[0]) {
 
+                            unitCost = st.invoiceData[0].parts[i].avgUnitPrice;
                             unitPrice = st.invoiceData[0].parts[i].unitCost;
                             totalPrice = st.invoiceData[0].parts[i].quantity * st.invoiceData[0].parts[i].unitCost;
                         }
                     }
                     i++;
 
-                    totalCost = d.quantity * d.unitCost;
+                    totalCost = d.quantity * unitCost;
 
-                    updatePartData.push({...d, totalCost: totalCost, unitPrice: unitPrice, totalPrice: totalPrice })
+                    updatePartData.push({...d, unitCost, totalCost: totalCost, unitPrice: unitPrice, totalPrice: totalPrice })
                 }
 
                 let tagsResult = [];
