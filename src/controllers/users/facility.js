@@ -1401,7 +1401,9 @@ const facilityBookingController = {
                 unitId: unitId,
                 companyId: facilityData.companyId,
                 isBookingConfirmed: confirmedStatus,
-                confirmedType: confirmType
+                confirmedType: confirmType,
+                remarks : payload.remarks
+
             }
             let insertResult = await knex('entity_bookings').insert(insertData).returning(['*']);
             resultData = insertResult[0];

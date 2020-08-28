@@ -52,6 +52,7 @@ const facilityBookingController = {
           checkInType: Joi.string().allow("").optional(),
           enablePreCheckIn: Joi.boolean().required(),
           preCheckinTime: Joi.string().allow("").optional(),
+          enableQuotaCheck: Joi.boolean().required()
           // qrCode: Joi.string().allow("").optional(),
           // "descriptionAlternateLang": Joi.string().required(),
         });
@@ -577,6 +578,7 @@ const facilityBookingController = {
             "facility_master.enableCheckIn",
             "facility_master.checkInType",
             "facility_master.preCheckinTime",
+            "facility_master.enableQuotaCheck",
             "facility_master.enablePreCheckIn",
             "facility_type_master.id as facilityTypeId",
             "facility_type_master.facilityTypeName",
