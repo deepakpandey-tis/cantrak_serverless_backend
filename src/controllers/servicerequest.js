@@ -3565,6 +3565,9 @@ const serviceRequestController = {
                     "service_problems.categoryId",
                     "incident_categories.id"
                 )
+                .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id')
+                .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
+
                 // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
                 // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
                 .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
@@ -3592,7 +3595,8 @@ const serviceRequestController = {
                     "property_units.id as unitId",
                     "service_requests.completedOn",
                     "service_requests.displayId as srNo",
-                    "service_orders.displayId as soNo"
+                    "service_orders.displayId as soNo",
+                    "incident_type.descriptionEng as problemType"
 
                 ])
                 .orderBy('service_requests.createdAt', 'desc')
@@ -3713,7 +3717,9 @@ const serviceRequestController = {
                     // "user_house_allocation.id",
                     "service_orders.id",
                     "companies.id",
-                    "projects.id"
+                    "projects.id",
+                    "incident_type.id",
+                    "incident_sub_categories.id"
                 ])
                 .distinct('service_requests.id'),
                 knex

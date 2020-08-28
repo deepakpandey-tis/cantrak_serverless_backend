@@ -11,7 +11,7 @@ const serviceRequestNotification = require('../notifications/service-request/app
 const serviceOrderController = {
     addServiceOrder: async(req, res) => {
         try {
-           
+
             let serviceOrder = null;
             let images = null
             let serviceOrderPayload = req.body;
@@ -19,7 +19,7 @@ const serviceOrderController = {
             let assignedServiceAdditionalUsers;
 
             await knex.transaction(async trx => {
-                      let ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY'];
+                    let ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY'];
 
                     images = req.body.images
                     let serviceRequestId = req.body.serviceRequestId
@@ -139,23 +139,22 @@ const serviceOrderController = {
                         //Service Request Team Management End
 
 
-                        // Send Notifications to Main User
-                        
-                         // Adding Notification in service request approval 
+                    // Send Notifications to Main User
 
-                            let sender = await knex.from('users').where({ id: req.me.id }).first();
-                            let receiver = await knex.from('users').where({ id: mainUserId }).first();
-                            
-                            console.log("requested mainUserId id for notification",mainUserId);
-                            
-                            //  console.log("receiver tenant",receiver)
-                    
-                            let dataNos = {
-                                payload: {
-                                }
-                            };
+                    // Adding Notification in service request approval 
 
-                            await serviceRequestNotification.send(sender, receiver, dataNos, ALLOWED_CHANNELS);
+                    let sender = await knex.from('users').where({ id: req.me.id }).first();
+                    let receiver = await knex.from('users').where({ id: mainUserId }).first();
+
+                    console.log("requested mainUserId id for notification", mainUserId);
+
+                    //  console.log("receiver tenant",receiver)
+
+                    let dataNos = {
+                        payload: {}
+                    };
+
+                    await serviceRequestNotification.send(sender, receiver, dataNos, ALLOWED_CHANNELS);
 
                     if (assignedServiceAdditionalUsers && assignedServiceAdditionalUsers.length) {
                         for (user of assignedServiceAdditionalUsers) {
@@ -184,10 +183,10 @@ const serviceOrderController = {
                                 .transacting(trx)
                                 .into("assigned_service_additional_users");
                             //additionalUsersResultantArray.push(userResult[0])
-                            
+
                             let receiver1 = await knex.from('users').where({ id: user }).first();
                             await serviceRequestNotification.send(sender, receiver1, dataNos, ALLOWED_CHANNELS);
-                        
+
                         }
                         // Send Notifications to Additional Users
                     }
@@ -2673,7 +2672,10 @@ const serviceOrderController = {
                     "incident_categories",
                     "service_problems.categoryId",
                     "incident_categories.id"
-                ).leftJoin('users as c', 'service_requests.createdBy', 'c.id')
+                )
+                .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id')
+                .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
+                .leftJoin('users as c', 'service_requests.createdBy', 'c.id')
 
             .select([
                     "service_requests.id as S Id",
@@ -2699,7 +2701,8 @@ const serviceOrderController = {
                     'service_requests.displayId as srNo',
                     'service_orders.displayId as soNo',
                     'service_orders.createdAt',
-                    'service_requests.completedOn'
+                    'service_requests.completedOn',
+                    "incident_type.descriptionEng as problemType"
                 ])
                 .groupBy([
                     "service_requests.id",
@@ -2714,7 +2717,9 @@ const serviceOrderController = {
                     "mainUsers.id",
                     "incident_categories.id",
                     "service_orders.id",
-                    "c.id"
+                    "c.id",
+                    "incident_type.id",
+                    "incident_sub_categories.id"
 
                 ])
                 .where(qb => {
