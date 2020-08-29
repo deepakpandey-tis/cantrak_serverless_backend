@@ -54,11 +54,13 @@ router.post('/parcel-acceptance-notification',authMiddleware.isAuthenticated, as
         console.log("requested tenant id for notification",req.body.id)
         let sender = await knex.from('users').where({ id: req.me.id }).first();
         let receiver = await knex.from('users').where({ id: req.body.id[0] }).first();
-        console.log("reciever tenant",receiver)
+        // console.log("reciever tenant",receiver)
+        // console.log("total parcel id",req.body.parcelId.join(','))
 
         let data = {
             payload: {
-                parcelId:req.body.parcelId[0]
+                
+                parcelId:req.body.parcelId.join(',')
             }
         };
         await parcelAcceptanceNotification.send(sender, receiver, data, ALLOWED_CHANNELS);
