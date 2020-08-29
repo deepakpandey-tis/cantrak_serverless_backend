@@ -21,5 +21,17 @@ router.post(
   bannersController.toggleBanners
 );
 
+router.post(
+  "/add-theme",
+  authMiddleware.isAuthenticated,
+  bannersController.addTheme
+);
+
+router.get(
+  "/get-theme-list",
+  authMiddleware.isAuthenticated,
+  bannersController.getThemeList
+);
+
 
 module.exports = router;

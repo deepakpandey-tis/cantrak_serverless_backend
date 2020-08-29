@@ -405,6 +405,13 @@ const quotationsController = {
                         ]
                     });
                 }
+                // let avgUnitPrice;
+                // let avgResult = await knex('part_master').where({ id: payload.partId, orgId: req.orgId }).first();
+                // if (avgResult) {
+                //     avgUnitPrice = avgResult.avgUnitPrice;
+                // }
+
+
 
                 let currentTime = new Date().getTime();
                 let insertData = {
@@ -416,7 +423,8 @@ const quotationsController = {
                     entityType: "quotations",
                     updatedAt: currentTime,
                     createdAt: currentTime,
-                    orgId: req.orgId
+                    orgId: req.orgId,
+                    //avgUnitPrice: avgUnitPrice
                 };
                 let partResult = await knex
                     .insert(insertData)
