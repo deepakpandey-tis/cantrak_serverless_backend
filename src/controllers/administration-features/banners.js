@@ -17,167 +17,86 @@ const bannersController = {
   addBanner: async (req, res) => {
     // Define try/catch block
     try {
-        let bannerImagesData = [];
-        
-        let userId = req.me.id;
+      let bannerImagesData = [];
 
-        await knex.transaction(async trx => {
-            let upNotesPayload = _.omit(req.body, ["images"]);
-            console.log("[controllers][remarks][updateRemarksNotes] : Request Body", upNotesPayload);
-
-            // validate keys
-            const schema = Joi.object().keys({
-                title: Joi.string().allow("").optional()
-            });
-            // validate params
-            const result = Joi.validate(upNotesPayload, schema);
-
-            if (result && result.hasOwnProperty("error") && result.error) {
-              console.log("result errors", result);
-                res.status(400).json({
-                    errors: [
-                        { code: "VALIDATION ERRORS", message: result.message.error }
-                    ]
-                });
-            }
-
-            const currentTime = new Date().getTime();
-           
-            /*INSERT IMAGE TABLE DATA OPEN */
-
-            if (req.body.images && req.body.images.length) {
-                let imagesData = req.body.images;
-                for (image of imagesData) {
-                    let d = await knex
-                        .insert({
-                            title: upNotesPayload.title,
-                            s3Url: image.s3Url,
-                            createdAt: currentTime,
-                            updatedAt: currentTime,
-                            orgId: req.orgId,
-                            createdBy: userId
-                        })
-                        .returning(["*"])
-                        .transacting(trx)
-                        .into("banners_master");
-                        bannerImagesData.push(d[0]);
-                }
-            }
-
-            /*INSERT FILE TABLE DATA OPEN */
-           
-            /*INSERT IMAGE TABLE DATA CLOSE */
-            if (bannerImagesData.length) {
-                notesData = { s3Url: bannerImagesData[0].s3Url }
-            }
-           else {
-                notesData = { s3Url: '' }
-            }
-
-            trx.commit;
-
-            res.status(200).json({
-                data: {
-                    bannerResponse: {
-                        notesData: [notesData]
-                    }
-                },
-                message: "Banners updated successfully !"
-            });
-        });
-    } catch (err) {
-        console.log("[controllers][banner][addBanner]:  : Error", err);
-
-        res.status(500).json({
-            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-        });
-    }
-},
-  addBanners: async (req, res) => {
-    try {
-      let courier = null;
       let userId = req.me.id;
-      let orgId = req.orgId;
 
-      await knex.transaction(async (trx) => {
-        const courierPayLoad = req.body;
-        console.log("[Controllers][Courier][add]", courierPayLoad);
+      await knex.transaction(async trx => {
+        let upNotesPayload = _.omit(req.body, ["images"]);
+        console.log("[controllers][remarks][updateRemarksNotes] : Request Body", upNotesPayload);
 
+        // validate keys
         const schema = Joi.object().keys({
-          courierCode: Joi.string().required(),
-          courierName: Joi.string().required(),
-          mobileNo: Joi.string().required(),
-          website: Joi.string().optional(),
-          address: Joi.string().required(),
+          title: Joi.string().allow("").optional()
         });
-        const result = Joi.validate(courierPayLoad, schema);
-        console.log("[Controller][Courier][add]:Joi result", result);
+        // validate params
+        const result = Joi.validate(upNotesPayload, schema);
+
         if (result && result.hasOwnProperty("error") && result.error) {
-          return res.status(400).json({
+          console.log("result errors", result);
+          res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message },
-            ],
+              { code: "VALIDATION ERRORS", message: result.message.error }
+            ]
           });
         }
-        const existCourierCode = await knex("courier").where({
-          courierCode: courierPayLoad.courierCode.toUpperCase(),
-          orgId: orgId,
-        });
-        console.log(
-          "[controllers][courier][add]: courierCode",
-          existCourierCode
-        );
-        if (existCourierCode && existCourierCode.length) {
-          return res.status(400).json({
-            errors: [
-              {
-                code: "TYPE_CODE_EXIST_ERROR",
-                message: "Courier Code already exist !",
-              },
-            ],
-          });
-        }
+
         const currentTime = new Date().getTime();
 
-        const insertData = {
-          ...courierPayLoad,
-          orgId: orgId,
-          createdBy: userId,
-          courierCode: courierPayLoad.courierCode.toUpperCase(),
-          createdAt: currentTime,
-          updatedAt: currentTime,
-        };
-        console.log("[controllers][courier][add]: Insert Data", insertData);
+        /*INSERT IMAGE TABLE DATA OPEN */
 
-        const incidentResult = await knex
-          .insert(insertData)
-          .returning(["*"])
-          .transacting(trx)
-          .into("courier");
+        if (req.body.images && req.body.images.length) {
+          let imagesData = req.body.images;
+          for (image of imagesData) {
+            let d = await knex
+              .insert({
+                title: upNotesPayload.title,
+                s3Url: image.s3Url,
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                orgId: req.orgId,
+                createdBy: userId
+              })
+              .returning(["*"])
+              .transacting(trx)
+              .into("banners_master");
+            bannerImagesData.push(d[0]);
+          }
+        }
 
-        incident = incidentResult[0];
+        /*INSERT FILE TABLE DATA OPEN */
+
+        /*INSERT IMAGE TABLE DATA CLOSE */
+        if (bannerImagesData.length) {
+          notesData = { s3Url: bannerImagesData[0].s3Url }
+        }
+        else {
+          notesData = { s3Url: '' }
+        }
 
         trx.commit;
-      });
 
-      res.status(200).json({
-        data: {
-          category: incident,
-        },
-        message: "Courier added successfully !",
+        res.status(200).json({
+          data: {
+            bannerResponse: {
+              notesData: [notesData]
+            }
+          },
+          message: "Banners updated successfully !"
+        });
       });
     } catch (err) {
-      console.log("[controllers][courier][courierAdd] :  Error", err);
+      console.log("[controllers][banner][addBanner]:  : Error", err);
 
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
-  
+
   getBannerList: async (req, res) => {
     try {
-      let sortPayload = req.body;      
+      let sortPayload = req.body;
 
       let reqData = req.query;
       let pagination = {};
@@ -232,12 +151,12 @@ const bannersController = {
       console.log("[controllers][banners][getBanners],Error", err);
     }
   },
-  
-  toggleBanners:async(req,res)=>{
-    try{
+
+  toggleBanners: async (req, res) => {
+    try {
       let banner = null
       let message;
-      await knex.transaction(async trx=>{
+      await knex.transaction(async trx => {
         let payload = req.body;
         let orgId = req.orgId;
 
@@ -264,7 +183,7 @@ const bannersController = {
               .returning(["*"])
               .transacting(trx)
               .into("banners_master");
-              banner = bannerResult[0];
+            banner = bannerResult[0];
             message = "Banner deactivate successfully!"
 
           } else {
@@ -275,7 +194,7 @@ const bannersController = {
               .returning(["*"])
               .transacting(trx)
               .into("banners_master");
-              banner = bannerResult[0];
+            banner = bannerResult[0];
             message = "Banner activate successfully!"
           }
         }
@@ -288,7 +207,7 @@ const bannersController = {
         },
         message: message
       });
-    }catch(err){
+    } catch (err) {
       console.log(
         "[controllers][Banner][toggleBanner] :  Error",
         err
@@ -299,6 +218,107 @@ const bannersController = {
 
     }
   },
-  
+
+  addTheme: async (req, res) => {
+    // Define try/catch block
+    try {
+      let userId = req.me.id;
+      let payload = req.body;
+      let orgId = req.orgId;
+      let themes;
+
+      await knex.transaction(async trx => {
+
+        // validate keys
+        const schema = Joi.object().keys({
+          theme: Joi.number().required()
+        });
+        // validate params
+        const result = Joi.validate(payload, schema);
+
+        if (result && result.hasOwnProperty("error") && result.error) {
+          console.log("result errors", result);
+          res.status(400).json({
+            errors: [
+              { code: "VALIDATION ERRORS", message: result.message.error }
+            ]
+          });
+        }
+
+        const currentTime = new Date().getTime();
+
+        /*INSERT THEMES TABLE DATA */
+        let checkThemeSettings = await knex.from('theme_master').where({ orgId: orgId }).returning(['*'])
+        if (checkThemeSettings && checkThemeSettings.length) {
+          themeResult = await knex
+            .update({ theme: payload.theme })
+            .where({ orgId: orgId })
+            .returning(["*"])
+            .transacting(trx)
+            .into("theme_master");
+          themes = themeResult[0];
+          message = "Theme settings updated successfully!"
+
+        } else {
+
+          let insertData = {
+            theme: payload.theme,
+            orgId: orgId,
+            createdBy: userId,
+            createdAt: currentTime,
+            updatedAt: currentTime
+          };
+
+          let insertResult = await knex
+            .insert(insertData)
+            .returning(["*"])
+            .transacting(trx)
+            .into("theme_master");
+          themes = insertResult[0];
+        }
+
+
+        trx.commit;
+
+        res.status(200).json({
+          data: {
+            themes: themes
+          },
+          message: "Theme managed successfully !"
+        });
+      });
+    } catch (err) {
+      console.log("[controllers][theme][addTheme]:  : Error", err);
+
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+
+  getThemeList: async (req, res) => {
+    try {
+      let result = await knex('theme_master')
+        .leftJoin('users', 'theme_master.createdBy', 'users.id')
+        .select([
+          'theme_master.*',
+          'users.name'
+        ])
+        .where({ 'theme_master.orgId': req.orgId })
+        .first()
+      return res.status(200).json({
+        data: result,
+        message: "Theme List!"
+      });
+    } catch (err) {
+      console.log("[controllers][banner][getTheme] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+
+
 };
 module.exports = bannersController;
