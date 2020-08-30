@@ -120,5 +120,21 @@ router.post('/get-report-by-team',
     serviceRequestController.getReportByTeam);
 
 
+/*GET GET REPORT BREAK BY SYSTEM */
+router.post('/get-report-by-system',
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    resourceAccessMiddleware.isCMAccessible,
+    serviceRequestController.getReportBySystem);
+
+
+/*GET GET REPORT BREAK BY TAGS */
+router.post('/get-report-by-tag',
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    resourceAccessMiddleware.isCMAccessible,
+    serviceRequestController.getReportByTag);
+
+
 
 module.exports = router;
