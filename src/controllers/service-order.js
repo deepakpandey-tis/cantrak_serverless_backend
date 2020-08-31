@@ -1473,12 +1473,26 @@ const serviceOrderController = {
                     });
                 }
 
+                let avgUnitPrice;
+                let avgResult = await knex('part_master').where({ id: assignedPartPayload.partId, orgId: req.orgId }).first();
+                if (avgResult) {
+                    avgUnitPrice = avgResult.avgUnitPrice;
+                }
+
                 // Insert in assigned_parts table,
                 const currentTime = new Date().getTime();
 
                 let assignedPartInsertPayload = _.omit(assignedPartPayload, ['serviceOrderId'])
 
-                let insertData = {...assignedPartInsertPayload, entityId: assignedPartPayload.serviceOrderId, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }
+                let insertData = {...assignedPartInsertPayload,
+                    entityId: assignedPartPayload.serviceOrderId,
+                    entityType: 'service_orders',
+                    unitCost: avgUnitPrice,
+                    createdAt: currentTime,
+                    updatedAt: currentTime,
+                    orgId: req.orgId,
+                    avgUnitPrice: avgUnitPrice
+                }
                 let partResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('assigned_parts')
                 assignedPart = partResult[0]
                 trx.commit

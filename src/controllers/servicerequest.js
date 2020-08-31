@@ -4231,6 +4231,116 @@ const serviceRequestController = {
             let result = await knex.raw(`select a.Stat ,b."1",b."2",b."3",b."4",b."5",b."6",b."7",b."8",b."9",b."10",b."11",b."12",b."13",b."14",b."15",b."16",b."17",b."18",b."19",b."20",b."21",b."22",b."23",b."24",b."25" ,b."26",b."27",b."28",b."29",b."30",b."31" from (select 'Open+Under Survey' Stat, 1 Sort union select 'Approved', 3 union select 'On-Hold', 4 union select 'In Progress', 5 union select 'Completed', 6) a LEFT OUTER JOIN ( select case when P."serviceStatusCode" in ('O','US') then 'Open+Under Survey' else case when P."serviceStatusCode" = 'A' then 'Approved' else case when P."serviceStatusCode" = 'OH' then 'On-Hold' else case when P."serviceStatusCode" = 'COM' then 'Completed' else 'In Progress' end end end end Stat , SUM(P."D01") as "1" , SUM(P."D02") as "2", SUM(P."D03") as "3", SUM(P."D04") as "4", SUM(P."D05") as "5", SUM(P."D06") as "6" , SUM(P."D07") as "7" , SUM(P."D08") as "8", SUM(P."D09") as "9" , SUM(P."D10") as "10", SUM(P."D11") as "11" , SUM(P."D12") as "12" , SUM(P."D13") as "13" , SUM(P."D14") as "14" , SUM(P."D15") as "15" , SUM(P."D16") as "16" , SUM(P."D17") as "17" , SUM(P."D18") as "18", SUM(P."D19") as "19", SUM(P."D20") as "20", SUM(P."D21") as "21", SUM(P."D22") as "22", SUM(P."D23") as "23", SUM(P."D24") as "24", SUM(P."D25") as "25", SUM(P."D26") as "26", SUM(P."D27") as "27", SUM(P."D28") as "28", SUM(P."D29") as "29", SUM(P."D30") as "30", SUM(P."D31") as "31", SUM(P."TOTAL") as "TOTAL" from (select sr."orgId" ,sr.id, sr."serviceStatusCode", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '1' then 1 else null end as "D01",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '2' then 1 else null end as "D02", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '3' then 1 else null end as "D03",  case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '4' then 1 else null end as "D04", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '5' then 1 else null end as "D05", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '6' then 1 else null end as "D06", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '7' then 1 else null end as "D07", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '8' then 1 else null end as "D08", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '9' then 1 else null end as "D09", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '10' then 1 else null end as "D10", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '11' then 1 else null end as "D11", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '12' then 1 else null end as "D12", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '13' then 1 else null end as "D13",  case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '14' then 1 else null end as "D14", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '15' then 1 else null end as "D15", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '16' then 1 else null end as "D16", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '17' then 1 else null end as "D17", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '18' then 1 else null end as "D18", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '19' then 1 else null end as "D19", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '20' then 1 else null end as "D20",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '21' then 1 else null end as "D21",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '22' then 1 else null end as "D22",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '23' then 1 else null end as "D23", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '24' then 1 else null end as "D24", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '25' then 1 else null end as "D25", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '26' then 1 else null end as "D26",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '27' then 1 else null end as "D27", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '28' then 1 else null end as "D28", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '29' then 1 else null end as "D29", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '30' then 1 else null end as "D30", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '31' then 1 else null end as "D31",case when to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}' then 1 else null end as "TOTAL" from service_requests sr where sr."orgId" = ${req.orgId} and  sr."companyId" = ${companyId} and sr."moderationStatus" = true and sr."serviceStatusCode" != 'C' and to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}' and public.f_get_teamname(sr."orgId" ,sr.id) in ('${teamCode}')) P group by  case when P."serviceStatusCode" in ('O','US') then 'Open+Under Survey' else case when P."serviceStatusCode" = 'A' then 'Approved' else case when P."serviceStatusCode" = 'OH' then 'On-Hold' else case when P."serviceStatusCode" = 'COM' then 'Completed' else 'In Progress' end end end end) b ON  a.stat = b.stat order by sort`)
 
 
+            const Parallel = require('async-parallel');
+            let total1 = 0;
+            let total2 = 0;
+            let total3 = 0;
+            let total4 = 0;
+            let total5 = 0;
+            let total6 = 0;
+            let total7 = 0;
+            let total8 = 0;
+            let total9 = 0;
+            let total10 = 0;
+            let total11 = 0;
+            let total12 = 0;
+            let total13 = 0;
+            let total14 = 0;
+            let total15 = 0;
+            let total16 = 0;
+            let total17 = 0;
+            let total18 = 0;
+            let total19 = 0;
+            let total20 = 0;
+            let total21 = 0;
+            let total22 = 0;
+            let total23 = 0;
+            let total24 = 0;
+            let total25 = 0;
+            let total26 = 0;
+            let total27 = 0;
+            let total28 = 0;
+            let total29 = 0;
+            let total30 = 0;
+            let total31 = 0;
+
+            result.rows = await Parallel.map(result.rows, async st => {
+
+
+                total1 += Number(st["1"]);
+                total2 += Number(st["2"]);
+                total3 += Number(st["3"]);
+                total4 += Number(st["4"]);
+                total5 += Number(st["5"]);
+                total6 += Number(st["6"]);
+                total7 += Number(st["7"]);
+                total8 += Number(st["8"]);
+                total9 += Number(st["9"]);
+                total10 += Number(st["10"]);
+                total11 += Number(st["11"]);
+                total12 += Number(st["12"]);
+                total13 += Number(st["13"]);
+                total14 += Number(st["14"]);
+                total15 += Number(st["15"]);
+                total16 += Number(st["16"]);
+                total17 += Number(st["17"]);
+                total18 += Number(st["18"]);
+                total19 += Number(st["19"]);
+                total20 += Number(st["20"]);
+                total21 += Number(st["21"]);
+                total22 += Number(st["22"]);
+                total23 += Number(st["23"]);
+                total24 += Number(st["24"]);
+                total25 += Number(st["25"]);
+                total26 += Number(st["26"]);
+                total27 += Number(st["27"]);
+                total28 += Number(st["28"]);
+                total29 += Number(st["29"]);
+                total30 += Number(st["30"]);
+                total31 += Number(st["31"]);
+
+                return {
+                    ...st,
+                    total1,
+                    total2,
+                    total3,
+                    total4,
+                    total5,
+                    total6,
+                    total7,
+                    total8,
+                    total9,
+                    total10,
+                    total11,
+                    total12,
+                    total13,
+                    total14,
+                    total15,
+                    total16,
+                    total17,
+                    total18,
+                    total19,
+                    total20,
+                    total21,
+                    total22,
+                    total23,
+                    total24,
+                    total25,
+                    total26,
+                    total27,
+                    total28,
+                    total29,
+                    total30,
+                    total31,
+
+                };
+
+            })
+
+
+
+
+
             return res.status(200).json({
                 data: result.rows,
                 companyId,
@@ -4275,6 +4385,117 @@ const serviceRequestController = {
             // teamCode = "'" + teamCode + "'";
             let period = payload.startYear + "-" + month;
             let result = await knex.raw(`select public.f_get_teamname(P."orgId" ,P.id) TEAM, SUM(P."D01") as "1", SUM(P."D02") as "2", SUM(P."D03") as "3", SUM(P."D04") as "4", SUM(P."D05") as "5", SUM(P."D06") as "6" , SUM(P."D07") as "7", SUM(P."D08") as "8" , SUM(P."D09") as "9" , SUM(P."D10") as "10" , SUM(P."D11") as "11", SUM(P."D12") as "12" , SUM(P."D13") as "13", SUM(P."D14") as "14", SUM(P."D15") as "15", SUM(P."D16") as "16", SUM(P."D17") as "17" , SUM(P."D18") as "18" , SUM(P."D19") as "19" , SUM(P."D20") as "20", SUM(P."D21") as "21", SUM(P."D22") as "22", SUM(P."D23") as "23", SUM(P."D24") as "24" , SUM(P."D25") as "25" , SUM(P."D26") as "26", SUM(P."D27") as "27", SUM(P."D28") as "28", SUM(P."D29") as "29", SUM(P."D30") as "30" , SUM(P."D31") as "31", SUM(P."TOTAL") as "TOTAL" from (select sr."orgId" ,sr.id, case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '1' then 1 else null end as "D01",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '2' then 1 else null end as "D02",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '3' then 1 else null end as "D03", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '4' then 1 else null end as "D04", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '5' then 1 else null end as "D05", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '6' then 1 else null end as "D06", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '7' then 1 else null end as "D07", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '8' then 1 else null end as "D08", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '9' then 1 else null end as "D09", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '10' then 1 else null end as "D10", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '11' then 1 else null end as "D11",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '12' then 1 else null end as "D12",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '13' then 1 else null end as "D13", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '14' then 1 else null end as "D14",  case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '15' then 1 else null end as "D15",  case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '16' then 1 else null end as "D16", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '17' then 1 else null end as "D17", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '18' then 1 else null end as "D18", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '19' then 1 else null end as "D19", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '20' then 1 else null end as "D20",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '21' then 1 else null end as "D21",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '22' then 1 else null end as "D22", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '23' then 1 else null end as "D23", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '24' then 1 else null end as "D24", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '25' then 1 else null end as "D25",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '26' then 1 else null end as "D26", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '27' then 1 else null end as "D27", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '28' then 1 else null end as "D28", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '29' then 1 else null end as "D29", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '30' then 1 else null end as "D30",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '31' then 1 else null end as "D31",case when to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}' then 1 else null end as "TOTAL" from service_requests sr where sr."orgId" = ${req.orgId} and  sr."companyId" = ${companyId} and sr."moderationStatus" = true and sr."serviceStatusCode" != 'C' and to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}') P group by public.f_get_teamname(P."orgId" ,P.id) order by 1`);
+
+
+
+            const Parallel = require('async-parallel');
+            let total1 = 0;
+            let total2 = 0;
+            let total3 = 0;
+            let total4 = 0;
+            let total5 = 0;
+            let total6 = 0;
+            let total7 = 0;
+            let total8 = 0;
+            let total9 = 0;
+            let total10 = 0;
+            let total11 = 0;
+            let total12 = 0;
+            let total13 = 0;
+            let total14 = 0;
+            let total15 = 0;
+            let total16 = 0;
+            let total17 = 0;
+            let total18 = 0;
+            let total19 = 0;
+            let total20 = 0;
+            let total21 = 0;
+            let total22 = 0;
+            let total23 = 0;
+            let total24 = 0;
+            let total25 = 0;
+            let total26 = 0;
+            let total27 = 0;
+            let total28 = 0;
+            let total29 = 0;
+            let total30 = 0;
+            let total31 = 0;
+            let totalValue = 0;
+
+            result.rows = await Parallel.map(result.rows, async st => {
+
+
+                total1 += Number(st["1"]);
+                total2 += Number(st["2"]);
+                total3 += Number(st["3"]);
+                total4 += Number(st["4"]);
+                total5 += Number(st["5"]);
+                total6 += Number(st["6"]);
+                total7 += Number(st["7"]);
+                total8 += Number(st["8"]);
+                total9 += Number(st["9"]);
+                total10 += Number(st["10"]);
+                total11 += Number(st["11"]);
+                total12 += Number(st["12"]);
+                total13 += Number(st["13"]);
+                total14 += Number(st["14"]);
+                total15 += Number(st["15"]);
+                total16 += Number(st["16"]);
+                total17 += Number(st["17"]);
+                total18 += Number(st["18"]);
+                total19 += Number(st["19"]);
+                total20 += Number(st["20"]);
+                total21 += Number(st["21"]);
+                total22 += Number(st["22"]);
+                total23 += Number(st["23"]);
+                total24 += Number(st["24"]);
+                total25 += Number(st["25"]);
+                total26 += Number(st["26"]);
+                total27 += Number(st["27"]);
+                total28 += Number(st["28"]);
+                total29 += Number(st["29"]);
+                total30 += Number(st["30"]);
+                total31 += Number(st["31"]);
+                totalValue += Number(st['TOTAL']);
+
+                return {
+                    ...st,
+                    total1,
+                    total2,
+                    total3,
+                    total4,
+                    total5,
+                    total6,
+                    total7,
+                    total8,
+                    total9,
+                    total10,
+                    total11,
+                    total12,
+                    total13,
+                    total14,
+                    total15,
+                    total16,
+                    total17,
+                    total18,
+                    total19,
+                    total20,
+                    total21,
+                    total22,
+                    total23,
+                    total24,
+                    total25,
+                    total26,
+                    total27,
+                    total28,
+                    total29,
+                    total30,
+                    total31,
+                    totalValue
+                };
+
+            })
+
 
             return res.status(200).json({
                 data: result.rows,
@@ -4325,6 +4546,115 @@ const serviceRequestController = {
             let result = await knex.raw(`select public.f_get_problem_types(P."orgId" ,P.id) as "Type" , SUM(P."D01") as "1" , SUM(P."D02") as "2", SUM(P."D03") as "3", SUM(P."D04") as "4" , SUM(P."D05") as "5" , SUM(P."D06") as "6" , SUM(P."D07") as "7", SUM(P."D08") as "8", SUM(P."D09") as "9" , SUM(P."D10") as "10" , SUM(P."D11") as "11", SUM(P."D12") as "12", SUM(P."D13") as "13", SUM(P."D14") as "14", SUM(P."D15") as "15", SUM(P."D16") as "16", SUM(P."D17") as "17", SUM(P."D18") as "18", SUM(P."D19") as "19", SUM(P."D20") as "20", SUM(P."D21") as "21", SUM(P."D22") as "22", SUM(P."D23") as "23", SUM(P."D24") as "24", SUM(P."D25") as "25", SUM(P."D26") as "26", SUM(P."D27") as "27", SUM(P."D28") as "28", SUM(P."D29") as "29", SUM(P."D30") as "30", SUM(P."D31") as "31", SUM(P."TOTAL") as "TOTAL" from (select sr."orgId" ,sr.id, "houseId",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '1' then 1 else null end as "D01",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '2' then 1 else null end as "D02", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '3' then 1 else null end as "D03", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '4' then 1 else null end as "D04",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '5' then 1 else null end as "D05", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '6' then 1 else null end as "D06", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '7' then 1 else null end as "D07", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '8' then 1 else null end as "D08", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '9' then 1 else null end as "D09", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '10' then 1 else null end as "D10",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '11' then 1 else null end as "D11",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '12' then 1 else null end as "D12",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '13' then 1 else null end as "D13", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '14' then 1 else null end as "D14",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '15' then 1 else null end as "D15", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '16' then 1 else null end as "D16", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '17' then 1 else null end as "D17", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '18' then 1 else null end as "D18", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '19' then 1 else null end as "D19", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '20' then 1 else null end as "D20",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '21' then 1 else null end as "D21",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '22' then 1 else null end as "D22",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '23' then 1 else null end as "D23",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '24' then 1 else null end as "D24", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '25' then 1 else null end as "D25", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '26' then 1 else null end as "D26", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '27' then 1 else null end as "D27", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '28' then 1 else null end as "D28", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '29' then 1 else null end as "D29", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '30' then 1 else null end as "D30",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '31' then 1 else null end as "D31",case when to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}' then 1 else null end as "TOTAL" from service_requests sr where sr."orgId" = ${req.orgId} and  sr."companyId" = ${companyId} and sr."moderationStatus" = true and sr."serviceStatusCode" != 'C' and to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}' and public.f_get_teamname(sr."orgId" ,sr.id) in ('${teamCode}')) P group by public.f_get_problem_types(P."orgId" ,P.id) order by 1`)
 
 
+            const Parallel = require('async-parallel');
+            let total1 = 0;
+            let total2 = 0;
+            let total3 = 0;
+            let total4 = 0;
+            let total5 = 0;
+            let total6 = 0;
+            let total7 = 0;
+            let total8 = 0;
+            let total9 = 0;
+            let total10 = 0;
+            let total11 = 0;
+            let total12 = 0;
+            let total13 = 0;
+            let total14 = 0;
+            let total15 = 0;
+            let total16 = 0;
+            let total17 = 0;
+            let total18 = 0;
+            let total19 = 0;
+            let total20 = 0;
+            let total21 = 0;
+            let total22 = 0;
+            let total23 = 0;
+            let total24 = 0;
+            let total25 = 0;
+            let total26 = 0;
+            let total27 = 0;
+            let total28 = 0;
+            let total29 = 0;
+            let total30 = 0;
+            let total31 = 0;
+            let totalValue = 0;
+
+            result.rows = await Parallel.map(result.rows, async st => {
+
+
+                total1 += Number(st["1"]);
+                total2 += Number(st["2"]);
+                total3 += Number(st["3"]);
+                total4 += Number(st["4"]);
+                total5 += Number(st["5"]);
+                total6 += Number(st["6"]);
+                total7 += Number(st["7"]);
+                total8 += Number(st["8"]);
+                total9 += Number(st["9"]);
+                total10 += Number(st["10"]);
+                total11 += Number(st["11"]);
+                total12 += Number(st["12"]);
+                total13 += Number(st["13"]);
+                total14 += Number(st["14"]);
+                total15 += Number(st["15"]);
+                total16 += Number(st["16"]);
+                total17 += Number(st["17"]);
+                total18 += Number(st["18"]);
+                total19 += Number(st["19"]);
+                total20 += Number(st["20"]);
+                total21 += Number(st["21"]);
+                total22 += Number(st["22"]);
+                total23 += Number(st["23"]);
+                total24 += Number(st["24"]);
+                total25 += Number(st["25"]);
+                total26 += Number(st["26"]);
+                total27 += Number(st["27"]);
+                total28 += Number(st["28"]);
+                total29 += Number(st["29"]);
+                total30 += Number(st["30"]);
+                total31 += Number(st["31"]);
+                totalValue += Number(st['TOTAL']);
+
+                return {
+                    ...st,
+                    total1,
+                    total2,
+                    total3,
+                    total4,
+                    total5,
+                    total6,
+                    total7,
+                    total8,
+                    total9,
+                    total10,
+                    total11,
+                    total12,
+                    total13,
+                    total14,
+                    total15,
+                    total16,
+                    total17,
+                    total18,
+                    total19,
+                    total20,
+                    total21,
+                    total22,
+                    total23,
+                    total24,
+                    total25,
+                    total26,
+                    total27,
+                    total28,
+                    total29,
+                    total30,
+                    total31,
+                    totalValue
+                };
+
+            })
+
+
             return res.status(200).json({
                 data: result.rows,
                 companyId,
@@ -4370,6 +4700,119 @@ const serviceRequestController = {
             let result = await knex.raw(`select public.f_get_user_category(P."orgId",P."houseId") as "Tags" , SUM(P."D01") as "1", SUM(P."D02") as "2", SUM(P."D03") as "3", SUM(P."D04") as "4", SUM(P."D05") as "5", SUM(P."D06") as "6", SUM(P."D07") as "7", SUM(P."D08") as "8" , SUM(P."D09") as "9", SUM(P."D10") as "10", SUM(P."D11") as "11" , SUM(P."D12") as "12", SUM(P."D13") as "13", SUM(P."D14") as "14", SUM(P."D15") as "15" , SUM(P."D16") as "16", SUM(P."D17") as "17", SUM(P."D18") as "18", SUM(P."D19") as "19", SUM(P."D20") as "20", SUM(P."D21") as "21", SUM(P."D22") as "22", SUM(P."D23") as "23", SUM(P."D24") as "24", SUM(P."D25") as "25", SUM(P."D26") as "26", SUM(P."D27") as "27", SUM(P."D28") as "28", SUM(P."D29") as "29", SUM(P."D30") as "30", SUM(P."D31") as "31", SUM(P."TOTAL") as "TOTAL" from (select sr."orgId" ,sr.id, "houseId",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '1' then 1 else null end as "D01",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '2' then 1 else null end as "D02",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '3' then 1 else null end as "D03", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '4' then 1 else null end as "D04", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '5' then 1 else null end as "D05", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '6' then 1 else null end as "D06", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '7' then 1 else null end as "D07", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '8' then 1 else null end as "D08", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '9' then 1 else null end as "D09", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '10' then 1 else null end as "D10", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '11' then 1 else null end as "D11",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '12' then 1 else null end as "D12", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '13' then 1 else null end as "D13", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '14' then 1 else null end as "D14", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '15' then 1 else null end as "D15", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '16' then 1 else null end as "D16", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '17' then 1 else null end as "D17", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '18' then 1 else null end as "D18", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '19' then 1 else null end as "D19", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '20' then 1 else null end as "D20",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '21' then 1 else null end as "D21",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '22' then 1 else null end as "D22",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '23' then 1 else null end as "D23", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '24' then 1 else null end as "D24", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '25' then 1 else null end as "D25", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '26' then 1 else null end as "D26", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '27' then 1 else null end as "D27", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '28' then 1 else null end as "D28", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '29' then 1 else null end as "D29", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '30' then 1 else null end as "D30",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '31' then 1 else null end as "D31",case when to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}' then 1 else null end as "TOTAL" from service_requests sr where sr."orgId" = ${req.orgId} and  sr."companyId" = ${companyId} and sr."moderationStatus" = true  and sr."serviceStatusCode" != 'C' and to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}' and public.f_get_teamname(sr."orgId" ,sr.id) in ('${teamCode}')) P group by public.f_get_user_category(P."orgId",P."houseId") order by 1`);
 
 
+
+            const Parallel = require('async-parallel');
+            let total1 = 0;
+            let total2 = 0;
+            let total3 = 0;
+            let total4 = 0;
+            let total5 = 0;
+            let total6 = 0;
+            let total7 = 0;
+            let total8 = 0;
+            let total9 = 0;
+            let total10 = 0;
+            let total11 = 0;
+            let total12 = 0;
+            let total13 = 0;
+            let total14 = 0;
+            let total15 = 0;
+            let total16 = 0;
+            let total17 = 0;
+            let total18 = 0;
+            let total19 = 0;
+            let total20 = 0;
+            let total21 = 0;
+            let total22 = 0;
+            let total23 = 0;
+            let total24 = 0;
+            let total25 = 0;
+            let total26 = 0;
+            let total27 = 0;
+            let total28 = 0;
+            let total29 = 0;
+            let total30 = 0;
+            let total31 = 0;
+            let totalValue = 0;
+
+            result.rows = await Parallel.map(result.rows, async st => {
+
+
+                total1 += Number(st["1"]);
+                total2 += Number(st["2"]);
+                total3 += Number(st["3"]);
+                total4 += Number(st["4"]);
+                total5 += Number(st["5"]);
+                total6 += Number(st["6"]);
+                total7 += Number(st["7"]);
+                total8 += Number(st["8"]);
+                total9 += Number(st["9"]);
+                total10 += Number(st["10"]);
+                total11 += Number(st["11"]);
+                total12 += Number(st["12"]);
+                total13 += Number(st["13"]);
+                total14 += Number(st["14"]);
+                total15 += Number(st["15"]);
+                total16 += Number(st["16"]);
+                total17 += Number(st["17"]);
+                total18 += Number(st["18"]);
+                total19 += Number(st["19"]);
+                total20 += Number(st["20"]);
+                total21 += Number(st["21"]);
+                total22 += Number(st["22"]);
+                total23 += Number(st["23"]);
+                total24 += Number(st["24"]);
+                total25 += Number(st["25"]);
+                total26 += Number(st["26"]);
+                total27 += Number(st["27"]);
+                total28 += Number(st["28"]);
+                total29 += Number(st["29"]);
+                total30 += Number(st["30"]);
+                total31 += Number(st["31"]);
+                totalValue += Number(st['TOTAL']);
+
+                return {
+                    ...st,
+                    total1,
+                    total2,
+                    total3,
+                    total4,
+                    total5,
+                    total6,
+                    total7,
+                    total8,
+                    total9,
+                    total10,
+                    total11,
+                    total12,
+                    total13,
+                    total14,
+                    total15,
+                    total16,
+                    total17,
+                    total18,
+                    total19,
+                    total20,
+                    total21,
+                    total22,
+                    total23,
+                    total24,
+                    total25,
+                    total26,
+                    total27,
+                    total28,
+                    total29,
+                    total30,
+                    total31,
+                    totalValue
+                };
+
+            })
+
+
+
+
+
             return res.status(200).json({
                 data: result.rows,
                 companyId,
@@ -4391,7 +4834,6 @@ const serviceRequestController = {
 
 
     },
-
 
 
 };
