@@ -120,35 +120,55 @@ const dashboardController = {
         }
     },
 
-
     getBannerList: async (req, res) => {
         try {
-        
-          let bannersImg;
-    
-          bannersImg = await knex
-              .from("banners_master")
-              .where({ "banners_master.orgId": req.orgId, "banners_master.isActive": true })
-              .select(
-                "banners_master.title as titles",
-                "banners_master.s3Url as banners"
-              )
-              .orderBy('banners_master.id','desc')
-              .limit(6);
-                      
-          return res.status(200).json({
-            data: {
-              banners: bannersImg,
-            },
-            message: "Banners List!",
-          });
+
+            let bannersImg;
+
+            bannersImg = await knex
+                .from("banners_master")
+                .where({ "banners_master.orgId": req.orgId, "banners_master.isActive": true })
+                .select(
+                    "banners_master.title as titles",
+                    "banners_master.s3Url as banners"
+                )
+                .orderBy('banners_master.id', 'desc')
+                .limit(6);
+
+            return res.status(200).json({
+                data: {
+                    banners: bannersImg,
+                },
+                message: "Banners List!",
+            });
 
         } catch (err) {
-          console.log("[controllers][banners][getBanners],Error", err);
+            console.log("[controllers][banners][getBanners],Error", err);
         }
-      },
+    },
 
+    getThemeSetting: async (req, res) => {
+        try {
+            let themes;
+            themes = await knex
+                .from("theme_master")
+                .where({ "theme_master.orgId": req.orgId })
+                .select(
+                    "theme_master.theme"
+                )
+                .first();
 
+            return res.status(200).json({
+                data: {
+                    theme: themes,
+                },
+                message: "Theme Settings!",
+            });
+
+        } catch (err) {
+            console.log("[controllers][dashboard][getThemes],Error", err);
+        }
+    },
 
 };
 

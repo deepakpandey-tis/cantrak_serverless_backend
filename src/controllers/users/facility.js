@@ -1212,6 +1212,7 @@ const facilityBookingController = {
                 offset: Joi.number().required(),
                 currentTime: Joi.date().required(),
                 timezone: Joi.string().required(),
+                remarks:  Joi.string().allow("").optional()
             })
 
             const result = Joi.validate(payload, schema);
@@ -1401,7 +1402,9 @@ const facilityBookingController = {
                 unitId: unitId,
                 companyId: facilityData.companyId,
                 isBookingConfirmed: confirmedStatus,
-                confirmedType: confirmType
+                confirmedType: confirmType,
+                remarks : payload.remarks
+
             }
             let insertResult = await knex('entity_bookings').insert(insertData).returning(['*']);
             resultData = insertResult[0];
