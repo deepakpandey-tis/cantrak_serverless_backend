@@ -1212,6 +1212,7 @@ const facilityBookingController = {
                 offset: Joi.number().required(),
                 currentTime: Joi.date().required(),
                 timezone: Joi.string().required(),
+                remarks:  Joi.string().allow("").optional()
             })
 
             const result = Joi.validate(payload, schema);
