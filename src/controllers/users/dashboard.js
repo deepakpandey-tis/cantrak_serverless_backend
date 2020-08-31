@@ -154,13 +154,13 @@ const dashboardController = {
                 .from("theme_master")
                 .where({ "theme_master.orgId": req.orgId })
                 .select(
-                    "theme_master.theme"
+                    "theme_master.theme as theme"
                 )
                 .first();
 
             return res.status(200).json({
                 data: {
-                    theme: themes,
+                    themes
                 },
                 message: "Theme Settings!",
             });
