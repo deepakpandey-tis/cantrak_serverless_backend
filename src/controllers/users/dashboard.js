@@ -150,6 +150,7 @@ const dashboardController = {
     getThemeSetting: async (req, res) => {
         try {
             let themes;
+            let themeValue;
             themes = await knex
                 .from("theme_master")
                 .where({ "theme_master.orgId": req.orgId })
@@ -158,9 +159,15 @@ const dashboardController = {
                 )
                 .first();
 
+            if(themes){
+                themeValue = themes.theme;
+            }else{
+                themeValue = '1';
+            }
+
             return res.status(200).json({
                 data: {
-                    themes
+                    result :  themeValue
                 },
                 message: "Theme Settings!",
             });
