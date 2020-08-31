@@ -23,7 +23,7 @@ const facilityDashboardController = {
       console.log("requested", facilityName, status);
       let Status;
       if (status) {
-        Status = status.join(" ");
+        Status = status.join(",");
       }
       var getDaysArray = function (start, end) {
         let dt = start;
@@ -56,12 +56,12 @@ const facilityDashboardController = {
           console.log("if selected");
           totalFacilityBookings = await knex
             .from("entity_bookings")
-            .leftJoin(
-              "facility_master",
-              "entity_bookings.entityId",
-              "facility_master.id"
-            )
-            .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+            // .leftJoin(
+            //   "facility_master",
+            //   "entity_bookings.entityId",
+            //   "facility_master.id"
+            // )
+            // .leftJoin("users", "entity_bookings.bookedBy", "users.id")
             .select([
               "entity_bookings.entityId",
               "entity_bookings.bookedAt",
@@ -74,8 +74,8 @@ const facilityDashboardController = {
               "entity_bookings.isBookingConfirmed",
               "entity_bookings.isBookingCancelled",
               "entity_bookings.createdAt",
-              "facility_master.name",
-              "users.name as bookedUser",
+              // "facility_master.name",
+              // "users.name as bookedUser",
             ])
             .where({ "entity_bookings.orgId": orgId })
             .whereBetween("entity_bookings.createdAt", [
@@ -113,14 +113,14 @@ const facilityDashboardController = {
                   console.log("Cancelled", status);
                   qb.where("entity_bookings.isBookingCancelled", true);
                 }
-                if (Status == "Approved Pending Cancelled Confirmed") {
+                if (Status == "Approved,Pending,Cancelled,Confirmed") {
                   qb.where("entity_bookings.isBookingConfirmed", false);
                   qb.orWhere("entity_bookings.isBookingConfirmed", true);
                   qb.orWhere("entity_bookings.confirmedType", 1);
                   qb.where("entity_bookings.isBookingCancelled", true);
                   qb.orWhere("entity_bookings.isBookingCancelled", false);
                 }
-                if (Status == "Approved Pending Cancelled Confirmed 0") {
+                if (Status == "Approved,Pending,Cancelled,Confirmed,0") {
                   console.log("All status 0", status);
 
                   qb.where("entity_bookings.isBookingConfirmed", false);
@@ -129,7 +129,7 @@ const facilityDashboardController = {
                   qb.where("entity_bookings.isBookingCancelled", true);
                   qb.orWhere("entity_bookings.isBookingCancelled", false);
                 }
-                if (Status === "Approved Pending Confirmed") {
+                if (Status === "Approved,Pending,Confirmed") {
                   console.log("Pending, Approved,Confirmed ", status);
                   qb.where({
                     "entity_bookings.isBookingConfirmed": true,
@@ -151,7 +151,7 @@ const facilityDashboardController = {
                     "entity_bookings.confirmedType": 1,
                   });
                 }
-                if (Status === "Approved Cancelled") {
+                if (Status === "Approved,Cancelled") {
                   qb.where({
                     "entity_bookings.isBookingConfirmed": true,
                     "entity_bookings.confirmedType": 0,
@@ -169,11 +169,11 @@ const facilityDashboardController = {
                     "entity_bookings.confirmedType": 0,
                   });
                 }
-                if (Status === "Approved Confirmed") {
+                if (Status === "Approved,Confirmed") {
                   qb.where("entity_bookings.isBookingConfirmed", true);
                   qb.where("entity_bookings.isBookingCancelled", false);
                 }
-                if (Status === "Approved Pending") {
+                if (Status === "Approved,Pending") {
                   console.log("Pending and approved", Status);
                   qb.where({
                     "entity_bookings.isBookingConfirmed": true,
@@ -199,12 +199,12 @@ const facilityDashboardController = {
                     "entity_bookings.confirmedType": 1,
                   });
                 }
-                if (Status === "Pending Cancelled") {
+                if (Status === "Pending,Cancelled") {
                   qb.where("entity_bookings.isBookingConfirmed", false);
                   qb.where("entity_bookings.isBookingCancelled", false);
                   qb.orWhere("entity_bookings.isBookingCancelled", true);
                 }
-                if (Status === "Approved Pending Cancelled") {
+                if (Status === "Approved,Pending,Cancelled") {
                   qb.where({
                     "entity_bookings.isBookingConfirmed": true,
                     "entity_bookings.confirmedType": 0,
@@ -219,19 +219,19 @@ const facilityDashboardController = {
                     "entity_bookings.confirmedType": 0,
                   });
                 }
-                if (Status === "Approved Cancelled Confirmed") {
+                if (Status === "Approved,Cancelled,Confirmed") {
                   qb.where("entity_bookings.isBookingConfirmed", true);
                   qb.where("entity_bookings.isBookingCancelled", true);
                   qb.orWhere("entity_bookings.confirmedType", 1);
                 }
-                if (Status === "Pending Cancelled Confirmed") {
+                if (Status === "Pending,Cancelled,Confirmed") {
                   qb.where("entity_bookings.isBookingConfirmed", false);
                   qb.where("entity_bookings.isBookingCancelled", false);
                   qb.orWhere("entity_bookings.isBookingCancelled", true);
                   qb.orWhere("entity_bookings.isBookingConfirmed", true);
                   qb.where("entity_bookings.confirmedType", 1);
                 }
-                if (Status === "Cancelled Confirmed") {
+                if (Status === "Cancelled,Confirmed") {
                   qb.where({ "entity_bookings.isBookingCancelled": true });
                   qb.orWhere({
                     "entity_bookings.confirmedType": 1,
@@ -256,21 +256,21 @@ const facilityDashboardController = {
               "entity_bookings.entityId",
               "facility_master.id"
             )
-            .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+            // .leftJoin("users", "entity_bookings.bookedBy", "users.id")
             .select([
               "entity_bookings.entityId",
-              "entity_bookings.bookedAt",
-              "entity_bookings.bookedBy",
-              "entity_bookings.noOfSeats",
-              "entity_bookings.entityId",
-              "entity_bookings.bookingStartDateTime",
-              "entity_bookings.bookingEndDateTime",
-              "entity_bookings.feesPaid",
-              "entity_bookings.isBookingConfirmed",
-              "entity_bookings.isBookingCancelled",
-              "entity_bookings.createdAt",
-              "facility_master.name",
-              "users.name as bookedUser",
+              // "entity_bookings.bookedAt",
+              // "entity_bookings.bookedBy",
+              // "entity_bookings.noOfSeats",
+              // "entity_bookings.entityId",
+              // "entity_bookings.bookingStartDateTime",
+              // "entity_bookings.bookingEndDateTime",
+              // "entity_bookings.feesPaid",
+              // "entity_bookings.isBookingConfirmed",
+              // "entity_bookings.isBookingCancelled",
+              // "entity_bookings.createdAt",
+              // "facility_master.name",
+              // "users.name as bookedUser",
             ])
             .where({ "entity_bookings.orgId": orgId })
             .whereBetween("entity_bookings.createdAt", [
@@ -338,21 +338,21 @@ const facilityDashboardController = {
               "entity_bookings.entityId",
               "facility_master.id"
             )
-            .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+            // .leftJoin("users", "entity_bookings.bookedBy", "users.id")
             .select([
               "entity_bookings.entityId",
-              "entity_bookings.bookedAt",
-              "entity_bookings.bookedBy",
-              "entity_bookings.noOfSeats",
-              "entity_bookings.entityId",
-              "entity_bookings.bookingStartDateTime",
-              "entity_bookings.bookingEndDateTime",
-              "entity_bookings.feesPaid",
-              "entity_bookings.isBookingConfirmed",
-              "entity_bookings.isBookingCancelled",
-              "entity_bookings.createdAt",
-              "facility_master.name",
-              "users.name as bookedUser",
+              // "entity_bookings.bookedAt",
+              // "entity_bookings.bookedBy",
+              // "entity_bookings.noOfSeats",
+              // "entity_bookings.entityId",
+              // "entity_bookings.bookingStartDateTime",
+              // "entity_bookings.bookingEndDateTime",
+              // "entity_bookings.feesPaid",
+              // "entity_bookings.isBookingConfirmed",
+              // "entity_bookings.isBookingCancelled",
+              // "entity_bookings.createdAt",
+              // "facility_master.name",
+              // "users.name as bookedUser",
             ])
             .where({ "entity_bookings.orgId": orgId })
             .whereIn("facility_master.name", facilityName)
@@ -590,21 +590,21 @@ const facilityDashboardController = {
               "entity_bookings.entityId",
               "facility_master.id"
             )
-            .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+            // .leftJoin("users", "entity_bookings.bookedBy", "users.id")
             .select([
               "entity_bookings.entityId",
-              "entity_bookings.bookedAt",
-              "entity_bookings.bookedBy",
-              "entity_bookings.noOfSeats",
-              "entity_bookings.entityId",
-              "entity_bookings.bookingStartDateTime",
-              "entity_bookings.bookingEndDateTime",
-              "entity_bookings.feesPaid",
-              "entity_bookings.isBookingConfirmed",
-              "entity_bookings.isBookingCancelled",
-              "entity_bookings.createdAt",
-              "facility_master.name",
-              "users.name as bookedUser",
+              // "entity_bookings.bookedAt",
+              // "entity_bookings.bookedBy",
+              // "entity_bookings.noOfSeats",
+              // "entity_bookings.entityId",
+              // "entity_bookings.bookingStartDateTime",
+              // "entity_bookings.bookingEndDateTime",
+              // "entity_bookings.feesPaid",
+              // "entity_bookings.isBookingConfirmed",
+              // "entity_bookings.isBookingCancelled",
+              // "entity_bookings.createdAt",
+              // "facility_master.name",
+              // "users.name as bookedUser",
             ])
             .where({
               "entity_bookings.orgId": orgId,
@@ -631,21 +631,21 @@ const facilityDashboardController = {
               "entity_bookings.entityId",
               "facility_master.id"
             )
-            .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+            // .leftJoin("users", "entity_bookings.bookedBy", "users.id")
             .select([
               "entity_bookings.entityId",
-              "entity_bookings.bookedAt",
-              "entity_bookings.bookedBy",
-              "entity_bookings.noOfSeats",
-              "entity_bookings.entityId",
-              "entity_bookings.bookingStartDateTime",
-              "entity_bookings.bookingEndDateTime",
-              "entity_bookings.feesPaid",
-              "entity_bookings.isBookingConfirmed",
-              "entity_bookings.isBookingCancelled",
-              "entity_bookings.createdAt",
-              "facility_master.name",
-              "users.name as bookedUser",
+              // "entity_bookings.bookedAt",
+              // "entity_bookings.bookedBy",
+              // "entity_bookings.noOfSeats",
+              // "entity_bookings.entityId",
+              // "entity_bookings.bookingStartDateTime",
+              // "entity_bookings.bookingEndDateTime",
+              // "entity_bookings.feesPaid",
+              // "entity_bookings.isBookingConfirmed",
+              // "entity_bookings.isBookingCancelled",
+              // "entity_bookings.createdAt",
+              // "facility_master.name",
+              // "users.name as bookedUser",
             ])
             .where({
               "entity_bookings.orgId": orgId,
@@ -716,24 +716,25 @@ const facilityDashboardController = {
               "entity_bookings.entityId",
               "facility_master.id"
             )
-            .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+            // .leftJoin("users", "entity_bookings.bookedBy", "users.id")
             .select([
               "entity_bookings.entityId",
-              "entity_bookings.bookedAt",
-              "entity_bookings.bookedBy",
-              "entity_bookings.noOfSeats",
-              "entity_bookings.entityId",
-              "entity_bookings.bookingStartDateTime",
-              "entity_bookings.bookingEndDateTime",
-              "entity_bookings.feesPaid",
-              "entity_bookings.isBookingConfirmed",
-              "entity_bookings.isBookingCancelled",
-              "entity_bookings.createdAt",
-              "facility_master.name",
-              "users.name as bookedUser",
+              // "entity_bookings.bookedAt",
+              // "entity_bookings.bookedBy",
+              // "entity_bookings.noOfSeats",
+              // "entity_bookings.entityId",
+              // "entity_bookings.bookingStartDateTime",
+              // "entity_bookings.bookingEndDateTime",
+              // "entity_bookings.feesPaid",
+              // "entity_bookings.isBookingConfirmed",
+              // "entity_bookings.isBookingCancelled",
+              // "entity_bookings.createdAt",
+              // "facility_master.name",
+              // "users.name as bookedUser",
             ])
-            .where({ "entity_bookings.orgId": orgId })
+            // .where({ "entity_bookings.orgId": orgId })
             .where({
+              "entity_bookings.orgId": orgId,
               "entity_bookings.isBookingConfirmed": true,
               "entity_bookings.isBookingCancelled": false,
               "entity_bookings.confirmedType": 1,
@@ -758,24 +759,25 @@ const facilityDashboardController = {
               "entity_bookings.entityId",
               "facility_master.id"
             )
-            .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+            // .leftJoin("users", "entity_bookings.bookedBy", "users.id")
             .select([
               "entity_bookings.entityId",
-              "entity_bookings.bookedAt",
-              "entity_bookings.bookedBy",
-              "entity_bookings.noOfSeats",
-              "entity_bookings.entityId",
-              "entity_bookings.bookingStartDateTime",
-              "entity_bookings.bookingEndDateTime",
-              "entity_bookings.feesPaid",
-              "entity_bookings.isBookingConfirmed",
-              "entity_bookings.isBookingCancelled",
-              "entity_bookings.createdAt",
-              "facility_master.name",
-              "users.name as bookedUser",
+              // "entity_bookings.bookedAt",
+              // "entity_bookings.bookedBy",
+              // "entity_bookings.noOfSeats",
+              // "entity_bookings.entityId",
+              // "entity_bookings.bookingStartDateTime",
+              // "entity_bookings.bookingEndDateTime",
+              // "entity_bookings.feesPaid",
+              // "entity_bookings.isBookingConfirmed",
+              // "entity_bookings.isBookingCancelled",
+              // "entity_bookings.createdAt",
+              // "facility_master.name",
+              // "users.name as bookedUser",
             ])
-            .where({ "entity_bookings.orgId": orgId })
+            // .where({ "entity_bookings.orgId": orgId })
             .where({
+              "entity_bookings.orgId": orgId,
               "entity_bookings.isBookingConfirmed": true,
               "entity_bookings.isBookingCancelled": false,
               "entity_bookings.confirmedType": 1,
@@ -849,24 +851,25 @@ const facilityDashboardController = {
               "entity_bookings.entityId",
               "facility_master.id"
             )
-            .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+            // .leftJoin("users", "entity_bookings.bookedBy", "users.id")
             .select([
               "entity_bookings.entityId",
-              "entity_bookings.bookedAt",
-              "entity_bookings.bookedBy",
-              "entity_bookings.noOfSeats",
-              "entity_bookings.entityId",
-              "entity_bookings.bookingStartDateTime",
-              "entity_bookings.bookingEndDateTime",
-              "entity_bookings.feesPaid",
-              "entity_bookings.isBookingConfirmed",
-              "entity_bookings.isBookingCancelled",
-              "entity_bookings.createdAt",
-              "facility_master.name",
-              "users.name as bookedUser",
+              // "entity_bookings.bookedAt",
+              // "entity_bookings.bookedBy",
+              // "entity_bookings.noOfSeats",
+              // "entity_bookings.entityId",
+              // "entity_bookings.bookingStartDateTime",
+              // "entity_bookings.bookingEndDateTime",
+              // "entity_bookings.feesPaid",
+              // "entity_bookings.isBookingConfirmed",
+              // "entity_bookings.isBookingCancelled",
+              // "entity_bookings.createdAt",
+              // "facility_master.name",
+              // "users.name as bookedUser",
             ])
-            .where({ "entity_bookings.orgId": orgId })
+            // .where({ "entity_bookings.orgId": orgId })
             .where({
+              "entity_bookings.orgId": orgId ,
               "entity_bookings.isBookingConfirmed": false,
               "entity_bookings.isBookingCancelled": false,
             })
@@ -890,24 +893,25 @@ const facilityDashboardController = {
               "entity_bookings.entityId",
               "facility_master.id"
             )
-            .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+            // .leftJoin("users", "entity_bookings.bookedBy", "users.id")
             .select([
               "entity_bookings.entityId",
-              "entity_bookings.bookedAt",
-              "entity_bookings.bookedBy",
-              "entity_bookings.noOfSeats",
-              "entity_bookings.entityId",
-              "entity_bookings.bookingStartDateTime",
-              "entity_bookings.bookingEndDateTime",
-              "entity_bookings.feesPaid",
-              "entity_bookings.isBookingConfirmed",
-              "entity_bookings.isBookingCancelled",
-              "entity_bookings.createdAt",
-              "facility_master.name",
-              "users.name as bookedUser",
+              // "entity_bookings.bookedAt",
+              // "entity_bookings.bookedBy",
+              // "entity_bookings.noOfSeats",
+              // "entity_bookings.entityId",
+              // "entity_bookings.bookingStartDateTime",
+              // "entity_bookings.bookingEndDateTime",
+              // "entity_bookings.feesPaid",
+              // "entity_bookings.isBookingConfirmed",
+              // "entity_bookings.isBookingCancelled",
+              // "entity_bookings.createdAt",
+              // "facility_master.name",
+              // "users.name as bookedUser",
             ])
-            .where({ "entity_bookings.orgId": orgId })
+            // .where({ "entity_bookings.orgId": orgId })
             .where({
+              "entity_bookings.orgId": orgId,
               "entity_bookings.isBookingConfirmed": false,
               "entity_bookings.isBookingCancelled": false,
             })
@@ -967,7 +971,7 @@ const facilityDashboardController = {
             "entity_bookings.entityId",
             "facility_master.id"
           )
-          .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+          // .leftJoin("users", "entity_bookings.bookedBy", "users.id")
           .select([
             "entity_bookings.entityId",
             "entity_bookings.bookedAt",
@@ -1019,7 +1023,7 @@ const facilityDashboardController = {
             "entity_bookings.entityId",
             "facility_master.id"
           )
-          .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+          // .leftJoin("users", "entity_bookings.bookedBy", "users.id")
           .select([
             "entity_bookings.entityId",
             "entity_bookings.bookedAt",
@@ -1067,7 +1071,7 @@ const facilityDashboardController = {
             "entity_bookings.entityId",
             "facility_master.id"
           )
-          .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+          // .leftJoin("users", "entity_bookings.bookedBy", "users.id")
           .select([
             "entity_bookings.entityId",
             "entity_bookings.bookedAt",
@@ -1252,14 +1256,14 @@ const facilityDashboardController = {
             "entity_bookings.entityId",
             "facility_master.id"
           )
-          .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+          // .leftJoin("users", "entity_bookings.bookedBy", "users.id")
           .select([
             "entity_bookings.entityId",
-            "entity_bookings.bookedAt",
-            "entity_bookings.bookedBy",
-            "entity_bookings.noOfSeats",
-            "facility_master.name",
-            "users.name as bookedUser",
+            // "entity_bookings.bookedAt",
+            // "entity_bookings.bookedBy",
+            // "entity_bookings.noOfSeats",
+            // "facility_master.name",
+            // "users.name as bookedUser",
           ])
           .where({ "entity_bookings.orgId": orgId })
           .where({
@@ -1279,17 +1283,17 @@ const facilityDashboardController = {
             "entity_bookings.entityId",
             "facility_master.id"
           )
-          .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+          // .leftJoin("users", "entity_bookings.bookedBy", "users.id")
           .select([
             "entity_bookings.entityId",
-            "entity_bookings.bookedAt",
-            "entity_bookings.bookedBy",
-            "entity_bookings.noOfSeats",
-            "facility_master.name",
-            "users.name as bookedUser",
+            // "entity_bookings.bookedAt",
+            // "entity_bookings.bookedBy",
+            // "entity_bookings.noOfSeats",
+            // "facility_master.name",
+            // "users.name as bookedUser",
           ])
-          .where("entity_bookings.orgId", orgId)
-          .where("entity_bookings.isBookingCancelled", true)
+          // .where("entity_bookings.orgId", orgId)
+          .where({"entity_bookings.isBookingCancelled": true,"entity_bookings.orgId": orgId})
           .whereBetween("entity_bookings.createdAt", [
             currentStartTime,
             currentEndTime,
@@ -1301,17 +1305,18 @@ const facilityDashboardController = {
             "entity_bookings.entityId",
             "facility_master.id"
           )
-          .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+          // .leftJoin("users", "entity_bookings.bookedBy", "users.id")
           .select([
             "entity_bookings.entityId",
-            "entity_bookings.bookedAt",
-            "entity_bookings.bookedBy",
-            "entity_bookings.noOfSeats",
-            "facility_master.name",
-            "users.name as bookedUser",
+            // "entity_bookings.bookedAt",
+            // "entity_bookings.bookedBy",
+            // "entity_bookings.noOfSeats",
+            // "facility_master.name",
+            // "users.name as bookedUser",
           ])
-          .where({ "entity_bookings.orgId": orgId })
+          // .where({ "entity_bookings.orgId": orgId })
           .where({
+            "entity_bookings.orgId": orgId,
             "entity_bookings.isBookingConfirmed": true,
             "entity_bookings.isBookingCancelled": false,
             "entity_bookings.confirmedType": 1,
@@ -1327,17 +1332,18 @@ const facilityDashboardController = {
             "entity_bookings.entityId",
             "facility_master.id"
           )
-          .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+          // .leftJoin("users", "entity_bookings.bookedBy", "users.id")
           .select([
             "entity_bookings.entityId",
-            "entity_bookings.bookedAt",
-            "entity_bookings.bookedBy",
-            "entity_bookings.noOfSeats",
-            "facility_master.name",
-            "users.name as bookedUser",
+            // "entity_bookings.bookedAt",
+            // "entity_bookings.bookedBy",
+            // "entity_bookings.noOfSeats",
+            // "facility_master.name",
+            // "users.name as bookedUser",
           ])
           .where({ "entity_bookings.orgId": orgId })
           .where({
+            "entity_bookings.orgId": orgId,
             "entity_bookings.isBookingConfirmed": false,
             "entity_bookings.isBookingCancelled": false,
           })
@@ -1395,12 +1401,12 @@ const facilityDashboardController = {
             "entity_bookings.entityId",
             "facility_master.id"
           )
-          .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+          // .leftJoin("users", "entity_bookings.bookedBy", "users.id")
           .select([
             "entity_bookings.entityId",
-            "entity_bookings.bookingStartDateTime",
-            "entity_bookings.bookingEndDateTime",
-            "entity_bookings.createdAt",
+            // "entity_bookings.bookingStartDateTime",
+            // "entity_bookings.bookingEndDateTime",
+            // "entity_bookings.createdAt",
           ])
           .where({ "entity_bookings.orgId": orgId })
           .whereBetween("entity_bookings.createdAt", [
@@ -1416,7 +1422,7 @@ const facilityDashboardController = {
             "entity_bookings.entityId",
             "facility_master.id"
           )
-          .leftJoin("users", "entity_bookings.bookedBy", "users.id")
+          // .leftJoin("users", "entity_bookings.bookedBy", "users.id")
           .select([
             "entity_bookings.entityId",
             "entity_bookings.bookingStartDateTime",
