@@ -4263,9 +4263,16 @@ const serviceRequestController = {
             let total29 = 0;
             let total30 = 0;
             let total31 = 0;
+            let totalValue = 0;
+            let TOTAL;
+            let arr = [];
 
             result.rows = await Parallel.map(result.rows, async st => {
 
+
+                TOTAL = (Number(st["1"]) + Number(st["2"]) + Number(st["3"]) + Number(st["4"]) + Number(st["5"]) + Number(st["6"]) + Number(st["7"]) + Number(st["8"]) + Number(st["9"]) + Number(st["10"]) + Number(st["11"]) + Number(st["12"]) + Number(st["13"]) + Number(st["14"]) + Number(st["15"]) + Number(st["16"]) + Number(st["17"]) + Number(st["18"]) + Number(st["19"]) + Number(st["20"]) + Number(st["21"]) + Number(st["22"]) + Number(st["23"]) + Number(st["24"]) + Number(st["25"]) + Number(st["26"]) + Number(st["27"]) + Number(st["28"]) + Number(st["29"]) + Number(st["30"]) + Number(st["31"]));
+
+                arr.push(TOTAL);
 
                 total1 += Number(st["1"]);
                 total2 += Number(st["2"]);
@@ -4298,6 +4305,11 @@ const serviceRequestController = {
                 total29 += Number(st["29"]);
                 total30 += Number(st["30"]);
                 total31 += Number(st["31"]);
+                totalValue += TOTAL;
+
+                let sumTotal = arr.reduce(function(a, b) {
+                    return a + b;
+                }, 0);
 
                 return {
                     ...st,
@@ -4332,12 +4344,33 @@ const serviceRequestController = {
                     total29,
                     total30,
                     total31,
-
+                    totalValue: sumTotal,
+                    TOTAL: TOTAL,
+                    arr
                 };
 
             })
 
 
+            let final = [];
+            let grouped = _.groupBy(result.rows, "stat");
+            final.push(grouped);
+
+            let chartData = _.flatten(final.filter(v => !_.isEmpty(v)).map(v => _.keys(v).map(p => ({
+
+                [p]: (v[p][0].TOTAL)
+
+            })))).reduce((a, p) => {
+
+                let l = _.keys(p)[0];
+                if (a[l]) {
+                    a[l] += p[l];
+
+                } else {
+                    a[l] = p[l];
+                }
+                return a;
+            }, {});
 
 
 
@@ -4346,6 +4379,7 @@ const serviceRequestController = {
                 companyId,
                 teamCode,
                 period,
+                chartData,
                 companyName: payload.companyId.CompanyName,
                 teamName: payload.teamId.teamName,
                 message: "Report Break By Status Successfully!",
@@ -4497,11 +4531,35 @@ const serviceRequestController = {
             })
 
 
+            let final = [];
+            let grouped = _.groupBy(result.rows, "team");
+            final.push(grouped);
+
+            let chartData = _.flatten(final.filter(v => !_.isEmpty(v)).map(v => _.keys(v).map(p => ({
+
+                [p]: (v[p][0].TOTAL)
+
+            })))).reduce((a, p) => {
+
+                let l = _.keys(p)[0];
+                // console.log("===============", a[l], "======================")
+
+                if (a[l]) {
+                    a[l] += p[l];
+
+                } else {
+                    a[l] = p[l];
+                }
+                return a;
+            }, {});
+
             return res.status(200).json({
                 data: result.rows,
                 companyId,
                 teamCode,
                 period,
+                chartData,
+                grouped,
                 companyName: payload.companyId.CompanyName,
                 teamName: payload.teamId.teamName,
                 message: "Report Break By Team Successfully!",
@@ -4653,6 +4711,25 @@ const serviceRequestController = {
                 };
 
             })
+            let final = [];
+            let grouped = _.groupBy(result.rows, "Type");
+            final.push(grouped);
+
+            let chartData = _.flatten(final.filter(v => !_.isEmpty(v)).map(v => _.keys(v).map(p => ({
+
+                [p]: (v[p][0].TOTAL)
+
+            })))).reduce((a, p) => {
+
+                let l = _.keys(p)[0];
+                if (a[l]) {
+                    a[l] += p[l];
+
+                } else {
+                    a[l] = p[l];
+                }
+                return a;
+            }, {});
 
 
             return res.status(200).json({
@@ -4660,6 +4737,7 @@ const serviceRequestController = {
                 companyId,
                 teamCode,
                 period,
+                chartData,
                 companyName: payload.companyId.CompanyName,
                 teamName: payload.teamId.teamName,
                 message: "Report Break By System Successfully!",
@@ -4734,6 +4812,7 @@ const serviceRequestController = {
             let total30 = 0;
             let total31 = 0;
             let totalValue = 0;
+
 
             result.rows = await Parallel.map(result.rows, async st => {
 
@@ -4810,7 +4889,25 @@ const serviceRequestController = {
             })
 
 
+            let final = [];
+            let grouped = _.groupBy(result.rows, "Tags");
+            final.push(grouped);
 
+            let chartData = _.flatten(final.filter(v => !_.isEmpty(v)).map(v => _.keys(v).map(p => ({
+
+                [p]: (v[p][0].TOTAL)
+
+            })))).reduce((a, p) => {
+
+                let l = _.keys(p)[0];
+                if (a[l]) {
+                    a[l] += p[l];
+
+                } else {
+                    a[l] = p[l];
+                }
+                return a;
+            }, {});
 
 
             return res.status(200).json({
@@ -4818,6 +4915,7 @@ const serviceRequestController = {
                 companyId,
                 teamCode,
                 period,
+                chartData,
                 companyName: payload.companyId.CompanyName,
                 teamName: payload.teamId.teamName,
                 message: "Report Break By Tag Successfully!",
