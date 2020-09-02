@@ -405,17 +405,17 @@ const quotationsController = {
                         ]
                     });
                 }
-                // let avgUnitPrice;
-                // let avgResult = await knex('part_master').where({ id: payload.partId, orgId: req.orgId }).first();
-                // if (avgResult) {
-                //     avgUnitPrice = avgResult.avgUnitPrice;
-                // }
+                let avgUnitPrice;
+                let avgResult = await knex('part_master').where({ id: payload.partId, orgId: req.orgId }).first();
+                if (avgResult) {
+                    avgUnitPrice = avgResult.avgUnitPrice;
+                }
 
 
 
                 let currentTime = new Date().getTime();
                 let insertData = {
-                    unitCost: payload.unitCost,
+                    unitCost: avgUnitPrice,
                     quantity: payload.quantity,
                     status: payload.status,
                     partId: payload.partId,
@@ -424,7 +424,7 @@ const quotationsController = {
                     updatedAt: currentTime,
                     createdAt: currentTime,
                     orgId: req.orgId,
-                    //avgUnitPrice: avgUnitPrice
+                    avgUnitPrice: avgUnitPrice
                 };
                 let partResult = await knex
                     .insert(insertData)

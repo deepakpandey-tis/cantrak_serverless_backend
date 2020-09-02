@@ -2945,7 +2945,7 @@ const partsController = {
                     "assigned_parts.status as status",
                     "assigned_parts.id as apId",
                     "part_master.displayId as pNo",
-                    "part_master.avgUnitPrice"
+                    "assigned_parts.avgUnitPrice"
                 ])
                 .where({
                     entityId: serviceOrderId,
@@ -2968,7 +2968,7 @@ const partsController = {
                     "assigned_parts.status as status",
                     "assigned_parts.id as apId",
                     "part_master.displayId as pNo",
-                    "part_master.avgUnitPrice"
+                    "assigned_parts.avgUnitPrice"
                 ])
                 .where({
                     entityId: serviceOrderId,
@@ -2980,14 +2980,14 @@ const partsController = {
 
 
 
-            const Parallel = require('async-parallel');
+            // const Parallel = require('async-parallel');
 
-            rows = await Parallel.map(rows, async st => {
+            // rows = await Parallel.map(rows, async st => {
 
 
-                return {...st, "unitCost": st.avgUnitPrice };
+            //     return {...st, "unitCost": st.avgUnitPrice };
 
-            })
+            // })
 
 
             let count = total.length;
@@ -3043,7 +3043,7 @@ const partsController = {
                     "assigned_parts.unitCost as unitCost",
                     "assigned_parts.id as apId",
                     "part_master.displayId as pNo",
-                    "part_master.avgUnitPrice"
+                    "assigned_parts.avgUnitPrice"
 
 
                 ])
@@ -3066,7 +3066,7 @@ const partsController = {
                     "assigned_parts.unitCost as unitCost",
                     "assigned_parts.id as apId",
                     "part_master.displayId as pNo",
-                    "part_master.avgUnitPrice"
+                    "assigned_parts.avgUnitPrice"
 
                 ])
                 .where({
@@ -3079,12 +3079,12 @@ const partsController = {
 
             const Parallel = require('async-parallel');
 
-            rows = await Parallel.map(rows, async row => {
+            // rows = await Parallel.map(rows, async row => {
 
 
-                return {...row, unitCost: row.avgUnitPrice };
+            //     return {...row, unitCost: row.avgUnitPrice };
 
-            })
+            // })
 
 
             let count = total.length;
@@ -4695,6 +4695,56 @@ const partsController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
+    }
+
+    ,
+    updateAvgPrice: async(req, res) => {
+
+        try {
+
+
+            let partMasterResult = await knex('part_master');
+            let updatePart = [];
+            let updateService = [];
+
+            for (let partData of partMasterResult) {
+
+                let updateData = {
+                    unitCost: partData.avgUnitPrice,
+                    avgUnitPrice: partData.avgUnitPrice
+                }
+
+                let updateResult = await knex.update(updateData).where({ partId: partData.id, entityType: 'quotations', orgId: partData.orgId })
+                    .into('assigned_parts');
+
+                updatePart.push(updateResult);
+
+
+                let updateResultService = await knex.update(updateData).where({ partId: partData.id, entityType: 'service_orders', orgId: partData.orgId })
+                    .into('assigned_parts');
+
+                updateService.push(updateResultService)
+
+            }
+
+            return res.status(200).json({
+                data: { updatePart, updateService },
+                message: "Data migration has been updated successfully!"
+            });
+
+
+
+
+
+
+        } catch (err) {
+
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+
+        }
+
     }
 }
 
