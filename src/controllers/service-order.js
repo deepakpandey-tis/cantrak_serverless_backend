@@ -1484,7 +1484,8 @@ const serviceOrderController = {
 
                 let assignedPartInsertPayload = _.omit(assignedPartPayload, ['serviceOrderId'])
 
-                let insertData = {...assignedPartInsertPayload,
+                let insertData = {
+                    ...assignedPartInsertPayload,
                     entityId: assignedPartPayload.serviceOrderId,
                     entityType: 'service_orders',
                     unitCost: avgUnitPrice,
@@ -3592,6 +3593,288 @@ const serviceOrderController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
+    },
+
+    /*GET SO COST REPORT */
+
+    getSoCostReport: async(req, res) => {
+
+
+        const accessibleProjects = req.userProjectResources[0].projects;
+        let payload = req.body;
+
+        let month;
+
+        if (Number(payload.startMonth) <= 9) {
+
+            month = "0" + Number(payload.startMonth);
+
+        } else {
+            month = Number(payload.startMonth);
+        }
+
+        let period = payload.startYear + "-" + month;
+
+        let rows = await knex
+            .from("service_orders")
+            .leftJoin(
+                "service_requests",
+                "service_orders.serviceRequestId",
+                "service_requests.id"
+            )
+            .leftJoin(
+                "service_problems",
+                "service_requests.id",
+                "service_problems.serviceRequestId"
+            )
+            .leftJoin(
+                "incident_categories",
+                "service_problems.categoryId",
+                "incident_categories.id"
+            )
+            .leftJoin(
+                "assigned_service_team",
+                "service_requests.id",
+                "assigned_service_team.entityId"
+            )
+            .leftJoin(
+                "users",
+                "assigned_service_team.userId",
+                "users.id"
+            )
+            .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
+            .leftJoin("users AS u", "service_requests.createdBy", "u.id")
+            .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+            .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
+            .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+            .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
+            // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
+            // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+            .leftJoin('companies', 'service_orders.companyId', 'companies.id')
+            .leftJoin('projects', 'property_units.projectId', 'projects.id')
+
+        .select([
+                "service_orders.id as soId",
+                "service_requests.description",
+                "service_requests.location",
+                "service_requests.id as srId",
+                "incident_categories.descriptionEng as problem",
+                "priority as priority",
+                "u.name as createdBy",
+                'service_requests.houseId as houseId',
+                "orderDueDate as dueDate",
+                "status.descriptionEng as status",
+                "service_orders.createdAt as dateCreated",
+                "buildings_and_phases.description as buildingName",
+                "users.userName as assignedMainUser",
+                "teams.teamName as teamName",
+                "requested_by.name as requestedBy",
+                "property_units.unitNumber as unitNumber",
+                "property_units.id as unitId",
+                "service_orders.displayId as soNo",
+                "service_requests.displayId as srNo",
+                "companies.companyName",
+                "companies.companyId",
+                "projects.project",
+                "projects.projectName",
+                "service_orders.id",
+                "service_requests.createdAt as serviceCreatedDate"
+
+
+                // "assignUser.name as Tenant Name"
+
+            ])
+            .where(qb => {
+                qb.where({ "service_orders.orgId": req.orgId });
+                qb.whereIn('service_requests.projectId', accessibleProjects)
+
+
+
+                if (payload.companyId) {
+
+                    if (payload.companyId == "all") {
+
+                    } else {
+                        qb.where('service_requests.companyId', payload.companyId.id);
+                    }
+                }
+                if (payload.projectId) {
+
+                    if (payload.projectId == "all") {
+
+                    } else {
+
+                        qb.where('service_requests.projectId', payload.projectId.id);
+                    }
+                }
+
+
+                if (payload.teamId) {
+
+                    if (payload.teamId == "all") {
+
+                    } else {
+
+                        //let team = payload.teamId.map(v => v.teamId);
+                        qb.where('teams.teamId', payload.teamId.teamId);
+                    }
+                }
+
+                if (payload.startYear && payload.startMonth) {
+
+                    qb.whereRaw(`to_char(to_timestamp(service_requests."createdAt"/1000),'YYYY-MM')='${period}'`)
+
+                }
+
+            }).groupBy([
+                "service_requests.id",
+                "service_orders.id",
+                "service_problems.id",
+                "incident_categories.id",
+                "assigned_service_team.id",
+                "users.id",
+                "u.id",
+                "status.id",
+                'buildings_and_phases.id',
+                'teams.teamId',
+                'requested_by.id',
+                'property_units.id',
+                "companies.id",
+                "projects.id",
+                // "assignUser.id",
+                // "user_house_allocation.id"
+            ])
+            .orderBy('service_orders.id', 'desc');
+
+
+        const Parallel = require('async-parallel');
+        let a = 0;
+        const final = await Parallel.map(_.uniqBy(rows, 'id'), async(st) => {
+
+            let partDataResult = await knex.from('assigned_parts')
+                .leftJoin('part_master', 'assigned_parts.partId', 'part_master.id')
+                .select([
+                    'assigned_parts.*',
+                    'part_master.partName',
+                    'part_master.partCode',
+                    'part_master.unitOfMeasure',
+                ])
+                .where(qb => {
+
+                })
+                .where({
+                    'assigned_parts.orgId': req.orgId,
+                    'assigned_parts.entityId': st.id,
+                    'assigned_parts.entityType': 'service_orders'
+                })
+
+            let chargeDataResult = await knex.from('assigned_service_charges')
+                .leftJoin('charge_master', 'assigned_service_charges.chargeId', 'charge_master.id')
+                .select([
+                    'assigned_service_charges.*',
+                    'charge_master.chargeCode',
+                    'charge_master.descriptionThai',
+                    'charge_master.descriptionEng',
+                    'charge_master.calculationUnit'
+
+                ])
+                .where(qb => {
+
+                })
+                .where({
+                    'assigned_service_charges.orgId': req.orgId,
+                    'assigned_service_charges.entityId': st.id,
+                    'assigned_service_charges.entityType': 'service_orders'
+                })
+
+
+            let updatePartData = [];
+            let updateChargeData = [];
+            let totalCost;
+            let unitPrice;
+
+            let i = 0;
+            for (let d of partDataResult) {
+
+
+                i++;
+
+                unitPrice = d.unitCost;
+                totalCost = d.quantity * d.unitCost;
+
+                updatePartData.push({...d, totalCost: totalCost, unitPrice: unitPrice })
+            }
+
+            let tagsResult = [];
+            tagsResult = await knex('location_tags')
+                .leftJoin('location_tags_master', 'location_tags.locationTagId', 'location_tags_master.id')
+                .where({ 'location_tags.entityId': st.srId, 'location_tags.entityType': 'service_requests', 'location_tags.orgId': req.orgId })
+                .where(qb => {
+
+                    // if (payload.tags && payload.tags.length) {
+
+                    //     if (payload.tags.includes('all')) {
+
+                    //     } else {
+
+                    //         let tag = payload.tags.map(v => v.id);
+
+                    //         qb.whereIn('location_tags.locationTagId', tag);
+                    //     }
+
+                    // }
+                })
+
+            tagsResult = _.uniqBy(tagsResult, 'title');
+            tagsResult = tagsResult.map(v => v.title);
+            let tag;
+            tag = tagsResult.toString();
+
+            let chargeTotalCost;
+            let chargeUnitPrice;
+            let chargeTotalPrice;
+            let chargeQuantity;
+
+            let j = 0;
+            for (let charge of chargeDataResult) {
+
+                j++;
+
+                chargeQuantity = charge.totalHours;
+                chargeUnitPrice = charge.rate;
+                chargeTotalCost = charge.totalHours * charge.rate;
+
+                updateChargeData.push({...charge, chargeTotalCost: chargeTotalCost, chargeUnitPrice: chargeUnitPrice, chargeQuantity: chargeQuantity })
+
+            }
+
+
+            let totalRowSpan = 0;
+
+            totalRowSpan = Number(updatePartData.length) + Number(updateChargeData.length);
+
+            return {
+                partData: updatePartData,
+                createdAt: st.createdAt,
+                srNo: st.srNo,
+                soNo: st.soNo,
+                srCreated: st.serviceCreatedDate,
+                tags: tag,
+                chargeData: updateChargeData,
+                rowSpan: totalRowSpan,
+                status: st.status
+
+            }
+        })
+
+
+
+
+        return res.status(200).json({
+            data: final,
+            message: "So cost report Successfully!",
+        });
+
     }
 }
 
