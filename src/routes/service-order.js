@@ -62,4 +62,7 @@ router.get('/get-satisfaction-list', authMiddleware.isAuthenticated, roleMiddlew
 router.get('/get-service-order-report', authMiddleware.isAuthenticated, serviceOrderController.getServiceOrderReport)
 router.post('/get-problem-category-report', authMiddleware.isAuthenticated, serviceOrderController.getProblemCategoryReport)
 
+router.post('/get-so-cost-report', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
+    resourceAccessMiddleware.isCMAccessible, serviceOrderController.getSoCostReport)
+
 module.exports = router;

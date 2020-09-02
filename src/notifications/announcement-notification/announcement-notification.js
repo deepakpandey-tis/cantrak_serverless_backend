@@ -64,7 +64,8 @@ const announcementNotification = {
             template: 'announcement.ejs',
             templateData: {
                 fullName: receiver.name,
-                description:description
+                description:description,
+                title:title
             },
             payload: {
                 ...data,
