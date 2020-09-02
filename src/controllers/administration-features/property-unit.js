@@ -1246,6 +1246,33 @@ const propertyUnitController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  getPropertyUnitsByMultipleFloor:async(req,res)=>{
+    try {
+      let floorZoneId = req.body
+      let orgId = req.orgId
+
+      let propertyUnit = await knex("property_units")
+      .where({"property_units.isActive":true,"property_units.orgId":orgId})
+      .whereIn("property_units.floorZoneId",floorZoneId)
+      .select("*")
+      .orderBy("property_units.description","asc")
+
+      return res.status(200).json({
+        data: {
+          propertyUnit
+        },
+        message: "Property unit list"
+      });
+
+    } catch (err) {
+      console.log("[controllers][generalsetup][viewPropertyUnit] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+      
+    }
   }
 };
 

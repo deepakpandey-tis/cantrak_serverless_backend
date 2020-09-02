@@ -1071,7 +1071,7 @@ const facilityBookingController = {
                 })
                 .first();
 
-                console.log("Open-Close",openCloseTimes);
+            console.log("Open-Close",openCloseTimes);
 
             return res.status(200).json({
 
@@ -1194,17 +1194,23 @@ const facilityBookingController = {
                     .where({ 'entity_bookings.entityType': 'facility_master', 'entity_bookings.orgId': req.orgId })
                     .where({ 'entity_bookings.bookedBy': id })
                     .orderBy('entity_bookings.bookingEndDateTime', 'desc')
+                    .limit(50);
 
             }
 
             const Parallel = require('async-parallel');
 
             resultData = await Parallel.map(resultData, async pd => {
+                console.log("pddddd",pd);
+
                 let imageResult = await knex.from('images').select('s3Url', 'title', 'name')
                     .where({ "entityId": pd.facilityId, "entityType": 'facility_master', orgId: req.orgId })
 
                 let iconResult = await knex.from('images').select('s3Url', 'title', 'name')
                     .where({ "entityId": pd.facilityTypeId, "entityType": 'facility_type_icon' }).first();
+                   
+                //let bookingAt = moment(pd.bookedAt).format("ddd");               
+
 
                 return {
                     ...pd,

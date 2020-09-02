@@ -12,6 +12,7 @@ const saltRounds = 10;
 const fs = require("fs");
 const path = require("path");
 const request = require("request");
+const { whereIn } = require("../../db/knex");
 
 const buildingPhaseController = {
     addBuildingPhase: async(req, res) => {
@@ -841,6 +842,35 @@ const buildingPhaseController = {
             });
         }
     },
+    getBuildingPhaseListByMultipleProjectId:async(req,res)=>{
+        try {
+            let projectId = req.body
+            let orgId = req.orgId;
+            console.log("projectId for building",projectId)
+
+
+            let  buildings = await knex("buildings_and_phases")
+            .where({ "buildings_and_phases.orgId": orgId, "buildings_and_phases.isActive": true })
+            .whereIn("buildings_and_phases.projectId",projectId)
+            .select("*")
+            .orderBy('buildings_and_phases.description', 'asc');
+
+            return res
+                .status(200)
+                .json({ data: { buildings }, message: "Buildings list" });
+
+        } catch (err) {
+            console.log(
+                "[controllers][generalsetup][viewbuildingPhase] :  Error",
+                err
+            );
+            //trx.rollback
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+            
+        }
+    },
     importBuildingData: async(req, res) => {
         try {
 
@@ -1067,6 +1097,7 @@ const buildingPhaseController = {
         try {
             let projectId = req.query.projectId;
             let orgId = req.orgId;
+            console.log("projectId for building",projectId)
 
             let buildingData = {};
             //console.log(orgId);
