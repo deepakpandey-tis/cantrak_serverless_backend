@@ -566,6 +566,7 @@ const teamsController = {
         }
     },
 
+   
     getAssignedTeamAndUsersForOther: async (req, res) => {
         try {
             const entityId = req.body.entityId;
@@ -1099,6 +1100,66 @@ const teamsController = {
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
                 ]
             });
+        }
+    },
+    getAssignedTeamByMultipleProjects:async(req,res)=>{
+        try {
+            let projectId = req.body
+            let orgId = req.orgId
+
+            let teams = await knex("team_roles_project_master")
+            .leftJoin('teams', 'team_roles_project_master.teamId', 'teams.teamId')
+            .select(['teams.teamName',
+            'teams.teamId'])
+            .whereIn("team_roles_project_master.projectId",projectId)
+            .distinct()
+
+            res.status(200).json({
+                data: {
+                    teams: teams
+                },
+                message: "Team list successfully !"
+            })
+
+
+        } catch (err) {
+
+            console.log('[controllers][teams][getTeamList] : Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ]
+            });
+            
+        }
+    },
+
+    getTeamUsersByMultipleTeamId:async(req,res)=>{
+        try {
+            let teamId =req.body
+
+            let teamUser = await knex("team_users")
+            .leftJoin("users","team_users.userId","users.id")
+            .select(["team_users.id","users.name","users.id as userId"])
+            .whereIn("team_users.teamId",teamId)
+
+            res.status(200).json({
+                data: {
+                    teamUsers: teamUser
+                },
+                message: "Team user list !"
+            })
+
+        } catch (err) {
+
+            console.log('[controllers][teams][getTeamUser] : Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ]
+            });
+            
+            
         }
     },
 

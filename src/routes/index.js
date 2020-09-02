@@ -71,6 +71,7 @@ const facilityTypeMaster = require("./administration-features/facility-type");
 const notificationRouter = require('./notifications');
 const parcelNotificationRouter = require('./parcel-notification');
 const serviceRequestNotificationRouter = require('./service-request-notification');
+const announcementRouter = require('./announcement');
 
 const bannersRouter = require("./administration-features/banners");
 
@@ -168,5 +169,7 @@ router.use("/notifications", notificationRouter)
 router.use("/parcel",parcelNotificationRouter)
 router.use("/administration-features/banners", bannersRouter);
 router.use("/service-request",serviceRequestNotificationRouter);
+
+router.use("/announcement",announcementRouter)
 
 module.exports = router;

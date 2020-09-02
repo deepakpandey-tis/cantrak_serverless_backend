@@ -32,6 +32,7 @@ let tempraryDirectory = null;
            tempraryDirectory = '/tmp/';  
          }
 var multer  = require('multer');
+const { getTeamUsersByMultipleTeamId } = require('../controllers/teams');
 var storage = multer.diskStorage({
 	destination: tempraryDirectory,
 	filename: function ( req, file, cb ) {
@@ -50,6 +51,10 @@ router.post('/get-team-list-by-projectid', authMiddleware.isAuthenticated, teams
 router.post('/get-team-by-entity', authMiddleware.isAuthenticated, teamsController.getTeamByEntity)
 router.post('/disable-login', authMiddleware.isAuthenticated, teamsController.disableLogin);
 router.post('/get-assigned-teams-and-users-others', authMiddleware.isAuthenticated, teamsController.getAssignedTeamAndUsersForOther);
+
+router.post('/get-teams-by-multiple-project',authMiddleware.isAuthenticated,teamsController.getAssignedTeamByMultipleProjects)
+
+router.post('/get-team-user-by-multiple-teamId',authMiddleware.isAuthenticated,teamsController.getTeamUsersByMultipleTeamId)
 
 
 module.exports = router;

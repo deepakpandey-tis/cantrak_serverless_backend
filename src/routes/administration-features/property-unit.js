@@ -106,5 +106,7 @@ router.post('/toggle-status',
   resourceAccessMiddleware.isPropertySetupAccessible,
   propertyUnitController.toggleStatus);
 
+router.post('/get-property-unit-by-multiple-floor',authMiddleware.isAuthenticated,propertyUnitController.getPropertyUnitsByMultipleFloor)
+
 module.exports = router
 
