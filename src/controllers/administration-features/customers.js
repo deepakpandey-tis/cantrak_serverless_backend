@@ -1250,6 +1250,32 @@ const customerController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  getTenantListByMultiplePropertyUnits:async(req,res)=>{
+    try {
+      let propertyUnit = req.body
+
+      let orgId = req.orgId
+
+      let tenantList = await knex("user_house_allocation")
+      .leftJoin("users", "user_house_allocation.userId", "users.id")
+      .select(["users.name", "users.id"])
+      .whereIn("user_house_allocation.houseId",propertyUnit)
+      .where("user_house_allocation.orgId",orgId)
+
+      return res.status(200).json({
+        data: {
+          tenants: tenantList,
+        },
+        message: " Tenant list"
+
+      });
+
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
   }
 };
 

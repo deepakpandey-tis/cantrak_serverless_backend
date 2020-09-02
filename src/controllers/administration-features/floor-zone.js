@@ -734,6 +734,36 @@ const floorZoneController = {
       });
     }
   },
+  getFloorZoneByMultipleBuildingId:async(req,res)=>{
+    try {
+      let orgId = req.orgId;
+
+      let  buildingPhaseId  = req.body;
+      console.log("building phase id",buildingPhaseId)
+
+     let floor = await knex("floor_and_zones")
+    //  .innerJoin("buildings_and_phases","floor_and_zones.buildingPhaseId","buildings_and_phases.id")
+          .where({ "floor_and_zones.isActive": true, "floor_and_zones.orgId": orgId })
+          .whereIn('floor_and_zones.buildingPhaseId',buildingPhaseId)
+          .select("*")
+          .orderBy('floor_and_zones.description','asc');
+
+          return res.status(200).json({
+            data: {
+              floor
+            },
+            message: "Floor zone list"
+          });
+
+    } catch (err) {
+      console.log("[controllers][generalsetup][viewfloorZone] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+      
+    }
+  },
   /**IMPORT FLOOR ZONE DATA */
   importFloorZoneData: async (req, res) => {
     try {
