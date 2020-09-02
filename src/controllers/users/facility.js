@@ -864,8 +864,7 @@ const facilityBookingController = {
                     'buildings_and_phases.buildingPhaseCode',
                     'buildings_and_phases.description as buildingName',
                     'floor_and_zones.floorZoneCode',
-                    'floor_and_zones.description as floorName',
-
+                    'floor_and_zones.description as floorName'
                 ])
                 .where(qb => {
                     if (projectId) {
@@ -889,6 +888,24 @@ const facilityBookingController = {
 
             const Parallel = require('async-parallel');
             resultData = await Parallel.map(resultData, async pd => {
+                
+                let currentTime = new Date().getTime();
+                
+                let bookingDay = moment(currentTime).format("ddd");
+                console.log("Checking Booking Availability of Day: ", bookingDay);
+
+                let openCloseTimes = await knex
+                    .from("entity_open_close_times")
+                    .where({
+                        entityId: pd.id,
+                        entityType: "facility_master",
+                        orgId: req.orgId,
+                        day: bookingDay,
+                    })
+                    .first();
+
+                    console.log("Open-Close",openCloseTimes);
+                    // Get Open-Close Time       
 
                 let imageResult = await knex.from('images').select('s3Url', 'title', 'name')
                     .where({ "entityId": pd.id, "entityType": 'facility_master' })
@@ -896,7 +913,6 @@ const facilityBookingController = {
                 let iconResult = await knex.from('images').select('s3Url', 'title', 'name')
                     .where({ "entityId": pd.facilityTypeId, "entityType": 'facility_type_icon' }).first();
 
-                let currentTime = new Date().getTime();
                 let startDate = moment(currentTime).startOf('date').format();
                 let endDate = moment(currentTime).endOf('date').format();
                 let startTime = new Date(startDate).getTime();
@@ -936,6 +952,7 @@ const facilityBookingController = {
                     uploadedIcons: iconResult,
                     todayTotalBooking,
                     charges,
+                    openCloseTimes,
                     sortBy
                 }
 
@@ -1039,12 +1056,28 @@ const facilityBookingController = {
             let iconResult = await knex.from('images').select('s3Url', 'title', 'name')
                 .where({ "entityId": facilityDetails.facilityTypeId, "entityType": 'facility_type_icon' }).first();
 
+            let currentTime = new Date().getTime();
+
+            let bookingDay = moment(currentTime).format("ddd");
+            console.log("Checking Booking Availability of Day: ", bookingDay);
+
+            let openCloseTimes = await knex
+                .from("entity_open_close_times")
+                .where({
+                    entityId: payload.id,
+                    entityType: "facility_master",
+                    orgId: req.orgId,
+                    day: bookingDay,
+                })
+                .first();
+
+                console.log("Open-Close",openCloseTimes);
 
             return res.status(200).json({
 
                 facilityDetails: {
                     ...facilityDetails, openingClosingDetail: _.uniqBy(openingClosingDetail, 'day'), ruleRegulationDetail: ruleRegulationDetail,
-                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'), bookingQuota, iconResult
+                    bookingCriteriaDetail, facilityImages, feeDetails, bookingLimits: _.uniqBy(bookingLimits, 'limitType'), bookingQuota, iconResult,openCloseTimes
                 },
                 message: "Facility Details Successfully!"
             })
