@@ -656,6 +656,36 @@ const ProjectController = {
       });
     }
   },
+  getProjectByMultipleCompany:async(req,res) =>{
+    try {
+      console.log("conpany id in req",req.body)
+      let companyId = req.body
+
+      let rows = await knex("projects")
+      .where({ "projects.isActive": true })
+      .whereIn("projects.companyId", companyId)
+      .select([
+        "projects.id as id",
+        "projects.projectName",
+        "projects.project as projectId"
+      ])
+      .orderBy('projects.projectName','asc')
+
+      return res.status(200).json({
+        data: {
+          projects: rows
+        },
+        message: "projects List!"
+      });
+
+    } catch (err) {
+      console.log("[controllers][generalsetup][viewProject] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
   getProjectAllList: async (req, res) => {
     try {
 
