@@ -14,4 +14,6 @@ router.get('/generate-announcement-id',authMiddleware.isAuthenticated,announceme
 
 router.post('/save-announcement-as-draft',authMiddleware.isAuthenticated,announcementController.saveAnnouncementAsDraft)
 
+router.post('/get-announcement-list',authMiddleware.isAuthenticated,announcementController.getAnnouncementList)
+
 module.exports = router;

@@ -1142,6 +1142,8 @@ const teamsController = {
             .leftJoin("users","team_users.userId","users.id")
             .select(["team_users.id","users.name","users.id as userId"])
             .whereIn("team_users.teamId",teamId)
+            .groupBy(["team_users.id","users.id"])
+            .distinct()
 
             res.status(200).json({
                 data: {
