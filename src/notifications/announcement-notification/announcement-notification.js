@@ -34,7 +34,7 @@ const announcementNotification = {
             payload: {
                 ...data,
                 subject: title,
-                body: `Hi!!, This is a Announcement notification to all users from ${sender.name}`,
+                body: description+`from  ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
@@ -47,6 +47,8 @@ const announcementNotification = {
                 {
                     action: "explore",
                     title: "Open",
+                    url: `${process.env.SITE_URL}/admin/dashboard/home`
+
                 }
             ]
         }
@@ -86,8 +88,8 @@ const announcementNotification = {
             senderId: sender.id,
             receiverId: receiver.id,
             payload: {
-                subject: 'Announcement Notification',
-                body: `Hi!!, This is a Announcement notification to all users from ${sender.name}`,
+                subject: title,
+                body: description + `from ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
