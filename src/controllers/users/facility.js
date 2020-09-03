@@ -132,6 +132,14 @@ const facilityBookingController = {
                     totalNewParcelAdded                     
                 };
             });
+
+            // Update view status as view all outgoing parcel by user
+            await Parallel.map(resultData, async (up) => {
+                // Update view status as view all outgoing parcel by user
+                const updateParcelStatus = await knex("parcel_management")
+                    .update({ parcelViewStatus: '0'})
+                    .where({'parcel_management.id' : up.id});
+            });
            
             res.status(200).json({
                 data: {
@@ -141,13 +149,7 @@ const facilityBookingController = {
             })
 
             console.log("parcelsId",parcelsId);
-            // Update view status as view all outgoing parcel by user
-            await Parallel.map(resultData, async (up) => {
-                // Update view status as view all outgoing parcel by user
-                const updateParcelStatus = await knex("parcel_management")
-                    .update({ parcelViewStatus: '0'})
-                    .where({'parcel_management.id' : up.id});
-            });
+            
 
         } catch (err) {
 
@@ -268,13 +270,6 @@ const facilityBookingController = {
                 };
             });
 
-            res.status(200).json({
-                data: {
-                    parcelListData: resultData
-                },
-                message: "Parcel list successfully!"
-            })
-
             console.log("parcelsId",parcelsId);
             await Parallel.map(resultData, async (up) => {
                 // Update view status as view all outgoing parcel by user
@@ -282,6 +277,15 @@ const facilityBookingController = {
                     .update({ parcelViewStatus: '0'})
                     .where({'parcel_management.id' : up.id});
             });
+
+            res.status(200).json({
+                data: {
+                    parcelListData: resultData
+                },
+                message: "Parcel list successfully!"
+            })
+
+         
 
         } catch (err) {
 
@@ -1145,7 +1149,7 @@ const facilityBookingController = {
                     //         }
                     //     }
                     // })
-                    .where('entity_bookings.bookingStartDateTime', '>=', endTime)
+                    .where('entity_bookings.bookingEndDateTime', '>=', endTime)
                     .where({ 'entity_bookings.entityType': 'facility_master', 'entity_bookings.orgId': req.orgId })
                     .where({ 'entity_bookings.bookedBy': id })
                     .orderBy('entity_bookings.bookingStartDateTime', 'asc')
@@ -1190,13 +1194,22 @@ const facilityBookingController = {
                     //         }
                     //     }
                     // })
-                    .where('entity_bookings.bookingEndDateTime', '<=', endTime)
+                    .where('entity_bookings.bookingEndDateTime', '<', endTime)
                     .where({ 'entity_bookings.entityType': 'facility_master', 'entity_bookings.orgId': req.orgId })
                     .where({ 'entity_bookings.bookedBy': id })
                     .orderBy('entity_bookings.bookingEndDateTime', 'desc')
                     .limit(50);
 
             }
+
+
+            totalNewBookingsData = await knex.from('entity_bookings')
+                .where('entity_bookings.bookingEndDateTime', '>=', endTime)               
+                .where({ 'entity_bookings.bookedBy': id, 'entity_bookings.viewStatus': true })
+                .count('* as totalNewBookings')
+                .where({ 'entity_bookings.orgId': req.orgId}).first();
+
+                let totalUpcomingBookings = totalNewBookingsData.totalNewBookings;
 
             const Parallel = require('async-parallel');
 
@@ -1209,21 +1222,59 @@ const facilityBookingController = {
                 let iconResult = await knex.from('images').select('s3Url', 'title', 'name')
                     .where({ "entityId": pd.facilityTypeId, "entityType": 'facility_type_icon' }).first();
                    
-                //let bookingAt = moment(pd.bookedAt).format("ddd");               
+                console.log("checkedDate",pd.bookingStartDateTime);
+                let checkBookedDate;
+                if(pd.bookingStartDateTime){
+                    checkBookedDate = moment(pd.bookingStartDateTime,"x").format('YYYY-MM-DD');
+                }
+                               
+                var time = moment().format("YYYY-MM-DD");
+
+                today = Date.now();
+                console.log("today",today,checkBookedDate,time);
+                let resultToday = moment(checkBookedDate).isSame(time); // true
+
+                const tomorrow = moment().add(1, 'day').endOf('day').format('YYYY-MM-DD');
+
+                let resultTomorrow = moment(checkBookedDate).isSame(tomorrow); // true
+               
+
+                let todayDate;
+                let tomorrowDate;
+                if(resultToday == true){
+                    console.log("todayResult", resultToday);
+                    todayDate = resultToday;
+                }
+
+                if(resultTomorrow == true){
+                    console.log("tomorrowResult", resultTomorrow);
+                    tomorrowDate = resultTomorrow;
+                }
 
 
                 return {
                     ...pd,
                     uploadedIcons: iconResult,
-                    uploadedImages: imageResult
+                    uploadedImages: imageResult,
+                    todayDate,
+                    tomorrowDate,
+                    totalUpcomingBookings
                 }
             })
+
+            await Parallel.map(resultData, async (up) => {
+                // Update view status as view all outgoing parcel by user
+                const updateBookingStatus = await knex("entity_bookings")
+                    .update({ viewStatus: false})
+                    .where({'entity_bookings.id' : up.id});
+            });
 
             return res.status(200).json({
                 bookingData: resultData,
                 message: "Your booking list successfully!"
             })
 
+            
 
         } catch (err) {
             res.status(500).json({
@@ -1442,7 +1493,8 @@ const facilityBookingController = {
                 companyId: facilityData.companyId,
                 isBookingConfirmed: confirmedStatus,
                 confirmedType: confirmType,
-                remarks : payload.remarks
+                remarks : payload.remarks,
+                viewStatus: true
 
             }
             let insertResult = await knex('entity_bookings').insert(insertData).returning(['*']);
