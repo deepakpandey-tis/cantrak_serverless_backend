@@ -746,7 +746,9 @@ const floorZoneController = {
           .where({ "floor_and_zones.isActive": true, "floor_and_zones.orgId": orgId })
           .whereIn('floor_and_zones.buildingPhaseId',buildingPhaseId)
           .select("*")
-          .orderBy('floor_and_zones.description','asc');
+          .orderBy('floor_and_zones.description','asc')
+          .groupBy(['floor_and_zones.id'])
+          .distinct()
 
           return res.status(200).json({
             data: {
