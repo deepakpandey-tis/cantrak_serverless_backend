@@ -147,6 +147,46 @@ const dashboardController = {
         }
     },
 
+    getAnnouncementList: async (req, res) => {
+        try {
+
+            let announcement;
+
+            announcement = await knex
+                .from("announcement_user_master")
+                .leftJoin(
+                    "images",
+                    "announcement_user_master.announcementId",
+                    "images.entityId"
+                )
+                .innerJoin(
+                    "announcement_master",
+                    "announcement_user_master.announcementId",
+                    "announcement_master.id"
+                )
+                .where({ "announcement_user_master.orgId": req.orgId, "announcement_user_master.userId": req.me.id })
+                .select(
+                    "announcement_master.title as titles",
+                    "announcement_master.url as Url",
+                    "announcement_master.description as details",
+                    "images.s3Url as s3URL",
+                    "announcement_master.createdAt as announcementDate"
+                )
+                .orderBy('announcement_master.id', 'desc')
+                .limit(10);
+
+            return res.status(200).json({
+                data: {
+                    announcement: announcement,
+                },
+                message: "Announcement List!",
+            });
+
+        } catch (err) {
+            console.log("[controllers][Announcement][getAnnouncementList],Error", err);
+        }
+    },
+
     getThemeSetting: async (req, res) => {
         try {
             let themes;
