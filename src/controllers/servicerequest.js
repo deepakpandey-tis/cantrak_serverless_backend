@@ -3573,6 +3573,7 @@ const serviceRequestController = {
                 .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
                 .leftJoin('companies', 'service_requests.companyId', 'companies.id')
                 .leftJoin('projects', 'service_requests.projectId', 'projects.id')
+                .leftJoin('users as completedUser', 'service_requests.completedBy', 'completedUser.id')
 
                 .select([
                     "service_requests.id as S Id",
@@ -3596,7 +3597,9 @@ const serviceRequestController = {
                     "service_requests.completedOn",
                     "service_requests.displayId as srNo",
                     "service_orders.displayId as soNo",
-                    "incident_type.descriptionEng as problemType"
+                    "incident_type.descriptionEng as problemType",
+                    "incident_sub_categories.descriptionEng as subCategory",
+                    "completedUser.name as completedBy"
 
                 ])
                 .orderBy('service_requests.createdAt', 'desc')
@@ -3719,7 +3722,8 @@ const serviceRequestController = {
                     "companies.id",
                     "projects.id",
                     "incident_type.id",
-                    "incident_sub_categories.id"
+                    "incident_sub_categories.id",
+                    "completedUser.id"
                 ])
                 .distinct('service_requests.id'),
                 knex
