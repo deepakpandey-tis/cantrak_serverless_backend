@@ -2691,6 +2691,7 @@ const serviceOrderController = {
                 .leftJoin('incident_sub_categories', 'service_problems.problemId', 'incident_sub_categories.id')
                 .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
                 .leftJoin('users as c', 'service_requests.createdBy', 'c.id')
+                .leftJoin('users as completedUser', 'service_requests.completedBy', 'completedUser.id')
 
             .select([
                     "service_requests.id as S Id",
@@ -2717,7 +2718,9 @@ const serviceOrderController = {
                     'service_orders.displayId as soNo',
                     'service_orders.createdAt',
                     'service_requests.completedOn',
-                    "incident_type.descriptionEng as problemType"
+                    "incident_type.descriptionEng as problemType",
+                    "incident_sub_categories.descriptionEng as subCategory",
+                    "completedUser.name as completedBy"
                 ])
                 .groupBy([
                     "service_requests.id",
@@ -2734,7 +2737,8 @@ const serviceOrderController = {
                     "service_orders.id",
                     "c.id",
                     "incident_type.id",
-                    "incident_sub_categories.id"
+                    "incident_sub_categories.id",
+                    "completedUser.id"
 
                 ])
                 .where(qb => {
