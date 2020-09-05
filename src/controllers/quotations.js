@@ -2289,19 +2289,26 @@ const quotationsController = {
                 let i = 0;
                 for (let d of partDataResult) {
 
-                    if (st.invoiceData) {
 
 
-                        if (st.invoiceData[0]) {
+                    unitPrice = d.unitCost;
 
-                            unitPrice = st.invoiceData[0].parts[i].unitCost;
-                            //totalPrice = st.invoiceData[0].parts[i].quantity * st.invoiceData[0].parts[i].unitCost;
-                            totalPrice = d.quantity * st.invoiceData[0].parts[i].unitCost;
-                        }
-                    }
+                    totalPrice = d.quantity * d.unitCost;
+
+
+                    // if (st.invoiceData) {
+
+
+                    //   if (st.invoiceData[0]) {
+
+                    //     unitPrice = st.invoiceData[0].parts[i].unitCost;
+                    //totalPrice = st.invoiceData[0].parts[i].quantity * st.invoiceData[0].parts[i].unitCost;
+                    //   totalPrice = d.quantity * st.invoiceData[0].parts[i].unitCost;
+                    // }
+                    //}
                     i++;
 
-                    totalCost = d.quantity * d.unitCost;
+                    totalCost = d.quantity * d.avgUnitPrice;
 
                     updatePartData.push({...d, totalCost: totalCost, unitPrice: unitPrice, totalPrice: totalPrice })
                 }
