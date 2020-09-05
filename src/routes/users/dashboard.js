@@ -21,4 +21,8 @@ router.get('/get-theme', authMiddleware.isAuthenticated,
 router.get('/get-announcements', authMiddleware.isAuthenticated,
 userMiddleware.customerInfo, dashboardController.getAnnouncementList);
 
+/*GET ANNOUNCEMENT DETAILS*/
+router.post('/get-announcements-details', authMiddleware.isAuthenticated,
+userMiddleware.customerInfo, dashboardController.getAnnouncementDetails);
+
 module.exports = router;

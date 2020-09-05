@@ -217,6 +217,57 @@ const dashboardController = {
         }
     },
 
+    getAnnouncementDetails: async (req, res) => {
+        try {
+            let id = req.me.id;
+            let { announcementId } = req.body;
+            let resultData;
+
+            resultData = await knex.from('announcement_user_master')                
+                .innerJoin(
+                    "announcement_master",
+                    "announcement_user_master.announcementId",
+                    "announcement_master.id"
+                )
+                .select([
+                    "announcement_master.title as titles",
+                    "announcement_master.url as Url",
+                    "announcement_master.description as details",
+                    "announcement_master.createdAt as announcementDate"
+                ])
+                .where({ 'announcement_user_master.orgId': req.orgId })
+                .where({ 'announcement_user_master.announcementId': announcementId })
+                .first()
+
+                console.log("...resultData",resultData)
+            
+            let imageResult = await knex
+                .from("images")
+                .select("s3Url", "title", "name")
+                .where({
+                    entityId: announcementId,
+                    entityType: "announcement_image"
+                })
+                
+
+            res.status(200).json({
+                data: {
+                    announcementDetails: {
+                        ...resultData, imageResult
+                    }
+                },
+                message: "Announcement details successfully!"
+            })
+
+        } catch (err) {
+
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+
+        }
+    }
+
 };
 
 module.exports = dashboardController;
