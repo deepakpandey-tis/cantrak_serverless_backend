@@ -4038,7 +4038,8 @@ const partsController = {
                         'floor_and_zones.floorZoneCode',
                         'floor_and_zones.description as floorDescripton',
                         'adjust_type.adjustType as adjustTypeName',
-                        'part_master.minimumQuantity'
+                        'part_master.minimumQuantity',
+                        'part_master.avgUnitPrice as avgUnitPriceMaster'
 
                     ])
                     .where(qb => {

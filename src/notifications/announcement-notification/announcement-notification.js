@@ -24,6 +24,7 @@ const announcementNotification = {
     },
 
     sendInAppNotification: async (sender, receiver, data) => {
+        console.log("Site url",process.env.SITE_URL)
         let title = data.payload.title
         let description = data.payload.description
         let url = data.payload.url
@@ -47,7 +48,7 @@ const announcementNotification = {
                 {
                     action: "explore",
                     title: "Open",
-                    url: `${process.env.SITE_URL}/admin/dashboard/home`
+                    url: `/user/dashboard/home`
 
                 }
             ]
