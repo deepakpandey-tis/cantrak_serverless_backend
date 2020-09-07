@@ -3803,8 +3803,8 @@ const serviceOrderController = {
 
                 i++;
 
-                unitPrice = d.unitCost;
-                totalCost = d.quantity * d.unitCost;
+                unitPrice = d.avgUnitPrice;
+                totalCost = d.quantity * d.avgUnitPrice;
 
                 updatePartData.push({...d, totalCost: totalCost, unitPrice: unitPrice })
             }

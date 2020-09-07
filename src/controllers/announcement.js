@@ -392,5 +392,72 @@ const announcementController = {
         });
     }
   },
+
+  getAnnouncementDeatails:async(req,res)=>{
+      try {
+          let id = req.body.id
+          let payload = req.body
+          console.log("id of announcement",id)
+          const schema = Joi.object().keys({
+            id: Joi.string().required(),
+          });
+
+          const result = Joi.validate(payload, schema);
+
+          if (result && result.hasOwnProperty("error") && result.error) {
+            return res.status(400).json({
+              errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+            });
+          }
+
+          let [announcementDetails,users] = await Promise.all([
+              knex
+              .from('announcement_master')
+              // .leftJoin('announcement_user_master','announcement_master.id','announcement_user_master.announcementId')
+              // .leftJoin('user_house_allocation','announcement_user_master.userId','user_house_allocation.userId')
+              // .leftJoin('property_units','user_house_allocation.houseId','property_units.id')
+              // .leftJoin('floor_and_zones','property_units.floorZoneId','floor_and_zones.id')
+              // .leftJoin('buildings_and_phases','property_units.buildingPhaseId','bildings_and_phases.id')
+              // .leftJoin('projects','property_units.projectId','projects.id')
+              // .leftJoin('companies','property_units.companyId','companies.id')
+              // .leftJoin('users','announcement_user_master.userId','users.id')
+              .select([
+                'announcement_master.*',
+                // 'users.name',
+                // 'companies.companyName',
+                // 'companies.id',
+                // 'projects.projectName',
+                // 'projects.id',
+                // 'buildings_and_phases.buildingPhaseCode',
+                // 'buildings_and_phases.description',
+                // 'floor_and_zones.floorZoneCode',
+                // 'floor_and_zones.description',
+                // 'property_units.unitNumber',
+                // 'property_units.description',
+              ])
+              .where('announcement_master.id',id)
+              .first(),
+              // knex
+              // .from('')
+          ])
+
+          return res.status(200).json({
+            announcementDetails: {
+              ...announcementDetails,
+              
+            },
+            message: "Announcement Details !",
+          });
+        
+
+      } catch (err) {
+        console.log("controller[announcement][announcementDetails]");
+
+        res.status(500).json({
+          errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        });
+          
+      }
+  }
 };
 module.exports = announcementController;
