@@ -180,7 +180,7 @@ const announcementController = {
       let announcementPayload = req.body;
 
       let announcementResult = null;
-      let id = req.body.userId;
+      // let id = req.body.userId;
       userIds = [];
       let images = [];
       let newAnnouncementId = req.body.newAnnouncementId;
