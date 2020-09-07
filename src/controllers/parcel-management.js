@@ -181,9 +181,7 @@ const parcelManagementController = {
         let imagesData = req.body.image;
         console.log("imagesData", imagesData);
         if (imagesData && imagesData.length > 0) {
-          // console.log("imagesData",imagesData)
           for (let image of imagesData) {
-            // console.log("image and parcel result",image,parcelResult.id)
             let d = await knex("images")
               .insert({
                 entityType: "parcel_management",

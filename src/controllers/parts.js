@@ -2355,6 +2355,19 @@ const partsController = {
                 ])
             }
 
+            const Parallel = require('async-parallel');
+            rows = await Parallel.map(rows, async st => {
+
+
+                return {
+                    ...st,
+                    Quantity: st.Quantity.toFixed(2),
+                    "Unit Cost": st["Unit Cost"].toFixed(2)
+
+                }
+
+            })
+
 
             let count = total.count;
             pagination.total = count;
