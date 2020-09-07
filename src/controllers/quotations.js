@@ -1112,7 +1112,7 @@ const quotationsController = {
             let tempraryDirectory = null;
             let bucketName = null;
             if (process.env.IS_OFFLINE) {
-                bucketName = 'sls-app-resources-bucket';
+                bucketName = process.env.S3_BUCKET_NAME;
                 tempraryDirectory = 'tmp/';
             } else {
                 tempraryDirectory = '/tmp/';
@@ -1163,7 +1163,10 @@ const quotationsController = {
                     } else {
                         console.log("File uploaded Successfully");
 
-                        let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Quotation/" + filename;
+                        let url = process.env.S3_BUCKET_URL + "/Export/Quotation/" +
+                            filename;
+
+                        // let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Quotation/" + filename;
                         res.status(200).json({
                             data: rows,
                             message: "Quotation data export successfully!",
@@ -2286,18 +2289,26 @@ const quotationsController = {
                 let i = 0;
                 for (let d of partDataResult) {
 
-                    if (st.invoiceData) {
 
 
-                        if (st.invoiceData[0]) {
+                    unitPrice = d.unitCost;
 
-                            unitPrice = st.invoiceData[0].parts[i].unitCost;
-                            totalPrice = st.invoiceData[0].parts[i].quantity * st.invoiceData[0].parts[i].unitCost;
-                        }
-                    }
+                    totalPrice = d.quantity * d.unitCost;
+
+
+                    // if (st.invoiceData) {
+
+
+                    //   if (st.invoiceData[0]) {
+
+                    //     unitPrice = st.invoiceData[0].parts[i].unitCost;
+                    //totalPrice = st.invoiceData[0].parts[i].quantity * st.invoiceData[0].parts[i].unitCost;
+                    //   totalPrice = d.quantity * st.invoiceData[0].parts[i].unitCost;
+                    // }
+                    //}
                     i++;
 
-                    totalCost = d.quantity * d.unitCost;
+                    totalCost = d.quantity * d.avgUnitPrice;
 
                     updatePartData.push({...d, totalCost: totalCost, unitPrice: unitPrice, totalPrice: totalPrice })
                 }

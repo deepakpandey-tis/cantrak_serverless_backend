@@ -2213,7 +2213,8 @@ const facilityBookingController = {
         isBookingConfirmed: confirmedStatus,
         bookingType: 1,
         confirmedType: confirmType,
-        remarks: payload.remarks
+        remarks: payload.remarks,
+        viewStatus: true
       };
 
       let insertResult = await knex("entity_bookings")

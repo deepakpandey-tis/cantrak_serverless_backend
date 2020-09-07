@@ -842,18 +842,18 @@ const buildingPhaseController = {
             });
         }
     },
-    getBuildingPhaseListByMultipleProjectId:async(req,res)=>{
+    getBuildingPhaseListByMultipleProjectId: async(req, res) => {
         try {
             let projectId = req.body
             let orgId = req.orgId;
-            console.log("projectId for building",projectId)
+            console.log("projectId for building", projectId)
 
 
-            let  buildings = await knex("buildings_and_phases")
-            .where({ "buildings_and_phases.orgId": orgId, "buildings_and_phases.isActive": true })
-            .whereIn("buildings_and_phases.projectId",projectId)
-            .select("*")
-            .orderBy('buildings_and_phases.description', 'asc');
+            let buildings = await knex("buildings_and_phases")
+                .where({ "buildings_and_phases.orgId": orgId, "buildings_and_phases.isActive": true })
+                .whereIn("buildings_and_phases.projectId", projectId)
+                .select("*")
+                .orderBy('buildings_and_phases.description', 'asc');
 
             return res
                 .status(200)
@@ -868,7 +868,7 @@ const buildingPhaseController = {
             res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
-            
+
         }
     },
     importBuildingData: async(req, res) => {
@@ -1097,7 +1097,7 @@ const buildingPhaseController = {
         try {
             let projectId = req.query.projectId;
             let orgId = req.orgId;
-            console.log("projectId for building",projectId)
+            console.log("projectId for building", projectId)
 
             let buildingData = {};
             //console.log(orgId);
@@ -1195,8 +1195,17 @@ const buildingPhaseController = {
                     .innerJoin('property_units', 'buildings_and_phases.id', 'property_units.buildingPhaseId')
                     .where({
                         "buildings_and_phases.isActive": true,
-                        "buildings_and_phases.projectId": projectId,
+                        //"buildings_and_phases.projectId": projectId,
                         "buildings_and_phases.orgId": orgId,
+                    })
+                    .where(qb => {
+                        if (projectId == 'undefined') {
+
+                        } else {
+
+                            qb.where('buildings_and_phases.projectId', projectId)
+
+                        }
                     })
                     .select([
                         "buildings_and_phases.id as id",
