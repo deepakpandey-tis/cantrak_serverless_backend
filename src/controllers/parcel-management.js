@@ -593,8 +593,6 @@ const parcelManagementController = {
               "buildings_and_phases.description",
               "parcel_user_non_tis.name",
               "parcel_management.updatedAt",
-
-              // "images.s3Url",
             ])
             .where("parcel_management.orgId", req.orgId)
             .groupBy([

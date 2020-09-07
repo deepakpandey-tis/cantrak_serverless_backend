@@ -154,7 +154,7 @@ const dashboardController = {
 
             announcement = await knex
                 .from("announcement_user_master")
-                .leftJoin(
+                .innerJoin(
                     "images",
                     "announcement_user_master.announcementId",
                     "images.entityId"
@@ -164,16 +164,28 @@ const dashboardController = {
                     "announcement_user_master.announcementId",
                     "announcement_master.id"
                 )
-                .where({ "announcement_user_master.orgId": req.orgId, "announcement_user_master.userId": req.me.id })
+                .where({ "announcement_user_master.orgId": req.orgId, "announcement_user_master.userId": req.me.id,"announcement_master.status": true,"images.entityType": 'announcement_image' })
                 .select(
+                    "announcement_master.id as Id",
                     "announcement_master.title as titles",
                     "announcement_master.url as Url",
                     "announcement_master.description as details",
-                    "images.s3Url as s3URL",
+                    "images.s3Url as img",
                     "announcement_master.createdAt as announcementDate"
                 )
                 .orderBy('announcement_master.id', 'desc')
                 .limit(10);
+
+
+                const Parallel = require("async-parallel");
+                announcement = await Parallel.map(announcement, async (pp) => {                  
+
+                    return {
+                        ...pp,
+                        URL: process.env.SITE_URL
+                    };
+                });
+
 
             return res.status(200).json({
                 data: {
