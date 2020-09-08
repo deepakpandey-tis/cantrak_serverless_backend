@@ -3,15 +3,12 @@ const moment = require("moment");
 // const uuidv4 = require("uuid/v4");
 var jwt = require("jsonwebtoken");
 const _ = require("lodash");
-const multer = require("multer");
-const multerS3 = require("multer-s3");
+
 const uuid = require("uuid/v4");
-const QRCODE = require("qrcode");
 
 const knex = require("../db/knex");
 
-const fs = require("fs");
-const https = require("https");
+
 
 const announcementNotification = require("../notifications/announcement-notification/announcement-notification");
 
@@ -22,7 +19,7 @@ const announcementController = {
 
       let announcementResult = null;
       let id = req.body.userId;
-      console.log("req user id for teamuser",req.body.userId)
+      console.log("req user id for teamuser",req.body)
       userIds = [];
       let images = [];
       let newAnnouncementId = req.body.newAnnouncementId;
@@ -58,7 +55,14 @@ const announcementController = {
           inApp: Joi.boolean().required(),
           line: Joi.boolean().required(),
           sms: Joi.boolean().required(),
-          userType: Joi.number().required()
+          userType: Joi.number().required(),
+          companyId:Joi.array().items(Joi.number().required()),
+          projectId:Joi.array().items(Joi.number().required()),
+          buildingPhaseId:Joi.array().items(Joi.number().allow(null).optional()),
+          floorZoneId:Joi.array().items(Joi.number().allow(null).optional()),
+          propertyUnitId:Joi.array().items(Joi.number().allow(null).optional()),
+          teamId:Joi.array().items(Joi.number().allow(null).optional())
+
         });
 
         let result = Joi.validate(payload, schema);
@@ -77,6 +81,7 @@ const announcementController = {
           savedStatus: 2,
           createdAt: currentTime,
           updatedAt: currentTime,
+          createdBy: req.me.id,
           orgId: req.orgId,
         };
 
@@ -201,7 +206,14 @@ const announcementController = {
           inApp: Joi.boolean().required(),
           line: Joi.boolean().required(),
           sms: Joi.boolean().required(),
-          userType:Joi.number().required()
+          userType:Joi.number().required(),
+          companyId:Joi.array().items(Joi.number().required()),
+          projectId:Joi.array().items(Joi.number().required()),
+          buildingPhaseId:Joi.array().items(Joi.number().allow(null).optional()),
+          floorZoneId:Joi.array().items(Joi.number().allow(null).optional()),
+          propertyUnitId:Joi.array().items(Joi.number().allow(null).optional()),
+          teamId:Joi.array().items(Joi.number().allow(null).optional())
+
         });
 
         let result = Joi.validate(payload, schema);
@@ -220,6 +232,7 @@ const announcementController = {
           savedStatus: 1,
           createdAt: currentTime,
           updatedAt: currentTime,
+          createdBy: req.me.id,
           orgId: req.orgId,
         };
 
@@ -456,40 +469,27 @@ const announcementController = {
             });
           }
 
-          let [announcementDetails,users] = await Promise.all([
+          let [announcementDetails] = await Promise.all([
               knex
               .from('announcement_master')
-              // .leftJoin('announcement_user_master','announcement_master.id','announcement_user_master.announcementId')
-              // .leftJoin('user_house_allocation','announcement_user_master.userId','user_house_allocation.userId')
-              // .leftJoin('property_units','user_house_allocation.houseId','property_units.id')
-              // .leftJoin('floor_and_zones','property_units.floorZoneId','floor_and_zones.id')
-              // .leftJoin('buildings_and_phases','property_units.buildingPhaseId','bildings_and_phases.id')
-              // .leftJoin('projects','property_units.projectId','projects.id')
-              // .leftJoin('companies','property_units.companyId','companies.id')
-              // .leftJoin('users','announcement_user_master.userId','users.id')
               .select([
                 'announcement_master.*',
-                // 'users.name',
-                // 'companies.companyName',
-                // 'companies.id',
-                // 'projects.projectName',
-                // 'projects.id',
-                // 'buildings_and_phases.buildingPhaseCode',
-                // 'buildings_and_phases.description',
-                // 'floor_and_zones.floorZoneCode',
-                // 'floor_and_zones.description',
-                // 'property_units.unitNumber',
-                // 'property_units.description',
               ])
               .where('announcement_master.id',id)
               .first(),
-              // knex
-              // .from('')
+             
           ])
+          let companies = await knex
+          .from('companies')
+          .select([
+            'companies.companyName'
+          ])
+          .whereIn('companies.id',announcementDetails.companyId)
 
           return res.status(200).json({
             announcementDetails: {
               ...announcementDetails,
+              companies
               
             },
             message: "Announcement Details !",
