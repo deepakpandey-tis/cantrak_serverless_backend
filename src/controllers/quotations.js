@@ -2347,17 +2347,19 @@ const quotationsController = {
 
 
 
-                    if (st.invoiceData) {
+                    //  if (st.invoiceData) {
 
-                        if (st.invoiceData[0]) {
+                    // if (st.invoiceData[0]) {
 
 
-
-                            chargeUnitPrice = st.invoiceData[0].charges[j].rate;
-                            chargeTotalPrice = st.invoiceData[0].charges[j].rate * st.invoiceData[0].charges[j].totalHours;
-                        }
-                    }
+                    //     chargeUnitPrice = st.invoiceData[0].charges[j].rate;
+                    //     chargeTotalPrice = st.invoiceData[0].charges[j].rate * st.invoiceData[0].charges[j].totalHours;
+                    // }
+                    // }
                     j++;
+
+                    chargeUnitPrice = charge.rate;
+                    chargeTotalPrice = charge.totalHours * charge.rate;
 
                     chargeTotalCost = charge.totalHours * charge.rate;
 
