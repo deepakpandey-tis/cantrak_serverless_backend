@@ -164,7 +164,7 @@ const dashboardController = {
                     "announcement_user_master.announcementId",
                     "announcement_master.id"
                 )
-                .where({ "announcement_user_master.orgId": req.orgId, "announcement_user_master.userId": req.me.id,"announcement_master.status": true,"images.entityType": 'announcement_image' })
+                .where({ "announcement_master.savedStatus": 2, "announcement_user_master.orgId": req.orgId, "announcement_user_master.userId": req.me.id,"announcement_master.status": true,"images.entityType": 'announcement_image' })
                 .select(
                     "announcement_master.id as Id",
                     "announcement_master.title as titles",
