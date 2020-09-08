@@ -12,10 +12,10 @@ const announcementNotification = {
 
             if (SHOULD_QUEUE) {
                 await notification.queue(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, __filename);
-                console.log('[notifications][test][test-notification][send]: All Notifications Queued');
+                console.log('[notifications][announcement][announcement-notification][send]: All Notifications Queued');
             } else {
                 await notification.send(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, announcementNotification);
-                console.log('[notifications][test][test-notification][send]: All Notifications Sent');
+                console.log('[notifications][announcement][announcement-notification][send]: All Notifications Sent');
             }
 
         }catch(err){
