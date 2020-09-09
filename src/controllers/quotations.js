@@ -2368,6 +2368,7 @@ const quotationsController = {
                 }
 
 
+
                 let totalRowSpan = 0;
 
                 totalRowSpan = Number(updatePartData.length) + Number(updateChargeData.length);
