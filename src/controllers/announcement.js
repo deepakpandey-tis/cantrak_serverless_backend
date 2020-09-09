@@ -319,6 +319,7 @@ const announcementController = {
                 "announcement_user_master.announcementId"
               )
               .where("announcement_master.orgId", req.orgId)
+              .where("announcement_master.status",true)
               .where((qb) => {
                 if (title) {
                   qb.where("announcement_master.title", title);
@@ -355,6 +356,7 @@ const announcementController = {
                 
               ])
               .where("announcement_master.orgId", req.orgId)
+              .where("announcement_master.status",true)
               .where((qb) => {
                 if (title) {
                   qb.where("announcement_master.title", title);
@@ -398,6 +400,7 @@ const announcementController = {
               "announcement_user_master.announcementId"
             )
             .where("announcement_master.orgId", req.orgId)
+            .where("announcement_master.status",true)
             .groupBy([
                 "announcement_master.id",
                 
@@ -418,6 +421,7 @@ const announcementController = {
                 "announcement_master.userType"
               ])
               .where("announcement_master.orgId", req.orgId)
+              .where("announcement_master.status",true)
               .groupBy([
                 "announcement_master.id",
                 
@@ -606,6 +610,42 @@ const announcementController = {
         });
           
       }
+  },
+  deleteAnnouncementById:async(req,res)=>{
+    try {
+      let id = req.body.id
+      let payload = req.body
+
+      const schema = Joi.object().keys({
+        id: Joi.string().required(),
+      });
+
+      const result = Joi.validate(payload, schema);
+
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+        });
+      }
+
+      let announcementResult = await knex('announcement_master')
+      .update({'status':false})
+      .where({'id':id})
+
+      return res.status(200).json({
+        data:{
+          announcementResult,
+          message:'Announcement deleted successfully'
+        }
+      })
+    } catch (err) {
+      console.log("controller[announcement][announcementDetails]");
+
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+      
+    }
   }
 };
 module.exports = announcementController;
