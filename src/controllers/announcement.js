@@ -48,7 +48,7 @@ const announcementController = {
 
         const schema = Joi.object().keys({
           title: Joi.string().required(),
-          description: Joi.string().required(),
+          description: Joi.string().allow("").optional(),
           url: Joi.string().allow("").optional(),
           email: Joi.boolean().required(),
           webPush: Joi.boolean().required(),
@@ -199,7 +199,7 @@ const announcementController = {
 
         const schema = Joi.object().keys({
           title: Joi.string().required(),
-          description: Joi.string().required(),
+          description: Joi.string().allow("").optional(),
           url: Joi.string().allow("").optional(),
           email: Joi.boolean().required(),
           webPush: Joi.boolean().required(),
@@ -319,6 +319,7 @@ const announcementController = {
                 "announcement_user_master.announcementId"
               )
               .where("announcement_master.orgId", req.orgId)
+              .where("announcement_master.status",true)
               .where((qb) => {
                 if (title) {
                   qb.where("announcement_master.title", title);
@@ -355,6 +356,7 @@ const announcementController = {
                 
               ])
               .where("announcement_master.orgId", req.orgId)
+              .where("announcement_master.status",true)
               .where((qb) => {
                 if (title) {
                   qb.where("announcement_master.title", title);
@@ -398,6 +400,7 @@ const announcementController = {
               "announcement_user_master.announcementId"
             )
             .where("announcement_master.orgId", req.orgId)
+            .where("announcement_master.status",true)
             .groupBy([
                 "announcement_master.id",
                 
@@ -418,6 +421,7 @@ const announcementController = {
                 "announcement_master.userType"
               ])
               .where("announcement_master.orgId", req.orgId)
+              .where("announcement_master.status",true)
               .groupBy([
                 "announcement_master.id",
                 
@@ -456,6 +460,13 @@ const announcementController = {
       try {
           let id = req.body.id
           let payload = req.body
+          let companies;
+          let projects;
+          let buildings;
+          let floors;
+          let propertyUnit;
+          let users;
+          let teams;
           console.log("id of announcement",id)
           const schema = Joi.object().keys({
             id: Joi.string().required(),
@@ -469,27 +480,122 @@ const announcementController = {
             });
           }
 
-          let [announcementDetails] = await Promise.all([
+          let [announcementDetails, images] = await Promise.all([
               knex
               .from('announcement_master')
+              // .leftJoin('announcement_user_master','announcement_master.id','announcement_user_master.announcementId')
+              // .leftJoin('users','announcement_user_master.userId','users.id')
               .select([
-                'announcement_master.*',
+                'announcement_master.id',
+                'announcement_master.inApp',
+                'announcement_master.line',
+                'announcement_master.sms',
+                'announcement_master.email',
+                'announcement_master.webPush',
+                'announcement_master.title',
+                'announcement_master.url',
+                'announcement_master.userType',
+                'announcement_master.description',
+                'announcement_master.savedStatus',
+                'announcement_master.createdAt',
+                'announcement_master.updatedAt',
+                'announcement_master.companyId',
+                'announcement_master.projectId',
+                'announcement_master.buildingPhaseId',
+                'announcement_master.floorZoneId',
+                'announcement_master.propertyUnitId',
+                'announcement_master.teamId',
               ])
               .where('announcement_master.id',id)
               .first(),
+              knex
+              .from('images')
+              .where({ entityId:id, entityType: "announcement_image" }),
              
           ])
-          let companies = await knex
+          if(announcementDetails.companyId){
+          companies = await knex
           .from('companies')
           .select([
-            'companies.companyName'
+            'companies.companyName',
+            'companies.companyId'
           ])
           .whereIn('companies.id',announcementDetails.companyId)
+        }
+
+        if(announcementDetails.projectId){
+          projects = await knex
+          .from('projects')
+          .select([
+            'projects.id',
+            'projects.projectName',
+            'projects.project'
+          ])
+          .whereIn('projects.id',announcementDetails.projectId)
+        }
+        if(announcementDetails.buildingPhaseId){
+          buildings = await knex
+          .from('buildings_and_phases')
+          .select([
+            'buildings_and_phases.buildingPhaseCode',
+            'buildings_and_phases.description'
+          ])
+          .whereIn('buildings_and_phases.id',announcementDetails.buildingPhaseId)
+        }
+        if(announcementDetails.floorZoneId){
+          floors = await knex
+          .from('floor_and_zones')
+          .select([
+            'floor_and_zones.floorZoneCode',
+            'floor_and_zones.description'
+          ])
+          .whereIn('floor_and_zones.id',announcementDetails.floorZoneId)
+        }
+        if(announcementDetails.propertyUnitId){
+          propertyUnit = await knex
+          .from('property_units')
+          .select([
+            'property_units.unitNumber',
+            'property_units.description'
+          ])
+          .whereIn('property_units.id',announcementDetails.propertyUnitId)
+        }
+         users = await knex
+        .from('announcement_user_master')
+        .select([
+          'announcement_user_master.userId'
+        ])
+        .where('announcement_user_master.announcementId',announcementDetails.id)
+
+        const Parallel = require("async-parallel");
+        users = await Parallel.map(users, async(pd)=>{
+          let users = await knex
+          .from('users')
+          .select([
+            'users.id',
+            'users.userName'
+          ])
+          .where('users.id',pd.userId)
+          .first()
+          return {
+            ...users
+          }
+        })
+
+        if(announcementDetails.userType == 1 && announcementDetails.teamId){
+          teams = await knex
+          .from('teams')
+          .select(['teams.teamId','teams.teamName'])
+          .whereIn('teams.teamId',announcementDetails.teamId)
+        }
+
+
+
 
           return res.status(200).json({
             announcementDetails: {
               ...announcementDetails,
-              companies
+              companies,projects,buildings,floors,propertyUnit,users,teams,images
               
             },
             message: "Announcement Details !",
@@ -504,6 +610,42 @@ const announcementController = {
         });
           
       }
+  },
+  deleteAnnouncementById:async(req,res)=>{
+    try {
+      let id = req.body.id
+      let payload = req.body
+
+      const schema = Joi.object().keys({
+        id: Joi.string().required(),
+      });
+
+      const result = Joi.validate(payload, schema);
+
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+        });
+      }
+
+      let announcementResult = await knex('announcement_master')
+      .update({'status':false})
+      .where({'id':id})
+
+      return res.status(200).json({
+        data:{
+          announcementResult,
+          message:'Announcement deleted successfully'
+        }
+      })
+    } catch (err) {
+      console.log("controller[announcement][announcementDetails]");
+
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+      
+    }
   }
 };
 module.exports = announcementController;

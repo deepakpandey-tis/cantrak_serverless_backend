@@ -17,4 +17,6 @@ router.post('/save-announcement-as-draft',authMiddleware.isAuthenticated,announc
 router.post('/get-announcement-list',authMiddleware.isAuthenticated,announcementController.getAnnouncementList)
 
 router.post('/get-announcement-details',authMiddleware.isAuthenticated,announcementController.getAnnouncementDeatails)
+
+router.post('/delete-announcement',authMiddleware.isAuthenticated,announcementController.deleteAnnouncementById)
 module.exports = router;
