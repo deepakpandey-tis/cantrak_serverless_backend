@@ -153,18 +153,24 @@ const dashboardController = {
             let announcement;
 
             announcement = await knex
-                .from("announcement_user_master")
+                .from("announcement_master")
                 .innerJoin(
                     "images",
-                    "announcement_user_master.announcementId",
+                    "announcement_master.id",
                     "images.entityId"
                 )
                 .innerJoin(
-                    "announcement_master",
-                    "announcement_user_master.announcementId",
-                    "announcement_master.id"
+                    "announcement_user_master",
+                    "announcement_master.id",
+                    "announcement_user_master.announcementId"
                 )
-                .where({ "announcement_master.savedStatus": 2, "announcement_user_master.orgId": req.orgId, "announcement_user_master.userId": req.me.id,"announcement_master.status": true,"images.entityType": 'announcement_image' })
+                .where({ 
+                    "announcement_master.savedStatus": 2,
+                    "announcement_user_master.orgId": req.orgId,
+                    "announcement_user_master.userId": req.me.id,
+                    "announcement_master.status": true,
+                    "images.entityType": 'announcement_image'
+                 })
                 .select(
                     "announcement_master.id as Id",
                     "announcement_master.title as titles",
