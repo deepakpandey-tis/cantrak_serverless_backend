@@ -630,7 +630,7 @@ const announcementController = {
 
       let announcementResult = await knex('announcement_master')
       .update({'status':false})
-      .where({'id':id})
+      .where({'id':id,'orgId':req.orgId})
 
       return res.status(200).json({
         data:{
@@ -646,6 +646,83 @@ const announcementController = {
       });
       
     }
+  },
+
+  resendAnnouncementNotification:async(req,res)=>{
+    try {
+      let userId = req.body.userId
+    } catch (err) {
+      
+    }
   }
+  // publishDraftAnnouncement:async(req,res)=>{
+  //   try {
+  //     let userId =req.body.userId
+  //     let id = req.body.id
+
+  //     await knex.transaction(async (trx) => {
+
+
+  //     let ALLOWED_CHANNELS = [];
+  //     if (req.body.email == true) {
+  //       ALLOWED_CHANNELS.push("EMAIL");
+  //     }
+  //     if (req.body.webPush == true) {
+  //       ALLOWED_CHANNELS.push("WEB_PUSH");
+  //     }
+  //     if (req.body.inApp == true) {
+  //       ALLOWED_CHANNELS.push("IN_APP");
+  //     }
+  //     if (req.body.line == true) {
+  //       ALLOWED_CHANNELS.push("LINE_NOTIFY");
+  //     }
+  //     if (req.body.sms == true) {
+  //       ALLOWED_CHANNELS.push("SMS");
+  //     }
+
+
+  //     let currentTime = new Date().getTime();
+
+  //     let updatePayload = {
+  //       savedStatus: 2,
+  //       updatedAt: currentTime,
+  //     };
+
+  //     let announcementNotificationResult = await knex
+  //       .update(updatePayload)
+  //       .where({ id: id })
+  //       .returning(["*"])
+  //       .transacting(trx)
+  //       .into("announcement_master");
+  //     announcementResult = announcementNotificationResult[0];
+
+  //     let sender = await knex.from("users").where({ id: req.me.id }).first();
+
+  //     if (userId && userId.length > 0) {
+  //       for (let id of userId) {
+  //         let receiver = await knex.from("users").where({ id: id }).first();
+
+  //         await announcementNotification.send(
+  //           sender,
+  //           receiver,
+  //           dataNos,
+  //           ALLOWED_CHANNELS
+  //         );
+  //       }
+  //     }
+  //    });
+  //    res.status(200).json({
+  //     data: {
+  //       announcementResult,
+  //     },
+  //     message: "Announcement Published successfully !",
+  //   });
+
+  //   } catch (err) {
+  //     console.log("[controllers][announcement][publishAnnouncement] : Error", err);
+
+      
+  //   }
+  // }
 };
 module.exports = announcementController;
