@@ -2355,15 +2355,28 @@ const partsController = {
                 ])
             }
 
+
             const Parallel = require('async-parallel');
             rows = await Parallel.map(rows, async st => {
+
+                let quantity = 0.000;
+                let unitCost = 0.000;
+
+                if (st.Quantity) {
+
+                    quantity = st.Quantity.toFixed(3)
+                }
+
+                if (st["Unit Cost"]) {
+
+                    unitCost = st["Unit Cost"].toFixed(2);
+                }
 
 
                 return {
                     ...st,
-                    Quantity: st.Quantity.toFixed(3),
-                    "Unit Cost": st["Unit Cost"].toFixed(2)
-
+                    Quantity: quantity,
+                    "Unit Cost": unitCost
                 }
 
             })
