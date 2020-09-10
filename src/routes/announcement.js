@@ -19,4 +19,6 @@ router.post('/get-announcement-list',authMiddleware.isAuthenticated,announcement
 router.post('/get-announcement-details',authMiddleware.isAuthenticated,announcementController.getAnnouncementDeatails)
 
 router.post('/delete-announcement',authMiddleware.isAuthenticated,announcementController.deleteAnnouncementById)
+
+router.post('/resend-announcement-notification',authMiddleware.isAuthenticated,announcementController.resendAnnouncementNotification)
 module.exports = router;
