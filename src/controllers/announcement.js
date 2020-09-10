@@ -163,6 +163,67 @@ const announcementController = {
     }
   },
 
+  resendAnnouncementNotification:async(req,res)=>{
+    try {
+      let userId = req.body.userId
+      let id = req.body.id
+
+      console.log('req data for resend notification',req.body)
+
+      let ALLOWED_CHANNELS = [];
+      if (req.body.email == true) {
+        ALLOWED_CHANNELS.push("EMAIL");
+      }
+      if (req.body.webPush == true) {
+        ALLOWED_CHANNELS.push("WEB_PUSH");
+      }
+      if (req.body.inApp == true) {
+        ALLOWED_CHANNELS.push("IN_APP");
+      }
+      if (req.body.line == true) {
+        ALLOWED_CHANNELS.push("LINE_NOTIFY");
+      }
+      if (req.body.sms == true) {
+        ALLOWED_CHANNELS.push("SMS");
+      }
+
+      let dataNos = {
+        payload: {
+          title: req.body.title,
+          url: req.body.url,
+          description: req.body.description,
+        },
+      };
+
+      let sender = await knex.from("users").where({ id: req.me.id }).first();
+
+      if (userId && userId.length > 0) {
+        for (let id of userId) {
+
+          let receiver = await knex.from("users").where({ id: id }).first();
+
+          await announcementNotification.send(
+            sender,
+            receiver,
+            dataNos,
+            ALLOWED_CHANNELS
+          );
+        }
+      }
+      
+      return res.status(200).json({
+        message: "Notification sent successfully !",
+      })
+
+    } catch (err) {
+       console.log("controller[announcement][announcementDetails]");
+
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
+
   generateAnnouncementId: async (req, res) => {
     try {
       const generatedId = await knex("announcement_master")
@@ -648,13 +709,7 @@ const announcementController = {
     }
   },
 
-  resendAnnouncementNotification:async(req,res)=>{
-    try {
-      let userId = req.body.userId
-    } catch (err) {
-      
-    }
-  }
+ 
   // publishDraftAnnouncement:async(req,res)=>{
   //   try {
   //     let userId =req.body.userId

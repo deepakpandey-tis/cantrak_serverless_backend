@@ -2229,7 +2229,7 @@ const partsController = {
     partRequisitionLogList: async(req, res) => {
         try {
 
-            let { partId, partCode, partName, serviceOrderNo, workOrderId, adjustType } = req.body
+            let { partId, partCode, partName, serviceOrderNo, workOrderId, adjustType, pId } = req.body
             let reqData = req.query;
             let total, rows
             let pagination = {};
@@ -2238,7 +2238,7 @@ const partsController = {
             if (page < 1) page = 1;
             let offset = (page - 1) * per_page;
 
-            if (partId || partName || serviceOrderNo || workOrderId || adjustType || partCode) {
+            if (partId || partName || serviceOrderNo || workOrderId || adjustType || partCode || pId) {
 
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from("part_ledger")
@@ -2265,6 +2265,10 @@ const partsController = {
                         if (partCode) {
                             qb.where('part_master.partCode', 'iLIKE', `%${partCode}%`)
 
+                        }
+
+                        if (pId) {
+                            qb.where('part_master.id', pId)
                         }
 
                     })
@@ -2312,6 +2316,10 @@ const partsController = {
                         if (partCode) {
                             qb.where('part_master.partCode', 'iLIKE', `%${partCode}%`)
 
+                        }
+
+                        if (pId) {
+                            qb.where('part_master.id', pId)
                         }
 
                     })
@@ -2355,15 +2363,28 @@ const partsController = {
                 ])
             }
 
+
             const Parallel = require('async-parallel');
             rows = await Parallel.map(rows, async st => {
+
+                let quantity = 0.000;
+                let unitCost = 0.000;
+
+                if (st.Quantity) {
+
+                    quantity = st.Quantity.toFixed(3)
+                }
+
+                if (st["Unit Cost"]) {
+
+                    unitCost = st["Unit Cost"].toFixed(2);
+                }
 
 
                 return {
                     ...st,
-                    Quantity: st.Quantity.toFixed(2),
-                    "Unit Cost": st["Unit Cost"].toFixed(2)
-
+                    Quantity: quantity,
+                    "Unit Cost": unitCost
                 }
 
             })

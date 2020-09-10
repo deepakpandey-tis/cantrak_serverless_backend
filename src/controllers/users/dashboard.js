@@ -153,24 +153,23 @@ const dashboardController = {
             let announcement;
 
             announcement = await knex
-                .from("announcement_user_master")
+                .from("announcement_master")              
                 .innerJoin(
-                    "images",
-                    "announcement_user_master.announcementId",
-                    "images.entityId"
+                    "announcement_user_master",
+                    "announcement_master.id",
+                    "announcement_user_master.announcementId"
                 )
-                .innerJoin(
-                    "announcement_master",
-                    "announcement_user_master.announcementId",
-                    "announcement_master.id"
-                )
-                .where({ "announcement_master.savedStatus": 2, "announcement_user_master.orgId": req.orgId, "announcement_user_master.userId": req.me.id,"announcement_master.status": true,"images.entityType": 'announcement_image' })
+                .where({ 
+                    "announcement_master.savedStatus": 2,
+                    "announcement_user_master.orgId": req.orgId,
+                    "announcement_user_master.userId": req.me.id,
+                    "announcement_master.status": true
+                 })
                 .select(
                     "announcement_master.id as Id",
                     "announcement_master.title as titles",
                     "announcement_master.url as Url",
                     "announcement_master.description as details",
-                    "images.s3Url as img",
                     "announcement_master.createdAt as announcementDate"
                 )
                 .orderBy('announcement_master.id', 'desc')
@@ -178,10 +177,19 @@ const dashboardController = {
 
 
                 const Parallel = require("async-parallel");
-                announcement = await Parallel.map(announcement, async (pp) => {                  
+                announcement = await Parallel.map(announcement, async (pp) => {   
+                    
+                    let imageResult = await knex
+                    .from("images")
+                    .select("s3Url as img", "title", "name")
+                    .where({
+                        entityId: pp.Id,
+                        entityType: "announcement_image"
+                    }).first();
 
                     return {
                         ...pp,
+                        imageResult,
                         URL: process.env.SITE_URL
                     };
                 });
