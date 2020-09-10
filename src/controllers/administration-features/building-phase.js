@@ -846,7 +846,7 @@ const buildingPhaseController = {
         try {
             let projectId = req.body
             let orgId = req.orgId;
-            console.log("projectId for building", projectId)
+            console.log("projectId for buildings", projectId)
 
 
             let buildings = await knex("buildings_and_phases")
@@ -857,7 +857,11 @@ const buildingPhaseController = {
 
             return res
                 .status(200)
-                .json({ data: { buildings }, message: "Buildings list" });
+                .json({ 
+                    data: { 
+                    buildings
+                 },
+                message: "Buildings list" });
 
         } catch (err) {
             console.log(
