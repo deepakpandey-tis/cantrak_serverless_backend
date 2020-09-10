@@ -151,7 +151,7 @@ const dashboardController = {
         try {
 
             let announcement;
-
+            let img;
             announcement = await knex
                 .from("announcement_master")              
                 .innerJoin(
@@ -181,13 +181,13 @@ const dashboardController = {
                     
                     let imageResult = await knex
                     .from("images")
-                    .select("s3Url as img")
+                    .select("s3Url")
                     .where({
                         entityId: pp.Id,
                         entityType: "announcement_image"
                     }).first();
 
-                    let img = imageResult.img
+                    img = imageResult.s3Url;
                     return {
                         ...pp,
                         img,
