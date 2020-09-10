@@ -181,7 +181,7 @@ const dashboardController = {
                     
                     let imageResult = await knex
                     .from("images")
-                    .select("s3Url")
+                    .select("images.s3Url")
                     .where({
                         entityId: pp.Id,
                         entityType: "announcement_image"
