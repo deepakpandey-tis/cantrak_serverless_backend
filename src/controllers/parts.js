@@ -2361,7 +2361,7 @@ const partsController = {
 
                 return {
                     ...st,
-                    Quantity: st.Quantity.toFixed(2),
+                    Quantity: st.Quantity.toFixed(3),
                     "Unit Cost": st["Unit Cost"].toFixed(2)
 
                 }
