@@ -963,9 +963,9 @@ const serviceRequestController = {
                         "buildings_and_phases.description as buildingDescription",
                         "incident_categories.descriptionEng as problemDescription",
                         "requested_by.email as requestedByEmail",
-                        "teams.teamName",
-                        "teams.teamCode",
-                        "mainUsers.name as mainUser",
+                        //"teams.teamName",
+                        //"teams.teamCode",
+                        //"mainUsers.name as mainUser",
                         "service_orders.id as SO Id",
                         "property_units.id as unitId",
                         "service_orders.displayId as SO#",
@@ -1211,9 +1211,9 @@ const serviceRequestController = {
                         "buildings_and_phases.description as buildingDescription",
                         "incident_categories.descriptionEng as problemDescription",
                         "requested_by.email as requestedByEmail",
-                        "teams.teamName",
-                        "teams.teamCode",
-                        "mainUsers.name as mainUser",
+                        //"teams.teamName",
+                        //"teams.teamCode",
+                        //"mainUsers.name as mainUser",
                         "service_orders.id as SO Id",
                         "property_units.id as unitId",
                         "service_orders.displayId as SO#",
@@ -1222,6 +1222,7 @@ const serviceRequestController = {
                         "companies.companyId",
                         "projects.project",
                         "projects.projectName",
+                        "service_requests.id",
                     ])
                     .groupBy([
                         "service_requests.id",
@@ -1817,18 +1818,51 @@ const serviceRequestController = {
             // let Parallel = require('async-parallel');
             pagination.data = await Parallel.map(rows, async pd => {
 
+
+
+                console.log("===================", pd, "==========================")
+
+                let teamName = '';
+                let teamCode = '';
+                let mainUser = '';
+
+                let teamResult = await knex.from('assigned_service_team')
+                    .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                    .leftJoin('users as mainUsers', 'assigned_service_team.userId', 'mainUsers.id')
+                    .select(['teams.teamName', 'teams.teamCode', 'mainUsers.name as mainUser'])
+                    .where({
+                        'assigned_service_team.orgId': req.orgId,
+                        'assigned_service_team.entityType': 'service_requests',
+                        'assigned_service_team.entityId': pd["S Id"]
+                    }).first();
+
+                if (teamResult) {
+
+
+                    teamName = teamResult.teamName;
+                    teamCode = teamResult.teamCode;
+                    mainUser = teamResult.mainUser;
+
+                }
+
                 let houseResult = await knex.from('user_house_allocation').select('userId').where({ houseId: pd.unitId }).first().orderBy('id', 'desc')
 
                 if (houseResult) {
                     let tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
                     return {
                         ...pd,
-                        "Tenant Name": tetantResult.name
+                        "Tenant Name": tetantResult.name,
+                        "teamName": teamName,
+                        "teamCode": teamCode,
+                        "mainUser": mainUser
                     }
                 } else {
                     return {
                         ...pd,
-                        "Tenant Name": ''
+                        "Tenant Name": '',
+                        "teamName": teamName,
+                        "teamCode": teamCode,
+                        "mainUser": mainUser
                     }
                 }
 
