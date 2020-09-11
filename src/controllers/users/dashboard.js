@@ -189,11 +189,12 @@ const dashboardController = {
                     }).first();
 
                     console.log("imagesResult", imageResult);
+
                    
 
                     return {
                         ...pp,
-                        img: imageResult.s3Url,
+                        img: imageResult,
                         URL: process.env.SITE_URL
                     };
                 });
