@@ -11,6 +11,8 @@ const emailHelper = require("../helpers/email");
 const facilityHelper = require("../helpers/facility");
 
 const _ = require("lodash");
+const bookingApprovedNotification = require("../notifications/facility/facility-booking-approved-notification");
+const bookingCanceledNotification = require("../notifications/facility/facility-booking-canceled-notification");
 
 const facilityBookingController = {
   addFacility: async (req, res) => {
@@ -2351,6 +2353,26 @@ const facilityBookingController = {
           facilityName: facilityData.name,
         },
       });
+
+      let ALLOWED_CHANNELS = ["IN_APP","LINE_NOTIFY"]
+      let dataNos = {
+        payload: {
+          date:moment(req.body.date,"x").format("YYYY-MM-DD"),
+          time:moment(req.body.date,"x").format("hh:mm A"),
+          facility:req.body.facilityName
+        },
+      };
+
+      let sender = await knex.from("users").where({ id: req.me.id }).first();
+      let receiver = await knex.from("users").where({ id: req.body.tenantId }).first();
+
+
+      await bookingCanceledNotification.send(
+        sender,
+        receiver,
+        dataNos,
+        ALLOWED_CHANNELS
+      )
       return res.status(200).json({ message: "cancelled!", data: cancelled });
     } catch (err) {
       res.status(500).json({
@@ -2362,9 +2384,18 @@ const facilityBookingController = {
   /*APPROVE FACILITY */
   approveFacility: async (req, res) => {
     try {
-      let payload = req.body;
+      // let payload = req.body;
+      let payLoad = req.body
+
+      let payload = _.omit(payLoad,[
+        "tenantId",
+        "date",
+        "facilityName"
+      ])
+
       const schema = Joi.object().keys({
         id: Joi.number().required(),
+        
       });
 
       const result = Joi.validate(payload, schema);
@@ -2420,6 +2451,28 @@ const facilityBookingController = {
             facilityName: facilityData.name,
           },
         });
+
+        let ALLOWED_CHANNELS = ["IN_APP","LINE_NOTIFY"]
+        let dataNos = {
+          payload: {
+            date:moment(req.body.date,"x").format("YYYY-MM-DD"),
+            time:moment(req.body.date,"x").format("hh:mm A"),
+            facility:req.body.facilityName
+          },
+        };
+
+        let sender = await knex.from("users").where({ id: req.me.id }).first();
+        let receiver = await knex.from("users").where({ id: req.body.tenantId }).first();
+
+
+        await bookingApprovedNotification.send(
+          sender,
+          receiver,
+          dataNos,
+          ALLOWED_CHANNELS
+        )
+
+
 
         return res
           .status(200)
