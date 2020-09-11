@@ -152,7 +152,7 @@ const dashboardController = {
 
             let announcement;
             let img;
-            let imageResult;
+           
             announcement = await knex
                 .from("announcement_master")              
                 .innerJoin(
@@ -180,7 +180,7 @@ const dashboardController = {
                 const Parallel = require("async-parallel");
                 announcement = await Parallel.map(announcement, async (pp) => {   
                     
-                    imageResult = await knex
+                    let imageResult = await knex
                     .from("images")
                     .select("s3Url", "title", "name")
                     .where({
@@ -189,13 +189,11 @@ const dashboardController = {
                     }).first();
 
                     console.log("imagesResult", imageResult);
-
-                    img = imageResult.s3Url;
-                    console.log("img", img);
+                   
 
                     return {
                         ...pp,
-                        img,
+                        img: imageResult.s3Url,
                         URL: process.env.SITE_URL
                     };
                 });
