@@ -4,33 +4,31 @@ const notification = require('../core/notification');
 const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY', 'SMS'];
 const SHOULD_QUEUE = process.env.IS_OFFLINE ? false : true;
 
-const bookingApprovedNotification = {
+const addOutGoingNotification = {
     send: async (sender, receiver, data, allowedChannels = ALLOWED_CHANNELS) => {
         try {
 
             // console.log('[notifications][test][test-notification][send]: Sender:', sender);
             // console.log('[notifications][test][test-notification][send]: Receiver:', receiver);
-            console.log('[notifications][facility-booking-approved][facility-booking-approved-notification][send]: Data:', data);
+            console.log('[notifications][add-outgoing][add-outgoing-notification][send]: Data:', data);
 
             if (SHOULD_QUEUE) {
                 await notification.queue(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, __filename);
-                console.log('[notifications][facility-booking-approved][facility-booking-approved-notification][send]: All Notifications Queued');
+                console.log('[notifications][add-outgoing][add-outgoing-notification][send]: All Notifications Queued');
             } else {
-                await notification.send(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, bookingApprovedNotification);
-                console.log('[notifications][facility-booking-approved][facility-booking-approved-notification][send]: All Notifications Sent');
+                await notification.send(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, addOutGoingNotification);
+                console.log('[notifications][add-outgoing][add-outgoing-notification][send]: All Notifications Sent');
             }
 
 
         } catch (err) {
-            console.log('[notifications][facility-booking-approved][facility-booking-approved-notification][send]:  Error', err);
+            console.log('[notifications][add-outgoing][add-outgoing-notification][send]:  Error', err);
             return { code: 'UNKNOWN_ERROR', message: err.message, error: err };
         }
     },
 
 
     sendInAppNotification: async (sender, receiver, data) => {
-        // let name = data.payload.
-        console.log("data of payload inapp",data)
 
         data = {
             orgId: sender.orgId,
@@ -38,8 +36,8 @@ const bookingApprovedNotification = {
             receiverId: receiver.id,
             payload: {
                 ...data,
-                subject: 'Facility Booking Approved',
-                body: `Hi!!, ${receiver.name} Your Booking in Facility ${data.payload.facility} made for ${data.payload.date} at ${data.payload.time} is approved.`,
+                subject: 'Test Notification',
+                body: `Hi!!, This is a test notification to all users from ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
@@ -52,7 +50,6 @@ const bookingApprovedNotification = {
                 {
                     action: "explore",
                     title: "Open",
-                    url: `/user/facility/your-bookings`
                 }
             ]
         }
@@ -117,7 +114,7 @@ const bookingApprovedNotification = {
     sendLineNotification: async (sender, receiver, data) => {
         data = {
             receiverId: receiver.id,
-            message: `Hi ${receiver.name} Your Booking in Facility ${data.payload.facility} made for ${data.payload.date} at ${data.payload.time} is approved.`
+            message: `Hi ${receiver.name} this is simple text message send to test the notification`
         };
 
         return data;
@@ -134,4 +131,4 @@ const bookingApprovedNotification = {
 
 };
 
-module.exports = bookingApprovedNotification;
+module.exports = addOutGoingNotification;
