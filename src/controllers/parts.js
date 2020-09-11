@@ -2538,7 +2538,7 @@ const partsController = {
                 data[0].D == "PART_CATEGORY_CODE" &&
                 data[0].E == "COMPANY_ID" &&
                 data[0].F == "quantity" &&
-                data[0].G == "unit_cost"
+                data[0].G == "AVG_UNIT_COST"
                 // data[0].H == "MINIMUM_QUANTITY"
             ) {
 
@@ -2726,8 +2726,9 @@ const partsController = {
                     "part_category_master.categoryName as PART_CATEGORY_CODE",
                     "companies.companyId as COMPANY_ID",
                     knex.raw('SUM("part_ledger"."quantity") as QUANTITY'),
-                    knex.raw('MAX("part_ledger"."unitCost") as UNIT_COST'),
-                    "part_master.minimumQuantity as MINIMUM_QUANTITY"
+                    //knex.raw('MAX("part_ledger"."unitCost") as UNIT_COST'),
+                    "part_master.avgUnitPrice as AVG_UNIT_COST",
+                    "part_master.minimumQuantity as MINIMUM_QUANTITY",
 
                 ])
                 .where(qb => {
