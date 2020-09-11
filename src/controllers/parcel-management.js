@@ -1163,7 +1163,7 @@ const parcelManagementController = {
         let tenantId = req.body.tenantId[0]
 
         if(req.body.pickedUpType[0] == 2 && req.body.isChecked == true){
-          const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY']
+          const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH']
         let sender = await knex.from("users").where({ id: req.me.id }).first();
 
         let receiver = await knex.from("users").where({ id: tenantId }).first();
