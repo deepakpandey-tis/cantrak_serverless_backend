@@ -168,7 +168,7 @@ const announcementController = {
       let userId = req.body.userId
       let id = req.body.id
 
-      console.log('req data for resend notification',req.body)
+      // console.log('req data for resend notification',req.body)
 
       let ALLOWED_CHANNELS = [];
       if (req.body.email == true) {

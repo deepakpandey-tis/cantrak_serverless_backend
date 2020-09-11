@@ -20,7 +20,7 @@ router.post('/get-pending-parcel-list',authMiddleware.isAuthenticated,parcelMana
 
 router.get('/get-tracking-number-list',authMiddleware.isAuthenticated,parcelManageController.getTrackingNumberList)
 
-router.post('/update-parcel-status',authMiddleware.isAuthenticated,parcelManageController.deliverParcel)
+router.post('/update-parcel-status',authMiddleware.isAuthenticated,parcelManageController.updateParcel)
 
 router.post('/update-parcel-details',authMiddleware.isAuthenticated,parcelManagementController.updateParcelDetails)
 
