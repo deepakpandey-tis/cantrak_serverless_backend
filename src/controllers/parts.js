@@ -2229,7 +2229,7 @@ const partsController = {
     partRequisitionLogList: async(req, res) => {
         try {
 
-            let { partId, partCode, partName, serviceOrderNo, workOrderId, adjustType, pId } = req.body
+            let { partId, partCode, partName, serviceOrderNo, workOrderId, adjustType, pId, fromDate, toDate } = req.body
             let reqData = req.query;
             let total, rows
             let pagination = {};
@@ -2238,7 +2238,7 @@ const partsController = {
             if (page < 1) page = 1;
             let offset = (page - 1) * per_page;
 
-            if (partId || partName || serviceOrderNo || workOrderId || adjustType || partCode || pId) {
+            if (partId || partName || serviceOrderNo || workOrderId || adjustType || partCode || pId || fromDate || toDate) {
 
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from("part_ledger")
@@ -2268,7 +2268,13 @@ const partsController = {
                         }
 
                         if (pId) {
-                            qb.where('part_master.id', pId)
+                            qb.where('part_ledger.partId', pId)
+                        }
+
+                        if (fromDate && toDate) {
+
+                            qb.whereBetween('part_ledger.createdAt', [fromDate, toDate])
+
                         }
 
                     })
@@ -2319,7 +2325,13 @@ const partsController = {
                         }
 
                         if (pId) {
-                            qb.where('part_master.id', pId)
+                            qb.where('part_ledger.partId', pId);
+                        }
+
+                        if (fromDate && toDate) {
+
+                            qb.whereBetween('part_ledger.createdAt', [fromDate, toDate])
+
                         }
 
                     })
@@ -4330,7 +4342,7 @@ const partsController = {
                     balance = (Number(openingBalance2) + Number(i)) + Number(o);
 
                     if (openingBalance2 == "" || openingBalance2 == 0) {
-                        openingBalance2 = "-";
+                        openingBalance2 = "";
                     }
 
                     let avgCost = 0;
