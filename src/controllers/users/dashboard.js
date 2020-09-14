@@ -152,6 +152,7 @@ const dashboardController = {
 
             let announcement;
             let img;
+           
             announcement = await knex
                 .from("announcement_master")              
                 .innerJoin(
@@ -163,9 +164,10 @@ const dashboardController = {
                     "announcement_master.savedStatus": 2,
                     "announcement_user_master.orgId": req.orgId,
                     "announcement_user_master.userId": req.me.id,
-                    "announcement_master.status": true
+                    "announcement_master.status": true,
+                    "announcement_master.userType": 2
                  })
-                .select(
+                .select(    
                     "announcement_master.id as Id",
                     "announcement_master.title as titles",
                     "announcement_master.url as Url",
@@ -181,16 +183,17 @@ const dashboardController = {
                     
                     let imageResult = await knex
                     .from("images")
-                    .select("images.s3Url")
+                    .select("s3Url", "title", "name")
                     .where({
                         entityId: pp.Id,
                         entityType: "announcement_image"
                     }).first();
 
-                    img = imageResult.s3Url;
+                    console.log("imagesResult", imageResult);
+
                     return {
                         ...pp,
-                        img,
+                        img: imageResult,
                         URL: process.env.SITE_URL
                     };
                 });

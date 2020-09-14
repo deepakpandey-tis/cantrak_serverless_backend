@@ -13,6 +13,8 @@ const knex = require("../db/knex");
 const fs = require("fs");
 const https = require("https");
 const { whereIn } = require("../db/knex");
+const parcelCollectedNotification = require("../notifications/parcel/parcel-collected-notification");
+const addOutGoingNotification = require("../notifications/parcel/add-outgoing-parcel-notification");
 
 const parcelManagementController = {
   getCompanyListHavingPropertyUnit: async (req, res) => {
@@ -84,6 +86,7 @@ const parcelManagementController = {
         "non_org_user_data",
         "org_user_data",
         "newParcelId",
+        "isChecked"
       ]);
       console.log("payloa data", payLoad);
       await knex.transaction(async (trx) => {
@@ -199,7 +202,27 @@ const parcelManagementController = {
             images.push(d[0]);
           }
         }
+        let dataNos = {
+          payload: {
+            
+          },
+        };
+        let tenantId = req.body.org_user_data.tenantId
+        // console.log("tenantid for notification",tenantId)
 
+        if(req.body.pickedUpType[0] == 2 && req.body.isChecked == true){
+          const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH']
+        let sender = await knex.from("users").where({ id: req.me.id }).first();
+
+        let receiver = await knex.from("users").where({ id: tenantId }).first();
+
+        await addOutGoingNotification.send(
+          sender,
+          receiver,
+          dataNos,
+          ALLOWED_CHANNELS
+        );
+        }
         trx.commit;
       });
       res.status(200).json({
@@ -1111,15 +1134,13 @@ const parcelManagementController = {
     }
   },
 
-  deliverParcel: async (req, res) => {
+  updateParcel: async (req, res) => {
     try {
-      // let payload = req.body
       let insertedImages = [];
       let id = req.body.id;
       let parcelResult = null;
       let parcelRemarks = [];
-      // let {parcelStatus,description}
-      console.log("requested data for image", req.body);
+      console.log("req parcel data", req.body.tenantId[0],req.body.pickedUpType[0]);
 
       const payload = _.omit(req.body, [
         "id",
@@ -1127,11 +1148,13 @@ const parcelManagementController = {
         "signImage",
         "signName",
         "description",
+        "pickedUpType",
+        "tenantId",
+        "isChecked"
       ]);
 
       const schema = Joi.object().keys({
         parcelStatus: Joi.string().required(),
-        // description: Joi.string().allow("").optional(),
         signature: Joi.string().allow("").optional(),
       });
       const result = Joi.validate(payload, schema);
@@ -1154,6 +1177,27 @@ const parcelManagementController = {
         .where("parcel_management.orgId", req.orgId)
         .returning(["*"]);
 
+        let dataNos = {
+          payload: {
+            
+          },
+        };
+        let tenantId = req.body.tenantId[0]
+
+        if(req.body.pickedUpType[0] == 2 && req.body.isChecked == true){
+          const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH']
+        let sender = await knex.from("users").where({ id: req.me.id }).first();
+
+        let receiver = await knex.from("users").where({ id: tenantId }).first();
+
+        await parcelCollectedNotification.send(
+          sender,
+          receiver,
+          dataNos,
+          ALLOWED_CHANNELS
+        );
+
+        }
       let description = req.body.description;
       let idLength = req.body.id.length;
       for (let i = 0; i < idLength; i++) {
