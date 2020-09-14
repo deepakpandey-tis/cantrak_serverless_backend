@@ -634,7 +634,8 @@ const announcementController = {
           .from('users')
           .select([
             'users.id',
-            'users.userName'
+            'users.userName',
+            'users.name as uName'
           ])
           .where('users.id',pd.userId)
           .first()
