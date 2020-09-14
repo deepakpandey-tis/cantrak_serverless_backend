@@ -1145,9 +1145,11 @@ const teamsController = {
             .groupBy(["team_users.id","users.id"])
             .distinct()
 
+            let users = _.uniqBy(teamUser,"id")
+
             res.status(200).json({
                 data: {
-                    teamUsers: teamUser
+                    teamUsers: users
                 },
                 message: "Team user list !"
             })

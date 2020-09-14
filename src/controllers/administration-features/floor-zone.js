@@ -739,7 +739,7 @@ const floorZoneController = {
       let orgId = req.orgId;
 
       let  buildingPhaseId  = req.body;
-      console.log("building phase id",buildingPhaseId)
+      // console.log("building phase id",buildingPhaseId)
 
      let floor = await knex("floor_and_zones")
     //  .innerJoin("buildings_and_phases","floor_and_zones.buildingPhaseId","buildings_and_phases.id")
@@ -747,8 +747,10 @@ const floorZoneController = {
           .whereIn('floor_and_zones.buildingPhaseId',buildingPhaseId)
           .select("*")
           .orderBy('floor_and_zones.description','asc')
-          .groupBy(['floor_and_zones.id'])
+          .groupBy(['floor_and_zones.floorZoneCode','floor_and_zones.id'])
           .distinct()
+
+       
 
           return res.status(200).json({
             data: {
