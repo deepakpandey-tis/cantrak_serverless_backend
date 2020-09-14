@@ -36,8 +36,8 @@ const addOutGoingNotification = {
             receiverId: receiver.id,
             payload: {
                 ...data,
-                subject: 'Test Notification',
-                body: `Hi!!, This is a test notification to all users from ${sender.name}`,
+                subject: 'Parcel Notification',
+                body: `Hi, ${receiver.name} your outgoing parcel is added.`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
@@ -50,6 +50,7 @@ const addOutGoingNotification = {
                 {
                     action: "explore",
                     title: "Open",
+                    url: `/user/parcel`
                 }
             ]
         }
@@ -81,8 +82,8 @@ const addOutGoingNotification = {
             senderId: sender.id,
             receiverId: receiver.id,
             payload: {
-                subject: 'Test Notification',
-                body: `Hi!!, This is a test notification to all users from ${sender.name}`,
+                subject: 'Parcel Notification',
+                body: `Hi, ${receiver.name} your outgoing parcel is added.`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
