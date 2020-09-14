@@ -85,7 +85,7 @@ const bookingCanceledNotification = {
             receiverId: receiver.id,
             payload: {
                 subject: 'Test Notification',
-                body: `Hi!!, This is a test notification to all users from ${sender.name}`,
+                body: `Hi, This is a test notification to all users from ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
@@ -117,7 +117,7 @@ const bookingCanceledNotification = {
     sendLineNotification: async (sender, receiver, data) => {
         data = {
             receiverId: receiver.id,
-            message: `Hi ${receiver.name} Your Booking in Facility ${data.payload.facility} made for "date of booking" at "time of booking" is canceled.`
+            message: `Hi ${receiver.name} Your Booking in Facility ${data.payload.facility} made for ${data.payload.date} at ${data.payload.time} is canceled.`
         };
 
         return data;
