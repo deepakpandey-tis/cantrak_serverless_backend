@@ -857,11 +857,12 @@ const buildingPhaseController = {
 
             return res
                 .status(200)
-                .json({ 
-                    data: { 
-                    buildings
-                 },
-                message: "Buildings list" });
+                .json({
+                    data: {
+                        buildings
+                    },
+                    message: "Buildings list"
+                });
 
         } catch (err) {
             console.log(
@@ -1346,6 +1347,7 @@ const buildingPhaseController = {
                         "property_units.isActive": true,
                         "property_units.buildingPhaseId": buildingId,
                         "property_units.orgId": orgId,
+                        "type": 1
                     })
                     .select('*')
 
