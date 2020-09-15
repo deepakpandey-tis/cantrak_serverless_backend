@@ -381,7 +381,7 @@ const quotationsController = {
 
     addQuotationPart: async(req, res) => {
         try {
-            let part = null;
+            let part = [];
             await knex.transaction(async trx => {
                 let payload = req.body;
                 const schema = Joi.object().keys({
@@ -398,41 +398,60 @@ const quotationsController = {
                     result
                 );
 
-                if (result && result.hasOwnProperty("error") && result.error) {
-                    return res.status(400).json({
-                        errors: [
-                            { code: "VALIDATION_ERROR", message: result.error.message }
-                        ]
-                    });
-                }
+                // if (result && result.hasOwnProperty("error") && result.error) {
+                //     return res.status(400).json({
+                //         errors: [
+                //             { code: "VALIDATION_ERROR", message: result.error.message }
+                //         ]
+                //     });
+                // }
                 let avgUnitPrice;
-                let avgResult = await knex('part_master').where({ id: payload.partId, orgId: req.orgId }).first();
-                if (avgResult) {
-                    avgUnitPrice = avgResult.avgUnitPrice;
-                }
-
-
-
                 let currentTime = new Date().getTime();
-                let insertData = {
-                    unitCost: avgUnitPrice,
-                    quantity: payload.quantity,
-                    status: payload.status,
-                    partId: payload.partId,
-                    entityId: payload.quotationId,
-                    entityType: "quotations",
-                    updatedAt: currentTime,
-                    createdAt: currentTime,
-                    orgId: req.orgId,
-                    avgUnitPrice: avgUnitPrice
-                };
-                let partResult = await knex
-                    .insert(insertData)
-                    .returning(["*"])
-                    .transacting(trx)
-                    .into("assigned_parts");
-                part = partResult[0];
-                trx.commit;
+
+
+                for (let d of payload) {
+
+
+                    if (d.quotationId && d.partId && d.unitCost && d.quantity && d.status) {
+
+
+                        let avgResult = await knex('part_master').where({ id: d.partId, orgId: req.orgId }).first();
+                        if (avgResult) {
+                            avgUnitPrice = avgResult.avgUnitPrice;
+                        }
+
+
+
+                        let insertData = {
+                            unitCost: avgUnitPrice,
+                            quantity: d.quantity,
+                            status: d.status,
+                            partId: d.partId,
+                            entityId: d.quotationId,
+                            entityType: "quotations",
+                            updatedAt: currentTime,
+                            createdAt: currentTime,
+                            orgId: req.orgId,
+                            avgUnitPrice: avgUnitPrice
+                        };
+                        let partResult = await knex
+                            .insert(insertData)
+                            .returning(["*"])
+                            .transacting(trx)
+                            .into("assigned_parts");
+                        part.push(partResult[0]);
+                        trx.commit;
+
+                    } else {
+                        return res.status(400).json({
+                            errors: [
+                                { code: "VALIDATION_ERROR", message: "Fill All Field!" }
+                            ]
+                        });
+
+                    }
+
+                }
             });
 
             return res.status(200).json({
