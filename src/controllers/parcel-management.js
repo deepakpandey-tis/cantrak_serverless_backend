@@ -14,6 +14,7 @@ const fs = require("fs");
 const https = require("https");
 const { whereIn } = require("../db/knex");
 const parcelCollectedNotification = require("../notifications/parcel/parcel-collected-notification");
+const addOutGoingNotification = require("../notifications/parcel/add-outgoing-parcel-notification");
 
 const parcelManagementController = {
   getCompanyListHavingPropertyUnit: async (req, res) => {
@@ -85,6 +86,7 @@ const parcelManagementController = {
         "non_org_user_data",
         "org_user_data",
         "newParcelId",
+        "isChecked"
       ]);
       console.log("payloa data", payLoad);
       await knex.transaction(async (trx) => {
@@ -200,7 +202,27 @@ const parcelManagementController = {
             images.push(d[0]);
           }
         }
+        let dataNos = {
+          payload: {
+            
+          },
+        };
+        let tenantId = req.body.org_user_data.tenantId
+        // console.log("tenantid for notification",tenantId)
 
+        if(req.body.pickedUpType[0] == 2 && req.body.isChecked == true){
+          const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH']
+        let sender = await knex.from("users").where({ id: req.me.id }).first();
+
+        let receiver = await knex.from("users").where({ id: tenantId }).first();
+
+        await addOutGoingNotification.send(
+          sender,
+          receiver,
+          dataNos,
+          ALLOWED_CHANNELS
+        );
+        }
         trx.commit;
       });
       res.status(200).json({
@@ -1163,7 +1185,7 @@ const parcelManagementController = {
         let tenantId = req.body.tenantId[0]
 
         if(req.body.pickedUpType[0] == 2 && req.body.isChecked == true){
-          const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY']
+          const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH']
         let sender = await knex.from("users").where({ id: req.me.id }).first();
 
         let receiver = await knex.from("users").where({ id: tenantId }).first();

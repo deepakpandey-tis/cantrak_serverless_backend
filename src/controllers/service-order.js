@@ -1447,7 +1447,7 @@ const serviceOrderController = {
     },
     addServiceOrderPart: async(req, res) => {
         try {
-            let assignedPart = null;
+            let assignedPart = [];
 
             await knex.transaction(async trx => {
 
@@ -1465,38 +1465,67 @@ const serviceOrderController = {
                 let result = Joi.validate(assignedPartPayload, schema)
                 console.log('[controllers][service][order]: JOi Result', result);
 
-                if (result && result.hasOwnProperty('error') && result.error) {
-                    return res.status(400).json({
-                        errors: [
-                            { code: 'VALIDATION_ERROR', message: result.error.message }
-                        ],
-                    });
-                }
+                // if (result && result.hasOwnProperty('error') && result.error) {
+                //     return res.status(400).json({
+                //         errors: [
+                //             { code: 'VALIDATION_ERROR', message: result.error.message }
+                //         ],
+                //     });
+                // }
+
+
+
+
 
                 let avgUnitPrice;
-                let avgResult = await knex('part_master').where({ id: assignedPartPayload.partId, orgId: req.orgId }).first();
-                if (avgResult) {
-                    avgUnitPrice = avgResult.avgUnitPrice;
-                }
-
-                // Insert in assigned_parts table,
                 const currentTime = new Date().getTime();
 
-                let assignedPartInsertPayload = _.omit(assignedPartPayload, ['serviceOrderId'])
 
-                let insertData = {
-                    ...assignedPartInsertPayload,
-                    entityId: assignedPartPayload.serviceOrderId,
-                    entityType: 'service_orders',
-                    unitCost: avgUnitPrice,
-                    createdAt: currentTime,
-                    updatedAt: currentTime,
-                    orgId: req.orgId,
-                    avgUnitPrice: avgUnitPrice
+                for (let d of assignedPartPayload) {
+
+
+                    if (d.partId && d.unitCost && d.quantity && d.status && d.serviceOrderId) {
+
+                        let avgResult = await knex('part_master').where({ id: d.partId, orgId: req.orgId }).first();
+                        if (avgResult) {
+                            avgUnitPrice = avgResult.avgUnitPrice;
+                        }
+
+                        // Insert in assigned_parts table,
+
+                        let da = _.omit(d, ['serviceOrderId'])
+
+
+
+
+                        let insertData = {
+                            ...da,
+                            entityId: d.serviceOrderId,
+                            entityType: 'service_orders',
+                            unitCost: avgUnitPrice,
+                            createdAt: currentTime,
+                            updatedAt: currentTime,
+                            orgId: req.orgId,
+                            avgUnitPrice: avgUnitPrice
+                        }
+                        let partResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('assigned_parts');
+                        assignedPart.push(partResult);
+
+                    } else {
+                        return res.status(400).json({
+                            errors: [
+                                { code: 'VALIDATION_ERROR', message: "Fill All Field!" }
+                            ],
+                        });
+
+
+                    }
+
+                    // console.log("part================", partResult, "=========================")
+
+                    trx.commit
+
                 }
-                let partResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('assigned_parts')
-                assignedPart = partResult[0]
-                trx.commit
 
             })
             res.status(200).json({

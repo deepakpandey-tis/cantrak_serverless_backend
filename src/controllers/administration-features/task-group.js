@@ -1157,12 +1157,25 @@ const taskGroupController = {
 
     try {
       let reqData = req.query;
-      let payload = req.body;
+      let payLoad = req.body;
+      let workOrderDate = req.body.workOrderDate
+      console.log("work order list data",req.body)
+
+      const payload = _.omit(payLoad, [
+        "assetCategoryId",
+        "workOrderDate",
+        "assetName",
+        "assetSerial"
+      ]);
 
       const schema = Joi.object().keys({
         taskGroupId: Joi.string().required(),
         category: Joi.string().allow("").allow(null).optional(),
-        workOrderId: Joi.string().allow("").allow(null).optional()
+        workOrderId: Joi.string().allow("").allow(null).optional(),
+        // assetCategoryId: Joi.array().items(Joi.number().allow(null).optional()),
+        // workOrderDate: Joi.string().allow("").allow(null).optional(),
+        // assetName : Joi.array().items(Joi.string().allow("").allow(null).optional()),
+        // assetSerial : Joi.array().items(Joi.string().allow("").allow(null).optional())
       });
 
       const result = Joi.validate(payload, schema);
@@ -1171,6 +1184,13 @@ const taskGroupController = {
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
         });
       }
+
+      // let workOrderDate = moment(workOrderDate).startOf('date').format("YYYY-MM-DD HH:mm:ss")
+      // let workOrderTime = new Date(moment(workOrderDate).startOf('date').format("YYYY-MM-DD HH:mm:ss")).getTime()
+      // console.log('work order time',workOrderTime)
+
+      let workOrderTime = moment(req.body.workOrderDate).format('YYYY-MM-DD')
+      console.log('work order time',workOrderTime)
 
       let pagination = {};
       let per_page = reqData.per_page || 10;
@@ -1196,7 +1216,6 @@ const taskGroupController = {
             "task_group_schedule_assign_assets.assetId",
             "asset_master.id"
           )
-
           .where({
             "task_group_schedule.taskGroupId": payload.taskGroupId,
             "task_group_schedule.orgId": req.orgId
@@ -1205,8 +1224,24 @@ const taskGroupController = {
             if (payload.workOrderId) {
               qb.where('task_group_schedule_assign_assets.displayId', payload.workOrderId)
             }
-            if (payload.category) {
-              qb.where('task_group_schedule_assign_assets.assetId', payload.category)
+            // if (payload.category) {
+            //   qb.where('task_group_schedule_assign_assets.assetId', payload.category)
+            // }
+            if(req.body.assetCategoryId){
+              qb.whereIn('asset_master.assetCategoryId',req.body.assetCategoryId)
+            }
+            if(req.body.workOrderDate){
+              qb.whereRaw(
+                `DATE("task_group_schedule_assign_assets"."pmDate") = workOrderTime)`
+              )
+              // console.log("work order date",workOrderTime)
+              // qb.where('task_group_schedule_assign_assets.pmDate',workOrderTime)
+            }
+            if(req.body.assetName){
+              qb.whereIn('task_group_schedule_assign_assets.assetId',req.body.assetName)
+            }
+            if(req.body.assetSerial){
+              qb.whereIn('asset_master.id',req.body.assetSerial)
             }
           })
         ,
@@ -1222,7 +1257,6 @@ const taskGroupController = {
             "task_group_schedule_assign_assets.assetId",
             "asset_master.id"
           )
-
           .select([
             "task_group_schedule_assign_assets.id as workOrderId",
             "task_group_schedule_assign_assets.displayId as TGAA",
@@ -1236,6 +1270,7 @@ const taskGroupController = {
             "asset_master.description as description",
             "asset_master.assetSerial as assetSerial",
             "asset_master.id as assetId",
+            "asset_master.assetCategoryId",
             // "buildings_and_phases.buildingPhaseCode",
             // "floor_and_zones.floorZoneCode",
             // "property_units.unitNumber as unitNumber",
@@ -1254,10 +1289,27 @@ const taskGroupController = {
           })
           .where(qb => {
             if (payload.workOrderId) {
+              // console.log("work order id",payload.workOrderId)
               qb.where('task_group_schedule_assign_assets.displayId', payload.workOrderId)
             }
-            if (payload.category) {
-              qb.where('task_group_schedule_assign_assets.assetId', payload.category)
+            // if (payload.category) {
+            //   qb.where('task_group_schedule_assign_assets.assetId', payload.category)
+            // }
+            if(req.body.assetCategoryId){
+              qb.whereIn('asset_master.assetCategoryId',req.body.assetCategoryId)
+            }
+            if(req.body.workOrderDate){
+              // qb.whereRaw(
+              //   `DATE("task_group_schedule_assign_assets"."pmDate") = workOrderTime)`
+              // )
+              // console.log("work drder date",req.body.workOrderDate)
+              // qb.where('task_group_schedule_assign_assets.pmDate',workOrderTime)
+            }
+            if(req.body.assetName){
+              qb.whereIn('task_group_schedule_assign_assets.assetId',req.body.assetName)
+            }
+            if(req.body.assetSerial){
+              qb.whereIn('asset_master.id',req.body.assetSerial)
             }
           })
           .offset(offset)

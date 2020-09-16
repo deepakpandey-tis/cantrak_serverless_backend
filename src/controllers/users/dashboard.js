@@ -164,9 +164,10 @@ const dashboardController = {
                     "announcement_master.savedStatus": 2,
                     "announcement_user_master.orgId": req.orgId,
                     "announcement_user_master.userId": req.me.id,
-                    "announcement_master.status": true
+                    "announcement_master.status": true,
+                    "announcement_master.userType": 2
                  })
-                .select(
+                .select(    
                     "announcement_master.id as Id",
                     "announcement_master.title as titles",
                     "announcement_master.url as Url",
@@ -189,8 +190,6 @@ const dashboardController = {
                     }).first();
 
                     console.log("imagesResult", imageResult);
-
-                   
 
                     return {
                         ...pp,
