@@ -4372,7 +4372,19 @@ const serviceRequestController = {
             let total31 = 0;
             let totalValue = 0;
 
-            result.rows = await Parallel.map(result.rows, async st => {
+            let arr = [];
+
+            for (let d of result.rows) {
+
+                if (d.team) {
+
+                    arr.push({...d });
+
+                }
+
+            }
+
+            result.rows = await Parallel.map(arr, async st => {
 
 
                 total1 += Number(st["1"]);
@@ -4448,6 +4460,7 @@ const serviceRequestController = {
 
 
             let final = [];
+
             let grouped = _.groupBy(result.rows, "team");
             final.push(grouped);
 
