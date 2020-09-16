@@ -38,7 +38,7 @@ const bookingCanceledNotification = {
             receiverId: receiver.id,
             payload: {
                 ...data,
-                subject: 'Facility Booking Approved',
+                subject: 'Facility Booking Canceled',
                 body: `Hi!!, ${receiver.name} Your Booking in Facility ${data.payload.facility} made for ${data.payload.date} at ${data.payload.time} is canceled.`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
@@ -84,7 +84,7 @@ const bookingCanceledNotification = {
             senderId: sender.id,
             receiverId: receiver.id,
             payload: {
-                subject: 'Test Notification',
+                subject: 'Facility Booking Canceled ',
                 body: `Hi, This is a test notification to all users from ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',

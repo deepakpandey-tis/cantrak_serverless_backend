@@ -1172,10 +1172,6 @@ const taskGroupController = {
         taskGroupId: Joi.string().required(),
         category: Joi.string().allow("").allow(null).optional(),
         workOrderId: Joi.string().allow("").allow(null).optional(),
-        // assetCategoryId: Joi.array().items(Joi.number().allow(null).optional()),
-        // workOrderDate: Joi.string().allow("").allow(null).optional(),
-        // assetName : Joi.array().items(Joi.string().allow("").allow(null).optional()),
-        // assetSerial : Joi.array().items(Joi.string().allow("").allow(null).optional())
       });
 
       const result = Joi.validate(payload, schema);
@@ -1185,12 +1181,12 @@ const taskGroupController = {
         });
       }
 
-      // let workOrderDate = moment(workOrderDate).startOf('date').format("YYYY-MM-DD HH:mm:ss")
-      // let workOrderTime = new Date(moment(workOrderDate).startOf('date').format("YYYY-MM-DD HH:mm:ss")).getTime()
+      // let workOrderDate = moment(workOrderDate).startOf('date').format("YYYY-MM-DD ")
+      // let workOrderTime = new Date(moment(workOrderDate).endOf('date').format("YYYY-MM-DD"))
       // console.log('work order time',workOrderTime)
 
-      let workOrderTime = moment(req.body.workOrderDate).format('YYYY-MM-DD')
-      console.log('work order time',workOrderTime)
+      let workOrderTime = moment(req.body.workOrderDate).endOf('date').format('YYYY-MM-DD')
+      console.log('work order time',workOrderTime,req.body.workOrderDate)
 
       let pagination = {};
       let per_page = reqData.per_page || 10;
@@ -1227,20 +1223,24 @@ const taskGroupController = {
             // if (payload.category) {
             //   qb.where('task_group_schedule_assign_assets.assetId', payload.category)
             // }
-            if(req.body.assetCategoryId){
+            if(req.body.assetCategoryId && req.body.assetCategoryId.length > 0 ){
+              console.log("asset category id")
               qb.whereIn('asset_master.assetCategoryId',req.body.assetCategoryId)
             }
             if(req.body.workOrderDate){
-              qb.whereRaw(
-                `DATE("task_group_schedule_assign_assets"."pmDate") = workOrderTime)`
-              )
+              console.log("work order date")
+              qb.whereRaw(`to_char((task_group_schedule_assign_assets."pmDate"),'YYYY-MM-DD')='${workOrderTime}'`)
+              // qb.where(
+              //   `DATE("task_group_schedule_assign_assets"."pmDate") = workOrderTime)`
+              // )
               // console.log("work order date",workOrderTime)
               // qb.where('task_group_schedule_assign_assets.pmDate',workOrderTime)
             }
             if(req.body.assetName){
+              console.log("Asset name")
               qb.whereIn('task_group_schedule_assign_assets.assetId',req.body.assetName)
             }
-            if(req.body.assetSerial){
+            if(req.body.assetSerial && req.body.assetSerial.length > 0){
               qb.whereIn('asset_master.id',req.body.assetSerial)
             }
           })
@@ -1295,20 +1295,16 @@ const taskGroupController = {
             // if (payload.category) {
             //   qb.where('task_group_schedule_assign_assets.assetId', payload.category)
             // }
-            if(req.body.assetCategoryId){
+            if(req.body.assetCategoryId && req.body.assetCategoryId.length > 0 ){
               qb.whereIn('asset_master.assetCategoryId',req.body.assetCategoryId)
             }
             if(req.body.workOrderDate){
-              // qb.whereRaw(
-              //   `DATE("task_group_schedule_assign_assets"."pmDate") = workOrderTime)`
-              // )
-              // console.log("work drder date",req.body.workOrderDate)
-              // qb.where('task_group_schedule_assign_assets.pmDate',workOrderTime)
+              qb.whereRaw(`to_char((task_group_schedule_assign_assets."pmDate"),'YYYY-MM-DD')='${workOrderTime}'`)
             }
             if(req.body.assetName){
               qb.whereIn('task_group_schedule_assign_assets.assetId',req.body.assetName)
             }
-            if(req.body.assetSerial){
+            if(req.body.assetSerial && req.body.assetSerial.length > 0){
               qb.whereIn('asset_master.id',req.body.assetSerial)
             }
           })
@@ -3162,7 +3158,7 @@ const taskGroupController = {
         .into("remarks_master");
 
       const updatedWorkOrder = await knex('task_group_schedule_assign_assets')
-        .update({ isActive: false })
+        .update({ isActive: false , status:'C'})
         .where({ id: id })
 
       return res.status(200).json({
