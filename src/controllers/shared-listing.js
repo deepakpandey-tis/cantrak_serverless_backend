@@ -396,7 +396,7 @@ const assetController = {
                 .count("* as count")
                 .from("charge_master")
                 .leftJoin("users", "users.id", "charge_master.createdBy")
-                .where({ "charge_master.orgId": req.orgId })
+                .where({ "charge_master.orgId": req.orgId, "charge_master.isActive": true })
                 .where(qb => {
                     if (chargeCode) {
                         qb.where('charge_master.chargeCode', 'iLIKE', `%${chargeCode}%`)
@@ -411,7 +411,7 @@ const assetController = {
                 .first(),
                 knex("charge_master")
                 .leftJoin("users", "users.id", "charge_master.createdBy")
-                .where({ "charge_master.orgId": req.orgId })
+                .where({ "charge_master.orgId": req.orgId, "charge_master.isActive": true})
                 .select([
                     "charge_master.id",
                     "charge_master.chargeCode as Charges Code",
