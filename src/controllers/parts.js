@@ -2297,7 +2297,7 @@ const partsController = {
                         'part_ledger.approved',
                         'part_ledger.description',
                         'part_ledger.approvedBy',
-                        'part_ledger.createdAt as Created Date',
+                        'part_ledger.createdAt as Transaction Date',
                     ])
                     .where(qb => {
                         qb.where({ 'part_ledger.orgId': req.orgId })
@@ -2369,7 +2369,7 @@ const partsController = {
                         'part_ledger.approved',
                         'part_ledger.description',
                         'part_ledger.approvedBy',
-                        'part_ledger.createdAt as Created Date',
+                        'part_ledger.createdAt as Transaction Date',
                     ])
                     .orderBy('part_ledger.createdAt', 'desc')
                     .orderBy('part_ledger.id', 'desc')
@@ -3262,6 +3262,7 @@ const partsController = {
                             qb.where('part_master.partName', 'ilike', `%${req.body.partName}%`)
                         }
                     })
+                    .orderBy('assigned_parts.createdAt', 'desc')
                     .offset(offset)
                     .limit(per_page)
                 ])
@@ -3307,6 +3308,9 @@ const partsController = {
             let payload = req.body;
             let recDate = new Date(payload.receiveDate).getTime()
                 // let issueDate = new Date(payload.issueDate).getTime();
+            let receiveById;
+            let issueToId;
+            let issueById;
             let getInfoData = await knex("assigned_parts")
                 .select(
                     "assigned_parts.entityId as Id"
@@ -3322,6 +3326,89 @@ const partsController = {
             let assignedResult = update[0];
             let quantity = "-" + assignedResult.quantity;
 
+
+            /*GET RECEIVE BY & ISSUE BY & ISSUE TO ID OPEN */
+
+            if (payload.receiveBy) {
+
+                let requestByData = await knex('adjust_part_users')
+                    .where({ name: payload.receiveBy, orgId: req.orgId })
+                    //.orWhere({ mobile: partStockPayload.mobile })
+                    //.orWhere({ email: partStockPayload.email })
+                    .returning(['*']);
+
+                if (requestByData && requestByData.length) {
+
+                    receiveById = requestByData[0].id;
+                } else {
+
+                    let requestedByResult = await knex('adjust_part_users').insert({
+                        name: payload.receiveBy,
+                        // mobile: partStockPayload.mobile,
+                        //email: partStockPayload.email,
+                        createdAt: currentTime,
+                        updatedAt: currentTime,
+                        orgId: req.orgId
+                    }).returning(['*'])
+                    receiveById = requestedByResult[0].id;
+                }
+            }
+
+
+            if (payload.issueBy) {
+
+                let issueData = await knex('adjust_part_users')
+                    .where({ name: payload.issueBy, orgId: req.orgId })
+                    //.orWhere({ mobile: partStockPayload.mobile })
+                    //.orWhere({ email: partStockPayload.email })
+                    .returning(['*']);
+
+                if (issueData && issueData.length) {
+
+                    issueById = issueData[0].id;
+                } else {
+
+                    let issueByResult = await knex('adjust_part_users').insert({
+                        name: payload.issueBy,
+                        // mobile: partStockPayload.mobile,
+                        //email: partStockPayload.email,
+                        createdAt: currentTime,
+                        updatedAt: currentTime,
+                        orgId: req.orgId
+                    }).returning(['*'])
+                    issueById = issueByResult[0].id;
+                }
+            }
+
+            if (payload.issueTo) {
+
+                let issueToData = await knex('adjust_part_users')
+                    .where({ name: payload.issueTo, orgId: req.orgId })
+                    //.orWhere({ mobile: partStockPayload.mobile })
+                    //.orWhere({ email: partStockPayload.email })
+                    .returning(['*']);
+
+                if (issueToData && issueToData.length) {
+
+                    issueToId = issueToData[0].id;
+                } else {
+
+                    let issueToResult = await knex('adjust_part_users').insert({
+                        name: payload.issueTo,
+                        // mobile: partStockPayload.mobile,
+                        //email: partStockPayload.email,
+                        createdAt: currentTime,
+                        updatedAt: currentTime,
+                        orgId: req.orgId
+                    }).returning(['*'])
+                    issueToId = issueToResult[0].id;
+                }
+            }
+
+            /*GET RECEIVE BY & ISSUE BY & ISSUE TO ID CLOSE */
+
+
+
             let ledgerObject = {
                 partId: assignedResult.partId,
                 unitCost: assignedResult.unitCost,
@@ -3333,18 +3420,21 @@ const partsController = {
                 serviceOrderNo: assignedResult.entityId,
                 orgId: req.orgId,
                 approvedBy: req.me.id,
-                receiveBy: payload.receiveBy,
+                receiveBy: receiveById,
                 receiveDate: recDate,
-                issueBy: payload.issueBy,
-                issueTo: payload.issueTo,
+                issueBy: issueById,
+                issueTo: issueToId,
                 taskAssignPartId: assignedResult.entityId,
                 // issueDate: issueDate,
             }
             let partLedger = await knex.insert(ledgerObject).returning(['*']).into('part_ledger');
 
             // update task_assigned_parts_in pm
-            const updateAssignParts = await knex('task_assigned_part').update({ status: 1 }).where({ orgId: req.orgId, id: getInfoData.Id }).returning(['*'])
 
+            if (getInfoData) {
+
+                const updateAssignParts = await knex('task_assigned_part').update({ status: 1 }).where({ orgId: req.orgId, id: getInfoData.Id }).returning(['*'])
+            }
 
             return res.status(200).json({
                 data: {
