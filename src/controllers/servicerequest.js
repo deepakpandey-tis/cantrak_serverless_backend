@@ -3259,6 +3259,7 @@ const serviceRequestController = {
             let serviceRequestId = req.body.data.serviceRequestId;
             let updateStatus = req.body.data.status;
             let cancelReason = req.body.data.cancelReason;
+            let signatureImg = req.body.data.signature;
             const currentTime = new Date().getTime();
             console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7', req.body)
 
@@ -3328,6 +3329,10 @@ const serviceRequestController = {
                 await knex("service_requests")
                     .update({ serviceStatusCode: updateStatus, updatedAt: currentTime, completedBy: req.me.id, completedOn: currentTime })
                     .where({ id: serviceRequestId });
+
+                await knex("service_orders")
+                    .update({ signature: signatureImg, updatedAt: currentTime })
+                    .where({ serviceRequestId: serviceRequestId });
             }
             if (updateStatus === 'C') {
                 await knex("service_requests")

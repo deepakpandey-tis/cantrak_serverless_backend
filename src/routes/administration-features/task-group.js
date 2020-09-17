@@ -254,6 +254,14 @@ router.post(
   taskGroupController.taskFeedback
 );
 
+router.post(
+  "/get-work-order-list",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  taskGroupController.getWorkOrderList
+)
+
 
 
 
