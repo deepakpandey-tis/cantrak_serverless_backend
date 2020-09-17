@@ -3720,6 +3720,7 @@ const serviceOrderController = {
             .where(qb => {
                 qb.where({ "service_orders.orgId": req.orgId });
                 qb.whereIn('service_requests.projectId', accessibleProjects)
+                qb.whereNot('service_requests.serviceStatusCode', 'C')
 
 
 
