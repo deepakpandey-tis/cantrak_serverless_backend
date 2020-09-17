@@ -48,6 +48,14 @@ router.post('/get-asset-list-for-filter',
   resourceAccessMiddleware.isAssetAccessible,
   assetCategoryController.getAssetListForWorkOrderFilter)
 
+router.get(
+  '/get-asset-list-for-work-order',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  assetCategoryController.getAssetListForWorkOrderList
+)
+
 
 
 /**IMPORT Building DATA */
