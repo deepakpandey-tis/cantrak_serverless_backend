@@ -2172,6 +2172,7 @@ const taskGroupController = {
           'task_group_schedule.endDate as endDate',
           'task_group_schedule.repeatFrequency as repeatFrequency',
           'task_group_schedule.repeatOn as repeatOn',
+          'task_group_schedule.repeatPeriod',
           'teams.teamName as teamName',
           'assigned_service_team.userId as mainUserId',
           'users.name as mainUser',
@@ -3711,7 +3712,7 @@ const taskGroupController = {
         taskGroupScheduleId: Joi.string().required(),
         taskGroupId: Joi.string().required(),
         assetId: Joi.string().required(),
-        description: Joi.string().required(),
+        description: Joi.string().allow(null).allow("").optional(),
         //workOrderId: Joi.string().required()
       })
       const result = Joi.validate(payload, schema);
