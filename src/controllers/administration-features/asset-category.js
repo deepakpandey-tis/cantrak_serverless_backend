@@ -638,6 +638,37 @@ const AssetCategoryController = {
         err
       );
     }
+  },
+  getAssetListForWorkOrderList:async(req,res)=>{
+    try {
+      let assets = await knex
+      .from('task_group_schedule_assign_assets')
+      .leftJoin('asset_master','task_group_schedule_assign_assets.assetId','asset_master.id')
+      .leftJoin('task_group_schedule','task_group_schedule_assign_assets.scheduleId','task_group_schedule.id')
+      .select([
+        // 'asset_master.id',
+        'asset_master.assetName',
+        'asset_master.description',
+        'asset_master.displayId',
+        'asset_master.assetSerial',
+        'task_group_schedule_assign_assets.assetId as id'
+      ])
+      .where({'task_group_schedule_assign_assets.orgId':req.orgId ,'asset_master.isActive':true})
+
+      let assetList = _.uniqBy(assets,"id")
+
+      return res.status(200).json({
+        data: {
+          assets: assetList
+        },
+        message: "Asset  List!"
+      });
+    } catch (err) {
+      console.log(
+        "[controllers][propertysetup][importCompanyData] :  Error",
+        err
+      );
+    }
   }
 };
 

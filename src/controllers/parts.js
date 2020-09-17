@@ -2336,6 +2336,7 @@ const partsController = {
 
                     })
                     .orderBy('part_ledger.createdAt', 'desc')
+                    .orderBy('part_ledger.id', 'desc')
                     .offset(offset).limit(per_page)
                 ])
 
@@ -2371,6 +2372,7 @@ const partsController = {
                         'part_ledger.createdAt as Created Date',
                     ])
                     .orderBy('part_ledger.createdAt', 'desc')
+                    .orderBy('part_ledger.id', 'desc')
                     .offset(offset).limit(per_page)
                 ])
             }
