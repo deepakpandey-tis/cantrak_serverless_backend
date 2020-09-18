@@ -3244,6 +3244,7 @@ const partsController = {
                         'task_assigned_part.id as TPID',
                         "task_group_schedule_assign_assets.id as workOrderId",
                         "task_group_schedule_assign_assets.displayId as TGAA",
+                        "assigned_parts.createdAt"
 
                     ])
                     .where({
@@ -3257,6 +3258,8 @@ const partsController = {
                     .where(qb => {
                         if (!_.isEmpty(filters)) {
                             qb.where(filters)
+                        } else {
+                            //qb.whereIn('assigned_parts.entityType', ['service_orders', 'task_assigned_part'])
                         }
                         if (req.body.partName) {
                             qb.where('part_master.partName', 'ilike', `%${req.body.partName}%`)
@@ -4069,13 +4072,16 @@ const partsController = {
 
             let approveResult = await knex('part_ledger').where({ 'serviceOrderNo': payload.soId })
                 .leftJoin("users", 'part_ledger.approvedBy', 'users.id')
+                .leftJoin('adjust_part_users as iBy', 'part_ledger.issueBy', 'iBy.id')
+                .leftJoin('adjust_part_users as iTo', 'part_ledger.issueTo', 'iTo.id')
+                //.leftJoin('adjust_part_users as rBy', 'part_ledger.issueBy', 'rBy.id')
                 //.leftJoin('users as ib', 'part_ledger.issueBy', 'ib.id')
                 //.leftJoin('users as it', 'part_ledger.issueTo', 'it.id')
                 .select([
                     'users.name as approvedUser',
                     'part_ledger.createdAt as approvedAt',
-                    'part_ledger.issueBy',
-                    'part_ledger.issueTo',
+                    'iBy.name as issueBy',
+                    'iTo.name as issueTo',
                     'part_ledger.issueDate',
                     'part_ledger.receiveDate'
                 ])
