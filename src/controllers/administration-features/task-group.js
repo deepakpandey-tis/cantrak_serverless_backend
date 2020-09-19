@@ -3699,6 +3699,17 @@ const taskGroupController = {
       });
     }
   },
+  // updateTaskStatus:async (req,res)=>{
+  //   try {
+  //     const payload = req.body;
+
+
+
+      
+  //   } catch (err) {
+      
+  //   }
+  // },
 
   /**task feedback */
   taskFeedback: async (req, res) => {
