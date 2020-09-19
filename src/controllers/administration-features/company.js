@@ -20,7 +20,7 @@ const companyController = {
       let company = null;
       await knex.transaction(async trx => {
 
-        const payload = _.omit(req.body, ["logoFile"]);
+        const payload = _.omit(req.body, ["logoFile"], ["orgLogoFile"]);
         let orgId;
         if (payload.orgId) {
           orgId = payload.orgId;
@@ -46,38 +46,17 @@ const companyController = {
         const schema = Joi.object().keys({
           companyName: Joi.string().required(),
           companyId: Joi.string().required(),
-          descriptionEng: Joi.string()
-            .allow("")
-            .optional(),
-          description1: Joi.string()
-            .allow("")
-            .optional(),
-          contactPerson: Joi.string()
-            .allow("")
-            .optional(),
-          companyAddressEng: Joi.string()
-            .allow("")
-            .optional(),
-          companyAddressThai: Joi.string()
-            .allow("")
-            .optional(),
-          logoFile: Joi.string()
-            .allow("")
-            .optional(),
-          taxId: Joi.number()
-            .allow("")
-            .optional(),
-          orgId: Joi.number()
-            .allow("")
-            .optional(),
-            telephone: Joi.number()
-            .allow("")
-            .allow(null)
-            .optional(),
-            fax: Joi.string()
-            .allow("")
-            .allow(null)
-            .optional()
+          descriptionEng: Joi.string().allow("").optional(),
+          description1: Joi.string().allow("").optional(),
+          contactPerson: Joi.string().allow("").optional(),
+          companyAddressEng: Joi.string().allow("").optional(),
+          companyAddressThai: Joi.string().allow("").optional(),
+          logoFile: Joi.string().allow("").optional(),
+          taxId: Joi.number().allow("").optional(),
+          orgId: Joi.number().allow("").optional(),
+          telephone: Joi.number().allow("").allow(null).optional(),
+          fax: Joi.string().allow("").allow(null).optional(),
+          orgLogoFile: Joi.string().allow("").optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -116,15 +95,25 @@ const companyController = {
           }
         }
 
+        /*For Organisation Logo Use*/
+        let orgLogo = "";
+        if (req.body.orgLogoFile) {
+          for (image of req.body.orgLogoFile) {
+            orgLogo = image.s3Url;
+          }
+        }
+
+
         let taxId = null;
         taxId = payload.taxId ? payload.taxId : null;
 
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
-          companyId:payload.companyId.toUpperCase(),
+          companyId: payload.companyId.toUpperCase(),
           createdBy: userId,
           logoFile: logo,
+          orgLogoFile: orgLogo,
           createdAt: currentTime,
           updatedAt: currentTime,
           orgId: orgId
@@ -158,7 +147,7 @@ const companyController = {
       let company = null;
       await knex.transaction(async trx => {
 
-        const payload = _.omit(req.body, ["logoFile"]);
+        const payload = _.omit(req.body, ["logoFile"], ["orgLogoFile"]);
         let orgId;
         if (payload.orgId) {
           orgId = payload.orgId;
@@ -228,7 +217,8 @@ const companyController = {
           orgId: Joi.number()
             .allow("")
             .allow(null)
-            .optional()
+            .optional(),
+          orgLogoFile: Joi.string().allow("").optional(),
 
         });
 
@@ -272,13 +262,35 @@ const companyController = {
           }
         }
         console.log("==============", req.body.logoFile)
+        /*For Organisation Logo Use*/
+        let orgLogo = "";
+        if (req.body.orgLogoFile) {
+          for (image of req.body.orgLogoFile) {
+            orgLogo = image.s3Url;
+          }
+        }
+        console.log("==============", req.body.orgLogoFile)
+
         let taxId = null;
         taxId = payload.taxId ? payload.taxId : null;
         let insertData;
+
+        if (req.body.orgLogoFile.length) {
+          insertData = { ...payload, companyId: payload.companyId.toUpperCase(), orgId, taxId, orgLogoFile: orgLogo, updatedAt: currentTime };
+        } 
+
+        let insertResult2 = await knex
+          .update(insertData)
+          .where({ id: payload.id })
+          .returning(["*"])
+          .transacting(trx)
+          .into("companies");
+        
+
         if (req.body.logoFile.length) {
-          insertData = { ...payload,companyId:payload.companyId.toUpperCase(), orgId, taxId, logoFile: logo, updatedAt: currentTime };
+          insertData = { ...payload, companyId: payload.companyId.toUpperCase(), orgId, taxId, logoFile: logo, updatedAt: currentTime };
         } else {
-          insertData = { ...payload,companyId:payload.companyId.toUpperCase(), orgId, taxId, updatedAt: currentTime };
+          insertData = { ...payload, companyId: payload.companyId.toUpperCase(), orgId, taxId, updatedAt: currentTime };
         }
         let insertResult = await knex
           .update(insertData)
@@ -656,8 +668,8 @@ const companyController = {
             let deleteFile = fs.unlink(filepath, err => {
               console.log("File Deleting Error " + err);
             });
-            let url = process.env.S3_BUCKET_URL+"/Export/Company/" +
-            filename;
+            let url = process.env.S3_BUCKET_URL + "/Export/Company/" +
+              filename;
             // let url =
             //   "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Company/" +
             //   filename;
@@ -694,7 +706,7 @@ const companyController = {
             knex("companies")
               .select("id", "companyId", "companyName as CompanyName")
               .where({ isActive: true, orgId: orgId })
-              .orderBy('companies.companyName','asc')
+              .orderBy('companies.companyName', 'asc')
           ]);
 
         } else {
@@ -702,7 +714,7 @@ const companyController = {
             knex("companies")
               .select("id", "companyId", "companyName as CompanyName")
               .where({ isActive: true })
-              .orderBy('companies.companyName','asc')
+              .orderBy('companies.companyName', 'asc')
           ]);
         }
       } else {
@@ -711,7 +723,7 @@ const companyController = {
           knex("companies")
             .select("id", "companyId", "companyName as CompanyName")
             .where({ isActive: true, orgId: req.orgId })
-            .orderBy('companies.companyName','asc')
+            .orderBy('companies.companyName', 'asc')
         ]);
       }
 
@@ -1043,18 +1055,18 @@ const companyController = {
       //let finalArr = _.intersection(companyArr4, companyArr2, companyArr3,companyArr1)
 
 
-      if(req.query.areaName === 'common'){
-        companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true,type:2 })
+      if (req.query.areaName === 'common') {
+        companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true, type: 2 })
         companyArr1 = companyHavingPU1.map(v => v.companyId)
         result = await knex("companies")
           .innerJoin('property_units', 'companies.id', 'property_units.companyId')
-          .select("companies.id", 
-          "companies.companyId",
-           "companies.companyName as CompanyName", 
-           "companies.logoFile as logoFile",
-           "companies.description1"
-           )
-          .where({ 'companies.isActive': true, 'companies.orgId': req.orgId,'property_units.type':2 })
+          .select("companies.id",
+            "companies.companyId",
+            "companies.companyName as CompanyName",
+            "companies.logoFile as logoFile",
+            "companies.description1"
+          )
+          .where({ 'companies.isActive': true, 'companies.orgId': req.orgId, 'property_units.type': 2 })
           .whereIn('companies.id', companyArr1)
           .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
           .orderBy('companies.companyName', 'asc')
@@ -1077,17 +1089,17 @@ const companyController = {
         companyArr1 = companyHavingPU1.map(v => v.companyId)
         result = await knex("companies")
           .innerJoin('property_units', 'companies.id', 'property_units.companyId')
-          .select("companies.id", 
-          "companies.companyId",
-           "companies.companyName as CompanyName", 
-           "companies.logoFile as logoFile",
+          .select("companies.id",
+            "companies.companyId",
+            "companies.companyName as CompanyName",
+            "companies.logoFile as logoFile",
             "companies.description1"
-           )
+          )
           .where({ 'companies.isActive': true, 'companies.orgId': req.orgId })
           .whereIn('companies.id', companyArr1)
           .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
           .orderBy('companies.companyName', 'asc')
-      }else {
+      } else {
 
         //         result = await knex.raw(`
         //         SELECT public.companies.*
@@ -1098,20 +1110,20 @@ const companyController = {
         // ) and public.companies."orgId" = ${req.orgId}
         //         `)
 
-        companyHavingPU1 = await knex('property_units').select(['companyId']).where({orgId:req.orgId,isActive:true,type:1})
+        companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true, type: 1 })
         companyArr1 = companyHavingPU1.map(v => v.companyId)
-          result =await knex("companies")
-            .innerJoin('property_units','companies.id','property_units.companyId')
-            .select("companies.id", 
+        result = await knex("companies")
+          .innerJoin('property_units', 'companies.id', 'property_units.companyId')
+          .select("companies.id",
             "companies.companyId",
-             "companies.companyName as CompanyName", 
-             "companies.logoFile as logoFile",
-              "companies.description1"
-             )
-            .where({ 'companies.isActive': true, 'companies.orgId': req.orgId,'property_units.type':1 })
-              .whereIn('companies.id',companyArr1)
-            .groupBy(['companies.id', 'companies.companyName','companies.companyId'])
-              .orderBy('companies.companyName','asc')
+            "companies.companyName as CompanyName",
+            "companies.logoFile as logoFile",
+            "companies.description1"
+          )
+          .where({ 'companies.isActive': true, 'companies.orgId': req.orgId, 'property_units.type': 1 })
+          .whereIn('companies.id', companyArr1)
+          .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
+          .orderBy('companies.companyName', 'asc')
       }
 
 
@@ -1136,27 +1148,27 @@ const companyController = {
       });
     }
   },
-  getCompanyById:async(req,res)=>{
-    try{
+  getCompanyById: async (req, res) => {
+    try {
       let companyId = req.body.id
       let orgId = req.orgId
 
       let companyResult = await knex("companies")
-      .select([
-        "companies.id",
-        "companies.companyName",
-    ])
-      .where("companies.orgId",orgId)
-      .where("companies.id",companyId)
+        .select([
+          "companies.id",
+          "companies.companyName",
+        ])
+        .where("companies.orgId", orgId)
+        .where("companies.id", companyId)
 
       return res.status(200).json({
         data: {
-          companies:companyResult
+          companies: companyResult
         },
         message: "Companies List!"
       });
 
-    }catch(err){
+    } catch (err) {
       console.log(
         "[controllers][companies][getCompany] :  Error",
         err
@@ -1166,7 +1178,7 @@ const companyController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-   
+
   }
 };
 

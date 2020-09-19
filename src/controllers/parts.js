@@ -4719,6 +4719,60 @@ const partsController = {
             });
         }
     },
+    requestMultiplePartForPm:async(req,res)=>{
+        try {
+            let taskAssignedPartId = req.body.taskAssignedPartId;
+            let assignedStatus;
+            let partInfo;
+            const currentTime = new Date();
+
+
+            assignedParts = await knex('assigned_parts').select('*').where({ entityType: 'task_assigned_part' }).whereIn('entityId', taskAssignedPartId)
+
+            if (assignedParts && assignedParts.length) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "VALIDATION_ERROR", message: 'You have already sent part request !!' }
+                    ]
+                });
+            } else {
+                partInfo = await knex('task_assigned_part')
+                .leftJoin('part_master', 'task_assigned_part.partId', 'part_master.id')
+                .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
+                .select(
+                    'task_assigned_part.partId as pid',
+                    'task_assigned_part.quantity as Quantity',
+                    'task_assigned_part.taskId as TaskId',
+                    'part_ledger.unitCost as unitCost'
+                )
+                .whereIn('task_assigned_part.id', taskAssignedPartId)
+                .first()
+
+                if(taskAssignedPartId && taskAssignedPartId.length > 0){
+                    for(let id of taskAssignedPartId){
+                        console.log("id of task",id)
+                        assignedStatus = await knex('assigned_parts').insert({ unitCost: partInfo.unitCost, quantity: partInfo.Quantity, status: 'in progress', orgId: req.orgId, createdAt: currentTime.getTime(), updatedAt: currentTime.getTime(), partId: partInfo.pid, entityId: id, entityType: 'task_assigned_part' }).returning(['*']);
+                        updatedTaskPart = await knex('task_assigned_part').update({ status: 3 }).where({ id: id, orgId: req.orgId }).returning(['*'])
+                    }
+                }
+                // assignedStatus = await knex('assigned_parts').insert({ unitCost: partInfo.unitCost, quantity: partInfo.Quantity, status: 'in progress', orgId: req.orgId, createdAt: currentTime.getTime(), updatedAt: currentTime.getTime(), partId: partInfo.pid, entityId: taskAssignedPartId, entityType: 'task_assigned_part' }).returning(['*']);
+
+                // updatedTaskPart = await knex('task_assigned_part').update({ status: 3 }).where({  orgId: req.orgId }).whereIn('id', taskAssignedPartId).returning(['*'])
+
+                return res.status(200).json({
+                    data: {
+                        data: assignedStatus
+                    },
+                    message: "Request has been sent successfully!"
+                });
+            }
+
+        } catch (err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
     partLedgerMigration: async(req, res) => {
         try {
 
