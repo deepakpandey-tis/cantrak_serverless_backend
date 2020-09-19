@@ -284,6 +284,12 @@ router.get(
     partsController.partLedgerMigration
 )
 
+router.post(
+    "/request-multiple-parts-for-pm",
+    authMiddleware.isAuthenticated,
+    partsController.requestMultiplePartForPm
+)
+
 /*PM ASSIGNED PART */
 
 // router.post('/get-pm-assigned-part-list', 

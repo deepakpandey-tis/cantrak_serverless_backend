@@ -2297,7 +2297,7 @@ const partsController = {
                         'part_ledger.approved',
                         'part_ledger.description',
                         'part_ledger.approvedBy',
-                        'part_ledger.createdAt as Created Date',
+                        'part_ledger.createdAt as Transaction Date',
                     ])
                     .where(qb => {
                         qb.where({ 'part_ledger.orgId': req.orgId })
@@ -2369,7 +2369,7 @@ const partsController = {
                         'part_ledger.approved',
                         'part_ledger.description',
                         'part_ledger.approvedBy',
-                        'part_ledger.createdAt as Created Date',
+                        'part_ledger.createdAt as Transaction Date',
                     ])
                     .orderBy('part_ledger.createdAt', 'desc')
                     .orderBy('part_ledger.id', 'desc')
@@ -3244,6 +3244,7 @@ const partsController = {
                         'task_assigned_part.id as TPID',
                         "task_group_schedule_assign_assets.id as workOrderId",
                         "task_group_schedule_assign_assets.displayId as TGAA",
+                        "assigned_parts.createdAt"
 
                     ])
                     .where({
@@ -3257,11 +3258,14 @@ const partsController = {
                     .where(qb => {
                         if (!_.isEmpty(filters)) {
                             qb.where(filters)
+                        } else {
+                            //qb.whereIn('assigned_parts.entityType', ['service_orders', 'task_assigned_part'])
                         }
                         if (req.body.partName) {
                             qb.where('part_master.partName', 'ilike', `%${req.body.partName}%`)
                         }
                     })
+                    .orderBy('assigned_parts.createdAt', 'desc')
                     .offset(offset)
                     .limit(per_page)
                 ])
@@ -3307,6 +3311,9 @@ const partsController = {
             let payload = req.body;
             let recDate = new Date(payload.receiveDate).getTime()
                 // let issueDate = new Date(payload.issueDate).getTime();
+            let receiveById;
+            let issueToId;
+            let issueById;
             let getInfoData = await knex("assigned_parts")
                 .select(
                     "assigned_parts.entityId as Id"
@@ -3322,6 +3329,89 @@ const partsController = {
             let assignedResult = update[0];
             let quantity = "-" + assignedResult.quantity;
 
+
+            /*GET RECEIVE BY & ISSUE BY & ISSUE TO ID OPEN */
+
+            if (payload.receiveBy) {
+
+                let requestByData = await knex('adjust_part_users')
+                    .where({ name: payload.receiveBy, orgId: req.orgId })
+                    //.orWhere({ mobile: partStockPayload.mobile })
+                    //.orWhere({ email: partStockPayload.email })
+                    .returning(['*']);
+
+                if (requestByData && requestByData.length) {
+
+                    receiveById = requestByData[0].id;
+                } else {
+
+                    let requestedByResult = await knex('adjust_part_users').insert({
+                        name: payload.receiveBy,
+                        // mobile: partStockPayload.mobile,
+                        //email: partStockPayload.email,
+                        createdAt: currentTime,
+                        updatedAt: currentTime,
+                        orgId: req.orgId
+                    }).returning(['*'])
+                    receiveById = requestedByResult[0].id;
+                }
+            }
+
+
+            if (payload.issueBy) {
+
+                let issueData = await knex('adjust_part_users')
+                    .where({ name: payload.issueBy, orgId: req.orgId })
+                    //.orWhere({ mobile: partStockPayload.mobile })
+                    //.orWhere({ email: partStockPayload.email })
+                    .returning(['*']);
+
+                if (issueData && issueData.length) {
+
+                    issueById = issueData[0].id;
+                } else {
+
+                    let issueByResult = await knex('adjust_part_users').insert({
+                        name: payload.issueBy,
+                        // mobile: partStockPayload.mobile,
+                        //email: partStockPayload.email,
+                        createdAt: currentTime,
+                        updatedAt: currentTime,
+                        orgId: req.orgId
+                    }).returning(['*'])
+                    issueById = issueByResult[0].id;
+                }
+            }
+
+            if (payload.issueTo) {
+
+                let issueToData = await knex('adjust_part_users')
+                    .where({ name: payload.issueTo, orgId: req.orgId })
+                    //.orWhere({ mobile: partStockPayload.mobile })
+                    //.orWhere({ email: partStockPayload.email })
+                    .returning(['*']);
+
+                if (issueToData && issueToData.length) {
+
+                    issueToId = issueToData[0].id;
+                } else {
+
+                    let issueToResult = await knex('adjust_part_users').insert({
+                        name: payload.issueTo,
+                        // mobile: partStockPayload.mobile,
+                        //email: partStockPayload.email,
+                        createdAt: currentTime,
+                        updatedAt: currentTime,
+                        orgId: req.orgId
+                    }).returning(['*'])
+                    issueToId = issueToResult[0].id;
+                }
+            }
+
+            /*GET RECEIVE BY & ISSUE BY & ISSUE TO ID CLOSE */
+
+
+
             let ledgerObject = {
                 partId: assignedResult.partId,
                 unitCost: assignedResult.unitCost,
@@ -3333,18 +3423,21 @@ const partsController = {
                 serviceOrderNo: assignedResult.entityId,
                 orgId: req.orgId,
                 approvedBy: req.me.id,
-                receiveBy: payload.receiveBy,
+                receiveBy: receiveById,
                 receiveDate: recDate,
-                issueBy: payload.issueBy,
-                issueTo: payload.issueTo,
+                issueBy: issueById,
+                issueTo: issueToId,
                 taskAssignPartId: assignedResult.entityId,
                 // issueDate: issueDate,
             }
             let partLedger = await knex.insert(ledgerObject).returning(['*']).into('part_ledger');
 
             // update task_assigned_parts_in pm
-            const updateAssignParts = await knex('task_assigned_part').update({ status: 1 }).where({ orgId: req.orgId, id: getInfoData.Id }).returning(['*'])
 
+            if (getInfoData) {
+
+                const updateAssignParts = await knex('task_assigned_part').update({ status: 1 }).where({ orgId: req.orgId, id: getInfoData.Id }).returning(['*'])
+            }
 
             return res.status(200).json({
                 data: {
@@ -3979,13 +4072,16 @@ const partsController = {
 
             let approveResult = await knex('part_ledger').where({ 'serviceOrderNo': payload.soId })
                 .leftJoin("users", 'part_ledger.approvedBy', 'users.id')
+                .leftJoin('adjust_part_users as iBy', 'part_ledger.issueBy', 'iBy.id')
+                .leftJoin('adjust_part_users as iTo', 'part_ledger.issueTo', 'iTo.id')
+                //.leftJoin('adjust_part_users as rBy', 'part_ledger.issueBy', 'rBy.id')
                 //.leftJoin('users as ib', 'part_ledger.issueBy', 'ib.id')
                 //.leftJoin('users as it', 'part_ledger.issueTo', 'it.id')
                 .select([
                     'users.name as approvedUser',
                     'part_ledger.createdAt as approvedAt',
-                    'part_ledger.issueBy',
-                    'part_ledger.issueTo',
+                    'iBy.name as issueBy',
+                    'iTo.name as issueTo',
                     'part_ledger.issueDate',
                     'part_ledger.receiveDate'
                 ])
@@ -4608,6 +4704,60 @@ const partsController = {
                 assignedStatus = await knex('assigned_parts').insert({ unitCost: partInfo.unitCost, quantity: partInfo.Quantity, status: 'in progress', orgId: req.orgId, createdAt: currentTime.getTime(), updatedAt: currentTime.getTime(), partId: partInfo.pid, entityId: taskAssignedPartId, entityType: 'task_assigned_part' }).returning(['*']);
 
                 updatedTaskPart = await knex('task_assigned_part').update({ status: 3 }).where({ id: taskAssignedPartId, orgId: req.orgId }).returning(['*'])
+
+                return res.status(200).json({
+                    data: {
+                        data: assignedStatus
+                    },
+                    message: "Request has been sent successfully!"
+                });
+            }
+
+        } catch (err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    requestMultiplePartForPm:async(req,res)=>{
+        try {
+            let taskAssignedPartId = req.body.taskAssignedPartId;
+            let assignedStatus;
+            let partInfo;
+            const currentTime = new Date();
+
+
+            assignedParts = await knex('assigned_parts').select('*').where({ entityType: 'task_assigned_part' }).whereIn('entityId', taskAssignedPartId)
+
+            if (assignedParts && assignedParts.length) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "VALIDATION_ERROR", message: 'You have already sent part request !!' }
+                    ]
+                });
+            } else {
+                partInfo = await knex('task_assigned_part')
+                .leftJoin('part_master', 'task_assigned_part.partId', 'part_master.id')
+                .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
+                .select(
+                    'task_assigned_part.partId as pid',
+                    'task_assigned_part.quantity as Quantity',
+                    'task_assigned_part.taskId as TaskId',
+                    'part_ledger.unitCost as unitCost'
+                )
+                .whereIn('task_assigned_part.id', taskAssignedPartId)
+                .first()
+
+                if(taskAssignedPartId && taskAssignedPartId.length > 0){
+                    for(let id of taskAssignedPartId){
+                        console.log("id of task",id)
+                        assignedStatus = await knex('assigned_parts').insert({ unitCost: partInfo.unitCost, quantity: partInfo.Quantity, status: 'in progress', orgId: req.orgId, createdAt: currentTime.getTime(), updatedAt: currentTime.getTime(), partId: partInfo.pid, entityId: id, entityType: 'task_assigned_part' }).returning(['*']);
+                        updatedTaskPart = await knex('task_assigned_part').update({ status: 3 }).where({ id: id, orgId: req.orgId }).returning(['*'])
+                    }
+                }
+                // assignedStatus = await knex('assigned_parts').insert({ unitCost: partInfo.unitCost, quantity: partInfo.Quantity, status: 'in progress', orgId: req.orgId, createdAt: currentTime.getTime(), updatedAt: currentTime.getTime(), partId: partInfo.pid, entityId: taskAssignedPartId, entityType: 'task_assigned_part' }).returning(['*']);
+
+                // updatedTaskPart = await knex('task_assigned_part').update({ status: 3 }).where({  orgId: req.orgId }).whereIn('id', taskAssignedPartId).returning(['*'])
 
                 return res.status(200).json({
                     data: {
