@@ -262,6 +262,14 @@ router.post(
   taskGroupController.getWorkOrderList
 )
 
+router.post(
+  "/update-task-status-result",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  taskGroupController.updateTaskStatusResult
+)
+
 
 
 
