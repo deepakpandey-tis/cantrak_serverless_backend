@@ -8,7 +8,7 @@ const uuid = require("uuid/v4");
 const emailHelper = require('../helpers/email')
 
 const vendorController = {
-    getVendors: async (req, res) => {
+    getVendors: async(req, res) => {
         let orgId = req.orgId;
         const vendors = await knex.select().from('vendor_master').where({ orgId });
         res.status(200).json({
@@ -18,7 +18,7 @@ const vendorController = {
         });
     },
     /*ADD VENDOR */
-    addVendor: async (req, res) => {
+    addVendor: async(req, res) => {
 
         try {
             let roleInserted;
@@ -105,7 +105,7 @@ const vendorController = {
                 let uuidv4 = uuid()
                 let currentTime = new Date().getTime()
                 insertedUser = await knex("users")
-                    .insert({ ...payload, mobileNo: mobileNo, verifyToken: uuidv4, emailVerified: emailVerified, isActive: isActive, createdAt: currentTime, updatedAt: currentTime, createdBy: req.me.id, orgId: orgId })
+                    .insert({...payload, mobileNo: mobileNo, verifyToken: uuidv4, emailVerified: emailVerified, isActive: isActive, createdAt: currentTime, updatedAt: currentTime, createdBy: req.me.id, orgId: orgId })
                     .returning(["*"])
                     .transacting(trx);
                 console.log(payload);
@@ -126,7 +126,8 @@ const vendorController = {
                 trx.commit;
             })
             return res.status(200).json({
-                insertedUser, roleInserted,
+                insertedUser,
+                roleInserted,
                 message: "Vendor created successfully!"
 
             });
@@ -139,9 +140,8 @@ const vendorController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
-    }
-    ,
-    getVendorsList: async (req, res) => {
+    },
+    getVendorsList: async(req, res) => {
         try {
 
             let filters = {}
@@ -167,76 +167,76 @@ const vendorController = {
 
             [total, rows] = await Promise.all([
                 knex("users")
-                    .leftJoin(
-                        "application_user_roles",
-                        "users.id",
-                        "application_user_roles.userId"
-                    )
-                    .select([
-                        "users.name as name",
-                        "users.email as email",
-                        "users.id as userId",
-                        "users.isActive",
-                        "users.mobileNo",
-                        "users.phoneNo",
-                        "users.location",
-                        "users.userName",
-                    ])
-                    .where({
-                        "application_user_roles.roleId": 5,
-                        "users.orgId": req.orgId
-                    })
-                    .groupBy(['users.id'])
-                    .distinct(['users.id'])
-                    .andWhere(qb => {
-                        if (name) {
+                .leftJoin(
+                    "application_user_roles",
+                    "users.id",
+                    "application_user_roles.userId"
+                )
+                .select([
+                    "users.name as name",
+                    "users.email as email",
+                    "users.id as userId",
+                    "users.isActive",
+                    "users.mobileNo",
+                    "users.phoneNo",
+                    "users.location",
+                    "users.userName",
+                ])
+                .where({
+                    "application_user_roles.roleId": 5,
+                    "users.orgId": req.orgId
+                })
+                .groupBy(['users.id'])
+                .distinct(['users.id'])
+                .andWhere(qb => {
+                    if (name) {
 
-                            qb.where('users.name', 'iLIKE', `%${name}%`)
-                            qb.orWhere('users.email', 'iLIKE', `%${name}%`)
-                            qb.orWhere('users.mobileNo', 'iLIKE', `%${name}%`)
-                            qb.orWhere('users.userName', 'iLIKE', `%${name}%`)
+                        qb.where('users.name', 'iLIKE', `%${name}%`)
+                        qb.orWhere('users.email', 'iLIKE', `%${name}%`)
+                        qb.orWhere('users.mobileNo', 'iLIKE', `%${name}%`)
+                        qb.orWhere('users.userName', 'iLIKE', `%${name}%`)
 
-                        }
-                    })
+                    }
+                })
 
                 ,
                 knex("users")
-                    .leftJoin(
-                        "application_user_roles",
-                        "users.id",
-                        "application_user_roles.userId"
-                    )
-                    .select([
-                        "users.name as name",
-                        "users.email as email",
-                        "users.id as userId",
-                        "users.isActive",
-                        "users.mobileNo",
-                        "users.phoneNo",
-                        "users.location",
-                        "users.userName",
-                    ])
-                    .orderBy(sortPayload.sortBy, sortPayload.orderBy)
-                    .where({
-                        "application_user_roles.roleId": 5,
-                        "users.orgId": req.orgId
-                    })
-                    .andWhere(qb => {
+                .leftJoin(
+                    "application_user_roles",
+                    "users.id",
+                    "application_user_roles.userId"
+                )
+                .select([
+                    "users.name as name",
+                    "users.email as email",
+                    "users.id as userId",
+                    "users.isActive",
+                    "users.mobileNo",
+                    "users.phoneNo",
+                    "users.location",
+                    "users.userName",
+                ])
+                .orderBy(sortPayload.sortBy, sortPayload.orderBy)
+                .where({
+                    "application_user_roles.roleId": 5,
+                    "users.orgId": req.orgId
+                })
+                .andWhere(qb => {
 
 
-                        if (name) {
+                    if (name) {
 
-                            qb.where('users.name', 'iLIKE', `%${name}%`)
-                            qb.orWhere('users.email', 'iLIKE', `%${name}%`)
-                            qb.orWhere('users.mobileNo', 'iLIKE', `%${name}%`)
-                            qb.orWhere('users.userName', 'iLIKE', `%${name}%`)
-                        }
+                        qb.where('users.name', 'iLIKE', `%${name}%`)
+                        qb.orWhere('users.email', 'iLIKE', `%${name}%`)
+                        qb.orWhere('users.mobileNo', 'iLIKE', `%${name}%`)
+                        qb.orWhere('users.userName', 'iLIKE', `%${name}%`)
+                    }
 
-                    })
-                    .groupBy(['users.id'])
-                    .distinct(['users.id'])
-                    .offset(offset)
-                    .limit(per_page)
+                })
+                .groupBy(['users.id'])
+                .distinct(['users.id'])
+                .offset(offset)
+                .limit(per_page)
             ]);
 
 
@@ -267,7 +267,7 @@ const vendorController = {
         }
     },
     /*GET VENDOR DETAILS */
-    getVendorsDetails: async (req, res) => {
+    getVendorsDetails: async(req, res) => {
 
         try {
 
@@ -310,7 +310,7 @@ const vendorController = {
 
         }
     },
-    updateVendor: async (req, res) => {
+    updateVendor: async(req, res) => {
         try {
             let insertedUser;
             await knex.transaction(async trx => {
@@ -405,7 +405,7 @@ const vendorController = {
                 payload = _.omit(payload, 'allowLogin')
                 let currentTime = new Date().getTime()
                 insertedUser = await knex("users")
-                    .update({ ...payload, mobileNo: mobileNo, emailVerified: emailVerified, isActive: isActive, updatedAt: currentTime, orgId: orgId })
+                    .update({...payload, mobileNo: mobileNo, emailVerified: emailVerified, isActive: isActive, updatedAt: currentTime, orgId: orgId })
                     .returning(["*"])
                     .transacting(trx)
                     .where({ id: payload.id });
@@ -429,7 +429,7 @@ const vendorController = {
             });
         }
     },
-    getVendorsData: async (req, res) => {
+    getVendorsData: async(req, res) => {
         try {
             vendorsResult = await knex('application_user_roles')
                 .leftJoin('users', 'application_user_roles.userId', 'users.id')
@@ -441,6 +441,7 @@ const vendorController = {
                 .where({ 'application_user_roles.roleId': 5, 'application_user_roles.orgId': req.orgId, 'users.isActive': true })
                 .orderBy('users.name', 'asc')
                 .returning('*')
+
 
             console.log("vendorsList", vendorsResult);
 
@@ -464,7 +465,7 @@ const vendorController = {
 
 
     },
-    getAssignedVendors: async (req, res) => {
+    getAssignedVendors: async(req, res) => {
         try {
             const entityId = req.body.entityId;
             const entityType = req.body.entityType;

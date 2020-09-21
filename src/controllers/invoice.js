@@ -14,7 +14,7 @@ const request = require("request");
 
 const invoiceController = {
 
-    getInvoiceDetails: async(req, res) => {
+    getInvoiceDetails: async (req, res) => {
         try {
 
             let payload = { entityId: req.query.entityId, entityType: req.query.entityType };
@@ -73,7 +73,7 @@ const invoiceController = {
         }
     },
 
-    updateInvoice: async(req, res) => {
+    updateInvoice: async (req, res) => {
         try {
             // validate keys
             let userId = req.me.id;
@@ -188,7 +188,7 @@ const invoiceController = {
         }
     },
 
-    getServiceOrderInvoice: async(req, res) => {
+    getServiceOrderInvoice: async (req, res) => {
         try {
             let { serviceOrderId } = req.body;
             let userInfo;
@@ -198,20 +198,20 @@ const invoiceController = {
             let pagination = {};
             [rows] = await Promise.all([
                 knex("service_orders")
-                .leftJoin(
-                    "service_appointments",
-                    "service_orders.id",
-                    "service_appointments.serviceOrderId"
-                )
-                .select([
-                    "service_appointments.appointedDate",
-                    "service_appointments.appointedTime",
-                    "service_orders.*"
-                ])
-                .where({
-                    "service_orders.id": serviceOrderId,
-                    "service_orders.orgId": req.orgId
-                })
+                    .leftJoin(
+                        "service_appointments",
+                        "service_orders.id",
+                        "service_appointments.serviceOrderId"
+                    )
+                    .select([
+                        "service_appointments.appointedDate",
+                        "service_appointments.appointedTime",
+                        "service_orders.*"
+                    ])
+                    .where({
+                        "service_orders.id": serviceOrderId,
+                        "service_orders.orgId": req.orgId
+                    })
             ]);
             let serviceOrderMaster = await knex("service_orders")
                 .leftJoin("service_requests", "service_orders.serviceRequestId", "=", "service_requests.id")
@@ -251,20 +251,22 @@ const invoiceController = {
             console.log("results", teamsResult.rows);
 
             let additionalUsers = othersUserData.rows;
-            let teamData = {...teamsResult.rows, additionalUsers };
+            let teamData = { ...teamsResult.rows, additionalUsers };
 
 
             console.log("SurveyOrderDate", surveyOrderData);
             requesterInfo = await knex("service_requests")
                 .leftJoin("requested_by", "service_requests.requestedBy", "=", "requested_by.id")
                 .leftJoin("source_of_request", "service_requests.serviceType", "=", "source_of_request.id")
+                .leftJoin("users", "service_requests.createdBy", "=", "users.id")
                 .select(
                     "requested_by.name",
                     "source_of_request.requestCode",
                     "service_requests.createdAt",
                     "service_requests.description",
                     "service_requests.location",
-                    "service_requests.priority"
+                    "service_requests.priority",
+                    "users.name as createdBy"
                 )
                 .where({
                     "service_requests.id": serviceRequestId
@@ -312,13 +314,31 @@ const invoiceController = {
                     "property_units.unitNumber as unitNumber",
                     "property_units.description as unitDescription",
                     "property_units.houseId as houseId",
-                    "companies.logoFile"
+                    "companies.logoFile",
+                    "companies.orgLogoFile"
                 )
                 .where({
                     "property_units.id": serviceOrderMaster.houseId
                 }).first();
 
             console.log("PropertyInfo", propertyInfo);
+
+
+            // Ger Problem Category/Sub Category/Details
+            problemDetails = await knex("service_problems")
+                .leftJoin("incident_categories", "service_problems.categoryId", "=", "incident_categories.id")
+                .leftJoin("incident_sub_categories", "service_problems.problemId", "=", "incident_sub_categories.id")
+                .select(
+                    "incident_categories.categoryCode ",
+                    "incident_categories.descriptionEng",
+                    // "incident_sub_categories.categoryCode as subCategoryCode",
+                    "incident_sub_categories.descriptionEng as subCategoryDescriptionEng",
+                    "service_problems.description"
+                )
+                .where({
+                    "service_problems.serviceRequestId": serviceRequestId,
+                    "service_problems.orgId": orgId
+                });
 
             let locationResult = await knex("location_tags")
                 .leftJoin("location_tags_master", "location_tags.locationTagId", "location_tags_master.id")
@@ -333,7 +353,7 @@ const invoiceController = {
             console.log("locationResult", tags);
 
 
-            userInfo = {...tenantInfo, requesterInfo, propertyInfo, serviceMaster: serviceOrderMaster, surveyData: surveyOrderData, surveyOrderNotes: remarkNotes, teams: teamData }
+            userInfo = { ...tenantInfo, requesterInfo, propertyInfo, problemDetails, serviceMaster: serviceOrderMaster, surveyData: surveyOrderData, surveyOrderNotes: remarkNotes, teams: teamData }
             pagination.data = rows;
             pagination.tenant = userInfo;
 
