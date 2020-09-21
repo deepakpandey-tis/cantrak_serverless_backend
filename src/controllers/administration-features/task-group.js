@@ -1406,9 +1406,11 @@ const taskGroupController = {
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
         });
       }
+      // let currentDate = new Date()
+      // console.log("Current date",currentDate)
 
       let workOrderTime = moment(req.body.workOrderDate).endOf('date').format('YYYY-MM-DD')
-      console.log('work order time',workOrderTime,req.body.workOrderDate)
+      // console.log('work order time',workOrderTime,req.body.workOrderDate)
 
       let pagination = {};
       let per_page = reqData.per_page || 10;
@@ -2180,7 +2182,8 @@ const taskGroupController = {
           'assigned_service_team.userId as mainUserId',
           'users.name as mainUser',
           'task_group_schedule_assign_assets.pmDate as pmDate',
-          'task_group_schedule_assign_assets.displayId'
+          'task_group_schedule_assign_assets.displayId',
+          'task_group_schedule_assign_assets.status as woStatus'
         ])
         .where({
           'task_group_schedule.id': payload.taskGroupScheduleId,
@@ -3461,15 +3464,82 @@ const taskGroupController = {
   },
 
   /** Single update task status with result  */
+  updateTaskStatusResult:async(req,res)=>{
+    try {
+      const payload = req.body
+      const schema = Joi.object().keys({
+        taskGroupId : Joi.string().required(),
+        result : Joi.number().required(),
+        userId: Joi.string().required(),
+        // taskMode:Joi.number().required()
+      })
+
+      const result = Joi.validate(_.omit(payload, "taskArr"), schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+
+      let workOrderDate;
+      let workOrderId;
+      if (payload.taskArr.length) {
+
+        workOrderDate = payload.taskArr[0].pmDate;
+        workOrderId = payload.taskArr[0].workOrderId;
+
+      }
+      payload.workOrderDate = workOrderDate;
+      payload.workOrderId = workOrderId;
+      let currentTime = new Date().getTime()
+      let taskUpdated = [];
+      let updateResult;
+
+
+      for (let t of payload.taskArr) {
+            let updateStatus
+            if(t.desireValue){
+              updateStatus = t.desireValue
+            }else{
+              updateStatus = payload.status
+            }
+            if (t.desireStatus) {
+              updateResult = t.desireStatus;
+            } else {
+              updateResult = payload.result;
+            }
+            taskUpdate = await knex('pm_task').update({ status: updateStatus, result: updateResult ,taskMode:payload.taskMode}).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId,taskMode:null }).orWhere({taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId,taskMode:1 }).returning(['*'])
+
+            taskUpdated.push(taskUpdate);
+
+      }
+      return res.status(200).json({
+        data: {
+          taskUpdated
+        },
+        message: 'Task updated'
+      })
+    } catch (err) {
+
+      console.log('[controllers][task-group][get-pm-task-details] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
   taskPerform: async (req, res) => {
     try {
       const payload = req.body;
-      console.log("task payload",payload)
+      // console.log("task payload",payload)
       const schema = Joi.object().keys({
         taskGroupId: Joi.string().required(),
         //taskId: Joi.string().required(),
         result: Joi.number().required(),
         status: Joi.string().required(),
+        // result: Joi.number().allow(null).optional(),
+        // status: Joi.string().allow("").optional(),
         userId: Joi.string().required(),
         taskMode:Joi.number().required()
         //cancelReason: Joi.string().allow("").allow(null).optional(),
@@ -3556,9 +3626,9 @@ const taskGroupController = {
 
 
       } else {
-        console.log("task mode",payload.taskMode)
+        // console.log("task mode",payload.taskMode)
 
-        await knex('task_group_schedule_assign_assets').update({ status: 'COM', updatedAt: currentTime, }).where({ id: payload.workOrderId, orgId: req.orgId }).returning(['*'])
+        // let workOrder = await knex('task_group_schedule_assign_assets').update({ status: 'COM', updatedAt: currentTime, }).where({ id: payload.workOrderId, orgId: req.orgId }).returning(['*'])
 
         if (payload.status === 'C') {
           // taskUpdated = await knex('pm_task').update({ status: payload.status, cancelReason: payload.status,taskMode:payload.taskMode }).where({ taskGroupId: payload.taskGroupId, id: payload.taskId, orgId: req.orgId }).returning(['*'])
@@ -3568,7 +3638,7 @@ const taskGroupController = {
 
           for (let t of payload.taskArr) {
 
-// console.log("taskMode is 1",payload)
+            // console.log("taskMode is 1",payload)
             // if (t.result == 2 || t.result == 3) {
 
             // } else {
@@ -3620,6 +3690,7 @@ const taskGroupController = {
       });
     }
   },
+ 
 
   /** All update task status with result  */
   allTaskPerform: async (req, res) => {
@@ -3765,7 +3836,7 @@ const taskGroupController = {
             scheduleStatus = "off"
           }
 
-          let workOrder = await knex('task_group_schedule_assign_assets').update({ status: payload.status, updatedAt: currentTime, scheduleStatus: scheduleStatus }).where({ id: payload.workOrderId, orgId: req.orgId }).returning(['*'])
+          // let workOrder = await knex('task_group_schedule_assign_assets').update({ status: payload.status, updatedAt: currentTime, scheduleStatus: scheduleStatus }).where({ id: payload.workOrderId, orgId: req.orgId }).returning(['*'])
 
         }
 
