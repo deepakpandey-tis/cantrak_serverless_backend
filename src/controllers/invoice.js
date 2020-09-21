@@ -258,13 +258,15 @@ const invoiceController = {
             requesterInfo = await knex("service_requests")
                 .leftJoin("requested_by", "service_requests.requestedBy", "=", "requested_by.id")
                 .leftJoin("source_of_request", "service_requests.serviceType", "=", "source_of_request.id")
+                .leftJoin("users", "service_requests.createdBy", "=", "users.id")
                 .select(
                     "requested_by.name",
                     "source_of_request.requestCode",
                     "service_requests.createdAt",
                     "service_requests.description",
                     "service_requests.location",
-                    "service_requests.priority"
+                    "service_requests.priority",
+                    "users.name as createdBy"
                 )
                 .where({
                     "service_requests.id": serviceRequestId
