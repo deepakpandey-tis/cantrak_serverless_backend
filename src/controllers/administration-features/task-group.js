@@ -2288,6 +2288,7 @@ const taskGroupController = {
           'pm_task.id as taskId',
           'pm_task.taskName as taskName',
           'status.descriptionEng as status',
+          'status.statusCode',
           'pm_task.taskNameAlternate',
           'pm_task.taskSerialNumber',
           'pm_task.result',
@@ -3469,12 +3470,13 @@ const taskGroupController = {
       const payload = req.body
       const schema = Joi.object().keys({
         taskGroupId : Joi.string().required(),
-        result : Joi.number().required(),
-        userId: Joi.string().required(),
+        // result : Joi.number().required(),
+        // userId: Joi.string().required(),
         // taskMode:Joi.number().required()
       })
 
-      const result = Joi.validate(_.omit(payload, "taskArr"), schema);
+      console.log("status and result",payload)
+      const result = Joi.validate(_.omit(payload, "taskArr","result","status","taskMode"), schema);
       if (result && result.hasOwnProperty("error") && result.error) {
         return res.status(400).json({
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
@@ -3497,18 +3499,20 @@ const taskGroupController = {
 
 
       for (let t of payload.taskArr) {
+        console.log("payload.taskArr1",payload.taskArr)
             let updateStatus
             if(t.desireValue){
               updateStatus = t.desireValue
-            }else{
-              updateStatus = payload.status
+            }else if(req.body.status){
+              updateStatus = req.body.status
             }
             if (t.desireStatus) {
               updateResult = t.desireStatus;
-            } else {
-              updateResult = payload.result;
+            } else if(req.body.result) {
+              updateResult = req.body.result;
             }
-            taskUpdate = await knex('pm_task').update({ status: updateStatus, result: updateResult ,taskMode:payload.taskMode}).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId,taskMode:null }).orWhere({taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId,taskMode:1 }).returning(['*'])
+            console.log("rasultsAnd Status",updateResult,updateStatus,payload)
+            taskUpdate = await knex('pm_task').update({ status: updateStatus, result: updateResult,taskMode:req.body.taskMode}).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId,taskMode:null }).orWhere({taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId,taskMode:1 }).returning(['*'])
 
             taskUpdated.push(taskUpdate);
 
@@ -3536,8 +3540,8 @@ const taskGroupController = {
       const schema = Joi.object().keys({
         taskGroupId: Joi.string().required(),
         //taskId: Joi.string().required(),
-        result: Joi.number().required(),
-        status: Joi.string().required(),
+        // result: Joi.number().required(),
+        // status: Joi.string().required(),
         // result: Joi.number().allow(null).optional(),
         // status: Joi.string().allow("").optional(),
         userId: Joi.string().required(),
@@ -3547,7 +3551,7 @@ const taskGroupController = {
         //workOrderDate: Joi.date().required()
 
       })
-      const result = Joi.validate(_.omit(payload, "taskArr"), schema);
+      const result = Joi.validate(_.omit(payload, "taskArr","result","status"), schema);
       if (result && result.hasOwnProperty("error") && result.error) {
         return res.status(400).json({
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
@@ -3575,7 +3579,7 @@ const taskGroupController = {
         for (let t of payload.taskArr) {
 
           if (t.result == 2 || t.result == 3) {
-            let taskUpdate = await knex('pm_task').update({status:'COM',result:payload.result,taskMode:payload.taskMode}).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
+            let taskUpdate = await knex('pm_task').update({status:'COM',result:req.body.result,taskMode:payload.taskMode}).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
             taskUpdated.push(taskUpdate)
           } else {
 
@@ -3596,7 +3600,7 @@ const taskGroupController = {
                 updateResult = t.desireStatus;
 
               } else {
-                updateResult = payload.result;
+                updateResult = req.body.result;
               }
 
               // let taskUpdate = await knex('pm_task').update({ result: updateResult, status: payload.status, completedAt: currentTime, completedBy: payload.userId,taskMode:payload.taskMode }).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
@@ -3660,7 +3664,7 @@ const taskGroupController = {
                   updateResult = t.desireStatus;
 
                 } else {
-                  updateResult = payload.result;
+                  updateResult = req.body.result;
                 }
 
                 taskUpdate = await knex('pm_task').update({ status: updateStatus, result: updateResult ,taskMode:payload.taskMode}).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId,taskMode:null }).orWhere({taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId,taskMode:1 }).returning(['*'])
@@ -3699,15 +3703,17 @@ const taskGroupController = {
       const schema = Joi.object().keys({
         taskGroupId: Joi.string().required(),
         //taskId: Joi.string().required(),
-        result: Joi.number().required(),
-        status: Joi.string().required(),
+        // result: Joi.number().required(),
+        // status: Joi.string().required(),
+        // result: Joi.number().allow(null).optional(),
+        // status: Joi.string().allow("").optional(),
         userId: Joi.string().required(),
         taskMode: Joi.number().required()
         //workOrderId: Joi.string().required(),
         //workOrderDate: Joi.date().required()
 
       })
-      const result = Joi.validate(_.omit(payload, "taskArr"), schema);
+      const result = Joi.validate(_.omit(payload, "taskArr","result","status"), schema);
       if (result && result.hasOwnProperty("error") && result.error) {
         return res.status(400).json({
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
@@ -3738,7 +3744,7 @@ const taskGroupController = {
         for (let t of payload.taskArr) {
 
           if (t.result == 2 || t.result == 3) {
-            let taskUpdate = await knex('pm_task').update({status:'COM',result:payload.result,taskMode:payload.taskMode}).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
+            let taskUpdate = await knex('pm_task').update({status:'COM',result:req.body.result,taskMode:payload.taskMode}).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
             taskUpdated.push(taskUpdate)
 
 
@@ -3761,7 +3767,7 @@ const taskGroupController = {
                 updateResult = t.desireStatus;
 
               } else {
-                updateResult = payload.result;
+                updateResult = req.body.result;
               }
 
               let taskUpdate = await knex('pm_task').update({ result: updateResult, status: 'COM', completedAt: currentTime, completedBy: payload.userId,taskMode:payload.taskMode }).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
@@ -3813,7 +3819,7 @@ const taskGroupController = {
                 updateResult = t.desireStatus;
 
               } else {
-                updateResult = payload.result;
+                updateResult = req.body.result;
               }
 
               let taskUpdate = await knex('pm_task').update({ result: updateResult, status: updateStatus, completedAt: currentTime, completedBy: payload.userId,taskMode:payload.taskMode }).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId,taskMode:null }).orWhere({taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId,taskMode:1}).returning(['*'])
