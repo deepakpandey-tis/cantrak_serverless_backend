@@ -328,12 +328,14 @@ const invoiceController = {
             problemDetails = await knex("service_problems")
                 .leftJoin("incident_categories", "service_problems.categoryId", "=", "incident_categories.id")
                 .leftJoin("incident_sub_categories", "service_problems.problemId", "=", "incident_sub_categories.id")
+                .leftJoin("incident_type", "incident_sub_categories.incidentTypeId", "=", "incident_type.id")
                 .select(
                     "incident_categories.categoryCode ",
                     "incident_categories.descriptionEng",
                     // "incident_sub_categories.categoryCode as subCategoryCode",
                     "incident_sub_categories.descriptionEng as subCategoryDescriptionEng",
-                    "service_problems.description"
+                    "service_problems.description",
+                    "incident_type.typeCode as problemType"
                 )
                 .where({
                     "service_problems.serviceRequestId": serviceRequestId,
