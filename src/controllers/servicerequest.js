@@ -3333,7 +3333,7 @@ const serviceRequestController = {
                     .where({ id: serviceRequestId });
 
                 await knex("service_orders")
-                    .update({ signature: signatureImg, ratings: ratings, comment: comments, updatedAt: currentTime })
+                    .update({ signature: signatureImg, ratings: ratings, comment: comments, updatedAt: currentTime,completedOn: currentTime })
                     .where({ serviceRequestId: serviceRequestId });
             }
             if (updateStatus === 'C') {
