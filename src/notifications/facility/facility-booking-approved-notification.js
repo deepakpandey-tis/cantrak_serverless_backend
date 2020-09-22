@@ -30,7 +30,7 @@ const bookingApprovedNotification = {
 
     sendInAppNotification: async (sender, receiver, data) => {
         // let name = data.payload.
-        console.log("data of payload inapp",data)
+        console.log("data of payload inapp",data.payload.time)
 
         data = {
             orgId: sender.orgId,
