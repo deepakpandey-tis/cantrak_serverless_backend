@@ -1228,8 +1228,11 @@ const taskGroupController = {
               qb.whereIn('asset_master.assetCategoryId',req.body.assetCategoryId)
             }
             if(req.body.workOrderDate){
-              console.log("work order date")
-              qb.whereRaw(`Math.round(task_group_schedule_assign_assets."pmDate".getTime()/1000) = ${workOrderTime}`)
+              let workDateFrom = moment(req.body.workOrderDate).startOf('date');
+              let workDateTo = moment(req.body.workOrderDate).endOf('date');
+              qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
+              // console.log("work order date")
+              // qb.whereRaw(`Math.round(task_group_schedule_assign_assets."pmDate".getTime()/1000) = ${workOrderTime}`)
               // qb.whereRaw(`date_format((task_group_schedule_assign_assets."pmDate"),'%Y-%m-%d')='${workOrderTime}'`)
               // qb.where(
               //   `DATE("task_group_schedule_assign_assets"."pmDate") = workOrderTime)`
@@ -1300,7 +1303,10 @@ const taskGroupController = {
               qb.whereIn('asset_master.assetCategoryId',req.body.assetCategoryId)
             }
             if(req.body.workOrderDate){
-              qb.whereRaw(`Math.round(task_group_schedule_assign_assets."pmDate".getTime()/1000) = ${workOrderTime}`)
+              let workDateFrom = moment(req.body.workOrderDate).startOf('date');
+              let workDateTo = moment(req.body.workOrderDate).endOf('date');
+              qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
+              // qb.whereRaw(`Math.round(task_group_schedule_assign_assets."pmDate".getTime()/1000) = ${workOrderTime}`)
               // qb.whereRaw(`to_char((task_group_schedule_assign_assets."pmDate"),'YYYY-MM-DD')='${workOrderTime}'`)
               // qb.whereRaw(`Math.round(task_group_schedule_assign_assets."pmDate").getTime()/1000 = ${workOrderTime}`)
             }
@@ -1385,7 +1391,7 @@ const taskGroupController = {
       let reqData = req.query;
       let payLoad = req.body;
       let workOrderDate = req.body.workOrderDate
-      console.log("work order list data",req.body)
+      // console.log("work order list data",req.body)
 
       const payload = _.omit(payLoad, [
         "assetCategoryId",
@@ -1406,10 +1412,21 @@ const taskGroupController = {
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
         });
       }
-      // let currentDate = new Date()
+
+      let currentDate = new Date()
+      let newDate = new Date(currentDate.setFullYear(currentDate.getFullYear()+ 1))
+      let currentDateStart = moment(currentDate).startOf('date')
+      let newDateStart = moment(newDate).startOf('date')
+      // let dateAfterOneYear = moment().add(1,'y')
+      
+
+      // let currentDateStartTime = moment(currentDate).startOf('date')
+      // let dateAfterOneYearStartTime = moment(dateAfterOneYear).startOf('date')
+      console.log("start date of month",currentDateStart,newDateStart)
+
       // console.log("Current date",currentDate)
 
-      let workOrderTime = moment(req.body.workOrderDate).endOf('date').format('YYYY-MM-DD')
+      // let workOrderTime = moment(req.body.workOrderDate).endOf('date').format('YYYY-MM-DD')
       // console.log('work order time',workOrderTime,req.body.workOrderDate)
 
       let pagination = {};
@@ -1441,6 +1458,7 @@ const taskGroupController = {
             // "task_group_schedule.taskGroupId": payload.taskGroupId,
             "task_group_schedule.orgId": req.orgId
           })
+          // .whereBetween()
           .where(qb => {
             if (payload.workOrderId && payload.workOrderId != null) {
               qb.where('task_group_schedule_assign_assets.displayId', payload.workOrderId)
@@ -1454,6 +1472,10 @@ const taskGroupController = {
             }
             if(req.body.workOrderDate ){
               console.log("work order date")
+              let workDateFrom = moment(req.body.workOrderDate).startOf('date');
+              let workDateTo = moment(req.body.workOrderDate).endOf('date');
+              console.log("workDateFrom",workDateFrom)
+              qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
               // qb.whereRaw(`to_char((task_group_schedule_assign_assets."pmDate"),'YYYY-MM-DD')='${workOrderTime}'`)
               // qb.where(
               //   `DATE("task_group_schedule_assign_assets"."pmDate") = workOrderTime)`
@@ -1535,6 +1557,9 @@ const taskGroupController = {
               qb.whereIn('asset_master.assetCategoryId',req.body.assetCategoryId)
             }
             if(req.body.workOrderDate){
+              let workDateFrom = moment(req.body.workOrderDate).startOf('date');
+              let workDateTo = moment(req.body.workOrderDate).endOf('date');
+              qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
               // qb.whereRaw(`to_char((task_group_schedule_assign_assets."pmDate"),'YYYY-MM-DD')='${workOrderTime}'`)
             }
             if(req.body.assetName && req.body.assetName.length > 0){
@@ -3579,8 +3604,16 @@ const taskGroupController = {
         for (let t of payload.taskArr) {
 
           if (t.result == 2 || t.result == 3) {
-            let taskUpdate = await knex('pm_task').update({status:'COM',result:req.body.result,taskMode:payload.taskMode}).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
-            taskUpdated.push(taskUpdate)
+            // let taskUpdate = await knex('pm_task').update({status:'COM',result:req.body.result,taskMode:payload.taskMode}).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
+            // taskUpdated.push(taskUpdate)
+            if(req.body.result){
+              let taskUpdate = await knex('pm_task').update({status:'COM',result:req.body.result,taskMode:payload.taskMode}).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
+              taskUpdated.push(taskUpdate)
+            }else{
+              let taskUpdate = await knex('pm_task').update({status:'COM',taskMode:payload.taskMode}).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
+              taskUpdated.push(taskUpdate)
+  
+            }
           } else {
 
 
@@ -3744,9 +3777,15 @@ const taskGroupController = {
         for (let t of payload.taskArr) {
 
           if (t.result == 2 || t.result == 3) {
+            
+            if(req.body.result){
             let taskUpdate = await knex('pm_task').update({status:'COM',result:req.body.result,taskMode:payload.taskMode}).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
             taskUpdated.push(taskUpdate)
+          }else{
+            let taskUpdate = await knex('pm_task').update({status:'COM',taskMode:payload.taskMode}).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
+            taskUpdated.push(taskUpdate)
 
+          }
 
           } else {
 
