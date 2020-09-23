@@ -1165,7 +1165,8 @@ const taskGroupController = {
         "assetCategoryId",
         "workOrderDate",
         "assetName",
-        "assetSerial"
+        "assetSerial",
+        "status"
       ]);
 
       const schema = Joi.object().keys({
@@ -1180,10 +1181,6 @@ const taskGroupController = {
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
         });
       }
-
-      // let workOrderDate = moment(workOrderDate).startOf('date').format("YYYY-MM-DD ")
-      // let workOrderTime = new Date(moment(workOrderDate).endOf('date').format("YYYY-MM-DD"))
-      // console.log('work order time',workOrderTime)
 
       let workOrderTime = moment(req.body.workOrderDate).endOf('date').format('YYYY-MM-DD')
       console.log('work order time',workOrderTime,req.body.workOrderDate)
@@ -1220,32 +1217,22 @@ const taskGroupController = {
             if (payload.workOrderId && payload.workOrderId != null) {
               qb.where('task_group_schedule_assign_assets.displayId', payload.workOrderId)
             }
-            // if (payload.category) {
-            //   qb.where('task_group_schedule_assign_assets.assetId', payload.category)
-            // }
             if(req.body.assetCategoryId && req.body.assetCategoryId.length > 0 ){
-              // console.log("asset category id")
               qb.whereIn('asset_master.assetCategoryId',req.body.assetCategoryId)
             }
             if(req.body.workOrderDate){
               let workDateFrom = moment(req.body.workOrderDate).startOf('date');
               let workDateTo = moment(req.body.workOrderDate).endOf('date');
               qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
-              // console.log("work order date")
-              // qb.whereRaw(`Math.round(task_group_schedule_assign_assets."pmDate".getTime()/1000) = ${workOrderTime}`)
-              // qb.whereRaw(`date_format((task_group_schedule_assign_assets."pmDate"),'%Y-%m-%d')='${workOrderTime}'`)
-              // qb.where(
-              //   `DATE("task_group_schedule_assign_assets"."pmDate") = workOrderTime)`
-              // )
-              // console.log("work order date",workOrderTime)
-              // qb.where('task_group_schedule_assign_assets.pmDate',workOrderTime)
             }
             if(req.body.assetName && req.body.assetName.length>0){
-              // console.log("Asset name")
               qb.whereIn('task_group_schedule_assign_assets.assetId',req.body.assetName)
             }
             if(req.body.assetSerial && req.body.assetSerial.length > 0){
               qb.whereIn('asset_master.id',req.body.assetSerial)
+            }
+            if(req.body.status){
+              qb.whereIn('task_group_schedule_assign_assets.status',req.body.status)
             }
           })
         ,
@@ -1293,7 +1280,6 @@ const taskGroupController = {
           })
           .where(qb => {
             if (payload.workOrderId && payload.workOrderId != null) {
-              // console.log("work order id",payload.workOrderId)
               qb.where('task_group_schedule_assign_assets.displayId', payload.workOrderId)
             }
             // if (payload.category) {
@@ -1306,15 +1292,15 @@ const taskGroupController = {
               let workDateFrom = moment(req.body.workOrderDate).startOf('date');
               let workDateTo = moment(req.body.workOrderDate).endOf('date');
               qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
-              // qb.whereRaw(`Math.round(task_group_schedule_assign_assets."pmDate".getTime()/1000) = ${workOrderTime}`)
-              // qb.whereRaw(`to_char((task_group_schedule_assign_assets."pmDate"),'YYYY-MM-DD')='${workOrderTime}'`)
-              // qb.whereRaw(`Math.round(task_group_schedule_assign_assets."pmDate").getTime()/1000 = ${workOrderTime}`)
             }
             if(req.body.assetName && req.body.assetName.length>0){
               qb.whereIn('task_group_schedule_assign_assets.assetId',req.body.assetName)
             }
             if(req.body.assetSerial && req.body.assetSerial.length > 0){
               qb.whereIn('asset_master.id',req.body.assetSerial)
+            }
+            if(req.body.status){
+              qb.whereIn('task_group_schedule_assign_assets.status',req.body.status)
             }
           })
           .offset(offset)
@@ -1398,12 +1384,15 @@ const taskGroupController = {
         "workOrderDate",
         "assetName",
         "assetSerial",
-        "pmName"
+        "pmName",
+        "status"
       ]);
 
       const schema = Joi.object().keys({
         category: Joi.string().allow("").allow(null).optional(),
         workOrderId: Joi.string().allow("").allow(null).optional(),
+        workOrderDateTo:Joi.string().required(),
+        workOrderDateFrom: Joi.string().required()
       });
 
       const result = Joi.validate(payload, schema);
@@ -1412,22 +1401,6 @@ const taskGroupController = {
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
         });
       }
-
-      let currentDate = new Date()
-      let newDate = new Date(currentDate.setFullYear(currentDate.getFullYear()+ 1))
-      let currentDateStart = moment(currentDate).startOf('date')
-      let newDateStart = moment(newDate).startOf('date')
-      // let dateAfterOneYear = moment().add(1,'y')
-      
-
-      // let currentDateStartTime = moment(currentDate).startOf('date')
-      // let dateAfterOneYearStartTime = moment(dateAfterOneYear).startOf('date')
-      console.log("start date of month",currentDateStart,newDateStart)
-
-      // console.log("Current date",currentDate)
-
-      // let workOrderTime = moment(req.body.workOrderDate).endOf('date').format('YYYY-MM-DD')
-      // console.log('work order time',workOrderTime,req.body.workOrderDate)
 
       let pagination = {};
       let per_page = reqData.per_page || 10;
@@ -1455,33 +1428,20 @@ const taskGroupController = {
             "pm_master2.id"
           )
           .where({
-            // "task_group_schedule.taskGroupId": payload.taskGroupId,
             "task_group_schedule.orgId": req.orgId
           })
-          // .whereBetween()
           .where(qb => {
             if (payload.workOrderId && payload.workOrderId != null) {
               qb.where('task_group_schedule_assign_assets.displayId', payload.workOrderId)
             }
-            // if (payload.category) {
-            //   qb.where('task_group_schedule_assign_assets.assetId', payload.category)
-            // }
+           
             if(req.body.assetCategoryId && req.body.assetCategoryId.length > 0 ){
-              // console.log("asset category id")
               qb.whereIn('asset_master.assetCategoryId',req.body.assetCategoryId)
             }
-            if(req.body.workOrderDate ){
-              console.log("work order date")
-              let workDateFrom = moment(req.body.workOrderDate).startOf('date');
-              let workDateTo = moment(req.body.workOrderDate).endOf('date');
-              console.log("workDateFrom",workDateFrom)
+            if(req.body.workOrderDateTo && req.body.workOrderDateFrom){
+              let workDateFrom = moment(req.body.workOrderDateFrom).startOf('date');
+              let workDateTo = moment(req.body.workOrderDateTo).endOf('date');
               qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
-              // qb.whereRaw(`to_char((task_group_schedule_assign_assets."pmDate"),'YYYY-MM-DD')='${workOrderTime}'`)
-              // qb.where(
-              //   `DATE("task_group_schedule_assign_assets"."pmDate") = workOrderTime)`
-              // )
-              // console.log("work order date",workOrderTime)
-              // qb.where('task_group_schedule_assign_assets.pmDate',workOrderTime)
             }
             if(req.body.assetName && req.body.assetName.length>0){
               console.log("Asset name")
@@ -1494,9 +1454,12 @@ const taskGroupController = {
               console.log("pm name",req.body.pmName)
               qb.where('pm_master2.name', 'iLIKE', `%${req.body.pmName}%`)
             }
+            if(req.body.status){
+              console.log("status of wo",req.body.status)
+              qb.whereIn('task_group_schedule_assign_assets.status',req.body.status)
+            }
           })
         ,
-        //.offset(offset).limit(per_page),
         knex("task_group_schedule")
           .innerJoin(
             "task_group_schedule_assign_assets",
@@ -1516,8 +1479,6 @@ const taskGroupController = {
           .select([
             "task_group_schedule_assign_assets.id as workOrderId",
             "task_group_schedule_assign_assets.displayId as TGAA",
-            // "task_group_schedule_assign_assets.status as status",
-            // "task_group_schedule_assign_assets.isActive as status",
             "task_group_schedule.id as id",
             "asset_master.assetName as assetName",
             "asset_master.model as model",
@@ -1529,9 +1490,6 @@ const taskGroupController = {
             "asset_master.assetCategoryId",
             "pm_master2.name as pmName",
             "pm_master2.id as pmId",
-            // "buildings_and_phases.buildingPhaseCode",
-            // "floor_and_zones.floorZoneCode",
-            // "property_units.unitNumber as unitNumber",
             "task_group_schedule_assign_assets.pmDate as pmDate",
             knex.raw(
               `DATE("task_group_schedule_assign_assets"."pmDate") as "workOrderDate"`
@@ -1542,25 +1500,19 @@ const taskGroupController = {
             "task_group_schedule_assign_assets.status"
           ])
           .where({
-            // "task_group_schedule.taskGroupId": payload.taskGroupId,
             "task_group_schedule.orgId": req.orgId
           })
           .where(qb => {
             if (payload.workOrderId && payload.workOrderId != null) {
-              // console.log("work order id",payload.workOrderId)
               qb.where('task_group_schedule_assign_assets.displayId', payload.workOrderId)
             }
-            // if (payload.category) {
-            //   qb.where('task_group_schedule_assign_assets.assetId', payload.category)
-            // }
             if(req.body.assetCategoryId && req.body.assetCategoryId.length > 0 ){
               qb.whereIn('asset_master.assetCategoryId',req.body.assetCategoryId)
             }
-            if(req.body.workOrderDate){
-              let workDateFrom = moment(req.body.workOrderDate).startOf('date');
-              let workDateTo = moment(req.body.workOrderDate).endOf('date');
+            if(req.body.workOrderDateTo && req.body.workOrderDateFrom){
+              let workDateFrom = moment(req.body.workOrderDateFrom).startOf('date');
+              let workDateTo = moment(req.body.workOrderDateTo).endOf('date');
               qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
-              // qb.whereRaw(`to_char((task_group_schedule_assign_assets."pmDate"),'YYYY-MM-DD')='${workOrderTime}'`)
             }
             if(req.body.assetName && req.body.assetName.length > 0){
               qb.whereIn('task_group_schedule_assign_assets.assetId',req.body.assetName)
@@ -1570,6 +1522,10 @@ const taskGroupController = {
             }
             if (req.body.pmName && req.body.pmName != null) {
               qb.where('pm_master2.name', 'iLIKE', `%${req.body.pmName}%`)
+            }
+            if(req.body.status){
+              console.log("status of wo",req.body.status)
+              qb.whereIn('task_group_schedule_assign_assets.status',req.body.status)
             }
           })
           .offset(offset)
