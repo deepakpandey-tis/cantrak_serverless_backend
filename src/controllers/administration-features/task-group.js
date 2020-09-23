@@ -1312,8 +1312,8 @@ const taskGroupController = {
                     }
                     if (req.body.workOrderDate) {
 
-                        let workDateFrom = moment(req.body.workOrderDate).startOf('date');
-                        let workDateTo = moment(req.body.workOrderDate).endOf('date');
+                        let workDateFrom = moment(req.body.workOrderDate).startOf('date').format();
+                        let workDateTo = moment(req.body.workOrderDate).endOf('date').format();
 
                         qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
                             //  qb.whereRaw(`Math.round(task_group_schedule_assign_assets."pmDate".getTime()/1000) = ${workOrderTime}`)
