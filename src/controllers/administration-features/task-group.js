@@ -1385,14 +1385,16 @@ const taskGroupController = {
         "assetName",
         "assetSerial",
         "pmName",
-        "status"
+        "status",
+        "workOrderDateTo",
+        "workOrderDateFrom"
       ]);
 
       const schema = Joi.object().keys({
         category: Joi.string().allow("").allow(null).optional(),
         workOrderId: Joi.string().allow("").allow(null).optional(),
-        workOrderDateTo:Joi.string().required(),
-        workOrderDateFrom: Joi.string().required()
+        // workOrderDateTo:Joi.string().required(),
+        // workOrderDateFrom: Joi.string().required()
       });
 
       const result = Joi.validate(payload, schema);
