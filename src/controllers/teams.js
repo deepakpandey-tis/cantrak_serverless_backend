@@ -19,7 +19,7 @@ const emailHelper = require('../helpers/email')
 const teamsController = {
 
     /* Define async function */
-    addNewTeams: async (req, res) => {
+    addNewTeams: async(req, res) => {
 
         // Define try/catch block
         try {
@@ -29,7 +29,7 @@ const teamsController = {
             let orgId = req.orgId;
             let roleProjectData = req.body.roleProjectData;
             let vendorTeam;
-            await knex.transaction(async (trx) => {
+            await knex.transaction(async(trx) => {
                 const teamsPayload = req.body;
                 const payload = _.omit(req.body, ['roleProjectData'], ['roleId'], 'projectId', ['userIds'], ['vendorIds'])
 
@@ -68,7 +68,7 @@ const teamsController = {
 
                 const currentTime = new Date().getTime();
                 // Insert into teams table
-                const insertData = { ...payload, teamCode: payload.teamCode.toUpperCase(), createdAt: currentTime, updatedAt: currentTime, createdBy: req.me.id, orgId: orgId };
+                const insertData = {...payload, teamCode: payload.teamCode.toUpperCase(), createdAt: currentTime, updatedAt: currentTime, createdBy: req.me.id, orgId: orgId };
                 console.log('[controllers][teams][addNewTeams] : Insert Data ', insertData);
 
                 const resultTeams = await knex.insert(insertData).returning(['*']).transacting(trx).into('teams');
@@ -184,7 +184,7 @@ const teamsController = {
     },
 
     /* Update Teams */
-    updateTeams: async (req, res) => {
+    updateTeams: async(req, res) => {
         // Define try/catch block
         try {
             let teamsResponse = null;
@@ -194,7 +194,7 @@ const teamsController = {
             let orgId = req.orgId;
             let roleProjectData = req.body.roleProjectData;
             let vendorTeam;
-            await knex.transaction(async (trx) => {
+            await knex.transaction(async(trx) => {
                 const upTeamsPayload = req.body;
                 const payload = _.omit(req.body, ['roleId'], 'projectId', ['userIds'], ['roleProjectData'], ['vendorIds'])
                 console.log('[controllers][teams][updateTeams] : Request Body', upTeams);
@@ -222,8 +222,7 @@ const teamsController = {
                 /*CHECK DUPLICATE VALUES OPEN */
                 let existValue = await knex('teams')
                     .where({ teamCode: payload.teamCode.toUpperCase(), orgId: req.orgId })
-                    .whereNot({ teamId: upTeamsPayload.teamId })
-                    ;
+                    .whereNot({ teamId: upTeamsPayload.teamId });
                 if (existValue && existValue.length) {
                     return res.status(400).json({
                         errors: [
@@ -332,7 +331,7 @@ const teamsController = {
     },
 
     /* Get Teams List */
-    getTeamList: async (req, res) => {
+    getTeamList: async(req, res) => {
         // Define try/catch block
         try {
 
@@ -363,7 +362,7 @@ const teamsController = {
         }
     },
 
-    getTeamAllList: async (req, res) => {
+    getTeamAllList: async(req, res) => {
         // Define try/catch block
         try {
             let sortPayload = req.body;
@@ -384,13 +383,13 @@ const teamsController = {
 
                 [total, rows] = await Promise.all([
                     knex.count('* as count').from("teams")
-                        .where({ "teams.orgId": req.orgId, })
-                        .where(qb => {
-                            if (teamName) {
-                                qb.where('teams.teamName', 'iLIKE', `%${teamName}%`)
-                            }
-                        })
-                        .first(),
+                    .where({ "teams.orgId": req.orgId, })
+                    .where(qb => {
+                        if (teamName) {
+                            qb.where('teams.teamName', 'iLIKE', `%${teamName}%`)
+                        }
+                    })
+                    .first(),
                     // knex.raw('select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams"."orgId" = ' + req.orgId + ' and "teams"."teamName" = "' + String(teamName) + '" group by "teams"."teamId" limit ' + per_page + ' OFFSET ' + offset + '')
                     knex.raw(`select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams"."orgId" = '${req.orgId}' and "teams"."teamName" ilike '%${teamName}%' group by "teams"."teamId"  order by "` + sortPayload.sortBy + `"  ` + sortPayload.orderBy + `  limit '${per_page}' OFFSET '${offset}'`)
                 ])
@@ -399,10 +398,10 @@ const teamsController = {
 
                 [total, rows] = await Promise.all([
                     knex
-                        .count("* as count")
-                        .from("teams")
-                        .where({ "teams.orgId": req.orgId })
-                        .first(),
+                    .count("* as count")
+                    .from("teams")
+                    .where({ "teams.orgId": req.orgId })
+                    .first(),
                     knex.raw(
                         'select "teams".*, count("team_users"."teamId") as People from "teams" left join "team_users" on "team_users"."teamId" = "teams"."teamId" where "teams"."orgId" = ' +
                         req.orgId +
@@ -447,7 +446,7 @@ const teamsController = {
     },
 
     /* Update Team Users */
-    addTeamUsers: async (req, res) => {
+    addTeamUsers: async(req, res) => {
         // Define try/catch block
         try {
             let updateUser = null;
@@ -505,7 +504,7 @@ const teamsController = {
     },
 
     /* Get Assigned Teams */
-    getAssignedTeams: async (req, res) => {
+    getAssignedTeams: async(req, res) => {
         // Define try/catch block
         try {
             let assignedTeams = null;
@@ -539,7 +538,7 @@ const teamsController = {
         // Export Team Data 
     },
 
-    getAssignedTeamAndUsers: async (req, res) => {
+    getAssignedTeamAndUsers: async(req, res) => {
         try {
             const entityId = req.body.entityId;
             const entityType = req.body.entityType;
@@ -566,8 +565,8 @@ const teamsController = {
         }
     },
 
-   
-    getAssignedTeamAndUsersForOther: async (req, res) => {
+
+    getAssignedTeamAndUsersForOther: async(req, res) => {
         try {
             const entityId = req.body.entityId;
             const entityType = req.body.entityType;
@@ -604,7 +603,7 @@ const teamsController = {
     },
 
 
-    exportTeams: async (req, res) => {
+    exportTeams: async(req, res) => {
 
         try {
             let rows = null;
@@ -614,20 +613,20 @@ const teamsController = {
             [rows] = await Promise.all([
 
                 knex("teams")
-                    .leftJoin("team_roles_project_master", "teams.teamId", "team_roles_project_master.teamId")
-                    .leftJoin("projects", "team_roles_project_master.projectId", "projects.id")
-                    .leftJoin("companies", "projects.companyId", "companies.id")
-                    .leftJoin("users", "teams.createdBy", "users.id")
-                    .leftJoin("organisation_roles", "team_roles_project_master.roleId", "organisation_roles.id")
-                    .where({ "teams.orgId": orgId })
-                    .select([
-                        "teams.teamCode as TEAM_CODE",
-                        "teams.teamName as TEAM_NAME",
-                        "teams.description as TEAM_ALTERNATE_NAME",
-                        //"companies.companyId as COMPANY_ID",
-                        "projects.project as PROJECT_CODE",
-                        "organisation_roles.name as ROLE_NAME"
-                    ])
+                .leftJoin("team_roles_project_master", "teams.teamId", "team_roles_project_master.teamId")
+                .leftJoin("projects", "team_roles_project_master.projectId", "projects.id")
+                .leftJoin("companies", "projects.companyId", "companies.id")
+                .leftJoin("users", "teams.createdBy", "users.id")
+                .leftJoin("organisation_roles", "team_roles_project_master.roleId", "organisation_roles.id")
+                .where({ "teams.orgId": orgId })
+                .select([
+                    "teams.teamCode as TEAM_CODE",
+                    "teams.teamName as TEAM_NAME",
+                    "teams.description as TEAM_ALTERNATE_NAME",
+                    //"companies.companyId as COMPANY_ID",
+                    "projects.project as PROJECT_CODE",
+                    "organisation_roles.name as ROLE_NAME"
+                ])
             ]);
 
             let tempraryDirectory = null;
@@ -644,16 +643,14 @@ const teamsController = {
             if (rows && rows.length) {
                 ws = XLSX.utils.json_to_sheet(rows);
             } else {
-                ws = XLSX.utils.json_to_sheet([
-                    {
-                        TEAM_CODE: "",
-                        TEAM_NAME: "",
-                        TEAM_CODE: "",
-                        TEAM_ALTERNATE_NAME: "",
-                        PROJECT_CODE: "",
-                        ROLE_NAME: ""
-                    }
-                ]);
+                ws = XLSX.utils.json_to_sheet([{
+                    TEAM_CODE: "",
+                    TEAM_NAME: "",
+                    TEAM_CODE: "",
+                    TEAM_ALTERNATE_NAME: "",
+                    PROJECT_CODE: "",
+                    ROLE_NAME: ""
+                }]);
             }
             XLSX.utils.book_append_sheet(wb, ws, "pres");
             XLSX.write(wb, { bookType: "csv", bookSST: true, type: 'base64' })
@@ -662,7 +659,7 @@ const teamsController = {
             let check = XLSX.writeFile(wb, filepath);
             const AWS = require('aws-sdk');
 
-            fs.readFile(filepath, function (err, file_buffer) {
+            fs.readFile(filepath, function(err, file_buffer) {
                 var s3 = new AWS.S3();
                 var params = {
                     Bucket: bucketName,
@@ -670,7 +667,7 @@ const teamsController = {
                     Body: file_buffer,
                     ACL: 'public-read'
                 }
-                s3.putObject(params, function (err, data) {
+                s3.putObject(params, function(err, data) {
                     if (err) {
                         console.log("Error at uploadCSVFileOnS3Bucket function", err);
                         res.status(500).json({
@@ -705,12 +702,12 @@ const teamsController = {
             });
         }
     },
-    getMainAndAdditionalUsersByTeamId: async (req, res) => {
+    getMainAndAdditionalUsersByTeamId: async(req, res) => {
         try {
             let teamId = req.body.teamId;
             let mainUsers = await knex('team_users').innerJoin('users', 'team_users.userId', 'users.id').select(['users.id as id', 'users.name as name']).where({ 'team_users.teamId': teamId, 'users.orgId': req.orgId })
             let additionalUsers = await knex('users').select(['id', 'name']).where({ orgId: req.orgId })
-            //additionalUsers = additionalUsers.map(user => _.omit(user, ['password','username']))
+                //additionalUsers = additionalUsers.map(user => _.omit(user, ['password','username']))
 
             const Parallel = require('async-parallel')
             const usersWithRoles = await Parallel.map(additionalUsers, async user => {
@@ -719,7 +716,7 @@ const teamsController = {
                     const roleNames = await knex('organisation_roles').select('name').where({ id: role.roleId, orgId: req.orgId }).whereNotIn('name', ['superAdmin', 'admin', 'customer'])
                     return roleNames.map(role => role.name).join(',')
                 })
-                return { ...user, roleNames: roleNames.filter(v => v).join(',') };
+                return {...user, roleNames: roleNames.filter(v => v).join(',') };
             })
 
             res.status(200).json({
@@ -739,7 +736,7 @@ const teamsController = {
         }
     },
     // GET TEAM DETAILS
-    getTeamDetails: async (req, res) => {
+    getTeamDetails: async(req, res) => {
         try {
             let teamId = req.query.teamId;
             let teamResult = null;
@@ -758,34 +755,33 @@ const teamsController = {
                     'teams.teamCode',
                     'teams.isActive'
                 ])
-                    .where({ 'teams.teamId': teamId }).returning('*'),
+                .where({ 'teams.teamId': teamId }).returning('*'),
 
                 knex('team_users')
-                    .leftJoin('users', 'team_users.userId', 'users.id')
-                    .select([
-                        'users.id',
-                        'users.name',
-                        'users.email',
-                        'team_users.userId as userIds',
-                    ])
-                    .where({ 'team_users.teamId': teamId }).returning('*'),
+                .leftJoin('users', 'team_users.userId', 'users.id')
+                .select([
+                    'users.id',
+                    'users.name',
+                    'users.email',
+                    'team_users.userId as userIds',
+                ])
+                .where({ 'team_users.teamId': teamId }).returning('*'),
 
                 knex('team_roles_project_master')
-                    .leftJoin('projects', 'team_roles_project_master.projectId', 'projects.id')
-                    .leftJoin('organisation_roles', 'team_roles_project_master.roleId', 'organisation_roles.id')
-                    .select([
-                        'team_roles_project_master.projectId',
-                        'team_roles_project_master.roleId',
-                        'projects.projectName',
-                        'organisation_roles.name as roleName',
-                        'projects.project as projectCode'
-                    ])
-                    .where({ 'team_roles_project_master.teamId': teamId }).returning('*')
-                ,
+                .leftJoin('projects', 'team_roles_project_master.projectId', 'projects.id')
+                .leftJoin('organisation_roles', 'team_roles_project_master.roleId', 'organisation_roles.id')
+                .select([
+                    'team_roles_project_master.projectId',
+                    'team_roles_project_master.roleId',
+                    'projects.projectName',
+                    'organisation_roles.name as roleName',
+                    'projects.project as projectCode'
+                ])
+                .where({ 'team_roles_project_master.teamId': teamId }).returning('*'),
                 knex('assigned_vendors')
-                    .leftJoin('users', 'assigned_vendors.userId', 'users.id')
-                    .select('assigned_vendors.userId', 'users.name', 'users.email')
-                    .where({ 'entityId': teamId, 'entityType': 'teams' }).returning('*'),
+                .leftJoin('users', 'assigned_vendors.userId', 'users.id')
+                .select('assigned_vendors.userId', 'users.name', 'users.email')
+                .where({ 'entityId': teamId, 'entityType': 'teams' }).returning('*'),
             ])
 
 
@@ -797,7 +793,7 @@ const teamsController = {
 
             res.status(200).json({
                 data: {
-                    teamDetails: { ...teamResult[0], usersData: userResult, projectData: projectResult, projectUpdateDetails: projectUpdateDetails, vendorIds: vendorIds, vendorData: vendorResult },
+                    teamDetails: {...teamResult[0], usersData: userResult, projectData: projectResult, projectUpdateDetails: projectUpdateDetails, vendorIds: vendorIds, vendorData: vendorResult },
                 },
                 message: "Team Details Successfully"
             })
@@ -812,7 +808,7 @@ const teamsController = {
             });
         }
     },
-    removeTeam: async (req, res) => {
+    removeTeam: async(req, res) => {
         try {
             let team = null;
             let message;
@@ -865,7 +861,7 @@ const teamsController = {
         }
     },
     /**IMPORT TEAM DATA */
-    importTeamData: async (req, res) => {
+    importTeamData: async(req, res) => {
 
         try {
 
@@ -1046,7 +1042,7 @@ const teamsController = {
         }
     },
     /* Get Teams List By Project */
-    getTeamListByProject: async (req, res) => {
+    getTeamListByProject: async(req, res) => {
 
         try {
 
@@ -1102,17 +1098,18 @@ const teamsController = {
             });
         }
     },
-    getAssignedTeamByMultipleProjects:async(req,res)=>{
+    getAssignedTeamByMultipleProjects: async(req, res) => {
         try {
             let projectId = req.body
             let orgId = req.orgId
 
             let teams = await knex("team_roles_project_master")
-            .leftJoin('teams', 'team_roles_project_master.teamId', 'teams.teamId')
-            .select(['teams.teamName',
-            'teams.teamId'])
-            .whereIn("team_roles_project_master.projectId",projectId)
-            .distinct()
+                .leftJoin('teams', 'team_roles_project_master.teamId', 'teams.teamId')
+                .select(['teams.teamName',
+                    'teams.teamId'
+                ])
+                .whereIn("team_roles_project_master.projectId", projectId)
+                .distinct()
 
             res.status(200).json({
                 data: {
@@ -1130,22 +1127,22 @@ const teamsController = {
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
                 ]
             });
-            
+
         }
     },
 
-    getTeamUsersByMultipleTeamId:async(req,res)=>{
+    getTeamUsersByMultipleTeamId: async(req, res) => {
         try {
-            let teamId =req.body
+            let teamId = req.body
 
             let teamUser = await knex("team_users")
-            .leftJoin("users","team_users.userId","users.id")
-            .select(["team_users.id","users.name","users.id as userId"])
-            .whereIn("team_users.teamId",teamId)
-            .groupBy(["team_users.id","users.id"])
-            .distinct()
+                .leftJoin("users", "team_users.userId", "users.id")
+                .select(["team_users.id", "users.name", "users.id as userId"])
+                .whereIn("team_users.teamId", teamId)
+                .groupBy(["team_users.id", "users.id"])
+                .distinct()
 
-            let users = _.uniqBy(teamUser,"userId")
+            let users = _.uniqBy(teamUser, "userId")
 
             res.status(200).json({
                 data: {
@@ -1162,12 +1159,12 @@ const teamsController = {
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
                 ]
             });
-            
-            
+
+
         }
     },
 
-    getTeamByEntity: async (req, res) => {
+    getTeamByEntity: async(req, res) => {
         try {
             const { entityId, entityType } = req.body;
             let so
@@ -1193,7 +1190,7 @@ const teamsController = {
 
                         return res.status(200).json({
                             data: {
-                                teams: teamResult
+                                teams: _.uniqBy(teamResult, "teamId")
                             }
                         })
                     } else {
@@ -1229,7 +1226,7 @@ const teamsController = {
 
                         return res.status(200).json({
                             data: {
-                                teams: teamResult
+                                teams: _.uniqBy(teamResult, "teamId")
                             }
                         })
                     } else {
@@ -1264,7 +1261,7 @@ const teamsController = {
 
                         return res.status(200).json({
                             data: {
-                                teams: teamResult
+                                teams: _.uniqBy(teamResult, "teamId")
                             }
                         })
                     } else {
@@ -1288,9 +1285,8 @@ const teamsController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
-    }
-    ,
-    disableLogin: async (req, res) => {
+    },
+    disableLogin: async(req, res) => {
         try {
             let team = null;
             let message;

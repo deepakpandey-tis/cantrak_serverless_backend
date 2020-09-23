@@ -3196,6 +3196,7 @@ const partsController = {
                     .leftJoin('service_orders', 'assigned_parts.entityId', 'service_orders.id')
                     .leftJoin('task_assigned_part', 'assigned_parts.entityId', 'task_assigned_part.id')
                     .leftJoin('task_group_schedule_assign_assets', 'task_assigned_part.workOrderId', 'task_group_schedule_assign_assets.id')
+                    .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
                     .select([
                         'assigned_parts.id as approvalId',
                         'assigned_parts.entityType as enType',
@@ -3216,8 +3217,28 @@ const partsController = {
                         // 'assigned_parts.entityType': 'service_orders'
                     })
                     .where(qb => {
+
+                        if (req.body.entityType) {
+                            qb.where('assigned_parts.entityType', req.body.entityType);
+                        } else {
+                            qb.whereIn('assigned_parts.entityType', ['service_orders', 'task_assigned_part']);
+                        }
+                        if (req.body.status) {
+                            qb.where('assigned_parts.status', req.body.status);
+                        }
+                        if (req.body.partId) {
+                            qb.where('part_master.displayId', req.body.partId)
+                        }
+
+                        if (req.body.serviceOrderId) {
+
+                            qb.where('service_orders.displayId', req.body.serviceOrderId)
+                            qb.orWhere('task_group_schedule_assign_assets.displayId', req.body.serviceOrderId)
+                        }
+
+
                         if (!_.isEmpty(filters)) {
-                            qb.where(filters)
+                            //qb.where(filters)
                         }
                         if (req.body.partName) {
                             qb.where('part_master.partName', 'ilike', `%${req.body.partName}%`)
@@ -3229,6 +3250,7 @@ const partsController = {
                     .leftJoin('service_orders', 'assigned_parts.entityId', 'service_orders.id')
                     .leftJoin('task_assigned_part', 'assigned_parts.entityId', 'task_assigned_part.id')
                     .leftJoin('task_group_schedule_assign_assets', 'task_assigned_part.workOrderId', 'task_group_schedule_assign_assets.id')
+                    .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
                     .select(['assigned_parts.id as approvalId',
                         'part_master.partCategory',
                         'part_master.id',
@@ -3256,15 +3278,36 @@ const partsController = {
                     //     'assigned_parts.entityType': 'task_assigned_part'
                     // })
                     .where(qb => {
-                        if (!_.isEmpty(filters)) {
-                            qb.where(filters)
+
+                        if (req.body.entityType) {
+                            qb.where('assigned_parts.entityType', req.body.entityType);
                         } else {
-                            //qb.whereIn('assigned_parts.entityType', ['service_orders', 'task_assigned_part'])
+                            qb.whereIn('assigned_parts.entityType', ['service_orders', 'task_assigned_part']);
+                        }
+                        if (req.body.status) {
+                            qb.where('assigned_parts.status', req.body.status);
+                        }
+                        if (req.body.partId) {
+                            qb.where('part_master.displayId', req.body.partId)
+                        }
+
+                        if (req.body.serviceOrderId) {
+
+                            qb.where('service_orders.displayId', req.body.serviceOrderId)
+                            qb.orWhere('task_group_schedule_assign_assets.displayId', req.body.serviceOrderId)
+                        }
+
+
+                        if (!_.isEmpty(filters)) {
+                            //  qb.where(filters)
+                        } else {
+                            // qb.whereIn('assigned_parts.entityType', ['service_orders', 'task_assigned_part'])
                         }
                         if (req.body.partName) {
                             qb.where('part_master.partName', 'ilike', `%${req.body.partName}%`)
                         }
                     })
+                    .whereIn('assigned_parts.entityType', ['service_orders', 'task_assigned_part'])
                     .orderBy('assigned_parts.createdAt', 'desc')
                     .offset(offset)
                     .limit(per_page)
@@ -3481,8 +3524,10 @@ const partsController = {
             const declined = await knex('assigned_parts').update({ status: 'declined' }).where({ id: approvalId, orgId: req.orgId }).returning(['*'])
             getInfoData = await knex('assigned_parts').select('*').where({ id: approvalId, entityType: 'task_assigned_part' }).returning(['*']).first();
 
-            updateAssignParts = await knex('task_assigned_part').update({ status: 2 }).where({ orgId: req.orgId, id: getInfoData.entityId })
+            if (getInfoData) {
+                updateAssignParts = await knex('task_assigned_part').update({ status: 2 }).where({ orgId: req.orgId, id: getInfoData.entityId })
 
+            }
             return res.status(200).json({
                 data: {
                     declined: declined
@@ -4719,7 +4764,7 @@ const partsController = {
             });
         }
     },
-    requestMultiplePartForPm:async(req,res)=>{
+    requestMultiplePartForPm: async(req, res) => {
         try {
             let taskAssignedPartId = req.body.taskAssignedPartId;
             let assignedStatus;
@@ -4737,20 +4782,20 @@ const partsController = {
                 });
             } else {
                 partInfo = await knex('task_assigned_part')
-                .leftJoin('part_master', 'task_assigned_part.partId', 'part_master.id')
-                .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
-                .select(
-                    'task_assigned_part.partId as pid',
-                    'task_assigned_part.quantity as Quantity',
-                    'task_assigned_part.taskId as TaskId',
-                    'part_ledger.unitCost as unitCost'
-                )
-                .whereIn('task_assigned_part.id', taskAssignedPartId)
-                .first()
+                    .leftJoin('part_master', 'task_assigned_part.partId', 'part_master.id')
+                    .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
+                    .select(
+                        'task_assigned_part.partId as pid',
+                        'task_assigned_part.quantity as Quantity',
+                        'task_assigned_part.taskId as TaskId',
+                        'part_ledger.unitCost as unitCost'
+                    )
+                    .whereIn('task_assigned_part.id', taskAssignedPartId)
+                    .first()
 
-                if(taskAssignedPartId && taskAssignedPartId.length > 0){
-                    for(let id of taskAssignedPartId){
-                        console.log("id of task",id)
+                if (taskAssignedPartId && taskAssignedPartId.length > 0) {
+                    for (let id of taskAssignedPartId) {
+                        console.log("id of task", id)
                         assignedStatus = await knex('assigned_parts').insert({ unitCost: partInfo.unitCost, quantity: partInfo.Quantity, status: 'in progress', orgId: req.orgId, createdAt: currentTime.getTime(), updatedAt: currentTime.getTime(), partId: partInfo.pid, entityId: id, entityType: 'task_assigned_part' }).returning(['*']);
                         updatedTaskPart = await knex('task_assigned_part').update({ status: 3 }).where({ id: id, orgId: req.orgId }).returning(['*'])
                     }
