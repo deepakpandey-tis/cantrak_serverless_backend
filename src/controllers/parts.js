@@ -3251,6 +3251,7 @@ const partsController = {
                     .leftJoin('task_assigned_part', 'assigned_parts.entityId', 'task_assigned_part.id')
                     .leftJoin('task_group_schedule_assign_assets', 'task_assigned_part.workOrderId', 'task_group_schedule_assign_assets.id')
                     .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                    .leftJoin('users', 'service_requests.approvedBy', 'users.id')
                     .select(['assigned_parts.id as approvalId',
                         'part_master.partCategory',
                         'part_master.id',
@@ -3266,7 +3267,9 @@ const partsController = {
                         'task_assigned_part.id as TPID',
                         "task_group_schedule_assign_assets.id as workOrderId",
                         "task_group_schedule_assign_assets.displayId as TGAA",
-                        "assigned_parts.createdAt"
+                        "assigned_parts.createdAt",
+                        "users.name as approvedBy",
+                        "users.id as approvedById"
 
                     ])
                     .where({
@@ -3307,7 +3310,7 @@ const partsController = {
                             qb.where('part_master.partName', 'ilike', `%${req.body.partName}%`)
                         }
                     })
-                    .whereIn('assigned_parts.entityType', ['service_orders', 'task_assigned_part'])
+                    //.whereIn('assigned_parts.entityType', ['service_orders', 'task_assigned_part'])
                     .orderBy('assigned_parts.createdAt', 'desc')
                     .offset(offset)
                     .limit(per_page)
@@ -3322,7 +3325,8 @@ const partsController = {
                     const element = quantity[i];
                     totalParts += Number(element.quantity);
                 }
-                return {...part, totalParts }
+                let me = req.me;
+                return {...part, totalParts, issueBy: me.name }
             })
 
 
