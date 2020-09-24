@@ -3484,15 +3484,25 @@ const taskGroupController = {
       for (let t of payload.taskArr) {
         console.log("payload.taskArr1",payload.taskArr)
             let updateStatus
-            if(t.desireValue){
-              updateStatus = t.desireValue
-            }else if(req.body.status){
-              updateStatus = req.body.status
+            // if(t.desireValue){
+            //   updateStatus = t.desireValue
+            // }else if(req.body.status){
+            //   updateStatus = req.body.status
+            // }
+            // if (t.desireStatus) {
+            //   updateResult = t.desireStatus;
+            // } else if(req.body.result) {
+            //   updateResult = req.body.result;
+            // }
+            if(req.body.result){
+              updateResult = req.body.result
+            }else{
+              updateResult = t.desireStatus
             }
-            if (t.desireStatus) {
-              updateResult = t.desireStatus;
-            } else if(req.body.result) {
-              updateResult = req.body.result;
+            if(req.body.status){
+              updateStatus = req.body.status
+            }else{
+              updateStatus = t.desireValue
             }
             console.log("rasultsAnd Status",updateResult,updateStatus,payload)
             taskUpdate = await knex('pm_task').update({ status: updateStatus, result: updateResult,taskMode:req.body.taskMode}).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId,taskMode:null }).orWhere({taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId,taskMode:1 }).returning(['*'])
@@ -3691,6 +3701,7 @@ const taskGroupController = {
   allTaskPerform: async (req, res) => {
     try {
       const payload = req.body;
+      console.log("task array",payload.taskArr)
       const schema = Joi.object().keys({
         taskGroupId: Joi.string().required(),
         //taskId: Joi.string().required(),
@@ -3763,8 +3774,10 @@ const taskGroupController = {
 
                 updateResult = t.desireStatus;
 
-              } else {
+              } else if(req.body.result){
                 updateResult = req.body.result;
+              }else{
+                updateResult = null
               }
 
               let taskUpdate = await knex('pm_task').update({ result: updateResult, status: 'COM', completedAt: currentTime, completedBy: payload.userId,taskMode:payload.taskMode }).where({ taskGroupId: payload.taskGroupId, id: t.taskId, orgId: req.orgId }).returning(['*'])
