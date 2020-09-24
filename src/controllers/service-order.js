@@ -1473,7 +1473,10 @@ const serviceOrderController = {
                     }
 
                     // Insert New Users
-
+                    let dataNos = {
+                        payload: {}
+                    };
+                    
                     for (user of assignedServiceAdditionalUsers) {
                         // let userResult = await knex.insert({ userId: user, entityId: id, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('assigned_service_additional_users')
                         // additionalUsers.push(userResult[0])
