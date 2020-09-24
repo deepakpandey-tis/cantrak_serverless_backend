@@ -4,6 +4,8 @@ const moment = require("moment")
 
 const knex = require('../db/knex');
 const XLSX = require('xlsx');
+
+
 const serviceRequestNotification = require('../notifications/service-request/approval-notification');
 
 
@@ -1363,13 +1365,18 @@ const serviceOrderController = {
     },
     updateServiceOrder: async(req, res) => {
         try {
+            let ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY'];
+            
             await knex.transaction(async trx => {
                 let serviceOrder = null;
                 let team = null;
                 let additionalUsers = []
                 let currentTime = new Date().getTime();
                 const id = req.body.serviceOrderId;
-                const serviceRequestId = req.body.serviceRequestId
+
+                let srId = await knex.from('service_orders').where({ id: id }).first();
+            
+                let serviceRequestId = srId.serviceRequestId;
                 const serviceOrderPayload = req.body;
 
 
@@ -1378,31 +1385,75 @@ const serviceOrderController = {
 
 
                 // Check if previous teamId is equal to new team id
-                let teamResult = await knex.select().where({ entityId: id, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_service_team').map(team => team.id)
+               let teamOldResult = await knex.select().where({ entityId: id, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_service_team');
+               console.log("teamOldResult", teamOldResult);
+               let teamResult;
+               const Parallel = require('async-parallel')
+                 teamResult = await Parallel.map(teamOldResult, async pd => {
+                     return pd.teamId;
+                })
 
                 if (!_.isEqual(teamResult, [req.body.teamId])) {
 
-                    // Delete previous TeamId
+                    console.log("notMatched", teamResult,req.body.teamId);
+
+                    // Delete previous TeamId From Service Order
                     await knex.del().where({ entityId: id, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_service_team')
 
+                    // Delete previous TeamId From Service Request
+                    await knex.del().where({ entityId: serviceRequestId, entityType: 'service_requests' }).returning(['*']).transacting(trx).into('assigned_service_team')
+
+                    
                     // Add new teamId
-                    let insertData = { createdAt: currentTime, updatedAt: currentTime, entityId: id, entityType: 'service_orders', teamId: serviceOrderPayload.teamId, userId: serviceOrderPayload.mainUserId }
-                    let teamRes = await knex.insert(insertData).returning(['*']).transacting(trx).into('assigned_service_team')
-                    team = teamRes[0]
+                    // let insertData = { createdAt: currentTime, updatedAt: currentTime, entityId: id, entityType: 'service_orders', teamId: serviceOrderPayload.teamId, userId: serviceOrderPayload.mainUserId }
+                    // let teamRes = await knex.insert(insertData).returning(['*']).transacting(trx).into('assigned_service_team')
+                    // team = teamRes[0]
+
+                     //Service Order Team Management
+                     const assignedServiceTeamPayload = { teamId: serviceOrderPayload.teamId, userId: serviceOrderPayload.mainUserId, entityId: id, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }
+                     let assignedServiceTeamResult = await knex.insert(assignedServiceTeamPayload).returning(['*']).transacting(trx).into('assigned_service_team')
+                     let assignedServiceTeam = assignedServiceTeamResult[0]
+                         //Service Order Team Management End
+ 
+                     // Service Request Team Management
+                     const assignedServiceTeamPayloadSR = { teamId: serviceOrderPayload.teamId, userId: serviceOrderPayload.mainUserId, entityId: serviceRequestId, entityType: 'service_requests', createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }
+                     let assignedServiceTeamResultSR = await knex.insert(assignedServiceTeamPayloadSR).returning(['*']).transacting(trx).into('assigned_service_team')
+                     assignedServiceTeamSR = assignedServiceTeamResultSR[0]
+                    //Service Request Team Management End
+
+
+                    // Adding Notification in service request approval 
+
+                    let sender = await knex.from('users').where({ id: req.me.id }).first();
+                    let receiver = await knex.from('users').where({ id: serviceOrderPayload.mainUserId }).first();
+
+                    console.log("requested mainUserId id for notification", serviceOrderPayload.mainUserId);
+
+                    //  console.log("receiver tenant",receiver)
+
+                    let dataNos = {
+                        payload: {}
+                    };
+
+                   await serviceRequestNotification.send(sender, receiver, dataNos, ALLOWED_CHANNELS);
+
                 }
-
-
-
-
-
 
 
                 let assignedServiceAdditionalUsers = serviceOrderPayload.additionalUsers;
                 let selectedUsers = [];
 
-                selectedUsers = await knex.select().where({ entityId: id, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_service_additional_users').map(user => user.userId)
+                let selectedUsersSOData = await knex.select().where({ entityId: id, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_service_additional_users');
+                selectedUsers = await Parallel.map(selectedUsersSOData, async user => {
+                    return user.userId;
+                })
+
                 if (selectedUsers.length === 0) {
-                    selectedUsers = await knex.select().where({ entityId: serviceRequestId, entityType: 'service_requests' }).returning(['*']).transacting(trx).into('assigned_service_additional_users').map(user => user.userId)
+
+                    let selectedUsersSRData = await knex.select().where({ entityId: serviceRequestId, entityType: 'service_requests' }).returning(['*']).transacting(trx).into('assigned_service_additional_users')
+                    selectedUsers = await Parallel.map(selectedUsersSRData, async user => {
+                        return user.userId;
+                    })
                 }
 
                 if (_.isEqual(selectedUsers, assignedServiceAdditionalUsers)) {
@@ -1418,13 +1469,47 @@ const serviceOrderController = {
 
                     for (user of selectedUsers) {
                         await knex.del().where({ entityId: id, entityType: 'service_orders' }).returning(['*']).transacting(trx).into('assigned_service_additional_users')
+                        await knex.del().where({ entityId: serviceRequestId, entityType: 'service_requests' }).returning(['*']).transacting(trx).into('assigned_service_additional_users')
                     }
 
                     // Insert New Users
-
+                    let dataNos = {
+                        payload: {}
+                    };
+                    
                     for (user of assignedServiceAdditionalUsers) {
-                        let userResult = await knex.insert({ userId: user, entityId: id, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('assigned_service_additional_users')
-                        additionalUsers.push(userResult[0])
+                        // let userResult = await knex.insert({ userId: user, entityId: id, entityType: 'service_orders', createdAt: currentTime, updatedAt: currentTime }).returning(['*']).transacting(trx).into('assigned_service_additional_users')
+                        // additionalUsers.push(userResult[0])
+
+                        await knex
+                                .insert({
+                                    userId: user,
+                                    entityId: id,
+                                    entityType: "service_orders",
+                                    createdAt: currentTime,
+                                    updatedAt: currentTime,
+                                    orgId: req.orgId
+                                })
+                                .returning(["*"])
+                                .transacting(trx)
+                                .into("assigned_service_additional_users");
+                            await knex
+                                .insert({
+                                    userId: user,
+                                    entityId: serviceRequestId,
+                                    entityType: "service_requests",
+                                    createdAt: currentTime,
+                                    updatedAt: currentTime,
+                                    orgId: req.orgId
+                                })
+                                .returning(["*"])
+                                .transacting(trx)
+                                .into("assigned_service_additional_users");
+                            //additionalUsersResultantArray.push(userResult[0])
+                            let sender = await knex.from('users').where({ id: req.me.id }).first();
+                            let receiver1 = await knex.from('users').where({ id: user }).first();
+                           await serviceRequestNotification.send(sender, receiver1, dataNos, ALLOWED_CHANNELS);
+
                     }
                     trx.commit;
                     return res.status(200).json({
