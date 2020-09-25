@@ -66,11 +66,11 @@ const peopleController = {
                                 { code: 'MOBILE_EXIST_ERROR', message: 'MobileNo already exist !' }
                             ],
                         });
+                    } else {
+
+                        mobile = payload.mobileNo;
+
                     }
-                } else {
-
-                    mobile = payload.mobileNo;
-
                 }
 
                 let random = Math.floor((Math.random() * 1000000) + 1);

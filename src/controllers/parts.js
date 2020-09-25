@@ -3197,6 +3197,7 @@ const partsController = {
                     .leftJoin('task_assigned_part', 'assigned_parts.entityId', 'task_assigned_part.id')
                     .leftJoin('task_group_schedule_assign_assets', 'task_assigned_part.workOrderId', 'task_group_schedule_assign_assets.id')
                     .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
+                    .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
                     .select([
                         'assigned_parts.id as approvalId',
                         'assigned_parts.entityType as enType',
@@ -3251,7 +3252,8 @@ const partsController = {
                     .leftJoin('task_assigned_part', 'assigned_parts.entityId', 'task_assigned_part.id')
                     .leftJoin('task_group_schedule_assign_assets', 'task_assigned_part.workOrderId', 'task_group_schedule_assign_assets.id')
                     .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
-                    .leftJoin('users', 'service_requests.approvedBy', 'users.id')
+                    .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
+                    //.leftJoin('users', 'service_requests.approvedBy', 'users.id')
                     .select(['assigned_parts.id as approvalId',
                         'part_master.partCategory',
                         'part_master.id',
@@ -3268,8 +3270,8 @@ const partsController = {
                         "task_group_schedule_assign_assets.id as workOrderId",
                         "task_group_schedule_assign_assets.displayId as TGAA",
                         "assigned_parts.createdAt",
-                        "users.name as approvedBy",
-                        "users.id as approvedById"
+                        "requested_by.name as requestedBy",
+                        "requested_by.id as requestedById"
 
                     ])
                     .where({
@@ -4106,7 +4108,7 @@ const partsController = {
                     'requested_by.name as requestedByUser',
 
                 ])
-                .where({ 'service_orders.id': payload.soId }).first();
+                .where({ 'service_orders.id': payload.soId, 'service_orders.orgId': req.orgId }).first();
 
             let partResult = await knex('assigned_parts')
                 .leftJoin('part_master', 'assigned_parts.partId', 'part_master.id')
@@ -4117,9 +4119,9 @@ const partsController = {
                     'part_category_master.*',
                     'assigned_parts.createdAt as requestedAt'
                 ])
-                .where({ 'assigned_parts.id': payload.id })
+                .where({ 'assigned_parts.id': payload.id, 'assigned_parts.orgId': req.orgId })
 
-            let approveResult = await knex('part_ledger').where({ 'serviceOrderNo': payload.soId })
+            let approveResult = await knex('part_ledger').where({ 'serviceOrderNo': payload.soId, 'part_ledger.orgId': req.orgId })
                 .leftJoin("users", 'part_ledger.approvedBy', 'users.id')
                 .leftJoin('adjust_part_users as iBy', 'part_ledger.issueBy', 'iBy.id')
                 .leftJoin('adjust_part_users as iTo', 'part_ledger.issueTo', 'iTo.id')
