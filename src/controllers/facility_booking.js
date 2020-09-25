@@ -688,7 +688,7 @@ const facilityBookingController = {
         try {
             let payload = req.body;
             let userId = req.me.id;
-            console.log("userId", userId);
+            console.log("facility report data",payload)
             let {
                 companyId,
                 projectId,
@@ -719,20 +719,19 @@ const facilityBookingController = {
                 .milliseconds(0)
                 .valueOf();
             console.log(
-                "Date and time",
+                "Date and time for report",
                 bookingStartTime,
                 bookingEndTime,
                 createStartTime,
                 createdEndTime,
-                facilityName
             );
             let Status;
             if (status) {
-                Status = status.join(" ");
+                Status = status.join(",");
             }
 
             let facilityReportResult;
-            // console.log("details for all",companyId,projectId,buildingPhaseId,unitNo,status,facilityName,tenantName)
+            console.log("details for all",companyId,projectId,buildingPhaseId,unitNo,status,facilityName,tenantName)
             if (
                 companyId ||
                 projectId ||
@@ -740,13 +739,9 @@ const facilityBookingController = {
                 unitNo ||
                 status ||
                 facilityName ||
-                tenantName ||
-                createStartTime ||
-                createdEndTime ||
-                bookingStartTime ||
-                bookingEndTime
+                tenantName
             ) {
-                try {
+                // try {
                     facilityReportResult = await knex
                         .from("entity_bookings")
                         .leftJoin(
@@ -782,7 +777,6 @@ const facilityBookingController = {
                             "property_unit_type_master.propertyUnitTypeCode",
                             "property_unit_type_master.descriptionEng",
                         ])
-                        // .where("entity_bookings.bookingStartDateTime",">=",)
                         .whereBetween("entity_bookings.bookingStartDateTime", [
                             bookingStartTime,
                             bookingEndTime,
@@ -791,84 +785,36 @@ const facilityBookingController = {
                             createStartTime,
                             createdEndTime,
                         ])
+                        .where((qb) => {
 
-                    //   .whereBetween("entity_bookings.createdAt", [createStartTime, createdEndTime])
-                    .where((qb) => {
-
-                            if (facilityName && facilityName.length) {
-                                console.log("Facility name 756", facilityName)
-                                qb.whereIn("facility_master.id", facilityName);
-                                // qb.whereBetween("entity_bookings.createdAt", [
-                                //   createStartTime,
-                                //   createdEndTime,
-                                // ]);
-                            }
+                            // if (facilityName && facilityName.length > 0) {
+                            //     console.log("Facility name 756", facilityName)
+                            //     qb.whereIn("facility_master.id", facilityName);
+                            // }
                             if (unitNo) {
                                 qb.where("entity_bookings.unitId", unitNo);
-                                // qb.whereBetween("entity_bookings.createdAt", [
-                                //   createStartTime,
-                                //   createdEndTime,
-                                // ]);
                             }
                             if (companyId) {
                                 qb.where("entity_bookings.companyId", companyId);
-                                // qb.whereBetween("entity_bookings.createdAt", [
-                                //   createStartTime,
-                                //   createdEndTime,
-                                // ]);
-
-                                // qb.orWhere("entity_bookings.companyId",'')
                             }
                             if (projectId) {
                                 qb.where("facility_master.projectId", projectId);
-                                // qb.whereBetween("entity_bookings.createdAt", [
-                                //   createStartTime,
-                                //   createdEndTime,
-                                // ]);
                             }
                             if (buildingPhaseId) {
                                 qb.where("facility_master.buildingPhaseId", buildingPhaseId);
-                                // qb.whereBetween("entity_bookings.createdAt", [
-                                //   createStartTime,
-                                //   createdEndTime,
-                                // ]);
                             }
 
-                            if (tenantName && tenantName.length) {
+                            if (tenantName && tenantName.length > 0) {
                                 console.log("tenant name", tenantName);
                                 qb.whereIn("users.name", tenantName);
-                                // qb.whereBetween("entity_bookings.createdAt", [
-                                //   createStartTime,
-                                //   createdEndTime,
-                                // ]);
                             }
-                            if (createStartTime && createdEndTime) {
-                                qb.where("entity_bookings.createdAt", ">=", createStartTime);
-                                qb.where("entity_bookings.createdAt", "<=", createdEndTime);
-                            }
-                            if (bookingStartTime && bookingEndTime) {
-                                qb.where(
-                                    "entity_bookings.bookingStartDateTime",
-                                    ">=",
-                                    bookingStartTime
-                                );
-                                qb.where(
-                                    "entity_bookings.bookingStartDateTime",
-                                    "<=",
-                                    bookingEndTime
-                                );
-                            }
-                            // if (status && status.length) {
-                            // console.log("Status of status", Status);
                             if (Status == "Pending") {
                                 console.log("Pending", status);
                                 qb.where("entity_bookings.isBookingConfirmed", false);
                                 qb.where("entity_bookings.isBookingCancelled", false);
-                                qb.whereBetween("entity_bookings.createdAt", [
-                                    createStartTime,
-                                    createdEndTime,
-                                ]);
+                                
                             }
+                            if(status && status.length > 0){
                             if (Status == "Approved") {
                                 console.log("Approved", status);
                                 qb.where({
@@ -881,12 +827,6 @@ const facilityBookingController = {
                                     "entity_bookings.confirmedType": null,
                                     "entity_bookings.isBookingCancelled": false,
                                 });
-                                qb.whereBetween("entity_bookings.createdAt", [
-                                    createStartTime,
-                                    createdEndTime,
-                                ]);
-
-                                // qb.where("entity_bookings.isBookingCancelled", false);
                             }
                             if (Status == 'Confirmed') {
                                 console.log("Confirmed1", status);
@@ -895,48 +835,43 @@ const facilityBookingController = {
                                     "entity_bookings.isBookingCancelled": false,
                                     "entity_bookings.confirmedType": 1,
                                 });
-                                qb.whereBetween("entity_bookings.createdAt", [
-                                    createStartTime,
-                                    createdEndTime,
-                                ]);
-
-                                // qb.where("entity_bookings.confirmedType", 1);
+                                
                             }
                             if (Status == "Cancelled") {
                                 console.log("Cancelled", status);
                                 qb.where("entity_bookings.isBookingCancelled", true);
-                                qb.whereBetween("entity_bookings.createdAt", [
-                                    createStartTime,
-                                    createdEndTime,
-                                ]);
+                               
                             }
-                            if (Status == "Approved Pending Cancelled Confirmed") {
+                            if (Status == "Approved,Pending,Cancelled,Confirmed") {
                                 console.log("All status", status)
 
-                                qb.where("entity_bookings.isBookingConfirmed", false);
-                                qb.orWhere("entity_bookings.isBookingConfirmed", true);
-                                qb.orWhere("entity_bookings.confirmedType", 1);
-                                qb.where("entity_bookings.isBookingCancelled", true);
-                                qb.orWhere("entity_bookings.isBookingCancelled", false);
-                                qb.whereBetween("entity_bookings.createdAt", [
-                                    createStartTime,
-                                    createdEndTime,
-                                ]);
+                                // qb.where("entity_bookings.isBookingConfirmed", false);
+                                // qb.orWhere("entity_bookings.isBookingConfirmed", true);
+                                // qb.orWhere("entity_bookings.confirmedType", 1);
+                                // qb.where("entity_bookings.isBookingCancelled", true);
+                                // qb.orWhere("entity_bookings.isBookingCancelled", false);
+                                qb.where({"entity_bookings.isBookingConfirmed": true,"entity_bookings.isBookingCancelled": false,"entity_bookings.confirmedType": 1})
+                                qb.orWhere({"entity_bookings.isBookingConfirmed": false,"entity_bookings.isBookingCancelled": false})
+                                qb.orWhere({"entity_bookings.isBookingCancelled": true})
+                                qb.orWhere({"entity_bookings.isBookingConfirmed": true,"entity_bookings.isBookingCancelled": false,"entity_bookings.confirmedType": 0})
+                                
                             }
-                            if (Status == "Approved Pending Cancelled Confirmed 0") {
+                            if (Status == "Approved,Pending,Cancelled,Confirmed,0") {
                                 console.log("All status 0", status);
 
-                                qb.where("entity_bookings.isBookingConfirmed", false);
-                                qb.orWhere("entity_bookings.isBookingConfirmed", true);
-                                qb.orWhere("entity_bookings.confirmedType", 1);
-                                qb.where("entity_bookings.isBookingCancelled", true);
-                                qb.orWhere("entity_bookings.isBookingCancelled", false);
-                                qb.whereBetween("entity_bookings.createdAt", [
-                                    createStartTime,
-                                    createdEndTime,
-                                ]);
+                                // qb.where("entity_bookings.isBookingConfirmed", false);
+                                // qb.orWhere("entity_bookings.isBookingConfirmed", true);
+                                // qb.orWhere("entity_bookings.confirmedType", 1);
+                                // qb.where("entity_bookings.isBookingCancelled", true);
+                                // qb.orWhere("entity_bookings.isBookingCancelled", false);
+                                qb.where({"entity_bookings.isBookingConfirmed": true,"entity_bookings.isBookingCancelled": false,"entity_bookings.confirmedType": 1})
+                                qb.orWhere({"entity_bookings.isBookingConfirmed": false,"entity_bookings.isBookingCancelled": false})
+                                qb.orWhere({"entity_bookings.isBookingCancelled": true})
+                                qb.orWhere({"entity_bookings.isBookingConfirmed": true,"entity_bookings.isBookingCancelled": false,"entity_bookings.confirmedType": 0})
+                                
+                               
                             }
-                            if (Status === "Approved Pending Confirmed") {
+                            if (Status === "Approved,Pending,Confirmed") {
                                 console.log("Pending, Approved,Confirmed ", status);
                                 qb.where({
                                     "entity_bookings.isBookingConfirmed": true,
@@ -957,13 +892,8 @@ const facilityBookingController = {
                                     "entity_bookings.isBookingCancelled": false,
                                     "entity_bookings.confirmedType": 1,
                                 });
-                                qb.whereBetween("entity_bookings.createdAt", [
-                                    createStartTime,
-                                    createdEndTime,
-                                ]);
                             }
-                            if (Status === "Approved Cancelled") {
-                                // console.log("Approved and cancelled",status)
+                            if (Status === "Approved,Cancelled") {
                                 qb.where({
                                     "entity_bookings.isBookingConfirmed": true,
                                     "entity_bookings.confirmedType": 0,
@@ -980,21 +910,12 @@ const facilityBookingController = {
                                     "entity_bookings.isBookingCancelled": true,
                                     "entity_bookings.confirmedType": 0,
                                 });
-                                qb.whereBetween("entity_bookings.createdAt", [
-                                    createStartTime,
-                                    createdEndTime,
-                                ]);
                             }
-                            if (Status === "Approved Confirmed") {
-                                // console.log("Approved and confirmed")
+                            if (Status === "Approved,Confirmed") {
                                 qb.where("entity_bookings.isBookingConfirmed", true);
                                 qb.where("entity_bookings.isBookingCancelled", false);
-                                qb.whereBetween("entity_bookings.createdAt", [
-                                    createStartTime,
-                                    createdEndTime,
-                                ]);
                             }
-                            if (Status === "Approved Pending") {
+                            if (Status === "Approved,Pending") {
                                 console.log("Pending and approved", Status);
                                 qb.where({
                                     "entity_bookings.isBookingConfirmed": true,
@@ -1011,13 +932,8 @@ const facilityBookingController = {
                                     "entity_bookings.isBookingCancelled": false,
                                     "entity_bookings.confirmedType": 0,
                                 });
-                                qb.whereBetween("entity_bookings.createdAt", [
-                                    createStartTime,
-                                    createdEndTime,
-                                ]);
                             }
-                            if (Status === "Pending Confirmed") {
-                                // console.log("Pending and Confirmed",status)
+                            if (Status === "Pending,Confirmed") {
                                 qb.where({
                                     "entity_bookings.isBookingConfirmed": false,
                                     "entity_bookings.isBookingCancelled": false,
@@ -1028,22 +944,14 @@ const facilityBookingController = {
                                     "entity_bookings.isBookingCancelled": false,
                                     "entity_bookings.confirmedType": 1,
                                 });
-                                qb.whereBetween("entity_bookings.createdAt", [
-                                    createStartTime,
-                                    createdEndTime,
-                                ]);
                             }
-                            if (Status === "Pending Cancelled") {
+                            if (Status === "Pending,Cancelled") {
                                 // console.log("Pending,Cancelled",status)
                                 qb.where("entity_bookings.isBookingConfirmed", false);
                                 qb.where("entity_bookings.isBookingCancelled", false);
                                 qb.orWhere("entity_bookings.isBookingCancelled", true);
-                                qb.whereBetween("entity_bookings.createdAt", [
-                                    createStartTime,
-                                    createdEndTime,
-                                ]);
                             }
-                            if (Status === "Approved Pending Cancelled") {
+                            if (Status === "Approved,Pending,Cancelled") {
                                 // console.log("Pending,Approved,Cancelled",status)
                                 qb.where({
                                     "entity_bookings.isBookingConfirmed": true,
@@ -1061,46 +969,34 @@ const facilityBookingController = {
                                     "entity_bookings.isBookingCancelled": true,
                                     "entity_bookings.confirmedType": 0,
                                 });
-                                qb.whereBetween("entity_bookings.createdAt", [
-                                    createStartTime,
-                                    createdEndTime,
-                                ]);
                             }
-                            if (Status === "Approved Cancelled Confirmed") {
+                            if (Status === "Approved,Cancelled,Confirmed") {
                                 // console.log("Approved,Cancelled,Confirmed",status)
                                 qb.where("entity_bookings.isBookingConfirmed", true);
                                 qb.where("entity_bookings.isBookingCancelled", true);
                                 qb.orWhere("entity_bookings.confirmedType", 1);
-                                qb.whereBetween("entity_bookings.createdAt", [
-                                    createStartTime,
-                                    createdEndTime,
-                                ]);
                             }
-                            if (Status === "Pending Cancelled Confirmed") {
+                            if (Status === "Pending,Cancelled,Confirmed") {
                                 // console.log("Pending,Cancelled,confirmed",status)
                                 qb.where("entity_bookings.isBookingConfirmed", false);
                                 qb.where("entity_bookings.isBookingCancelled", false);
                                 qb.orWhere("entity_bookings.isBookingCancelled", true);
                                 qb.orWhere("entity_bookings.isBookingConfirmed", true);
                                 qb.where("entity_bookings.confirmedType", 1);
-                                qb.whereBetween("entity_bookings.createdAt", [
-                                    createStartTime,
-                                    createdEndTime,
-                                ]);
                             }
-                            if (Status === "Cancelled Confirmed") {
+                            if (Status === "Cancelled,Confirmed") {
                                 // console.log("Cancelled,confirmed",status)
                                 qb.where({ "entity_bookings.isBookingCancelled": true });
                                 qb.orWhere({
                                     "entity_bookings.confirmedType": 1,
                                     "entity_bookings.isBookingConfirmed": true,
                                 });
-                                qb.whereBetween("entity_bookings.createdAt", [
-                                    createStartTime,
-                                    createdEndTime,
-                                ]);
                             }
-                            // }
+                            }
+                            if (facilityName && facilityName.length > 0) {
+                                console.log("Facility name 756", facilityName)
+                                qb.whereIn("facility_master.id", facilityName);
+                            }
                         })
                         .where("entity_bookings.orgId", req.orgId)
                         .groupBy([
@@ -1114,12 +1010,12 @@ const facilityBookingController = {
                         ])
                         .orderBy("entity_bookings.id", "asc")
                         .distinct("entity_bookings.id");
-                } catch (err) {
-                    console.log("[controllers][facilityBooking][list] :  Error", err);
-                    return res.status(500).json({
-                        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
-                    });
-                }
+                // } catch (err) {
+                //     console.log("[controllers][facilityBooking][list] :  Error", err);
+                //     return res.status(500).json({
+                //         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+                //     });
+                // }
             } else {
                 console.log("else returned");
                 facilityReportResult = await knex
@@ -1145,7 +1041,7 @@ const facilityBookingController = {
                     .select([
                         "entity_bookings.*",
                         "users.name as bookedUser",
-                        "users.userName",
+                        "users.name",
                         "facility_master.name as Facility",
                         "companies.companyName as Company",
                         "property_units.unitNumber",
@@ -1154,13 +1050,13 @@ const facilityBookingController = {
                         "property_unit_type_master.propertyUnitTypeCode",
                         "property_unit_type_master.descriptionEng",
                     ])
-                    // .where("entity_bookings.bookingStartDateTime", ">=", bookingStartTime)
-                    // .where("entity_bookings.bookingStartDateTime", "<=", bookingEndTime)
-                    // .where("entity_bookings.createdAt", ">=", createStartTime)
-                    // .where("entity_bookings.createdAt", "<=", createdEndTime)
                     .whereBetween("entity_bookings.bookingStartDateTime", [
                         bookingStartTime,
                         bookingEndTime,
+                    ])
+                    .whereBetween("entity_bookings.createdAt", [
+                        createStartTime,
+                        createdEndTime,
                     ])
                     .groupBy([
                         "entity_bookings.id",
@@ -5339,6 +5235,44 @@ const facilityBookingController = {
                     .where({ "facility_master.orgId": orgId, "facility_master.isActive": true })
 
             }
+            return res.status(200).json({
+                data: {
+                    facilityList,
+                },
+            });
+
+        } catch (err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+            });
+        }
+    },
+    getFacilityListByFacilityId:async(req,res) =>{
+        try {
+            console.log("facility id for list",req.body)
+            let payload = req.body
+            const schema = Joi.object().keys({
+                // id: Joi.string().required(),
+                id:Joi.array().items(Joi.number().required())
+            });
+            const result = Joi.validate(payload, schema);
+
+            if (result && result.hasOwnProperty("error") && result.error) {
+                return res.status(400).json({
+                    errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+                });
+            }
+
+
+            let facilityList = await knex
+            .from('facility_master')
+            .select([
+                "facility_master.id",
+                "facility_master.name",
+            ])
+            .where({ "facility_master.orgId": orgId, "facility_master.isActive": true })
+            .whereIn("facility_master.id",payload.id )
+             
             return res.status(200).json({
                 data: {
                     facilityList,
