@@ -1399,6 +1399,7 @@ const facilityBookingController = {
                         "property_units.unitNumber",
                         "property_units.description as unitDescription",
                         "facility_master.name as facilityName",
+                        "facility_master.bookingStatus"
                     ])
                     .where({ "entity_bookings.orgId": orgId, isBookingCancelled: false })
                     .where((qb) => {
@@ -1449,6 +1450,7 @@ const facilityBookingController = {
                         "property_units.unitNumber",
                         "property_units.description as unitDescription",
                         "facility_master.name as facilityName",
+                        "facility_master.bookingStatus"
                     ])
                     .where({
                         "entity_bookings.orgId": req.orgId,
@@ -5270,7 +5272,7 @@ const facilityBookingController = {
                 "facility_master.id",
                 "facility_master.name",
             ])
-            .where({ "facility_master.orgId": orgId, "facility_master.isActive": true })
+            .where({ "facility_master.orgId": req.orgId, "facility_master.isActive": true })
             .whereIn("facility_master.id",payload.id )
              
             return res.status(200).json({
@@ -5279,6 +5281,42 @@ const facilityBookingController = {
                 },
             });
 
+        } catch (err) {
+            return res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+            });
+        }
+    },
+    getUnitListByUnitId:async(req,res)=>{
+        try {
+            let payload = req.body
+            const schema = Joi.object().keys({
+                id: Joi.string().required(),
+                // id:Joi.array().items(Joi.number().required())
+            });
+            const result = Joi.validate(payload, schema);
+
+            if (result && result.hasOwnProperty("error") && result.error) {
+                return res.status(400).json({
+                    errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+                });
+            }
+
+            let unitList = await knex
+            .from('property_units')
+            .select([
+                'property_units.unitNumber',
+                'property_units.description'
+            ])
+            .where({'property_units.orgId':req.orgId,'property_units.isActive':true,'property_units.id':payload.id})
+            // .whereIn('property_units.id',payload.id)
+
+            return res.status(200).json({
+                data: {
+                    unitList,
+                },
+            });
+            
         } catch (err) {
             return res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],

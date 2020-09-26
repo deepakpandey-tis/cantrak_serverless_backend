@@ -1514,6 +1514,7 @@ const taskGroupController = {
             if(req.body.workOrderDateTo && req.body.workOrderDateFrom){
               let workDateFrom = moment(req.body.workOrderDateFrom).startOf('date');
               let workDateTo = moment(req.body.workOrderDateTo).endOf('date');
+              console.log("work order date from and to",req.body.workOrderDateTo,workDateTo)
               qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
             }
             if(req.body.assetName && req.body.assetName.length > 0){
@@ -3875,18 +3876,7 @@ const taskGroupController = {
       });
     }
   },
-  updateTaskStatus:async (req,res)=>{
-    try {
-      const payload = req.body;
-
-
-
-
-      
-    } catch (err) {
-      
-    }
-  },
+ 
 
   /**task feedback */
   taskFeedback: async (req, res) => {
