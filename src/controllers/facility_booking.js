@@ -1399,6 +1399,7 @@ const facilityBookingController = {
                         "property_units.unitNumber",
                         "property_units.description as unitDescription",
                         "facility_master.name as facilityName",
+                        "facility_master.bookingStatus"
                     ])
                     .where({ "entity_bookings.orgId": orgId, isBookingCancelled: false })
                     .where((qb) => {
@@ -1449,6 +1450,7 @@ const facilityBookingController = {
                         "property_units.unitNumber",
                         "property_units.description as unitDescription",
                         "facility_master.name as facilityName",
+                        "facility_master.bookingStatus"
                     ])
                     .where({
                         "entity_bookings.orgId": req.orgId,
