@@ -119,6 +119,8 @@ router.post('/get-facility-report-detail',authMiddleware.isAuthenticated,facilit
 
 router.post('/get-facility-list-by-project',authMiddleware.isAuthenticated,facilityBookingController.getFacilityListByProject)
 
+router.post('/get-facility-list-by-id',authMiddleware.isAuthenticated,facilityBookingController.getFacilityListByFacilityId)
+
 // router.post('/get-facility-by-status',authMiddleware.isAuthenticated,facilityBookingController.facilityListingStatus)
 
 module.exports = router;
