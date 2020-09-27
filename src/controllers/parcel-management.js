@@ -139,6 +139,7 @@ const parcelManagementController = {
         // console.log("parcel result id", parcelResult.id);
 
         let noOrgUserDataPayload = req.body.non_org_user_data;
+        if(noOrgUserDataPayload){
 
         noOrgUserData = await knex("parcel_user_non_tis")
           .insert({
@@ -149,7 +150,8 @@ const parcelManagementController = {
             createdBy: req.me.id,
             orgId: req.orgId,
           })
-          .returning(["*"]);
+          .returning(["*"])
+        }
 
         let orgUserDataPayload = req.body.org_user_data;
 
@@ -1047,14 +1049,15 @@ const parcelManagementController = {
         parcelResult = updateResult[0];
 
         let noOrgUserDataPayload = req.body.non_org_user_data;
-
+        if(noOrgUserDataPayload){
         noOrgUserData = await knex("parcel_user_non_tis")
           .update({
             ...noOrgUserDataPayload,
             updatedAt: currentTime,
           })
           .where({ parcelId: payload.id })
-          .returning(["*"]);
+          .returning(["*"])
+        }
 
         let orgUserDataPayload = req.body.org_user_data;
 
