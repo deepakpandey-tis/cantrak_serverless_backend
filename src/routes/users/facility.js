@@ -11,30 +11,30 @@ const userMiddleware = require("../../middlewares/userMiddleware");
 const router = Router();
 
 router.post('/get-user-incoming-parcels', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
-facilityBookingController.getIncomingParcelList);
+    facilityBookingController.getIncomingParcelList);
 
 router.post('/get-user-outgoing-parcels', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
-facilityBookingController.getOutgoingParcelList);
+    facilityBookingController.getOutgoingParcelList);
 
 router.post('/get-user-picked-up-parcels', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
-facilityBookingController.getPickedUpParcelList);
+    facilityBookingController.getPickedUpParcelList);
 
 router.post('/get-user-dispatched-parcels', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
-facilityBookingController.getDispatchedParcelList);
+    facilityBookingController.getDispatchedParcelList);
 
 router.get('/get-user-pending-approval-list', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
-facilityBookingController.getUserPendingApprovalList);
+    facilityBookingController.getUserPendingApprovalList);
 
-router.post('/get-user-parcel-details', authMiddleware.isAuthenticated, userMiddleware.customerInfo,facilityBookingController.getParcelDetails);
+router.post('/get-user-parcel-details', authMiddleware.isAuthenticated, userMiddleware.customerInfo, facilityBookingController.getParcelDetails);
 
 router.post('/get-parcel-approval-list', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
-facilityBookingController.getParcelApprovalList);
+    facilityBookingController.getParcelApprovalList);
 
 router.post('/cancel-parcel', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
-facilityBookingController.cancelParcel);
+    facilityBookingController.cancelParcel);
 
 router.post('/approve-parcel', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
-facilityBookingController.approveParcel);
+    facilityBookingController.approveParcel);
 
 
 /* USER FACILITY LIST */
@@ -67,8 +67,11 @@ router.post('/get-all-units', authMiddleware.isAuthenticated, userMiddleware.cus
 router.post('/get-units-list', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
     facilityBookingController.getAllUnitList);
 
-router.post('/checked-in-facility',authMiddleware.isAuthenticated,userMiddleware.customerInfo,
-    facilityBookingController.checkInFacility)
+router.post('/checked-in-facility', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    facilityBookingController.checkInFacility);
+
+router.post('/get-facility-booked-details', authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    facilityBookingController.getFacilityBookedDetails);
 
 
 
