@@ -1531,10 +1531,11 @@ const facilityBookingController = {
             let updateDisplayId = await knex('entity_bookings').update({ isActive: true }).where({ isActive: true });
 
             res.status(200).json({
-                result: resultData,
+                data: {
+                    result: resultData,
+                },               
                 message: "Your facility booked successfully!"
             })
-
 
         } catch (err) {
 
