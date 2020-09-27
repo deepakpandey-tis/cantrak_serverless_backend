@@ -814,7 +814,7 @@ const facilityBookingController = {
                                 qb.where("entity_bookings.isBookingCancelled", false);
                                 
                             }
-                            if(status && status.length > 0){
+                            if(status){
                             if (Status == "Approved") {
                                 console.log("Approved", status);
                                 qb.where({
@@ -993,7 +993,7 @@ const facilityBookingController = {
                                 });
                             }
                             }
-                            if (facilityName && facilityName.length > 0) {
+                            if (facilityName) {
                                 console.log("Facility name 756", facilityName)
                                 qb.whereIn("facility_master.id", facilityName);
                             }
