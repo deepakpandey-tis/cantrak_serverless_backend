@@ -731,7 +731,7 @@ const facilityBookingController = {
             }
 
             let facilityReportResult;
-            console.log("details for all",companyId,projectId,buildingPhaseId,unitNo,status,facilityName,tenantName)
+            // console.log("details for all",companyId,projectId,buildingPhaseId,unitNo,status,facilityName,tenantName)
             if (
                 companyId ||
                 projectId ||
@@ -765,7 +765,6 @@ const facilityBookingController = {
                             "entity_bookings.*",
                             "facility_master.displayId as No",
                             "users.name as bookedUser",
-                            // "users.userName",
                             "facility_master.name as Facility",
                             "facility_master.projectId",
                             "facility_master.buildingPhaseId",
@@ -787,10 +786,10 @@ const facilityBookingController = {
                         ])
                         .where((qb) => {
 
-                            // if (facilityName && facilityName.length > 0) {
-                            //     console.log("Facility name 756", facilityName)
-                            //     qb.whereIn("facility_master.id", facilityName);
-                            // }
+                            if (facilityName && facilityName.length > 0) {
+                                console.log("Facility name 756", facilityName)
+                                qb.whereIn("facility_master.id", facilityName);
+                            }
                             if (unitNo) {
                                 qb.where("entity_bookings.unitId", unitNo);
                             }
@@ -803,18 +802,16 @@ const facilityBookingController = {
                             if (buildingPhaseId) {
                                 qb.where("facility_master.buildingPhaseId", buildingPhaseId);
                             }
-
                             if (tenantName && tenantName.length > 0) {
                                 console.log("tenant name", tenantName);
                                 qb.whereIn("users.name", tenantName);
                             }
+                            if(status){
                             if (Status == "Pending") {
                                 console.log("Pending", status);
                                 qb.where("entity_bookings.isBookingConfirmed", false);
                                 qb.where("entity_bookings.isBookingCancelled", false);
-                                
                             }
-                            if(status){
                             if (Status == "Approved") {
                                 console.log("Approved", status);
                                 qb.where({
@@ -993,10 +990,10 @@ const facilityBookingController = {
                                 });
                             }
                             }
-                            if (facilityName) {
-                                console.log("Facility name 756", facilityName)
-                                qb.whereIn("facility_master.id", facilityName);
-                            }
+                            // if (facilityName) {
+                            //     console.log("Facility name 756", facilityName)
+                            //     qb.whereIn("facility_master.id", facilityName);
+                            // }
                         })
                         .where("entity_bookings.orgId", req.orgId)
                         .groupBy([

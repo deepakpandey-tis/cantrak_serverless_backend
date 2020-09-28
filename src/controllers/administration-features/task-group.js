@@ -1181,9 +1181,15 @@ const taskGroupController = {
           errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
         });
       }
+      // console.log("req.body.workOrderDate",req.body.workOrderDate)
+
 
       let workOrderTime = moment(req.body.workOrderDate).endOf('date').format('YYYY-MM-DD')
-      console.log('work order time',workOrderTime,req.body.workOrderDate)
+      // console.log('work order time',workOrderTime,req.body.workOrderDate)
+
+
+      // let workDate1 = moment(req.body.workOrderDate).utc().startOf('date');
+      // let workDate2 = moment(req.body.workOrderDate).utc().endOf('date');
 
       let pagination = {};
       let per_page = reqData.per_page || 10;
@@ -1291,6 +1297,7 @@ const taskGroupController = {
             if(req.body.workOrderDate){
               let workDateFrom = moment(req.body.workOrderDate).startOf('date');
               let workDateTo = moment(req.body.workOrderDate).endOf('date');
+              console.log("work date",workDateFrom,"work date to",workDateTo)
               qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
             }
             if(req.body.assetName && req.body.assetName.length>0){
@@ -1359,7 +1366,8 @@ const taskGroupController = {
         data: {
           taskGroupAssetPmsData: pagination
         },
-        message: 'Task Group PMs Asset List Successfully!'
+        message: 'Task Group PMs Asset List Successfully!',
+        // workDate1,workDate2
       })
 
     } catch (err) {
@@ -1410,6 +1418,7 @@ const taskGroupController = {
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
 
+     
       let [total, rows] = await Promise.all([
         knex
           .count("* as count")
@@ -1723,6 +1732,7 @@ const taskGroupController = {
       return res.status(200).json({
         data: {
           taskGroupAssetPmsData: pagination
+
         },
         message: 'Task Group PMs Asset List Successfully!'
       })
