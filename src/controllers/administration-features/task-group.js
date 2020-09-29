@@ -591,7 +591,710 @@ const taskGroupController = {
 
 
 
+<<<<<<< HEAD
                 if (req.body.additionalUsers && req.body.additionalUsers.length) {
+=======
+            if (pmPlanName) {
+              qb.where('pm_master2.name', 'iLIKE', `%${pmPlanName}%`)
+            }
+            if (startDate && endDate) {
+              qb.whereBetween('pm_master2.createdAt', [startTime, endTime])
+              // qb.where('task_group_schedule.endDate', '<=', endDate)
+            }
+            if (endDate) {
+              //  qb.where({ 'task_group_schedule.endDate': endDate })
+            }
+          })
+          .orderBy("pm_master2.createdAt", 'desc')
+          .offset(offset).limit(per_page)
+      ])
+
+      console.log(JSON.stringify(total, 2, null))
+      let count = total[0].count;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+      return res.status(200).json({
+        data: {
+          pm_list: pagination,
+          startTime,
+          endTime
+        }
+      })
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  createBrandNewPm: async (req, res) => {
+    try {
+      let payload = req.body;
+      let currentTime = new Date().getTime();
+      // CREATE PM  OPEN
+      let insertPmData = { "name": payload.pmName, 'assetCategoryId': payload.assetCategoryId, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId };
+      let insertPmResult = await knex('pm_master2').insert(insertPmData).returning(['*'])
+      createPM = insertPmResult[0];
+
+      return res.status(200).json({
+        data: {
+          pm: createPM,
+          message: 'Pm created Successfully'
+        }
+      })
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  // GET TASK GROUP ASSET PMS LIST
+  getTaskGroupAssetPmsList: async (req, res) => {
+
+    try {
+      let reqData = req.query;
+      let payLoad = req.body;
+      let workOrderDate = req.body.workOrderDate
+      console.log("work order list data",req.body)
+
+      const payload = _.omit(payLoad, [
+        "assetCategoryId",
+        "workOrderDate",
+        "assetName",
+        "assetSerial",
+        "status"
+      ]);
+
+      const schema = Joi.object().keys({
+        taskGroupId: Joi.string().required(),
+        category: Joi.string().allow("").allow(null).optional(),
+        workOrderId: Joi.string().allow("").allow(null).optional(),
+      });
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+      // console.log("req.body.workOrderDate",req.body.workOrderDate)
+
+
+      let workOrderTime = moment(req.body.workOrderDate).endOf('date').format('YYYY-MM-DD')
+      // console.log('work order time',workOrderTime,req.body.workOrderDate)
+
+
+      // let workDate1 = moment(req.body.workOrderDate).utc().startOf('date');
+      // let workDate2 = moment(req.body.workOrderDate).utc().endOf('date');
+
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+      await knex('task_group_schedule_assign_assets')
+        .update({ isActive: true })
+        .where({ isActive: true })
+
+      let [total, rows] = await Promise.all([
+        knex
+          .count("* as count")
+          .from("task_group_schedule")
+          .innerJoin(
+            "task_group_schedule_assign_assets",
+            "task_group_schedule.id",
+            "task_group_schedule_assign_assets.scheduleId"
+          )
+          .innerJoin(
+            "asset_master",
+            "task_group_schedule_assign_assets.assetId",
+            "asset_master.id"
+          )
+          .where({
+            "task_group_schedule.taskGroupId": payload.taskGroupId,
+            "task_group_schedule.orgId": req.orgId
+          })
+          .where(qb => {
+            if (payload.workOrderId && payload.workOrderId != null) {
+              qb.where('task_group_schedule_assign_assets.displayId', payload.workOrderId)
+            }
+            if(req.body.assetCategoryId && req.body.assetCategoryId.length > 0 ){
+              qb.whereIn('asset_master.assetCategoryId',req.body.assetCategoryId)
+            }
+            if(req.body.workOrderDate){
+              let workDateFrom = moment(req.body.workOrderDate).startOf('date');
+              let workDateTo = moment(req.body.workOrderDate).endOf('date');
+              qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
+            }
+            if(req.body.assetName && req.body.assetName.length>0){
+              qb.whereIn('task_group_schedule_assign_assets.assetId',req.body.assetName)
+            }
+            if(req.body.assetSerial && req.body.assetSerial.length > 0){
+              qb.whereIn('asset_master.id',req.body.assetSerial)
+            }
+            if(req.body.status){
+              qb.whereIn('task_group_schedule_assign_assets.status',req.body.status)
+            }
+          })
+        ,
+        //.offset(offset).limit(per_page),
+        knex("task_group_schedule")
+          .innerJoin(
+            "task_group_schedule_assign_assets",
+            "task_group_schedule.id",
+            "task_group_schedule_assign_assets.scheduleId"
+          )
+          .innerJoin(
+            "asset_master",
+            "task_group_schedule_assign_assets.assetId",
+            "asset_master.id"
+          )
+          .select([
+            "task_group_schedule_assign_assets.id as workOrderId",
+            "task_group_schedule_assign_assets.displayId as TGAA",
+            // "task_group_schedule_assign_assets.status as status",
+            "task_group_schedule_assign_assets.isActive as status",
+            "task_group_schedule.id as id",
+            "asset_master.assetName as assetName",
+            "asset_master.model as model",
+            "asset_master.barcode as barcode",
+            "asset_master.areaName as areaName",
+            "asset_master.description as description",
+            "asset_master.assetSerial as assetSerial",
+            "asset_master.id as assetId",
+            "asset_master.assetCategoryId",
+            // "buildings_and_phases.buildingPhaseCode",
+            // "floor_and_zones.floorZoneCode",
+            // "property_units.unitNumber as unitNumber",
+            "task_group_schedule_assign_assets.pmDate as pmDate",
+            knex.raw(
+              `DATE("task_group_schedule_assign_assets"."pmDate") as "workOrderDate"`
+            ),
+            "task_group_schedule.repeatPeriod as repeatPeriod",
+            "task_group_schedule.repeatOn as repeatOn",
+            "task_group_schedule.repeatFrequency as repeatFrequency",
+            "task_group_schedule_assign_assets.status"
+          ])
+          .where({
+            "task_group_schedule.taskGroupId": payload.taskGroupId,
+            "task_group_schedule.orgId": req.orgId
+          })
+          .where(qb => {
+            if (payload.workOrderId && payload.workOrderId != null) {
+              qb.where('task_group_schedule_assign_assets.displayId', payload.workOrderId)
+            }
+            // if (payload.category) {
+            //   qb.where('task_group_schedule_assign_assets.assetId', payload.category)
+            // }
+            if(req.body.assetCategoryId && req.body.assetCategoryId.length > 0 ){
+              qb.whereIn('asset_master.assetCategoryId',req.body.assetCategoryId)
+            }
+            if(req.body.workOrderDate){
+              let workDateFrom = moment(req.body.workOrderDate).startOf('date');
+              let workDateTo = moment(req.body.workOrderDate).endOf('date');
+              console.log("work date",workDateFrom,"work date to",workDateTo)
+              qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
+            }
+            if(req.body.assetName && req.body.assetName.length>0){
+              qb.whereIn('task_group_schedule_assign_assets.assetId',req.body.assetName)
+            }
+            if(req.body.assetSerial && req.body.assetSerial.length > 0){
+              qb.whereIn('asset_master.id',req.body.assetSerial)
+            }
+            if(req.body.status){
+              qb.whereIn('task_group_schedule_assign_assets.status',req.body.status)
+            }
+          })
+          .offset(offset)
+          .limit(per_page)
+          .orderBy("workOrderDate", "asc")
+      ]);
+
+      const Parallel = require('async-parallel')
+      const rowsWithLocations = await Parallel.map(rows, async row => {
+
+        console.log("rows", row);
+
+        const location = await knex('asset_location')
+          .innerJoin('companies', 'asset_location.companyId', 'companies.id')
+          .innerJoin('projects', 'asset_location.projectId', 'projects.id')
+          .innerJoin(
+            "buildings_and_phases",
+            "asset_location.buildingId",
+            "buildings_and_phases.id"
+          )
+          .innerJoin(
+            "floor_and_zones",
+            "asset_location.floorId",
+            "floor_and_zones.id"
+          )
+          .innerJoin(
+            "property_units",
+            "asset_location.unitId",
+            "property_units.id"
+          )
+          .select([
+            'companies.companyName',
+            'projects.projectName',
+            'buildings_and_phases.buildingPhaseCode',
+            'floor_and_zones.floorZoneCode',
+            'property_units.unitNumber'
+          ]).where({ "asset_location.assetId": row.assetId })
+          .orderBy("asset_location", 'desc')
+          .limit('1')
+          .first()
+        // ]).max('asset_location.updatedAt').first()
+        return { ...row, ...location }
+      })
+
+      let count = total[0].count;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rowsWithLocations.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rowsWithLocations;
+
+      return res.status(200).json({
+        data: {
+          taskGroupAssetPmsData: pagination
+        },
+        message: 'Task Group PMs Asset List Successfully!',
+        // workDate1,workDate2
+      })
+
+    } catch (err) {
+      console.log('[controllers][task-group][get-task-group-asset-pms-list] :  Error', err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
+  getWorkOrderList:async (req,res) =>{
+    try {
+      let reqData = req.query;
+      let payLoad = req.body;
+      let workOrderDate = req.body.workOrderDate
+      // console.log("work order list data",req.body)
+
+      const payload = _.omit(payLoad, [
+        "assetCategoryId",
+        "workOrderDate",
+        "assetName",
+        "assetSerial",
+        "pmName",
+        "status",
+        "workOrderDateTo",
+        "workOrderDateFrom"
+      ]);
+
+      const schema = Joi.object().keys({
+        category: Joi.string().allow("").allow(null).optional(),
+        workOrderId: Joi.string().allow("").allow(null).optional(),
+        // workOrderDateTo:Joi.string().required(),
+        // workOrderDateFrom: Joi.string().required()
+      });
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+     
+      let [total, rows] = await Promise.all([
+        knex
+          .count("* as count")
+          .from("task_group_schedule")
+          .innerJoin(
+            "task_group_schedule_assign_assets",
+            "task_group_schedule.id",
+            "task_group_schedule_assign_assets.scheduleId"
+          )
+          .innerJoin(
+            "asset_master",
+            "task_group_schedule_assign_assets.assetId",
+            "asset_master.id"
+          )
+          .innerJoin(
+            "pm_master2",
+            "task_group_schedule.pmId",
+            "pm_master2.id"
+          )
+          .where({
+            "task_group_schedule.orgId": req.orgId
+          })
+          .where(qb => {
+            if (payload.workOrderId && payload.workOrderId != null) {
+              qb.where('task_group_schedule_assign_assets.displayId', payload.workOrderId)
+            }
+           
+            if(req.body.assetCategoryId && req.body.assetCategoryId.length > 0 ){
+              qb.whereIn('asset_master.assetCategoryId',req.body.assetCategoryId)
+            }
+            if(req.body.workOrderDateTo && req.body.workOrderDateFrom){
+              let workDateFrom = moment(req.body.workOrderDateFrom).startOf('date');
+              let workDateTo = moment(req.body.workOrderDateTo).endOf('date');
+              qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
+            }
+            if(req.body.assetName && req.body.assetName.length>0){
+              console.log("Asset name")
+              qb.whereIn('task_group_schedule_assign_assets.assetId',req.body.assetName)
+            }
+            if(req.body.assetSerial && req.body.assetSerial.length > 0){
+              qb.whereIn('asset_master.id',req.body.assetSerial)
+            }
+            if (req.body.pmName && req.body.pmName != null) {
+              console.log("pm name",req.body.pmName)
+              qb.where('pm_master2.name', 'iLIKE', `%${req.body.pmName}%`)
+            }
+            if(req.body.status){
+              console.log("status of wo",req.body.status)
+              qb.whereIn('task_group_schedule_assign_assets.status',req.body.status)
+            }
+          })
+        ,
+        knex("task_group_schedule")
+          .innerJoin(
+            "task_group_schedule_assign_assets",
+            "task_group_schedule.id",
+            "task_group_schedule_assign_assets.scheduleId"
+          )
+          .innerJoin(
+            "asset_master",
+            "task_group_schedule_assign_assets.assetId",
+            "asset_master.id"
+          )
+          .innerJoin(
+            "pm_master2",
+            "task_group_schedule.pmId",
+            "pm_master2.id"
+          )
+          .select([
+            "task_group_schedule_assign_assets.id as workOrderId",
+            "task_group_schedule_assign_assets.displayId as TGAA",
+            "task_group_schedule.id as id",
+            "asset_master.assetName as assetName",
+            "asset_master.model as model",
+            "asset_master.barcode as barcode",
+            "asset_master.areaName as areaName",
+            "asset_master.description as description",
+            "asset_master.assetSerial as assetSerial",
+            "asset_master.id as assetId",
+            "asset_master.assetCategoryId",
+            "pm_master2.name as pmName",
+            "pm_master2.id as pmId",
+            "task_group_schedule_assign_assets.pmDate as pmDate",
+            knex.raw(
+              `DATE("task_group_schedule_assign_assets"."pmDate") as "workOrderDate"`
+            ),
+            "task_group_schedule.repeatPeriod as repeatPeriod",
+            "task_group_schedule.repeatOn as repeatOn",
+            "task_group_schedule.repeatFrequency as repeatFrequency",
+            "task_group_schedule_assign_assets.status"
+          ])
+          .where({
+            "task_group_schedule.orgId": req.orgId
+          })
+          .where(qb => {
+            if (payload.workOrderId && payload.workOrderId != null) {
+              qb.where('task_group_schedule_assign_assets.displayId', payload.workOrderId)
+            }
+            if(req.body.assetCategoryId && req.body.assetCategoryId.length > 0 ){
+              qb.whereIn('asset_master.assetCategoryId',req.body.assetCategoryId)
+            }
+            if(req.body.workOrderDateTo && req.body.workOrderDateFrom){
+              let workDateFrom = moment(req.body.workOrderDateFrom).startOf('date');
+              let workDateTo = moment(req.body.workOrderDateTo).endOf('date');
+              console.log("work order date from and to",req.body.workOrderDateTo,workDateTo)
+              qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
+            }
+            if(req.body.assetName && req.body.assetName.length > 0){
+              qb.whereIn('task_group_schedule_assign_assets.assetId',req.body.assetName)
+            }
+            if(req.body.assetSerial && req.body.assetSerial.length > 0){
+              qb.whereIn('asset_master.id',req.body.assetSerial)
+            }
+            if (req.body.pmName && req.body.pmName != null) {
+              qb.where('pm_master2.name', 'iLIKE', `%${req.body.pmName}%`)
+            }
+            if(req.body.status){
+              console.log("status of wo",req.body.status)
+              qb.whereIn('task_group_schedule_assign_assets.status',req.body.status)
+            }
+          })
+          .offset(offset)
+          .limit(per_page)
+          .orderBy("workOrderDate", "asc")
+      ]);
+
+      const Parallel = require('async-parallel')
+      const rowsWithLocations = await Parallel.map(rows, async row => {
+
+        console.log("rows", row);
+
+        const location = await knex('asset_location')
+          .innerJoin('companies', 'asset_location.companyId', 'companies.id')
+          .innerJoin('projects', 'asset_location.projectId', 'projects.id')
+          .innerJoin(
+            "buildings_and_phases",
+            "asset_location.buildingId",
+            "buildings_and_phases.id"
+          )
+          .innerJoin(
+            "floor_and_zones",
+            "asset_location.floorId",
+            "floor_and_zones.id"
+          )
+          .innerJoin(
+            "property_units",
+            "asset_location.unitId",
+            "property_units.id"
+          )
+          .select([
+            'companies.companyName',
+            'projects.projectName',
+            'buildings_and_phases.buildingPhaseCode',
+            'floor_and_zones.floorZoneCode',
+            'property_units.unitNumber'
+          ]).where({ "asset_location.assetId": row.assetId })
+          .orderBy("asset_location", 'desc')
+          .limit('1')
+          .first()
+        // ]).max('asset_location.updatedAt').first()
+        return { ...row, ...location }
+      })
+
+      let count = total[0].count;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rowsWithLocations.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rowsWithLocations;
+
+      return res.status(200).json({
+        data: {
+          taskGroupAssetPmsData: pagination
+        },
+        message: 'Task Group PMs Asset List Successfully!'
+      })
+
+
+
+
+    } catch (err) {
+      console.log('[controllers][task-group][get-task-group-asset-pms-list] :  Error', err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+      
+    }
+  },
+  getTaskGroupAssetPmsListOnToday: async (req, res) => {
+
+    try {
+      let reqData = req.query;
+      let payload = req.body
+
+      const schema = Joi.object().keys({
+        // taskGroupId: Joi.string().required(),
+        pmId: Joi.string().required(),
+        // pmDate:Joi.string().required()
+      });
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+      await knex('task_group_schedule_assign_assets')
+        .update({ isActive: true })
+        .where({ isActive: true })
+
+
+      let [total, rows] = await Promise.all([
+        knex("task_group_schedule")
+          .innerJoin(
+            "task_group_schedule_assign_assets",
+            "task_group_schedule.id",
+            "task_group_schedule_assign_assets.scheduleId"
+          )
+          .innerJoin(
+            "asset_master",
+            "task_group_schedule_assign_assets.assetId",
+            "asset_master.id"
+          )
+          .select([
+            "task_group_schedule_assign_assets.id as workOrderId",
+            "task_group_schedule_assign_assets.displayId as TGAA",
+            "task_group_schedule_assign_assets.status as status",
+            "task_group_schedule.id as id",
+            "asset_master.assetName as assetName",
+            "asset_master.model as model",
+            "asset_master.barcode as barcode",
+            "asset_master.areaName as areaName",
+            "asset_master.description as description",
+            "asset_master.assetSerial as assetSerial",
+            "task_group_schedule_assign_assets.pmDate as pmDate",
+            "task_group_schedule.repeatPeriod as repeatPeriod",
+            "task_group_schedule.repeatOn as repeatOn",
+            "task_group_schedule.repeatFrequency as repeatFrequency"
+          ])
+          .where({
+            "task_group_schedule.pmId": payload.pmId
+            // 'task_group_schedule_assign_assets.pmDate':payload.pmDate })
+          })
+          .whereRaw(
+            `DATE("task_group_schedule_assign_assets"."pmDate") = date(now())`
+          ),
+        // knex.count('* as count').from("task_group_schedule")
+        //   .innerJoin('task_group_schedule_assign_assets', 'task_group_schedule.id', 'task_group_schedule_assign_assets.scheduleId')
+        //   .innerJoin('asset_master', 'task_group_schedule_assign_assets.assetId', 'asset_master.id'),
+        // .where({ "task_group_stask_group_schedule_assign_assetschedule.taskGroupId": payload.taskGroupId }),
+        //.offset(offset).limit(per_page),
+        knex("task_group_schedule")
+          .innerJoin(
+            "task_group_schedule_assign_assets",
+            "task_group_schedule.id",
+            "task_group_schedule_assign_assets.scheduleId"
+          )
+          .innerJoin(
+            "asset_master",
+            "task_group_schedule_assign_assets.assetId",
+            "asset_master.id"
+          )
+          .select([
+            "task_group_schedule_assign_assets.id as workOrderId",
+            "task_group_schedule_assign_assets.displayId as TGAA",
+            "task_group_schedule.id as id",
+            "asset_master.assetName as assetName",
+            "asset_master.model as model",
+            "asset_master.barcode as barcode",
+            "asset_master.areaName as areaName",
+            "asset_master.description as description",
+            "asset_master.assetSerial as assetSerial",
+            "task_group_schedule_assign_assets.pmDate as pmDate",
+            "task_group_schedule.repeatPeriod as repeatPeriod",
+            "task_group_schedule.repeatOn as repeatOn",
+            "task_group_schedule.repeatFrequency as repeatFrequency",
+          ])
+          .where({
+            "task_group_schedule.pmId": payload.pmId,
+            "task_group_schedule.orgId": req.orgId
+          })
+          .whereRaw(
+            `DATE("task_group_schedule_assign_assets"."pmDate") = date(now())`
+          )
+          .offset(offset)
+          .limit(per_page)
+      ]);
+
+      let count = total.length;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+      return res.status(200).json({
+        data: {
+          taskGroupAssetPmsData: pagination
+
+        },
+        message: 'Task Group PMs Asset List Successfully!'
+      })
+
+    } catch (err) {
+      console.log('[controllers][task-group][get-task-group-asset-pms-list] :  Error', err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
+  // CREATE TASK TEMPLATE
+  createTaskTemplate: async (req, res) => {
+
+    try {
+
+      let createTemplate = null;
+      let createTemplateTask = null;
+      let taskSchedule = null;
+      let assignedServiceTeam = null;
+      let assignedAdditionalUser = null;
+
+      let payload = _.omit(req.body, ['additionalUsers']);
+
+      const schema = Joi.object().keys({
+        pmId: Joi.string().required(),
+        assetCategoryId: Joi.string().required(),
+        taskTemplateName: Joi.string().required(),
+        // tasks: Joi.array().items(Joi.object()).strict().required(),
+        startDateTime: Joi.date().allow("").allow(null).optional(),
+        endDateTime: Joi.date().allow("").allow(null).optional(),
+        repeatPeriod: Joi.string().allow("").allow(null).optional(),
+        repeatFrequency: Joi.string().allow("").allow(null).optional(),
+        teamId: Joi.string().allow("").allow(null).optional(),
+        mainUserId: Joi.string().allow("").allow(null).optional(),
+        // additionalUsers: Joi.array().items(Joi.string().required()).strict().required(),
+      });
+
+      const result = Joi.validate(_.omit(payload, ['repeatOn', 'tasks']), schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+        });
+      }
+
+      await knex.transaction(async trx => {
+
+        let currentTime = new Date().getTime();
+        // CREATE TASK TEMPLATE OPEN 
+        let insertTemplateData = {
+          pmId: payload.pmId,
+          assetCategoryId: payload.assetCategoryId,
+          taskGroupName: payload.taskTemplateName,
+          createdAt: currentTime,
+          updatedAt: currentTime,
+          orgId: req.orgId
+        }
+>>>>>>> 9de0661dba64d25470d373902f55554a5ee08dc5
 
                     // ASSIGNED ADDITIONAL USER OPEN
                     let insertAssignedAdditionalUserData = req.body.additionalUsers.map(user => ({

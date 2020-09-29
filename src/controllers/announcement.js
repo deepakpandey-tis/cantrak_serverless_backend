@@ -297,15 +297,23 @@ const announcementController = {
           orgId: req.orgId,
         };
 
-        let announcementNotificationResult = await knex
+
+        let announcementNotificationResult = await knex('announcement_master')
           .update(insertAnnouncementPayload)
           .where({ id: newAnnouncementId })
           .returning(["*"])
-          .transacting(trx)
-          .into("announcement_master");
+          // .transacting(trx)
+          // .into("announcement_master");
         announcementResult = announcementNotificationResult[0];
 
         let userId = req.body.userId;
+
+        delUsers = await knex('announcement_user_master')
+        .where({
+          announcementId:newAnnouncementId
+        })
+        .del()
+
 
         if (userId && userId.length > 0) {
           for (let id of userId) {
@@ -324,7 +332,15 @@ const announcementController = {
         }
 
         let imagesData = req.body.logoFile;
-        console.log("imagesData", imagesData);
+        // console.log("imagesData", imagesData);
+
+        // delImage = await knex("images")
+        // .where({
+        //   entityType: "announcement_image",
+        //   entityId: newAnnouncementId
+        // })
+        // .del()
+
         if (imagesData && imagesData.length > 0) {
           for (let image of imagesData) {
             let d = await knex("images")
