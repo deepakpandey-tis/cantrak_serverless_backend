@@ -135,6 +135,14 @@ router.post('/get-report-by-tag',
     resourceAccessMiddleware.isCMAccessible,
     serviceRequestController.getReportByTag);
 
+/*GET REPORT CM REVENUE REPORT */
+router.post('/get-report-cm-revenue',
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    resourceAccessMiddleware.isCMAccessible,
+    serviceRequestController.getReportCmRevenue);
+
+
 
 
 module.exports = router;

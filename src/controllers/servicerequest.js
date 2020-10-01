@@ -4893,6 +4893,44 @@ const serviceRequestController = {
 
     },
 
+    getReportCmRevenue: async(req, res) => {
+
+        try {
+
+
+            let payload = req.body;
+            let companyId = Number(payload.companyId.id);
+            let projectId = Number(payload.projectId.id);
+
+            let month;
+
+            if (Number(payload.startMonth) <= 9) {
+
+                month = "0" + Number(payload.startMonth);
+
+            } else {
+                month = Number(payload.startMonth);
+            }
+            let period = payload.startYear + "-" + month;
+
+            let result = await knex.raw(`select "SO no", "createdAt", "Problem Type", "Problem Description", "buildName", "Assign Team", "Assign MainUser", "Tags", "Customer Name" , case when part_cost is null then 0 else -1*part_cost end + case when part_asscost is null then 0 else part_asscost end   part_cost, part_price, case when part_price is null then 0 else part_price end-(case when part_cost is null then 0 else -1*part_cost end + case when part_asscost is null then 0 else part_asscost end) part_diff, charge_cost, charge_price,  case when charge_price is null then 0 else charge_price end -case when charge_cost is null then 0 else charge_cost end charge_diff, "serviceStatus" from (select so."displayId" as "SO no",to_char(to_timestamp(sr."createdAt"/1000),'fmDD/MM/YYYY') "createdAt",public.f_get_problem_types(sr."orgId" ,sr.id) as "Problem Type",public.f_get_problem_desc(sr."orgId", sr.id) as "Problem Description",public.f_get_building_name_fuid(sr."houseId") as "buildName",public.f_get_teamname(sr."orgId" ,so.id) as "Assign Team",public.f_get_teammain_name(sr."orgId" ,so.id ) as "Assign MainUser",public.f_get_sr_status(sr."serviceStatusCode") as "serviceStatus",public.f_get_user_category(sr."orgId",sr."houseId") as "Tags",public.f_get_tenantname(sr."orgId",sr.tenantid) as "Customer Name" ,public.f_sum_partcost(sr."orgId" , so."displayId") part_cost,public.f_sum_asspartcost(sr."orgId" , so."displayId") part_asscost,public.f_sum_chargecost(sr."orgId" , so.id) charge_cost,public.f_sum_partprice(sr."orgId" , so.id) part_price,public.f_sum_chargeprice(sr."orgId" , so.id) charge_price,sr."orgId" ,sr.id srid,so.id soid from service_requests sr left outer join service_orders so on sr.id = so."serviceRequestId" and sr."orgId" = so."orgId" and sr."companyId" = so."companyId" where sr."orgId" = ${req.orgId} and sr."companyId" = ${companyId} and sr."projectId" = ${projectId} and sr."moderationStatus" = true and sr."serviceStatusCode" not in ('C','O') and to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}') F order by 1`);
+
+
+            return res.status(200).json({
+                data: result.rows,
+                message: "CM Revenue report Successfully!",
+            });
+
+
+        } catch (err) {
+
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+
+    }
+
 
 };
 
