@@ -14,7 +14,7 @@ const request = require("request");
 
 const invoiceController = {
 
-    getInvoiceDetails: async (req, res) => {
+    getInvoiceDetails: async(req, res) => {
         try {
 
             let payload = { entityId: req.query.entityId, entityType: req.query.entityType };
@@ -73,7 +73,7 @@ const invoiceController = {
         }
     },
 
-    updateInvoice: async (req, res) => {
+    updateInvoice: async(req, res) => {
         try {
             // validate keys
             let userId = req.me.id;
@@ -188,7 +188,7 @@ const invoiceController = {
         }
     },
 
-    getServiceOrderInvoice: async (req, res) => {
+    getServiceOrderInvoice: async(req, res) => {
         try {
             let { serviceOrderId } = req.body;
             let userInfo;
@@ -198,20 +198,20 @@ const invoiceController = {
             let pagination = {};
             [rows] = await Promise.all([
                 knex("service_orders")
-                    .leftJoin(
-                        "service_appointments",
-                        "service_orders.id",
-                        "service_appointments.serviceOrderId"
-                    )
-                    .select([
-                        "service_appointments.appointedDate",
-                        "service_appointments.appointedTime",
-                        "service_orders.*"
-                    ])
-                    .where({
-                        "service_orders.id": serviceOrderId,
-                        "service_orders.orgId": req.orgId
-                    })
+                .leftJoin(
+                    "service_appointments",
+                    "service_orders.id",
+                    "service_appointments.serviceOrderId"
+                )
+                .select([
+                    "service_appointments.appointedDate",
+                    "service_appointments.appointedTime",
+                    "service_orders.*"
+                ])
+                .where({
+                    "service_orders.id": serviceOrderId,
+                    "service_orders.orgId": req.orgId
+                })
             ]);
             let serviceOrderMaster = await knex("service_orders")
                 .leftJoin("service_requests", "service_orders.serviceRequestId", "=", "service_requests.id")
@@ -251,7 +251,13 @@ const invoiceController = {
             console.log("results", teamsResult.rows);
 
             let additionalUsers = othersUserData.rows;
-            let teamData = { ...teamsResult.rows, additionalUsers };
+            let addUsers;
+            if (additionalUsers) {
+
+                addUsers = additionalUsers.map(v => v.addUsers);
+
+            }
+            let teamData = {...teamsResult.rows, additionalUsers, addUsers };
 
 
             console.log("SurveyOrderDate", surveyOrderData);
@@ -355,7 +361,7 @@ const invoiceController = {
             console.log("locationResult", tags);
 
 
-            userInfo = { ...tenantInfo, requesterInfo, propertyInfo, problemDetails, serviceMaster: serviceOrderMaster, surveyData: surveyOrderData, surveyOrderNotes: remarkNotes, teams: teamData }
+            userInfo = {...tenantInfo, requesterInfo, propertyInfo, problemDetails, serviceMaster: serviceOrderMaster, surveyData: surveyOrderData, surveyOrderNotes: remarkNotes, teams: teamData }
             pagination.data = rows;
             pagination.tenant = userInfo;
 
