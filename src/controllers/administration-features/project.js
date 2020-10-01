@@ -661,6 +661,10 @@ const ProjectController = {
       console.log("conpany id in req",req.body)
       let companyId = req.body
 
+      const index = companyId.indexOf(0)
+      if(index !== -1){
+          companyId.splice(index,1)
+      }
       let rows = await knex("projects")
       .where({ "projects.isActive": true })
       .whereIn("projects.companyId", companyId)
