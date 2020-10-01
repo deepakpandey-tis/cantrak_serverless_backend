@@ -123,6 +123,8 @@ router.post('/get-facility-list-by-id',authMiddleware.isAuthenticated,facilityBo
 
 router.post('/get-unit-list-by-id',authMiddleware.isAuthenticated,facilityBookingController.getUnitListByUnitId)
 
+router.post('/get-unit-and-facility-by-multiple-buildingId',authMiddleware.isAuthenticated,facilityBookingController.getPropertyUnitByMultipleBuilding)
+
 // router.post('/get-facility-by-status',authMiddleware.isAuthenticated,facilityBookingController.facilityListingStatus)
 
 module.exports = router;

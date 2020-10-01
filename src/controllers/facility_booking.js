@@ -698,6 +698,9 @@ const facilityBookingController = {
                 status,
                 tenantName,
             } = req.body;
+           
+            
+
 
             moment.tz.setDefault(payload.timezone);
             let currentTime = moment();
@@ -731,7 +734,7 @@ const facilityBookingController = {
             }
 
             let facilityReportResult;
-            console.log("details for all",companyId,projectId,buildingPhaseId,unitNo,status,facilityName,tenantName)
+            // console.log("details for all",companyId,projectId,buildingPhaseId,unitNo,status,facilityName,tenantName)
             if (
                 companyId ||
                 projectId ||
@@ -741,7 +744,42 @@ const facilityBookingController = {
                 facilityName ||
                 tenantName
             ) {
+                console.log("project id",projectId)
                 // try {
+                    const index = companyId.indexOf(0)
+                    if(index !== -1){
+                        companyId.splice(index,1)
+                    }
+                    if(projectId){
+                    const index1 = projectId.indexOf(0)
+                    if(index1 !== -1){
+                        projectId.splice(index,1)
+                    }
+                }
+                if(buildingPhaseId){
+                    const index2 = buildingPhaseId.indexOf(0)
+                    if(index2 !== -1){
+                        buildingPhaseId.splice(index,1)
+                    }
+                }
+                if(unitNo){
+                    const index3 = unitNo.indexOf(0)
+                    if(index3 !== -1){
+                        unitNo.splice(index,1)
+                    }
+                }
+                if(facilityName){
+                    const index4 = facilityName.indexOf(0)
+                    if(index4 !== -1){
+                        facilityName.splice(index,1)
+                    }
+                }
+                if(tenantName){
+                    const index5 = tenantName.indexOf(0)
+                    if(index5 !== -1){
+                        tenantName.splice(index,1)
+                    }
+                }
                     facilityReportResult = await knex
                         .from("entity_bookings")
                         .leftJoin(
@@ -765,7 +803,6 @@ const facilityBookingController = {
                             "entity_bookings.*",
                             "facility_master.displayId as No",
                             "users.name as bookedUser",
-                            // "users.userName",
                             "facility_master.name as Facility",
                             "facility_master.projectId",
                             "facility_master.buildingPhaseId",
@@ -787,34 +824,32 @@ const facilityBookingController = {
                         ])
                         .where((qb) => {
 
-                            // if (facilityName && facilityName.length > 0) {
-                            //     console.log("Facility name 756", facilityName)
-                            //     qb.whereIn("facility_master.id", facilityName);
-                            // }
+                            if (facilityName && facilityName.length > 0) {
+                                console.log("Facility name 756", facilityName)
+                                qb.whereIn("facility_master.id", facilityName);
+                            }
                             if (unitNo) {
-                                qb.where("entity_bookings.unitId", unitNo);
+                                qb.whereIn("entity_bookings.unitId", unitNo);
                             }
                             if (companyId) {
-                                qb.where("entity_bookings.companyId", companyId);
+                                qb.whereIn("entity_bookings.companyId", companyId);
                             }
                             if (projectId) {
-                                qb.where("facility_master.projectId", projectId);
+                                qb.whereIn("facility_master.projectId", projectId);
                             }
                             if (buildingPhaseId) {
-                                qb.where("facility_master.buildingPhaseId", buildingPhaseId);
+                                qb.whereIn("facility_master.buildingPhaseId", buildingPhaseId);
                             }
-
                             if (tenantName && tenantName.length > 0) {
                                 console.log("tenant name", tenantName);
-                                qb.whereIn("users.name", tenantName);
+                                qb.whereIn("users.id", tenantName);
                             }
+                            if(status){
                             if (Status == "Pending") {
                                 console.log("Pending", status);
                                 qb.where("entity_bookings.isBookingConfirmed", false);
                                 qb.where("entity_bookings.isBookingCancelled", false);
-                                
                             }
-                            if(status){
                             if (Status == "Approved") {
                                 console.log("Approved", status);
                                 qb.where({
@@ -993,10 +1028,10 @@ const facilityBookingController = {
                                 });
                             }
                             }
-                            if (facilityName) {
-                                console.log("Facility name 756", facilityName)
-                                qb.whereIn("facility_master.id", facilityName);
-                            }
+                            // if (facilityName) {
+                            //     console.log("Facility name 756", facilityName)
+                            //     qb.whereIn("facility_master.id", facilityName);
+                            // }
                         })
                         .where("entity_bookings.orgId", req.orgId)
                         .groupBy([
@@ -3170,6 +3205,32 @@ const facilityBookingController = {
             });
         }
     },
+    getPropertyUnitByMultipleBuilding: async(req,res) =>{
+        try {
+            let  buildingId  = req.body;
+            console.log("building id",req.body)
+
+            let getPropertyUnits = await knex("property_units")
+                .select("*")
+                .where({ orgId: req.orgId })
+                .whereIn("buildingPhaseId", buildingId);
+            console.log("getUnits", getPropertyUnits);
+
+            let getFacilityList = await knex("facility_master")
+                .select("*")
+                .where({ orgId: req.orgId, status: true })
+                .whereIn("buildingPhaseId", buildingId);
+
+            let result = { units: getPropertyUnits, facility: getFacilityList };
+            return res.status(200).json({
+                data: {
+                    data: result,
+                },
+            });
+        } catch (err) {
+            
+        }
+    },
     getPropertyUnitListForReport: async(req, res) => {
         try {
             let orgId = req.orgId;
@@ -5219,13 +5280,17 @@ const facilityBookingController = {
             let orgId = req.orgId
 
             if (projectId) {
+                const index = projectId.indexOf(0)
+                if(index !== -1){
+                    projectId.splice(index,1)
+                }
                 facilityList = await knex
                     .from("facility_master")
                     .select([
                         "facility_master.id",
                         "facility_master.name",
                     ])
-                    .where("facility_master.projectId", projectId)
+                    .whereIn("facility_master.projectId", projectId)
                     .where({ "facility_master.orgId": orgId, "facility_master.isActive": true })
             } else {
                 facilityList = await knex
