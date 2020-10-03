@@ -829,6 +829,7 @@ const facilityBookingController = {
                                 qb.whereIn("facility_master.id", facilityName);
                             }
                             if (unitNo) {
+                                console.log("unit id for bookings",unitNo)
                                 qb.whereIn("entity_bookings.unitId", unitNo);
                             }
                             if (companyId) {
