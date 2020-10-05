@@ -1123,6 +1123,7 @@ const facilityBookingController = {
                         'facility_master.name as facilityName',
                         'facility_master.facilityTypeId',
                         'facility_master.enablePreCheckIn',
+                        'facility_master.enableCheckIn',
                         'facility_master.qrCode',
                         'companies.companyId as companyCode',
                         'companies.companyName',
