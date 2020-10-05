@@ -2230,7 +2230,7 @@ const quotationsController = {
                     }
 
                     if (payload.fromDate && payload.toDate) {
-                        qb.whereBetween('service_requests.createdAt', [payload.fromDate, payload.toDate])
+                        qb.whereBetween('quotations.createdAt', [payload.fromDate, payload.toDate])
                     }
                 })
                 .whereIn('quotations.projectId', accessibleProjects)
