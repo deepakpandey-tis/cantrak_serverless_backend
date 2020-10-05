@@ -1123,6 +1123,7 @@ const facilityBookingController = {
                         'facility_master.name as facilityName',
                         'facility_master.facilityTypeId',
                         'facility_master.enablePreCheckIn',
+                        'facility_master.enableCheckIn',
                         'facility_master.qrCode',
                         'companies.companyId as companyCode',
                         'companies.companyName',
@@ -1150,7 +1151,7 @@ const facilityBookingController = {
                     //     }
                     // })
                     .where('entity_bookings.bookingEndDateTime', '>=', endTime)
-                    .where({ 'entity_bookings.entityType': 'facility_master', 'entity_bookings.orgId': req.orgId })
+                    .where({ 'entity_bookings.entityType': 'facility_master', 'entity_bookings.orgId': req.orgId ,'entity_bookings.isBookingCancelled': false })
                     .where({ 'entity_bookings.bookedBy': id })
                     .orderBy('entity_bookings.bookingStartDateTime', 'asc')
             }
@@ -1195,6 +1196,7 @@ const facilityBookingController = {
                     //     }
                     // })
                     .where('entity_bookings.bookingEndDateTime', '<', endTime)
+                    .orWhere('entity_bookings.isBookingCancelled', true)
                     .where({ 'entity_bookings.entityType': 'facility_master', 'entity_bookings.orgId': req.orgId })
                     .where({ 'entity_bookings.bookedBy': id })
                     .orderBy('entity_bookings.bookingEndDateTime', 'desc')
