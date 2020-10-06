@@ -573,11 +573,22 @@ const quotationsController = {
             let startTime;
             let endTime;
 
+            const d = new Date();
+            let differencesTime = d.getTimezoneOffset();           
+
+            moment.tz.setDefault(moment.tz.guess()); // now we've set the default time zone          
+            let selectedTimeZone = moment().tz();
+            let currentTime = moment();
+            console.log("Current Time:",currentTime.format("MMMM Do YYYY, h:mm:ss a"));
+
             if (dateFrom && dateTo) {
 
-                newDateFrom = moment(dateFrom).startOf('date').format();
-                newDateTo = moment(dateTo).endOf('date', 'days').format();
-                startTime = new Date(newDateFrom).getTime();
+                //newDateFrom = moment(dateFrom).startOf('date').format();
+                // newDateTo = moment(dateTo).endOf('date', 'days').format();
+                //startTime = new Date(newDateFrom).getTime();
+                startTime = moment(dateFrom).tz(selectedTimeZone).valueOf();
+                
+                newDateTo = moment(dateTo).endOf('date').format();
                 endTime = new Date(newDateTo).getTime();
 
             }
