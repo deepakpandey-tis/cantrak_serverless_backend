@@ -680,6 +680,7 @@ const serviceRequestController = {
             let selectedTimeZone = moment().tz();
             let currentTime = moment();
             console.log("Current Time:",currentTime.format("MMMM Do YYYY, h:mm:ss a"));
+            console.log("Selected Time Zone:",selectedTimeZone);
 
 
             if (serviceFrom && serviceTo) {
