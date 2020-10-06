@@ -672,20 +672,36 @@ const serviceRequestController = {
 
             // Service From Data & to Date
             let serviceFromDate, serviceToDate;
+
+            const d = new Date();
+            let differencesTime = d.getTimezoneOffset();           
+
+            moment.tz.setDefault(moment.tz.guess()); // now we've set the default time zone          
+            let selectedTimeZone = moment().tz();
+            let currentTime = moment();
+            console.log("Current Time:",currentTime.format("MMMM Do YYYY, h:mm:ss a"));
+
+
             if (serviceFrom && serviceTo) {
 
-                let fromDate = moment(serviceFrom).startOf('date').format();
+                // let fromDate = moment(serviceFrom).startOf('date').format();
+                serviceFromDate = moment(serviceFrom).tz(selectedTimeZone).valueOf();
                 let toDate = moment(serviceTo).endOf('date').format();
 
-                serviceFromDate = new Date(fromDate).getTime();
+                // serviceFromDate = new Date(fromDate).getTime();
                 serviceToDate = new Date(toDate).getTime();
 
+                
+                // serviceToDate = moment(serviceTo).tz(selectedTimeZone).valueOf();
+
             } else if (serviceFrom && !serviceTo) {
-                serviceFromDate = new Date(serviceFrom).getTime();
+                // serviceFromDate = new Date(serviceFrom).getTime();
+                serviceFromDate = moment(serviceFrom).tz(selectedTimeZone).valueOf();
                 serviceToDate = new Date("2030-01-01").getTime();
             } else if (!serviceFrom && serviceTo) {
                 serviceFromDate = new Date("2000-01-01").getTime();
                 serviceToDate = new Date(serviceTo).getTime();
+                //serviceToDate = moment(serviceTo).tz(selectedTimeZone).valueOf();
             }
 
             if (closingDate) {
