@@ -4994,6 +4994,8 @@ const serviceRequestController = {
 
                 return {
                     ...st,
+                    part_diff:partDiff,
+                    charge_diff:chargeDiff,
                     totalPartCost,
                     totalPartPrice,
                     totalPartDiff,
