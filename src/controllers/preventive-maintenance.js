@@ -957,12 +957,12 @@ const pmController = {
                 .where(qb => {
 
                     if (fromDate && toDate) {
-                        qb.whereBetween('task_group_schedule_assign_assets.pmDate', [fromNewDate, toNewDate])
 
+                        qb.whereRaw(`to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD') BETWEEN '${payload.fromDate}' and '${payload.toDate}' `);
+                      //  qb.whereBetween('task_group_schedule_assign_assets.pmDate', [fromDate, toDate])
                     }
 
                     if (payload.companyId == 'all' || payload.companyId == '' || payload.companyId == null) {
-
 
                     } else {
 

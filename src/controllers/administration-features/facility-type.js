@@ -87,11 +87,8 @@ const FacilityTypeController = {
         facilityTypeResult = incidentResult[0]
 
         let imagesData = req.body.logoFile;
-        console.log("imagesData", imagesData);
         if (imagesData && imagesData.length > 0) {
-          // console.log("imagesData",imagesData)
           for (let image of imagesData) {
-            // console.log("image and parcel result",image,parcelResult.id)
             let d = await knex("images")
               .insert({
                 entityType: "facility_type_image",
@@ -146,6 +143,7 @@ const FacilityTypeController = {
     }
   },
   updateFacilityType: async (req, res) => {
+    console.log("facility type req.body",req.body)
     try {
       let updatePayload = null;
       let userId = req.me.id;
@@ -153,6 +151,11 @@ const FacilityTypeController = {
 
       await knex.transaction(async (trx) => {
         let statusPayload = req.body;
+        statusPayload = _.omit(req.body, [
+          "iconUrl",
+          "logoFile"
+          
+        ]);
 
         const schema = Joi.object().keys({
           id: Joi.number().required(),
@@ -172,7 +175,7 @@ const FacilityTypeController = {
             facilityTypeCode: statusPayload.facilityTypeCode.toUpperCase(),
             orgId: orgId,
           })
-          .whereNot({ id: statusPaylaod.id });
+          .whereNot({ id: statusPayload.id });
         console.log(
           "[controllers][status][updateStatus]: Status Code",
           existStatusCode
@@ -191,8 +194,8 @@ const FacilityTypeController = {
 
         const updateStatusResult = await knex
           .update({
-            facilityTypeCode: statusPaylaod.facilityTypeCode.toUpperCase(),
-            facilityTypeName: statusPaylaod.facilityTypeName,
+            facilityTypeCode: statusPayload.facilityTypeCode.toUpperCase(),
+            facilityTypeName: statusPayload.facilityTypeName,
             updatedAt: currentTime,
           })
           .where({ id: statusPayload.id, createdBy: userId, orgId: orgId })
@@ -205,6 +208,49 @@ const FacilityTypeController = {
           updateStatusResult
         );
         updatePayload = updateStatusResult[0];
+
+        let imagesData = req.body.logoFile;
+        if (imagesData && imagesData.length > 0) {
+          for (let image of imagesData) {
+            let d = await knex("images")
+              .update({
+                // entityType: "facility_type_image",
+                // entityId: facilityTypeResult.id,
+                s3Url: image.s3Url,
+                name: image.filename,
+                title: image.title,
+                // createdAt: currentTime,
+                updatedAt: currentTime,
+                orgId: req.orgId,
+              })
+              .where({entityId : req.body.id,entityType:"facility_type_image"})
+              .returning(["*"]);
+            // .transacting(trx)
+            // .into("images");
+            images.push(d[0]);
+          }
+        }
+
+        let iconData = req.body.iconUrl
+        console.log("iconData",iconData)
+
+        if(iconData && iconData.length > 0){
+          for (let icon of iconData){
+            let d = await knex("images")
+            .update({
+              // entityType:"facility_type_icon",
+              // entityId: facilityTypeResult.id,
+                s3Url: icon.s3Url,
+                name: icon.filename,
+                title: icon.title,
+                // createdAt: currentTime,
+                updatedAt: currentTime,
+                // orgId: req.orgId,
+            })
+            .where({entityId : req.body.id,entityType:"facility_type_icon"})
+          }
+        }
+
         trx.commit;
       });
       res.status(200).json({
