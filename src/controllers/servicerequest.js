@@ -674,13 +674,13 @@ const serviceRequestController = {
             let serviceFromDate, serviceToDate;
 
             const d = new Date();
-            let differencesTime = d.getTimezoneOffset();           
+            let differencesTime = d.getTimezoneOffset();
 
             moment.tz.setDefault(moment.tz.guess()); // now we've set the default time zone          
             let selectedTimeZone = moment().tz();
             let currentTime = moment();
-            console.log("Current Time:",currentTime.format("MMMM Do YYYY, h:mm:ss a"));
-            console.log("Selected Time Zone:",selectedTimeZone);
+            console.log("Current Time:", currentTime.format("MMMM Do YYYY, h:mm:ss a"));
+            console.log("Selected Time Zone:", selectedTimeZone);
 
 
             if (serviceFrom && serviceTo) {
@@ -692,7 +692,7 @@ const serviceRequestController = {
                 // serviceFromDate = new Date(fromDate).getTime();
                 serviceToDate = new Date(toDate).getTime();
 
-                
+
                 // serviceToDate = moment(serviceTo).tz(selectedTimeZone).valueOf();
 
             } else if (serviceFrom && !serviceTo) {
@@ -4952,6 +4952,7 @@ const serviceRequestController = {
             let payload = req.body;
             let companyId = Number(payload.companyId.id);
             let projectId = Number(payload.projectId.id);
+            let costArr = [];
 
             let month;
 
@@ -4966,6 +4967,21 @@ const serviceRequestController = {
 
             let result = await knex.raw(`select "SO no", "createdAt", "Problem Type", "Problem Description", "buildName", "Assign Team", "Assign MainUser", "Tags", "Customer Name" , case when part_cost is null then 0 else -1*part_cost end + case when part_asscost is null then 0 else part_asscost end   part_cost, part_price, case when part_price is null then 0 else part_price end-(case when part_cost is null then 0 else -1*part_cost end + case when part_asscost is null then 0 else part_asscost end) part_diff, charge_cost, charge_price,  case when charge_price is null then 0 else charge_price end -case when charge_cost is null then 0 else charge_cost end charge_diff, "serviceStatus" from (select so."displayId" as "SO no",to_char(to_timestamp(sr."createdAt"/1000),'fmDD/MM/YYYY') "createdAt",public.f_get_problem_types(sr."orgId" ,sr.id) as "Problem Type",public.f_get_problem_desc(sr."orgId", sr.id) as "Problem Description",public.f_get_building_name_fuid(sr."houseId") as "buildName",public.f_get_teamname(sr."orgId" ,so.id) as "Assign Team",public.f_get_teammain_name(sr."orgId" ,so.id ) as "Assign MainUser",public.f_get_sr_status(sr."serviceStatusCode") as "serviceStatus",public.f_get_user_category(sr."orgId",sr."houseId") as "Tags",public.f_get_tenantname(sr."orgId",sr.tenantid) as "Customer Name" ,public.f_sum_partcost(sr."orgId" , so."displayId") part_cost,public.f_sum_asspartcost(sr."orgId" , so."displayId") part_asscost,public.f_sum_chargecost(sr."orgId" , so.id) charge_cost,public.f_sum_partprice(sr."orgId" , so.id) part_price,public.f_sum_chargeprice(sr."orgId" , so.id) charge_price,sr."orgId" ,sr.id srid,so.id soid from service_requests sr left outer join service_orders so on sr.id = so."serviceRequestId" and sr."orgId" = so."orgId" and sr."companyId" = so."companyId" where sr."orgId" = ${req.orgId} and sr."companyId" = ${companyId} and sr."projectId" = ${projectId} and sr."moderationStatus" = true and sr."serviceStatusCode" not in ('C','O') and to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}') F order by 1`);
 
+            if (payload.showData == false) {
+
+                for (let d of result.rows) {
+
+                    if (d.part_cost || d.part_price || d.part_diff || d.charge_cost || d.charge_price || d.charge_diff) {
+
+                        costArr.push({ ...d });
+
+                    }
+                }
+            } else {
+                costArr = result.rows;
+            }
+
+
 
             const Parallel = require('async-parallel');
 
@@ -4975,7 +4991,7 @@ const serviceRequestController = {
             let totalChargeCost = 0;
             let totalChargePrice = 0;
             let totalChargeDiff = 0;
-            result.rows = await Parallel.map(result.rows, async st => {
+            costArr = await Parallel.map(costArr, async st => {
 
                 let partCost = Math.abs(st.part_cost);
                 let partPrice = Math.abs(st.part_price);
@@ -4995,8 +5011,8 @@ const serviceRequestController = {
 
                 return {
                     ...st,
-                    part_diff:partDiff,
-                    charge_diff:chargeDiff,
+                    part_diff: partDiff,
+                    charge_diff: chargeDiff,
                     totalPartCost,
                     totalPartPrice,
                     totalPartDiff,
@@ -5010,7 +5026,7 @@ const serviceRequestController = {
 
 
             return res.status(200).json({
-                data: result.rows,
+                data: costArr,
                 message: "CM Revenue report Successfully!",
             });
 
