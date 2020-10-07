@@ -672,20 +672,37 @@ const serviceRequestController = {
 
             // Service From Data & to Date
             let serviceFromDate, serviceToDate;
+
+            const d = new Date();
+            let differencesTime = d.getTimezoneOffset();
+
+            moment.tz.setDefault(moment.tz.guess()); // now we've set the default time zone          
+            let selectedTimeZone = moment().tz();
+            let currentTime = moment();
+            console.log("Current Time:", currentTime.format("MMMM Do YYYY, h:mm:ss a"));
+            console.log("Selected Time Zone:", selectedTimeZone);
+
+
             if (serviceFrom && serviceTo) {
 
-                let fromDate = moment(serviceFrom).startOf('date').format();
+                // let fromDate = moment(serviceFrom).startOf('date').format();
+                serviceFromDate = moment(serviceFrom).tz(selectedTimeZone).valueOf();
                 let toDate = moment(serviceTo).endOf('date').format();
 
-                serviceFromDate = new Date(fromDate).getTime();
+                // serviceFromDate = new Date(fromDate).getTime();
                 serviceToDate = new Date(toDate).getTime();
 
+
+                // serviceToDate = moment(serviceTo).tz(selectedTimeZone).valueOf();
+
             } else if (serviceFrom && !serviceTo) {
-                serviceFromDate = new Date(serviceFrom).getTime();
+                // serviceFromDate = new Date(serviceFrom).getTime();
+                serviceFromDate = moment(serviceFrom).tz(selectedTimeZone).valueOf();
                 serviceToDate = new Date("2030-01-01").getTime();
             } else if (!serviceFrom && serviceTo) {
                 serviceFromDate = new Date("2000-01-01").getTime();
                 serviceToDate = new Date(serviceTo).getTime();
+                //serviceToDate = moment(serviceTo).tz(selectedTimeZone).valueOf();
             }
 
             if (closingDate) {
@@ -4341,7 +4358,8 @@ const serviceRequestController = {
 
             // teamCode = "'" + teamCode + "'";
             let period = payload.startYear + "-" + month;
-            let result = await knex.raw(`select public.f_get_teamname(P."orgId" ,P.id) TEAM, SUM(P."D01") as "1", SUM(P."D02") as "2", SUM(P."D03") as "3", SUM(P."D04") as "4", SUM(P."D05") as "5", SUM(P."D06") as "6" , SUM(P."D07") as "7", SUM(P."D08") as "8" , SUM(P."D09") as "9" , SUM(P."D10") as "10" , SUM(P."D11") as "11", SUM(P."D12") as "12" , SUM(P."D13") as "13", SUM(P."D14") as "14", SUM(P."D15") as "15", SUM(P."D16") as "16", SUM(P."D17") as "17" , SUM(P."D18") as "18" , SUM(P."D19") as "19" , SUM(P."D20") as "20", SUM(P."D21") as "21", SUM(P."D22") as "22", SUM(P."D23") as "23", SUM(P."D24") as "24" , SUM(P."D25") as "25" , SUM(P."D26") as "26", SUM(P."D27") as "27", SUM(P."D28") as "28", SUM(P."D29") as "29", SUM(P."D30") as "30" , SUM(P."D31") as "31", SUM(P."TOTAL") as "TOTAL" from (select sr."orgId" ,sr.id, case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '1' then 1 else null end as "D01",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '2' then 1 else null end as "D02",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '3' then 1 else null end as "D03", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '4' then 1 else null end as "D04", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '5' then 1 else null end as "D05", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '6' then 1 else null end as "D06", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '7' then 1 else null end as "D07", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '8' then 1 else null end as "D08", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '9' then 1 else null end as "D09", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '10' then 1 else null end as "D10", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '11' then 1 else null end as "D11",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '12' then 1 else null end as "D12",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '13' then 1 else null end as "D13", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '14' then 1 else null end as "D14",  case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '15' then 1 else null end as "D15",  case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '16' then 1 else null end as "D16", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '17' then 1 else null end as "D17", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '18' then 1 else null end as "D18", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '19' then 1 else null end as "D19", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '20' then 1 else null end as "D20",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '21' then 1 else null end as "D21",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '22' then 1 else null end as "D22", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '23' then 1 else null end as "D23", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '24' then 1 else null end as "D24", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '25' then 1 else null end as "D25",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '26' then 1 else null end as "D26", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '27' then 1 else null end as "D27", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '28' then 1 else null end as "D28", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '29' then 1 else null end as "D29", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '30' then 1 else null end as "D30",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '31' then 1 else null end as "D31",case when to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}' then 1 else null end as "TOTAL" from service_requests sr where sr."orgId" = ${req.orgId} and  sr."companyId" = ${companyId} and sr."projectId" = ${projectId} and sr."moderationStatus" = true and sr."serviceStatusCode" != 'C' and to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}') P group by public.f_get_teamname(P."orgId" ,P.id) order by 1`);
+            let result = await knex.raw(`select public.f_get_teamname(P."orgId" ,P.id) TEAM, SUM(P."D01") as "1", SUM(P."D02") as "2", SUM(P."D03") as "3", SUM(P."D04") as "4", SUM(P."D05") as "5", SUM(P."D06") as "6", SUM(P."D07") as "7", SUM(P."D08") as "8", SUM(P."D09") as "9", SUM(P."D10") as "10", SUM(P."D11") as "11", SUM(P."D12") as "12", SUM(P."D13") as "13", SUM(P."D14") as "14", SUM(P."D15") as "15", SUM(P."D16") as "16", SUM(P."D17") as "17", SUM(P."D18") as "18", SUM(P."D19") as "19", SUM(P."D20") as "20", SUM(P."D21") as "21", SUM(P."D22") as "22", SUM(P."D23") as "23", SUM(P."D24") as "24", SUM(P."D25") as "25", SUM(P."D26") as "26", SUM(P."D27") as "27", SUM(P."D28") as "28", SUM(P."D29") as "29", SUM(P."D30") as "30", SUM(P."D31") as "31", SUM(P."Incomplete")  as "Incomplete", round(SUM(P."Incomplete")*100./SUM(P."TOTAL"),2) as "Incomplete(%)", SUM(P."Completed") as "Completed", 100-round(SUM(P."Incomplete")*100./SUM(P."TOTAL"),2) as "Completed(%)" , SUM(P."TOTAL") as "TOTAL" from (select sr."orgId" ,sr.id,case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '1' then 1 else null end as "D01",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '2' then 1 else null end as "D02",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '3' then 1 else null end as "D03", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '4' then 1 else null end as "D04", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '5' then 1 else null end as "D05", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '6' then 1 else null end as "D06", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '7' then 1 else null end as "D07", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '8' then 1 else null end as "D08", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '9' then 1 else null end as "D09", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '10' then 1 else null end as "D10",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '11' then 1 else null end as "D11",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '12' then 1 else null end as "D12",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '13' then 1 else null end as "D13", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '14' then 1 else null end as "D14", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '15' then 1 else null end as "D15", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '16' then 1 else null end as "D16", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '17' then 1 else null end as "D17", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '18' then 1 else null end as "D18", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '19' then 1 else null end as "D19", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '20' then 1 else null end as "D20",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '21' then 1 else null end as "D21",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '22' then 1 else null end as "D22",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '23' then 1 else null end as "D23", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '24' then 1 else null end as "D24", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '25' then 1 else null end as "D25", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '26' then 1 else null end as "D26", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '27' then 1 else null end as "D27", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '28' then 1 else null end as "D28", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '29' then 1 else null end as "D29", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '30' then 1 else null end as "D30",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '31' then 1 else null end as "D31",case when to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}' then case when sr."serviceStatusCode" = 'COM' then 0 else 1 end else null end as "Incomplete", case when to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}' then case when sr."serviceStatusCode" = 'COM' then 1 else null end else null end as "Completed", case when to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}' then 1 else null end as "TOTAL" from service_requests sr where sr."orgId" = ${req.orgId} and sr."companyId" = ${companyId} and sr."projectId" = ${projectId} and sr."moderationStatus" = true  and sr."serviceStatusCode" != 'C' and to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}') P group by public.f_get_teamname(P."orgId" ,P.id) order by 1`);
+            //let result = await knex.raw(`select public.f_get_teamname(P."orgId" ,P.id) TEAM, SUM(P."D01") as "1", SUM(P."D02") as "2", SUM(P."D03") as "3", SUM(P."D04") as "4", SUM(P."D05") as "5", SUM(P."D06") as "6" , SUM(P."D07") as "7", SUM(P."D08") as "8" , SUM(P."D09") as "9" , SUM(P."D10") as "10" , SUM(P."D11") as "11", SUM(P."D12") as "12" , SUM(P."D13") as "13", SUM(P."D14") as "14", SUM(P."D15") as "15", SUM(P."D16") as "16", SUM(P."D17") as "17" , SUM(P."D18") as "18" , SUM(P."D19") as "19" , SUM(P."D20") as "20", SUM(P."D21") as "21", SUM(P."D22") as "22", SUM(P."D23") as "23", SUM(P."D24") as "24" , SUM(P."D25") as "25" , SUM(P."D26") as "26", SUM(P."D27") as "27", SUM(P."D28") as "28", SUM(P."D29") as "29", SUM(P."D30") as "30" , SUM(P."D31") as "31", SUM(P."TOTAL") as "TOTAL" from (select sr."orgId" ,sr.id, case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '1' then 1 else null end as "D01",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '2' then 1 else null end as "D02",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '3' then 1 else null end as "D03", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '4' then 1 else null end as "D04", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '5' then 1 else null end as "D05", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '6' then 1 else null end as "D06", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '7' then 1 else null end as "D07", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '8' then 1 else null end as "D08", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '9' then 1 else null end as "D09", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '10' then 1 else null end as "D10", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '11' then 1 else null end as "D11",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '12' then 1 else null end as "D12",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '13' then 1 else null end as "D13", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '14' then 1 else null end as "D14",  case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '15' then 1 else null end as "D15",  case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '16' then 1 else null end as "D16", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '17' then 1 else null end as "D17", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '18' then 1 else null end as "D18", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '19' then 1 else null end as "D19", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '20' then 1 else null end as "D20",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '21' then 1 else null end as "D21",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '22' then 1 else null end as "D22", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '23' then 1 else null end as "D23", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '24' then 1 else null end as "D24", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '25' then 1 else null end as "D25",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '26' then 1 else null end as "D26", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '27' then 1 else null end as "D27", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '28' then 1 else null end as "D28", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '29' then 1 else null end as "D29", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '30' then 1 else null end as "D30",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '31' then 1 else null end as "D31",case when to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}' then 1 else null end as "TOTAL" from service_requests sr where sr."orgId" = ${req.orgId} and  sr."companyId" = ${companyId} and sr."projectId" = ${projectId} and sr."moderationStatus" = true and sr."serviceStatusCode" != 'C' and to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}') P group by public.f_get_teamname(P."orgId" ,P.id) order by 1`);
 
 
 
@@ -4378,6 +4396,10 @@ const serviceRequestController = {
             let total30 = 0;
             let total31 = 0;
             let totalValue = 0;
+            let totalIncomplete = 0;
+            let totalComplete = 0;
+            let totalIncompletePercentage = 0;
+            let totalCompletePercentage = 0;
 
             let arr = [];
 
@@ -4427,6 +4449,14 @@ const serviceRequestController = {
                 total31 += Number(st["31"]);
                 totalValue += Number(st['TOTAL']);
 
+                totalIncomplete += Number(st['Incomplete']);
+                totalComplete += Number(st["Completed"]);
+
+                totalIncompletePercentage = (100 * (totalIncomplete) / totalValue);
+                totalCompletePercentage = (100 * (totalComplete) / totalValue);
+                totalIncompletePercentage = totalIncompletePercentage.toFixed(2);
+                totalCompletePercentage = totalCompletePercentage.toFixed(2);
+
                 return {
                     ...st,
                     total1,
@@ -4460,7 +4490,11 @@ const serviceRequestController = {
                     total29,
                     total30,
                     total31,
-                    totalValue
+                    totalValue,
+                    totalIncomplete,
+                    totalComplete,
+                    totalIncompletePercentage,
+                    totalCompletePercentage,
                 };
 
             })
@@ -4735,7 +4769,8 @@ const serviceRequestController = {
                 month = Number(payload.startMonth);
             }
             let period = payload.startYear + "-" + month;
-            let result = await knex.raw(`select public.f_get_user_category(P."orgId",P."houseId") as "Tags" , SUM(P."D01") as "1", SUM(P."D02") as "2", SUM(P."D03") as "3", SUM(P."D04") as "4", SUM(P."D05") as "5", SUM(P."D06") as "6", SUM(P."D07") as "7", SUM(P."D08") as "8" , SUM(P."D09") as "9", SUM(P."D10") as "10", SUM(P."D11") as "11" , SUM(P."D12") as "12", SUM(P."D13") as "13", SUM(P."D14") as "14", SUM(P."D15") as "15" , SUM(P."D16") as "16", SUM(P."D17") as "17", SUM(P."D18") as "18", SUM(P."D19") as "19", SUM(P."D20") as "20", SUM(P."D21") as "21", SUM(P."D22") as "22", SUM(P."D23") as "23", SUM(P."D24") as "24", SUM(P."D25") as "25", SUM(P."D26") as "26", SUM(P."D27") as "27", SUM(P."D28") as "28", SUM(P."D29") as "29", SUM(P."D30") as "30", SUM(P."D31") as "31", SUM(P."TOTAL") as "TOTAL" from (select sr."orgId" ,sr.id, "houseId",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '1' then 1 else null end as "D01",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '2' then 1 else null end as "D02",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '3' then 1 else null end as "D03", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '4' then 1 else null end as "D04", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '5' then 1 else null end as "D05", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '6' then 1 else null end as "D06", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '7' then 1 else null end as "D07", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '8' then 1 else null end as "D08", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '9' then 1 else null end as "D09", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '10' then 1 else null end as "D10", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '11' then 1 else null end as "D11",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '12' then 1 else null end as "D12", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '13' then 1 else null end as "D13", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '14' then 1 else null end as "D14", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '15' then 1 else null end as "D15", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '16' then 1 else null end as "D16", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '17' then 1 else null end as "D17", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '18' then 1 else null end as "D18", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '19' then 1 else null end as "D19", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '20' then 1 else null end as "D20",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '21' then 1 else null end as "D21",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '22' then 1 else null end as "D22",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '23' then 1 else null end as "D23", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '24' then 1 else null end as "D24", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '25' then 1 else null end as "D25", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '26' then 1 else null end as "D26", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '27' then 1 else null end as "D27", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '28' then 1 else null end as "D28", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '29' then 1 else null end as "D29", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '30' then 1 else null end as "D30",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '31' then 1 else null end as "D31",case when to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}' then 1 else null end as "TOTAL" from service_requests sr where sr."orgId" = ${req.orgId} and  sr."companyId" = ${companyId} and sr."projectId" = ${projectId}  and sr."moderationStatus" = true  and sr."serviceStatusCode" != 'C' and to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}' and public.f_get_teamname(sr."orgId" ,sr.id) in ('${teamCode}')) P group by public.f_get_user_category(P."orgId",P."houseId") order by 1`);
+            let result = await knex.raw(`select public.f_get_user_category(P."orgId",P."houseId") as "Tags" , SUM(P."D01") as "1", SUM(P."D02") as "2", SUM(P."D03") as "3", SUM(P."D04") as "4", SUM(P."D05") as "5", SUM(P."D06") as "6", SUM(P."D07") as "7", SUM(P."D08") as "8", SUM(P."D09") as "9", SUM(P."D10") as "10", SUM(P."D11") as "11", SUM(P."D12") as "12", SUM(P."D13") as "13", SUM(P."D14") as "14", SUM(P."D15") as "15", SUM(P."D16") as "16", SUM(P."D17") as "17", SUM(P."D18") as "18", SUM(P."D19") as "19", SUM(P."D20") as "20", SUM(P."D21") as "21", SUM(P."D22") as "22", SUM(P."D23") as "23", SUM(P."D24") as "24", SUM(P."D25") as "25", SUM(P."D26") as "26", SUM(P."D27") as "27", SUM(P."D28") as "28", SUM(P."D29") as "29", SUM(P."D30") as "30", SUM(P."D31") as "31", SUM(P."Incomplete")  as "Incomplete", round(SUM(P."Incomplete")*100./SUM(P."TOTAL"),2) as "Incomplete(%)", SUM(P."Completed") as "Completed", 100-round(SUM(P."Incomplete")*100./SUM(P."TOTAL"),2) as "Completed(%)" , SUM(P."TOTAL") as "TOTAL" from (select sr."orgId" ,sr.id, "houseId",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '1' then 1 else null end as "D01",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '2' then 1 else null end as "D02",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '3' then 1 else null end as "D03", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '4' then 1 else null end as "D04", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '5' then 1 else null end as "D05", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '6' then 1 else null end as "D06", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '7' then 1 else null end as "D07", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '8' then 1 else null end as "D08", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '9' then 1 else null end as "D09", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '10' then 1 else null end as "D10",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '11' then 1 else null end as "D11",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '12' then 1 else null end as "D12",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '13' then 1 else null end as "D13", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '14' then 1 else null end as "D14", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '15' then 1 else null end as "D15", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '16' then 1 else null end as "D16", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '17' then 1 else null end as "D17", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '18' then 1 else null end as "D18", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '19' then 1 else null end as "D19", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '20' then 1 else null end as "D20",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '21' then 1 else null end as "D21",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '22' then 1 else null end as "D22",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '23' then 1 else null end as "D23", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '24' then 1 else null end as "D24", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '25' then 1 else null end as "D25", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '26' then 1 else null end as "D26", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '27' then 1 else null end as "D27", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '28' then 1 else null end as "D28", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '29' then 1 else null end as "D29", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '30' then 1 else null end as "D30",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '31' then 1 else null end as "D31",case when to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}' then case when sr."serviceStatusCode" = 'COM' then 0 else 1 end else null end as "Incomplete", case when to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}' then case when sr."serviceStatusCode" = 'COM' then 1 else null end else null end as "Completed", case when to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}' then 1 else null end as "TOTAL" from service_requests sr where sr."orgId" = ${req.orgId} and sr."companyId" = ${companyId} and sr."projectId" = ${projectId} and sr."moderationStatus" = true and sr."serviceStatusCode" != 'C' and to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}' and public.f_get_teamname(sr."orgId" ,sr.id) in ('${teamCode}')) P group by public.f_get_user_category(P."orgId",P."houseId") order by 1`);
+            //let result = await knex.raw(`select public.f_get_user_category(P."orgId",P."houseId") as "Tags" , SUM(P."D01") as "1", SUM(P."D02") as "2", SUM(P."D03") as "3", SUM(P."D04") as "4", SUM(P."D05") as "5", SUM(P."D06") as "6", SUM(P."D07") as "7", SUM(P."D08") as "8" , SUM(P."D09") as "9", SUM(P."D10") as "10", SUM(P."D11") as "11" , SUM(P."D12") as "12", SUM(P."D13") as "13", SUM(P."D14") as "14", SUM(P."D15") as "15" , SUM(P."D16") as "16", SUM(P."D17") as "17", SUM(P."D18") as "18", SUM(P."D19") as "19", SUM(P."D20") as "20", SUM(P."D21") as "21", SUM(P."D22") as "22", SUM(P."D23") as "23", SUM(P."D24") as "24", SUM(P."D25") as "25", SUM(P."D26") as "26", SUM(P."D27") as "27", SUM(P."D28") as "28", SUM(P."D29") as "29", SUM(P."D30") as "30", SUM(P."D31") as "31", SUM(P."TOTAL") as "TOTAL" from (select sr."orgId" ,sr.id, "houseId",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '1' then 1 else null end as "D01",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '2' then 1 else null end as "D02",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '3' then 1 else null end as "D03", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '4' then 1 else null end as "D04", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '5' then 1 else null end as "D05", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '6' then 1 else null end as "D06", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '7' then 1 else null end as "D07", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '8' then 1 else null end as "D08", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '9' then 1 else null end as "D09", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '10' then 1 else null end as "D10", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '11' then 1 else null end as "D11",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '12' then 1 else null end as "D12", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '13' then 1 else null end as "D13", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '14' then 1 else null end as "D14", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '15' then 1 else null end as "D15", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '16' then 1 else null end as "D16", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '17' then 1 else null end as "D17", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '18' then 1 else null end as "D18", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '19' then 1 else null end as "D19", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '20' then 1 else null end as "D20",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '21' then 1 else null end as "D21",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '22' then 1 else null end as "D22",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '23' then 1 else null end as "D23", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '24' then 1 else null end as "D24", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '25' then 1 else null end as "D25", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '26' then 1 else null end as "D26", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '27' then 1 else null end as "D27", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '28' then 1 else null end as "D28", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '29' then 1 else null end as "D29", case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '30' then 1 else null end as "D30",case when to_char(to_timestamp(sr."createdAt"/1000),'fmDD') = '31' then 1 else null end as "D31",case when to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}' then 1 else null end as "TOTAL" from service_requests sr where sr."orgId" = ${req.orgId} and  sr."companyId" = ${companyId} and sr."projectId" = ${projectId}  and sr."moderationStatus" = true  and sr."serviceStatusCode" != 'C' and to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}' and public.f_get_teamname(sr."orgId" ,sr.id) in ('${teamCode}')) P group by public.f_get_user_category(P."orgId",P."houseId") order by 1`);
 
 
 
@@ -4772,6 +4807,11 @@ const serviceRequestController = {
             let total30 = 0;
             let total31 = 0;
             let totalValue = 0;
+            let totalIncomplete = 0;
+            let totalComplete = 0;
+            let totalIncompletePercentage = 0;
+            let totalCompletePercentage = 0;
+
 
 
             result.rows = await Parallel.map(result.rows, async st => {
@@ -4809,6 +4849,14 @@ const serviceRequestController = {
                 total30 += Number(st["30"]);
                 total31 += Number(st["31"]);
                 totalValue += Number(st['TOTAL']);
+                totalIncomplete += Number(st['Incomplete']);
+                totalComplete += Number(st["Completed"]);
+
+                totalIncompletePercentage = (100 * (totalIncomplete) / totalValue);
+                totalCompletePercentage = (100 * (totalComplete) / totalValue);
+                totalIncompletePercentage = totalIncompletePercentage.toFixed(2);
+                totalCompletePercentage = totalCompletePercentage.toFixed(2);
+
 
                 return {
                     ...st,
@@ -4843,7 +4891,11 @@ const serviceRequestController = {
                     total29,
                     total30,
                     total31,
-                    totalValue
+                    totalValue,
+                    totalIncomplete,
+                    totalComplete,
+                    totalIncompletePercentage,
+                    totalCompletePercentage,
                 };
 
             })
@@ -4900,6 +4952,7 @@ const serviceRequestController = {
             let payload = req.body;
             let companyId = Number(payload.companyId.id);
             let projectId = Number(payload.projectId.id);
+            let costArr = [];
 
             let month;
 
@@ -4914,6 +4967,21 @@ const serviceRequestController = {
 
             let result = await knex.raw(`select "SO no", "createdAt", "Problem Type", "Problem Description", "buildName", "Assign Team", "Assign MainUser", "Tags", "Customer Name" , case when part_cost is null then 0 else -1*part_cost end + case when part_asscost is null then 0 else part_asscost end   part_cost, part_price, case when part_price is null then 0 else part_price end-(case when part_cost is null then 0 else -1*part_cost end + case when part_asscost is null then 0 else part_asscost end) part_diff, charge_cost, charge_price,  case when charge_price is null then 0 else charge_price end -case when charge_cost is null then 0 else charge_cost end charge_diff, "serviceStatus" from (select so."displayId" as "SO no",to_char(to_timestamp(sr."createdAt"/1000),'fmDD/MM/YYYY') "createdAt",public.f_get_problem_types(sr."orgId" ,sr.id) as "Problem Type",public.f_get_problem_desc(sr."orgId", sr.id) as "Problem Description",public.f_get_building_name_fuid(sr."houseId") as "buildName",public.f_get_teamname(sr."orgId" ,so.id) as "Assign Team",public.f_get_teammain_name(sr."orgId" ,so.id ) as "Assign MainUser",public.f_get_sr_status(sr."serviceStatusCode") as "serviceStatus",public.f_get_user_category(sr."orgId",sr."houseId") as "Tags",public.f_get_tenantname(sr."orgId",sr.tenantid) as "Customer Name" ,public.f_sum_partcost(sr."orgId" , so."displayId") part_cost,public.f_sum_asspartcost(sr."orgId" , so."displayId") part_asscost,public.f_sum_chargecost(sr."orgId" , so.id) charge_cost,public.f_sum_partprice(sr."orgId" , so.id) part_price,public.f_sum_chargeprice(sr."orgId" , so.id) charge_price,sr."orgId" ,sr.id srid,so.id soid from service_requests sr left outer join service_orders so on sr.id = so."serviceRequestId" and sr."orgId" = so."orgId" and sr."companyId" = so."companyId" where sr."orgId" = ${req.orgId} and sr."companyId" = ${companyId} and sr."projectId" = ${projectId} and sr."moderationStatus" = true and sr."serviceStatusCode" not in ('C','O') and to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}') F order by 1`);
 
+            if (payload.showData == false) {
+
+                for (let d of result.rows) {
+
+                    if (d.part_cost || d.part_price || d.part_diff || d.charge_cost || d.charge_price || d.charge_diff) {
+
+                        costArr.push({ ...d });
+
+                    }
+                }
+            } else {
+                costArr = result.rows;
+            }
+
+
 
             const Parallel = require('async-parallel');
 
@@ -4923,19 +4991,28 @@ const serviceRequestController = {
             let totalChargeCost = 0;
             let totalChargePrice = 0;
             let totalChargeDiff = 0;
-            result.rows = await Parallel.map(result.rows, async st => {
+            costArr = await Parallel.map(costArr, async st => {
 
-                totalPartCost += Number(st.part_cost);
-                totalPartPrice += Number(st.part_price);
-                totalPartDiff += Number(st.part_diff);
-                totalChargeCost += Number(st.charge_cost);
-                totalChargePrice += Number(st.charge_price);
-                totalChargeDiff += Number(st.charge_diff);
+                let partCost = Math.abs(st.part_cost);
+                let partPrice = Math.abs(st.part_price);
+                let partDiff = Math.abs(st.part_diff);
+                let chargeCost = Math.abs(st.charge_cost);
+                let chargePrice = Math.abs(st.charge_price);
+                let chargeDiff = Math.abs(st.charge_diff);
+
+                totalPartCost += Number(partCost);
+                totalPartPrice += Number(partPrice);
+                totalPartDiff += Number(partDiff);
+                totalChargeCost += Number(chargeCost);
+                totalChargePrice += Number(chargePrice);
+                totalChargeDiff += Number(chargeDiff);
 
 
 
                 return {
                     ...st,
+                    part_diff: partDiff,
+                    charge_diff: chargeDiff,
                     totalPartCost,
                     totalPartPrice,
                     totalPartDiff,
@@ -4949,7 +5026,7 @@ const serviceRequestController = {
 
 
             return res.status(200).json({
-                data: result.rows,
+                data: costArr,
                 message: "CM Revenue report Successfully!",
             });
 

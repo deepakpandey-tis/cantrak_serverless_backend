@@ -362,29 +362,43 @@ const serviceOrderController = {
             }
 
 
+            const d = new Date();
+            let differencesTime = d.getTimezoneOffset();           
 
+            moment.tz.setDefault(moment.tz.guess()); // now we've set the default time zone          
+            let selectedTimeZone = moment().tz();
+            let currentTime = moment();
+            console.log("Current Time:",currentTime.format("MMMM Do YYYY, h:mm:ss a"));
 
             let dueFromDate, dueToDate
             if (dueFrom && dueTo) {
-                dueFromDate = new Date(moment(dueFrom).startOf('day')).getTime()
+                //dueFromDate = new Date(moment(dueFrom).startOf('day')).getTime()
                     // dueFromDate = moment(dueFrom).format();
                     // dueToDate = moment(dueTo).format();
                     // console.log(dueFromDate)
-                dueToDate = new Date(moment(dueTo).startOf('day')).getTime()
+                dueFromDate = moment(dueFrom).tz(selectedTimeZone).valueOf();
+                //dueToDate = new Date(moment(dueTo).startOf('day')).getTime();
+                let toDate = moment(dueTo).endOf('date').format();              
+                dueToDate = new Date(toDate).getTime();
 
             } else if (dueFrom && !dueTo) {
 
                 // dueFromDate = dueFrom;
                 // dueToDate = "2030-01-01"
-                dueFromDate = new Date(moment(dueFrom).startOf('day')).getTime()
-                dueToDate = new Date().getTime()
-
+               // dueFromDate = new Date(moment(dueFrom).startOf('day')).getTime()
+                // dueFromDate = moment(dueFrom).tz(selectedTimeZone).valueOf();
+                // dueToDate = new Date().getTime()
+                dueFromDate = moment(dueFrom).tz(selectedTimeZone).valueOf();
+                dueToDate = new Date("2030-01-01").getTime();              
 
             } else if (!dueFrom && dueTo) {
                 // dueFromDate = "2000-01-01";
                 // dueToDate = dueTo
-                dueFromDate = new Date().getTime()
-                dueToDate = new Date(moment(dueTo).startOf('day')).getTime()
+                dueFromDate = new Date("2000-01-01").getTime();
+                dueToDate = new Date(dueTo).getTime();
+
+                // dueFromDate = new Date().getTime()
+                // dueToDate = new Date(moment(dueTo).startOf('day')).getTime()
             }
 
 
