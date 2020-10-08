@@ -277,18 +277,21 @@ const companyController = {
 
         if (req.body.orgLogoFile.length) {
           insertData = { ...payload, companyId: payload.companyId.toUpperCase(), orgId, taxId, orgLogoFile: orgLogo, updatedAt: currentTime };
-        } 
+        }
 
-        let insertResult2 = await knex
-          .update(insertData)
-          .where({ id: payload.id })
-          .returning(["*"])
-          .transacting(trx)
-          .into("companies");
-        
+        // let insertResult2 = await knex
+        //   .update(insertData)
+        //   .where({ id: payload.id })
+        //   .returning(["*"])
+        //   .transacting(trx)
+        //   .into("companies");
+
 
         if (req.body.logoFile.length) {
           insertData = { ...payload, companyId: payload.companyId.toUpperCase(), orgId, taxId, logoFile: logo, updatedAt: currentTime };
+        } else if (req.body.orgLogoFile.length) {
+          insertData = { ...payload, companyId: payload.companyId.toUpperCase(), orgId, taxId, orgLogoFile: orgLogo, updatedAt: currentTime };
+
         } else {
           insertData = { ...payload, companyId: payload.companyId.toUpperCase(), orgId, taxId, updatedAt: currentTime };
         }
