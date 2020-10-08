@@ -616,6 +616,7 @@ const serviceRequestController = {
     getServiceRequestList: async (req, res) => {
         // We will get service request list
         try {
+
             let reqData = req.query;
             let {
                 assignedTo,
@@ -689,21 +690,23 @@ const serviceRequestController = {
                 serviceFromDate = moment(serviceFrom).tz(selectedTimeZone).valueOf();
                 let toDate = moment(serviceTo).endOf('date').format();
 
+                serviceFromDate = serviceFrom;
                 // serviceFromDate = new Date(fromDate).getTime();
-                serviceToDate = new Date(toDate).getTime();
-
-
+                //serviceToDate = new Date(toDate).getTime();
+                serviceToDate = serviceTo;
                 // serviceToDate = moment(serviceTo).tz(selectedTimeZone).valueOf();
 
-            } else if (serviceFrom && !serviceTo) {
-                // serviceFromDate = new Date(serviceFrom).getTime();
-                serviceFromDate = moment(serviceFrom).tz(selectedTimeZone).valueOf();
-                serviceToDate = new Date("2030-01-01").getTime();
-            } else if (!serviceFrom && serviceTo) {
-                serviceFromDate = new Date("2000-01-01").getTime();
-                serviceToDate = new Date(serviceTo).getTime();
-                //serviceToDate = moment(serviceTo).tz(selectedTimeZone).valueOf();
             }
+
+            //else if (serviceFrom && !serviceTo) {
+            //     // serviceFromDate = new Date(serviceFrom).getTime();
+            //     serviceFromDate = moment(serviceFrom).tz(selectedTimeZone).valueOf();
+            //     serviceToDate = new Date("2030-01-01").getTime();
+            // } else if (!serviceFrom && serviceTo) {
+            //     serviceFromDate = new Date("2000-01-01").getTime();
+            //     serviceToDate = new Date(serviceTo).getTime();
+            //     //serviceToDate = moment(serviceTo).tz(selectedTimeZone).valueOf();
+            // }
 
             if (closingDate) {
                 filters["service_requests.completedOn"] = closingDate;

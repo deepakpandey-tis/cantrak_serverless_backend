@@ -531,6 +531,7 @@ const quotationsController = {
     },
     getQuotationList: async(req, res) => {
         try {
+            let payload = req.body;
             let reqData = req.query;
             //let filters = req.body;
             let total, rows;
@@ -713,7 +714,7 @@ const quotationsController = {
                         qb.where('service_requests.description', 'iLIKE', `%${description}%`)
                     }
                     if (dateFrom && dateTo) {
-                        qb.whereBetween('quotations.createdAt', [startTime, endTime])
+                        qb.whereBetween('quotations.createdAt', [payload.dateFrom,payload.dateTo])
                     }
                 })
                 .whereIn('quotations.projectId', accessibleProjects)
@@ -830,7 +831,9 @@ const quotationsController = {
                     }
 
                     if (dateFrom && dateTo) {
-                        qb.whereBetween('quotations.createdAt', [startTime, endTime])
+                        qb.whereBetween('quotations.createdAt', [payload.dateFrom,payload.dateTo])
+
+                      //  qb.whereBetween('quotations.createdAt', [startTime, endTime])
                     }
                 })
                 .whereIn('quotations.projectId', accessibleProjects)
