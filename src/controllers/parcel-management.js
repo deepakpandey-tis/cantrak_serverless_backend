@@ -225,8 +225,20 @@ const parcelManagementController = {
           ALLOWED_CHANNELS
         );
         }
+       
+      
+        let updateResultss = await knex
+        .update({isActive : true})
+        .where({isActive :true})
+        .returning(["*"])
+        .into("parcel_user_tis");
+
         trx.commit;
+
       });
+
+      // update public.parcel_user_tis  set "isActive" = true where "isActive"=true;
+
       res.status(200).json({
         data: parcelResult,
         noOrgUserData: noOrgUserData,
