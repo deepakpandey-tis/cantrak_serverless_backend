@@ -1196,9 +1196,10 @@ const facilityBookingController = {
                     //     }
                     // })
                     .where('entity_bookings.bookingEndDateTime', '<', endTime)
-                    .orWhere('entity_bookings.isBookingCancelled', true)
-                    .where({ 'entity_bookings.entityType': 'facility_master', 'entity_bookings.orgId': req.orgId })
-                    .where({ 'entity_bookings.bookedBy': id })
+                    // .orWhere({'entity_bookings.isBookingCancelled': true,'entity_bookings.bookedBy': id})
+                    .where({ 'entity_bookings.entityType': 'facility_master', 'entity_bookings.orgId': req.orgId,'entity_bookings.bookedBy': id })
+                    // .where({ 'entity_bookings.bookedBy': id })
+                    .orWhere({'entity_bookings.isBookingCancelled': true,'entity_bookings.entityType': 'facility_master', 'entity_bookings.orgId': req.orgId,'entity_bookings.bookedBy': id})
                     .orderBy('entity_bookings.bookingEndDateTime', 'desc')
                     .limit(50);
 
