@@ -3877,7 +3877,7 @@ const partsController = {
 
                     })
                     .where({ 'part_ledger.orgId': req.orgId })
-                    .whereBetween('part_ledger.createdAt', [fromTime, toTime])
+                    .whereBetween('part_ledger.createdAt', [fromDate, toDate])
                     .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
 
 
@@ -3891,7 +3891,8 @@ const partsController = {
                 const final = await Parallel.map(_.uniqBy(stockResult, 'partId'), async(st) => {
                     let balance = await knex.from('part_ledger')
                         .sum('quantity as quantity')
-                        .where('part_ledger.createdAt', '<', fromTimeEnd)
+                        .where('part_ledger.createdAt', '<', fromDate)
+                        //.where('part_ledger.createdAt', '<', fromTimeEnd)
                         .where({ partId: st.partId, orgId: req.orgId }).first();
 
 
@@ -3917,7 +3918,7 @@ const partsController = {
                             }
                         })
                         .where({ 'part_ledger.orgId': req.orgId, partId: st.partId })
-                        .whereBetween('part_ledger.createdAt', [fromTime, toTime])
+                        .whereBetween('part_ledger.createdAt', [fromDate, toDate])
                         .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc');
 
 
