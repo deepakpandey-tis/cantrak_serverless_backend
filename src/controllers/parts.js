@@ -4267,7 +4267,7 @@ const partsController = {
 
                     })
                     .where({ 'part_ledger.orgId': req.orgId })
-                    .whereBetween('part_ledger.createdAt', [fromTime, toTime])
+                    .whereBetween('part_ledger.createdAt', [fromDate, toDate])
                     .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
 
 
@@ -4282,7 +4282,7 @@ const partsController = {
 
                     let openingQuantity = await knex.from('part_ledger')
                         .sum('quantity as quantity')
-                        .where('part_ledger.createdAt', '<', fromTimeEnd)
+                        .where('part_ledger.createdAt', '<', fromDate)
                         .where({ partId: st.partId, orgId: req.orgId }).first();
 
                     let openingBalance;
@@ -4344,7 +4344,7 @@ const partsController = {
                         })
                         .where('part_ledger.quantity', '>', 0)
                         .where({ 'part_ledger.partId': st.partId, 'part_ledger.orgId': req.orgId })
-                        .whereBetween('part_ledger.createdAt', [fromTime, toTime])
+                        .whereBetween('part_ledger.createdAt', [fromDate, toDate])
                         .groupBy('part_ledger.partId')
                         .first();
                     //.orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
@@ -4403,7 +4403,7 @@ const partsController = {
                         })
                         .where('part_ledger.quantity', '<', 0)
                         .where({ 'part_ledger.partId': st.partId, 'part_ledger.orgId': req.orgId })
-                        .whereBetween('part_ledger.createdAt', [fromTime, toTime])
+                        .whereBetween('part_ledger.createdAt', [fromDate, toDate])
                         .groupBy('part_ledger.partId').first();
 
                     let avgResult = await knex.from('part_ledger')
@@ -4460,7 +4460,7 @@ const partsController = {
                         })
                         .where('part_ledger.quantity', '>', 0)
                         .where({ 'part_ledger.partId': st.partId, 'part_ledger.orgId': req.orgId })
-                        .whereBetween('part_ledger.createdAt', [fromTime, toTime]);
+                        .whereBetween('part_ledger.createdAt', [fromDate, toDate]);
 
                     avgResult = avgResult.filter(v => v.unitCost != 0 || v.unitCost != "");
 
@@ -4517,7 +4517,6 @@ const partsController = {
 
 
                 })
-
 
 
                 /*Export Data open */
