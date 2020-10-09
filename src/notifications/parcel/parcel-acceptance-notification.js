@@ -35,7 +35,7 @@ const parcelAcceptanceNotification = {
             payload: {
                 ...data,
                 subject: 'Parcel Acceptation',
-                body: `Hi!!, You have received a parcel,Please accept for picked up the parcels.`,
+                body: `Hi ,Parcel pickup confirmation is pending please confirm to complete the process.`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
