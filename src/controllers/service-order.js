@@ -3178,7 +3178,7 @@ const serviceOrderController = {
                         'buildings_and_phases.buildingPhaseCode',
                         'buildings_and_phases.description as BuildingDescription',
                     ])
-                    .whereBetween('service_requests.createdAt', [fromTime, toTime])
+                    .whereBetween('service_requests.createdAt', [fromDate, toDate])
                     .where(qb => {
 
                         if (payload.companyId) {
@@ -3425,7 +3425,7 @@ const serviceOrderController = {
                         'buildings_and_phases.description as BuildingDescription',
                         'service_orders.serviceRequestId'
                     ])
-                    .whereBetween('service_orders.createdAt', [fromTime, toTime])
+                    .whereBetween('service_orders.createdAt', [fromDate, toDate])
                     .where(qb => {
 
                         if (payload.companyId) {
