@@ -127,4 +127,10 @@ router.get(
   buildingPhaseController.getUnitListByBuildingId
 );
 
+router.get(
+  "/generate-building-id",
+  authMiddleware.isAuthenticated,
+  buildingPhaseController.generateBuildingId
+)
+
 module.exports = router;
