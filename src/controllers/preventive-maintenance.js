@@ -753,7 +753,7 @@ const pmController = {
 
 
                     if (fromDate && toDate) {
-                        qb.whereBetween('pm_master2.createdAt', [fromTime, toTime])
+                        qb.whereBetween('pm_master2.createdAt', [payload.fromDate, payload.toDate])
 
                     }
 
