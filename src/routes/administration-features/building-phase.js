@@ -133,4 +133,10 @@ router.get(
   buildingPhaseController.generateBuildingId
 )
 
+router.post(
+  "/add-building-info",
+  authMiddleware.isAuthenticated,
+  buildingPhaseController.addBuildingInfo
+)
+
 module.exports = router;
