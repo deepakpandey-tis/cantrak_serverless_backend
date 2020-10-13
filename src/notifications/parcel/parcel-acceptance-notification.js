@@ -83,7 +83,7 @@ const parcelAcceptanceNotification = {
             receiverId: receiver.id,
             payload: {
                 subject: 'Parcel Acceptation',
-                body: `Hi!!, You have received a parcel,Please accept for picked up the parcels.`,
+                body: `Hi ,Parcel pickup confirmation is pending please confirm to complete the process.`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
@@ -106,7 +106,7 @@ const parcelAcceptanceNotification = {
     sendLineNotification: async (sender, receiver, data) => {
         data = {
             receiverId: receiver.id,
-            message: `Hi ${receiver.name} You have received a parcel,Please accept for picked up the parcels.`
+            message: `Hi ${receiver.name} Parcel pickup confirmation is pending please confirm to complete the process.`
         };
 
         return data;

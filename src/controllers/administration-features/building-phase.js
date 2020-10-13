@@ -13,6 +13,7 @@ const fs = require("fs");
 const path = require("path");
 const request = require("request");
 const { whereIn } = require("../../db/knex");
+const { join } = require("path");
 
 const buildingPhaseController = {
     addBuildingPhase: async(req, res) => {
@@ -25,6 +26,7 @@ const buildingPhaseController = {
                 const payload = req.body;
 
                 const schema = Joi.object().keys({
+                    id:Joi.string().required(),
                     companyId: Joi.string().required(),
                     projectId: Joi.string().required(),
                     propertyTypeId: Joi.string().required(),
@@ -72,7 +74,8 @@ const buildingPhaseController = {
                 };
 
                 let insertResult = await knex
-                    .insert(insertData)
+                    .update(insertData)
+                    .where({id:payload.id})
                     .returning(["*"])
                     .transacting(trx)
                     .into("buildings_and_phases");
@@ -95,6 +98,73 @@ const buildingPhaseController = {
             res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
+        }
+    },
+    addBuildingInfo:async(req,res)=>{
+        try {
+            let addedDescription = []
+
+            await knex.transaction(async trx=>{
+                // const payload = req.body
+
+                const payload = _.omit(req.body,['description'])
+
+                const schema = Joi.object().keys({
+                    id:Joi.string().required(),
+                    title:Joi.string().required(),
+                    // description:Joi.string().allow('').optional()
+                })
+
+                const result = Joi.validate(payload, schema);
+
+                console.log(
+                    "[controllers][administrationFeatures][addbuildingPhase]: JOi Result",
+                    result
+                );
+
+                if (result && result.hasOwnProperty("error") && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "VALIDATION_ERROR", message: result.error.message }
+                        ]
+                    });
+                }
+
+                let currentTime = new Date().getTime();
+
+                let descriptionPayload = req.body.description
+
+                addedDescription = []
+                for(let d of descriptionPayload){
+                    let addedResult = await knex("building_info")
+                    .insert({
+                        buildingId : req.body.id,
+                        title : req.body.title,
+                        description:d.description,
+                        updatedAt: currentTime,
+                        createdAt: currentTime,
+                        orgId: req.orgId,
+                        createdBy: req.me.id
+                    })
+                    .returning(["*"])
+                    addedDescription.push(addedResult[0])
+                }
+                trx.commit;
+            })
+            return res.status(200).json({
+                data: {
+                    buildingInfo: addedDescription
+                },
+                message: "Building Info added successfully."
+            });
+
+        } catch (err) {
+
+            console.log(
+                "[controllers][buildingInfo][building] :  Error",
+                err
+            );
+            
         }
     },
     updateBuildingPhase: async(req, res) => {
@@ -178,6 +248,23 @@ const buildingPhaseController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
+    },
+    generateBuildingId:async(req,res) => {
+       try {
+        const generatedId = await knex("buildings_and_phases")
+        .insert({ createdAt: new Date().getTime() })
+        .returning(["*"]);
+    return res.status(200).json({
+        data: {
+            id: generatedId[0].id,
+        },
+    }); 
+       } catch (err) {
+        console.log("[controllers][building_and_phases][id] :  Error", err);
+        return res.status(500).json({
+            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        });
+       }
     },
     viewBuildingPhase: async(req, res) => {
         try {
@@ -1365,7 +1452,8 @@ const buildingPhaseController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
-    }
+    },
+   
 
 };
 
