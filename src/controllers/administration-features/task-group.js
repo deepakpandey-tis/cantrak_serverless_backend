@@ -1001,9 +1001,10 @@ const taskGroupController = {
     },
     getPmList: async(req, res) => {
         try {
-            const list = await knex('pm_master2').select()
+            const list = await knex('pm_master2').select();
+            let payload = req.body;
             let reqData = req.query;
-            let total, rows
+            let total, rows;
             let { companyId, pmNo, assetCategoryId, pmPlanName, startDate, endDate } = req.body;
             let filters = {}
                 // if (assetCategoryId) {
@@ -1052,7 +1053,7 @@ const taskGroupController = {
                         qb.where('pm_master2.name', 'iLIKE', `%${pmPlanName}%`)
                     }
                     if (startDate && endDate) {
-                        qb.whereBetween('pm_master2.createdAt', [startTime, endTime])
+                        qb.whereBetween('pm_master2.createdAt', [payload.startDate, payload.endDate])
                             // qb.where('task_group_schedule.endDate', '<=', endDate)
                     }
                     // if (startDate && endDate) {
@@ -1097,7 +1098,7 @@ const taskGroupController = {
                         qb.where('pm_master2.name', 'iLIKE', `%${pmPlanName}%`)
                     }
                     if (startDate && endDate) {
-                        qb.whereBetween('pm_master2.createdAt', [startTime, endTime])
+                        qb.whereBetween('pm_master2.createdAt', [payload.startDate, payload.endDate])
                             // qb.where('task_group_schedule.endDate', '<=', endDate)
                     }
                     if (endDate) {

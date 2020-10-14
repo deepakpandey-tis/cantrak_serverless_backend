@@ -25,4 +25,8 @@ userMiddleware.customerInfo, dashboardController.getAnnouncementList);
 router.post('/get-announcements-details', authMiddleware.isAuthenticated,
 userMiddleware.customerInfo, dashboardController.getAnnouncementDetails);
 
+/*GET BUILDING DATA*/
+router.get('/get-building-info', authMiddleware.isAuthenticated,
+userMiddleware.customerInfo, dashboardController.getBuildingList);
+
 module.exports = router;

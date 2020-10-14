@@ -290,7 +290,72 @@ const dashboardController = {
             });
 
         }
-    }
+    },
+    getBuildingList: async (req, res) => {
+        try {
+            console.log("customerInfo", req.me.id);
+            console.log("customerHouseInfo", req.me.houseIds);
+            
+            userHouseResult = await knex
+            .from("user_house_allocation")
+            .where({ userId: req.me.id, orgId: req.orgId })
+            .whereIn("houseId", req.me.houseIds);
+
+            let houseIdArray = userHouseResult.map((v) => v.houseId);
+
+            propertyUnitFinalResult = await knex
+                .from("property_units")
+                .where({ orgId: req.orgId })
+                .whereIn("id", houseIdArray);
+
+            let buildingArray = _.uniqBy(propertyUnitFinalResult, "buildingPhaseId").map(
+                (v) => v.buildingPhaseId
+            );
+
+            let buildingInfo;
+           
+            buildingInfo = await knex
+                .from("building_info")              
+                .innerJoin(
+                    "buildings_and_phases",
+                    "building_info.buildingId",
+                    "buildings_and_phases.id"
+                )
+                .where({ 
+                    "building_info.orgId": req.orgId,
+                    "building_info.isActive": true,
+                 })
+                .whereIn("building_info.buildingId", buildingArray)
+                .select(    
+                    "building_info.id as Id",
+                    "building_info.title as titles",
+                    "building_info.description as details"                    
+                )
+                .orderBy('building_info.id', 'desc')
+
+                let imageResult = await knex
+                .from("images")
+                .select("s3Url", "title", "name")
+                .where({
+                    orgId: req.orgId,
+                    entityType: "building_info"
+                })
+                .whereIn("images.entityId", buildingArray)
+
+            return res.status(200).json({
+                data: {
+                    buildingData : {
+                        buildingInfo, 
+                        imageResult
+                    }
+                },
+                message: "Building Information!",
+            });
+
+        } catch (err) {
+            console.log("[controllers][Building][getBuildingList],Error", err);
+        }
+    },
 
 };
 
