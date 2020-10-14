@@ -139,4 +139,10 @@ router.post(
   buildingPhaseController.addBuildingInfo
 )
 
+router.post(
+  "/add-contact-info",
+  authMiddleware.isAuthenticated,
+  buildingPhaseController.addContactInfo
+)
+
 module.exports = router;

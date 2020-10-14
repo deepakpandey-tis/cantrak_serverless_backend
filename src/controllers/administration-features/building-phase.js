@@ -167,6 +167,69 @@ const buildingPhaseController = {
             
         }
     },
+    addContactInfo:async(req,res)=>{
+        try {
+            let addedInfo = []
+            await knex.transaction(async trx => {
+                // const payload = req.body
+                const payload = _.omit(req.body,['contactInfo'])
+
+                const schema = Joi.object().keys({
+                    id:Joi.string().required(),
+                    // title:Joi.string().required(),
+                    // description:Joi.string().allow('').optional()
+                })
+
+                const result = Joi.validate(payload, schema);
+
+                console.log(
+                    "[controllers][administrationFeatures][addbuildingPhase]: JOi Result",
+                    result
+                );
+
+                if (result && result.hasOwnProperty("error") && result.error) {
+                    return res.status(400).json({
+                        errors: [
+                            { code: "VALIDATION_ERROR", message: result.error.message }
+                        ]
+                    });
+                }
+
+                let currentTime = new Date().getTime();
+                let contactPayload = req.body.contactInfo
+                console.log("contact payload",contactPayload)
+                addedInfo = []
+
+                for(let c of contactPayload){
+                    let addedResult = await knex("contact_info")
+                    .insert({
+                        buildingId : req.body.id,
+                        contactId : c.contactName,
+                        contactValue:c.contactValue,
+                        updatedAt: currentTime,
+                        createdAt: currentTime,
+                        orgId: req.orgId,
+                        createdBy: req.me.id
+                    })
+                    .returning(["*"])
+                    addedInfo.push(addedResult[0])
+                }
+                trx.commit;
+            })
+            return res.status(200).json({
+                data: {
+                    contactInfo: addedInfo
+                },
+                message: "Contact Info added successfully."
+            });
+        } catch (err) {
+            console.log(
+                "[controllers][buildingInfo][building] :  Error",
+                err
+            );
+            
+        }
+    },
     updateBuildingPhase: async(req, res) => {
         try {
             let userId = req.me.id;
