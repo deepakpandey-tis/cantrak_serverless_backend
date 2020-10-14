@@ -29,4 +29,8 @@ userMiddleware.customerInfo, dashboardController.getAnnouncementDetails);
 router.get('/get-building-info', authMiddleware.isAuthenticated,
 userMiddleware.customerInfo, dashboardController.getBuildingList);
 
+/*GET CONTACT DATA*/
+router.get('/get-contact-info', authMiddleware.isAuthenticated,
+userMiddleware.customerInfo, dashboardController.getContactList);
+
 module.exports = router;
