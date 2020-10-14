@@ -337,7 +337,6 @@ const dashboardController = {
                 .from("images")
                 .select("s3Url", "title", "name")
                 .where({
-                    orgId: req.orgId,
                     entityType: "building_info"
                 })
                 .whereIn("images.entityId", buildingArray)
