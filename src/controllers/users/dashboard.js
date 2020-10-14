@@ -152,22 +152,22 @@ const dashboardController = {
 
             let announcement;
             let img;
-           
+
             announcement = await knex
-                .from("announcement_master")              
+                .from("announcement_master")
                 .innerJoin(
                     "announcement_user_master",
                     "announcement_master.id",
                     "announcement_user_master.announcementId"
                 )
-                .where({ 
+                .where({
                     "announcement_master.savedStatus": 2,
                     "announcement_user_master.orgId": req.orgId,
                     "announcement_user_master.userId": req.me.id,
                     "announcement_master.status": true,
                     "announcement_master.userType": 2
-                 })
-                .select(    
+                })
+                .select(
                     "announcement_master.id as Id",
                     "announcement_master.title as titles",
                     "announcement_master.url as Url",
@@ -178,10 +178,10 @@ const dashboardController = {
                 .limit(10);
 
 
-                const Parallel = require("async-parallel");
-                announcement = await Parallel.map(announcement, async (pp) => {   
-                    
-                    let imageResult = await knex
+            const Parallel = require("async-parallel");
+            announcement = await Parallel.map(announcement, async (pp) => {
+
+                let imageResult = await knex
                     .from("images")
                     .select("s3Url", "title", "name")
                     .where({
@@ -189,14 +189,14 @@ const dashboardController = {
                         entityType: "announcement_image"
                     }).first();
 
-                    console.log("imagesResult", imageResult);
+                console.log("imagesResult", imageResult);
 
-                    return {
-                        ...pp,
-                        img: imageResult,
-                        URL: process.env.SITE_URL
-                    };
-                });
+                return {
+                    ...pp,
+                    img: imageResult,
+                    URL: process.env.SITE_URL
+                };
+            });
 
 
             return res.status(200).json({
@@ -223,15 +223,15 @@ const dashboardController = {
                 )
                 .first();
 
-            if(themes){
+            if (themes) {
                 themeValue = themes.theme;
-            }else{
+            } else {
                 themeValue = '1';
             }
 
             return res.status(200).json({
                 data: {
-                    result :  themeValue
+                    result: themeValue
                 },
                 message: "Theme Settings!",
             });
@@ -247,7 +247,7 @@ const dashboardController = {
             let { announcementId } = req.body;
             let resultData;
 
-            resultData = await knex.from('announcement_user_master')                
+            resultData = await knex.from('announcement_user_master')
                 .innerJoin(
                     "announcement_master",
                     "announcement_user_master.announcementId",
@@ -263,8 +263,8 @@ const dashboardController = {
                 .where({ 'announcement_user_master.announcementId': announcementId })
                 .first()
 
-                console.log("...resultData",resultData)
-            
+            console.log("...resultData", resultData)
+
             let imageResult = await knex
                 .from("images")
                 .select("s3Url", "title", "name")
@@ -272,7 +272,7 @@ const dashboardController = {
                     entityId: announcementId,
                     entityType: "announcement_image"
                 })
-                
+
 
             res.status(200).json({
                 data: {
@@ -290,7 +290,169 @@ const dashboardController = {
             });
 
         }
-    }
+    },
+    getBuildingList: async (req, res) => {
+        try {
+            console.log("customerInfo", req.me.id);
+            console.log("customerHouseInfo", req.me.houseIds);
+
+            userHouseResult = await knex
+                .from("user_house_allocation")
+                .where({ userId: req.me.id, orgId: req.orgId })
+                .whereIn("houseId", req.me.houseIds);
+
+            let houseIdArray = userHouseResult.map((v) => v.houseId);
+
+            propertyUnitFinalResult = await knex
+                .from("property_units")
+                .where({ orgId: req.orgId })
+                .whereIn("id", houseIdArray);
+
+            let buildingArray = _.uniqBy(propertyUnitFinalResult, "buildingPhaseId").map(
+                (v) => v.buildingPhaseId
+            );
+
+            let buildingInfo;
+
+            buildingInfo = await knex
+                .from("building_info")
+                .innerJoin(
+                    "buildings_and_phases",
+                    "building_info.buildingId",
+                    "buildings_and_phases.id"
+                )
+                .where({
+                    "building_info.orgId": req.orgId,
+                    "building_info.isActive": true,
+                })
+                .whereIn("building_info.buildingId", buildingArray)
+                .select(
+                    "building_info.id as Id",
+                    "building_info.title as titles",
+                    "building_info.description as details"
+                )
+                .orderBy('building_info.id', 'desc')
+
+            let imageResult = await knex
+                .from("images")
+                .select("s3Url", "title", "name")
+                .where({
+                    entityType: "building_info"
+                })
+                .whereIn("images.entityId", buildingArray)
+
+            return res.status(200).json({
+                data: {
+                    buildingData: {
+                        buildingInfo,
+                        imageResult
+                    }
+                },
+                message: "Building Information!",
+            });
+
+        } catch (err) {
+            console.log("[controllers][Building][getBuildingList],Error", err);
+        }
+    },
+    getContactList: async (req, res) => {
+        try {
+            console.log("customerInfo", req.me.id);
+            console.log("customerHouseInfo", req.me.houseIds);
+
+            userHouseResult = await knex
+                .from("user_house_allocation")
+                .where({ userId: req.me.id, orgId: req.orgId })
+                .whereIn("houseId", req.me.houseIds);
+
+            let houseIdArray = userHouseResult.map((v) => v.houseId);
+
+            propertyUnitFinalResult = await knex
+                .from("property_units")
+                .where({ orgId: req.orgId })
+                .whereIn("id", houseIdArray);
+
+            let buildingArray = _.uniqBy(propertyUnitFinalResult, "buildingPhaseId").map(
+                (v) => v.buildingPhaseId
+            );
+
+            let contactInfo;
+            let faxInfo;
+            let emailInfo;
+
+            contactInfo = await knex
+                .from("contact_info")
+                .innerJoin(
+                    "buildings_and_phases",
+                    "contact_info.buildingId",
+                    "buildings_and_phases.id"
+                )
+                .where({
+                    "contact_info.orgId": req.orgId,
+                    "contact_info.contactId": 1,
+                    "contact_info.isActive": true,
+                })
+                .whereIn("contact_info.buildingId", buildingArray)
+                .select(
+                    "contact_info.contactId as Id",
+                    "contact_info.contactValue as contactValue"
+                )
+                .orderBy('contact_info.id', 'desc')
+
+            faxInfo = await knex
+                .from("contact_info")
+                .innerJoin(
+                    "buildings_and_phases",
+                    "contact_info.buildingId",
+                    "buildings_and_phases.id"
+                )
+                .where({
+                    "contact_info.orgId": req.orgId,
+                    "contact_info.contactId": 2,
+                    "contact_info.isActive": true,
+                })
+                .whereIn("contact_info.buildingId", buildingArray)
+                .select(
+                    "contact_info.contactId as Id",
+                    "contact_info.contactValue as contactValue"
+                )
+                .orderBy('contact_info.id', 'desc')
+
+            emailInfo = await knex
+                .from("contact_info")
+                .innerJoin(
+                    "buildings_and_phases",
+                    "contact_info.buildingId",
+                    "buildings_and_phases.id"
+                )
+                .where({
+                    "contact_info.orgId": req.orgId,
+                    "contact_info.isActive": true,
+                    "contact_info.contactId": 3,
+                })
+                .whereIn("contact_info.buildingId", buildingArray)
+                .select(
+                    "contact_info.contactId as Id",
+                    "contact_info.contactValue as contactValue"
+                )
+                .orderBy('contact_info.id', 'desc')
+
+
+            return res.status(200).json({
+                data: {
+                    contactData: {
+                        phoneData : contactInfo,
+                        faxData : faxInfo,
+                        emailData : emailInfo
+                    }
+                },
+                message: "Contact Information!",
+            });
+
+        } catch (err) {
+            console.log("[controllers][Contact][getContactList],Error", err);
+        }
+    },
 
 };
 

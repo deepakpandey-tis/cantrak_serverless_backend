@@ -139,4 +139,16 @@ router.post(
   buildingPhaseController.addBuildingInfo
 )
 
+router.post(
+  "/add-contact-info",
+  authMiddleware.isAuthenticated,
+  buildingPhaseController.addContactInfo
+)
+
+router.post(
+  "/get-building-info",
+  authMiddleware.isAuthenticated,
+  buildingPhaseController.getBuildingInfoByBuildingId
+)
+
 module.exports = router;
