@@ -50,6 +50,26 @@ const buildingPhaseController = {
                     });
                 }
 
+                let checkBuildInfoUpdate = await knex("building_info")
+                    .where({buildingId:payload.id})
+                    .first()
+                
+                if(checkBuildInfoUpdate && checkBuildInfoUpdate.moderationStatus == false){
+                    let updateModerationStatus = await knex('building_info')
+                    .update({moderationStatus : true})
+                    .where({buildingId:payload.id , orgId:req.orgId})
+                    .returning(['*'])
+                }
+                let checkContactInfoUpdate = await knex("contact_info")
+                .where({buildingId:payload.id})
+                .first()
+            
+            if(checkContactInfoUpdate && checkContactInfoUpdate.moderationStatus == false){
+                let updateModerationStatus = await knex('contact_info')
+                .update({moderationStatus : true})
+                .where({buildingId:payload.id , orgId:req.orgId})
+                .returning(['*'])
+            }
                 /*CHECK DUPLICATE VALUES OPEN */
                 let existValue = await knex('buildings_and_phases')
                     .where({ buildingPhaseCode: payload.buildingPhaseCode.toUpperCase(), projectId: payload.projectId, orgId: orgId });
@@ -165,6 +185,37 @@ const buildingPhaseController = {
                 err
             );
             
+        }
+    },
+    getBuildingInfoByBuildingId:async(req,res)=>{
+        try {
+            let payload = req.body
+
+            const schema = Joi.object().keys({
+                id:Joi.string().required()
+            })
+
+            const result = Joi.validate(payload, schema);
+
+            if (result && result.hasOwnProperty("error") && result.error) {
+                return res.status(400).json({
+                    errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+                });
+            }
+
+            let buildingInfo = await knex("building_info")
+            .select('*')
+            .where({buildingId:payload.id,orgId:req.orgId})
+
+            return res.status(200).json({
+                data:{
+                    buildingInfo
+                }
+            })
+        } catch (err) {
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+            });
         }
     },
     addContactInfo:async(req,res)=>{
