@@ -323,7 +323,7 @@ const dashboardController = {
                 )
                 .where({ 
                     "building_info.orgId": req.orgId,
-                    "building_info.isActive": true
+                    "building_info.isActive": true,
                  })
                 .whereIn("building_info.buildingId", buildingArray)
                 .select(    
@@ -336,7 +336,7 @@ const dashboardController = {
                 let imageResult = await knex
                 .from("images")
                 .select("s3Url", "title", "name")
-                .whereIn({
+                .where({
                     orgId: req.orgId,
                     entityType: "building_info"
                 })
@@ -345,7 +345,8 @@ const dashboardController = {
             return res.status(200).json({
                 data: {
                     buildingData : {
-                        ...buildingInfo, imageResult
+                        buildingInfo, 
+                        imageResult
                     }
                 },
                 message: "Building Information!",
