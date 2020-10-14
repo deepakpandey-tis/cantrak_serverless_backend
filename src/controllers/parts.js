@@ -4204,6 +4204,33 @@ const partsController = {
 
         try {
 
+
+            let projectIds = [];
+            const accessibleProjects = req.userProjectResources;
+
+            if (accessibleProjects.length) {
+                for (let pro of accessibleProjects) {
+
+                    if (pro.projects.length) {
+
+                        for (let projectId of pro.projects) {
+                            console.log("project=========", pro.projects, "project")
+
+                            projectIds.push(projectId);
+                        }
+                    }
+                }
+            }
+
+            projectIds = _.uniqBy(projectIds);
+
+            let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
+                .whereIn('projects.id', projectIds)
+                .where({ orgId: req.orgId });
+
+            let companyIds = companyResult.map(v => v.companyId);
+            let ids;
+
             let payload = req.body;
             let fromDate = payload.fromDate;
             let toDate = payload.toDate;
@@ -4214,9 +4241,11 @@ const partsController = {
                 let toNewDate = moment(toDate).endOf('date', 'days').format();
                 let fromTime = new Date(fromNewDate).getTime();
                 let toTime = new Date(toNewDate).getTime();
+                let stockResult;
+                let partMasterResult;
+                let masterResult;
 
-
-                let stockResult = await knex.from('part_ledger')
+                stockResult = await knex.from('part_ledger')
                     .leftJoin('part_master', 'part_ledger.partId', 'part_master.id')
                     .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
                     .leftJoin('buildings_and_phases', 'part_ledger.building', 'buildings_and_phases.id')
@@ -4270,7 +4299,123 @@ const partsController = {
                     })
                     .where({ 'part_ledger.orgId': req.orgId })
                     .whereBetween('part_ledger.createdAt', [fromDate, toDate])
-                    .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc')
+                    .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc');
+
+
+                if (payload.showData == true) {
+
+
+                    partMasterResult = await knex.from('part_master')
+                        .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
+                        .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
+                        .leftJoin('companies', 'part_master.companyId', 'companies.id')
+                        .leftJoin('buildings_and_phases', 'part_ledger.building', 'buildings_and_phases.id')
+                        .leftJoin('projects', 'buildings_and_phases.projectId', 'projects.id')
+                        .leftJoin('floor_and_zones', 'part_ledger.floor', 'floor_and_zones.id')
+                        .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
+                        .select([
+                            'part_ledger.*',
+                            'part_master.partName',
+                            'part_master.partCode',
+                            'part_master.unitOfMeasure',
+                            'part_category_master.categoryName as partCategory',
+                            'buildings_and_phases.buildingPhaseCode',
+                            'buildings_and_phases.description as buildingDescription',
+                            'projects.project as projectCode',
+                            'projects.projectName',
+                            'floor_and_zones.floorZoneCode',
+                            'floor_and_zones.description as floorDescripton',
+                            'adjust_type.adjustType as adjustTypeName',
+                            'part_master.minimumQuantity',
+                            'part_master.avgUnitPrice as avgUnitPriceMaster',
+                            "part_master.createdAt",
+                            "part_master.id as partId"
+                        ])
+                        .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
+                        .whereIn('part_master.companyId', companyIds)
+                        .orderBy('part_master.createdAt', 'desc')
+                        .groupBy([
+                            'part_master.id',
+                            'companies.companyId',
+                            'companies.companyName',
+                            'part_category_master.id',
+                            'part_ledger.id',
+                            'buildings_and_phases.id',
+                            'projects.id',
+                            'floor_and_zones.id',
+                            'adjust_type.id'
+                        ])
+                        .distinct('part_master.id')
+
+
+                    // partMasterResult    =   await knex.from('part_master')
+                    // .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
+                    // .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
+                    // .leftJoin('buildings_and_phases', 'part_ledger.building', 'buildings_and_phases.id')
+                    // .leftJoin('projects', 'buildings_and_phases.projectId', 'projects.id')
+                    // .leftJoin('floor_and_zones', 'part_ledger.floor', 'floor_and_zones.id')
+                    // .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
+                    // .select([
+                    //     'part_ledger.*',
+                    //     'part_master.partName',
+                    //     'part_master.partCode',
+                    //     'part_master.unitOfMeasure',
+                    //     'part_category_master.categoryName as partCategory',
+                    //     'buildings_and_phases.buildingPhaseCode',
+                    //     'buildings_and_phases.description as buildingDescription',
+                    //     'projects.project as projectCode',
+                    //     'projects.projectName',
+                    //     'floor_and_zones.floorZoneCode',
+                    //     'floor_and_zones.description as floorDescripton',
+                    //     'adjust_type.adjustType as adjustTypeName',
+                    //     'part_master.minimumQuantity',
+                    //     'part_master.avgUnitPrice as avgUnitPriceMaster'
+
+                    // ])
+                    // .where(qb => {
+                    //     if (payload.partId) {
+
+                    //         qb.where('part_master.id', payload.partId)
+                    //     }
+
+                    //     if (payload.partCode) {
+
+                    //         qb.where('part_master.partCode', 'iLIKE', `%${payload.partCode}%`)
+                    //     }
+
+                    //     if (payload.partName) {
+
+                    //         qb.where('part_master.partName', 'iLIKE', `%${payload.partName}%`)
+                    //     }
+
+                    //     if (payload.partCategory) {
+
+                    //         qb.where('part_master.partCategory', payload.partCategory)
+                    //     }
+
+                    //     if (payload.adjustType) {
+
+                    //         qb.where('part_ledger.adjustType', payload.adjustType)
+                    //     }
+
+                    // })
+                    // .whereIn('part_master.companyId', companyIds)
+                    // .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
+                    // .orderBy('part_master.partCode', 'asc', 'part_master.id', 'asc');
+
+                    masterResult = _.uniqBy(partMasterResult, "partId");
+                    ids = _.uniqBy(stockResult.map(v => v.partId));
+
+                    // masterResult = masterResult.filter(function( obj,i ) {
+
+                    //     return obj.id!= ids[i];
+                    // });
+
+                    // masterResult = _.omit(masterResult,ids);
+
+                    stockResult = stockResult.concat(masterResult);
+
+                }
 
 
                 let fromDateEnd = moment(fromTime).startOf('date').format();
@@ -4644,6 +4789,7 @@ const partsController = {
                 } */
                 /*Export Data close */
 
+                console.log("=========", partMasterResult, "===================");
 
                 res.status(200).json({
                     data: {
@@ -4653,9 +4799,11 @@ const partsController = {
                         toDate,
                         fromTime,
                         toTime,
-                        //dateArr,
+                       // dateArr,
                         fromNewDate,
                         toNewDate,
+                        partMasterResult: masterResult,
+                        ids
                         // final
 
                     },
