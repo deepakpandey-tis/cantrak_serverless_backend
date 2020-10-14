@@ -355,6 +355,59 @@ const dashboardController = {
             console.log("[controllers][Building][getBuildingList],Error", err);
         }
     },
+    getContactList: async (req, res) => {
+        try {
+            console.log("customerInfo", req.me.id);
+            console.log("customerHouseInfo", req.me.houseIds);
+            
+            userHouseResult = await knex
+            .from("user_house_allocation")
+            .where({ userId: req.me.id, orgId: req.orgId })
+            .whereIn("houseId", req.me.houseIds);
+
+            let houseIdArray = userHouseResult.map((v) => v.houseId);
+
+            propertyUnitFinalResult = await knex
+                .from("property_units")
+                .where({ orgId: req.orgId })
+                .whereIn("id", houseIdArray);
+
+            let buildingArray = _.uniqBy(propertyUnitFinalResult, "buildingPhaseId").map(
+                (v) => v.buildingPhaseId
+            );
+
+            let contactInfo;
+           
+            contactInfo = await knex
+                .from("contact_info")              
+                .innerJoin(
+                    "buildings_and_phases",
+                    "contact_info.buildingId",
+                    "buildings_and_phases.id"
+                )
+                .where({ 
+                    "contact_info.orgId": req.orgId,
+                    "contact_info.isActive": true,
+                 })
+                .whereIn("contact_info.buildingId", buildingArray)
+                .select(    
+                    "contact_info.contactId as Id",
+                    "contact_info.contactValue as contactValue"             
+                )
+                .orderBy('contact_info.id', 'desc')
+               
+
+            return res.status(200).json({
+                data: {
+                    contactData :  contactInfo
+                },
+                message: "Contact Information!",
+            });
+
+        } catch (err) {
+            console.log("[controllers][Contact][getContactList],Error", err);
+        }
+    },
 
 };
 
