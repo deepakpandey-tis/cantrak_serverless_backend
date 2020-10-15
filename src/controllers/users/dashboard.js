@@ -379,6 +379,7 @@ const dashboardController = {
             let contactInfo;
             let faxInfo;
             let emailInfo;
+            let descriptionInfo;
 
             contactInfo = await knex
                 .from("contact_info")
@@ -438,12 +439,33 @@ const dashboardController = {
                 .orderBy('contact_info.id', 'desc')
 
 
+            descriptionInfo = await knex
+                .from("contact_info")
+                .innerJoin(
+                    "buildings_and_phases",
+                    "contact_info.buildingId",
+                    "buildings_and_phases.id"
+                )
+                .where({
+                    "contact_info.orgId": req.orgId,
+                    "contact_info.isActive": true,
+                    "contact_info.contactId": 4,
+                })
+                .whereIn("contact_info.buildingId", buildingArray)
+                .select(
+                    "contact_info.contactId as Id",
+                    "contact_info.contactValue as contactValue"
+                )
+                .orderBy('contact_info.id', 'desc')
+
+
             return res.status(200).json({
                 data: {
                     contactData: {
                         phoneData : contactInfo,
                         faxData : faxInfo,
-                        emailData : emailInfo
+                        emailData : emailInfo,
+                        description : descriptionInfo
                     }
                 },
                 message: "Contact Information!",
