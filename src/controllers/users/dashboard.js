@@ -449,7 +449,7 @@ const dashboardController = {
                 .where({
                     "contact_info.orgId": req.orgId,
                     "contact_info.isActive": true,
-                    "contact_info.contactId": 4,
+                    "contact_info.contactId": 0,
                 })
                 .whereIn("contact_info.buildingId", buildingArray)
                 .select(
