@@ -4331,6 +4331,34 @@ const partsController = {
                             "part_master.createdAt",
                             "part_master.id as partId"
                         ])
+                        .where(qb=>{
+
+                            if (payload.partId) {
+
+                                qb.where('part_ledger.partId', payload.partId)
+                            }
+    
+                            if (payload.partCode) {
+    
+                                qb.where('part_master.partCode', 'iLIKE', `%${payload.partCode}%`)
+                            }
+    
+                            if (payload.partName) {
+    
+                                qb.where('part_master.partName', 'iLIKE', `%${payload.partName}%`)
+                            }
+    
+                            if (payload.partCategory) {
+    
+                                qb.where('part_master.partCategory', payload.partCategory)
+                            }
+    
+                            if (payload.adjustType) {
+    
+                                qb.where('part_ledger.adjustType', payload.adjustType)
+                            }
+    
+                        })
                         .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
                         .whereIn('part_master.companyId', companyIds)
                         .orderBy('part_master.createdAt', 'desc')
