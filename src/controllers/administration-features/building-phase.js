@@ -154,6 +154,10 @@ const buildingPhaseController = {
 
                 let descriptionPayload = req.body.description
 
+                let delBuildingInfo = await knex("building_info")
+                .where({buildingId:req.body.id,orgId:req.orgId})
+                .del()
+                
                 addedDescription = []
                 for(let d of descriptionPayload){
                     let addedResult = await knex("building_info")
@@ -203,13 +207,22 @@ const buildingPhaseController = {
                 });
             }
 
-            let buildingInfo = await knex("building_info")
-            .select('*')
-            .where({buildingId:payload.id,orgId:req.orgId})
+            let [buildingInfo,images] = await Promise.all([
+                knex.from("building_info")
+                .select('*')
+                .where({"building_info.buildingId":payload.id,"building_info.orgId":req.orgId}),
+                knex
+                .from('images')
+                .where({ entityId: payload.id, entityType: "building_info" })
+            ])
+            // knex("building_info")
+            // .select('*')
+            // .where({buildingId:payload.id,orgId:req.orgId})
 
             return res.status(200).json({
                 data:{
-                    buildingInfo
+                    buildingInfo,
+                    images
                 }
             })
         } catch (err) {
@@ -250,6 +263,9 @@ const buildingPhaseController = {
                 let contactPayload = req.body.contactInfo
                 console.log("contact payload",contactPayload)
                 addedInfo = []
+                let delContact = await knex("contact_info")
+                .where({buildingId:req.body.id,orgId:req.orgId})
+                .del()
 
                 for(let c of contactPayload){
                     let addedResult = await knex("contact_info")
@@ -279,6 +295,38 @@ const buildingPhaseController = {
                 err
             );
             
+        }
+    },
+    getContactInfoById:async(req,res)=>{
+        try {
+            let payload = req.body
+
+            const schema = Joi.object().keys({
+                id:Joi.string().required()
+            })
+
+            const result = Joi.validate(payload, schema);
+
+            if (result && result.hasOwnProperty("error") && result.error) {
+                return res.status(400).json({
+                    errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+                });
+            }
+
+            let contactInfo = await knex("contact_info")
+            .select('*')
+            .where({buildingId:payload.id,orgId:req.orgId})
+
+            return res.status(200).json({
+                data:{
+                    contactInfo
+                }
+            })
+        } catch (err) {
+            console.log(
+                "[controllers][buildingInfo][building] :  Error",
+                err
+            );
         }
     },
     updateBuildingPhase: async(req, res) => {
