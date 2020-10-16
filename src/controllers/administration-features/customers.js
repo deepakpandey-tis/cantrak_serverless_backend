@@ -811,6 +811,11 @@ const customerController = {
             "property_units.floorZoneId",
             "floor_and_zones.id"
           )
+          .leftJoin(
+            "property_types",
+            "buildings_and_phases.propertyTypeId",
+            "property_types.id"
+          )
           .select([
             "users.userType as TENANT_TYPE",
             "users.name as NAME",
@@ -821,10 +826,11 @@ const customerController = {
             "users.location as ADDRESS",
             "users.taxId as TAX_ID",
             "users.nationalId as NATIONAL_ID",
-            //"companies.companyId as COMPANY_ID",
-            //"projects.project as PROJECT_ID",
-            //"buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
-            //"floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
+            "companies.companyId as COMPANY_CODE",
+            "projects.project as PROJECT_CODE",
+            "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
+            "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
+            "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
             "property_units.unitNumber as UNIT_NUMBER",
           ])
           .orderBy('users.id', 'desc')
@@ -874,10 +880,11 @@ const customerController = {
             ADDRESS: "",
             TAX_ID: "",
             NATIONAL_ID: "",
-            //COMPANY_ID: "",
-            //PROJECT_ID: "",
-            //BUILDING_PHASE_CODE: "",
-            //FLOOR_ZONE_CODE: "",
+            COMPANY_CODE:"",
+            PROJECT_CODE:"",
+            PROPERTY_TYPE_CODE:"",
+            BUILDING_PHASE_CODE:"",
+            FLOOR_ZONE_CODE:"",
             UNIT_NUMBER: "",
             ALLOW_LOGIN_SERVICEMIND: 1,
           }
@@ -963,11 +970,12 @@ const customerController = {
         data[0].G === 'ADDRESS' &&
         data[0].H === 'TAX_ID' &&
         data[0].I === 'NATIONAL_ID' &&
-        //data[0].J === 'COMPANY_ID' &&
-        //data[0].K === 'PROJECT_ID' &&
-        //data[0].L === 'BUILDING_PHASE_CODE' &&
-        //data[0].M === 'FLOOR_ZONE_CODE' &&
-        data[0].J === 'UNIT_NUMBER' &&
+        data[0].J === 'COMPANY_CODE' &&
+        data[0].K === 'PROJECT_CODE' &&
+        data[0].L === 'PROPERTY_TYPE_CODE' && 
+        data[0].M === 'BUILDING_PHASE_CODE' &&
+        data[0].N === 'FLOOR_ZONE_CODE' &&
+        data[0].O === 'UNIT_NUMBER' &&
         data[0].A === 'TENANT_TYPE' || data[0].A === 'Ã¯Â»Â¿TENANT_TYPE'
       ) {
         if (data.length > 0) {
@@ -1011,7 +1019,7 @@ const customerController = {
               }
 
 
-              if (!tenantData.J) {
+              if (!tenantData.O) {
                 let values = _.values(tenantData)
                 values.unshift('Unit number is required!')
                 errors.push(values);
@@ -1021,9 +1029,9 @@ const customerController = {
 
               let unitId = null;
 
-              if (tenantData.J) {
+              if (tenantData.O) {
                 let checkUnit = await knex('property_units').select("id")
-                  .where({ unitNumber: tenantData.J, orgId: req.orgId })
+                  .where({ unitNumber: tenantData.O, orgId: req.orgId })
 
                 if (!checkUnit.length) {
                   let values = _.values(tenantData)
@@ -1126,7 +1134,7 @@ const customerController = {
                 let emailVerified = false;
                 let isActive = false;
 
-                if (tenantData.K && tenantData.K == 1) {
+                if (tenantData.P && tenantData.P == 1) {
 
                   emailVerified = true;
                   isActive = true;
@@ -1166,7 +1174,7 @@ const customerController = {
                 let roleInserted = await knex('application_user_roles').insert({ userId: result[0].id, roleId: 4, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId })
                   .returning(['*']);
 
-                let user = result[0]
+                let user = result[0];
                 console.log('User: ', result)
                 if (result && result.length) {
 
