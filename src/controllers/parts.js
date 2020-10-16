@@ -2150,7 +2150,11 @@ const partsController = {
 
             // This 687 ,688 needs to be removed because its irrelevant but its here because we dont know where this is being used
             let unitCost = partLedgerResult.length ? partLedgerResult[0].unitCost : '0'
-            let quantity = partLedgerResult.length ? partLedgerResult[0].quantity : '0'
+
+            let partLedger = await knex('part_ledger').sum('quantity as quantity').where({ partId: id, orgId: req.orgId }).first();
+
+            // let quantity = partLedgerResult.length ? partLedgerResult[0].quantity : '0'
+            let quantity = partLedger.quantity ? partLedger.quantity.toFixed(3) : '0.00';
 
 
             let additionalAttribute = await knex.from('part_attributes')
@@ -2166,7 +2170,7 @@ const partsController = {
 
             return res.status(200).json({
                 message: "Part Details Successfully!",
-                partDetail: { ...partResult[0], partLedgerResult, additionalAttributes: additionalAttribute, images, files, unitCost, quantity }
+                partDetail: { ...partResult[0], partLedgerResult, additionalAttributes: additionalAttribute, images, files, unitCost, quantity, partLedger }
             })
 
         } catch (err) {
@@ -4331,33 +4335,33 @@ const partsController = {
                             "part_master.createdAt",
                             "part_master.id as partId"
                         ])
-                        .where(qb=>{
+                        .where(qb => {
 
                             if (payload.partId) {
 
                                 qb.where('part_ledger.partId', payload.partId)
                             }
-    
+
                             if (payload.partCode) {
-    
+
                                 qb.where('part_master.partCode', 'iLIKE', `%${payload.partCode}%`)
                             }
-    
+
                             if (payload.partName) {
-    
+
                                 qb.where('part_master.partName', 'iLIKE', `%${payload.partName}%`)
                             }
-    
+
                             if (payload.partCategory) {
-    
+
                                 qb.where('part_master.partCategory', payload.partCategory)
                             }
-    
+
                             if (payload.adjustType) {
-    
+
                                 qb.where('part_ledger.adjustType', payload.adjustType)
                             }
-    
+
                         })
                         .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
                         .whereIn('part_master.companyId', companyIds)
@@ -4375,72 +4379,8 @@ const partsController = {
                         ])
                         .distinct('part_master.id')
 
-
-                    // partMasterResult    =   await knex.from('part_master')
-                    // .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
-                    // .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
-                    // .leftJoin('buildings_and_phases', 'part_ledger.building', 'buildings_and_phases.id')
-                    // .leftJoin('projects', 'buildings_and_phases.projectId', 'projects.id')
-                    // .leftJoin('floor_and_zones', 'part_ledger.floor', 'floor_and_zones.id')
-                    // .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
-                    // .select([
-                    //     'part_ledger.*',
-                    //     'part_master.partName',
-                    //     'part_master.partCode',
-                    //     'part_master.unitOfMeasure',
-                    //     'part_category_master.categoryName as partCategory',
-                    //     'buildings_and_phases.buildingPhaseCode',
-                    //     'buildings_and_phases.description as buildingDescription',
-                    //     'projects.project as projectCode',
-                    //     'projects.projectName',
-                    //     'floor_and_zones.floorZoneCode',
-                    //     'floor_and_zones.description as floorDescripton',
-                    //     'adjust_type.adjustType as adjustTypeName',
-                    //     'part_master.minimumQuantity',
-                    //     'part_master.avgUnitPrice as avgUnitPriceMaster'
-
-                    // ])
-                    // .where(qb => {
-                    //     if (payload.partId) {
-
-                    //         qb.where('part_master.id', payload.partId)
-                    //     }
-
-                    //     if (payload.partCode) {
-
-                    //         qb.where('part_master.partCode', 'iLIKE', `%${payload.partCode}%`)
-                    //     }
-
-                    //     if (payload.partName) {
-
-                    //         qb.where('part_master.partName', 'iLIKE', `%${payload.partName}%`)
-                    //     }
-
-                    //     if (payload.partCategory) {
-
-                    //         qb.where('part_master.partCategory', payload.partCategory)
-                    //     }
-
-                    //     if (payload.adjustType) {
-
-                    //         qb.where('part_ledger.adjustType', payload.adjustType)
-                    //     }
-
-                    // })
-                    // .whereIn('part_master.companyId', companyIds)
-                    // .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
-                    // .orderBy('part_master.partCode', 'asc', 'part_master.id', 'asc');
-
                     masterResult = _.uniqBy(partMasterResult, "partId");
                     ids = _.uniqBy(stockResult.map(v => v.partId));
-
-                    // masterResult = masterResult.filter(function( obj,i ) {
-
-                    //     return obj.id!= ids[i];
-                    // });
-
-                    // masterResult = _.omit(masterResult,ids);
-
                     stockResult = stockResult.concat(masterResult);
 
                 }
@@ -4827,7 +4767,7 @@ const partsController = {
                         toDate,
                         fromTime,
                         toTime,
-                       // dateArr,
+                        // dateArr,
                         fromNewDate,
                         toNewDate,
                         partMasterResult: masterResult,
