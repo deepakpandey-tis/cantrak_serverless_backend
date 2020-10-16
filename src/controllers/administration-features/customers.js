@@ -17,8 +17,8 @@ const customerController = {
   getCustomers: async (req, res) => {
     try {
       let userDetails = null;
-      let units = null
-      let fullLocationDetails = []
+      let units = null;
+      let fullLocationDetails = [];
       let customerId = req.query.customerId;
       if (customerId) {
         userDetails = await knex("users")
@@ -78,13 +78,13 @@ const customerController = {
         }
 
         let userResult;
-        if(userDetails.length){
+        if (userDetails.length) {
 
           userResult = userDetails[0];
 
-        } else{
+        } else {
 
-          userResult = await knex('requested_by').select('name','email','mobile as mobileNo').where({id:customerId,orgId:req.orgId}).first(); 
+          userResult = await knex('requested_by').select('name', 'email', 'mobile as mobileNo').where({ id: customerId, orgId: req.orgId }).first();
 
         }
 
@@ -170,7 +170,7 @@ const customerController = {
             .select([
               "users.name as name",
               "users.email as email",
-             // "user_house_allocation.houseId as houseId",
+              // "user_house_allocation.houseId as houseId",
               "users.id as userId",
               "property_units.unitNumber",
               "users.isActive"
@@ -192,9 +192,9 @@ const customerController = {
                 }
               }
             })
-            .groupBy(['users.id','property_units.id'])
+            .groupBy(['users.id', 'property_units.id'])
             .distinct(['users.id'])
-            ,
+          ,
           knex("users")
             .leftJoin(
               "application_user_roles",
@@ -235,7 +235,7 @@ const customerController = {
                 }
               }
             })
-            .groupBy(['users.id','property_units.id'])
+            .groupBy(['users.id', 'property_units.id'])
             .distinct(['users.id'])
             .offset(offset)
             .limit(per_page)
@@ -274,7 +274,7 @@ const customerController = {
               "application_user_roles.roleId": 4,
               "users.orgId": req.orgId
             })
-            .groupBy(['users.id','property_units.id'])
+            .groupBy(['users.id', 'property_units.id'])
             .distinct(['users.id'])
             .whereIn('property_units.projectId', resourceProject)
             .andWhere(qb => {
@@ -325,7 +325,7 @@ const customerController = {
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
 
-                if (name) { 
+                if (name) {
                   qb.where('users.name', 'iLIKE', `%${name}%`)
                   qb.orWhere('users.email', 'iLIKE', `%${name}%`)
                   qb.orWhere('users.mobileNo', 'iLIKE', `%${name}%`)
@@ -335,7 +335,7 @@ const customerController = {
                 }
               }
             })
-            .groupBy(['users.id','property_units.id'])
+            .groupBy(['users.id', 'property_units.id'])
             .distinct(['users.id'])
             .offset(offset)
             .limit(per_page)
@@ -350,24 +350,24 @@ const customerController = {
       pagination.last_page = Math.ceil(count / per_page);
       pagination.current_page = page;
       pagination.from = offset;
-//      pagination.data = rows;
+      //      pagination.data = rows;
 
 
 
       let Parallel = require('async-parallel');
-      pagination.data = await Parallel.map(rows, async pd=>{
+      pagination.data = await Parallel.map(rows, async pd => {
 
-        let houseData = await knex.from('user_house_allocation').where({userId:pd.userId}).first();
+        let houseData = await knex.from('user_house_allocation').where({ userId: pd.userId }).first();
 
-        if(houseData){
+        if (houseData) {
           return {
             ...pd,
-            houseId :houseData.houseId
+            houseId: houseData.houseId
           }
         } else {
           return {
             ...pd,
-            houseId :""
+            houseId: ""
           }
         }
       })
@@ -771,6 +771,7 @@ const customerController = {
     try {
       console.log("Req.orgId: ", req.orgId);
       let resourceProject = req.userProjectResources[0].projects;
+      let name = req.query.name;
 
       [rows] = await Promise.all([
 
@@ -830,6 +831,14 @@ const customerController = {
           .where({
             "application_user_roles.roleId": 4,
             "users.orgId": req.orgId
+          })
+          .where(qb => {
+
+            if (name) {
+              qb.where('users.name', 'iLIKE', `%${name}%`)
+              qb.orWhere('users.email', 'iLIKE', `%${name}%`)
+              qb.orWhere('users.mobileNo', 'iLIKE', `%${name}%`)
+            }
           })
           .whereIn('property_units.projectId', resourceProject)
 
@@ -903,8 +912,8 @@ const customerController = {
             // let deleteFile = fs.unlink(filepath, err => {
             //   console.log("File Deleting Error " + err);
             // });
-            let url = process.env.S3_BUCKET_URL+"/Export/Tenant/" +
-            filename;
+            let url = process.env.S3_BUCKET_URL + "/Export/Tenant/" +
+              filename;
             // let url =
             //   "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Tenant/" +
             //   filename;
@@ -1251,20 +1260,20 @@ const customerController = {
       });
     }
   },
-  getTenantListByMultiplePropertyUnits:async(req,res)=>{
+  getTenantListByMultiplePropertyUnits: async (req, res) => {
     try {
       let propertyUnit = req.body
 
       let orgId = req.orgId
 
       let tenantList = await knex("user_house_allocation")
-      .leftJoin("users", "user_house_allocation.userId", "users.id")
-      .select(["users.name", "users.id"])
-      .whereIn("user_house_allocation.houseId",propertyUnit)
-      .groupBy(['users.name','users.id'])
-      .where("user_house_allocation.orgId",orgId)
+        .leftJoin("users", "user_house_allocation.userId", "users.id")
+        .select(["users.name", "users.id"])
+        .whereIn("user_house_allocation.houseId", propertyUnit)
+        .groupBy(['users.name', 'users.id'])
+        .where("user_house_allocation.orgId", orgId)
 
-      let tenant = _.uniqBy(tenantList , "id")
+      let tenant = _.uniqBy(tenantList, "id")
 
       return res.status(200).json({
         data: {
