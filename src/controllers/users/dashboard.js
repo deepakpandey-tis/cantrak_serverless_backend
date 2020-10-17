@@ -154,11 +154,11 @@ const dashboardController = {
             let img;
 
             announcement = await knex
-                .from("announcement_master")
+                .from("announcement_user_master")
                 .innerJoin(
-                    "announcement_user_master",
-                    "announcement_master.id",
-                    "announcement_user_master.announcementId"
+                    "announcement_master",
+                    "announcement_user_master.announcementId",
+                    "announcement_master.id"
                 )
                 .where({
                     "announcement_master.savedStatus": 2,
@@ -174,7 +174,7 @@ const dashboardController = {
                     "announcement_master.description as details",
                     "announcement_master.createdAt as announcementDate"
                 )
-                .orderBy('announcement_master.id', 'desc')
+                .orderBy('announcement_user_master.id', 'desc')
                 .limit(10);
 
 
