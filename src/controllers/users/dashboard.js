@@ -157,8 +157,8 @@ const dashboardController = {
                 .from("announcement_master")
                 .innerJoin(
                     "announcement_user_master",
-                    "announcement_master.announcementId",
-                    "announcement_user_master.id"
+                    "announcement_master.id",
+                    "announcement_user_master.announcementId"
                 )
                 .where({
                     "announcement_master.savedStatus": 2,
