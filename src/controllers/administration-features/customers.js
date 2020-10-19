@@ -886,7 +886,7 @@ const customerController = {
             BUILDING_PHASE_CODE:"",
             FLOOR_ZONE_CODE:"",
             UNIT_NUMBER: "",
-            ALLOW_LOGIN_SERVICEMIND: 1,
+            ALLOW_LOGIN_SERVICEMIND: "Y",
           }
         ]);
       }
@@ -1134,7 +1134,7 @@ const customerController = {
                 let emailVerified = false;
                 let isActive = false;
 
-                if (tenantData.P && tenantData.P == 1) {
+                if (tenantData.P && tenantData.P == "Y" || tenantData.P == "y") {
 
                   emailVerified = true;
                   isActive = true;

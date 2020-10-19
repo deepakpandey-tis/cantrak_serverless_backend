@@ -106,7 +106,12 @@ router.post('/toggle-status',
   resourceAccessMiddleware.isPropertySetupAccessible,
   propertyUnitController.toggleStatus);
 
-router.post('/get-property-unit-by-multiple-floor',authMiddleware.isAuthenticated,propertyUnitController.getPropertyUnitsByMultipleFloor)
+router.post('/get-property-unit-by-multiple-floor', authMiddleware.isAuthenticated, propertyUnitController.getPropertyUnitsByMultipleFloor);
+
+/*GET UNIT & COMMON AREA BY FLOOR ID */
+router.post('/get-unit-common-area-by-floor',
+  authMiddleware.isAuthenticated,
+  propertyUnitController.getUnitCommonByFloor)
 
 module.exports = router
 

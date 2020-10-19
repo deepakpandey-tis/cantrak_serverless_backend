@@ -4625,7 +4625,7 @@ const partsController = {
                         ...st,
                         openingBalance: openingBalance2,
                         in: i,
-                        out: o,
+                        out:Math.abs(o),
                         balance: balance,
                         avgCost: (avgCost).toFixed(2)
                     }
