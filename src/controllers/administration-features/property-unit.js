@@ -339,7 +339,7 @@ const propertyUnitController = {
   getPropertyUnitList: async (req, res) => {
     try {
 
-      
+
       let resourceProject = req.userProjectResources[0].projects;
 
       let sortPayload = req.body;
@@ -580,7 +580,7 @@ const propertyUnitController = {
               "property_unit_type_master.propertyUnitTypeCode as PROPERTY_UNIT_TYPE_CODE",
 
             ])
-            .where({ "property_units.orgId": orgId ,type:1})
+            .where({ "property_units.orgId": orgId, type: 1 })
             .where({ "floor_and_zones.isActive": true })
         ]);
       } else {
@@ -628,7 +628,7 @@ const propertyUnitController = {
             .where({
               "property_units.companyId": companyId,
               "property_units.orgId": orgId,
-              type:1
+              type: 1
             })
             .where({ "floor_and_zones.isActive": true })
         ]);
@@ -663,7 +663,7 @@ const propertyUnitController = {
             "ACTUAL_SALE_AREA": "",
             "HOUSE_ID": "",
             "PRODUCT_CODE": "",
-            "PROPERTY_UNIT_TYPE_CODE":"",
+            "PROPERTY_UNIT_TYPE_CODE": "",
           }
         ]);
       }
@@ -688,8 +688,8 @@ const propertyUnitController = {
 
           } else {
             console.log("File uploaded Successfully");
-            let url = process.env.S3_BUCKET_URL+"/Export/PropertyUnit/" +
-            filename;
+            let url = process.env.S3_BUCKET_URL + "/Export/PropertyUnit/" +
+              filename;
             //let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/PropertyUnit/" + filename;
 
             return res.status(200).json({
@@ -775,7 +775,7 @@ const propertyUnitController = {
           "property_unit_type_master.descriptionEng as propertyUnitTypeDescription",
 
         ])
-        .where({ "property_units.id": id});
+        .where({ "property_units.id": id });
 
       return res.status(200).json({
         data: {
@@ -798,10 +798,10 @@ const propertyUnitController = {
     try {
       let orgId = req.orgId;
 
-      const { floorZoneId,type } = req.body;
+      const { floorZoneId, type } = req.body;
       const unit = await knex("property_units")
         .select("*")
-        .where({ floorZoneId, orgId: orgId, isActive: true,type:type });
+        .where({ floorZoneId, orgId: orgId, isActive: true, type: type });
       return res.status(200).json({
         data: {
           unit
@@ -827,7 +827,7 @@ const propertyUnitController = {
       let floorId = req.query.floorId;
       let result = await knex("property_units")
         .select(["id", "unitNumber", "houseId"])
-        .where({ floorZoneId: floorId, orgId: orgId,type:1 });
+        .where({ floorZoneId: floorId, orgId: orgId, type: 1 });
 
       return res.status(200).json({
         data: {
@@ -841,7 +841,7 @@ const propertyUnitController = {
       });
     }
   },
-  
+
   checkHouseId: async (req, res) => {
     try {
       const id = req.body.id;
@@ -953,7 +953,7 @@ const propertyUnitController = {
                 continue;
               }
 
-              
+
 
               // Query from different tables and get data
               let companyId = null;
@@ -1013,7 +1013,7 @@ const propertyUnitController = {
                   propertyTypeCode: propertyUnitData.E.toUpperCase(),
                   orgId: req.orgId
                 });
-                
+
 
               // console.log({ buildingPhaseIdResult, floorZoneIdResult });
 
@@ -1030,7 +1030,7 @@ const propertyUnitController = {
                   .select("id")
                   .where({
                     propertyUnitTypeCode: propertyUnitData.M.toUpperCase(),
-                    isActive:true,
+                    isActive: true,
                     orgId: req.orgId
                   }).first();
 
@@ -1043,7 +1043,7 @@ const propertyUnitController = {
                   fail++;
                   let values = _.values(propertyUnitData)
                   values.unshift('Property Unit Type does not exists or Inactive')
-  
+
                   //errors.push(header);
                   errors.push(values);
                   continue;
@@ -1112,7 +1112,7 @@ const propertyUnitController = {
               }
 
 
-             
+
 
 
 
@@ -1145,7 +1145,7 @@ const propertyUnitController = {
                   createdBy: req.me.id,
                   createdAt: new Date().getTime(),
                   updatedAt: new Date().getTime(),
-                  propertyUnitType:unitTypeId,
+                  propertyUnitType: unitTypeId,
                 };
 
                 resultData = await knex
@@ -1247,16 +1247,16 @@ const propertyUnitController = {
       });
     }
   },
-  getPropertyUnitsByMultipleFloor:async(req,res)=>{
+  getPropertyUnitsByMultipleFloor: async (req, res) => {
     try {
       let floorZoneId = req.body
       let orgId = req.orgId
 
       let propertyUnit = await knex("property_units")
-      .where({"property_units.isActive":true,"property_units.orgId":orgId})
-      .whereIn("property_units.floorZoneId",floorZoneId)
-      .select("*")
-      .orderBy("property_units.description","asc")
+        .where({ "property_units.isActive": true, "property_units.orgId": orgId })
+        .whereIn("property_units.floorZoneId", floorZoneId)
+        .select("*")
+        .orderBy("property_units.description", "asc")
 
       return res.status(200).json({
         data: {
@@ -1271,9 +1271,38 @@ const propertyUnitController = {
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
-      
+
     }
   }
+
+  ,
+  /*GET UNIT & COMMON AREA BY FLOOR ID */
+  getUnitCommonByFloor: async (req, res) => {
+    try {
+      let orgId = req.orgId;
+
+      const { floorZoneId, type } = req.body;
+      const unit = await knex("property_units")
+        .select("*")
+        .whereIn('property_units.type', [1, 2])
+        .where({ floorZoneId, orgId: orgId, isActive: true });
+      return res.status(200).json({
+        data: {
+          unit
+        },
+        message: "Unit list"
+      });
+    } catch (err) {
+      console.log(
+        "[controllers][generalsetup][viewpropertyUnit] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
 };
 
 module.exports = propertyUnitController;
