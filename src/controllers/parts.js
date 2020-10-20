@@ -2622,6 +2622,25 @@ const partsController = {
                                 min = partData.H;
                             }
 
+
+                            let avgUnitCost = 0;
+
+                            if (partData.G) {
+
+                                avgUnitCost = partData.G;
+
+                                if (isNaN(partData.G)) {
+                                    fail++;
+                                    let values = _.values(partData)
+                                    values.unshift('Avg. Unit cost is not a number.')
+                                    errors.push(values);
+                                    continue;
+                                }
+
+                            }
+
+
+
                             let insertData = {
                                 orgId: req.orgId,
                                 partCode: partData.A,
@@ -2632,18 +2651,13 @@ const partsController = {
                                 createdAt: currentTime,
                                 updatedAt: currentTime,
                                 minimumQuantity: min,
+                                avgUnitPrice: avgUnitCost
                             }
 
                             resultData = await knex.insert(insertData).returning(['*']).into('part_master');
 
 
-                            if (isNaN(partData.G)) {
-                                fail++;
-                                let values = _.values(partData)
-                                values.unshift('Unit cost is not a number.')
-                                errors.push(values);
-                                continue;
-                            }
+
 
                             if (isNaN(partData.F)) {
                                 fail++;
@@ -2653,7 +2667,7 @@ const partsController = {
                                 continue;
                             }
 
-                            let quantityData = { partId: resultData[0].id, unitCost: partData.G, quantity: partData.F, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId };
+                            let quantityData = { partId: resultData[0].id, unitCost: avgUnitCost, quantity: partData.F, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId };
                             let partQuantityResult = await knex.insert(quantityData).returning(['*']).into('part_ledger');
 
                             if (resultData && resultData.length) {
@@ -2796,7 +2810,7 @@ const partsController = {
                     PART_CATEGORY_CODE: "",
                     COMPANY_ID: "",
                     quantity: "",
-                    unit_cost: "",
+                    AVG_UNIT_COST: "",
                     MINIMUM_QUANTITY: "",
                 }]);
             }
@@ -4625,7 +4639,7 @@ const partsController = {
                         ...st,
                         openingBalance: openingBalance2,
                         in: i,
-                        out:Math.abs(o),
+                        out: Math.abs(o),
                         balance: balance,
                         avgCost: (avgCost).toFixed(2)
                     }
