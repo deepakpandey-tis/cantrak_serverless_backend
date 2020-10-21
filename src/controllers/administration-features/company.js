@@ -1072,7 +1072,7 @@ const companyController = {
           .where({ 'companies.isActive': true, 'companies.orgId': req.orgId, 'property_units.type': 2 })
           .whereIn('companies.id', companyArr1)
           .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
-          .orderBy('companies.companyName', 'asc')
+          .orderBy('companies.companyId', 'asc')
 
 
 
@@ -1101,7 +1101,7 @@ const companyController = {
           .where({ 'companies.isActive': true, 'companies.orgId': req.orgId })
           .whereIn('companies.id', companyArr1)
           .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
-          .orderBy('companies.companyName', 'asc')
+          .orderBy('companies.companyId', 'asc')
       } else {
 
         //         result = await knex.raw(`
@@ -1126,7 +1126,8 @@ const companyController = {
           .where({ 'companies.isActive': true, 'companies.orgId': req.orgId, 'property_units.type': 1 })
           .whereIn('companies.id', companyArr1)
           .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
-          .orderBy('companies.companyName', 'asc')
+          .orderBy('companies.companyId', 'asc')
+
       }
 
 
