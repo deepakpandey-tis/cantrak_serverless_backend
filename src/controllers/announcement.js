@@ -103,7 +103,12 @@ const announcementController = {
         };
 
         let sender = await knex.from("users").where({ id: req.me.id }).first();
-
+        
+        delUsers = await knex('announcement_user_master')
+        .where({
+          announcementId:newAnnouncementId
+        })
+        .del()
         if (userId && userId.length > 0) {
           for (let id of userId) {
             let d = await knex("announcement_user_master")
