@@ -1986,7 +1986,7 @@ const taskGroupController = {
                 .where({ "task_group_templates.id": payload.templateId, "task_group_templates.orgId": req.orgId })
                 //.where({ "task_group_templates.id": payload.templateId, 'assigned_service_team.entityType': 'task_group_templates', 'assigned_service_additional_users.entityType': 'task_group_templates', "task_group_templates.orgId": req.orgId })
                 .orderBy('template_task.taskSerialNumber', 'asc')
-                .offset(offset).limit(per_page)
+                // .offset(offset).limit(per_page)
             ])
 
             let count = total[0].count;
