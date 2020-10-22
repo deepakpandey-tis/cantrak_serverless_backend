@@ -396,12 +396,14 @@ const taskGroupController = {
                 assetCategoryId: Joi.string().required()
             });
 
+
             const result = Joi.validate(payload, schema);
             if (result && result.hasOwnProperty("error") && result.error) {
                 return res.status(400).json({
                     errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
                 });
             }
+            
             let templateResult = await knex('task_group_templates').returning('*').where({ "assetCategoryId": payload.assetCategoryId, orgId: req.orgId, isActive: true });
 
             return res.status(200).json({
