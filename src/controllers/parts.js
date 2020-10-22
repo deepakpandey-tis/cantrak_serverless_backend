@@ -2150,7 +2150,11 @@ const partsController = {
 
             // This 687 ,688 needs to be removed because its irrelevant but its here because we dont know where this is being used
             let unitCost = partLedgerResult.length ? partLedgerResult[0].unitCost : '0'
-            let quantity = partLedgerResult.length ? partLedgerResult[0].quantity : '0'
+
+            let partLedger = await knex('part_ledger').sum('quantity as quantity').where({ partId: id, orgId: req.orgId }).first();
+
+            // let quantity = partLedgerResult.length ? partLedgerResult[0].quantity : '0'
+            let quantity = partLedger.quantity ? partLedger.quantity.toFixed(3) : '0.00';
 
 
             let additionalAttribute = await knex.from('part_attributes')
@@ -2166,7 +2170,7 @@ const partsController = {
 
             return res.status(200).json({
                 message: "Part Details Successfully!",
-                partDetail: { ...partResult[0], partLedgerResult, additionalAttributes: additionalAttribute, images, files, unitCost, quantity }
+                partDetail: { ...partResult[0], partLedgerResult, additionalAttributes: additionalAttribute, images, files, unitCost, quantity, partLedger }
             })
 
         } catch (err) {
@@ -2618,6 +2622,25 @@ const partsController = {
                                 min = partData.H;
                             }
 
+
+                            let avgUnitCost = 0;
+
+                            if (partData.G) {
+
+                                avgUnitCost = partData.G;
+
+                                if (isNaN(partData.G)) {
+                                    fail++;
+                                    let values = _.values(partData)
+                                    values.unshift('Avg. Unit cost is not a number.')
+                                    errors.push(values);
+                                    continue;
+                                }
+
+                            }
+
+
+
                             let insertData = {
                                 orgId: req.orgId,
                                 partCode: partData.A,
@@ -2628,18 +2651,13 @@ const partsController = {
                                 createdAt: currentTime,
                                 updatedAt: currentTime,
                                 minimumQuantity: min,
+                                avgUnitPrice: avgUnitCost
                             }
 
                             resultData = await knex.insert(insertData).returning(['*']).into('part_master');
 
 
-                            if (isNaN(partData.G)) {
-                                fail++;
-                                let values = _.values(partData)
-                                values.unshift('Unit cost is not a number.')
-                                errors.push(values);
-                                continue;
-                            }
+
 
                             if (isNaN(partData.F)) {
                                 fail++;
@@ -2649,7 +2667,7 @@ const partsController = {
                                 continue;
                             }
 
-                            let quantityData = { partId: resultData[0].id, unitCost: partData.G, quantity: partData.F, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId };
+                            let quantityData = { partId: resultData[0].id, unitCost: avgUnitCost, quantity: partData.F, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId };
                             let partQuantityResult = await knex.insert(quantityData).returning(['*']).into('part_ledger');
 
                             if (resultData && resultData.length) {
@@ -2792,7 +2810,7 @@ const partsController = {
                     PART_CATEGORY_CODE: "",
                     COMPANY_ID: "",
                     quantity: "",
-                    unit_cost: "",
+                    AVG_UNIT_COST: "",
                     MINIMUM_QUANTITY: "",
                 }]);
             }
@@ -4331,33 +4349,33 @@ const partsController = {
                             "part_master.createdAt",
                             "part_master.id as partId"
                         ])
-                        .where(qb=>{
+                        .where(qb => {
 
                             if (payload.partId) {
 
                                 qb.where('part_ledger.partId', payload.partId)
                             }
-    
+
                             if (payload.partCode) {
-    
+
                                 qb.where('part_master.partCode', 'iLIKE', `%${payload.partCode}%`)
                             }
-    
+
                             if (payload.partName) {
-    
+
                                 qb.where('part_master.partName', 'iLIKE', `%${payload.partName}%`)
                             }
-    
+
                             if (payload.partCategory) {
-    
+
                                 qb.where('part_master.partCategory', payload.partCategory)
                             }
-    
+
                             if (payload.adjustType) {
-    
+
                                 qb.where('part_ledger.adjustType', payload.adjustType)
                             }
-    
+
                         })
                         .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
                         .whereIn('part_master.companyId', companyIds)
@@ -4375,72 +4393,8 @@ const partsController = {
                         ])
                         .distinct('part_master.id')
 
-
-                    // partMasterResult    =   await knex.from('part_master')
-                    // .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
-                    // .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
-                    // .leftJoin('buildings_and_phases', 'part_ledger.building', 'buildings_and_phases.id')
-                    // .leftJoin('projects', 'buildings_and_phases.projectId', 'projects.id')
-                    // .leftJoin('floor_and_zones', 'part_ledger.floor', 'floor_and_zones.id')
-                    // .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
-                    // .select([
-                    //     'part_ledger.*',
-                    //     'part_master.partName',
-                    //     'part_master.partCode',
-                    //     'part_master.unitOfMeasure',
-                    //     'part_category_master.categoryName as partCategory',
-                    //     'buildings_and_phases.buildingPhaseCode',
-                    //     'buildings_and_phases.description as buildingDescription',
-                    //     'projects.project as projectCode',
-                    //     'projects.projectName',
-                    //     'floor_and_zones.floorZoneCode',
-                    //     'floor_and_zones.description as floorDescripton',
-                    //     'adjust_type.adjustType as adjustTypeName',
-                    //     'part_master.minimumQuantity',
-                    //     'part_master.avgUnitPrice as avgUnitPriceMaster'
-
-                    // ])
-                    // .where(qb => {
-                    //     if (payload.partId) {
-
-                    //         qb.where('part_master.id', payload.partId)
-                    //     }
-
-                    //     if (payload.partCode) {
-
-                    //         qb.where('part_master.partCode', 'iLIKE', `%${payload.partCode}%`)
-                    //     }
-
-                    //     if (payload.partName) {
-
-                    //         qb.where('part_master.partName', 'iLIKE', `%${payload.partName}%`)
-                    //     }
-
-                    //     if (payload.partCategory) {
-
-                    //         qb.where('part_master.partCategory', payload.partCategory)
-                    //     }
-
-                    //     if (payload.adjustType) {
-
-                    //         qb.where('part_ledger.adjustType', payload.adjustType)
-                    //     }
-
-                    // })
-                    // .whereIn('part_master.companyId', companyIds)
-                    // .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
-                    // .orderBy('part_master.partCode', 'asc', 'part_master.id', 'asc');
-
                     masterResult = _.uniqBy(partMasterResult, "partId");
                     ids = _.uniqBy(stockResult.map(v => v.partId));
-
-                    // masterResult = masterResult.filter(function( obj,i ) {
-
-                    //     return obj.id!= ids[i];
-                    // });
-
-                    // masterResult = _.omit(masterResult,ids);
-
                     stockResult = stockResult.concat(masterResult);
 
                 }
@@ -4685,7 +4639,7 @@ const partsController = {
                         ...st,
                         openingBalance: openingBalance2,
                         in: i,
-                        out: o,
+                        out: Math.abs(o),
                         balance: balance,
                         avgCost: (avgCost).toFixed(2)
                     }
@@ -4827,7 +4781,7 @@ const partsController = {
                         toDate,
                         fromTime,
                         toTime,
-                       // dateArr,
+                        // dateArr,
                         fromNewDate,
                         toNewDate,
                         partMasterResult: masterResult,
