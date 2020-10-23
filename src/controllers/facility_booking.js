@@ -2322,7 +2322,7 @@ const facilityBookingController = {
 
             let payload = _.omit(payLoad, [
                 "tenantId",
-                "date",
+                "startDate",
                 "facilityName"
             ])
 
@@ -2384,10 +2384,11 @@ const facilityBookingController = {
                 });
 
                 let ALLOWED_CHANNELS = ["IN_APP", "LINE_NOTIFY"]
+                // console.log("date in body",req.body.date)
                 let dataNos = {
                     payload: {
-                        date: moment(req.body.date, "x").format("YYYY-MM-DD"),
-                        time: moment(req.body.date, "x").format("hh:mm A"),
+                        date: moment(req.body.startDate, "x").format("YYYY-MM-DD"),
+                        time: moment(req.body.startDate, "x").format("hh:mm A"),
                         facility: req.body.facilityName
                     },
                 };

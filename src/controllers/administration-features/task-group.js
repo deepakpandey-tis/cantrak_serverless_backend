@@ -396,12 +396,14 @@ const taskGroupController = {
                 assetCategoryId: Joi.string().required()
             });
 
+
             const result = Joi.validate(payload, schema);
             if (result && result.hasOwnProperty("error") && result.error) {
                 return res.status(400).json({
                     errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
                 });
             }
+            
             let templateResult = await knex('task_group_templates').returning('*').where({ "assetCategoryId": payload.assetCategoryId, orgId: req.orgId, isActive: true });
 
             return res.status(200).json({
@@ -1986,7 +1988,7 @@ const taskGroupController = {
                 .where({ "task_group_templates.id": payload.templateId, "task_group_templates.orgId": req.orgId })
                 //.where({ "task_group_templates.id": payload.templateId, 'assigned_service_team.entityType': 'task_group_templates', 'assigned_service_additional_users.entityType': 'task_group_templates', "task_group_templates.orgId": req.orgId })
                 .orderBy('template_task.taskSerialNumber', 'asc')
-                .offset(offset).limit(per_page)
+                // .offset(offset).limit(per_page)
             ])
 
             let count = total[0].count;
