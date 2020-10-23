@@ -177,7 +177,7 @@ const FacilityTypeController = {
           })
           .whereNot({ id: statusPayload.id });
         console.log(
-          "[controllers][status][updateStatus]: Status Code",
+          "[controllers][status][updateStatus]: Facility Code",
           existStatusCode
         );
         if (existStatusCode && existStatusCode.length) {
@@ -185,7 +185,7 @@ const FacilityTypeController = {
             errors: [
               {
                 code: "STORAGE_EXIST_ERROR",
-                message: "Storage Code already exist !",
+                message: "Facility Code already exist !",
               },
             ],
           });
@@ -345,6 +345,7 @@ const FacilityTypeController = {
       let facilityTypeDetail = null;
       let orgId = req.orgId;
       let images ;
+      let icon;
 
       await knex.transaction(async(trx)=>{
         let payload = req.body
@@ -359,7 +360,7 @@ const FacilityTypeController = {
             ],
           });
         }
-        let [facilityTypeResult,facilityTypeImages] = await Promise.all([
+        let [facilityTypeResult,facilityTypeImages,facilityTypeIcon] = await Promise.all([
         knex
         .from("facility_type_master")
         .select("facility_type_master.*")
@@ -367,18 +368,22 @@ const FacilityTypeController = {
         knex
         .from("images")
         .where({ entityId: payload.id, entityType: "facility_type_image" }),
+        knex
+        .from("images")
+        .where({ entityId: payload.id, entityType: "facility_type_icon" })
 
       ])
 
         facilityTypeDetail = _.omit(facilityTypeResult[0],["createdAt", "updatedAt"]);
         images = facilityTypeImages
+        icon = facilityTypeIcon
         trx.commit;
       
       })
       return res.status(200).json({
         data: {
           facilityTypeDetail: facilityTypeDetail,
-          images
+          images,icon
         },
         message: "Facility Type Details !!",
       });
