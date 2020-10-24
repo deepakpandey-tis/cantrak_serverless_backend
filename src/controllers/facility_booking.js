@@ -2388,7 +2388,7 @@ const facilityBookingController = {
                 let dataNos = {
                     payload: {
                         date: moment(req.body.startDate, "x").format("YYYY-MM-DD"),
-                        time: moment(req.body.startDate, "x").format("hh:mm A"),
+                        time: moment(Number(resultData[0].bookingStartDateTime), "x").format("hh:mm A"),
                         facility: req.body.facilityName
                     },
                 };
