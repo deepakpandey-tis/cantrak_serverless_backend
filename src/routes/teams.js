@@ -52,9 +52,12 @@ router.post('/get-team-by-entity', authMiddleware.isAuthenticated, teamsControll
 router.post('/disable-login', authMiddleware.isAuthenticated, teamsController.disableLogin);
 router.post('/get-assigned-teams-and-users-others', authMiddleware.isAuthenticated, teamsController.getAssignedTeamAndUsersForOther);
 
-router.post('/get-teams-by-multiple-project',authMiddleware.isAuthenticated,teamsController.getAssignedTeamByMultipleProjects)
+router.post('/get-teams-by-multiple-project',authMiddleware.isAuthenticated,teamsController.getAssignedTeamByMultipleProjects);
 
-router.post('/get-team-user-by-multiple-teamId',authMiddleware.isAuthenticated,teamsController.getTeamUsersByMultipleTeamId)
+router.post('/get-team-user-by-multiple-teamId',authMiddleware.isAuthenticated,teamsController.getTeamUsersByMultipleTeamId);
+
+router.post('/get-additional-users-by-mainId', authMiddleware.isAuthenticated, teamsController.getAdditionalUsersByMainId)
+
 
 
 module.exports = router;

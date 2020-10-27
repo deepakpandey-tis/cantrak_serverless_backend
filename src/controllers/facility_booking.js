@@ -2384,11 +2384,11 @@ const facilityBookingController = {
                 });
 
                 let ALLOWED_CHANNELS = ["IN_APP", "LINE_NOTIFY"]
-                // console.log("date in body",req.body.date)
+                console.log("date in body",req.body.startDate)
                 let dataNos = {
                     payload: {
                         date: moment(req.body.startDate, "x").format("YYYY-MM-DD"),
-                        time: moment(Number(resultData[0].bookingStartDateTime), "x").format("hh:mm A"),
+                        time: moment(req.body.startDate, "x").utcOffset("+05:30").format("hh:mm:A"),
                         facility: req.body.facilityName
                     },
                 };
