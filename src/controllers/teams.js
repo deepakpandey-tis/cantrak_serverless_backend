@@ -1370,6 +1370,42 @@ const teamsController = {
         }
     },
 
+    /*GET ADDITIONAL USER BY MAIN ID  */
+    getAdditionalUsersByMainId: async (req, res) => {
+        try {
+            let vendorUsers = [];
+            let teamId = req.body.teamId;
+            let mainId = req.body.mainId;
+            let mainUsers = await knex('team_users').innerJoin('users', 'team_users.userId', 'users.id').select(['users.id as id', 'users.name as name'])
+                .where({ 'team_users.teamId': teamId, 'users.orgId': req.orgId })
+                .whereNot({ 'team_users.userId': mainId });
+            vendorUsers = await knex('assigned_vendors')
+                .innerJoin('users', 'assigned_vendors.userId', 'users.id')
+                .select([
+                    'users.id as id',
+                    'users.name as name'
+                ])
+                .where({ "assigned_vendors.entityId": teamId, "assigned_vendors.entityType": 'teams', 'assigned_vendors.orgId': req.orgId })
+                .whereNot({ 'assigned_vendors.userId': mainId });
+
+            mainUsers = mainUsers.concat(vendorUsers);
+
+            res.status(200).json({
+                data: {
+                    additionalUsers: mainUsers,
+                }
+            });
+
+        } catch (err) {
+            console.log('[controllers][teams][getAssignedTeams] : Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ]
+            });
+        }
+    },
+
 }
 
 module.exports = teamsController;
