@@ -2054,7 +2054,7 @@ const taskGroupController = {
                     'assigned_service_additional_users.entityType': 'task_group_templates',
                     'assigned_service_additional_users.orgId': req.orgId
                 })
-            userResult = _.uniqBy(additionalResult,'additional_user');
+            userResult = _.uniqBy(additionalResult, 'additional_user');
             /*GET ADDITIONAL USER CLOSE */
 
 
@@ -2925,8 +2925,15 @@ const taskGroupController = {
             }
 
 
-            let updatedTeamResult = await knex('assigned_service_team').update({ teamId: req.body.teamId ? req.body.teamId : null, userId: req.body.mainUserId ? req.body.mainUserId : null }).returning('*')
-            updatedTeam = updatedTeamResult[0]
+            // let updatedTeamResult = await knex('assigned_service_team').update({ teamId: req.body.teamId ? req.body.teamId : null, userId: req.body.mainUserId ? req.body.mainUserId : null }).returning('*')
+            // updatedTeam = updatedTeamResult[0]
+
+
+            if (req.body.teamId && req.body.mainUserId) {
+                let updatedTeamResult = await knex('assigned_service_team').update({ teamId: req.body.teamId, userId: req.body.mainUserId }).where({ entityId: id, entityType: 'task_group_templates', orgId: req.orgId }).returning('*')
+                updatedTeam = updatedTeamResult[0]
+            }
+
 
             return res.status(200).json({
                 data: {
