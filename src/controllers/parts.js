@@ -22,7 +22,7 @@ const partsController = {
                     if (pro.projects.length) {
 
                         for (let projectId of pro.projects) {
-                            console.log("project=========", pro.projects, "===========================================")
+                            console.log("project=========", pro.projects, "================")
 
                             projectIds.push(projectId);
                         }
