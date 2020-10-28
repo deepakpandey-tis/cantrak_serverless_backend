@@ -105,7 +105,7 @@ router.post(
 router.post('/get-asset-list-by-houseId', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, assetController.getAssetListByHouseId);
 
 
-router.get(
+router.post(
   "/export-asset-data",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
