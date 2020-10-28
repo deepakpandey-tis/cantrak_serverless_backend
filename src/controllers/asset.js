@@ -2551,7 +2551,7 @@ const assetController = {
             } = req.body;
 
 
-            const assetResult = await knex("asset_master")
+            let assetResult = await knex("asset_master")
                 .leftJoin(
                     "asset_category_master",
                     "asset_master.assetCategoryId",
@@ -2594,7 +2594,10 @@ const assetController = {
                     "asset_master.assignedUsers as ASSIGN_USER",
                     "teams.teamCode as ASSIGN_TEAM",
                     "asset_master.assignedVendors as ASSIGN_VENDOR",
-                    "asset_master.additionalInformation as ASSIGN_INFORMATION"
+                    "asset_master.additionalInformation as ASSIGN_INFORMATION",
+                    "asset_master.id as ID"
+
+                    //knex.raw(`public.f_get_companycode(am."orgId" , am."companyId" ) as "company" ,public.f_get_proj_name(am."companyId" , am."projectId" ) as "project" ,public.f_get_building_name(al."companyId", al."buildingId") as "building" ,public.f_get_floor_name(al."companyId" , al."floorId" ) as "floor" ,public.f_get_unitname(al."orgId", al."unitId" ) as "Unit_Location" (asset_master am,asset_location al)`)
                 ])
                 .where({ 'asset_master.orgId': req.orgId })
                 .where(qb => {
@@ -2643,9 +2646,59 @@ const assetController = {
                         qb.where('asset_master.projectId', project)
                     }
                 })
-                .whereIn('asset_master.companyId', companyIds);
+                .whereIn('asset_master.companyId', companyIds)
+                .orderBy("asset_master.id", "desc");
 
-            let assets = assetResult
+
+
+
+            const Parallel = require('async-parallel');
+
+            assetResult = await Parallel.map(assetResult, async pd => {
+
+                let houseResult = await knex.from('asset_location')
+                    .leftJoin('property_units', 'asset_location.unitId', 'property_units.id')
+                    .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
+                    .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+                    .leftJoin('projects', 'property_units.projectId', 'projects.id')
+                    .leftJoin('companies', 'property_units.companyId', 'companies.id')
+                    .select([
+                        'property_units.unitNumber',
+                        'property_units.houseId',
+                        'property_units.description',
+                        'companies.companyId as COMPANY_CODE',
+                        'projects.project as PROJECT_CODE',
+                        'buildings_and_phases.buildingPhaseCode as BUILDING_CODE',
+                        'floor_and_zones.floorZoneCode as FLOOR_CODE',
+                        'property_units.unitNumber as UNIT_NUMBER'
+                    ])
+                    .where({ "asset_location.assetId": pd.ID }).first().orderBy('asset_location.id', 'desc')
+
+                if (houseResult) {
+                    return {
+                        ..._.omit(pd, "ID"),
+                        COMPANY_CODE: houseResult.COMPANY_CODE,
+                        PROJECT_CODE: houseResult.PROJECT_CODE,
+                        BUILDING_CODE: houseResult.BUILDING_CODE,
+                        FLOOR_CODE: houseResult.FLOOR_CODE,
+                        UNIT_NUMBER: houseResult.UNIT_NUMBER,
+                    }
+                } else {
+                    return {
+                        ..._.omit(pd, "ID"),
+                        COMPANY_CODE: "",
+                        PROJECT_CODE: "",
+                        BUILDING_CODE: "",
+                        FLOOR_CODE: "",
+                        UNIT_NUMBER: "",
+                    }
+                }
+
+            })
+
+
+
+            let assets = assetResult;
             let tempraryDirectory = null;
             let bucketName = null;
             if (process.env.IS_OFFLINE) {
@@ -2681,7 +2734,12 @@ const assetController = {
                     ASSIGN_USER: "",
                     ASSIGN_TEAM: "",
                     ASSIGN_VENDOR: "",
-                    ASSIGN_INFORMATION: ""
+                    ASSIGN_INFORMATION: "",
+                    COMPANY_CODE: "",
+                    PROJECT_CODE: "",
+                    BUILDING_CODE: "",
+                    FLOOR_CODE: "",
+                    UNIT_NUMBER: ""
                 }]);
             }
 
@@ -2724,7 +2782,8 @@ const assetController = {
                                 assets: assets
                             },
                             message: "Asset Data Export Successfully!",
-                            url: url
+                            url: url,
+                            assetResult
                         });
                     }
                 });
