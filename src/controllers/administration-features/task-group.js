@@ -2929,9 +2929,14 @@ const taskGroupController = {
 
 
             if (req.body.teamId && req.body.mainUserId) {
-                let updatedTeamResult = await knex('assigned_service_team').update({ teamId: req.body.teamId, userId: req.body.mainUserId }).where({ entityId: id, entityType: 'task_group_templates', orgId: req.orgId }).returning('*')
+                let updatedTeamResult = await knex('assigned_service_team').update({updatedAt: currentTime, teamId: req.body.teamId, userId: req.body.mainUserId }).where({ entityId: id, entityType: 'task_group_templates', orgId: req.orgId }).returning('*')
+                updatedTeam = updatedTeamResult[0]
+            }else if (req.body.mainUserId) {
+                let updatedTeamResult = await knex('assigned_service_team').update({updatedAt: currentTime, userId: req.body.mainUserId }).where({ entityId: id, entityType: 'task_group_templates', orgId: req.orgId }).returning('*')
                 updatedTeam = updatedTeamResult[0]
             }
+
+            
 
 
             return res.status(200).json({
