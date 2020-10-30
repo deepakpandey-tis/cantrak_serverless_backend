@@ -2128,7 +2128,7 @@ const taskGroupController = {
     getTaskgroupAssetPmDetails: async (req, res) => {
 
         try {
-            
+
             let payload = req.body;
 
             const schema = Joi.object().keys({
@@ -2675,12 +2675,13 @@ const taskGroupController = {
                 .leftJoin('users', 'assigned_service_team.userId', 'users.id')
                 .where({
                     'assigned_service_team.entityId': req.body.id,
-                    'assigned_service_team.entityType': 'task_group_templates'
+                    'assigned_service_team.entityType': 'task_group_templates',
+                    'assigned_service_team.orgId': req.orgId
                 })
                 .select([
                     'teams.teamId as teamId',
                     'assigned_service_team.userId as mainUserId'
-                ])
+                ]);
 
 
             const additionalUsers = await knex('assigned_service_additional_users')
@@ -2691,8 +2692,7 @@ const taskGroupController = {
                     'assigned_service_additional_users.orgId': req.orgId
                 }).select([
                     'users.id as id'
-                ])
-
+                ]);
 
 
             return res.status(200).json({
@@ -2716,10 +2716,10 @@ const taskGroupController = {
     },
     updateTaskGroupDetails: async (req, res) => {
         try {
-            let id = req.body.id
+            let id = req.body.id;
             let payload = _.omit(req.body, ['id', 'additionalUsers', 'tasks', 'taskGroupName', 'assetCategoryId', 'mainUserId', 'teamId', 'deletedTasks']);
             let tasks = req.body.tasks;
-            let deletedTasks = req.body.deletedTasks
+            let deletedTasks = req.body.deletedTasks;
             let additionalUsers = req.body.additionalUsers;
             let taskGroupCatId = req.body.assetCategoryId;
             let currentTime = new Date().getTime();
@@ -2781,15 +2781,15 @@ const taskGroupController = {
 
             let updatedTaskGroupTemplate = null
             let resultScheduleData = null
-            let updatedTeam = null
+            let updatedTeam = '';
             let result = await knex('task_group_templates').update({ updatedAt: currentTime, taskGroupName: req.body.taskGroupName, assetCategoryId: req.body.assetCategoryId, orgId: req.orgId }).where({ id }).returning('*')
             updatedTaskGroupTemplate = result[0]
 
             let resultSchedule = await knex('task_group_template_schedule').update({ ...payload, repeatOn: payload.repeatOn }).where({ "taskGroupId": id })
             resultScheduleData = resultSchedule[0]
 
-            let updatedTasks = []
-            let updatedUsers = []
+            let updatedTasks = [];
+            let updatedUsers = [];
             let updatedTaskResult
             for (let task of tasks) {
                 if (task.id) {
@@ -2929,8 +2929,30 @@ const taskGroupController = {
 
 
             if (req.body.teamId && req.body.mainUserId) {
-                let updatedTeamResult = await knex('assigned_service_team').update({ teamId: req.body.teamId, userId: req.body.mainUserId }).where({ entityId: id, entityType: 'task_group_templates', orgId: req.orgId }).returning('*')
-                updatedTeam = updatedTeamResult[0]
+
+                let checkTeamMainUser = await knex('assigned_service_team').where({ entityId: id, entityType: 'task_group_templates', orgId: req.orgId }).returning('*').first();
+
+                if (checkTeamMainUser) {
+
+                    let updatedTeamResult = await knex('assigned_service_team').update({ teamId: req.body.teamId, userId: req.body.mainUserId }).where({ entityId: id, entityType: 'task_group_templates', orgId: req.orgId }).returning('*');
+                    updatedTeam = updatedTeamResult[0];
+
+                } else {
+                    // ASSIGNED TEAM OPEN
+                    let insertAssignedServiceTeamData = {
+                        teamId: req.body.teamId ? req.body.teamId : null,
+                        userId: req.body.mainUserId ? req.body.mainUserId : null,
+                        entityId: id,
+                        entityType: "task_group_templates",
+                        createdAt: currentTime,
+                        updatedAt: currentTime,
+                        orgId: req.orgId
+                    };
+
+                    let assignedServiceTeamResult = await knex('assigned_service_team').insert(insertAssignedServiceTeamData).returning(['*']);
+                    updatedTeam = assignedServiceTeamResult[0];
+                    // ASSIGNED TEAM CLOSE
+                }
             }
 
 
