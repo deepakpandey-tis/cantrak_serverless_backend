@@ -459,13 +459,24 @@ const dashboardController = {
                 .orderBy('contact_info.id', 'desc')
 
 
+
+                let imageResult = await knex
+                .from("images")
+                .select("s3Url", "title", "name")
+                .where({
+                    entityType: "contact_info"
+                })
+                .whereIn("images.entityId", buildingArray)
+
+
             return res.status(200).json({
                 data: {
                     contactData: {
                         phoneData : contactInfo,
                         faxData : faxInfo,
                         emailData : emailInfo,
-                        description : descriptionInfo
+                        description : descriptionInfo,
+                        imageResult
                     }
                 },
                 message: "Contact Information!",
