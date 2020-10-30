@@ -313,13 +313,23 @@ const buildingPhaseController = {
                 });
             }
 
-            let contactInfo = await knex("contact_info")
-            .select('*')
-            .where({buildingId:payload.id,orgId:req.orgId})
+            // let contactInfo = await knex("contact_info")
+            // .select('*')
+            // .where({buildingId:payload.id,orgId:req.orgId})
+
+            let [contactInfo,images] = await Promise.all([
+                knex.from("contact_info")
+                .select('*')
+                .where({"contact_info.buildingId":payload.id,"contact_info.orgId":req.orgId}),
+                knex
+                .from('images')
+                .where({ entityId: payload.id, entityType: "contact_info" })
+            ])
 
             return res.status(200).json({
                 data:{
-                    contactInfo
+                    contactInfo,
+                    images
                 }
             })
         } catch (err) {
