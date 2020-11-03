@@ -81,7 +81,7 @@ const ProjectController = {
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
-          project:payload.project.toUpperCase(),
+          project: payload.project.toUpperCase(),
           createdBy: userId,
           createdAt: currentTime,
           updatedAt: currentTime,
@@ -183,7 +183,7 @@ const ProjectController = {
 
 
         let currentTime = new Date().getTime();
-        let insertData = { ...payload,project:payload.project.toUpperCase(),orgId: orgId, updatedAt: currentTime };
+        let insertData = { ...payload, project: payload.project.toUpperCase(), orgId: orgId, updatedAt: currentTime };
         let insertResult = await knex
           .update(insertData)
           .where({ id: payload.id })
@@ -592,9 +592,9 @@ const ProjectController = {
             console.log("File uploaded Successfully");
             //next(null, filePath);
             let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
-            let url = process.env.S3_BUCKET_URL+"/Export/Project/" +
-            filename;
-           // let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Project/" + filename;
+            let url = process.env.S3_BUCKET_URL + "/Export/Project/" +
+              filename;
+            // let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Project/" + filename;
             return res.status(200).json({
               data: rows,
               message: "Project Data Export Successfully!",
@@ -636,7 +636,7 @@ const ProjectController = {
           "companies.companyId",
           "projects.project as projectId"
         ])
-        .orderBy('projects.projectName','asc')
+        .orderBy('projects.projectName', 'asc')
 
       console.log("rows", rows);
 
@@ -656,24 +656,25 @@ const ProjectController = {
       });
     }
   },
-  getProjectByMultipleCompany:async(req,res) =>{
+  getProjectByMultipleCompany: async (req, res) => {
     try {
-      console.log("conpany id in req",req.body)
-      let companyId = req.body
+      console.log("conpany id in req", req.body);
+      let companyId = [];
+      companyId = req.body;
 
-      const index = companyId.indexOf(0)
-      if(index !== -1){
-          companyId.splice(index,1)
-      }
+      // const index = companyId.indexOf(0);
+      // if(index !== -1){
+      //     companyId.splice(index,1)
+      // }
       let rows = await knex("projects")
-      .where({ "projects.isActive": true })
-      .whereIn("projects.companyId", companyId)
-      .select([
-        "projects.id as id",
-        "projects.projectName",
-        "projects.project as projectId"
-      ])
-      .orderBy('projects.projectName','asc')
+        .where({ "projects.isActive": true })
+        .whereIn("projects.companyId", companyId)
+        .select([
+          "projects.id as id",
+          "projects.projectName",
+          "projects.project as projectId"
+        ])
+        .orderBy('projects.projectName', 'asc')
 
       return res.status(200).json({
         data: {
@@ -700,7 +701,7 @@ const ProjectController = {
           "projects.id as id",
           "projects.projectName",
           "projects.project as projectId",
-        ]).where({ orgId: req.orgId,isActive:true})
+        ]).where({ orgId: req.orgId, isActive: true })
 
       return res.status(200).json({
         data: {
@@ -745,12 +746,12 @@ const ProjectController = {
 
 
       if (data[0].B == "PROJECT_NAME" &&
-          data[0].C == "COMPANY" &&
-          data[0].D == "COMPANY_NAME" &&
-          data[0].E == "PROJECT_LOCATION" &&
-          data[0].F == "PROJECT_LOCATION_ALTERNATE_LANGUAGE" &&
-          data[0].G == "CURRENCY" &&
-          data[0].A == "PROJECT" || data[0].A == "Ã¯Â»Â¿PROJECT"
+        data[0].C == "COMPANY" &&
+        data[0].D == "COMPANY_NAME" &&
+        data[0].E == "PROJECT_LOCATION" &&
+        data[0].F == "PROJECT_LOCATION_ALTERNATE_LANGUAGE" &&
+        data[0].G == "CURRENCY" &&
+        data[0].A == "PROJECT" || data[0].A == "Ã¯Â»Â¿PROJECT"
       ) {
         if (data.length > 0) {
           let i = 0;
@@ -759,7 +760,7 @@ const ProjectController = {
 
             if (i > 1) {
 
-              if(!projectData.A){
+              if (!projectData.A) {
                 let values = _.values(projectData)
                 values.unshift('Project Code can not empty!')
                 errors.push(values);
@@ -767,7 +768,7 @@ const ProjectController = {
                 continue;
               }
 
-              if(!projectData.B){
+              if (!projectData.B) {
                 let values = _.values(projectData)
                 values.unshift('Project name can not empty!')
                 errors.push(values);
@@ -775,7 +776,7 @@ const ProjectController = {
                 continue;
               }
 
-              if(!projectData.C){
+              if (!projectData.C) {
                 let values = _.values(projectData)
                 values.unshift('Company Id can not empty!')
                 errors.push(values);
@@ -783,7 +784,7 @@ const ProjectController = {
                 continue;
               }
 
-              if(!projectData.E){
+              if (!projectData.E) {
                 let values = _.values(projectData)
                 values.unshift('Project location can not empty!')
                 errors.push(values);
@@ -891,7 +892,7 @@ const ProjectController = {
   getUserProjectByCompany: async (req, res) => {
     try {
       let companyId = req.query.companyId;
-    
+
 
       let pagination = {}
       console.log("companyId", companyId);
@@ -926,7 +927,7 @@ const ProjectController = {
       });
     }
   },
-  getProjectListHavingPropertyUnits:async(req,res) =>{
+  getProjectListHavingPropertyUnits: async (req, res) => {
     try {
       let companyId = req.query.companyId;
       let projects = _.flatten(
@@ -941,14 +942,14 @@ const ProjectController = {
       let companyArr1 = []
       let rows = []
 
-      if(req.query.areaName === 'common'){
-       
+      if (req.query.areaName === 'common') {
+
         companyHavingProjects = await knex('projects').select(['companyId']).where({ orgId: req.orgId, isActive: true })
         companyArr1 = companyHavingProjects.map(v => v.companyId)
         rows = await knex("projects")
           .innerJoin('companies', 'projects.companyId', 'companies.id')
           .innerJoin('property_units', 'projects.id', 'property_units.projectId')
-          .where({ "projects.companyId": companyId, "projects.isActive": true,'property_units.type':2 })
+          .where({ "projects.companyId": companyId, "projects.isActive": true, 'property_units.type': 2 })
           .whereIn('projects.id', projects)
           .whereIn('projects.companyId', companyArr1)
           .select([
@@ -965,7 +966,7 @@ const ProjectController = {
             "companies.companyId",
             "projects.project"])
           .orderBy('projects.projectName', 'asc')
-      }else if (req.query.areaName === 'all' && companyId==='') {
+      } else if (req.query.areaName === 'all' && companyId === '') {
         companyHavingProjects = await knex('projects').select(['companyId']).where({ orgId: req.orgId, isActive: true })
         companyArr1 = companyHavingProjects.map(v => v.companyId)
         rows = await knex("projects")
@@ -1011,16 +1012,16 @@ const ProjectController = {
             "companies.companyId",
             "projects.project"])
           .orderBy('projects.projectName', 'asc')
-      }else {
-        
+      } else {
+
         companyHavingProjects = await knex('projects').select(['companyId']).where({ orgId: req.orgId, isActive: true })
         companyArr1 = companyHavingProjects.map(v => v.companyId)
         rows = await knex("projects")
-          .innerJoin('companies','projects.companyId','companies.id')
+          .innerJoin('companies', 'projects.companyId', 'companies.id')
           .innerJoin('property_units', 'projects.id', 'property_units.projectId')
-          .where({ "projects.companyId": companyId, "projects.isActive": true,'property_units.type':1 })
+          .where({ "projects.companyId": companyId, "projects.isActive": true, 'property_units.type': 1 })
           .whereIn('projects.id', projects)
-          .whereIn('projects.companyId',companyArr1)
+          .whereIn('projects.companyId', companyArr1)
           .select([
             "projects.id as id",
             "projects.projectName",
@@ -1034,7 +1035,7 @@ const ProjectController = {
             "companies.id",
             "companies.companyId",
             "projects.project"])
-            .orderBy('projects.projectName','asc')
+          .orderBy('projects.projectName', 'asc')
       }
 
       console.log("rows", rows);
@@ -1047,7 +1048,7 @@ const ProjectController = {
         },
         message: "projects List!"
       });
-    } catch(err) {
+    } catch (err) {
       console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
       //trx.rollback
       res.status(500).json({
@@ -1055,18 +1056,18 @@ const ProjectController = {
       });
     }
   },
-  getProjectById:async(req,res)=>{
-    try{
+  getProjectById: async (req, res) => {
+    try {
       let projectId = req.body.id
       let orgId = req.orgId
 
       let projectResult = await knex("projects")
-      .select([
-        "projects.id",
-        "projects.projectName"
-      ])
-      .where("projects.id",projectId)
-      .where("projects.orgId",orgId)
+        .select([
+          "projects.id",
+          "projects.projectName"
+        ])
+        .where("projects.id", projectId)
+        .where("projects.orgId", orgId)
 
       return res.status(200).json({
         data: {
@@ -1074,7 +1075,7 @@ const ProjectController = {
         },
         message: "projects List!"
       });
-    }catch(err){
+    } catch (err) {
       console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
       //trx.rollback
       res.status(500).json({

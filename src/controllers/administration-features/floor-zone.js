@@ -748,7 +748,7 @@ const floorZoneController = {
           .select("*")
           .orderBy('floor_and_zones.description','asc')
           .groupBy(['floor_and_zones.floorZoneCode','floor_and_zones.id'])
-          .distinct()
+          //.distinct()
 
        
 
