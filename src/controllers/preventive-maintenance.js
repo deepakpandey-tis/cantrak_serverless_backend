@@ -876,6 +876,7 @@ const pmController = {
 
             /*Work Done close */
 
+    
             let totalPlanOrder = 0;
             let totalWorkDone = 0;
             let totalPercentage = 0;

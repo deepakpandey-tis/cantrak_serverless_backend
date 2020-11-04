@@ -10,13 +10,13 @@ const QRCode = require('qrcode')
 const uuid = require('uuid/v4')
 const moment = require('moment')
 const assetController = {
-    getAssetCategories: async(req, res) => {
+    getAssetCategories: async (req, res) => {
 
         try {
             let categories
             let filters = req.body;
             if (filters) {
-                categories = await knex('asset_category_master').select().where({...filters, orgId: req.orgId, isActive: true })
+                categories = await knex('asset_category_master').select().where({ ...filters, orgId: req.orgId, isActive: true })
             } else {
                 categories = await knex('asset_category_master').select().where({ orgId: req.orgId, isActive: true });
             }
@@ -34,7 +34,7 @@ const assetController = {
             })
         }
     },
-    addAsset: async(req, res) => {
+    addAsset: async (req, res) => {
         try {
 
             let asset = null;
@@ -43,11 +43,11 @@ const assetController = {
             let files = []
             let location = null
 
-            await knex.transaction(async(trx) => {
+            await knex.transaction(async (trx) => {
                 let assetPayload = req.body;
                 console.log('[controllers][asset][payload]: Asset Payload', assetPayload);
                 assetPayload = _.omit(assetPayload, ['additionalAttributes', 'multiple', 'images', 'files', 'assetCategory', 'vendorId', 'additionalVendorId'])
-                    // validate keys
+                // validate keys
                 const schema = Joi.object().keys({
                     //parentAssetId: Joi.string(),
                     // subAssetId: Joi.string(),
@@ -115,7 +115,7 @@ const assetController = {
                     .returning(["*"])
                     .transacting(trx)
                     .into("asset_master")
-                    //.where({ orgId: req.orgId });
+                //.where({ orgId: req.orgId });
 
                 asset = assetResult
 
@@ -127,7 +127,7 @@ const assetController = {
                     .returning(["*"])
                     .transacting(trx)
                     .into("location_tags")
-                    //.where({ orgId: req.orgId });
+                //.where({ orgId: req.orgId });
                 location = locationResult[0]
 
 
@@ -148,7 +148,7 @@ const assetController = {
                                     .returning(["*"])
                                     .transacting(trx)
                                     .into("asset_attributes")
-                                    //.where({ orgId: req.orgId });
+                                //.where({ orgId: req.orgId });
                                 attribs.push(d[0])
                             }
                         }
@@ -172,7 +172,7 @@ const assetController = {
                                 .returning(["*"])
                                 .transacting(trx)
                                 .into("images")
-                                //   .where({ orgId: req.orgId });
+                            //   .where({ orgId: req.orgId });
                             images.push(d[0])
                         }
                     }
@@ -223,7 +223,7 @@ const assetController = {
                             .returning(["*"])
                             .transacting(trx)
                             .into("assigned_vendors")
-                            //.where({ orgId: req.orgId });            
+                        //.where({ orgId: req.orgId });            
                     }
                     // Insert Secondry Vendor Data
                     if (vendorsADData) {
@@ -241,7 +241,7 @@ const assetController = {
                             .returning(["*"])
                             .transacting(trx)
                             .into("assigned_vendors")
-                            //.where({ orgId: req.orgId });           
+                        //.where({ orgId: req.orgId });           
                     }
                 }
 
@@ -255,7 +255,7 @@ const assetController = {
 
             res.status(200).json({
                 data: {
-                    asset: {...asset, attributes: attribs, images, files, location }
+                    asset: { ...asset, attributes: attribs, images, files, location }
                 },
                 message: "Asset added successfully !"
             });
@@ -270,7 +270,7 @@ const assetController = {
             });
         }
     },
-    getAllAssetList: async(req, res) => {
+    getAllAssetList: async (req, res) => {
         try {
             const assets = await knex("asset_master")
                 .select("id", "assetName", "model")
@@ -292,11 +292,9 @@ const assetController = {
         }
     },
 
-    getAssetList: async(req, res) => {
+    getAssetList: async (req, res) => {
         // name, model, area, category
         try {
-
-
 
             let projectIds = [];
             const accessibleProjects = req.userProjectResources;
@@ -307,7 +305,7 @@ const assetController = {
                     if (pro.projects.length) {
 
                         for (let projectId of pro.projects) {
-                            console.log("project=========", pro.projects, "===========================================")
+                            console.log("project=========", pro.projects, "====================")
 
                             projectIds.push(projectId);
                         }
@@ -390,173 +388,173 @@ const assetController = {
             try {
                 [total, rows] = await Promise.all([
                     knex
-                    .count("* as count")
-                    .from("asset_master")
-                    // .leftJoin(
-                    //   "location_tags",
-                    //   "asset_master.id",
-                    //   "location_tags.entityId"
-                    // )
-                    // .leftJoin(
-                    //   "location_tags_master",
-                    //   "location_tags.locationTagId",
-                    //   "location_tags_master.id"
-                    // )
-                    .leftJoin(
-                        "asset_category_master",
-                        "asset_master.assetCategoryId",
-                        "asset_category_master.id"
-                    )
-                    .leftJoin(
-                        "companies",
-                        "asset_master.companyId",
-                        "companies.id"
-                    )
-                    .leftJoin('projects', 'asset_master.projectId', 'projects.id')
+                        .count("* as count")
+                        .from("asset_master")
+                        // .leftJoin(
+                        //   "location_tags",
+                        //   "asset_master.id",
+                        //   "location_tags.entityId"
+                        // )
+                        // .leftJoin(
+                        //   "location_tags_master",
+                        //   "location_tags.locationTagId",
+                        //   "location_tags_master.id"
+                        // )
+                        .leftJoin(
+                            "asset_category_master",
+                            "asset_master.assetCategoryId",
+                            "asset_category_master.id"
+                        )
+                        .leftJoin(
+                            "companies",
+                            "asset_master.companyId",
+                            "companies.id"
+                        )
+                        .leftJoin('projects', 'asset_master.projectId', 'projects.id')
 
-                    .where(qb => {
-                        if (assetName) {
-                            qb.where(
-                                "asset_master.assetName",
-                                "iLIKE",
-                                `%${assetName}%`
-                            );
-                        }
+                        .where(qb => {
+                            if (assetName) {
+                                qb.where(
+                                    "asset_master.assetName",
+                                    "iLIKE",
+                                    `%${assetName}%`
+                                );
+                            }
 
-                        if (assetSerial) {
-                            qb.where(
-                                "asset_master.assetSerial",
-                                "iLIKE",
-                                `%${assetSerial}%`
-                            )
-                        }
-                        if (assetModel) {
-                            qb.where(
-                                "asset_master.model",
-                                "iLIKE",
-                                `%${assetModel}%`
-                            );
-                        }
-                        if (assetCode) {
-                            qb.where(
-                                "asset_master.assetCode",
-                                "iLIKE",
-                                `%${assetCode}%`
-                            );
-                        }
-                        if (category) {
-                            qb.where(
-                                "asset_category_master.categoryName",
-                                "iLIKE",
-                                `%${category}%`
-                            );
-                        }
-                        if (asNo) {
-                            qb.where("asset_master.displayId", asNo)
-                        }
-                        if (company) {
-                            qb.where('asset_master.companyId', company)
-                        }
-                        if (project) {
-                            qb.where('asset_master.projectId', project)
-                        }
-                    })
-                    .whereIn('asset_master.companyId', companyIds)
-                    .first()
-                    .where({ 'asset_master.orgId': req.orgId }),
+                            if (assetSerial) {
+                                qb.where(
+                                    "asset_master.assetSerial",
+                                    "iLIKE",
+                                    `%${assetSerial}%`
+                                )
+                            }
+                            if (assetModel) {
+                                qb.where(
+                                    "asset_master.model",
+                                    "iLIKE",
+                                    `%${assetModel}%`
+                                );
+                            }
+                            if (assetCode) {
+                                qb.where(
+                                    "asset_master.assetCode",
+                                    "iLIKE",
+                                    `%${assetCode}%`
+                                );
+                            }
+                            if (category) {
+                                qb.where(
+                                    "asset_category_master.categoryName",
+                                    "iLIKE",
+                                    `%${category}%`
+                                );
+                            }
+                            if (asNo) {
+                                qb.where("asset_master.displayId", asNo)
+                            }
+                            if (company) {
+                                qb.where('asset_master.companyId', company)
+                            }
+                            if (project) {
+                                qb.where('asset_master.projectId', project)
+                            }
+                        })
+                        .whereIn('asset_master.companyId', companyIds)
+                        .first()
+                        .where({ 'asset_master.orgId': req.orgId }),
                     knex("asset_master")
-                    // .leftJoin(
-                    //   "location_tags",
-                    //   "asset_master.id",
-                    //   "location_tags.entityId"
-                    // )
-                    // .leftJoin(
-                    //   "location_tags_master",
-                    //   "location_tags.locationTagId",
-                    //   "location_tags_master.id"
-                    // )
-                    .leftJoin(
-                        "asset_category_master",
-                        "asset_master.assetCategoryId",
-                        "asset_category_master.id"
-                    )
-                    .leftJoin(
-                        "companies",
-                        "asset_master.companyId",
-                        "companies.id"
-                    )
-                    .leftJoin('projects', 'asset_master.projectId', 'projects.id')
+                        // .leftJoin(
+                        //   "location_tags",
+                        //   "asset_master.id",
+                        //   "location_tags.entityId"
+                        // )
+                        // .leftJoin(
+                        //   "location_tags_master",
+                        //   "location_tags.locationTagId",
+                        //   "location_tags_master.id"
+                        // )
+                        .leftJoin(
+                            "asset_category_master",
+                            "asset_master.assetCategoryId",
+                            "asset_category_master.id"
+                        )
+                        .leftJoin(
+                            "companies",
+                            "asset_master.companyId",
+                            "companies.id"
+                        )
+                        .leftJoin('projects', 'asset_master.projectId', 'projects.id')
 
-                    .select([
-                        "asset_master.assetName as Name",
-                        "asset_master.id as ID",
-                        // "location_tags_master.title as Location",
-                        "asset_master.model as Model",
-                        "asset_master.barcode as Barcode",
-                        "asset_master.assetSerial as assetSerial",
-                        "asset_master.areaName as Area",
-                        "asset_category_master.categoryName as Category",
-                        "asset_master.createdAt as Date Created",
-                        "asset_master.unitOfMeasure as Unit Of Measure",
-                        "asset_master.price as Price",
-                        "companies.companyName",
-                        "companies.companyId",
-                        "projects.project",
-                        "projects.projectName",
-                        "asset_master.displayId as AsNo",
-                        "asset_master.assetCode"
-                    ])
-                    .where({ 'asset_master.orgId': req.orgId })
-                    .where(qb => {
-                        if (assetName) {
-                            qb.where(
-                                "asset_master.assetName",
-                                "iLIKE",
-                                `%${assetName}%`
-                            );
-                        }
-                        if (assetSerial) {
-                            qb.where(
-                                "asset_master.assetSerial",
-                                "iLIKE",
-                                `%${assetSerial}%`
-                            )
-                        }
-                        if (assetModel) {
-                            qb.where(
-                                "asset_master.model",
-                                "iLIKE",
-                                `%${assetModel}%`
-                            );
-                        }
-                        if (assetCode) {
-                            qb.where(
-                                "asset_master.assetCode",
-                                "iLIKE",
-                                `%${assetCode}%`
-                            );
-                        }
-                        if (category) {
-                            qb.where(
-                                "asset_category_master.categoryName",
-                                "iLIKE",
-                                `%${category}%`
-                            );
-                        }
-                        if (asNo) {
-                            qb.where("asset_master.displayId", asNo)
-                        }
-                        if (company) {
-                            qb.where('asset_master.companyId', company)
-                        }
-                        if (project) {
-                            qb.where('asset_master.projectId', project)
-                        }
-                    })
-                    .whereIn('asset_master.companyId', companyIds)
-                    .orderBy("asset_master.id", "desc")
-                    .offset(offset)
-                    .limit(per_page)
+                        .select([
+                            "asset_master.assetName as Name",
+                            "asset_master.id as ID",
+                            // "location_tags_master.title as Location",
+                            "asset_master.model as Model",
+                            "asset_master.barcode as Barcode",
+                            "asset_master.assetSerial as assetSerial",
+                            "asset_master.areaName as Area",
+                            "asset_category_master.categoryName as Category",
+                            "asset_master.createdAt as Date Created",
+                            "asset_master.unitOfMeasure as Unit Of Measure",
+                            "asset_master.price as Price",
+                            "companies.companyName",
+                            "companies.companyId",
+                            "projects.project",
+                            "projects.projectName",
+                            "asset_master.displayId as AsNo",
+                            "asset_master.assetCode"
+                        ])
+                        .where({ 'asset_master.orgId': req.orgId })
+                        .where(qb => {
+                            if (assetName) {
+                                qb.where(
+                                    "asset_master.assetName",
+                                    "iLIKE",
+                                    `%${assetName}%`
+                                );
+                            }
+                            if (assetSerial) {
+                                qb.where(
+                                    "asset_master.assetSerial",
+                                    "iLIKE",
+                                    `%${assetSerial}%`
+                                )
+                            }
+                            if (assetModel) {
+                                qb.where(
+                                    "asset_master.model",
+                                    "iLIKE",
+                                    `%${assetModel}%`
+                                );
+                            }
+                            if (assetCode) {
+                                qb.where(
+                                    "asset_master.assetCode",
+                                    "iLIKE",
+                                    `%${assetCode}%`
+                                );
+                            }
+                            if (category) {
+                                qb.where(
+                                    "asset_category_master.categoryName",
+                                    "iLIKE",
+                                    `%${category}%`
+                                );
+                            }
+                            if (asNo) {
+                                qb.where("asset_master.displayId", asNo)
+                            }
+                            if (company) {
+                                qb.where('asset_master.companyId', company)
+                            }
+                            if (project) {
+                                qb.where('asset_master.projectId', project)
+                            }
+                        })
+                        .whereIn('asset_master.companyId', companyIds)
+                        .orderBy("asset_master.id", "desc")
+                        .offset(offset)
+                        .limit(per_page)
                 ]);
             } catch (e) {
                 // Error
@@ -634,7 +632,7 @@ const assetController = {
             });
         }
     },
-    getAssetListByCategory: async(req, res) => {
+    getAssetListByCategory: async (req, res) => {
         // name, model, area, category
         try {
 
@@ -693,148 +691,148 @@ const assetController = {
 
                 [total, rows] = await Promise.all([
                     knex
-                    .count("* as count")
-                    .from("asset_master")
-                    .leftJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
-                    .innerJoin('companies', 'asset_location.companyId', 'companies.id')
-                    .leftJoin('projects', 'asset_location.projectId', 'projects.id')
-                    .leftJoin(
-                        "buildings_and_phases",
-                        "asset_location.buildingId",
-                        "buildings_and_phases.id"
-                    )
-                    .leftJoin(
-                        "floor_and_zones",
-                        "asset_location.floorId",
-                        "floor_and_zones.id"
-                    )
-                    .leftJoin(
-                        "property_units",
-                        "asset_location.unitId",
-                        "property_units.id"
-                    )
-                    .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId })
-                    .first()
-                    .where({ 'asset_master.orgId': req.orgId })
-                    .where('asset_location.endDate', null)
-                    .where(qb => {
+                        .count("* as count")
+                        .from("asset_master")
+                        .leftJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
+                        .innerJoin('companies', 'asset_location.companyId', 'companies.id')
+                        .leftJoin('projects', 'asset_location.projectId', 'projects.id')
+                        .leftJoin(
+                            "buildings_and_phases",
+                            "asset_location.buildingId",
+                            "buildings_and_phases.id"
+                        )
+                        .leftJoin(
+                            "floor_and_zones",
+                            "asset_location.floorId",
+                            "floor_and_zones.id"
+                        )
+                        .leftJoin(
+                            "property_units",
+                            "asset_location.unitId",
+                            "property_units.id"
+                        )
+                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId })
+                        .first()
+                        .where({ 'asset_master.orgId': req.orgId })
+                        .where('asset_location.endDate', null)
+                        .where(qb => {
 
-                        if (building) {
-                            qb.where('asset_location.buildingId', building)
-                        }
+                            if (building) {
+                                qb.where('asset_location.buildingId', building)
+                            }
 
-                        if (floorZone) {
-                            qb.where('asset_location.floorId', floorZone)
-                        }
+                            if (floorZone) {
+                                qb.where('asset_location.floorId', floorZone)
+                            }
 
-                        if (assetName) {
-                            qb.where(
-                                "asset_master.assetName",
-                                "iLIKE",
-                                `%${assetName}%`
-                            );
-                        }
-                        if (assetSerial) {
-                            qb.where(
-                                "asset_master.assetSerial",
-                                "iLIKE",
-                                `%${assetSerial}%`
-                            )
-                        }
-                        if (assetModel) {
-                            qb.where(
-                                "asset_master.model",
-                                "iLIKE",
-                                `%${assetModel}%`
-                            );
-                        }
-                        if (assetCode) {
-                            qb.where(
-                                "asset_master.assetCode",
-                                "iLIKE",
-                                `%${assetCode}%`
-                            );
-                        }
-                    }),
+                            if (assetName) {
+                                qb.where(
+                                    "asset_master.assetName",
+                                    "iLIKE",
+                                    `%${assetName}%`
+                                );
+                            }
+                            if (assetSerial) {
+                                qb.where(
+                                    "asset_master.assetSerial",
+                                    "iLIKE",
+                                    `%${assetSerial}%`
+                                )
+                            }
+                            if (assetModel) {
+                                qb.where(
+                                    "asset_master.model",
+                                    "iLIKE",
+                                    `%${assetModel}%`
+                                );
+                            }
+                            if (assetCode) {
+                                qb.where(
+                                    "asset_master.assetCode",
+                                    "iLIKE",
+                                    `%${assetCode}%`
+                                );
+                            }
+                        }),
 
                     knex("asset_master")
-                    .leftJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
-                    .innerJoin('companies', 'asset_location.companyId', 'companies.id')
-                    .leftJoin('projects', 'asset_location.projectId', 'projects.id')
-                    .leftJoin(
-                        "buildings_and_phases",
-                        "asset_location.buildingId",
-                        "buildings_and_phases.id"
-                    )
-                    .leftJoin(
-                        "floor_and_zones",
-                        "asset_location.floorId",
-                        "floor_and_zones.id"
-                    )
-                    .leftJoin(
-                        "property_units",
-                        "asset_location.unitId",
-                        "property_units.id"
-                    )
-                    .select(["asset_master.id",
-                        "asset_master.assetCode",
-                        "asset_master.assetName",
-                        "asset_master.model",
-                        "asset_master.barcode",
-                        "asset_master.areaName", "assetSerial",
-                        'asset_location.id as locationId',
-                        'companies.companyName',
-                        'projects.projectName',
-                        'buildings_and_phases.buildingPhaseCode',
-                        "buildings_and_phases.description as building",
-                        'floor_and_zones.floorZoneCode',
-                        'property_units.unitNumber'
-                    ])
-                    .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId })
-                    .offset(offset)
-                    .limit(per_page)
-                    .where('asset_location.endDate', null)
-                    .where({ 'asset_master.orgId': req.orgId })
-                    .where(qb => {
+                        .leftJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
+                        .innerJoin('companies', 'asset_location.companyId', 'companies.id')
+                        .leftJoin('projects', 'asset_location.projectId', 'projects.id')
+                        .leftJoin(
+                            "buildings_and_phases",
+                            "asset_location.buildingId",
+                            "buildings_and_phases.id"
+                        )
+                        .leftJoin(
+                            "floor_and_zones",
+                            "asset_location.floorId",
+                            "floor_and_zones.id"
+                        )
+                        .leftJoin(
+                            "property_units",
+                            "asset_location.unitId",
+                            "property_units.id"
+                        )
+                        .select(["asset_master.id",
+                            "asset_master.assetCode",
+                            "asset_master.assetName",
+                            "asset_master.model",
+                            "asset_master.barcode",
+                            "asset_master.areaName", "assetSerial",
+                            'asset_location.id as locationId',
+                            'companies.companyName',
+                            'projects.projectName',
+                            'buildings_and_phases.buildingPhaseCode',
+                            "buildings_and_phases.description as building",
+                            'floor_and_zones.floorZoneCode',
+                            'property_units.unitNumber'
+                        ])
+                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId })
+                        .offset(offset)
+                        .limit(per_page)
+                        .where('asset_location.endDate', null)
+                        .where({ 'asset_master.orgId': req.orgId })
+                        .where(qb => {
 
 
-                        if (building) {
-                            qb.where('asset_location.buildingId', building)
-                        }
+                            if (building) {
+                                qb.where('asset_location.buildingId', building)
+                            }
 
-                        if (floorZone) {
-                            qb.where('asset_location.floorId', floorZone)
-                        }
+                            if (floorZone) {
+                                qb.where('asset_location.floorId', floorZone)
+                            }
 
-                        if (assetName) {
-                            qb.where(
-                                "asset_master.assetName",
-                                "iLIKE",
-                                `%${assetName}%`
-                            );
-                        }
-                        if (assetSerial) {
-                            qb.where(
-                                "asset_master.assetSerial",
-                                "iLIKE",
-                                `%${assetSerial}%`
-                            )
-                        }
-                        if (assetModel) {
-                            qb.where(
-                                "asset_master.model",
-                                "iLIKE",
-                                `%${assetModel}%`
-                            );
-                        }
-                        if (assetCode) {
-                            qb.where(
-                                "asset_master.assetCode",
-                                "iLIKE",
-                                `%${assetCode}%`
-                            );
-                        }
-                    })
+                            if (assetName) {
+                                qb.where(
+                                    "asset_master.assetName",
+                                    "iLIKE",
+                                    `%${assetName}%`
+                                );
+                            }
+                            if (assetSerial) {
+                                qb.where(
+                                    "asset_master.assetSerial",
+                                    "iLIKE",
+                                    `%${assetSerial}%`
+                                )
+                            }
+                            if (assetModel) {
+                                qb.where(
+                                    "asset_master.model",
+                                    "iLIKE",
+                                    `%${assetModel}%`
+                                );
+                            }
+                            if (assetCode) {
+                                qb.where(
+                                    "asset_master.assetCode",
+                                    "iLIKE",
+                                    `%${assetCode}%`
+                                );
+                            }
+                        })
                 ]);
 
 
@@ -854,90 +852,90 @@ const assetController = {
 
                 [total, rows] = await Promise.all([
                     knex
-                    .count("* as count")
-                    .from("asset_master")
+                        .count("* as count")
+                        .from("asset_master")
 
-                    .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId })
-                    .first()
-                    .where({ 'asset_master.orgId': req.orgId })
-                    .where(qb => {
+                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId })
+                        .first()
+                        .where({ 'asset_master.orgId': req.orgId })
+                        .where(qb => {
 
 
-                        if (assetName) {
-                            qb.where(
-                                "asset_master.assetName",
-                                "iLIKE",
-                                `%${assetName}%`
-                            );
-                        }
-                        if (assetSerial) {
-                            qb.where(
-                                "asset_master.assetSerial",
-                                "iLIKE",
-                                `%${assetSerial}%`
-                            )
-                        }
-                        if (assetModel) {
-                            qb.where(
-                                "asset_master.model",
-                                "iLIKE",
-                                `%${assetModel}%`
-                            );
-                        }
-                        if (assetCode) {
-                            qb.where(
-                                "asset_master.assetCode",
-                                "iLIKE",
-                                `%${assetCode}%`
-                            );
-                        }
-                    }),
+                            if (assetName) {
+                                qb.where(
+                                    "asset_master.assetName",
+                                    "iLIKE",
+                                    `%${assetName}%`
+                                );
+                            }
+                            if (assetSerial) {
+                                qb.where(
+                                    "asset_master.assetSerial",
+                                    "iLIKE",
+                                    `%${assetSerial}%`
+                                )
+                            }
+                            if (assetModel) {
+                                qb.where(
+                                    "asset_master.model",
+                                    "iLIKE",
+                                    `%${assetModel}%`
+                                );
+                            }
+                            if (assetCode) {
+                                qb.where(
+                                    "asset_master.assetCode",
+                                    "iLIKE",
+                                    `%${assetCode}%`
+                                );
+                            }
+                        }),
 
                     knex("asset_master")
 
-                    .select(["asset_master.id",
-                        "asset_master.assetCode",
-                        "asset_master.assetName",
-                        "asset_master.model",
-                        "asset_master.barcode",
-                        "asset_master.areaName", "assetSerial",
+                        .select(["asset_master.id",
+                            "asset_master.assetCode",
+                            "asset_master.assetName",
+                            "asset_master.model",
+                            "asset_master.barcode",
+                            "asset_master.areaName", "assetSerial",
 
-                    ])
-                    .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId })
-                    .offset(offset)
-                    .limit(per_page)
-                    .where({ 'asset_master.orgId': req.orgId })
-                    .where(qb => {
+                        ])
+                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId })
+                        .offset(offset)
+                        .limit(per_page)
+                        .where({ 'asset_master.orgId': req.orgId })
+                        .where(qb => {
 
-                        if (assetName) {
-                            qb.where(
-                                "asset_master.assetName",
-                                "iLIKE",
-                                `%${assetName}%`
-                            );
-                        }
-                        if (assetSerial) {
-                            qb.where(
-                                "asset_master.assetSerial",
-                                "iLIKE",
-                                `%${assetSerial}%`
-                            )
-                        }
-                        if (assetModel) {
-                            qb.where(
-                                "asset_master.model",
-                                "iLIKE",
-                                `%${assetModel}%`
-                            );
-                        }
-                        if (assetCode) {
-                            qb.where(
-                                "asset_master.assetCode",
-                                "iLIKE",
-                                `%${assetCode}%`
-                            );
-                        }
-                    })
+                            if (assetName) {
+                                qb.where(
+                                    "asset_master.assetName",
+                                    "iLIKE",
+                                    `%${assetName}%`
+                                );
+                            }
+                            if (assetSerial) {
+                                qb.where(
+                                    "asset_master.assetSerial",
+                                    "iLIKE",
+                                    `%${assetSerial}%`
+                                )
+                            }
+                            if (assetModel) {
+                                qb.where(
+                                    "asset_master.model",
+                                    "iLIKE",
+                                    `%${assetModel}%`
+                                );
+                            }
+                            if (assetCode) {
+                                qb.where(
+                                    "asset_master.assetCode",
+                                    "iLIKE",
+                                    `%${assetCode}%`
+                                );
+                            }
+                        })
                 ]);
 
 
@@ -981,8 +979,8 @@ const assetController = {
                         .orderBy("asset_location.id", "desc")
                         .limit(1)
                         .first()
-                        // ]).max('asset_location.updatedAt').first()
-                    return {...row, ...location }
+                    // ]).max('asset_location.updatedAt').first()
+                    return { ...row, ...location }
                 })
 
                 let count = total.count;
@@ -1014,7 +1012,7 @@ const assetController = {
             });
         }
     },
-    getAssetDetails1111: async(req, res) => {
+    getAssetDetails1111: async (req, res) => {
         try {
 
             let assetData = null;
@@ -1076,7 +1074,7 @@ const assetController = {
             });
         }
     },
-    getAssetDetails: async(req, res) => {
+    getAssetDetails: async (req, res) => {
         try {
 
             let assetData = null;
@@ -1122,7 +1120,7 @@ const assetController = {
             additionalAttributes = await knex("asset_attributes")
                 .where({ assetId: id, orgId: req.orgId })
                 .select()
-                //   .where({  });
+            //   .where({  });
 
 
             files = await knex("files")
@@ -1140,7 +1138,7 @@ const assetController = {
                     orgId: req.orgId
                 })
                 .select()
-                //   .where({ orgId: req.orgId });
+            //   .where({ orgId: req.orgId });
 
             console.log('[controllers][asset][getAssetDetails]: Asset Details', assetData);
             // Get asset location
@@ -1211,7 +1209,7 @@ const assetController = {
                 .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
                 .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
 
-            .select([
+                .select([
                     'service_orders.id as So Id',
                     'service_requests.description as Description',
                     'service_requests.location as Location',
@@ -1246,7 +1244,7 @@ const assetController = {
 
 
             res.status(200).json({
-                data: { asset: {...omitedAssetDataResult, additionalAttributes, files, partData, images, assetLocation, qrcode, serviceOrders: service_orders, teamName: team ? team.teamName : '', UserName: user ? user.name : '' } },
+                data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, partData, images, assetLocation, qrcode, serviceOrders: service_orders, teamName: team ? team.teamName : '', UserName: user ? user.name : '' } },
                 message: "Asset Details",
 
             });
@@ -1261,7 +1259,7 @@ const assetController = {
             });
         }
     },
-    updateAssetDetails: async(req, res) => {
+    updateAssetDetails: async (req, res) => {
         try {
 
             let asset = null;
@@ -1269,12 +1267,12 @@ const assetController = {
             let insertedImages = []
             let insertedFiles = []
 
-            await knex.transaction(async(trx) => {
+            await knex.transaction(async (trx) => {
                 let assetPayload = req.body;
                 let id = req.body.id
                 console.log('[controllers][asset][payload]: Update Asset Payload', assetPayload);
                 assetPayload = _.omit(assetPayload, ['additionalAttributes', 'id', 'assetCategory', 'images', 'files', 'vendorId', 'additionalVendorId'])
-                    // validate keys
+                // validate keys
                 const schema = Joi.object().keys({
                     // parentAssetId: Joi.string(),
                     // subAssetId: Joi.string(),
@@ -1347,7 +1345,7 @@ const assetController = {
                                 updatedAt: currentTime,
                                 orgId: req.orgId
                             })
-                            //   .where({ orgId: req.orgId });
+                        //   .where({ orgId: req.orgId });
                         insertedImages.push(insertedImageResult[0])
                     }
                 }
@@ -1426,7 +1424,7 @@ const assetController = {
                             .returning(["*"])
                             .transacting(trx)
                             .into("asset_attributes")
-                            //   .where({ orgId: req.orgId });
+                        //   .where({ orgId: req.orgId });
                         attribs.push(d[0])
 
                         //}
@@ -1492,7 +1490,7 @@ const assetController = {
                                 .returning(["*"])
                                 .transacting(trx)
                                 .into("assigned_vendors")
-                                //.where({ orgId: req.orgId });            
+                            //.where({ orgId: req.orgId });            
                         }
                     }
 
@@ -1549,7 +1547,7 @@ const assetController = {
                                 .returning(["*"])
                                 .transacting(trx)
                                 .into("assigned_vendors")
-                                //.where({ orgId: req.orgId });  
+                            //.where({ orgId: req.orgId });  
                         }
 
                     }
@@ -1561,7 +1559,7 @@ const assetController = {
 
             res.status(200).json({
                 data: {
-                    asset: {...asset, attributes: attribs, insertedImages, insertedFiles }
+                    asset: { ...asset, attributes: attribs, insertedImages, insertedFiles }
                 },
                 message: "Asset updated successfully !"
             });
@@ -1577,7 +1575,7 @@ const assetController = {
         }
 
     },
-    addServiceOrderReplaceAsset: async(req, res) => {
+    addServiceOrderReplaceAsset: async (req, res) => {
         //if newAset exists in the table for this oldasset that we gonna replace with some other newasset add end date to that previous entry if end date blank
         try {
             let asset = null
@@ -1599,7 +1597,7 @@ const assetController = {
                 }
 
                 let currentTime = new Date().getTime()
-                    //let currentDate = new Date().getDate()
+                //let currentDate = new Date().getDate()
                 let ommitedPayload = _.omit(payload, ['serviceOrderId'])
 
 
@@ -1615,7 +1613,7 @@ const assetController = {
                     .returning(["*"])
                     .transacting(trx)
                     .into("replaced_assets")
-                    //   .where({ orgId: req.orgId });
+                //   .where({ orgId: req.orgId });
 
                 if (entry.length > 0) {
                     // Update endDate of previous entry with today's date and insert new entry
@@ -1648,7 +1646,7 @@ const assetController = {
                         .returning(["*"])
                         .transacting(trx)
                         .into("replaced_assets")
-                        //   .where({ orgId: req.orgId });
+                    //   .where({ orgId: req.orgId });
                     asset = assetResult[0]
                 } else {
                     let insertData = {
@@ -1666,7 +1664,7 @@ const assetController = {
                         .returning(["*"])
                         .transacting(trx)
                         .into("replaced_assets")
-                        //   .where({ orgId: req.orgId });
+                    //   .where({ orgId: req.orgId });
                     asset = assetResult[0]
                 }
                 trx.commit
@@ -1688,7 +1686,7 @@ const assetController = {
             });
         }
     },
-    addServiceRequestReplaceAsset: async(req, res) => {
+    addServiceRequestReplaceAsset: async (req, res) => {
         try {
             let asset = null
             let updated = null
@@ -1724,7 +1722,7 @@ const assetController = {
                     .returning(["*"])
                     .transacting(trx)
                     .into("replaced_assets")
-                    //   .where({ orgId: req.orgId });
+                //   .where({ orgId: req.orgId });
 
                 if (entry.length > 0) {
                     // Update endDate of previous entry with today's date and insert new entry
@@ -1738,7 +1736,7 @@ const assetController = {
                         .returning(["*"])
                         .transacting(trx)
                         .into("replaced_assets")
-                        //   .where({ orgId: req.orgId });
+                    //   .where({ orgId: req.orgId });
 
                     updated = updatedEntry[0]
 
@@ -1757,7 +1755,7 @@ const assetController = {
                         .returning(["*"])
                         .transacting(trx)
                         .into("replaced_assets")
-                        //   .where({ orgId: req.orgId });
+                    //   .where({ orgId: req.orgId });
                     asset = assetResult[0]
                 } else {
                     let insertData = {
@@ -1775,7 +1773,7 @@ const assetController = {
                         .returning(["*"])
                         .transacting(trx)
                         .into("replaced_assets")
-                        //   .where({ orgId: req.orgId });
+                    //   .where({ orgId: req.orgId });
                     asset = assetResult[0]
                 }
                 trx.commit
@@ -1797,7 +1795,7 @@ const assetController = {
             });
         }
     },
-    addServiceOrderRelocateAsset: async(req, res) => {
+    addServiceOrderRelocateAsset: async (req, res) => {
         try {
             let updatedEntry = null
             let insertedEntry = null
@@ -1819,7 +1817,7 @@ const assetController = {
                 }
 
                 let currentTime = new Date().getTime()
-                    // Check whether this asset is already relocated once or this is the first time
+                // Check whether this asset is already relocated once or this is the first time
                 let entryCheck = await knex
                     .select()
                     .where({
@@ -1831,7 +1829,7 @@ const assetController = {
                     .returning(["*"])
                     .transacting(trx)
                     .into("relocated_assets")
-                    //   .where({ orgId: req.orgId });
+                //   .where({ orgId: req.orgId });
                 if (entryCheck.length > 0) {
                     let updateEntry = await knex
                         .update({
@@ -1861,7 +1859,7 @@ const assetController = {
                         .returning(["*"])
                         .transacting(trx)
                         .into("relocated_assets")
-                        //   .where({ orgId: req.orgId });
+                    //   .where({ orgId: req.orgId });
                     insertedEntry = insertEntry[0]
                 } else {
                     // Insert new entry with endDate equal to null
@@ -1879,7 +1877,7 @@ const assetController = {
                         .returning(["*"])
                         .transacting(trx)
                         .into("relocated_assets")
-                        //   .where({ orgId: req.orgId });
+                    //   .where({ orgId: req.orgId });
                     insertedEntry = insertEntry[0]
                 }
 
@@ -1904,7 +1902,7 @@ const assetController = {
             });
         }
     },
-    addServiceRequestRelocateAsset: async(req, res) => {
+    addServiceRequestRelocateAsset: async (req, res) => {
         try {
             let updatedEntry = null
             let insertedEntry = null
@@ -1926,7 +1924,7 @@ const assetController = {
                 }
 
                 let currentTime = new Date().getTime()
-                    // Check whether this asset is already relocated once or this is the first time
+                // Check whether this asset is already relocated once or this is the first time
                 let entryCheck = await knex
                     .select()
                     .where({
@@ -1967,7 +1965,7 @@ const assetController = {
                         .returning(["*"])
                         .transacting(trx)
                         .into("relocated_assets")
-                        //   .where({ orgId: req.orgId });
+                    //   .where({ orgId: req.orgId });
                     insertedEntry = insertEntry[0]
                 } else {
                     // Insert new entry with endDate equal to null
@@ -1985,7 +1983,7 @@ const assetController = {
                         .returning(["*"])
                         .transacting(trx)
                         .into("relocated_assets")
-                        //   .where({ orgId: req.orgId });
+                    //   .where({ orgId: req.orgId });
                     insertedEntry = insertEntry[0]
                 }
 
@@ -2010,43 +2008,43 @@ const assetController = {
             });
         }
     },
-    assetSearch: async(req, res) => {
+    assetSearch: async (req, res) => {
         try {
 
             let query = decodeURI(req.query.query).trim();
 
             const getFilteredItems = searchTerm =>
                 knex("asset_master")
-                .where(qb => {
-                    qb.where({ 'asset_master.orgId': req.orgId })
-                    qb.where("asset_master.assetName", "like", `%${searchTerm}%`);
+                    .where(qb => {
+                        qb.where({ 'asset_master.orgId': req.orgId })
+                        qb.where("asset_master.assetName", "like", `%${searchTerm}%`);
 
-                    qb.orWhere("asset_master.barcode", "like", `%${searchTerm}%`);
+                        qb.orWhere("asset_master.barcode", "like", `%${searchTerm}%`);
 
-                    qb.orWhere(
-                        "asset_master.areaName",
-                        "like",
-                        `%${searchTerm}%`
-                    );
-                    qb.orWhere(
-                        "asset_master.assetCategory",
-                        "like",
-                        `%${searchTerm}%`
-                    );
-                    qb.orWhere("asset_master.price", "like", `%${searchTerm}%`);
-                    qb.orWhere(
-                        "asset_master.additionalInformation",
-                        "like",
-                        `%${searchTerm}%`
-                    );
-                    qb.orWhere(
-                        "asset_master.description",
-                        "like",
-                        `%${searchTerm}%`
-                    );
-                    qb.orWhere("asset_master.model", "like", `%${searchTerm}%`);
-                })
-                // .where({ orgId: req.orgId });
+                        qb.orWhere(
+                            "asset_master.areaName",
+                            "like",
+                            `%${searchTerm}%`
+                        );
+                        qb.orWhere(
+                            "asset_master.assetCategory",
+                            "like",
+                            `%${searchTerm}%`
+                        );
+                        qb.orWhere("asset_master.price", "like", `%${searchTerm}%`);
+                        qb.orWhere(
+                            "asset_master.additionalInformation",
+                            "like",
+                            `%${searchTerm}%`
+                        );
+                        qb.orWhere(
+                            "asset_master.description",
+                            "like",
+                            `%${searchTerm}%`
+                        );
+                        qb.orWhere("asset_master.model", "like", `%${searchTerm}%`);
+                    })
+            // .where({ orgId: req.orgId });
             const assets = await getFilteredItems(query)
             return res.status(200).json({
                 data: {
@@ -2237,7 +2235,7 @@ const assetController = {
     //         }
     // },
     // DEPRECATED API
-    getAssetListByLocation: async(req, res) => {
+    getAssetListByLocation: async (req, res) => {
         try {
 
             let reqData = req.query;
@@ -2270,7 +2268,7 @@ const assetController = {
                             `%${filters.buildingPhaseCode}%`
                         );
                     })
-                    // .where({ orgId: req.orgId });
+                // .where({ orgId: req.orgId });
                 if (buildingIdResult && buildingIdResult.length) {
                     buildingId = buildingIdResult[0].id
                 }
@@ -2283,7 +2281,7 @@ const assetController = {
                         qb.where({ orgId: req.orgId });
                         qb.where("companyName", "like", `%${filters.companyName}%`);
                     })
-                    //  .where({ orgId: req.orgId });
+                //  .where({ orgId: req.orgId });
                 if (buildingIdResult && buildingIdResult.length) {
                     companyId = buildingIdResult[0].id
                 }
@@ -2299,7 +2297,7 @@ const assetController = {
                             `%${filters.floorZoneCode}%`
                         );
                     })
-                    //  .where({ orgId: req.orgId });
+                //  .where({ orgId: req.orgId });
                 if (buildingIdResult && buildingIdResult.length) {
                     floorId = buildingIdResult[0].id
                 }
@@ -2311,7 +2309,7 @@ const assetController = {
                         qb.where({ orgId: req.orgId });
                         qb.where("projectName", "like", `%${filters.projectName}%`);
                     })
-                    //  .where({ orgId: req.orgId });
+                //  .where({ orgId: req.orgId });
                 if (buildingIdResult && buildingIdResult.length) {
                     projectId = buildingIdResult[0].id
                 }
@@ -2339,42 +2337,42 @@ const assetController = {
 
             [total, rows] = await Promise.all([
                 knex
-                .count("* as count")
-                .from("asset_master")
-                .innerJoin(
-                    "asset_location",
-                    "asset_master.id",
-                    "asset_location.assetId"
-                )
-                .select([
-                    "asset_master.id as id",
-                    "assetName",
-                    "model",
-                    "barcode",
-                    "areaName"
-                ])
-                .where(condition)
-                .where({ 'asset_master.orgId': req.orgId })
-                // .where({ orgId: req.orgId })
-                .groupBy(["asset_master.id", "asset_location.id"]),
+                    .count("* as count")
+                    .from("asset_master")
+                    .innerJoin(
+                        "asset_location",
+                        "asset_master.id",
+                        "asset_location.assetId"
+                    )
+                    .select([
+                        "asset_master.id as id",
+                        "assetName",
+                        "model",
+                        "barcode",
+                        "areaName"
+                    ])
+                    .where(condition)
+                    .where({ 'asset_master.orgId': req.orgId })
+                    // .where({ orgId: req.orgId })
+                    .groupBy(["asset_master.id", "asset_location.id"]),
                 knex
-                .from("asset_master")
-                .innerJoin(
-                    "asset_location",
-                    "asset_master.id",
-                    "asset_location.assetId"
-                )
-                .select([
-                    "asset_master.id as id",
-                    "assetName",
-                    "model",
-                    "barcode",
-                    "areaName"
-                ])
-                .where({ 'asset_master.orgId': req.orgId })
-                .where(condition)
-                .offset(offset)
-                .limit(per_page)
+                    .from("asset_master")
+                    .innerJoin(
+                        "asset_location",
+                        "asset_master.id",
+                        "asset_location.assetId"
+                    )
+                    .select([
+                        "asset_master.id as id",
+                        "assetName",
+                        "model",
+                        "barcode",
+                        "areaName"
+                    ])
+                    .where({ 'asset_master.orgId': req.orgId })
+                    .where(condition)
+                    .offset(offset)
+                    .limit(per_page)
             ]);
 
 
@@ -2413,7 +2411,7 @@ const assetController = {
 
 
     },
-    updateAssetLocation: async(req, res) => {
+    updateAssetLocation: async (req, res) => {
         try {
             const payload = _.omit(req.body, ['previousLocationId', 'houseNo']);
             let currentTime = new Date().getTime()
@@ -2469,9 +2467,9 @@ const assetController = {
 
             }
             console.log('***********************ASSET LOCATION:***********************', req.body)
-                // Deprecated
+            // Deprecated
             let updatedLastLocationEndDate
-                // if (req.body.previousLocationId) {
+            // if (req.body.previousLocationId) {
 
             //   updatedLastLocationEndDate = await knex("asset_location")
             //     .update({ updatedAt: currentTime })
@@ -2490,7 +2488,7 @@ const assetController = {
                     orgId: req.orgId
                 })
                 .returning(["*"])
-                //   .where({ orgId: req.orgId });
+            //   .where({ orgId: req.orgId });
 
             // UPDATE ASSET LOCATION  
 
@@ -2511,10 +2509,49 @@ const assetController = {
             });
         }
     },
-    exportAssetData: async(req, res) => {
+    exportAssetData: async (req, res) => {
         try {
 
-            const assetResult = await knex("asset_master")
+            let projectIds = [];
+            const accessibleProjects = req.userProjectResources;
+
+            if (accessibleProjects.length) {
+                for (let pro of accessibleProjects) {
+
+                    if (pro.projects.length) {
+
+                        for (let projectId of pro.projects) {
+                            console.log("project=========", pro.projects, "====================")
+
+                            projectIds.push(projectId);
+                        }
+                    }
+                }
+            }
+
+            projectIds = _.uniqBy(projectIds);
+
+            let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
+                .whereIn('projects.id', projectIds)
+                .where({ orgId: req.orgId });
+
+            let companyIds = companyResult.map(v => v.companyId);
+
+            companyIds = _.uniqBy(companyIds);
+
+            let {
+                assetName,
+                assetModel,
+                assetSerial,
+                category,
+                company,
+                project,
+                asNo,
+                assetCode,
+            } = req.body;
+
+
+            let assetResult = await knex("asset_master")
                 .leftJoin(
                     "asset_category_master",
                     "asset_master.assetCategoryId",
@@ -2557,10 +2594,111 @@ const assetController = {
                     "asset_master.assignedUsers as ASSIGN_USER",
                     "teams.teamCode as ASSIGN_TEAM",
                     "asset_master.assignedVendors as ASSIGN_VENDOR",
-                    "asset_master.additionalInformation as ASSIGN_INFORMATION"
+                    "asset_master.additionalInformation as ASSIGN_INFORMATION",
+                    "asset_master.id as ID"
+
+                    //knex.raw(`public.f_get_companycode(am."orgId" , am."companyId" ) as "company" ,public.f_get_proj_name(am."companyId" , am."projectId" ) as "project" ,public.f_get_building_name(al."companyId", al."buildingId") as "building" ,public.f_get_floor_name(al."companyId" , al."floorId" ) as "floor" ,public.f_get_unitname(al."orgId", al."unitId" ) as "Unit_Location" (asset_master am,asset_location al)`)
                 ])
-                .where({ 'asset_master.orgId': req.orgId });
-            let assets = assetResult
+                .where({ 'asset_master.orgId': req.orgId })
+                .where(qb => {
+                    if (assetName) {
+                        qb.where(
+                            "asset_master.assetName",
+                            "iLIKE",
+                            `%${assetName}%`
+                        );
+                    }
+                    if (assetSerial) {
+                        qb.where(
+                            "asset_master.assetSerial",
+                            "iLIKE",
+                            `%${assetSerial}%`
+                        )
+                    }
+                    if (assetModel) {
+                        qb.where(
+                            "asset_master.model",
+                            "iLIKE",
+                            `%${assetModel}%`
+                        );
+                    }
+                    if (assetCode) {
+                        qb.where(
+                            "asset_master.assetCode",
+                            "iLIKE",
+                            `%${assetCode}%`
+                        );
+                    }
+                    if (category) {
+                        qb.where(
+                            "asset_category_master.categoryName",
+                            "iLIKE",
+                            `%${category}%`
+                        );
+                    }
+                    if (asNo) {
+                        qb.where("asset_master.displayId", asNo)
+                    }
+                    if (company) {
+                        qb.where('asset_master.companyId', company)
+                    }
+                    if (project) {
+                        qb.where('asset_master.projectId', project)
+                    }
+                })
+                .whereIn('asset_master.companyId', companyIds)
+                .orderBy("asset_master.id", "desc");
+
+
+
+
+            const Parallel = require('async-parallel');
+
+            assetResult = await Parallel.map(assetResult, async pd => {
+
+                let houseResult = await knex.from('asset_location')
+                    .leftJoin('property_units', 'asset_location.unitId', 'property_units.id')
+                    .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
+                    .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+                    .leftJoin('projects', 'property_units.projectId', 'projects.id')
+                    .leftJoin('companies', 'property_units.companyId', 'companies.id')
+                    .select([
+                        'property_units.unitNumber',
+                        'property_units.houseId',
+                        'property_units.description',
+                        'companies.companyId as COMPANY_CODE',
+                        'projects.project as PROJECT_CODE',
+                        'buildings_and_phases.buildingPhaseCode as BUILDING_CODE',
+                        'floor_and_zones.floorZoneCode as FLOOR_CODE',
+                        'property_units.unitNumber as UNIT_NUMBER'
+                    ])
+                    .where({ "asset_location.assetId": pd.ID }).first().orderBy('asset_location.id', 'desc')
+
+                if (houseResult) {
+                    return {
+                        ..._.omit(pd, "ID"),
+                        COMPANY_CODE: houseResult.COMPANY_CODE,
+                        PROJECT_CODE: houseResult.PROJECT_CODE,
+                        BUILDING_CODE: houseResult.BUILDING_CODE,
+                        FLOOR_CODE: houseResult.FLOOR_CODE,
+                        UNIT_NUMBER: houseResult.UNIT_NUMBER,
+                    }
+                } else {
+                    return {
+                        ..._.omit(pd, "ID"),
+                        COMPANY_CODE: "",
+                        PROJECT_CODE: "",
+                        BUILDING_CODE: "",
+                        FLOOR_CODE: "",
+                        UNIT_NUMBER: "",
+                    }
+                }
+
+            })
+
+
+
+            let assets = assetResult;
             let tempraryDirectory = null;
             let bucketName = null;
             if (process.env.IS_OFFLINE) {
@@ -2596,7 +2734,12 @@ const assetController = {
                     ASSIGN_USER: "",
                     ASSIGN_TEAM: "",
                     ASSIGN_VENDOR: "",
-                    ASSIGN_INFORMATION: ""
+                    ASSIGN_INFORMATION: "",
+                    COMPANY_CODE: "",
+                    PROJECT_CODE: "",
+                    BUILDING_CODE: "",
+                    FLOOR_CODE: "",
+                    UNIT_NUMBER: ""
                 }]);
             }
 
@@ -2606,7 +2749,7 @@ const assetController = {
             let filepath = tempraryDirectory + filename;
             let check = XLSX.writeFile(wb, filepath);
             const AWS = require("aws-sdk");
-            fs.readFile(filepath, function(err, file_buffer) {
+            fs.readFile(filepath, function (err, file_buffer) {
                 var s3 = new AWS.S3();
                 var params = {
                     Bucket: bucketName,
@@ -2614,7 +2757,7 @@ const assetController = {
                     Body: file_buffer,
                     ACL: "public-read"
                 };
-                s3.putObject(params, function(err, data) {
+                s3.putObject(params, function (err, data) {
                     if (err) {
                         console.log("Error at uploadCSVFileOnS3Bucket function", err);
                         //next(err);
@@ -2639,7 +2782,8 @@ const assetController = {
                                 assets: assets
                             },
                             message: "Asset Data Export Successfully!",
-                            url: url
+                            url: url,
+                            assetResult
                         });
                     }
                 });
@@ -2651,7 +2795,7 @@ const assetController = {
             });
         }
     },
-    importAssetData: async(req, res) => {
+    importAssetData: async (req, res) => {
 
         try {
             // if (req.file) {
@@ -2903,7 +3047,7 @@ const assetController = {
             });
         }
     },
-    getAssetListByHouseId: async(req, res) => {
+    getAssetListByHouseId: async (req, res) => {
         try {
             let houseId = req.body.houseId;
             let reqData = req.query
@@ -2917,62 +3061,62 @@ const assetController = {
 
             [total, rows] = await Promise.all([
                 knex("asset_location")
-                .leftJoin("asset_master", "asset_location.assetId", "asset_master.id")
-                .leftJoin('companies', 'asset_location.companyId', 'companies.id')
-                .leftJoin('projects', 'asset_location.projectId', 'projects.id')
-                .leftJoin('buildings_and_phases', 'asset_location.buildingId', 'buildings_and_phases.id')
-                .leftJoin('floor_and_zones', 'asset_location.floorId', 'floor_and_zones.id')
-                .leftJoin('property_units', 'asset_location.unitId', 'property_units.id')
-                .select([
-                    "asset_master.assetName as assetName",
-                    "asset_master.id as id",
-                    'companies.companyName',
-                    'companies.id as companyId',
-                    'projects.projectName as projectName',
-                    'projects.id as projectId',
-                    'buildings_and_phases.buildingPhaseCode as buildingPhaseCode',
-                    'buildings_and_phases.id as buildingId',
-                    'floor_and_zones.floorZoneCode as floorZoneCode',
-                    'floor_and_zones.id as floorId',
-                    'property_units.unitNumber as unitNumber',
-                    'property_units.id as unitId',
-                    'property_units.houseId as houseId',
-                    "asset_master.displayId"
-                ])
-                .where({
-                    "asset_location.houseId": houseId,
-                    "asset_master.orgId": req.orgId,
-                    "asset_location.endDate": null,
-                }),
+                    .leftJoin("asset_master", "asset_location.assetId", "asset_master.id")
+                    .leftJoin('companies', 'asset_location.companyId', 'companies.id')
+                    .leftJoin('projects', 'asset_location.projectId', 'projects.id')
+                    .leftJoin('buildings_and_phases', 'asset_location.buildingId', 'buildings_and_phases.id')
+                    .leftJoin('floor_and_zones', 'asset_location.floorId', 'floor_and_zones.id')
+                    .leftJoin('property_units', 'asset_location.unitId', 'property_units.id')
+                    .select([
+                        "asset_master.assetName as assetName",
+                        "asset_master.id as id",
+                        'companies.companyName',
+                        'companies.id as companyId',
+                        'projects.projectName as projectName',
+                        'projects.id as projectId',
+                        'buildings_and_phases.buildingPhaseCode as buildingPhaseCode',
+                        'buildings_and_phases.id as buildingId',
+                        'floor_and_zones.floorZoneCode as floorZoneCode',
+                        'floor_and_zones.id as floorId',
+                        'property_units.unitNumber as unitNumber',
+                        'property_units.id as unitId',
+                        'property_units.houseId as houseId',
+                        "asset_master.displayId"
+                    ])
+                    .where({
+                        "asset_location.houseId": houseId,
+                        "asset_master.orgId": req.orgId,
+                        "asset_location.endDate": null,
+                    }),
                 knex("asset_location")
-                .leftJoin("asset_master", "asset_location.assetId", "asset_master.id")
-                .leftJoin('companies', 'asset_location.companyId', 'companies.id')
-                .leftJoin('projects', 'asset_location.projectId', 'projects.id')
-                .leftJoin('buildings_and_phases', 'asset_location.buildingId', 'buildings_and_phases.id')
-                .leftJoin('floor_and_zones', 'asset_location.floorId', 'floor_and_zones.id')
-                .leftJoin('property_units', 'asset_location.unitId', 'property_units.id')
-                .select([
-                    "asset_master.assetName as assetName",
-                    "asset_master.id as id",
-                    'companies.companyName',
-                    'companies.id as companyId',
-                    'projects.projectName as projectName',
-                    'projects.id as projectId',
-                    'buildings_and_phases.buildingPhaseCode as buildingPhaseCode',
-                    'buildings_and_phases.id as buildingId',
-                    'floor_and_zones.floorZoneCode as floorZoneCode',
-                    'floor_and_zones.id as floorId',
-                    'property_units.unitNumber as unitNumber',
-                    'property_units.id as unitId',
-                    'property_units.houseId as houseId',
-                    "asset_master.displayId"
+                    .leftJoin("asset_master", "asset_location.assetId", "asset_master.id")
+                    .leftJoin('companies', 'asset_location.companyId', 'companies.id')
+                    .leftJoin('projects', 'asset_location.projectId', 'projects.id')
+                    .leftJoin('buildings_and_phases', 'asset_location.buildingId', 'buildings_and_phases.id')
+                    .leftJoin('floor_and_zones', 'asset_location.floorId', 'floor_and_zones.id')
+                    .leftJoin('property_units', 'asset_location.unitId', 'property_units.id')
+                    .select([
+                        "asset_master.assetName as assetName",
+                        "asset_master.id as id",
+                        'companies.companyName',
+                        'companies.id as companyId',
+                        'projects.projectName as projectName',
+                        'projects.id as projectId',
+                        'buildings_and_phases.buildingPhaseCode as buildingPhaseCode',
+                        'buildings_and_phases.id as buildingId',
+                        'floor_and_zones.floorZoneCode as floorZoneCode',
+                        'floor_and_zones.id as floorId',
+                        'property_units.unitNumber as unitNumber',
+                        'property_units.id as unitId',
+                        'property_units.houseId as houseId',
+                        "asset_master.displayId"
 
-                ])
-                .where({
-                    "asset_location.houseId": houseId,
-                    "asset_master.orgId": req.orgId,
-                    "asset_location.endDate": null,
-                }).offset(offset).limit(per_page)
+                    ])
+                    .where({
+                        "asset_location.houseId": houseId,
+                        "asset_master.orgId": req.orgId,
+                        "asset_location.endDate": null,
+                    }).offset(offset).limit(per_page)
             ]);
 
 
@@ -3001,7 +3145,7 @@ const assetController = {
             });
         }
     },
-    getServiceRequestRelocatedAssets: async(req, res) => {
+    getServiceRequestRelocatedAssets: async (req, res) => {
         try {
             const { serviceRequestId } = req.body;
 
@@ -3033,7 +3177,7 @@ const assetController = {
             });
         }
     },
-    replaceAsset: async(req, res) => {
+    replaceAsset: async (req, res) => {
         try {
             let replaced
             let location_update
@@ -3041,10 +3185,10 @@ const assetController = {
             let currentTime = new Date().getTime()
             await Promise.all([
                 knex('asset_location')
-                .update({ endDate: currentTime, serviceRequestId })
-                .where({ assetId: oldAssetId, orgId: req.orgId }),
+                    .update({ endDate: currentTime, serviceRequestId })
+                    .where({ assetId: oldAssetId, orgId: req.orgId }),
                 knex('asset_location')
-                .insert({ assetId: oldAssetId, startDate: currentTime, orgId: req.orgId })
+                    .insert({ assetId: oldAssetId, startDate: currentTime, orgId: req.orgId })
             ])
 
             replaced = await knex('replaced_assets')
@@ -3060,8 +3204,8 @@ const assetController = {
                     updatedAt: currentTime
                 })
             location_update = await knex('asset_location')
-                .insert({...newAssetLocation, assetId: newAssetId, createdAt: currentTime, updatedAt: currentTime, serviceRequestId, startDate: currentTime, orgId: req.orgId, serviceRequestId })
-                // Change the old asset location to null
+                .insert({ ...newAssetLocation, assetId: newAssetId, createdAt: currentTime, updatedAt: currentTime, serviceRequestId, startDate: currentTime, orgId: req.orgId, serviceRequestId })
+            // Change the old asset location to null
 
 
             return res.status(200).json({
@@ -3076,7 +3220,7 @@ const assetController = {
             });
         }
     },
-    getReplacedAssetList: async(req, res) => {
+    getReplacedAssetList: async (req, res) => {
         try {
             let { serviceRequestId } = req.body;
             let replacedAssetList
@@ -3114,7 +3258,7 @@ const assetController = {
             });
         }
     },
-    getAssetListForReplace: async(req, res) => {
+    getAssetListForReplace: async (req, res) => {
         try {
             let reqData = req.query
             let total, rows;
@@ -3126,53 +3270,53 @@ const assetController = {
 
             [total, rows] = await Promise.all([
                 knex('asset_master')
-                .leftJoin('asset_location', 'asset_location.assetId', 'asset_master.id')
-                .leftJoin('companies', 'asset_location.companyId', 'companies.id')
-                .leftJoin('projects', 'asset_location.projectId', 'projects.id')
-                .leftJoin('buildings_and_phases', 'asset_location.buildingId', 'buildings_and_phases.id')
-                .leftJoin('floor_and_zones', 'asset_location.floorId', 'floor_and_zones.id')
-                .leftJoin('property_units', 'asset_location.unitId', 'property_units.id')
-                .select([
-                    'asset_master.id as id',
-                    'asset_master.assetName',
-                    'companies.companyName',
-                    'companies.id as companyId',
-                    'projects.projectName as projectName',
-                    'projects.id as projectId',
-                    'buildings_and_phases.buildingPhaseCode as buildingPhaseCode',
-                    'buildings_and_phases.id as buildingId',
-                    'floor_and_zones.floorZoneCode as floorZoneCode',
-                    'floor_and_zones.id as floorId',
-                    'property_units.unitNumber as unitNumber',
-                    'property_units.id as unitId',
-                    'property_units.houseId as houseId',
-                    'asset_master.displayId',
+                    .leftJoin('asset_location', 'asset_location.assetId', 'asset_master.id')
+                    .leftJoin('companies', 'asset_location.companyId', 'companies.id')
+                    .leftJoin('projects', 'asset_location.projectId', 'projects.id')
+                    .leftJoin('buildings_and_phases', 'asset_location.buildingId', 'buildings_and_phases.id')
+                    .leftJoin('floor_and_zones', 'asset_location.floorId', 'floor_and_zones.id')
+                    .leftJoin('property_units', 'asset_location.unitId', 'property_units.id')
+                    .select([
+                        'asset_master.id as id',
+                        'asset_master.assetName',
+                        'companies.companyName',
+                        'companies.id as companyId',
+                        'projects.projectName as projectName',
+                        'projects.id as projectId',
+                        'buildings_and_phases.buildingPhaseCode as buildingPhaseCode',
+                        'buildings_and_phases.id as buildingId',
+                        'floor_and_zones.floorZoneCode as floorZoneCode',
+                        'floor_and_zones.id as floorId',
+                        'property_units.unitNumber as unitNumber',
+                        'property_units.id as unitId',
+                        'property_units.houseId as houseId',
+                        'asset_master.displayId',
 
-                ]).distinct(['asset_location.assetId'])
-                .where({ 'asset_master.orgId': req.orgId }),
+                    ]).distinct(['asset_location.assetId'])
+                    .where({ 'asset_master.orgId': req.orgId }),
                 knex('asset_master')
-                .leftJoin('asset_location', 'asset_location.assetId', 'asset_master.id')
-                .leftJoin('companies', 'asset_location.companyId', 'companies.id')
-                .leftJoin('projects', 'asset_location.projectId', 'projects.id')
-                .leftJoin('buildings_and_phases', 'asset_location.buildingId', 'buildings_and_phases.id')
-                .leftJoin('floor_and_zones', 'asset_location.floorId', 'floor_and_zones.id')
-                .leftJoin('property_units', 'asset_location.unitId', 'property_units.id')
-                .select([
-                    'asset_master.id as id',
-                    'asset_master.assetName',
-                    'companies.companyName',
-                    'projects.projectName as projectName',
-                    'buildings_and_phases.buildingPhaseCode as buildingPhaseCode',
-                    'floor_and_zones.floorZoneCode as floorZoneCode',
-                    'property_units.unitNumber as unitNumber',
-                    'property_units.houseId as houseId',
-                    'asset_master.displayId',
+                    .leftJoin('asset_location', 'asset_location.assetId', 'asset_master.id')
+                    .leftJoin('companies', 'asset_location.companyId', 'companies.id')
+                    .leftJoin('projects', 'asset_location.projectId', 'projects.id')
+                    .leftJoin('buildings_and_phases', 'asset_location.buildingId', 'buildings_and_phases.id')
+                    .leftJoin('floor_and_zones', 'asset_location.floorId', 'floor_and_zones.id')
+                    .leftJoin('property_units', 'asset_location.unitId', 'property_units.id')
+                    .select([
+                        'asset_master.id as id',
+                        'asset_master.assetName',
+                        'companies.companyName',
+                        'projects.projectName as projectName',
+                        'buildings_and_phases.buildingPhaseCode as buildingPhaseCode',
+                        'floor_and_zones.floorZoneCode as floorZoneCode',
+                        'property_units.unitNumber as unitNumber',
+                        'property_units.houseId as houseId',
+                        'asset_master.displayId',
 
-                ])
-                .distinct(['asset_location.assetId'])
-                .where({ 'asset_master.orgId': req.orgId })
-                .offset(offset)
-                .limit(per_page)
+                    ])
+                    .distinct(['asset_location.assetId'])
+                    .where({ 'asset_master.orgId': req.orgId })
+                    .offset(offset)
+                    .limit(per_page)
             ])
 
             let count = total.length;
@@ -3196,7 +3340,7 @@ const assetController = {
             });
         }
     },
-    deleteServiceAssignedAsset: async(req, res) => {
+    deleteServiceAssignedAsset: async (req, res) => {
         try {
             const id = req.body.id;
             // deleteRow = filtered;
@@ -3214,7 +3358,7 @@ const assetController = {
             });
         }
     },
-    removePartFromAsset: async(req, res) => {
+    removePartFromAsset: async (req, res) => {
         try {
             const data = req.body;
             if (data.assetId) {
