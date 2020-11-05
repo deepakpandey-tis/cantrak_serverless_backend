@@ -1548,7 +1548,6 @@ const dashboardController = {
   }
   ,
   /* GET ALL ALLOW COMPANY LIST */
-
   getAllowAllCompanyList: async (req, res) => {
 
     try {
@@ -1602,6 +1601,116 @@ const dashboardController = {
     }
 
 
+  }
+  ,
+  /*GET SERVICE REQUEST DATA BY PROBLEM TYPE FOR CHART */
+  getServiceRequestByProblemTypeChartdata: async (req, res) => {
+
+    try {
+
+      let problems = null;
+      problems = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "incident_type",
+          "incident_sub_categories.incidentTypeId",
+          "incident_type.id"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_problems.serviceRequestId",
+          "incident_type.typeCode as Type",
+          "incident_categories.descriptionEng",
+          "service_requests.priority",
+        ])
+        .where({
+          "service_requests.orgId": req.orgId,
+        })
+        .where({ "service_requests.orgId": req.orgId })
+
+        .where({ "service_requests.isCreatedFromSo": false, 'service_requests.moderationStatus': true })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "desc");
+
+
+
+      let final = [];
+      let grouped = _.groupBy(problems, "Type");
+      final.push(grouped);
+
+      let chartData = _.flatten(
+        final
+          .filter(v => !_.isEmpty(v))
+          .map(v => _.keys(v).map(p => ({ [p]: v[p].length })))
+      ).reduce((a, p) => {
+        let l = _.keys(p)[0];
+        if (a[l]) {
+          a[l] += p[l];
+        } else {
+          a[l] = p[l];
+        }
+        return a;
+      }, {});
+
+
+      const Parallel = require('async-parallel');
+
+      problems = await Parallel.map(problems, async st => {
+
+        return {
+          ...st,
+          chartData,
+          "hha": "dfd"
+        }
+
+      })
+
+
+
+
+      res.status(200).json({
+        data: {
+          problems,
+          chartData,
+          grouped,
+          final
+        },
+        message: "Service Request by problem type data successfully!"
+      })
+
+
+    } catch (err) {
+
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      })
+
+    }
   }
 
 };

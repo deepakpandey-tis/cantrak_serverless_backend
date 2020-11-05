@@ -34,10 +34,10 @@ router.post('/get-start-end-service-request-service-order', authMiddleware.isAut
     dashboardController.getServiceRequestServiceOrderBwDates)
 
 
-router.post('/get-main-data-for-pie-chart', 
-authMiddleware.isAuthenticated, 
-roleMiddleware.parseUserPermission, 
-dashboardController.getMainDataForPieChart)
+router.post('/get-main-data-for-pie-chart',
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    dashboardController.getMainDataForPieChart)
 
 router.post('/get-service-requests-by-problem-type',
     authMiddleware.isAuthenticated,
@@ -47,18 +47,29 @@ router.post('/get-service-requests-by-problem-type',
 
 
 router.post('/get-pie-chart-for-incident-types',
-authMiddleware.isAuthenticated,
-roleMiddleware.parseUserPermission,
-dashboardController.getPieChartForIncidentTypes
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    dashboardController.getPieChartForIncidentTypes
 );
 
-router.post('/get-pie-chart-for-all-incident-types',authMiddleware.isAuthenticated,roleMiddleware.parseUserPermission,dashboardController.getPieChartForAllIncidentTypes)
+router.post('/get-pie-chart-for-all-incident-types',
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    dashboardController.getPieChartForAllIncidentTypes)
 
 router.get('/get-allow-all-company-list',
-authMiddleware.isAuthenticated,
-roleMiddleware.parseUserPermission,
-dashboardController.getAllowAllCompanyList
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    dashboardController.getAllowAllCompanyList
 );
+
+/*GET SERVICE REQUEST DATA BY PROBLEM TYPE FOR CHART */
+router.post('/get-service-request-by-problem-type-chart-data',
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    dashboardController.getServiceRequestByProblemTypeChartdata
+)
+
 
 
 module.exports = router;
