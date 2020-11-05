@@ -1678,6 +1678,109 @@ const dashboardController = {
       }, {});
 
 
+
+      let final2 = [];
+
+      let ch = _.flatten(
+        final
+          .filter(v => !_.isEmpty(v))
+          .map(v => _.keys(v).map(p => ({
+
+
+            [p]: _.groupBy(v[p], "priority")
+
+          })))
+      ).reduce((a, p) => {
+        let l = _.keys(p)[0];
+        if (a[l]) {
+          a[l] += p[l];
+        } else {
+          a[l] = p[l];
+        }
+        return a;
+      }, {});
+
+
+
+
+
+      let ch2 = _.flatten(
+        final
+          .filter(v => !_.isEmpty(v))
+          .map(v => Object.keys(v).map(p =>
+            p
+
+          ))
+      )
+
+
+      final2.push(ch);
+
+      let chart2 = _.flatten(
+        final2
+          .filter(v => !_.isEmpty(v))
+          .map(v =>
+
+            _.keys(v).map(p => ({ [p]: v[p] }))
+
+            //_.keys(v).map(p => ({ [p]: v[p].map(x => _.keys(x).map(y => ({ [y]: x[y] }))) }))
+
+            //console.log("vvvvvvvvvv",_.keys(v),"vvvvvvvvvvvvvvvvvvvvvvvvvvv")
+
+            //   _.keys(v).map(p => ({ 
+
+
+            //   //[p]: v[p] 
+
+
+
+            // }))
+          )
+      )
+
+
+
+
+      let prG = _.groupBy(problems, "priority");
+      let f = [];
+      f.push(prG);
+      let arr1 = [];
+
+      let x = _.flatten(
+        f
+          .filter(v => !_.isEmpty(v))
+          .map(v => _.keys(v).map(p => ({
+            [p]: v[p]
+
+          })))
+      ).reduce((a, p) => {
+        let l = _.keys(p)[0];
+        if (a[l]) {
+          a[l] += p[l];
+        } else {
+          a[l] = p[l];
+        }
+        return a;
+      }, {});
+
+
+      for (let d of problems) {
+
+
+
+
+
+
+      }
+
+      // let m = chart2.map(v =>
+
+      //  // _.keys(v).map(p => v[p].map(x => _.keys(x).map(y => ({ [y]: x[y] }))))
+
+      //   //console.log("vvvvvvvvvvvvvvvvvvv", v, "==============================");
+
+      // )
+
       const Parallel = require('async-parallel');
 
       problems = await Parallel.map(problems, async st => {
@@ -1685,7 +1788,6 @@ const dashboardController = {
         return {
           ...st,
           chartData,
-          "hha": "dfd"
         }
 
       })
@@ -1698,7 +1800,16 @@ const dashboardController = {
           problems,
           chartData,
           grouped,
-          final
+          final,
+          ch,
+          ch2,
+          chart2,
+          prG,
+          arr1,
+          x
+
+
+
         },
         message: "Service Request by problem type data successfully!"
       })
