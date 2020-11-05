@@ -1548,7 +1548,6 @@ const dashboardController = {
   }
   ,
   /* GET ALL ALLOW COMPANY LIST */
-
   getAllowAllCompanyList: async (req, res) => {
 
     try {
@@ -1601,6 +1600,448 @@ const dashboardController = {
       });
     }
 
+
+  }
+  ,
+  /*GET SERVICE REQUEST DATA BY PROBLEM TYPE FOR CHART */
+  getServiceRequestByProblemTypeChartdata: async (req, res) => {
+
+    try {
+
+      let problems = null;
+      problems = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "incident_type",
+          "incident_sub_categories.incidentTypeId",
+          "incident_type.id"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_problems.serviceRequestId",
+          "incident_type.typeCode as Type",
+          "incident_categories.descriptionEng",
+          "service_requests.priority",
+        ])
+        .where({
+          "service_requests.orgId": req.orgId,
+        })
+        .where({ "service_requests.orgId": req.orgId })
+
+        .where({ "service_requests.isCreatedFromSo": false, 'service_requests.moderationStatus': true })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "desc");
+
+
+
+      let final = [];
+      let grouped = _.groupBy(problems, "Type");
+      final.push(grouped);
+
+      let chartData = _.flatten(
+        final
+          .filter(v => !_.isEmpty(v))
+          .map(v => _.keys(v).map(p => ({ [p]: v[p].length })))
+      ).reduce((a, p) => {
+        let l = _.keys(p)[0];
+        if (a[l]) {
+          a[l] += p[l];
+        } else {
+          a[l] = p[l];
+        }
+        return a;
+      }, {});
+
+
+
+      let final2 = [];
+
+      let ch = _.flatten(
+        final
+          .filter(v => !_.isEmpty(v))
+          .map(v => _.keys(v).map(p => ({
+
+
+            [p]: _.groupBy(v[p], "priority")
+
+          })))
+      ).reduce((a, p) => {
+        let l = _.keys(p)[0];
+        if (a[l]) {
+          a[l] += p[l];
+        } else {
+          a[l] = p[l];
+        }
+        return a;
+      }, {});
+
+
+
+
+
+
+      let ch2 = _.flatten(
+        final
+          .filter(v => !_.isEmpty(v))
+          .map(v => Object.keys(v).map(p =>
+            p
+
+          ))
+      )
+
+
+      final2.push(ch);
+
+      let chart2 = _.flatten(
+        final2
+          .filter(v => !_.isEmpty(v))
+          .map(v =>
+
+            _.keys(v).map(p => ({ [p]: v[p] }))
+
+            //_.keys(v).map(p => ({ [p]: v[p].map(x => _.keys(x).map(y => ({ [y]: x[y] }))) }))
+
+            //console.log("vvvvvvvvvv",_.keys(v),"vvvvvvvvvvvvvvvvvvvvvvvvvvv")
+
+            //   _.keys(v).map(p => ({ 
+
+
+            //   //[p]: v[p] 
+
+
+
+            // }))
+          )
+      )
+
+
+
+
+      let prG = _.groupBy(problems, "priority");
+      let f = [];
+      f.push(prG);
+      let arr1 = [];
+
+      let x = _.flatten(
+        f
+          .filter(v => !_.isEmpty(v))
+          .map(v => _.keys(v).map(p => ({
+            [p]: v[p]
+
+          })))
+      ).reduce((a, p) => {
+        let l = _.keys(p)[0];
+        if (a[l]) {
+          a[l] += p[l];
+        } else {
+          a[l] = p[l];
+        }
+        return a;
+      }, {});
+
+
+      for (let d of problems) {
+
+
+
+
+
+
+      }
+
+      // let m = chart2.map(v =>
+
+      //  // _.keys(v).map(p => v[p].map(x => _.keys(x).map(y => ({ [y]: x[y] }))))
+
+      //   //console.log("vvvvvvvvvvvvvvvvvvv", v, "==============================");
+
+      // )
+
+      const Parallel = require('async-parallel');
+
+      problems = await Parallel.map(problems, async st => {
+
+        return {
+          ...st,
+          chartData,
+        }
+
+      })
+
+
+
+
+      res.status(200).json({
+        data: {
+          problems,
+          chartData,
+          grouped,
+          final,
+          ch,
+          ch2,
+          chart2,
+          prG,
+          arr1,
+          x
+
+
+
+        },
+        message: "Service Request by problem type data successfully!"
+      })
+
+
+    } catch (err) {
+
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      })
+
+    }
+  }
+  ,
+
+  getServiceRequestByPriorityChartdata: async (req, res) => {
+
+    try {
+
+      let problems = null;
+      problems = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "incident_type",
+          "incident_sub_categories.incidentTypeId",
+          "incident_type.id"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_problems.serviceRequestId",
+          "incident_type.typeCode as Type",
+          "incident_categories.descriptionEng",
+          "service_requests.priority",
+        ])
+        .where({
+          "service_requests.orgId": req.orgId,
+        })
+        .where({ "service_requests.orgId": req.orgId })
+
+        .where({ "service_requests.isCreatedFromSo": false, 'service_requests.moderationStatus': true })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "desc");
+
+
+
+      let final = [];
+      let grouped = _.groupBy(problems, "priority");
+      final.push(grouped);
+
+      let chartData = _.flatten(
+        final
+          .filter(v => !_.isEmpty(v))
+          .map(v => _.keys(v).map(p => ({ [p]: v[p].length })))
+      ).reduce((a, p) => {
+        let l = _.keys(p)[0];
+        if (a[l]) {
+          a[l] += p[l];
+        } else {
+          a[l] = p[l];
+        }
+        return a;
+      }, {});
+
+
+
+      let final2 = [];
+
+      let ch = _.flatten(
+        final
+          .filter(v => !_.isEmpty(v))
+          .map(v => _.keys(v).map(p => ({
+
+
+            [p]: _.groupBy(v[p], "priority")
+
+          })))
+      ).reduce((a, p) => {
+        let l = _.keys(p)[0];
+        if (a[l]) {
+          a[l] += p[l];
+        } else {
+          a[l] = p[l];
+        }
+        return a;
+      }, {});
+
+
+
+
+
+
+      let ch2 = _.flatten(
+        final
+          .filter(v => !_.isEmpty(v))
+          .map(v => Object.keys(v).map(p =>
+            p
+
+          ))
+      )
+
+
+      final2.push(ch);
+
+      let chart2 = _.flatten(
+        final2
+          .filter(v => !_.isEmpty(v))
+          .map(v =>
+
+            _.keys(v).map(p => ({ [p]: v[p] }))
+
+            //_.keys(v).map(p => ({ [p]: v[p].map(x => _.keys(x).map(y => ({ [y]: x[y] }))) }))
+
+            //console.log("vvvvvvvvvv",_.keys(v),"vvvvvvvvvvvvvvvvvvvvvvvvvvv")
+
+            //   _.keys(v).map(p => ({ 
+
+
+            //   //[p]: v[p] 
+
+
+
+            // }))
+          )
+      )
+
+
+
+
+      let prG = _.groupBy(problems, "priority");
+      let f = [];
+      f.push(prG);
+      let arr1 = [];
+
+      let x = _.flatten(
+        f
+          .filter(v => !_.isEmpty(v))
+          .map(v => _.keys(v).map(p => ({
+            [p]: v[p]
+
+          })))
+      ).reduce((a, p) => {
+        let l = _.keys(p)[0];
+        if (a[l]) {
+          a[l] += p[l];
+        } else {
+          a[l] = p[l];
+        }
+        return a;
+      }, {});
+
+
+      for (let d of problems) {
+
+
+
+
+
+
+      }
+
+      // let m = chart2.map(v =>
+
+      //  // _.keys(v).map(p => v[p].map(x => _.keys(x).map(y => ({ [y]: x[y] }))))
+
+      //   //console.log("vvvvvvvvvvvvvvvvvvv", v, "==============================");
+
+      // )
+
+      const Parallel = require('async-parallel');
+
+      problems = await Parallel.map(problems, async st => {
+
+        return {
+          ...st,
+          chartData,
+        }
+
+      })
+
+      res.status(200).json({
+        data: {
+          problems,
+          chartData,
+          grouped,
+          final,
+          ch,
+          ch2,
+          chart2,
+          prG,
+          arr1,
+          x
+
+
+
+        },
+        message: "Service Request by priority data successfully!"
+      })
+
+
+    } catch (err) {
+
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      })
+
+    }
 
   }
 
