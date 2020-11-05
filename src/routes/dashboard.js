@@ -71,6 +71,13 @@ router.post('/get-service-request-by-problem-type-chart-data',
 )
 
 
+/*GET SERVICE REQUEST DATA BY PRIORITY TYPE FOR CHART */
+router.post('/get-service-request-by-priority-chart-data',
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    dashboardController.getServiceRequestByPriorityChartdata
+)
+
 
 module.exports = router;
 
