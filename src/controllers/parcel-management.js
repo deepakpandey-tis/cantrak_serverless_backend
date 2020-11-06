@@ -204,26 +204,31 @@ const parcelManagementController = {
             images.push(d[0]);
           }
         }
+
+        let orgMaster = await knex.from("organisations").where({ id: 49, organisationAdminId: 406 }).first();
+
         let dataNos = {
           payload: {
-            
+            orgData : orgMaster
           },
         };
+
+        console.log("OrgData+++++",dataNos);
         let tenantId = req.body.org_user_data.tenantId
         // console.log("tenantid for notification",tenantId)
 
         if(req.body.pickedUpType[0] == 2 && req.body.isChecked == true){
           const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH']
-        let sender = await knex.from("users").where({ id: req.me.id }).first();
+          let sender = await knex.from("users").where({ id: req.me.id }).first();
 
-        let receiver = await knex.from("users").where({ id: tenantId }).first();
+          let receiver = await knex.from("users").where({ id: tenantId }).first();
 
-        await addOutGoingNotification.send(
-          sender,
-          receiver,
-          dataNos,
-          ALLOWED_CHANNELS
-        );
+          await addOutGoingNotification.send(
+            sender,
+            receiver,
+            dataNos,
+            ALLOWED_CHANNELS
+          );
         }
        
       

@@ -1272,7 +1272,7 @@ const customerController = {
     try {
       let propertyUnit = req.body;
 
-      let orgId = req.orgId;
+      let orgId = req.orgId
 
       let tenantList = await knex("user_house_allocation")
         .leftJoin("users", "user_house_allocation.userId", "users.id")
