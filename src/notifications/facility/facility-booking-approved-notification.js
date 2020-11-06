@@ -31,6 +31,17 @@ const bookingApprovedNotification = {
     sendInAppNotification: async (sender, receiver, data) => {
         // let name = data.payload.
         console.log("data of payload inapp",data.payload.time)
+      
+        let  orgData = data.payload.orgData;
+        let icons;
+        let images;
+        if(orgData.id == 53){
+            icons = 'assets/icons/cbre-512x512.png';
+            images = 'assets/icons/cbre-512x512.png';
+        }else{
+            icons = 'assets/icons/icon-512x512.png';
+            images = 'assets/icons/icon-512x512.png';
+        }
 
         data = {
             orgId: sender.orgId,
@@ -40,8 +51,8 @@ const bookingApprovedNotification = {
                 ...data,
                 subject: 'Facility Booking Approved',
                 body: `Hi!!, ${receiver.name} Your Booking in Facility ${data.payload.facility} made for ${data.payload.date} at ${data.payload.time} is approved.`,
-                icon: 'assets/icons/icon-512x512.png',
-                image: 'assets/icons/icon-512x512.png',
+                icon: icons,
+                image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
                     url: `/user/dashboard/home`,
@@ -79,6 +90,18 @@ const bookingApprovedNotification = {
 
     sendWebPushNotification: async (sender, receiver, data) => {
 
+        let  orgData = data.payload.orgData;
+        let icons;
+        let images;
+        if(orgData.id == 53){
+            icons = 'assets/icons/cbre-512x512.png';
+            images = 'assets/icons/cbre-512x512.png';
+        }else{
+            icons = 'assets/icons/icon-512x512.png';
+            images = 'assets/icons/icon-512x512.png';
+        }
+
+
         data = {
             orgId: sender.orgId,
             senderId: sender.id,
@@ -86,8 +109,8 @@ const bookingApprovedNotification = {
             payload: {
                 subject: 'Test Notification',
                 body: `Hi!!, This is a test notification to all users from ${sender.name}`,
-                icon: 'assets/icons/icon-512x512.png',
-                image: 'assets/icons/icon-512x512.png',
+                icon: icons,
+                image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
                     url: `${process.env.SITE_URL}/admin/dashboard/home`,
