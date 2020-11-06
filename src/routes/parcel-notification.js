@@ -23,9 +23,12 @@ router.post('/parcel-notification',authMiddleware.isAuthenticated, async(req,res
         let sender = await knex.from('users').where({ id: req.me.id }).first();
         let receiver = await knex.from('users').where({ id: req.body.id }).first();
         console.log("reciever tenant",receiver)
+        let orgMaster = await knex.from("organisations").where({ id: 53, organisationAdminId: 766 }).first();
+
 
         let data = {
             payload: {
+                orgData : orgMaster
             }
         };
         await parcelNotification.send(sender, receiver, data, ALLOWED_CHANNELS);
@@ -56,10 +59,11 @@ router.post('/parcel-acceptance-notification',authMiddleware.isAuthenticated, as
         let receiver = await knex.from('users').where({ id: req.body.id[0] }).first();
         // console.log("reciever tenant",receiver)
         // console.log("total parcel id",req.body.parcelId.join(','))
+        let orgMaster = await knex.from("organisations").where({ id: 53, organisationAdminId: 766 }).first();
 
         let data = {
             payload: {
-                
+                orgData : orgMaster,
                 parcelId:req.body.parcelId.join(',')
             }
         };
@@ -85,9 +89,12 @@ router.post('/parcel-pickedUp-notification',authMiddleware.isAuthenticated, asyn
         let sender = await knex.from('users').where({ id: req.me.id }).first();
         let receiver = await knex.from('users').where({ id: req.body.id }).first();
         console.log("reciever tenant",receiver)
+        let orgMaster = await knex.from("organisations").where({ id: 53, organisationAdminId: 766 }).first();
+
 
         let data = {
             payload: {
+                orgData : orgMaster,
                 parcelId:req.body.parcelId
             }
         };
@@ -124,9 +131,12 @@ router.post('/outgoing-parcel-notification',authMiddleware.isAuthenticated, asyn
         //     qrCode = await QRCODE.toDataURL(qrCode1);
         // }
         // console.log("qr code1",qrCode)
+        let orgMaster = await knex.from("organisations").where({ id: 53, organisationAdminId: 766 }).first();
+
 
         let data = {
             payload: {
+                orgData : orgMaster,
                 parcelId:req.body.parcelId,
                 orgId:req.orgId,
                 // qrCode:req.body.url
