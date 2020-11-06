@@ -93,16 +93,21 @@ const announcementController = {
           .into("announcement_master");
         announcementResult = announcementNotificationResult[0];
 
+        let orgMaster = await knex.from("organisations").where({ id: 56, organisationAdminId: 994 }).first();
+
         let userId = req.body.userId;
         let dataNos = {
           payload: {
             title: req.body.title,
             url: req.body.url,
             description: req.body.description,
+            orgData : orgMaster
           },
         };
 
         let sender = await knex.from("users").where({ id: req.me.id }).first();
+
+        
         
         delUsers = await knex('announcement_user_master')
         .where({
@@ -192,11 +197,14 @@ const announcementController = {
         ALLOWED_CHANNELS.push("SMS");
       }
 
+      let orgMaster = await knex.from("organisations").where({ id: 56, organisationAdminId: 994 }).first();
+
       let dataNos = {
         payload: {
           title: req.body.title,
           url: req.body.url,
           description: req.body.description,
+          orgData : orgMaster
         },
       };
 
