@@ -35,7 +35,7 @@ const addOutGoingNotification = {
        
         let icons;
         let images;
-        if(orgData.id == 49){
+        if(orgData.id == 56){
             icons = 'assets/icons/cbre-512x512.png';
             images = 'assets/icons/cbre-512x512.png';
         }else{
@@ -94,7 +94,7 @@ const addOutGoingNotification = {
         let  orgData = data.payload.orgData;
         let icons;
         let images;
-        if(orgData.id == 49){
+        if(orgData.id == 56){
             icons = 'assets/icons/cbre-512x512.png';
             images = 'assets/icons/cbre-512x512.png';
         }else{
