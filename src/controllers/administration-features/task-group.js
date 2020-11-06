@@ -454,6 +454,7 @@ const taskGroupController = {
     createPmTaskgroupSchedule: async (req, res) => {
 
         try {
+            console.log("frequency tag Id",req.body)
 
             let createTemplateTask = null;
             let createTemplate = null;
@@ -465,7 +466,7 @@ const taskGroupController = {
             let assetResults = [];
             let createPmTask = [];
             let partResult = [];
-            let payload = _.omit(req.body, ['additionalUsers']);
+            let payload = _.omit(req.body.taskGroup, ['additionalUsers']);
 
 
             let currentDate = moment().format("YYYY-MM-DD");
@@ -490,6 +491,7 @@ const taskGroupController = {
 
             }
 
+
             const schema = Joi.object().keys({
                 assetCategoryId: Joi.number().required(),
                 companyId: Joi.number().required(),
@@ -506,6 +508,8 @@ const taskGroupController = {
                 // tasks: Joi.array().items(Joi.string().required()).strict().required(),
 
                 assets: Joi.array().items(Joi.string().required()).strict().required(),
+
+                frequencyTagId : Joi.number().required()
 
             });
 
@@ -637,6 +641,7 @@ const taskGroupController = {
                     repeatPeriod: payload.repeatPeriod,
                     repeatOn: payload.repeatOn,
                     repeatFrequency: payload.repeatFrequency,
+                    frequencyTagId:payload.frequencyTagId,
                     createdAt: currentTime,
                     updatedAt: currentTime,
                     orgId: req.orgId
@@ -735,10 +740,14 @@ const taskGroupController = {
 
                     console.log("assssssssssssssssssssss=============", assetId)
 
-                    for (let j = 0; j < performingDates.length; j++) {
-                        const date = performingDates[j];
+                    console.log('pdddddddddddddddddddddddddddd',req.body.workDate,"performing date",performingDates)
 
-                        console.log("pmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm", date, "========================")
+                    // for (let j = 0; j < performingDates.length; j++) {
+                    for (let j = 0; j < req.body.workDate.length; j++) {
+                        // const date = performingDates[j];
+                        const date = req.body.workDate[j];
+
+                        console.log("pmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm1", date, "========================")
 
                         let insertDataGroup = {
                             pmDate: date,
@@ -1544,10 +1553,75 @@ const taskGroupController = {
                     .orderBy("workOrderDate", "asc")
             ]);
 
-            const Parallel = require('async-parallel')
-            const rowsWithLocations = await Parallel.map(rows, async row => {
 
-                console.log("rows", row);
+            // const newData2 = Object.values(
+            //     rows.reduce((acc, cur) => {
+            //       key = cur["pmId"] + cur["pmDate"];
+            //       acc[key] = acc[key]
+            //         ? Object.assign({}, acc[key], {
+            //             repeatPeriod: [acc[key]["repeatPeriod"], cur["repeatPeriod"]]
+            //               .filter(
+            //                 (item, index, inputArray) => inputArray.indexOf(item) == index
+            //               )
+            //               .join(","),
+            //           })
+            //         : cur;
+            //       return acc;
+            //     }, {})
+            //   );
+            const newData2 = Object.values(
+                rows.reduce((acc, cur) => {
+                  key = cur["pmId"] + cur["pmDate"];
+                  acc[key] = acc[key]
+                    ? Object.assign({}, acc[key], {
+                        repeatPeriod: (acc[key]["repeatPeriod"] + "," + cur["repeatPeriod"])
+                          .split(",")
+                          .filter((d, index, arr) => arr.indexOf(d) === index)
+                          .join(","),
+                        workOrderId: (Array.isArray(acc[key]["workOrderId"])
+                          ? acc[key]["workOrderId"].concat([cur["workOrderId"]])
+                          : [acc[key]["workOrderId"], cur["workOrderId"]]
+                        ).filter((d, index, arr) => arr.indexOf(d) === index),
+                      })
+                    : cur;
+                  return acc;
+                }, {})
+              );
+              
+
+              console.log("data in newdata",newData2)
+
+            const Parallel = require('async-parallel')
+
+            
+            const rowsWithLocations = await Parallel.map(newData2, async row => {
+
+                // const workRow = await knex('task_group_schedule')
+                // .innerJoin(
+                //     "task_group_schedule_assign_assets",
+                //     "task_group_schedule.id",
+                //     "task_group_schedule_assign_assets.scheduleId"
+                // )
+                // .innerJoin(
+                //     "asset_master",
+                //     "task_group_schedule_assign_assets.assetId",
+                //     "asset_master.id"
+                // )
+                // .innerJoin(
+                //     "pm_master2",
+                //     "task_group_schedule.pmId",
+                //     "pm_master2.id"
+                // )
+                // .where({
+                //     "task_group_schedule.pmId": row.pmId
+                // })
+                // .where({
+                //     "task_group_schedule.pmDate": row.pmId
+                // })
+
+
+
+                console.log("rows of data", rows);
 
                 const location = await knex('asset_location')
                     .innerJoin('companies', 'asset_location.companyId', 'companies.id')
@@ -1590,6 +1664,7 @@ const taskGroupController = {
             pagination.current_page = page;
             pagination.from = offset;
             pagination.data = rowsWithLocations;
+
 
             return res.status(200).json({
                 data: {
@@ -2131,9 +2206,13 @@ const taskGroupController = {
             
             let payload = req.body;
 
+            console.log("work order date in req",req.body.workOrderDate)
             const schema = Joi.object().keys({
                 taskGroupScheduleId: Joi.string().required(),
-                taskGroupScheduleAssignAssetId: Joi.string().required()
+                taskGroupScheduleAssignAssetId: Joi.string().required(),
+                workOrderDate : Joi.string().required(),
+                pmId : Joi.string().required()
+
             })
 
             const result = Joi.validate(payload, schema);
@@ -2142,6 +2221,8 @@ const taskGroupController = {
                     errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
                 });
             }
+
+            // let woDate = payload.workOrderDate
 
             const pmResult2 = await knex("task_group_schedule")
                 .leftJoin('task_group_schedule_assign_assets', 'task_group_schedule.id', 'task_group_schedule_assign_assets.scheduleId')
@@ -2191,6 +2272,8 @@ const taskGroupController = {
                     'task_group_schedule_assign_assets.status as woStatus'
                 ])
                 .where({
+                    // 'pm_master2.id':payload.pmId,
+                    // 'task_group_schedule_assign_assets.pmDate':req.workOrderDate,
                     'task_group_schedule.id': payload.taskGroupScheduleId,
                     'task_group_schedule_assign_assets.id': payload.taskGroupScheduleAssignAssetId,
                     //'task_group_schedule.taskGroupId':payload.taskGroupId,
@@ -2304,7 +2387,7 @@ const taskGroupController = {
 
                 ])
                 .where({
-                    'pm_task.taskGroupScheduleAssignAssetId': payload.taskGroupScheduleAssignAssetId,
+                    // 'pm_task.taskGroupScheduleAssignAssetId': payload.taskGroupScheduleAssignAssetId,
                     'pm_task.orgId': req.orgId
                 })
                 .orderBy('pm_task.taskSerialNumber', 'asc');
