@@ -70,12 +70,19 @@ router.post('/get-service-request-by-problem-type-chart-data',
     dashboardController.getServiceRequestByProblemTypeChartdata
 )
 
-
-/*GET SERVICE REQUEST DATA BY PRIORITY TYPE FOR CHART */
+/*GET SERVICE REQUEST DATA BY PRIORITY  FOR CHART */
 router.post('/get-service-request-by-priority-chart-data',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
     dashboardController.getServiceRequestByPriorityChartdata
+)
+
+
+/*GET SERVICE REQUEST DATA BY MONTH PRIORITY  FOR CHART */
+router.post('/get-service-request-by-month-priority-chart-data',
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    dashboardController.getServiceRequestByMonthPriorityChartdata
 )
 
 

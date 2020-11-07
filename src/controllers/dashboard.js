@@ -1687,7 +1687,7 @@ const dashboardController = {
           .map(v => _.keys(v).map(p => ({
 
 
-            [p]: _.groupBy(v[p], "priority")
+            [p]: Array(_.groupBy(v[p], "priority")).map(x => _.keys(x).map(y => ({ [y]: x[y].length })))
 
           })))
       ).reduce((a, p) => {
@@ -1826,6 +1826,7 @@ const dashboardController = {
   }
   ,
 
+  /*GET SERVICE REQUEST DATA BY PRIORITY  FOR CHART */
   getServiceRequestByPriorityChartdata: async (req, res) => {
 
     try {
@@ -2032,6 +2033,158 @@ const dashboardController = {
 
         },
         message: "Service Request by priority data successfully!"
+      })
+
+
+    } catch (err) {
+
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      })
+
+    }
+
+  }
+  ,
+  /*GET SERVICE REQUEST DATA BY MONTH PRIORITY  FOR CHART */
+  getServiceRequestByMonthPriorityChartdata: async (req, res) => {
+
+    try {
+
+      let payload = req.body;
+      let startMonth;
+      let endMonth;
+
+      if (Number(payload.startMonth) <= 9) {
+
+        startMonth = "0" + Number(payload.startMonth);
+
+      } else {
+        startMonth = Number(payload.startMonth);
+      }
+
+      if (Number(payload.endMonth) <= 9) {
+
+        endMonth = "0" + Number(payload.endMonth);
+
+      } else {
+        endMonth = Number(payload.endMonth);
+      }
+
+      let lastDay;
+
+      if (endMonth == "1") {
+        lastDay = 31;
+      } else if (endMonth == "2") {
+        lastDay = 28;
+      } else if (endMonth == "3") {
+        lastDay = 31;
+      } else if (endMonth == "4") {
+        lastDay = 30;
+      } else if (endMonth == "5") {
+        lastDay = 31;
+      } else if (endMonth == "6") {
+        lastDay = 30;
+      } else if (endMonth == "7") {
+        lastDay = 31;
+      } else if (endMonth == "8") {
+        lastDay = 31;
+      } else if (endMonth == "9") {
+        lastDay = 30;
+      } else if (endMonth == "10") {
+        lastDay = 31;
+      } else if (endMonth == "11") {
+        lastDay = 30;
+      } else if (endMonth == "12") {
+        lastDay = 31;
+      }
+      let year = payload.startYear;
+      let fromDate = year + "-" + startMonth + "-" + '01';
+      let toDate = year + "-" + endMonth + "-" + lastDay;
+
+      let problems = null;
+      problems = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "incident_type",
+          "incident_sub_categories.incidentTypeId",
+          "incident_type.id"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_problems.serviceRequestId",
+          "incident_type.typeCode as Type",
+          "incident_categories.descriptionEng",
+          "service_requests.priority",
+          knex.raw(`to_char(to_timestamp(service_requests."createdAt"/1000),'YYYY-mm') as Date`)
+        ])
+        .whereRaw(`to_char(to_timestamp(service_requests."createdAt"/1000),'YYYY-MM-DD') BETWEEN '${fromDate}' and '${toDate}'`)
+        //.whereRaw(`to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}')`)
+        .where({
+          "service_requests.orgId": req.orgId,
+        })
+        .where({ "service_requests.orgId": req.orgId })
+
+        .where({ "service_requests.isCreatedFromSo": false, 'service_requests.moderationStatus': true })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "asc");
+
+
+
+      let final = [];
+      let grouped = _.groupBy(problems, "date");
+      final.push(grouped);
+
+      let chartData = _.flatten(
+        final
+          .filter(v => !_.isEmpty(v))
+          .map(v => _.keys(v).map(p => ({ [p]: v[p].length })))
+      ).reduce((a, p) => {
+        let l = _.keys(p)[0];
+        if (a[l]) {
+          a[l] += p[l];
+        } else {
+          a[l] = p[l];
+        }
+        return a;
+      }, {});
+
+
+
+
+      res.status(200).json({
+        data: {
+          problems,
+          chartData,
+          grouped,
+          final,
+        },
+        message: "Service Request by month priority data successfully!"
       })
 
 
