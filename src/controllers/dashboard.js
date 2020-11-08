@@ -1657,8 +1657,6 @@ const dashboardController = {
         .distinct("service_requests.id")
         .orderBy("service_requests.id", "desc");
 
-
-
       let final = [];
       let grouped = _.groupBy(problems, "Type");
       final.push(grouped);
@@ -1677,18 +1675,71 @@ const dashboardController = {
         return a;
       }, {});
 
+      // let final2 = [];
+
+      // let ch = _.flatten(
+      //   final
+      //     .filter(v => !_.isEmpty(v))
+      //     .map(v => _.keys(v).map(p => ({
 
 
-      let final2 = [];
+      //       [p]: Array(_.groupBy(v[p], "priority")).map(x => _.keys(x).map(y => ({ [y]: x[y].length })))
 
-      let ch = _.flatten(
-        final
+      //     })))
+      // ).reduce((a, p) => {
+      //   let l = _.keys(p)[0];
+      //   if (a[l]) {
+      //     a[l] += p[l];
+      //   } else {
+      //     a[l] = p[l];
+      //   }
+      //   return a;
+      // }, {});
+
+      // let ch2 = _.flatten(
+      //   final
+      //     .filter(v => !_.isEmpty(v))
+      //     .map(v => Object.keys(v).map(p =>
+      //       p
+
+      //     ))
+      // )
+
+
+      // final2.push(ch);
+
+      // let chart2 = _.flatten(
+      //   final2
+      //     .filter(v => !_.isEmpty(v))
+      //     .map(v =>
+
+      //       _.keys(v).map(p => ({ [p]: v[p] }))
+
+      //       //_.keys(v).map(p => ({ [p]: v[p].map(x => _.keys(x).map(y => ({ [y]: x[y] }))) }))
+
+      //       //console.log("vvvvvvvvvv",_.keys(v),"vvvvvvvvvvvvvvvvvvvvvvvvvvv")
+
+      //       //   _.keys(v).map(p => ({ 
+
+
+      //       //   //[p]: v[p] 
+
+      //       // }))
+      //     )
+      // )
+
+
+
+
+      let priorityGroup = _.groupBy(problems, "priority");
+      let finalPriority = [];
+      finalPriority.push(priorityGroup);
+
+      let priorityChartData = _.flatten(
+        finalPriority
           .filter(v => !_.isEmpty(v))
           .map(v => _.keys(v).map(p => ({
-
-
-            [p]: Array(_.groupBy(v[p], "priority")).map(x => _.keys(x).map(y => ({ [y]: x[y].length })))
-
+            [p]: v[p]
           })))
       ).reduce((a, p) => {
         let l = _.keys(p)[0];
@@ -1700,45 +1751,33 @@ const dashboardController = {
         return a;
       }, {});
 
+      let priorityKeys = Object.keys(priorityChartData);
 
 
+      let barChartData = [];
 
+      let i = 0;
+      let arrKey = [];
 
+      for (let p of priorityKeys) {
 
-      let ch2 = _.flatten(
-        final
-          .filter(v => !_.isEmpty(v))
-          .map(v => Object.keys(v).map(p =>
-            p
+        let m = [];
 
-          ))
-      )
+        for (let n of priorityKeys) {
+          m.push("");
+        }
 
+        let prData = Object.values(priorityChartData)[i];
+        i++;
 
-      final2.push(ch);
+        let d = getProblemTypeChart(p, prData);
+        let l = m.length;
 
-      let chart2 = _.flatten(
-        final2
-          .filter(v => !_.isEmpty(v))
-          .map(v =>
+        barChartData.push({
+          priority: p, data: d, m
+        })
 
-            _.keys(v).map(p => ({ [p]: v[p] }))
-
-            //_.keys(v).map(p => ({ [p]: v[p].map(x => _.keys(x).map(y => ({ [y]: x[y] }))) }))
-
-            //console.log("vvvvvvvvvv",_.keys(v),"vvvvvvvvvvvvvvvvvvvvvvvvvvv")
-
-            //   _.keys(v).map(p => ({ 
-
-
-            //   //[p]: v[p] 
-
-
-
-            // }))
-          )
-      )
-
+      }
 
 
 
@@ -1765,14 +1804,8 @@ const dashboardController = {
       }, {});
 
 
-      for (let d of problems) {
+      let ky = Object.keys(x);
 
-
-
-
-
-
-      }
 
       // let m = chart2.map(v =>
 
@@ -1782,35 +1815,60 @@ const dashboardController = {
 
       // )
 
-      const Parallel = require('async-parallel');
+      //  const Parallel = require('async-parallel');
 
-      problems = await Parallel.map(problems, async st => {
+      // problems = await Parallel.map(problems, async st => {
 
-        return {
-          ...st,
-          chartData,
-        }
+      //   return {
+      //     ...st,
+      //     chartData,
+      //   }
 
-      })
+      // })
 
 
+      let yrr = [];
+
+      // let i = 0;
+      // for (let a of ky) {
+
+      //   let b = Object.values(x)[i];
+      //   i++;
+
+      //   let d = getProblemTypeChart(a, b);
+
+      //   if (a == "Medium") {
+
+      //     d = [0, 1];
+      //   }
+
+
+
+
+
+      //   //let d = problems.filter(v => v.priority == a);
+      //   yrr.push({
+      //     priority: a, data: d, b: b
+      //   })
+
+      // }
 
 
       res.status(200).json({
         data: {
           problems,
           chartData,
-          grouped,
-          final,
-          ch,
-          ch2,
-          chart2,
+          //grouped,
+          //final,
+          //ch,
+          //ch2,
+          //chart2,
           prG,
-          arr1,
-          x
-
-
-
+          // arr1,
+          x,
+          ky,
+          yrr,
+          barChartData
         },
         message: "Service Request by problem type data successfully!"
       })
@@ -1865,11 +1923,18 @@ const dashboardController = {
           "assigned_service_team.entityId"
         )
         .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .leftJoin(
+          "service_status AS status",
+          "service_requests.serviceStatusCode",
+          "status.statusCode"
+        )
         .select([
           "service_problems.serviceRequestId",
           "incident_type.typeCode as Type",
           "incident_categories.descriptionEng",
           "service_requests.priority",
+          "status.descriptionEng as status",
+
         ])
         .where({
           "service_requests.orgId": req.orgId,
@@ -1922,10 +1987,6 @@ const dashboardController = {
         }
         return a;
       }, {});
-
-
-
-
 
 
       let ch2 = _.flatten(
@@ -1987,16 +2048,6 @@ const dashboardController = {
         return a;
       }, {});
 
-
-      for (let d of problems) {
-
-
-
-
-
-
-      }
-
       // let m = chart2.map(v =>
 
       //  // _.keys(v).map(p => v[p].map(x => _.keys(x).map(y => ({ [y]: x[y] }))))
@@ -2016,6 +2067,56 @@ const dashboardController = {
 
       })
 
+
+      let statusGroup = _.groupBy(problems, "status");
+      let finalStatus = [];
+      finalStatus.push(statusGroup);
+
+      let statusChartData = _.flatten(
+        finalStatus
+          .filter(v => !_.isEmpty(v))
+          .map(v => _.keys(v).map(p => ({
+            [p]: v[p]
+          })))
+      ).reduce((a, p) => {
+        let l = _.keys(p)[0];
+        if (a[l]) {
+          a[l] += p[l];
+        } else {
+          a[l] = p[l];
+        }
+        return a;
+      }, {});
+
+      let statusKeys = Object.keys(statusChartData);
+
+
+      let barChartData = [];
+
+      let i = 0;
+      let arrKey = [];
+
+      for (let p of statusKeys) {
+
+        let m = [];
+
+        for (let n of statusKeys) {
+          m.push("");
+        }
+
+        let prData = Object.values(statusChartData)[i];
+        i++;
+
+        let d = getPriorityChart(p, prData);
+        let l = m.length;
+
+        barChartData.push({
+          status: p, data: d, m
+        })
+
+      }
+
+
       res.status(200).json({
         data: {
           problems,
@@ -2027,7 +2128,8 @@ const dashboardController = {
           chart2,
           prG,
           arr1,
-          x
+          x,
+          barChartData
 
 
 
@@ -2175,7 +2277,53 @@ const dashboardController = {
       }, {});
 
 
+      let priorityGroup = _.groupBy(problems, "priority");
+      let finalPriority = [];
+      finalPriority.push(priorityGroup);
 
+      let priorityChartData = _.flatten(
+        finalPriority
+          .filter(v => !_.isEmpty(v))
+          .map(v => _.keys(v).map(p => ({
+            [p]: v[p]
+          })))
+      ).reduce((a, p) => {
+        let l = _.keys(p)[0];
+        if (a[l]) {
+          a[l] += p[l];
+        } else {
+          a[l] = p[l];
+        }
+        return a;
+      }, {});
+
+      let priorityKeys = Object.keys(priorityChartData);
+
+
+      let barChartData = [];
+
+      let i = 0;
+      let arrKey = [];
+
+      for (let p of priorityKeys) {
+
+        let m = [];
+
+        for (let n of priorityKeys) {
+          m.push("");
+        }
+
+        let prData = Object.values(priorityChartData)[i];
+        i++;
+
+        let d = getMonthChart(p, prData);
+        let l = m.length;
+
+        barChartData.push({
+          priority: p, data: d, m
+        })
+
+      }
 
       res.status(200).json({
         data: {
@@ -2183,6 +2331,7 @@ const dashboardController = {
           chartData,
           grouped,
           final,
+          barChartData
         },
         message: "Service Request by month priority data successfully!"
       })
@@ -2199,6 +2348,134 @@ const dashboardController = {
   }
 
 };
+
+
+function getProblemTypeChart(priority, data) {
+
+  let d = _.groupBy(data, "Type");
+
+  let n = Object.keys(d);
+  let arr = [];
+  let arr1 = [""];
+
+  let i = 0;
+  for (let g of n) {
+
+
+
+    for (let k of n) {
+      //arr1.push("");
+    }
+
+
+    let ind = n.indexOf(g);
+
+
+
+    let l = Object.values(d)[i].length;
+    let l2;
+    if (l) {
+
+      l2 = l;
+    } else {
+      l2 = 0;
+    }
+    i++;
+
+    arr1.splice(ind + 1 - 1, 0, l);
+
+    arr.push(arr1, ind);
+
+  }
+
+  return arr1;
+
+}
+
+
+function getPriorityChart(priority, data) {
+
+  let d = _.groupBy(data, "priority");
+
+  let n = Object.keys(d);
+  let arr = [];
+  let arr1 = [""];
+
+  let i = 0;
+  for (let g of n) {
+
+
+
+    for (let k of n) {
+      //arr1.push("");
+    }
+
+
+    let ind = n.indexOf(g);
+
+
+
+    let l = Object.values(d)[i].length;
+    let l2;
+    if (l) {
+
+      l2 = l;
+    } else {
+      l2 = 0;
+    }
+    i++;
+
+    arr1.splice(ind + 1 - 1, 0, l);
+
+    arr.push(arr1, ind);
+
+  }
+
+  return arr1;
+
+}
+
+
+function getMonthChart(priority, data) {
+
+  let d = _.groupBy(data, "date");
+
+  let n = Object.keys(d);
+  let arr = [];
+  let arr1 = [""];
+
+  let i = 0;
+  for (let g of n) {
+
+
+    for (let k of n) {
+      //arr1.push("");
+    }
+
+
+    let ind = n.indexOf(g);
+
+
+
+    let l = Object.values(d)[i].length;
+    let l2;
+    if (l) {
+
+      l2 = l;
+    } else {
+      l2 = 0;
+    }
+    i++;
+
+    arr1.splice(ind + 1 - 1, 0, l);
+
+    arr.push(arr1, ind);
+
+  }
+
+  return arr1;
+
+}
 
 module.exports = dashboardController;
 
