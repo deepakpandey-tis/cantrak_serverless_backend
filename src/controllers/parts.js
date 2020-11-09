@@ -4250,9 +4250,7 @@ const partsController = {
                 }
 
 
-                for (let a of updatedStockDataWithInAndOut2) {
-
-                }
+                
 
 
                 let finalPush = [];
