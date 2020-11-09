@@ -33,4 +33,8 @@ userMiddleware.customerInfo, dashboardController.getBuildingList);
 router.get('/get-contact-info', authMiddleware.isAuthenticated,
 userMiddleware.customerInfo, dashboardController.getContactList);
 
+/*GET USER DATA*/
+router.get('/get-user-info', authMiddleware.isAuthenticated,
+userMiddleware.customerInfo, dashboardController.getUsersInfo);
+
 module.exports = router;
