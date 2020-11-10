@@ -709,7 +709,7 @@ const companyController = {
             knex("companies")
               .select("id", "companyId", "companyName as CompanyName")
               .where({ isActive: true, orgId: orgId })
-              .orderBy('companies.companyName', 'asc')
+              .orderBy('companies.companyId', 'asc')
           ]);
 
         } else {
@@ -717,7 +717,7 @@ const companyController = {
             knex("companies")
               .select("id", "companyId", "companyName as CompanyName")
               .where({ isActive: true })
-              .orderBy('companies.companyName', 'asc')
+              .orderBy('companies.companyId', 'asc')
           ]);
         }
       } else {
@@ -726,7 +726,7 @@ const companyController = {
           knex("companies")
             .select("id", "companyId", "companyName as CompanyName")
             .where({ isActive: true, orgId: req.orgId })
-            .orderBy('companies.companyName', 'asc')
+            .orderBy('companies.companyId', 'asc')
         ]);
       }
 
