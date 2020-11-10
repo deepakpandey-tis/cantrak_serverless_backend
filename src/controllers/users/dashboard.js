@@ -460,7 +460,7 @@ const dashboardController = {
 
 
 
-                let imageResult = await knex
+            let imageResult = await knex
                 .from("images")
                 .select("s3Url", "title", "name")
                 .where({
@@ -472,10 +472,10 @@ const dashboardController = {
             return res.status(200).json({
                 data: {
                     contactData: {
-                        phoneData : contactInfo,
-                        faxData : faxInfo,
-                        emailData : emailInfo,
-                        description : descriptionInfo,
+                        phoneData: contactInfo,
+                        faxData: faxInfo,
+                        emailData: emailInfo,
+                        description: descriptionInfo,
                         imageResult
                     }
                 },
@@ -486,6 +486,53 @@ const dashboardController = {
             console.log("[controllers][Contact][getContactList],Error", err);
         }
     },
+    getUsersInfo: async (req, res) => {
+        try {
+            console.log("customerInfo", req.me.id);
+            console.log("customerHouseInfo", req.me.houseIds);
+
+            userHouseResult = await knex
+                .from("user_house_allocation")
+                .where({ userId: req.me.id, orgId: req.orgId })
+                .whereIn("houseId", req.me.houseIds);
+
+            let houseIdArray = userHouseResult.map((v) => v.houseId);
+
+            propertyUnitFinalResult = await knex
+                .from("property_units")
+                .where({ orgId: req.orgId })
+                .whereIn("id", houseIdArray);
+
+            let projectArray = _.uniqBy(propertyUnitFinalResult, "projectId").map(
+                (v) => v.projectId
+            );
+
+            let userInfo;
+
+            userInfo = await knex("projects")
+                .select(
+                    "projects.projectName"
+                )
+                .where({
+                    "projects.orgId": req.orgId
+                })
+                .whereIn("projects.id", projectArray);
+
+            console.log(
+                "[controllers][Dashboard][getUserInfo]: View Data", userInfo
+            );
+
+            return res.status(200).json({
+                data: {
+                    userInfo
+                },
+                message: "User Information!",
+            });
+
+        } catch (err) {
+            console.log("[controllers][Dashboard][getUserInfo],Error", err);
+        }
+    }
 
 };
 
