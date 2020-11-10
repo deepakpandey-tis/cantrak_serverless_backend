@@ -805,7 +805,7 @@ const partsController = {
 
             partData = await knex('part_master')
                 .leftJoin('vendor_master', 'part_master.assignedVendors', 'vendor_master.id')
-                .where({ 'part_master.id': id }).select('part_master.*', 'vendor_master.name')
+                .where({ 'part_master.id': id }).select('part_master.*', 'vendor_master.name','part_master.id as partId')
             let partDataResult = partData[0];
             let omitedPartDataResult = _.omit(partDataResult, ['createdAt'], ['updatedAt'], ['isActive'])
             additionalAttributes = await knex('part_attributes').where({ partId: id }).select()
