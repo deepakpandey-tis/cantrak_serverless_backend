@@ -16,9 +16,15 @@ const assetController = {
             let categories
             let filters = req.body;
             if (filters) {
-                categories = await knex('asset_category_master').select().where({ ...filters, orgId: req.orgId, isActive: true })
+                categories = await knex('asset_category_master')
+                    .select()
+                    .where({ ...filters, orgId: req.orgId, isActive: true })
+                    .orderBy('asset_category_master.categoryName', 'asc');
             } else {
-                categories = await knex('asset_category_master').select().where({ orgId: req.orgId, isActive: true });
+                categories = await knex('asset_category_master')
+                    .select()
+                    .where({ orgId: req.orgId, isActive: true })
+                    .orderBy('asset_category_master.categoryName', 'asc');
             }
             res.status(200).json({
                 data: {
