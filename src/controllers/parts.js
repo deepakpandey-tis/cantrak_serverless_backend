@@ -805,7 +805,7 @@ const partsController = {
 
             partData = await knex('part_master')
                 .leftJoin('vendor_master', 'part_master.assignedVendors', 'vendor_master.id')
-                .where({ 'part_master.id': id }).select('part_master.*', 'vendor_master.name','part_master.id as partId')
+                .where({ 'part_master.id': id }).select('part_master.*', 'vendor_master.name', 'part_master.id as partId')
             let partDataResult = partData[0];
             let omitedPartDataResult = _.omit(partDataResult, ['createdAt'], ['updatedAt'], ['isActive'])
             additionalAttributes = await knex('part_attributes').where({ partId: id }).select()
@@ -2264,7 +2264,9 @@ const partsController = {
                                 qb.where('part_ledger.workOrderId', 'like', `%${workOrderId}%`)
                             }
                             if (adjustType) {
-                                qb.where('part_ledger.adjustType', adjustType)
+                                if (adjustType.length) {
+                                    qb.whereIn('part_ledger.adjustType', adjustType)
+                                }
                             }
                             if (partCode) {
                                 qb.where('part_master.partCode', 'iLIKE', `%${partCode}%`)
@@ -2320,7 +2322,9 @@ const partsController = {
                                 qb.where('part_ledger.workOrderId', 'like', `%${workOrderId}%`)
                             }
                             if (adjustType) {
-                                qb.where('part_ledger.adjustType', adjustType)
+                                if (adjustType.length) {
+                                    qb.whereIn('part_ledger.adjustType', adjustType)
+                                }
                             }
 
                             if (partCode) {
@@ -4250,7 +4254,7 @@ const partsController = {
                 }
 
 
-                
+
 
 
                 let finalPush = [];
