@@ -192,6 +192,41 @@ const dashboardIconsController = {
                 message: "Dashboard Icons List!",
               });
         } catch (error) {
+            console.log("[controllers][dashboardIcons][addDashboardIcons] :  Error", err);
+            res.status(500).json({
+            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+        }
+    },
+    getDashboardIconByOrg:async(req,res)=>{
+        try {
+            let dashboardIcon = null
+
+
+            dashboardIcon = await knex
+            .from("components_icon_master")
+            .leftJoin("user_component_master", "user_component_master.id", "components_icon_master.componentId")
+            .select([
+                "components_icon_master.id",
+                "user_component_master.componentName",
+                "components_icon_master.icon",
+                "components_icon_master.componentId"
+            ])
+            .where({ "components_icon_master.orgId": req.orgId })
+            .where({"components_icon_master.isActive":true})
+
+
+            return res.status(200).json({
+                data: {
+                  dashBoardIcons: dashboardIcon,
+                },
+                message: "Dashboard Icons List!",
+              });
+        } catch (err) {
+            console.log("[controllers][dashboardIcons][addDashboardIcons] :  Error", err);
+            res.status(500).json({
+            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
             
         }
     },
@@ -213,7 +248,7 @@ const dashboardIconsController = {
                     });
                   }
 
-                  let current = new Date().getTime();
+                //   let current = new Date().getTime();
                    dashboardIconResult = await knex.select()
                   .where({id:payload.id})
                   .returning(["*"])
@@ -282,8 +317,6 @@ const dashboardIconsController = {
           .transacting(trx)
           .into("components_icon_master");
         dashboardIconResult = insertResult[0];
-
-
         trx.commit;
             })
 
@@ -294,7 +327,6 @@ const dashboardIconsController = {
                 message: "Dashboard Icon details updated successfully."
               });
         } catch (err) {
-            
         }
     },
     toggleDashboardIconData : async(req,res)=>{
@@ -354,6 +386,7 @@ const dashboardIconsController = {
         } catch (err) {
             
         }
-    }
+    },
+    
 }
 module.exports = dashboardIconsController
