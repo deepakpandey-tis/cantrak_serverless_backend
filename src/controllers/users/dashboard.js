@@ -152,6 +152,7 @@ const dashboardController = {
 
             let announcement;
             let img;
+            let announcementTitle;
 
             announcement = await knex
                 .from("announcement_master")
@@ -175,11 +176,15 @@ const dashboardController = {
                     "announcement_master.createdAt as announcementDate"
                 )
                 .orderBy('announcement_master.id', 'desc')
-                .limit(10);
+                .limit(10); 
 
 
             const Parallel = require("async-parallel");
             announcement = await Parallel.map(announcement, async (pp) => {
+
+
+                announcementTitle = pp.titles.split(" ").slice(0,22);
+                
 
                 let imageResult = await knex
                     .from("images")
@@ -193,6 +198,7 @@ const dashboardController = {
 
                 return {
                     ...pp,
+                    titles: announcementTitle,
                     img: imageResult,
                     URL: process.env.SITE_URL
                 };

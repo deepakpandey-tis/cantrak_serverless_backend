@@ -3905,7 +3905,7 @@ const partsController = {
                 let fromTimeEnd = new Date(fromDateEnd).getTime();
 
 
-                const Parallel = require('async-parallel')
+                const Parallel = require('async-parallel');
                 const final = await Parallel.map(_.uniqBy(stockResult, 'partId'), async (st) => {
                     let balance = await knex.from('part_ledger')
                         .sum('quantity as quantity')
@@ -4003,6 +4003,106 @@ const partsController = {
                 })
 
 
+                /* EXPORT DATA */
+                const stockExport = await Parallel.map(stockResult, async (st) => {
+                    let balance = await knex.from('part_ledger')
+                        .sum('quantity as quantity')
+                        .where('part_ledger.createdAt', '<', fromDate)
+                        //.where('part_ledger.createdAt', '<', fromTimeEnd)
+                        .where({ partId: st.partId, orgId: req.orgId }).first();
+
+                    let stockData = await knex.from('part_ledger')
+                        .leftJoin('adjust_type', 'part_ledger.adjustType', 'adjust_type.id')
+                        .leftJoin('adjust_part_users as re', 'part_ledger.receiveBy', 're.id')
+                        .leftJoin('adjust_part_users as ib', 'part_ledger.issueBy', 'ib.id')
+                        .leftJoin('adjust_part_users as it', 'part_ledger.issueTo', 'it.id')
+                        .select([
+                            'part_ledger.*',
+                            'adjust_type.adjustType as adjustTypeName',
+                            're.name as receiveByName',
+                            'ib.name as issueByName',
+                            'it.name as issueToName'
+                        ])
+                        .where(qb => {
+
+                            if (payload.adjustType) {
+
+                                qb.where('part_ledger.adjustType', payload.adjustType)
+                            }
+                        })
+                        .where({ 'part_ledger.orgId': req.orgId, partId: st.partId })
+                        .whereBetween('part_ledger.createdAt', [fromDate, toDate])
+                        .orderBy('part_ledger.createdAt', 'asc', 'part_ledger.partId', 'asc');
+
+
+
+                    let openingBalance = 0;
+                    if (balance.quantity) {
+                        openingBalance = balance.quantity;
+                    }
+
+
+
+                    let updatedStockDataWithInAndOut = [];
+                    let newBal = openingBalance;
+                    let s = 0;
+                    let totalIn = 0;
+                    let totalOut = 0;
+                    //for (let d of stockData) {
+                    s++;
+                    let i = 0;
+                    let o = 0;
+                    let bal = 0
+
+                    //  if (d.quantity && d.quantity.includes('-')) {
+
+                    if (st.quantity && Math.sign(st.quantity) == -1) {
+                        o = Number(st.quantity)
+                        //    balance.totalQuantity = Number(balance.totalQuantity) + o
+                        //if (s > 1) {
+                        bal = Number(newBal) + o;
+                        //} else {
+                        //   bal = Number(balance.quantity);
+                        //}
+
+                    } else {
+
+                        i = Number(st.quantity)
+                        //    balance.totalQuantity = Number(balance.totalQuantity) + i
+                        //if (s > 1) {
+                        bal = Number(newBal) + i;
+                        //} else {
+                        //   bal = Number(balance.quantity);
+                        //}
+
+                    }
+                    newBal = bal;
+                    totalIn += i;
+                    totalOut += Math.abs(o);
+
+                    // updatedStockDataWithInAndOut.push({ ...d, in: i, out: o, balance: newBal, totalIn: totalIn, totalOut: totalOut })
+                    //  }
+
+
+
+                    return {
+                        PNo: st.PNo,
+                        partId: st.partId,
+                        partCode: st.partCode,
+                        partName: st.partName,
+                        openingBalance: openingBalance,
+                        stockData: updatedStockDataWithInAndOut,
+                        unitOfMeasure: st.unitOfMeasure,
+                        in: i,
+                        out: o,
+                        balance: newBal,
+                        totalIn: totalIn,
+                        totalOut: totalOut
+                    }
+                })
+                /*EXPORT DATA CLOSE
+
+
                 /*Export Data open */
                 let updatedStockDataWithInAndOut2 = [];
                 let newBal2 = 0;
@@ -4010,11 +4110,27 @@ const partsController = {
                 let totalIn2 = 0;
                 let totalOut2 = 0;
                 let partArr = [];
-                for (let d2 of _.orderBy(stockResult, 'partName')) {
-                    s2++;
+                let openingBalance2 = 0;
+                let partArr2 = [];
+
+                for (let d2 of stockResult) {
+                    //for (let d2 of _.orderBy(stockResult, 'partName')) {
+
+
+                    let balance = await knex.from('part_ledger')
+                        .sum('quantity as quantity')
+                        .where('part_ledger.createdAt', '<', fromDate)
+                        //.where('part_ledger.createdAt', '<', fromTimeEnd)
+                        .where({ partId: d2.partId, orgId: req.orgId }).first();
+
+                    if (balance.quantity) {
+                        openingBalance2 = balance.quantity;
+                    }
+
+                    //newBal2 = openingBalance2;
                     let i2 = 0;
                     let o2 = 0;
-                    let bal2 = 0
+                    let bal2 = 0;
 
                     var lastValue = partArr[partArr.length - 1];
 
@@ -4023,16 +4139,42 @@ const partsController = {
 
                     } else {
 
-                        newBal2 = 0;
+                        newBal2 = openingBalance2;
                         //console.log("NOOOOOOOOOOOOOoo")
+
+
+                        updatedStockDataWithInAndOut2.push({
+                            ...d2,
+                            createdAt: "",
+                            adjustTypeName: "",
+                            partCode: "",
+                            partName: "",
+                            partCategory: "",
+                            serviceOrderNo: "",
+                            description: "",
+                            buildingPhaseCode: "",
+                            floorZoneCode: "",
+                            unitOfMeasure: "Opening Balance",
+                            receiveByName: "",
+                            issueByName: "",
+                            issueToName: "",
+                            in: "",
+                            out: "",
+                            balance: openingBalance2,
+                            totalIn: "",
+                            totalOut: "",
+
+                        });
+
                     }
 
                     partArr.push(d2.partCode);
 
 
-
                     if (d2.quantity && Math.sign(d2.quantity) == -1) {
-                        o2 = Number(d2.quantity)
+                        o2 = Number(d2.quantity);
+
+                        let o5 = Math.abs(o2);
 
 
                         //    balance.totalQuantity = Number(balance.totalQuantity) + o
@@ -4060,8 +4202,121 @@ const partsController = {
                     totalIn2 += i2;
                     totalOut2 += Math.abs(o2);
 
-                    updatedStockDataWithInAndOut2.push({ ...d2, in: i2, out: o2, balance: newBal2, totalIn: totalIn2, totalOut: totalOut2, partArr })
+                    updatedStockDataWithInAndOut2.push({ ...d2, in: i2, out: o2, balance: newBal2, totalIn: totalIn2, totalOut: totalOut2, partArr, openingBalance2 });
+
+                    let lastData = partArr2[partArr2.length - 1];
+
+
+
+
+                    if (lastData === d2.partCode) {
+
+                        // console.log("YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY", "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY")
+
+                    } else {
+
+                        // updatedStockDataWithInAndOut2.push({
+                        //     ...d2,
+                        //     createdAt: "",
+                        //     adjustTypeName: "",
+                        //     partCode: d2.partCode,
+                        //     partName: "",
+                        //     partCategory: "",
+                        //     serviceOrderNo: "",
+                        //     description: "",
+                        //     buildingPhaseCode: "",
+                        //     floorZoneCode: "",
+                        //     unitOfMeasure: "Ending Balance",
+                        //     receiveByName: "",
+                        //     issueByName: "",
+                        //     issueToName: "",
+                        //     in: "",
+                        //     out: "",
+                        //     balance: "",
+                        //     totalIn: "",
+                        //     totalOut: "",
+
+                        // });
+
+                    }
+                    partArr2.push(d2.partCode);
+
+
+
+
+
+
+
                 }
+
+
+                
+
+
+                let finalPush = [];
+                let newbb = 0;
+                let parts = [];
+                let openingBalance3 = 0;
+
+                // for (let datas of stockResult) {
+
+
+                //     let balance = await knex.from('part_ledger')
+                //         .sum('quantity as quantity')
+                //         .where('part_ledger.createdAt', '<', fromDate)
+                //         .where({ partId: datas.partId, orgId: req.orgId }).first();
+
+                //     if (balance.quantity) {
+                //         openingBalance3 = balance.quantity;
+                //     }
+
+                //     //newbb = openingBalance3;
+
+
+
+                //     let inq = 0;
+                //     let outq = 0;
+                //     let bbb = 0;
+
+                //     let lastValue = parts[parts.length - 1];
+
+                //     if (datas.partCode == lastValue) {
+                //         // console.log("yesss",lastValue)
+
+                //     } else {
+
+                //         newbb = openingBalance3;
+                //     }
+
+                //     parts.push(datas.partCode);
+
+                //     if (datas.quantity && Math.sign(datas.quantity) == -1) {
+
+
+                //         outq = Number(datas.quantity);
+
+                //         bbb = Number(newbb) + outq;
+
+
+                //     } else {
+
+                //         inq = Number(datas.quantity);
+                //         bbb = Number(newbb) + inq;
+
+
+                //     }
+
+                //     newbb = bbb;
+
+
+                //     finalPush.push({ in: inq, out: outq, balance: newbb });
+                //     console.log("=====================", datas, "====================");
+
+
+                // }
+
+
+
                 /*Export Data close */
 
                 res.status(200).json({
@@ -4072,6 +4327,8 @@ const partsController = {
                         fromTime,
                         toTime,
                         exportStockData: updatedStockDataWithInAndOut2,
+                        stockExport,
+                        finalPush
                     },
                     message: "Stock report Successfully!"
                 })
