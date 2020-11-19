@@ -58,7 +58,7 @@ const outgoingParcelNotification = {
    
     let icons;
     let images;
-    if(orgData.id == 56){
+    if(orgData && orgData.id == 56){
         icons = 'assets/icons/cbre-512x512.png';
         images = 'assets/icons/cbre-512x512.png';
     }else{
@@ -130,7 +130,8 @@ const outgoingParcelNotification = {
 
     let icons;
     let images;
-    if(orgData.id == 56){
+    let  orgData = data.payload.orgData;
+    if(orgData && orgData.id == 56){
         icons = 'assets/icons/cbre-512x512.png';
         images = 'assets/icons/cbre-512x512.png';
     }else{
