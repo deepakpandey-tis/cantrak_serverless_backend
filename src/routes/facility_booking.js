@@ -127,4 +127,7 @@ router.post('/get-unit-and-facility-by-multiple-buildingId',authMiddleware.isAut
 
 // router.post('/get-facility-by-status',authMiddleware.isAuthenticated,facilityBookingController.facilityListingStatus)
 
+router.post('/get-unit-by-floorId',authMiddleware.isAuthenticated,facilityBookingController.getUnitByFloorId)
+
+
 module.exports = router;

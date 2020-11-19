@@ -1270,7 +1270,7 @@ const customerController = {
   },
   getTenantListByMultiplePropertyUnits: async (req, res) => {
     try {
-      let propertyUnit = req.body
+      let propertyUnit = req.body;
 
       let orgId = req.orgId
 
@@ -1278,10 +1278,10 @@ const customerController = {
         .leftJoin("users", "user_house_allocation.userId", "users.id")
         .select(["users.name", "users.id"])
         .whereIn("user_house_allocation.houseId", propertyUnit)
-        .groupBy(['users.name', 'users.id'])
-        .where("user_house_allocation.orgId", orgId)
+        //.groupBy(['users.name', 'users.id'])
+        .where("user_house_allocation.orgId", orgId);
 
-      let tenant = _.uniqBy(tenantList, "id")
+      let tenant = _.uniqBy(tenantList, "id");
 
       return res.status(200).json({
         data: {

@@ -25,9 +25,20 @@ const announcementNotification = {
 
     sendInAppNotification: async (sender, receiver, data) => {
         console.log("Site url",process.env.SITE_URL)
-        let title = data.payload.title
-        let description = data.payload.description
-        let url = data.payload.url
+        let title = data.payload.title;
+        let description = data.payload.description;
+        let url = data.payload.url;
+        let  orgData = data.payload.orgData;
+        let icons;
+        let images;
+        if(orgData && orgData.id == 56){
+            icons = 'assets/icons/cbre-512x512.png';
+            images = 'assets/icons/cbre-512x512.png';
+        }else{
+            icons = 'assets/icons/icon-512x512.png';
+            images = 'assets/icons/icon-512x512.png';
+        }
+
         data = {
             orgId: sender.orgId,
             senderId: sender.id,
@@ -36,8 +47,8 @@ const announcementNotification = {
                 ...data,
                 subject: title,
                 body: description+`from  ${sender.name}`,
-                icon: 'assets/icons/icon-512x512.png',
-                image: 'assets/icons/icon-512x512.png',
+                icon: icons,
+                image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
                     url: `/user/dashboard/home`,
@@ -59,9 +70,9 @@ const announcementNotification = {
 
 
     sendEmailNotification: async (sender, receiver, data) => {
-        let title = data.payload.title
-        let description = data.payload.description
-        let url = data.payload.url
+        let title = data.payload.title;
+        let description = data.payload.description;
+        let url = data.payload.url;
         data = {
             receiverEmail: receiver.email,
             template: 'announcement.ejs',
@@ -80,9 +91,20 @@ const announcementNotification = {
     },
 
     sendWebPushNotification: async (sender, receiver, data) => {
-        let title = data.payload.title
-        let description = data.payload.description
-        let url = data.payload.url
+        let title = data.payload.title;
+        let description = data.payload.description;
+        let url = data.payload.url;
+
+        let  orgData = data.payload.orgData;
+        let icons;
+        let images;
+        if(orgData && orgData.id == 56){
+            icons = 'assets/icons/cbre-512x512.png';
+            images = 'assets/icons/cbre-512x512.png';
+        }else{
+            icons = 'assets/icons/icon-512x512.png';
+            images = 'assets/icons/icon-512x512.png';
+        }
 
         data = {
             orgId: sender.orgId,
@@ -91,8 +113,8 @@ const announcementNotification = {
             payload: {
                 subject: title,
                 body: description + `from ${sender.name}`,
-                icon: 'assets/icons/icon-512x512.png',
-                image: 'assets/icons/icon-512x512.png',
+                icon: icons,
+                image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
                     url: `${process.env.SITE_URL}/admin/dashboard/home`,

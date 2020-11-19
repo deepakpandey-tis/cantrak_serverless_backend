@@ -34,11 +34,24 @@ const pushNotificationController = {
                 .into("push_subscribers");
             addedData = addedData[0];
 
+            let orgMaster = await knex.from("users").where({ id: user.id, orgId: 56 }).first();
+
+            let icons;
+            let images;
+            if(orgMaster && orgMaster.orgId == 56){
+                icons = 'assets/icons/cbre-512x512.png';
+                images = 'assets/icons/cbre-512x512.png';
+            }else{
+                icons = 'assets/icons/icon-512x512.png';
+                images = 'assets/icons/icon-512x512.png';
+            }
+
+
             let notification = {
                 title: 'TIS - New Notification',
                 body: 'Thanks for Subscribing Push Notification from TIS. We will notify you with only those messages which concerns you!',
-                icon: 'assets/icons/icon-512x512.png',
-                image: 'assets/icons/icon-512x512.png',
+                icon: icons,
+                image: images,
                 data: {
                     dateOfArrival: Date.now(),
                     url: `${process.env.SITE_URL}/admin/dashboard/home`,

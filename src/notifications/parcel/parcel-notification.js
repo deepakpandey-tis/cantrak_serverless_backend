@@ -27,6 +27,19 @@ const parcelNotification = {
     },
     sendInAppNotification: async (sender, receiver, data) => {
 
+        let  orgData = data.payload.orgData;
+        console.log("organisationData",orgData); 
+       
+        let icons;
+        let images;
+        if(orgData && orgData.id == 56){
+            icons = 'assets/icons/cbre-512x512.png';
+            images = 'assets/icons/cbre-512x512.png';
+        }else{
+            icons = 'assets/icons/icon-512x512.png';
+            images = 'assets/icons/icon-512x512.png';
+        }
+
         data = {
             orgId: sender.orgId,
             senderId: sender.id,
@@ -35,8 +48,8 @@ const parcelNotification = {
                 ...data,
                 subject: 'Parcel Notification',
                 body: `Hi!!, You have received a parcel,Please Pick up your parcel.`,
-                icon: 'assets/icons/icon-512x512.png',
-                image: 'assets/icons/icon-512x512.png',
+                icon: icons,
+                image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
                     url: `/user/parcel`,
@@ -74,6 +87,21 @@ const parcelNotification = {
 
     sendWebPushNotification: async (sender, receiver, data) => {
 
+        let  orgData = data.payload.orgData;
+        console.log("organisationData parcel",data); 
+       
+        let icons;
+        let images;
+        if(orgData && orgData.id == 56){
+            console.log("org data 56")
+            icons = 'assets/icons/cbre-512x512.png';
+            images = 'assets/icons/cbre-512x512.png';
+        }else{
+            console.log("org data default")
+            icons = 'assets/icons/icon-512x512.png';
+            images = 'assets/icons/icon-512x512.png';
+        }
+
         data = {
             orgId: sender.orgId,
             senderId: sender.id,
@@ -81,8 +109,8 @@ const parcelNotification = {
             payload: {
                 subject: 'Parcel Notification',
                 body: `Hi!!, You have received a parcel,please come and collect.`,
-                icon: 'assets/icons/icon-512x512.png',
-                image: 'assets/icons/icon-512x512.png',
+                icon: icons,
+                image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
                     url: `${process.env.SITE_URL}/user/parcel`,
