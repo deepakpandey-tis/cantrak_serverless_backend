@@ -32,7 +32,7 @@ const parcelNotification = {
        
         let icons;
         let images;
-        if(orgData && orgData.id == 56){
+        if(orgData && orgData.id == '56'){
             icons = 'assets/icons/cbre-512x512.png';
             images = 'assets/icons/cbre-512x512.png';
         }else{
@@ -92,7 +92,7 @@ const parcelNotification = {
        
         let icons;
         let images;
-        if(orgData && orgData.id == 56){
+        if(orgData && orgData.id == '56'){
             console.log("org data 56")
             icons = 'assets/icons/cbre-512x512.png';
             images = 'assets/icons/cbre-512x512.png';
