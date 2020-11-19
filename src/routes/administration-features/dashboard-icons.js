@@ -18,4 +18,6 @@ router.post('/update-dashboard-icon-detail',authMiddleware.isAuthenticated,dashb
 
 router.get('/get-dashboard-icon-by-orgId',authMiddleware.isAuthenticated,dashboardIconsController.getDashboardIconByOrg)
 
+// router.get('/get-manifest-data',dashboardIconsController.getManifestData)
+
 module.exports = router
