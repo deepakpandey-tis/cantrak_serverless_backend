@@ -412,7 +412,8 @@ const quotationsController = {
                 for (let d of payload) {
 
 
-                    if (d.quotationId && d.partId && d.unitCost && d.quantity && d.status) {
+                  if (d.quotationId && d.partId && d.quantity && d.status) {
+                        //if (d.quotationId && d.partId && d.unitCost && d.quantity && d.status) {
 
 
                         let avgResult = await knex('part_master').where({ id: d.partId, orgId: req.orgId }).first();
