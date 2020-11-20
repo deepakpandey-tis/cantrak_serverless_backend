@@ -411,7 +411,6 @@ const quotationsController = {
 
                 for (let d of payload) {
 
-
                   if (d.quotationId && d.partId && d.quantity && d.status) {
                         //if (d.quotationId && d.partId && d.unitCost && d.quantity && d.status) {
 
