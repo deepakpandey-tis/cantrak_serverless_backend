@@ -24,6 +24,8 @@ router.post('/parcel-notification',authMiddleware.isAuthenticated, async(req,res
         let receiver = await knex.from('users').where({ id: req.body.id }).first();
         console.log("reciever tenant",receiver)
         let orgMaster = await knex.from("organisations").where({ id: 56, organisationAdminId: 994 }).first();
+        console.log("requested tenant id for notification orgMaster",orgMaster)
+
 
 
         let data = {

@@ -38,7 +38,7 @@ const pushNotificationController = {
 
             let icons;
             let images;
-            if(orgMaster.orgId == 56){
+            if(orgMaster && orgMaster.orgId == 56){
                 icons = 'assets/icons/cbre-512x512.png';
                 images = 'assets/icons/cbre-512x512.png';
             }else{

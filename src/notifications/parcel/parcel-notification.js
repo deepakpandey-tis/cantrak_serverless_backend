@@ -32,7 +32,7 @@ const parcelNotification = {
        
         let icons;
         let images;
-        if(orgData.id == 56){
+        if(orgData && orgData.id == '56'){
             icons = 'assets/icons/cbre-512x512.png';
             images = 'assets/icons/cbre-512x512.png';
         }else{
@@ -88,14 +88,16 @@ const parcelNotification = {
     sendWebPushNotification: async (sender, receiver, data) => {
 
         let  orgData = data.payload.orgData;
-        console.log("organisationData",orgData); 
+        console.log("organisationData parcel",data); 
        
         let icons;
         let images;
-        if(orgData.id == 56){
+        if(orgData && orgData.id == '56'){
+            console.log("org data 56")
             icons = 'assets/icons/cbre-512x512.png';
             images = 'assets/icons/cbre-512x512.png';
         }else{
+            console.log("org data default")
             icons = 'assets/icons/icon-512x512.png';
             images = 'assets/icons/icon-512x512.png';
         }
