@@ -180,6 +180,8 @@ const assetController = {
                             }
                         })
                         .orderBy("asset_master.id", "desc")
+                        //.groupBy(['asset_master.id'])
+                        //.distinct('asset_master.id')
                         .offset(offset)
                         .limit(per_page)
                 ]);
@@ -188,6 +190,7 @@ const assetController = {
                 console.log('Error: ' + e.message)
             }
             //}
+             rows = _.uniqBy(rows, 'ID');
 
             let count = total.count;
             pagination.total = count;
