@@ -191,7 +191,7 @@ const dashboardIconsController = {
                 },
                 message: "Dashboard Icons List!",
               });
-        } catch (error) {
+        } catch (err) {
             console.log("[controllers][dashboardIcons][addDashboardIcons] :  Error", err);
             res.status(500).json({
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
