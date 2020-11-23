@@ -159,7 +159,7 @@ const taskGroupController = {
             let taskGroupTemplateSchedule = null;
             let partResult = [];
             //let assignedAdditionalUser = null;
-            let payload = _.omit(req.body, ['teamId', 'repeatFrequency', 'repeatPeriod', 'repeatOn', 'tasks', 'mainUserId', 'additionalUsers', 'startDate', 'endDate'])
+            let payload = _.omit(req.body, ['teamId', 'repeatFrequency', 'repeatPeriod', 'repeatOn', 'tasks', 'mainUserId', 'additionalUsers', 'startDate', 'endDate', 'frequencyTagId']);
             const schema = Joi.object().keys({
                 assetCategoryId: Joi.string().required(),
                 // repeatFrequency: Joi.string().required(),
@@ -182,27 +182,25 @@ const taskGroupController = {
             }
 
 
-
-
             // Check duplicate value open
             const templateExist = await knex("task_group_templates")
                 .where('taskGroupName', 'iLIKE', payload.taskGroupName)
                 .where('assetCategoryId', payload.assetCategoryId)
-                .where({ orgId: req.orgId });
+                .where({ orgId: req.orgId }).first();
 
             console.log(
                 "[controllers][task-group][createTemplate]: ServiceCode",
                 templateExist
             );
 
-            // if (templateExist && templateExist.length) {
+            if (templateExist && templateExist.length) {
 
-            //   return res.status(400).json({
-            //     errors: [
-            //       { code: "VALIDATION_ERROR", message: "Template already exist!!" }
-            //     ]
-            //   });
-            // }
+              return res.status(400).json({
+                errors: [
+                  { code: "VALIDATION_ERROR", message: "Template already exist for selected asset category!!" }
+                ]
+              });
+            }
             // Check duplicate value close
 
 
@@ -219,25 +217,7 @@ const taskGroupController = {
                 orgId: req.orgId
             };
             let taskGroupTemplateResult = await knex('task_group_templates').insert(tgtInsert).returning(['*'])
-            taskGroupTemplate = taskGroupTemplateResult[0]
-
-            // // Insert tasks into template_task
-            // let insertPaylaod = req.body.tasks.map(v => ({
-            //   taskName: v.taskName,
-            //   templateId: taskGroupTemplate.id,
-            //   createdAt: currentTime,
-            //   createdBy: req.body.mainUserId ? req.body.mainUserId : null,
-            //   orgId: req.orgId,
-            //   taskSerialNumber: v.taskSerialNumber,
-            //   taskNameAlternate: v.taskNameAlternate,
-            //   updatedAt: currentTime
-            // }))
-            // insertedTasks = await knex('template_task').insert(insertPaylaod).returning(['*'])
-
-
-
-
-            /*insert part */
+            taskGroupTemplate = taskGroupTemplateResult[0];
 
             for (let k = 0; k < req.body.tasks.length; k++) {
 
@@ -315,6 +295,7 @@ const taskGroupController = {
                 endDate: req.body.endDate ? req.body.endDate : null,
                 repeatFrequency: req.body.repeatFrequency ? req.body.repeatFrequency : null,
                 repeatOn: req.body.repeatOn,
+                frequencyTagId: req.body.frequencyTagId,
                 repeatPeriod: req.body.repeatPeriod ? req.body.repeatPeriod : null,
                 taskGroupId: taskGroupTemplate.id,
                 createdAt: currentTime,
@@ -366,8 +347,6 @@ const taskGroupController = {
             // ASSIGNED TEAM CLOSE
 
 
-
-
             return res.status(200).json({
                 data: {
                     taskGroupTemplate,
@@ -378,7 +357,7 @@ const taskGroupController = {
                     partResult
                 },
                 mesaage: 'Task Group Template added successfully!'
-            })
+            });
 
         } catch (err) {
             console.log("[controllers][task-group][createTaskGroupTemplate] :  Error", err);
@@ -454,7 +433,6 @@ const taskGroupController = {
     createPmTaskgroupSchedule: async (req, res) => {
 
         try {
-            console.log("frequency tag Id",req.body)
 
             let createTemplateTask = null;
             let createTemplate = null;
@@ -466,33 +444,27 @@ const taskGroupController = {
             let assetResults = [];
             let createPmTask = [];
             let partResult = [];
-            let payload = _.omit(req.body.taskGroup, ['additionalUsers']);
 
+            let payload = req.body.taskGroups;
 
             let currentDate = moment().format("YYYY-MM-DD");
-            //return res.json(currentDate)  
+
+            // if (!(payload.startDateTime >= currentDate)) {
+            //     console.log(currentDate, "current Date")
+            //     return res.status(400).json({
+            //         errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid start date" }]
+            //     });
+            // }
+
+            // if (!(payload.endDateTime >= currentDate)) {
+            //     console.log(currentDate, "Current Date")
+            //     return res.status(400).json({
+            //         errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid end date" }]
+            //     });
+            // }
 
 
-            if (!(payload.startDateTime >= currentDate)) {
-
-                console.log(currentDate, "current Date")
-                return res.status(400).json({
-                    errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid start date" }]
-                })
-
-            }
-
-            if (!(payload.endDateTime >= currentDate)) {
-
-                console.log(currentDate, "Current Date")
-                return res.status(400).json({
-                    errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid end date" }]
-                })
-
-            }
-
-
-            const schema = Joi.object().keys({
+            const schema = Joi.array().items(Joi.object().keys({
                 assetCategoryId: Joi.number().required(),
                 companyId: Joi.number().required(),
                 projectId: Joi.number().required(),
@@ -503,77 +475,37 @@ const taskGroupController = {
                 repeatFrequency: Joi.number().required(),
                 teamId: Joi.string().required(),
                 mainUserId: Joi.string().required(),
-                // additionalUsers: Joi.array().items(Joi.string().required()).strict().required(),
                 taskGroupName: Joi.string().required(),
-                // tasks: Joi.array().items(Joi.string().required()).strict().required(),
-
                 assets: Joi.array().items(Joi.string().required()).strict().required(),
-
                 frequencyTagId : Joi.number().required()
-
-            });
-
-            if (_.isEmpty(payload.repeatFrequency)) {
-
-                return res.status(400).json({
-                    errors: [{ code: "LESS_THAN_ERROR", message: "Repeat Frequency is required!" }]
-                })
-
-            }
-
-            if (_.isEmpty(payload.repeatPeriod)) {
-
-                return res.status(400).json({
-                    errors: [{ code: "LESS_THAN_ERROR", message: "Repeat Period is required!" }]
-                })
-
-            }
-
-            if (payload.repeatPeriod == "WEEK") {
-
-                if (_.isEmpty(payload.repeatOn)) {
-
-                    return res.status(400).json({
-                        errors: [{ code: "LESS_THAN_ERROR", message: "Day is required!" }]
-                    })
-                }
-            }
+            }));
 
 
-            if (_.isEmpty(payload.teamId)) {
-
-                return res.status(400).json({
-                    errors: [{ code: "LESS_THAN_ERROR", message: "Team is required!" }]
-                })
-
-            }
-
-            if (_.isEmpty(payload.mainUserId)) {
-
-                return res.status(400).json({
-                    errors: [{ code: "LESS_THAN_ERROR", message: "Main user is required!" }]
-                })
-
-            }
-
-            const result = Joi.validate(_.omit(payload, ['repeatOn', 'tasks']), schema);
+            const result = Joi.validate(req.body.taskGroups, schema);
             if (result && result.hasOwnProperty("error") && result.error) {
                 return res.status(400).json({
                     errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
                 });
             }
 
+            const consolidatedWorkOrders = req.body.consolidatedWorkOrders;
+            console.log('Consolidated Work Orders:', consolidatedWorkOrders);
 
+
+            /// Testing...
+            return res.status(200).json({
+                errors: [{ code: "TEST", data: { consolidatedWorkOrders: consolidatedWorkOrders } }]
+            });
+
+
+            // Amar now make the changes from here...
 
             await knex.transaction(async trx => {
-
 
                 // Update PM Company and Project
                 await knex('pm_master2').update({ companyId: payload.companyId, projectId: payload.projectId }).where({ id: payload.pmId, orgId: req.orgId })
 
-                //   let payload       = req.body;
                 let currentTime = new Date().getTime();
-
 
                 // CREATE PM TASK GROUP OPEN
                 let insertPmTaskGroupData = {
@@ -589,17 +521,8 @@ const taskGroupController = {
                 createPmTaskGroup = insertPmTemplateResult[0];
 
 
-                // update pm_task_group
-
-                await knex('pm_task_groups')
-                    .update({ isActive: true })
-                    .where({ isActive: true })
-
-
-
+                // ASSIGNED ADDITIONAL USER OPEN
                 if (req.body.additionalUsers && req.body.additionalUsers.length) {
-
-                    // ASSIGNED ADDITIONAL USER OPEN
                     let insertAssignedAdditionalUserData = req.body.additionalUsers.map(user => ({
                         userId: user,
                         entityId: createPmTaskGroup.id,
@@ -607,13 +530,10 @@ const taskGroupController = {
                         createdAt: currentTime,
                         updatedAt: currentTime,
                         orgId: req.orgId
+                    }));
 
-                    }))
-
-                    let assignedAdditionalUserResult = await knex.insert(insertAssignedAdditionalUserData).returning(['*']).transacting(trx).into('assigned_service_additional_users');
-                    assignedAdditionalUser = assignedAdditionalUserResult;
+                    let assignedAdditionalUser = await knex.insert(insertAssignedAdditionalUserData).returning(['*']).transacting(trx).into('assigned_service_additional_users');
                 }
-
                 // ASSIGNED ADDITIONAL USER CLOSE
 
                 // ASSIGNED TEAM OPEN
@@ -626,10 +546,8 @@ const taskGroupController = {
                     updatedAt: currentTime,
                     orgId: req.orgId
                 }
-
                 let assignedServiceTeamResult = await knex.insert(insertAssignedServiceTeamData).returning(['*']).transacting(trx).into('assigned_service_team');
                 assignedServiceTeam = assignedServiceTeamResult[0];
-
                 // ASSIGNED TEAM CLOSE
 
                 // TASK GROUP SCHEDULE OPEN
@@ -655,84 +573,6 @@ const taskGroupController = {
                     .where({ isActive: true })
                 // TASK GROUP SCHEDULE CLOSE 
 
-
-                // create recurring pm of this task group open
-
-                let repeatPeriod = payload.repeatPeriod;
-                let repeatOn = payload.repeatOn.length ? payload.repeatOn.join(',') : []; //payload.repeatOn ? payload.repeatOn : ""; //&& ;
-                let repeatFrequency = Number(payload.repeatFrequency);
-                let start = new Date(payload.startDateTime);
-
-                console.log("=============sss", start, "==========================")
-                let startYear = start.getFullYear();
-                let startMonth = start.getMonth();
-                let startDate = start.getDate();
-                let end = new Date(payload.endDateTime);
-
-                console.log("=============sss", end, "==========================", payload.repeatPeriod, payload.repeatOn, repeatFrequency, "=================")
-
-
-                let endYear = end.getFullYear();
-                let endMonth = end.getMonth();
-                let endDate = end.getDate();
-                let performingDates;
-
-                let config = {
-                    interval: repeatFrequency,
-                    dtstart: new Date(
-                        Date.UTC(
-                            startYear, startMonth, startDate
-                        )
-                    ),
-                    until: new Date(
-                        Date.UTC(
-                            endYear, endMonth, endDate
-                        )
-                    ) // year, month, date
-                };
-                if (repeatPeriod === "YEAR") {
-                    config["freq"] = RRule.YEARLY;
-                } else if (repeatPeriod === "MONTH") {
-                    config["freq"] = RRule.MONTHLY;
-                } else if (repeatPeriod === "WEEK") {
-                    config["freq"] = RRule.WEEKLY;
-                    let array = [];
-
-                    if (repeatOn.includes("MO")) {
-                        array.push(RRule.MO);
-                    }
-                    if (repeatOn.includes("TU")) {
-                        array.push(RRule.TU);
-                    }
-                    if (repeatOn.includes("WE")) {
-                        array.push(RRule.WE);
-                    }
-                    if (repeatOn.includes("TH")) {
-                        array.push(RRule.TH);
-                    }
-                    if (repeatOn.includes("FR")) {
-                        array.push(RRule.FR);
-                    }
-                    if (repeatOn.includes("SA")) {
-                        array.push(RRule.SA);
-                    }
-                    if (repeatOn.includes("SU")) {
-                        array.push(RRule.SU);
-                    }
-                    config["byweekday"] = array;
-                } else if (repeatPeriod === "DAY") {
-                    config["freq"] = RRule.DAILY;
-                }
-
-                const rule = new RRule(config);
-                performingDates = rule.all();
-
-
-                let tot = Number(performingDates.length);
-
-                console.log("====================", tot, "================================")
-
-                //www = "dddddd";
 
                 for (let i = 0; i < payload.assets.length; i++) {
                     const assetId = payload.assets[i];
@@ -855,6 +695,7 @@ const taskGroupController = {
                         assetResults.push(assetResult[0]);
                     }
                 }
+
                 // Send email to the team about pm plan
                 // let mainUserId = payload.mainUserId;
                 // let mainUser = await knex('users').where({id:mainUserId}).select(['name','email']).first()
@@ -879,19 +720,19 @@ const taskGroupController = {
 
             await knex('pm_master2')
                 .update({ isActive: true })
-                .where({ id: payload.pmId })
+                .where({ id: payload.pmId });
 
-            await knex('pm_task_groups')
-                .update({ isActive: true })
-                .where({ isActive: true })
+            // await knex('pm_task_groups')
+            //     .update({ isActive: true })
+            //     .where({ isActive: true })
 
-            await knex('task_group_schedule')
-                .update({ isActive: true })
-                .where({ isActive: true })
+            // await knex('task_group_schedule')
+            //     .update({ isActive: true })
+            //     .where({ isActive: true })
 
-            await knex('task_group_schedule_assign_assets')
-                .update({ isActive: true })
-                .where({ isActive: true })
+            // await knex('task_group_schedule_assign_assets')
+            //     .update({ isActive: true })
+            //     .where({ isActive: true })
 
             return res.status(200).json({
                 data: {
@@ -4111,12 +3952,6 @@ const taskGroupController = {
 }
 
 module.exports = taskGroupController
-
-
-
-
-
-
 
 
 
