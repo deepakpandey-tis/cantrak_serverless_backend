@@ -1270,7 +1270,7 @@ const serviceOrderController = {
 
 
             let Parallel = require('async-parallel');
-            pagination.data = await Parallel.map(rows, async pd => {
+            pagination.data = await Parallel.map(_.uniqBy(rows, 'So Id'), async pd => {
 
                 let houseResult = await knex.from('user_house_allocation').select('userId').where({ houseId: pd.unitId }).first().orderBy('id', 'desc')
 
