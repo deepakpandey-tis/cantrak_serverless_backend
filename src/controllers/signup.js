@@ -539,10 +539,23 @@ const singupController = {
   forgotPassword: async (req, res) => {
 
     try {
-      let url = process.env.SITE_URL;
+      let url;
+      let org;
       let payload = req.body;
       let emailExistResult = await knex.from('users').where({ email: payload.email }).returning(['*']);
       if (emailExistResult.length) {
+
+        if(emailExistResult[0].orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+          url = 'https://cbreconnect.servicemind.asia';
+          org = "CBRE Connect";
+        }else if(emailExistResult[0].orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+          url = 'https://senses.servicemind.asia';
+          org = "Senses";
+        }else{
+          url = process.env.SITE_URL;
+          org = "ServiceMind";
+        }
+        
 
         let uid = uuid();
         await emailHelper.sendTemplateEmail({
@@ -551,7 +564,8 @@ const singupController = {
           template: 'forgot-email.ejs',
           templateData: {
             fullName: emailExistResult[0].name,
-            URL: url+'/reset-password/' + uid
+            URL: url+'/reset-password/' + uid,
+            Org: org
           }
         })
         let result = await knex.from('users').update({ verifyToken: uid }).where({ email: emailExistResult[0].email }).returning(['*']);
