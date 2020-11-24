@@ -92,7 +92,7 @@ const sendSQSMessage = async (messageBody) => {
 
 
 const emailHelper = {
-    sendTemplateEmail: async ({ to, subject, template, templateData }) => {
+    sendTemplateEmail: async ({ to, subject, template, templateData, orgId }) => {
         try {
 
             console.log('[helpers][email][sendTemplateEmail] To:', to);
@@ -104,13 +104,28 @@ const emailHelper = {
                 template: Joi.string().required(),
                 templateData: Joi.object().optional(),
                 layout: Joi.string().optional(),
+                orgId: Joi.string().optional(),
             });
 
-            const result = Joi.validate({ to, subject, template, templateData, layout }, schema);
+            const result = Joi.validate({ to, subject, template, templateData, layout, orgId }, schema);
             console.log('[helpers][email][sendTemplateEmail]: Joi Validate Params:', result);
 
             if (result && result.hasOwnProperty('error') && result.error) {
                 return { code: 'PARAMS_VALIDATION_ERROR', message: + result.error.message, error: new Error('Could Not Send Mail due to params Validations Failed.') };
+            }
+
+            if(orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+                orgLogoFile = 'https://cbreconnect.servicemind.asia/assets/img/cbre-logo.png';
+                orgNameData = "CBRE Connect";
+                fromSettings = 'important-notifications@cbreconnect.servicemind.asia';
+            }else if(orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+                orgLogoFile = 'https://servicemind.asia/wp-content/uploads/thegem-logos/logo_4ecb6ca197a78baa1c9bb3558b2f0c09_1x.png';
+                orgNameData = "Senses";
+                fromSettings = 'important-notifications@servicemind.asia';
+            }else{
+                orgLogoFile = 'https://servicemind.asia/wp-content/uploads/thegem-logos/logo_4ecb6ca197a78baa1c9bb3558b2f0c09_1x.png';
+                orgNameData = "ServiceMind";
+                fromSettings = 'important-notifications@servicemind.asia';
             }
 
             // CODE FOR COMPILING EMAIL TEMPLATES
@@ -134,11 +149,11 @@ const emailHelper = {
             console.log('[helpers][email][sendTemplateEmail]: Email layout:', layout);
 
             let htmlEmailContents = await ejs.renderFile(emailTemplatePath, { url, ...templateData });
-            htmlEmailContents = await ejs.renderFile(layout, { url: url, body: htmlEmailContents });
+            htmlEmailContents = await ejs.renderFile(layout, { url: url, body: htmlEmailContents, orgLogo: orgLogoFile, orgName: orgNameData });
 
             console.log('[helpers][email][sendTemplateEmail]: htmlEmailContents :', htmlEmailContents);
 
-            let from = process.env.FROM_EMAIL_ADDRESS || 'important-notifications@servicemind.asia';
+            let from = process.env.FROM_EMAIL_ADDRESS || fromSettings;
 
             let mailOptions = {
                 from: from,
