@@ -540,24 +540,20 @@ const singupController = {
 
     try {
       let url;
-      let org;
-      let layouts;
+      let org;      
       let payload = req.body;
       let emailExistResult = await knex.from('users').where({ email: payload.email }).returning(['*']);
       if (emailExistResult.length) {
 
         if(emailExistResult[0].orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
           url = 'https://cbreconnect.servicemind.asia';
-          org = "CBRE Connect";
-          layouts='organization-layout.ejs';
+          org = "CBRE Connect";         
         }else if(emailExistResult[0].orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
           url = 'https://senses.servicemind.asia';
-          org = "Senses";
-          layouts='';
+          org = "Senses";         
         }else{
           url = process.env.SITE_URL;
-          org = "ServiceMind";
-          layouts='';
+          org = "ServiceMind";        
         }
         
 
@@ -566,8 +562,7 @@ const singupController = {
           to: emailExistResult[0].email,
           subject: 'Reset Password',
           template: 'forgot-email.ejs',
-          orgId: emailExistResult[0].orgId,
-          layout: layouts,
+          orgId: emailExistResult[0].orgId,          
           templateData: {
             fullName: emailExistResult[0].name,
             URL: url+'/reset-password/' + uid,
