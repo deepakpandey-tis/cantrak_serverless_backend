@@ -118,12 +118,12 @@ const emailHelper = {
                 orgLogoFile = 'https://cbreconnect.servicemind.asia/assets/img/cbre-logo.png';
                 orgNameData = "CBRE Connect";
                 fromSettings = 'important-notifications@cbreconnect.servicemind.asia';
-                layouts='organization-layout.ejs';
+                layout='organization-layout.ejs';
             }else if(orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
                 orgLogoFile = 'https://servicemind.asia/wp-content/uploads/thegem-logos/logo_4ecb6ca197a78baa1c9bb3558b2f0c09_1x.png';
                 orgNameData = "Senses";
                 fromSettings = 'important-notifications@servicemind.asia';
-                layouts='organization-layout.ejs';
+                layout='organization-layout.ejs';
             }else{
                 orgLogoFile = 'https://servicemind.asia/wp-content/uploads/thegem-logos/logo_4ecb6ca197a78baa1c9bb3558b2f0c09_1x.png';
                 orgNameData = "ServiceMind";
