@@ -577,8 +577,24 @@ const customerController = {
         console.log('User: ', insertedUser)
         if (insertedUser && insertedUser.length) {
 
+          if(orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+            url = 'https://cbreconnect.servicemind.asia';
+            org = "CBRE Connect";
+            layouts='organization-layout.ejs';
+            subjectData = 'Welcome to CBRE Connect';
+          }else if(orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+            url = 'https://senses.servicemind.asia';
+            org = "Senses";
+            layouts='';
+            subjectData = 'Welcome to Senses';
+          }else{
+            url = process.env.SITE_URL;
+            org = "ServiceMind";
+            layouts='';
+            subjectData = 'Welcome to Service Mind';
+          }
 
-          await emailHelper.sendTemplateEmail({ to: payload.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, uuid: uuidv4 } })
+          await emailHelper.sendTemplateEmail({ to: payload.email, layout: layouts, subject: subjectData, orgId:orgId,  template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, uuid: uuidv4, urlData : url,  orgData : org  } })
 
         }
         trx.commit;
