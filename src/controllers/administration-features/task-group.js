@@ -2474,6 +2474,7 @@ const taskGroupController = {
             tasks = await knex('pm_task')
                 .leftJoin("service_status AS status", "pm_task.status", "status.statusCode")
                 .leftJoin('task_feedbacks', 'pm_task.id', 'task_feedbacks.taskId')
+                .leftJoin("task_group_schedule",'pm_task.taskGroupId','task_group_schedule.taskGroupId')
                 .select([
                     'pm_task.id as taskId',
                     'pm_task.taskName as taskName',
@@ -2485,7 +2486,8 @@ const taskGroupController = {
                     'task_feedbacks.description as feedbackDescription',
                     'pm_task.duration',
                     'pm_task.hourlyRate',
-                    'pm_task.taskMode'
+                    'pm_task.taskMode',
+                    'task_group_schedule.repeatFrequency'
 
                 ])
                 .where({
