@@ -92,7 +92,7 @@ const sendSQSMessage = async (messageBody) => {
 
 
 const emailHelper = {
-    sendTemplateEmail: async ({ to, subject, template, templateData, orgId }) => {
+    sendTemplateEmail: async ({ to, subject, template, templateData, orgId, layout }) => {
         try {
 
             console.log('[helpers][email][sendTemplateEmail] To:', to);
@@ -126,6 +126,9 @@ const emailHelper = {
                 orgLogoFile = 'https://servicemind.asia/wp-content/uploads/thegem-logos/logo_4ecb6ca197a78baa1c9bb3558b2f0c09_1x.png';
                 orgNameData = "ServiceMind";
                 fromSettings = 'important-notifications@servicemind.asia';
+                // orgLogoFile = 'https://cbreconnect.servicemind.asia/assets/img/cbre-logo.png';
+                // orgNameData = "CBRE Connect";
+                // fromSettings = 'important-notifications@cbreconnect.servicemind.asia';
             }
 
             // CODE FOR COMPILING EMAIL TEMPLATES
@@ -140,7 +143,7 @@ const emailHelper = {
             var emailTemplatePath = path.join(__dirname, '..', 'emails/', template);
             var layout;
             if (layout) {
-                layout = path.join(path.dirname(emailTemplatePath), path.resolve('layouts/', layout));
+                layout = path.join(path.dirname(emailTemplatePath), 'layouts/'+layout);
             } else {
                 layout = path.join(path.dirname(emailTemplatePath), 'layouts/default-layout.ejs');
             }

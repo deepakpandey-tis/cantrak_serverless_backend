@@ -572,7 +572,7 @@ const customerController = {
         // Insert this users role as customer
         roleInserted = await knex('application_user_roles').insert({ userId: insertedUser[0].id, roleId: 4, createdAt: currentTime, updatedAt: currentTime, orgId: orgId })
           .returning(['*']).transacting(trx)
-
+        let layouts;
         let user = insertedUser[0]
         console.log('User: ', insertedUser)
         if (insertedUser && insertedUser.length) {
@@ -591,7 +591,7 @@ const customerController = {
             url = process.env.SITE_URL;
             org = "ServiceMind";
             layouts='';
-            subjectData = 'Welcome to Service Mind';
+            subjectData = 'Welcome to Service Mind';            
           }
 
           await emailHelper.sendTemplateEmail({ to: payload.email, layout: layouts, subject: subjectData, orgId:orgId,  template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, uuid: uuidv4, urlData : url,  orgData : org  } })

@@ -541,6 +541,7 @@ const singupController = {
     try {
       let url;
       let org;
+      let layouts;
       let payload = req.body;
       let emailExistResult = await knex.from('users').where({ email: payload.email }).returning(['*']);
       if (emailExistResult.length) {
