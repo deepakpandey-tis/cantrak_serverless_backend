@@ -154,12 +154,13 @@ const taskGroupController = {
     },
     createPMTemplate: async (req, res) => {
         try {
+            console.log("Create PM template data",req.body)
             let taskGroupTemplate = null;
             let insertedTasks = [];
             let taskGroupTemplateSchedule = null;
             let partResult = [];
             //let assignedAdditionalUser = null;
-            let payload = _.omit(req.body, ['teamId', 'repeatFrequency', 'repeatPeriod', 'repeatOn', 'tasks', 'mainUserId', 'additionalUsers', 'startDate', 'endDate', 'frequencyTagId']);
+            let payload = _.omit(req.body, ['teamId', 'repeatFrequency', 'repeatPeriod', 'repeatOn', 'tasks', 'mainUserId', 'additionalUsers', 'startDate', 'endDate', 'frequencyTagId','workOrderDates']);
             const schema = Joi.object().keys({
                 assetCategoryId: Joi.string().required(),
                 // repeatFrequency: Joi.string().required(),
@@ -434,9 +435,6 @@ const taskGroupController = {
 
         try {
 
-            console.log("final task group payload",req.body.taskGroups)
-            console.log("final task group payload consolidated",req.body.consolidatedWorkOrders)
-
             let createTemplateTask = null;
             let createTemplate = null;
             let createPM = null;
@@ -478,8 +476,10 @@ const taskGroupController = {
                 endDateTime: Joi.date().required(),
                 repeatPeriod: Joi.string().required(),
                 repeatFrequency: Joi.number().required(),
-                teamId: Joi.string().required(),
-                mainUserId: Joi.string().required(),
+                // teamId: Joi.string().required(),
+                teamId: Joi.string().allow('').optional(),
+                // mainUserId: Joi.string().required(),
+                mainUserId: Joi.string().allow('').optional(),
                 taskGroupName: Joi.string().required(),
                 assets: Joi.array().items(Joi.string().required()).strict().required(),
                 frequencyTagId : Joi.number().required(),
