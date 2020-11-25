@@ -414,6 +414,8 @@ const serviceDetailsController = {
                         'status.descriptionEng as Status',
                         "service_requests.cancellationReason as cancellationReason",
                         "service_requests.cancelledOn as sCancelledOn",
+                        "service_requests.priority",
+                        "projects.project"
 
 
 

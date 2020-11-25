@@ -669,18 +669,18 @@ const serviceRequestController = {
               ]);
             }
 
-            if (dueDateFrom && dueDateTo) {
-              qb.whereBetween("service_requests.createdAt", [
-                dueFrom,
-                dueTo
-              ]);
+            // if (dueDateFrom && dueDateTo) {
+            //   qb.whereBetween("service_requests.createdAt", [
+            //     dueFrom,
+            //     dueTo
+            //   ]);
 
-            }
+            // }
             //qb.where(filters);
           })
           .where({ "service_requests.orgId": req.orgId })
           .whereIn("service_requests.houseId", houseIds)
-          .orWhere("service_requests.createdBy", req.me.id)
+          //.orWhere("service_requests.createdBy", req.me.id)
           .distinct('service_requests.displayId'),
 
         knex
@@ -765,18 +765,19 @@ const serviceRequestController = {
               ]);
             }
 
-            if (dueDateFrom && dueDateTo) {
-              qb.whereBetween("service_requests.createdAt", [
-                dueFrom,
-                dueTo
-              ]);
+            // if (dueDateFrom && dueDateTo) {
+            //   qb.whereBetween("service_requests.createdAt", [
+            //     dueFrom,
+            //     dueTo
+            //   ]);
 
-            }
+            // }
             //qb.where(filters);
+
           })
           .where({ "service_requests.orgId": req.orgId })
           .whereIn("service_requests.houseId", houseIds)
-          .orWhere("service_requests.createdBy", req.me.id)
+          //.orWhere("service_requests.createdBy", req.me.id)
           .distinct('service_requests.displayId')
 
       ]);
