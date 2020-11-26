@@ -754,8 +754,14 @@ const facilityBookingController = {
                     console.log("newPid+++++", newPid);
                     console.log("pid+++++", pId);
                     console.log("resultArray+++++", parcelIds);
+                    if(req.orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+                        approvalUrl = `https://cbreconnect.servicemind.asia/user/parcel/parcel-confirmation?parcels=${newPid}`;
+                    }else if(req.orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+                        approvalUrl = `https://senses.servicemind.asia/user/parcel/parcel-confirmation?parcels=${newPid}`;
+                    }else{
+                        approvalUrl = `${process.env.SITE_URL}/user/parcel/parcel-confirmation?parcels=${newPid}`;
+                    }
 
-                    approvalUrl = `${process.env.SITE_URL}/user/parcel/parcel-confirmation?parcels=${newPid}`;
                     console.log("approvalUrl", approvalUrl);
 
                 }else{

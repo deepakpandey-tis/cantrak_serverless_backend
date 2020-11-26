@@ -12,7 +12,7 @@ router.get('/get-card-data', authMiddleware.isAuthenticated,
 /*GET BANNERS CARD DATA */
 router.get('/get-banners', authMiddleware.isAuthenticated,
     userMiddleware.customerInfo, dashboardController.getBannerList)
-
+    
 /*GET THEME DATA*/
 router.get('/get-theme', authMiddleware.isAuthenticated,
     userMiddleware.customerInfo, dashboardController.getThemeSetting);
