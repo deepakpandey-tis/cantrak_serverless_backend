@@ -962,7 +962,7 @@ const serviceRequestController = {
       pagination.data = await Parallel.map(rows, async (st) => {
 
         let imageResult = [];
-        imageResult = await knex('images').where({ "entityId": st.serviceProblemId, "entityType": "service_problems", orgId: req.orgId });
+        imageResult = await knex('images').where({ "entityId": st["S Id"], "entityType": "service_problems", orgId: req.orgId });
         return {
           ...st,
           uploadImages: imageResult
