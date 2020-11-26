@@ -572,13 +572,26 @@ const customerController = {
         // Insert this users role as customer
         roleInserted = await knex('application_user_roles').insert({ userId: insertedUser[0].id, roleId: 4, createdAt: currentTime, updatedAt: currentTime, orgId: orgId })
           .returning(['*']).transacting(trx)
-
+       
         let user = insertedUser[0]
         console.log('User: ', insertedUser)
         if (insertedUser && insertedUser.length) {
 
+          if(orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+            url = 'https://cbreconnect.servicemind.asia';
+            org = "CBRE Connect";           
+            subjectData = 'Welcome to CBRE Connect';
+          }else if(orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+            url = 'https://senses.servicemind.asia';
+            org = "Senses";           
+            subjectData = 'Welcome to Senses';
+          }else{
+            url = process.env.SITE_URL;
+            org = "ServiceMind";           
+            subjectData = 'Welcome to Service Mind';            
+          }
 
-          await emailHelper.sendTemplateEmail({ to: payload.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, uuid: uuidv4 } })
+          await emailHelper.sendTemplateEmail({ to: payload.email, subject: subjectData, orgId:orgId,  template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, uuid: uuidv4, urlData : url,  orgData : org  } })
 
         }
         trx.commit;

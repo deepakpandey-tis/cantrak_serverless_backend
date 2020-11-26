@@ -1055,15 +1055,15 @@ const pmController = {
 
             let monthDifference = moment(toDate).diff(fromDate, "months");
 
-            if (monthDifference > 3) {
+            // if (monthDifference > 3) {
 
-                return res.status(400).json({
-                    errors: [
-                        { code: 'VALIDATION_ERROR', message: "You can see max four month report, please select max four month difference!" }
-                    ],
-                });
+            //     return res.status(400).json({
+            //         errors: [
+            //             { code: 'VALIDATION_ERROR', message: "You can see max four month report, please select max four month difference!" }
+            //         ],
+            //     });
 
-            }
+            // }
 
 
             let fromNewDate = moment(fromDate).startOf('date').format("YYYY-MM-DD");
@@ -1157,7 +1157,7 @@ const pmController = {
 
 
 
-            for (let i = startWeek; i < startWeek + 20; i++) {
+            for (let i = startWeek; i <= endWeek; i++) {
 
                 arr.push({ "day": i })
 

@@ -191,7 +191,42 @@ const dashboardIconsController = {
                 },
                 message: "Dashboard Icons List!",
               });
-        } catch (error) {
+        } catch (err) {
+            console.log("[controllers][dashboardIcons][addDashboardIcons] :  Error", err);
+            res.status(500).json({
+            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+        }
+    },
+    getDashboardIconByOrg:async(req,res)=>{
+        try {
+            let dashboardIcon = null
+
+
+            dashboardIcon = await knex
+            .from("components_icon_master")
+            .leftJoin("user_component_master", "user_component_master.id", "components_icon_master.componentId")
+            .select([
+                "components_icon_master.id",
+                "user_component_master.componentName",
+                "components_icon_master.icon",
+                "components_icon_master.componentId"
+            ])
+            .where({ "components_icon_master.orgId": req.orgId })
+            .where({"components_icon_master.isActive":true})
+
+
+            return res.status(200).json({
+                data: {
+                  dashBoardIcons: dashboardIcon,
+                },
+                message: "Dashboard Icons List!",
+              });
+        } catch (err) {
+            console.log("[controllers][dashboardIcons][addDashboardIcons] :  Error", err);
+            res.status(500).json({
+            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
             
         }
     },
@@ -213,7 +248,7 @@ const dashboardIconsController = {
                     });
                   }
 
-                  let current = new Date().getTime();
+                //   let current = new Date().getTime();
                    dashboardIconResult = await knex.select()
                   .where({id:payload.id})
                   .returning(["*"])
@@ -282,8 +317,6 @@ const dashboardIconsController = {
           .transacting(trx)
           .into("components_icon_master");
         dashboardIconResult = insertResult[0];
-
-
         trx.commit;
             })
 
@@ -294,7 +327,6 @@ const dashboardIconsController = {
                 message: "Dashboard Icon details updated successfully."
               });
         } catch (err) {
-            
         }
     },
     toggleDashboardIconData : async(req,res)=>{
@@ -354,6 +386,71 @@ const dashboardIconsController = {
         } catch (err) {
             
         }
+    },
+    getManifestData:async(req,res)=>{
+      try {
+        let manifestData = {
+          "name": "ServiceMind",
+          "short_name": "ServiceMind",
+          "theme_color": "#1976d2",
+          "background_color": "#fafafa",
+          "display": "standalone",
+          "scope": "/",
+          "start_url": "/login",
+          "icons": [
+            {
+              "src": "assets/icons/icon-72x72.png",
+              "sizes": "72x72",
+              "type": "image/png"
+            },
+            {
+              "src": "assets/icons/icon-96x96.png",
+              "sizes": "96x96",
+              "type": "image/png"
+            },
+            {
+              "src": "assets/icons/icon-128x128.png",
+              "sizes": "128x128",
+              "type": "image/png"
+            },
+            {
+              "src": "assets/icons/icon-144x144.png",
+              "sizes": "144x144",
+              "type": "image/png"
+            },
+            {
+              "src": "assets/icons/icon-152x152.png",
+              "sizes": "152x152",
+              "type": "image/png"
+            },
+            {
+              "src": "assets/icons/icon-192x192.png",
+              "sizes": "192x192",
+              "type": "image/png"
+            },
+            {
+              "src": "assets/icons/icon-384x384.png",
+              "sizes": "384x384",
+              "type": "image/png"
+            },
+            {
+              "src": "assets/icons/icon-512x512.png",
+              "sizes": "512x512",
+              "type": "image/png"
+            }
+          ]
+        }
+        return res.status(200).json({
+          data: {
+            manifestData
+          },
+          message: message
+        });
+      } catch (err) {
+        console.log(err)
+      }
+
     }
+    
 }
 module.exports = dashboardIconsController

@@ -152,6 +152,9 @@ const dashboardController = {
 
             let announcement;
             let img;
+            let announcementTitle;
+            let approvalUrl;
+
 
             announcement = await knex
                 .from("announcement_master")
@@ -175,11 +178,15 @@ const dashboardController = {
                     "announcement_master.createdAt as announcementDate"
                 )
                 .orderBy('announcement_master.id', 'desc')
-                .limit(10);
+                .limit(10); 
 
 
             const Parallel = require("async-parallel");
             announcement = await Parallel.map(announcement, async (pp) => {
+
+
+                announcementTitle = pp.titles.split(" ").slice(0,22);
+                
 
                 let imageResult = await knex
                     .from("images")
@@ -191,10 +198,20 @@ const dashboardController = {
 
                 console.log("imagesResult", imageResult);
 
+
+                if(req.orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+                    approvalUrl = 'https://cbreconnect.servicemind.asia';
+                }else if(req.orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+                    approvalUrl = 'https://senses.servicemind.asia';
+                }else{
+                    approvalUrl = process.env.SITE_URL;
+                }
+
                 return {
                     ...pp,
+                    titles: announcementTitle,
                     img: imageResult,
-                    URL: process.env.SITE_URL
+                    URL: approvalUrl
                 };
             });
 

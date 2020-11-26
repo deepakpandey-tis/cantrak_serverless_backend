@@ -12,7 +12,7 @@ const moment = require('moment')
 const assetController = {
 
 
-    getAssetList: async(req, res) => {
+    getAssetList: async (req, res) => {
 
         // name, model, area, category
         try {
@@ -27,6 +27,7 @@ const assetController = {
                 assetSerial,
                 category,
                 assetCode,
+                companyId
             } = req.body;
             let pagination = {};
             let per_page = reqData.per_page || 10;
@@ -37,148 +38,159 @@ const assetController = {
             try {
                 [total, rows] = await Promise.all([
                     knex
-                    .count("* as count")
-                    .from("asset_master")
-                    .leftJoin(
-                        "asset_category_master",
-                        "asset_master.assetCategoryId",
-                        "asset_category_master.id"
-                    )
-                    .leftJoin(
-                        "companies",
-                        "asset_master.companyId",
-                        "companies.id"
-                    )
-                    .where(qb => {
-                        if (assetName) {
-                            qb.where(
-                                "asset_master.assetName",
-                                "iLIKE",
-                                `%${assetName}%`
-                            );
-                        }
-                        if (assetSerial) {
-                            qb.where(
-                                "asset_master.assetSerial",
-                                "iLIKE",
-                                `%${assetSerial}%`
-                            )
-                        }
-                        if (assetModel) {
-                            qb.where(
-                                "asset_master.model",
-                                "iLIKE",
-                                `%${assetModel}%`
-                            );
-                        }
-                        if (category) {
-                            qb.where(
-                                "asset_category_master.categoryName",
-                                "like",
-                                `%${category}%`
-                            );
-                        }
-                        if (assetCode) {
-                            qb.where(
-                                "asset_master.assetCode",
-                                "iLIKE",
-                                `%${assetCode}%`
-                            );
-                        }
-                    })
-                    .first()
-                    .where({ 'asset_master.orgId': req.orgId }),
+                        .count("* as count")
+                        .from("asset_master")
+                        .leftJoin(
+                            "asset_category_master",
+                            "asset_master.assetCategoryId",
+                            "asset_category_master.id"
+                        )
+                        .leftJoin(
+                            "companies",
+                            "asset_master.companyId",
+                            "companies.id"
+                        )
+                        .where(qb => {
+                            if (assetName) {
+                                qb.where(
+                                    "asset_master.assetName",
+                                    "iLIKE",
+                                    `%${assetName}%`
+                                );
+                            }
+                            if (assetSerial) {
+                                qb.where(
+                                    "asset_master.assetSerial",
+                                    "iLIKE",
+                                    `%${assetSerial}%`
+                                )
+                            }
+                            if (assetModel) {
+                                qb.where(
+                                    "asset_master.model",
+                                    "iLIKE",
+                                    `%${assetModel}%`
+                                );
+                            }
+                            if (category) {
+                                qb.where(
+                                    "asset_category_master.categoryName",
+                                    "like",
+                                    `%${category}%`
+                                );
+                            }
+                            if (assetCode) {
+                                qb.where(
+                                    "asset_master.assetCode",
+                                    "iLIKE",
+                                    `%${assetCode}%`
+                                );
+                            }
+
+                            if (companyId) {
+                                qb.where("asset_master.companyId", companyId);
+                            }
+                        })
+                        .first()
+                        .where({ 'asset_master.orgId': req.orgId }),
 
                     knex("asset_master")
-                    .leftJoin(
-                        "asset_category_master",
-                        "asset_master.assetCategoryId",
-                        "asset_category_master.id"
-                    )
-                    .leftJoin(
-                        "companies",
-                        "asset_master.companyId",
-                        "companies.id"
-                    )
-                    .leftJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
-                    .leftJoin(
-                        "buildings_and_phases",
-                        "asset_location.buildingId",
-                        "buildings_and_phases.id"
-                    )
+                        .leftJoin(
+                            "asset_category_master",
+                            "asset_master.assetCategoryId",
+                            "asset_category_master.id"
+                        )
+                        .leftJoin(
+                            "companies",
+                            "asset_master.companyId",
+                            "companies.id"
+                        )
+                        .leftJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
+                        .leftJoin(
+                            "buildings_and_phases",
+                            "asset_location.buildingId",
+                            "buildings_and_phases.id"
+                        )
 
-                    .leftJoin(
-                        "property_units",
-                        "asset_location.unitId",
-                        "property_units.id"
-                    )
+                        .leftJoin(
+                            "property_units",
+                            "asset_location.unitId",
+                            "property_units.id"
+                        )
 
-                    .select([
-                        "asset_master.assetName as Name",
-                        "asset_master.id as ID",
-                        "asset_master.model as Model",
-                        "asset_master.barcode as Barcode",
-                        "asset_master.assetSerial as assetSerial",
-                        "asset_master.areaName as Area",
-                        "asset_category_master.categoryName as Category",
-                        "asset_master.createdAt as Date Created",
-                        "asset_master.unitOfMeasure as Unit Of Measure",
-                        "asset_master.price as Price",
-                        "companies.companyName",
-                        "asset_master.assetCode",
-                        'buildings_and_phases.buildingPhaseCode',
-                        "buildings_and_phases.description as building",
-                        'property_units.unitNumber'
-                    ])
-                    .where({ 'asset_master.orgId': req.orgId })
-                    .where('asset_location.endDate', null)
-                    .where(qb => {
-                        if (assetName) {
-                            qb.where(
-                                "asset_master.assetName",
-                                "iLIKE",
-                                `%${assetName}%`
-                            );
-                        }
-                        if (assetModel) {
-                            qb.where(
-                                "asset_master.model",
-                                "iLIKE",
-                                `%${assetModel}%`
-                            );
-                        }
-                        if (assetSerial) {
-                            qb.where(
-                                "asset_master.assetSerial",
-                                "iLIKE",
-                                `%${assetSerial}%`
-                            )
-                        }
-                        if (category) {
-                            qb.where(
-                                "asset_category_master.categoryName",
-                                "like",
-                                `%${category}%`
-                            );
-                        }
+                        .select([
+                            "asset_master.assetName as Name",
+                            "asset_master.id as ID",
+                            "asset_master.model as Model",
+                            "asset_master.barcode as Barcode",
+                            "asset_master.assetSerial as assetSerial",
+                            "asset_master.areaName as Area",
+                            "asset_category_master.categoryName as Category",
+                            "asset_master.createdAt as Date Created",
+                            "asset_master.unitOfMeasure as Unit Of Measure",
+                            "asset_master.price as Price",
+                            "companies.companyName",
+                            "asset_master.assetCode",
+                            'buildings_and_phases.buildingPhaseCode',
+                            "buildings_and_phases.description as building",
+                            'property_units.unitNumber'
+                        ])
+                        .where({ 'asset_master.orgId': req.orgId })
+                        .where('asset_location.endDate', null)
+                        .where(qb => {
+                            if (assetName) {
+                                qb.where(
+                                    "asset_master.assetName",
+                                    "iLIKE",
+                                    `%${assetName}%`
+                                );
+                            }
+                            if (assetModel) {
+                                qb.where(
+                                    "asset_master.model",
+                                    "iLIKE",
+                                    `%${assetModel}%`
+                                );
+                            }
+                            if (assetSerial) {
+                                qb.where(
+                                    "asset_master.assetSerial",
+                                    "iLIKE",
+                                    `%${assetSerial}%`
+                                )
+                            }
+                            if (category) {
+                                qb.where(
+                                    "asset_category_master.categoryName",
+                                    "like",
+                                    `%${category}%`
+                                );
+                            }
 
-                        if (assetCode) {
-                            qb.where(
-                                "asset_master.assetCode",
-                                "iLIKE",
-                                `%${assetCode}%`
-                            );
-                        }
-                    })
-                    .orderBy("asset_master.id", "desc")
-                    .offset(offset)
-                    .limit(per_page)
+                            if (assetCode) {
+                                qb.where(
+                                    "asset_master.assetCode",
+                                    "iLIKE",
+                                    `%${assetCode}%`
+                                );
+                            }
+
+                            if (companyId) {
+                                qb.where("asset_master.companyId", companyId);
+                            }
+                        })
+                        .orderBy("asset_master.id", "desc")
+                        //.groupBy(['asset_master.id'])
+                        //.distinct('asset_master.id')
+                        .offset(offset)
+                        .limit(per_page)
                 ]);
             } catch (e) {
                 // Error
                 console.log('Error: ' + e.message)
             }
             //}
+             rows = _.uniqBy(rows, 'ID');
 
             let count = total.count;
             pagination.total = count;
@@ -207,7 +219,7 @@ const assetController = {
         }
     },
 
-    getParts: async(req, res) => {
+    getParts: async (req, res) => {
         try {
             let partData = null;
             let reqData = req.query;
@@ -215,9 +227,9 @@ const assetController = {
             let pagination = {};
 
 
-            let { partName, partCode, partCategory } = req.body;
+            let { partName, partCode, partCategory, companyId } = req.body;
 
-            if (partName || partCode || partCategory) {
+            if (partName || partCode || partCategory || companyId) {
 
                 let per_page = reqData.per_page || 10;
                 let page = reqData.current_page || 1;
@@ -225,56 +237,64 @@ const assetController = {
                 let offset = (page - 1) * per_page;
                 [total, rows] = await Promise.all([
                     knex.from("part_master")
-                    .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
-                    .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
-                    .where(qb => {
-                        if (partName) {
-                            qb.where('part_master.partName', 'iLIKE', `%${partName}%`)
-                        }
-                        if (partCode) {
-                            qb.where('part_master.partCode', 'iLIKE', `%${partCode}%`)
+                        .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
+                        .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
+                        .where(qb => {
+                            if (partName) {
+                                qb.where('part_master.partName', 'iLIKE', `%${partName}%`)
+                            }
+                            if (partCode) {
+                                qb.where('part_master.partCode', 'iLIKE', `%${partCode}%`)
 
-                        }
-                        if (partCategory) {
-                            qb.where('part_master.partCategory', partCategory)
-                        }
-                    })
-                    .groupBy(['part_master.id'])
-                    .distinct('part_master.id'),
+                            }
+                            if (partCategory) {
+                                qb.where('part_master.partCategory', partCategory)
+                            }
+                            if (companyId) {
+                                qb.where('part_master.companyId', companyId)
+
+                            }
+                        })
+                        .groupBy(['part_master.id'])
+                        .distinct('part_master.id'),
                     //.first(),
                     //.innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
                     knex.from('part_master')
-                    .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
-                    .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
-                    .select([
-                        'part_master.id as partId',
-                        'part_master.partName as Name',
-                        'part_master.partCode as ID',
-                        knex.raw('SUM("part_ledger"."quantity") as Quantity'),
-                        knex.raw('MAX("part_ledger"."unitCost") as Price'),
-                        'part_master.unitOfMeasure',
-                        'part_category_master.categoryName as Category',
-                        'part_master.barcode as Barcode',
-                        'part_master.createdAt as Date Added',
-                        'part_master.avgUnitPrice'
-                    ])
-                    .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
-                    .where(qb => {
-                        if (partName) {
-                            qb.where('part_master.partName', 'iLIKE', `%${partName}%`)
-                        }
-                        if (partCode) {
-                            qb.where('part_master.partCode', 'iLIKE', `%${partCode}%`)
+                        .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
+                        .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
+                        .select([
+                            'part_master.id as partId',
+                            'part_master.partName as Name',
+                            'part_master.partCode as ID',
+                            knex.raw('SUM("part_ledger"."quantity") as Quantity'),
+                            knex.raw('MAX("part_ledger"."unitCost") as Price'),
+                            'part_master.unitOfMeasure',
+                            'part_category_master.categoryName as Category',
+                            'part_master.barcode as Barcode',
+                            'part_master.createdAt as Date Added',
+                            'part_master.avgUnitPrice'
+                        ])
+                        .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
+                        .where(qb => {
+                            if (partName) {
+                                qb.where('part_master.partName', 'iLIKE', `%${partName}%`)
+                            }
+                            if (partCode) {
+                                qb.where('part_master.partCode', 'iLIKE', `%${partCode}%`)
 
-                        }
-                        if (partCategory) {
-                            qb.where('part_master.partCategory', partCategory)
-                        }
-                    })
-                    .orderBy('part_master.createdAt', 'desc')
-                    .groupBy(['part_master.id', 'part_category_master.id'])
-                    .distinct('part_master.id')
-                    .offset(offset).limit(per_page)
+                            }
+                            if (partCategory) {
+                                qb.where('part_master.partCategory', partCategory)
+                            }
+
+                            if (companyId) {
+                                qb.where('part_master.companyId', companyId)
+                            }
+                        })
+                        .orderBy('part_master.createdAt', 'desc')
+                        .groupBy(['part_master.id', 'part_category_master.id'])
+                        .distinct('part_master.id')
+                        .offset(offset).limit(per_page)
                 ])
 
 
@@ -310,32 +330,32 @@ const assetController = {
 
                 [total, rows] = await Promise.all([
                     knex.from("part_master")
-                    .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id').where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
-                    .groupBy(['part_master.id'])
-                    .distinct('part_master.id'),
+                        .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id').where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
+                        .groupBy(['part_master.id'])
+                        .distinct('part_master.id'),
                     //.first(),
                     //.innerJoin('part_master', 'part_ledger.partId', 'part_master.id').first(),
                     knex.from('part_master')
-                    .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
-                    .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
-                    .select([
-                        'part_master.id as partId',
-                        'part_master.partName as Name',
-                        'part_master.partCode as ID',
-                        knex.raw('SUM("part_ledger"."quantity") as Quantity'),
-                        knex.raw('MAX("part_ledger"."unitCost") as Price'),
-                        'part_master.unitOfMeasure',
-                        'part_category_master.categoryName as Category',
-                        'part_master.barcode as Barcode',
-                        'part_master.createdAt as Date Added',
-                        'part_master.avgUnitPrice'
+                        .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
+                        .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
+                        .select([
+                            'part_master.id as partId',
+                            'part_master.partName as Name',
+                            'part_master.partCode as ID',
+                            knex.raw('SUM("part_ledger"."quantity") as Quantity'),
+                            knex.raw('MAX("part_ledger"."unitCost") as Price'),
+                            'part_master.unitOfMeasure',
+                            'part_category_master.categoryName as Category',
+                            'part_master.barcode as Barcode',
+                            'part_master.createdAt as Date Added',
+                            'part_master.avgUnitPrice'
 
-                    ])
-                    .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
-                    .orderBy('part_master.createdAt', 'desc')
-                    .groupBy(['part_master.id', 'part_category_master.id'])
-                    .distinct('part_master.id')
-                    .offset(offset).limit(per_page)
+                        ])
+                        .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
+                        .orderBy('part_master.createdAt', 'desc')
+                        .groupBy(['part_master.id', 'part_category_master.id'])
+                        .distinct('part_master.id')
+                        .offset(offset).limit(per_page)
                 ])
 
 
@@ -380,7 +400,7 @@ const assetController = {
         }
     },
 
-    getChargesList: async(req, res) => {
+    getChargesList: async (req, res) => {
         try {
             let reqData = req.query;
             let total = null;
@@ -393,53 +413,53 @@ const assetController = {
             let { chargeCode, calculationUnit, description } = req.body;
             [total, rows] = await Promise.all([
                 knex
-                .count("* as count")
-                .from("charge_master")
-                .leftJoin("users", "users.id", "charge_master.createdBy")
-                .where({ "charge_master.orgId": req.orgId, "charge_master.isActive": true })
-                .where(qb => {
-                    if (chargeCode) {
-                        qb.where('charge_master.chargeCode', 'iLIKE', `%${chargeCode}%`)
-                    }
-                    if (calculationUnit) {
-                        qb.where('charge_master.calculationUnit', 'iLIKE', `%${calculationUnit}%`)
-                    }
-                    if (description) {
-                        qb.where('charge_master.descriptionEng', 'iLIKE', `%${description}%`)
-                    }
-                })
-                .first(),
+                    .count("* as count")
+                    .from("charge_master")
+                    .leftJoin("users", "users.id", "charge_master.createdBy")
+                    .where({ "charge_master.orgId": req.orgId, "charge_master.isActive": true })
+                    .where(qb => {
+                        if (chargeCode) {
+                            qb.where('charge_master.chargeCode', 'iLIKE', `%${chargeCode}%`)
+                        }
+                        if (calculationUnit) {
+                            qb.where('charge_master.calculationUnit', 'iLIKE', `%${calculationUnit}%`)
+                        }
+                        if (description) {
+                            qb.where('charge_master.descriptionEng', 'iLIKE', `%${description}%`)
+                        }
+                    })
+                    .first(),
                 knex("charge_master")
-                .leftJoin("users", "users.id", "charge_master.createdBy")
-                .where({ "charge_master.orgId": req.orgId, "charge_master.isActive": true})
-                .select([
-                    "charge_master.id",
-                    "charge_master.chargeCode as Charges Code",
-                    "charge_master.chargeCode as chargeCode",
-                    "charge_master.calculationUnit as Calculation Unit",
-                    "charge_master.calculationUnit as calculationUnit",
-                    "charge_master.rate as Cost",
-                    "charge_master.rate as rate",
-                    "charge_master.isActive as Status",
-                    "users.name as Created By",
-                    "charge_master.createdAt as Date Created",
-                    "charge_master.descriptionEng",
-                    "charge_master.descriptionThai",
-                ])
-                .where(qb => {
-                    if (chargeCode) {
-                        qb.where('charge_master.chargeCode', 'iLIKE', `%${chargeCode}%`)
-                    }
-                    if (calculationUnit) {
-                        qb.where('charge_master.calculationUnit', 'iLIKE', `%${calculationUnit}%`)
-                    }
-                    if (description) {
-                        qb.where('charge_master.descriptionEng', 'iLIKE', `%${description}%`)
-                    }
-                })
-                .orderBy('charge_master.id', 'desc')
-                .offset(offset)
-                .limit(per_page)
+                    .leftJoin("users", "users.id", "charge_master.createdBy")
+                    .where({ "charge_master.orgId": req.orgId, "charge_master.isActive": true })
+                    .select([
+                        "charge_master.id",
+                        "charge_master.chargeCode as Charges Code",
+                        "charge_master.chargeCode as chargeCode",
+                        "charge_master.calculationUnit as Calculation Unit",
+                        "charge_master.calculationUnit as calculationUnit",
+                        "charge_master.rate as Cost",
+                        "charge_master.rate as rate",
+                        "charge_master.isActive as Status",
+                        "users.name as Created By",
+                        "charge_master.createdAt as Date Created",
+                        "charge_master.descriptionEng",
+                        "charge_master.descriptionThai",
+                    ])
+                    .where(qb => {
+                        if (chargeCode) {
+                            qb.where('charge_master.chargeCode', 'iLIKE', `%${chargeCode}%`)
+                        }
+                        if (calculationUnit) {
+                            qb.where('charge_master.calculationUnit', 'iLIKE', `%${calculationUnit}%`)
+                        }
+                        if (description) {
+                            qb.where('charge_master.descriptionEng', 'iLIKE', `%${description}%`)
+                        }
+                    })
+                    .orderBy('charge_master.id', 'desc')
+                    .offset(offset)
+                    .limit(per_page)
             ]);
 
             let count = total.count;
