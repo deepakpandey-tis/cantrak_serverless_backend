@@ -435,6 +435,8 @@ const taskGroupController = {
 
         try {
 
+            console.log("Week days selected",req.body.taskGroups[0].repeatOn)
+
             let createTemplateTask = null;
             let createTemplate = null;
             let createPM = null;
@@ -484,7 +486,7 @@ const taskGroupController = {
                 assets: Joi.array().items(Joi.string().required()).strict().required(),
                 frequencyTagId : Joi.number().required(),
                 additionalUsers:Joi.array().items(Joi.string().allow('').optional()).optional(),
-                repeatOn : Joi.string().allow('').optional(),
+                repeatOn : Joi.array().items(Joi.string().allow('').optional()).allow('').optional(),
                 tasks : Joi.array().items(Joi.object().optional()).optional(),
                 workOrderDates : Joi.array().items(Joi.string().allow('').optional()).optional()
 
@@ -553,17 +555,19 @@ const taskGroupController = {
 
                 // ASSIGNED TEAM OPEN
                let insertAssignedServiceTeamData;
-                // for(let i = 0;i<req.body.taskGroups.length ;i++){
+                for(let i = 0;i<req.body.taskGroups.length ;i++){
+                    if(payload[i].teamId && payload[i].mainUserId){
                  insertAssignedServiceTeamData = {
-                    teamId: payload[0].teamId,
-                    userId: payload[0].mainUserId,
+                    teamId: payload[i].teamId,
+                    userId: payload[i].mainUserId,
                     entityId: createPmTaskGroup.id,
                     entityType: "pm_task_groups",
                     createdAt: currentTime,
                     updatedAt: currentTime,
                     orgId: req.orgId
                 }
-            // }
+            }
+            }
                 let assignedServiceTeamResult = await knex.insert(insertAssignedServiceTeamData).returning(['*']).transacting(trx).into('assigned_service_team');
                 assignedServiceTeam = assignedServiceTeamResult[0];
                 // ASSIGNED TEAM CLOSE
@@ -2315,6 +2319,7 @@ const taskGroupController = {
         try {
 
             let payload = req.body;
+            console.log("payload data in PM details",payload)
 
             const schema = Joi.object().keys({
                 taskGroupScheduleId: Joi.string().required(),
@@ -2379,7 +2384,7 @@ const taskGroupController = {
                     'task_group_schedule.id': payload.taskGroupScheduleId,
                     'task_group_schedule_assign_assets.id': payload.taskGroupScheduleAssignAssetId,
                     //'task_group_schedule.taskGroupId':payload.taskGroupId,
-                    'assigned_service_team.entityType': 'pm_task_groups',
+                    // 'assigned_service_team.entityType': 'pm_task_groups',
                     'task_group_schedule.orgId': req.orgId,
                 })
             // .where(knex.raw('"asset_location"."updatedAt" = (select max("updatedAt") from asset_location)'))
@@ -2387,6 +2392,7 @@ const taskGroupController = {
 
 
             /// Update by Deepak Tiwari
+            console.log("Details for team user",pmResult2)
 
             const Parallel = require('async-parallel')
             const pmResult = await Parallel.map(pmResult2, async row => {
