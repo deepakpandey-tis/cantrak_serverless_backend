@@ -435,7 +435,7 @@ const taskGroupController = {
 
         try {
 
-            console.log("Week days selected",req.body.taskGroups[0].repeatOn)
+            console.log("Week days selected data",req.body)
 
             let createTemplateTask = null;
             let createTemplate = null;
@@ -480,13 +480,14 @@ const taskGroupController = {
                 repeatFrequency: Joi.number().required(),
                 // teamId: Joi.string().required(),
                 teamId: Joi.string().allow('').optional(),
-                // mainUserId: Joi.string().required(),
                 mainUserId: Joi.string().allow('').optional(),
+                // mainUserId: Joi.array().items(Joi.number().allow(null).optional()).allow(null).optional(),
                 taskGroupName: Joi.string().required(),
                 assets: Joi.array().items(Joi.string().required()).strict().required(),
                 frequencyTagId : Joi.number().required(),
                 additionalUsers:Joi.array().items(Joi.string().allow('').optional()).optional(),
-                repeatOn : Joi.array().items(Joi.string().allow('').optional()).allow('').optional(),
+                repeatOn : Joi.string().allow('').allow(null).optional(),
+                // repeatOn : Joi.array().items(Joi.string().allow(null).optional()).allow(null).optional(),
                 tasks : Joi.array().items(Joi.object().optional()).optional(),
                 workOrderDates : Joi.array().items(Joi.string().allow('').optional()).optional()
 
@@ -1046,7 +1047,7 @@ const taskGroupController = {
             let reqData = req.query;
             let payLoad = req.body;
             let workOrderDate = req.body.workOrderDate
-            console.log("work order list data", req.body)
+            console.log("work order list data pm Id", req.body)
 
             const payload = _.omit(payLoad, [
                 "assetCategoryId",
@@ -1057,7 +1058,8 @@ const taskGroupController = {
             ]);
 
             const schema = Joi.object().keys({
-                taskGroupId: Joi.string().required(),
+                // taskGroupId: Joi.string().required(),
+                pmId:Joi.string().required(),
                 category: Joi.string().allow("").allow(null).optional(),
                 workOrderId: Joi.string().allow("").allow(null).optional(),
             });
@@ -1097,7 +1099,8 @@ const taskGroupController = {
                         "asset_master.id"
                     )
                     .where({
-                        "task_group_schedule.taskGroupId": payload.taskGroupId,
+                        // "task_group_schedule.taskGroupId": payload.taskGroupId,
+                        "task_group_schedule.pmId":payload.pmId,
                         "task_group_schedule.orgId": req.orgId
                     })
                     .where(qb => {
@@ -1164,7 +1167,7 @@ const taskGroupController = {
                         "task_group_schedule_assign_assets.status"
                     ])
                     .where({
-                        "task_group_schedule.taskGroupId": payload.taskGroupId,
+                        "task_group_schedule.pmId": payload.pmId,
                         "task_group_schedule.orgId": req.orgId
                     })
                     .where(qb => {
@@ -2493,8 +2496,7 @@ const taskGroupController = {
                     'pm_task.duration',
                     'pm_task.hourlyRate',
                     'pm_task.taskMode',
-                    'task_group_schedule.repeatFrequency'
-
+                    'pm_task.taskGroupId'
                 ])
                 .where({
                     'pm_task.taskGroupScheduleAssignAssetId': payload.taskGroupScheduleAssignAssetId,
@@ -2513,6 +2515,14 @@ const taskGroupController = {
                 }
 
             })
+
+            //  tasks = await Parallel.map(tasks , async task =>{
+            //     const taskRepeatFrequency = await knex('task_group_schedule')
+            //     .select('task_group_schedule.repeatFrequency')
+            //     .where({'task_group_schedule.taskGroupId':task.taskGroupId})
+
+            //     return {...task ,taskRepeatFrequency}
+            // })
 
             // let statuses = tasks.filter(t => t.status !== "CMTD")
             // if (statuses.length === 0) {
@@ -2727,7 +2737,8 @@ const taskGroupController = {
                     'task_feedbacks.description as feedbackDescription',
                     'pm_task.duration',
                     'pm_task.hourlyRate',
-                    'pm_task.taskMode'
+                    'pm_task.taskMode',
+                    'pm_task.taskGroupId'
 
                 ])
                 .where({
@@ -2735,6 +2746,8 @@ const taskGroupController = {
                     'pm_task.orgId': req.orgId
                 })
                 .orderBy('pm_task.taskSerialNumber', 'asc');
+
+                console.log("task group Id",tasks)
 
             tasks = tasks.map(v => {
 
