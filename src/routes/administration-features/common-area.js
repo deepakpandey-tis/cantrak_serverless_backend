@@ -45,7 +45,7 @@ router.post(
   commonAreaController.getdetailsCommonArea
 );
 // Export Common Area 
-router.get(
+router.post(
   "/export-common-area",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
