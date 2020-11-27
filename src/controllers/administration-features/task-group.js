@@ -296,7 +296,7 @@ const taskGroupController = {
                 endDate: req.body.endDate ? req.body.endDate : null,
                 repeatFrequency: req.body.repeatFrequency ? req.body.repeatFrequency : null,
                 repeatOn: req.body.repeatOn,
-                frequencyTagId: req.body.frequencyTagId,
+                frequencyTagId: req.body.frequencyTagId ? req.body.frequencyTagId : null,
                 repeatPeriod: req.body.repeatPeriod ? req.body.repeatPeriod : null,
                 taskGroupId: taskGroupTemplate.id,
                 createdAt: currentTime,
@@ -486,8 +486,8 @@ const taskGroupController = {
                 assets: Joi.array().items(Joi.string().required()).strict().required(),
                 frequencyTagId : Joi.number().required(),
                 additionalUsers:Joi.array().items(Joi.string().allow('').optional()).optional(),
-                repeatOn : Joi.string().allow('').allow(null).optional(),
-                // repeatOn : Joi.array().items(Joi.string().allow(null).optional()).allow(null).optional(),
+                // repeatOn : Joi.string().allow('').allow(null).optional(),
+                repeatOn : Joi.array().items(Joi.string().allow(null).optional()).allow(null).optional(),
                 tasks : Joi.array().items(Joi.object().optional()).optional(),
                 workOrderDates : Joi.array().items(Joi.string().allow('').optional()).optional()
 
