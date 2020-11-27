@@ -388,7 +388,13 @@ const serviceDetailsController = {
                     .leftJoin("source_of_request", "service_requests.serviceType", "source_of_request.id")
                     .leftJoin("images", "service_requests.id", "images.entityId")
                     .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
-
+                    .leftJoin(
+                        "service_problems",
+                        "service_requests.id",
+                        "service_problems.serviceRequestId"
+                    )
+                    .leftJoin("incident_categories", "service_problems.categoryId", "=", "incident_categories.id")
+                    .leftJoin("incident_sub_categories", "service_problems.problemId", "=", "incident_sub_categories.id")
                     .select(
                         "companies.companyName",
                         "projects.projectName",
@@ -414,10 +420,13 @@ const serviceDetailsController = {
                         'status.descriptionEng as Status',
                         "service_requests.cancellationReason as cancellationReason",
                         "service_requests.cancelledOn as sCancelledOn",
-
-
-
-
+                        "service_requests.priority",
+                        "projects.project",
+                        "incident_categories.categoryCode",
+                        "incident_categories.descriptionEng as categoryDescription",
+                        // "incident_sub_categories.categoryCode as subCategoryCode",
+                        "incident_sub_categories.descriptionEng as subCategoryDescriptionEng",
+                        "service_problems.description as problemDescription"
                     )
                     .where({
                         "property_units.id": houseId,
@@ -465,10 +474,13 @@ const serviceDetailsController = {
                 if (incidentRequestPayload.id) {
                     imagesResult = await knex.from('images')
                         // .where({ "entityId": incidentRequestPayload.id, "entityType": "service_requests", orgId: orgId })
-                        .where({ "entityId": incidentRequestPayload.id, "entityType": "service_requests" })
+                        .where({ "entityId": incidentRequestPayload.id, "entityType": "service_problems" })
                         .select('s3Url', 'title', 'name');
                 }
                 /*GET UPLOADED IMAGES CLOSE  */
+
+
+
 
                 generalDetails = DataResult;
                 generalDetails.uploadedImages = imagesResult;
