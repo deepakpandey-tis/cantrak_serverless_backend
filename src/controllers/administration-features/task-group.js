@@ -435,7 +435,7 @@ const taskGroupController = {
 
         try {
 
-            console.log("Week days selected data",req.body)
+            console.log("Week days selected data repeat on",req.body.taskGroups)
 
             let createTemplateTask = null;
             let createTemplate = null;
@@ -479,15 +479,16 @@ const taskGroupController = {
                 repeatPeriod: Joi.string().required(),
                 repeatFrequency: Joi.number().required(),
                 // teamId: Joi.string().required(),
-                teamId: Joi.string().allow('').optional(),
-                mainUserId: Joi.string().allow('').optional(),
+                teamId: Joi.string().allow('').allow(null).optional(),
+                mainUserId: Joi.string().allow('').allow(null).optional(),
                 // mainUserId: Joi.array().items(Joi.number().allow(null).optional()).allow(null).optional(),
                 taskGroupName: Joi.string().required(),
                 assets: Joi.array().items(Joi.string().required()).strict().required(),
                 frequencyTagId : Joi.number().required(),
                 additionalUsers:Joi.array().items(Joi.string().allow('').optional()).optional(),
                 // repeatOn : Joi.string().allow('').allow(null).optional(),
-                repeatOn : Joi.array().items(Joi.string().allow(null).optional()).allow(null).optional(),
+                // repeatOn : Joi.array().items(Joi.object().optional()).optional(),
+                repeatOn : Joi.array().items(Joi.string().allow('').allow(null).optional()).allow('').allow(null).optional(),
                 tasks : Joi.array().items(Joi.object().optional()).optional(),
                 workOrderDates : Joi.array().items(Joi.string().allow('').optional()).optional()
 
