@@ -2381,7 +2381,10 @@ const taskGroupController = {
                     'users.name as mainUser',
                     'task_group_schedule_assign_assets.pmDate as pmDate',
                     'task_group_schedule_assign_assets.displayId',
-                    'task_group_schedule_assign_assets.status as woStatus'
+                    'task_group_schedule_assign_assets.status as woStatus',
+                    'companies.taxId',
+                    'companies.telephone',
+
                 ])
                 .where({
                     'task_group_schedule.id': payload.taskGroupScheduleId,
