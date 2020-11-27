@@ -270,6 +270,14 @@ router.post(
   taskGroupController.updateTaskStatusResult
 )
 
+/**Work Order Report */
+router.post(
+  "/get-work-order-report",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  taskGroupController.getWorkOrderReport
+);
 
 
 
