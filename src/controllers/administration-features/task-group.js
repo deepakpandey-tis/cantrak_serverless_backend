@@ -435,7 +435,7 @@ const taskGroupController = {
 
         try {
 
-            console.log("Week days selected data repeat on", req.body.taskGroups)
+            console.log("Week days selected data repeat on", req.body)
 
             let createTemplateTask = null;
             let createTemplate = null;
@@ -671,6 +671,7 @@ const taskGroupController = {
                                 updatedAt: currentTime,
                                 orgId: req.orgId,
                                 status: 'O',
+                                repeatFrequencyId: req.body.consolidatedWorkOrders[i].tasks[l].frequencyTagId,
                                 duration: req.body.consolidatedWorkOrders[i].tasks[l].duration ? req.body.consolidatedWorkOrders[i].tasks[l].duration : 0.0,
                                 hourlyRate: req.body.consolidatedWorkOrders[i].tasks[l].hourlyRate ? req.body.consolidatedWorkOrders[i].tasks[l].hourlyRate : 0.0,
 
@@ -2503,7 +2504,8 @@ const taskGroupController = {
                     'pm_task.duration',
                     'pm_task.hourlyRate',
                     'pm_task.taskMode',
-                    'pm_task.taskGroupId'
+                    'pm_task.taskGroupId',
+                    'pm_task.repeatFrequencyId'
                 ])
                 .where({
                     'pm_task.taskGroupScheduleAssignAssetId': payload.taskGroupScheduleAssignAssetId,
@@ -4656,6 +4658,7 @@ const taskGroupController = {
                     'pm_task.hourlyRate',
                     'pm_task.taskMode',
                     'pm_task.taskGroupId',
+                    'pm_task.repeatFrequencyId',
                     'task_group_schedule_assign_assets.frequencyTagIds'
                 ])
                 .where({
