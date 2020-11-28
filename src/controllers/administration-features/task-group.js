@@ -1055,7 +1055,10 @@ const taskGroupController = {
                 "workOrderDate",
                 "assetName",
                 "assetSerial",
-                "status"
+                "status",
+                "assignedTeam",
+                "repeatPeriod",
+                "company"
             ]);
 
             const schema = Joi.object().keys({
