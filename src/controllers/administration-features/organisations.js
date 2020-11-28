@@ -26,7 +26,8 @@ const organisationsController = {
           userName: Joi.string().required(),
           email: Joi.string().required(),
           password: Joi.string().required(),
-          resources: Joi.array().required()
+          resources: Joi.array().required(),
+          userResources: Joi.array().allow("").optional(),
         });
 
         const result = Joi.validate(_.omit(payload, "mobileNo"), schema);
@@ -140,17 +141,50 @@ const organisationsController = {
 
 
         // Assign Resources to current organisation
-        let resources = req.body.resources;
-        let insertPayload = resources.map(resource => ({
-          updatedAt: currentTime,
-          createdAt: currentTime,
-          resourceId: resource,
-          orgId: organisation
-            .id
-        }));
-        insertedResourcesResult = await knex(
-          "organisation_resources_master"
-        ).insert(insertPayload).returning(['*'])
+        // let resources = req.body.resources;
+        let adminResources = req.body.resources;
+        let userResource = req.body.userResources;
+
+        let a = adminResources, b = userResource
+        let resource = a.concat(b.filter((item) => a.indexOf(item) < 0));
+
+        for (let resourceId of resource) {
+          if (userResource.includes(resourceId)) {
+            console.log("exist in user", resourceId);
+            let insertPayload = {
+              orgId: organisation.id,
+              resourceId: resourceId,
+              createdAt: currentTime,
+              updatedAt: currentTime,
+              userStatus: true
+            }
+            insertedResourcesResult = await knex.insert(insertPayload).returning(['*'])
+            .transacting(trx).into('organisation_resources_master')
+          } else {
+            let insertPayload = {
+              updatedAt: currentTime,
+              createdAt: currentTime,
+              resourceId: resourceId,
+              orgId: organisation.id
+            }
+            insertedResourcesResult = await knex(
+              "organisation_resources_master"
+            ).insert(insertPayload).transacting(trx).returning(['*'])
+          }
+        }
+
+        // let insertPayload = resources.map(resource => ({
+        //   updatedAt: currentTime,
+        //   createdAt: currentTime,
+        //   resourceId: resource,
+        //   orgId: organisation.id
+        // }));
+        // insertedResourcesResult = await knex(
+        //   "organisation_resources_master"
+        // ).insert(insertPayload).returning(['*'])
+
+
+       
 
         await emailHelper.sendTemplateEmail({ to: payloadData.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payloadData.name, username: payloadData.userName, password: pass, layout: 'welcome-org-admin.ejs' } })
 
@@ -170,6 +204,7 @@ const organisationsController = {
       });
     }
   },
+
   updateOrganisation: async (req, res) => {
     try {
       let organisation = null;
@@ -186,6 +221,7 @@ const organisationsController = {
           email: Joi.string().required(),
           resources: Joi.array().required(),
           password: Joi.string().allow("").optional(),
+          userResources: Joi.array().allow("").optional(),
         });
 
         const result = Joi.validate(_.omit(payload, "mobileNo", "id"), schema);
@@ -253,22 +289,43 @@ const organisationsController = {
         user = insertUser[0];
 
 
-        let resources = req.body.resources;
+        let adminResources = req.body.resources;
+        let userResource = req.body.userResources;
+
+
+        let a = adminResources, b = userResource
+        let resources = a.concat(b.filter((item) => a.indexOf(item) < 0));
+        // Merges both arrays and gets unique items
+        console.log("unique ++ unique", resources);
+
         let delData = await knex('organisation_resources_master').where({ orgId: payload.id }).del();
         if (resources.length > 0) {
-
-          
-
           for (let resourceId of resources) {
-            let insertData = {
-              orgId: payload.id,
-              resourceId: resourceId,
-              createdAt: currentTime,
-              updatedAt: currentTime
+
+            if (userResource.includes(resourceId)) {
+              console.log("exist in user", resourceId);
+              let insertData = {
+                orgId: payload.id,
+                resourceId: resourceId,
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                userStatus: true
+              }
+              let resourceResult = await knex.insert(insertData).returning(['*'])
+                .transacting(trx).into('organisation_resources_master');
+              resource = resourceResult[0];
+            } else {
+              let insertData = {
+                orgId: payload.id,
+                resourceId: resourceId,
+                createdAt: currentTime,
+                updatedAt: currentTime
+              }
+              let resourceResult = await knex.insert(insertData).returning(['*'])
+                .transacting(trx).into('organisation_resources_master');
+              resource = resourceResult[0];
             }
-            let resourceResult = await knex.insert(insertData).returning(['*'])
-              .transacting(trx).into('organisation_resources_master');
-            resource = resourceResult[0]
+
           }
         }
         trx.commit;
@@ -368,8 +425,8 @@ const organisationsController = {
         }
 
         // Send email to org admin about org deactivation
-        
-        
+
+
 
         trx.commit;
       });
@@ -562,12 +619,12 @@ const organisationsController = {
       let result;
       if (role === "superAdmin" && name === "superAdmin") {
         result = await knex("organisations").select(['id', 'organisationName']).returning(['*'])
-          .orderBy('organisationName','asc');
+          .orderBy('organisationName', 'asc');
       } else {
         result = await knex("organisations").select(['id', 'organisationName']).returning(['*'])
           .where({ id: orgId })
           .orderBy('organisationName', 'asc');
-          ;
+        ;
       }
       return res.status(200).json({
         data: result,
