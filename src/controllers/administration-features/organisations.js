@@ -587,8 +587,127 @@ const organisationsController = {
 
       let resourcesarr = [];
       let resourceResult = await knex("organisation_resources_master")
-        .leftJoin('resources', 'organisation_resources_master.resourceId', 'resources.id')
+        .innerJoin('resources', 'organisation_resources_master.resourceId', 'resources.id')
         .where({ "organisation_resources_master.orgId": id });
+
+
+      for (resource of resourceResult) {
+        resourcesarr.push(resource.resourceId)
+
+      }
+
+      return res.status(200).json({
+        data: {
+          organisationDetails: { ...result[0], resources: resourcesarr, resourceDetail: resourceResult }
+        },
+        message: "Organisation Details!."
+      });
+
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+
+    /* GET ORGANISATION DETAILS FOR ADMIN */
+    getOrganisationDetailsForAdmin: async (req, res) => {
+
+      try {
+  
+        let id = req.query.id;
+        let resourceSelected;
+        let resourceResult = [];
+        let result = await knex("organisations")
+          .leftJoin('users', 'organisations.id', 'users.orgId')
+          .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+          .where({ 'application_user_roles.roleId': 2 })
+          .select([
+            'organisations.*',
+            'users.name',
+            'users.email',
+            'users.mobileNo',
+            'users.userName'
+          ]).where({ 'organisations.id': id })
+  
+        let resourcesarr = [];
+        // let resourceResult = await knex("organisation_resources_master")
+        //   .innerJoin('resources', 'organisation_resources_master.resourceId', 'resources.id')
+        //   .where({ "organisation_resources_master.orgId": id });
+  
+        let resourceResultData = await knex("resources").select('*');
+        for(resourceResultValue  of resourceResultData){
+          console.log("resourceResultValue+++++",resourceResultValue);
+          resourceSelected = await knex("organisation_resources_master")
+          .where({ "organisation_resources_master.orgId": id, "organisation_resources_master.resourceId": resourceResultValue.id}).first();
+          console.log("resourceSelected",resourceSelected);
+          if(resourceSelected){
+            resourceResult.push({
+              'adminStatus' : resourceSelected.adminStatus,
+              'id' : resourceSelected.resourceId,
+              'orgId' : resourceSelected.orgId,
+              'resourceId' : resourceSelected.resourceId,
+              'resourceName' : resourceResultValue.resourceName,
+              'userStatus': resourceSelected.userStatus
+            })
+          }else{
+            resourceResult.push({
+              'adminStatus' : false,
+              'id' : resourceResultValue.id,
+              'orgId' : id,
+              'resourceId' : resourceResultValue.id,
+              'resourceName' : resourceResultValue.resourceName,
+              'userStatus': false
+            })
+          }
+          
+        }
+  
+         
+  
+  
+  
+        for (resource of resourceResult) {
+          resourcesarr.push(resource.resourceId)
+  
+        }
+  
+        return res.status(200).json({
+          data: {
+            organisationDetails: { ...result[0], resources: resourcesarr, resourceDetail: resourceResult }
+          },
+          message: "Organisation Details!."
+        });
+  
+      } catch (err) {
+        res.status(500).json({
+          errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        });
+      }
+    },
+
+  /* GET ORGANISATION DETAILS FOR USER */
+  getOrganisationDetailsForUser: async (req, res) => {
+
+    try {
+
+      let id = req.query.id;
+      let result = await knex("organisations")
+        .leftJoin('users', 'organisations.id', 'users.orgId')
+        .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+        .where({ 'application_user_roles.roleId': 2 })
+        .select([
+          'organisations.*',
+          'users.name',
+          'users.email',
+          'users.mobileNo',
+          'users.userName'
+        ]).where({ 'organisations.id': id })
+
+      let resourcesarr = [];
+      let resourceResult = await knex("organisation_resources_master")
+        .leftJoin('resources', 'organisation_resources_master.resourceId', 'resources.id')
+        .where({ "organisation_resources_master.orgId": id, "organisation_resources_master.userStatus" : true });
 
 
       for (resource of resourceResult) {
