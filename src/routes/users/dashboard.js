@@ -37,4 +37,10 @@ userMiddleware.customerInfo, dashboardController.getContactList);
 router.get('/get-user-info', authMiddleware.isAuthenticated,
 userMiddleware.customerInfo, dashboardController.getUsersInfo);
 
+/*GET USER DATA*/
+router.get('/get-user-access-controls', authMiddleware.isAuthenticated,
+userMiddleware.customerInfo, dashboardController.getUsersAccessControls);
+
+
+
 module.exports = router;
