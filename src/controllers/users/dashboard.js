@@ -178,15 +178,15 @@ const dashboardController = {
                     "announcement_master.createdAt as announcementDate"
                 )
                 .orderBy('announcement_master.id', 'desc')
-                .limit(10); 
+                .limit(10);
 
 
             const Parallel = require("async-parallel");
             announcement = await Parallel.map(announcement, async (pp) => {
 
 
-                announcementTitle = pp.titles.split(" ").slice(0,22);
-                
+                announcementTitle = pp.titles.split(" ").slice(0, 22);
+
 
                 let imageResult = await knex
                     .from("images")
@@ -199,11 +199,11 @@ const dashboardController = {
                 console.log("imagesResult", imageResult);
 
 
-                if(req.orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+                if (req.orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
                     approvalUrl = 'https://cbreconnect.servicemind.asia';
-                }else if(req.orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+                } else if (req.orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
                     approvalUrl = 'https://senses.servicemind.asia';
-                }else{
+                } else {
                     approvalUrl = process.env.SITE_URL;
                 }
 
@@ -549,8 +549,36 @@ const dashboardController = {
         } catch (err) {
             console.log("[controllers][Dashboard][getUserInfo],Error", err);
         }
-    }
+    },
 
+    /* GET ORGANISATION DETAILS FOR USER */
+    getUsersAccessControls: async (req, res) => {
+        try {
+            let orgId = req.orgId;
+
+            let resourcesArr = [];
+            let resourceResult = await knex("organisation_resources_master")
+                .leftJoin('resources', 'organisation_resources_master.resourceId', 'resources.id')
+                .where({ "organisation_resources_master.orgId": orgId, "organisation_resources_master.userStatus": true });
+
+
+            for (resource of resourceResult) {
+                resourcesArr.push(resource.resourceId)
+            }
+
+            return res.status(200).json({
+                data: {
+                    userAccessControl: { resources: resourcesArr, resourceDetail: resourceResult }
+                },
+                message: "Access Control Details!."
+            });
+
+        } catch (err) {
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
 };
 
 module.exports = dashboardController;
