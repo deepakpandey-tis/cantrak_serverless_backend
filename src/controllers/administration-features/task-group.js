@@ -154,7 +154,7 @@ const taskGroupController = {
     },
     createPMTemplate: async (req, res) => {
         try {
-            console.log("Create PM template data", req.body)
+            // console.log("Create PM template data", req.body)
             let taskGroupTemplate = null;
             let insertedTasks = [];
             let taskGroupTemplateSchedule = null;
@@ -505,7 +505,7 @@ const taskGroupController = {
             }
 
             const consolidatedWorkOrders = req.body.consolidatedWorkOrders;
-            console.log('Consolidated Work Orders:', consolidatedWorkOrders);
+            // console.log('Consolidated Work Orders:', consolidatedWorkOrders);
 
 
             /// Testing...
@@ -542,7 +542,7 @@ const taskGroupController = {
                 .where({ isActive: true })
 
 
-                console.log("create PM task froup : ",createPmTaskGroup)
+                // console.log("create PM task froup : ",createPmTaskGroup)
                 // ASSIGNED ADDITIONAL USER OPEN
                 for (let i = 0; i < req.body.taskGroups.length; i++) {
                     if (req.body.taskGroups[i].additionalUsers && req.body.taskGroups[i].additionalUsers.length) {
@@ -563,7 +563,7 @@ const taskGroupController = {
                 // ASSIGNED TEAM OPEN
                 let insertAssignedServiceTeamData;
                 for (let i = 0; i < req.body.taskGroups.length; i++) {
-                    console.log("payload team id",payload[i].teamId)
+                    // console.log("payload team id",payload[i].teamId)
                     // if (payload[i].teamId && payload[i].mainUserId) {
                         insertAssignedServiceTeamData = {
                             teamId: payload[i].teamId ? payload[i].teamId : null,
