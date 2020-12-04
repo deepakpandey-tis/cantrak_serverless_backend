@@ -972,7 +972,8 @@ const serviceRequestController = {
 
       return res.status(200).json({
         data: {
-          service_requests: pagination
+          service_requests: pagination,
+          house:req.me.houseIds
         },
         message: "Service Request List!"
       });
@@ -1248,38 +1249,74 @@ const serviceRequestController = {
     try {
       let result;
       let orgId = req.orgId;
-      let payload = _.omit(req.body, ["images", "isSo", "mobile", "email", "name"]);
+      let payload = _.omit(req.body, ["images", "isSo", "mobile", "email", "name",'company','project','floor','userId']);
 
       await knex.transaction(async trx => {
+        let schema;
 
-        const schema = Joi.object().keys({
-          serviceRequestId: Joi.number().required(),
-          areaName: Joi.string().allow("").optional(),
-          building: Joi.string().required(),
-          commonArea: Joi.string().allow("").optional(),
-          company: Joi.string().required(),
-          serviceStatusCode: Joi.string().required(),
-          description: Joi.string().required(),
-          floor: Joi.string().required(),
-          house: Joi.string().allow('').optional(),
-          location: Joi.string().allow("").optional(),
-          locationTags: Joi.array().items(Joi.string().optional()),
-          project: Joi.string().required(),
-          serviceType: Joi.string().allow("").optional(),
-          unit: Joi.string().required(),
-          userId: Joi.string().allow("").optional(),
-          priority: Joi.string().allow("").optional(),
-          // name: Joi
-          //   .allow("")
-          //   .optional(),
-          // mobile: Joi
-          //   .allow("")
-          //   .optional(),
-          // email: Joi.string()
-          //   .allow("")
-          //   .optional(),
-          uid: Joi.string().allow("").optional()
-        });
+        if (payload.areaName == 'private') {
+
+          schema = Joi.object().keys({
+            serviceRequestId: Joi.number().required(),
+            areaName: Joi.string().required(),
+            building: Joi.string().allow('').optional(),
+            commonArea: Joi.string().allow("").optional(),
+            company: Joi.string().allow('').optional(),
+            serviceStatusCode: Joi.string().required(),
+            description: Joi.string().required(),
+            floor: Joi.string().allow('').optional(),
+            house: Joi.string().allow('').optional(),
+            location: Joi.string().allow("").optional(),
+            locationTags: Joi.array().items(Joi.string().optional()),
+            project: Joi.string().allow('').optional(),
+            serviceType: Joi.string().allow("").optional(),
+            unit: Joi.string().required(),
+            userId: Joi.string().allow("").optional(),
+            priority: Joi.string().allow("").optional(),
+            // name: Joi
+            //   .allow("")
+            //   .optional(),
+            // mobile: Joi
+            //   .allow("")
+            //   .optional(),
+            // email: Joi.string()
+            //   .allow("")
+            //   .optional(),
+            uid: Joi.string().allow("").optional()
+          });
+
+        } else {
+
+          schema = Joi.object().keys({
+            serviceRequestId: Joi.number().required(),
+            areaName: Joi.string().required(),
+            building: Joi.string().required(),
+            commonArea: Joi.string().allow("").optional(),
+            company: Joi.string().allow("").optional(),
+            serviceStatusCode: Joi.string().required(),
+            description: Joi.string().required(),
+            //floor: Joi.string().required(),
+            house: Joi.string().allow('').optional(),
+            location: Joi.string().allow("").optional(),
+            locationTags: Joi.array().items(Joi.string().optional()),
+            //project: Joi.string().required(),
+            serviceType: Joi.string().allow("").optional(),
+            unit: Joi.string().allow("").optional(),
+            userId: Joi.string().allow("").optional(),
+            priority: Joi.string().allow("").optional(),
+            // name: Joi
+            //   .allow("")
+            //   .optional(),
+            // mobile: Joi
+            //   .allow("")
+            //   .optional(),
+            // email: Joi.string()
+            //   .allow("")
+            //   .optional(),
+            uid: Joi.string().allow("").optional()
+          });
+
+        }
 
         const result = Joi.validate(payload, schema);
         console.log("[controllers][service][problem]: JOi Result", result);
@@ -2140,13 +2177,25 @@ const serviceRequestController = {
       let buildingData = {};
       //console.log(orgId);
 
-      let companyHavingProjects = []
-      let companyArr1 = []
-      let rows = []
+      let companyHavingProjects = [];
+      let companyArr1 = [];
+      let rows = [];
+      let propertyUnit = [];
+      let houseIds = req.me.houseIds;
+      let buildingArr = [];
 
       if (req.query.areaName === 'common') {
-        companyHavingProjects = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
-        companyArr1 = companyHavingProjects.map(v => v.companyId)
+
+
+        propertyUnit = await knex('property_units').select(['buildingPhaseId'])
+          .whereIn('property_units.id', houseIds)
+          .where({ orgId: req.orgId, isActive: true });
+
+        buildingArr = propertyUnit.map(v => v.buildingPhaseId);
+
+
+        // companyHavingProjects = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+        // companyArr1 = companyHavingProjects.map(v => v.companyId)
         rows = await knex("buildings_and_phases")
           .innerJoin(
             "projects",
@@ -2161,7 +2210,7 @@ const serviceRequestController = {
           .innerJoin('property_units', 'buildings_and_phases.id', 'property_units.buildingPhaseId')
           .where({
             "buildings_and_phases.isActive": true,
-            "buildings_and_phases.projectId": projectId,
+            //"buildings_and_phases.projectId": projectId,
             "buildings_and_phases.orgId": orgId,
             'property_units.type': 2
           })
@@ -2172,7 +2221,8 @@ const serviceRequestController = {
             "buildings_and_phases.description",
             "property_types.propertyTypeCode",
           ])
-          .whereIn('projects.companyId', companyArr1)
+          .whereIn('buildings_and_phases.id', buildingArr)
+          //.whereIn('projects.companyId', companyArr1)
           .groupBy(["buildings_and_phases.id",
             "buildings_and_phases.buildingPhaseCode",
             "property_types.propertyType",
@@ -2308,13 +2358,26 @@ const serviceRequestController = {
   getPropertyUnitListByFloor: async (req, res) => {
     try {
       let orgId = req.orgId;
-      let houseId = req.me.houseIds[0];
+      let houseIds = req.me.houseIds;
 
 
       const { floorZoneId, type } = req.body;
-      const unit = await knex("property_units")
-        .select("*")
-        .where({ floorZoneId, orgId: orgId, isActive: true, type: type, id: houseId });
+      let unit;
+      if (type == 2) {
+
+        unit = await knex("property_units")
+          .select("*")
+          .where({ "buildingPhaseId": floorZoneId, orgId: orgId, isActive: true, type: type });
+      } else if (type == 1) {
+
+        unit = await knex("property_units")
+          .select("*")
+          .whereIn('property_units.id', houseIds)
+          .where({ orgId: orgId, isActive: true, type: type });
+
+      }
+
+
       return res.status(200).json({
         data: {
           unit
@@ -2859,7 +2922,21 @@ const serviceRequestController = {
       });
     }
   }
+  ,
+  /*GET BUILDING LIST ALL FOR USER */
+  getBuildingAllListForUser: async (req, res) => {
 
+    try {
+
+    } catch (err) {
+
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+
+    }
+
+  }
 
 };
 
