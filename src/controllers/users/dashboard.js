@@ -183,11 +183,7 @@ const dashboardController = {
 
             const Parallel = require("async-parallel");
             announcement = await Parallel.map(announcement, async (pp) => {
-
-
-                announcementTitle = pp.titles;
-
-
+               
                 let imageResult = await knex
                     .from("images")
                     .select("s3Url", "title", "name")
@@ -209,7 +205,6 @@ const dashboardController = {
 
                 return {
                     ...pp,
-                    titles: announcementTitle,
                     img: imageResult,
                     URL: approvalUrl
                 };
