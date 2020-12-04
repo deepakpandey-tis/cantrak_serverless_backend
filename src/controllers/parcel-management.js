@@ -1197,8 +1197,13 @@ const parcelManagementController = {
         .where("parcel_management.orgId", req.orgId)
         .returning(["*"]);
 
+
+        let orgMaster = await knex.from("organisations").where({ id: 56, organisationAdminId: 994 }).first();
+
+        
         let dataNos = {
           payload: {
+            orgData : orgMaster
             
           },
         };
@@ -1209,6 +1214,7 @@ const parcelManagementController = {
         let sender = await knex.from("users").where({ id: req.me.id }).first();
 
         let receiver = await knex.from("users").where({ id: tenantId }).first();
+
 
         await parcelCollectedNotification.send(
           sender,
