@@ -107,7 +107,7 @@ const bookingCanceledNotification = {
             receiverId: receiver.id,
             payload: {
                 subject: 'Facility Booking Canceled ',
-                body: `Hi, This is a test notification to all users from ${sender.name}`,
+                body: `Hi, Your booking has been cancelled ${sender.name}`,
                 icon: icons,
                 image: images,
                 extraData: {

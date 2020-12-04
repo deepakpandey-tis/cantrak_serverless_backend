@@ -154,7 +154,7 @@ const taskGroupController = {
     },
     createPMTemplate: async (req, res) => {
         try {
-            console.log("Create PM template data", req.body)
+            // console.log("Create PM template data", req.body)
             let taskGroupTemplate = null;
             let insertedTasks = [];
             let taskGroupTemplateSchedule = null;
@@ -435,7 +435,7 @@ const taskGroupController = {
 
         try {
 
-            console.log("Week days selected data repeat on", req.body)
+            console.log("Consolidated work orders in body", req.body.consolidatedWorkOrders)
 
             let createTemplateTask = null;
             let createTemplate = null;
@@ -505,7 +505,7 @@ const taskGroupController = {
             }
 
             const consolidatedWorkOrders = req.body.consolidatedWorkOrders;
-            console.log('Consolidated Work Orders:', consolidatedWorkOrders);
+            // console.log('Consolidated Work Orders:', consolidatedWorkOrders);
 
 
             /// Testing...
@@ -542,7 +542,7 @@ const taskGroupController = {
                 .where({ isActive: true })
 
 
-                console.log("create PM task froup : ",createPmTaskGroup)
+                // console.log("create PM task froup : ",createPmTaskGroup)
                 // ASSIGNED ADDITIONAL USER OPEN
                 for (let i = 0; i < req.body.taskGroups.length; i++) {
                     if (req.body.taskGroups[i].additionalUsers && req.body.taskGroups[i].additionalUsers.length) {
@@ -561,23 +561,19 @@ const taskGroupController = {
                 // ASSIGNED ADDITIONAL USER CLOSE
 
                 // ASSIGNED TEAM OPEN
-                let insertAssignedServiceTeamData;
-                for (let i = 0; i < req.body.taskGroups.length; i++) {
-                    console.log("payload team id",payload[i].teamId)
-                    // if (payload[i].teamId && payload[i].mainUserId) {
-                        insertAssignedServiceTeamData = {
-                            teamId: payload[i].teamId ? payload[i].teamId : null,
-                            userId: payload[i].mainUserId ? payload[i].mainUserId : null,
-                            entityId: createPmTaskGroup.id,
-                            entityType: "pm_task_groups",
-                            createdAt: currentTime,
-                            updatedAt: currentTime,
-                            orgId: req.orgId
-                        }
-                    // }
-                }
-                let assignedServiceTeamResult = await knex.insert(insertAssignedServiceTeamData).returning(['*']).transacting(trx).into('assigned_service_team');
-                assignedServiceTeam = assignedServiceTeamResult[0];
+                // let insertAssignedServiceTeamData;
+                // for (let i = 0; i < req.body.taskGroups.length; i++) {
+                //         insertAssignedServiceTeamData = {
+                //             teamId: payload[i].teamId ? payload[i].teamId : null,
+                //             userId: payload[i].mainUserId ? payload[i].mainUserId : null,
+                //             entityId: createPmTaskGroup.id,
+                //             entityType: "pm_task_groups",
+                //             createdAt: currentTime,
+                //             updatedAt: currentTime,
+                //             orgId: req.orgId
+                //         }
+                // }
+                
                 // ASSIGNED TEAM CLOSE
 
                 // TASK GROUP SCHEDULE OPEN
@@ -609,7 +605,7 @@ const taskGroupController = {
                     .update({ isActive: true })
                     .where({ isActive: true })
                 // TASK GROUP SCHEDULE CLOSE 
-
+                let assetResult;
                 for (let i = 0; i < req.body.consolidatedWorkOrders.length; i++) {
 
                     for (let j = 0; j < req.body.consolidatedWorkOrders[i].assets.length; j++) {
@@ -640,7 +636,7 @@ const taskGroupController = {
                             orgId: req.orgId
                         }
 
-                        let assetResult = await knex
+                         assetResult = await knex
                             .insert(insertDataGroup)
                             .returning(["*"])
                             .transacting(trx)
@@ -736,6 +732,23 @@ const taskGroupController = {
 
                         // CREATE PM TASK CLOSE
                         assetResults.push(assetResult[0]);
+
+                let insertAssignedServiceTeamData;
+
+                        for (let i = 0; i < req.body.consolidatedWorkOrders.length; i++) {
+                            insertAssignedServiceTeamData = {
+                                teamId: req.body.consolidatedWorkOrders[i].teamId ? req.body.consolidatedWorkOrders[i].teamId : null,
+                                userId: req.body.consolidatedWorkOrders[i].mainUserId ? req.body.consolidatedWorkOrders[i].mainUserId : null,
+                                entityId: createPmTaskGroup.id,
+                                entityType: "pm_task_groups",
+                                workOrderId : assetResult[0].id,
+                                createdAt: currentTime,
+                                updatedAt: currentTime,
+                                orgId: req.orgId
+                            }
+                    }
+                        let assignedServiceTeamResult = await knex.insert(insertAssignedServiceTeamData).returning(['*']).transacting(trx).into('assigned_service_team');
+                        assignedServiceTeam = assignedServiceTeamResult[0];
                         // }
                     }
                 }
@@ -1109,11 +1122,6 @@ const taskGroupController = {
                         "task_group_schedule_assign_assets.assetId",
                         "asset_master.id"
                     )
-                    // .leftJoin(
-                    //     "assigned_service_team",
-                    //     "task_group_schedule.taskGroupId",
-                    //     "assigned_service_team.entityId"
-                    // )
                     .where({
                         // "task_group_schedule.taskGroupId": payload.taskGroupId,
                         "task_group_schedule.pmId": payload.pmId,
@@ -1217,6 +1225,9 @@ const taskGroupController = {
                         if (req.body.status) {
                             qb.whereIn('task_group_schedule_assign_assets.status', req.body.status)
                         }
+                        // if(req.body.assignedTeam){
+                        //     qb.whereIn('')
+                        // }
                     })
                     .offset(offset)
                     .limit(per_page)
@@ -1261,13 +1272,21 @@ const taskGroupController = {
                 return { ...row, ...location }
             })
             rowsWithLocations = await Parallel.map(rowsWithLocations, async row =>{
+                console.log("data in row with location",row)
                 const teamData = await knex('assigned_service_team')
                 .select([
                     "assigned_service_team.teamId",
                     "assigned_service_team.userId",
                     "assigned_service_team.entityId as assignedId"
-                ]).where({'assigned_service_team.entityId':row.taskGroupId,'assigned_service_team.entityType':'pm_task_groups'}).first()
-
+                ])
+                // .where({'assigned_service_team.workOrderId':row.workOrderId,'assigned_service_team.entityType':'pm_task_groups'})
+                .where({'assigned_service_team.entityId':row.taskGroupId,'assigned_service_team.entityType':'pm_task_groups'})
+                .where(qb=>{
+                    if(req.body.assignedTeam){
+                           qb.whereIn('assigned_service_team.teamId',req.body.assignedTeam)
+                       }
+               })
+                .first()
                 return{...row,...teamData}
             })
 
@@ -1303,7 +1322,7 @@ const taskGroupController = {
             let reqData = req.query;
             let payLoad = req.body;
             let workOrderDate = req.body.workOrderDate
-            // console.log("work order list data",req.body)
+            console.log("work order list data",req.body)
 
             const payload = _.omit(payLoad, [
                 "assetCategoryId",
@@ -1313,7 +1332,10 @@ const taskGroupController = {
                 "pmName",
                 "status",
                 "workOrderDateTo",
-                "workOrderDateFrom"
+                "workOrderDateFrom",
+                'assignedTeam',
+                'repeatPeriod',
+                'company'
             ]);
 
             const schema = Joi.object().keys({
@@ -3854,7 +3876,7 @@ const taskGroupController = {
             moment.tz.setDefault(payload.timezone);
             payload.newPmDate = moment(payload.newPmDate);
             payload.newPmDate = payload.newPmDate.format("YYYY-MM-DDTHH:mm:ss.SSSZ");
-            console.log('payload.newPmDate Time:', payload);
+            console.log('payload.newPmDate and Time:', payload);
 
             //payload.newPmDate = new Date(payload.newPmDate);
 
@@ -3873,6 +3895,7 @@ const taskGroupController = {
             const updateWorkOrderTeamAndUsers = await knex('assigned_service_team')
             .update(teamUsersPayload)
             .where({entityType:'pm_task_groups'})
+            // .whereIn('assigned_service_team.workOrderId',payload.workOrderId)
             .whereIn('assigned_service_team.entityId',payload.entityId)
 
             
