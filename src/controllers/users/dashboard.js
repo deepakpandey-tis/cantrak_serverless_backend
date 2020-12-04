@@ -185,7 +185,7 @@ const dashboardController = {
             announcement = await Parallel.map(announcement, async (pp) => {
 
 
-                announcementTitle = pp.titles.split(" ").slice(0, 22);
+                announcementTitle = pp.titles;
 
 
                 let imageResult = await knex
