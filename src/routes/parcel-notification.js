@@ -19,12 +19,12 @@ const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_
 router.post('/parcel-notification',authMiddleware.isAuthenticated, async(req,res)=>{
     try{
         // console.log("org user",req.me.id)
-        console.log("requested tenant id for notification",req.body.id)
+        // console.log("requested tenant id for notification",req.body.id)
         let sender = await knex.from('users').where({ id: req.me.id }).first();
         let receiver = await knex.from('users').where({ id: req.body.id }).first();
-        console.log("reciever tenant",receiver)
+        // console.log("reciever tenant",receiver)
         let orgMaster = await knex.from("organisations").where({ id: 56, organisationAdminId: 994 }).first();
-        console.log("requested tenant id for notification orgMaster",orgMaster)
+        // console.log("requested tenant id for notification orgMaster",orgMaster)
 
 
 
