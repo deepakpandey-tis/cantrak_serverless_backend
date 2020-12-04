@@ -205,7 +205,7 @@ const parcelManagementController = {
           }
         }
 
-        let orgMaster = await knex.from("organisations").where({ id: 49, organisationAdminId: 406 }).first();
+        let orgMaster = await knex.from("organisations").where({ id: 56, organisationAdminId: 994 }).first();
 
         let dataNos = {
           payload: {

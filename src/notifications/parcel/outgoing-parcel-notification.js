@@ -74,7 +74,7 @@ const outgoingParcelNotification = {
       payload: {
         ...data,
         subject: "Parcel Acceptation",
-        body: `Hi!!, You have received a parcel,Please accept for picked up the parcels.`,
+        body: `Hi, You have received a parcel,Please accept for picked up the parcels.`,
         icon: icons,
         image: images,
         extraData: {
@@ -145,7 +145,7 @@ const outgoingParcelNotification = {
       receiverId: receiver.id,
       payload: {
         subject: "Acceptation",
-        body: `Hi!!, You have received a parcel,Please accept for picked up the parcels.`,
+        body: `Hi, You have received a parcel,Please accept for picked up the parcels.`,
         icon: icons,
         image: images,
         extraData: {

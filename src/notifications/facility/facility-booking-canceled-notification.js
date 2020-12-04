@@ -50,7 +50,7 @@ const bookingCanceledNotification = {
             payload: {
                 ...data,
                 subject: 'Facility Booking Canceled',
-                body: `Hi!!, ${receiver.name} Your Booking in Facility ${data.payload.facility} made for ${data.payload.date} at ${data.payload.time} is canceled.`,
+                body: `Hi, ${receiver.name} Your Booking in Facility ${data.payload.facility} made for ${data.payload.date} at ${data.payload.time} is canceled.`,
                 icon: icons,
                 image: images,
                 extraData: {

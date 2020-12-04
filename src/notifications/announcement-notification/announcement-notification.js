@@ -46,7 +46,7 @@ const announcementNotification = {
             payload: {
                 ...data,
                 subject: title,
-                body: description+`from  ${sender.name}`,
+                body: description +`from  ${sender.name}`,
                 icon: icons,
                 image: images,
                 extraData: {

@@ -47,7 +47,7 @@ const parcelNotification = {
             payload: {
                 ...data,
                 subject: 'Parcel Notification',
-                body: `Hi!!, You have received a parcel,Please Pick up your parcel.`,
+                body: `Hi, You have received a parcel,Please Pick up your parcel.`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -108,7 +108,7 @@ const parcelNotification = {
             receiverId: receiver.id,
             payload: {
                 subject: 'Parcel Notification',
-                body: `Hi!!, You have received a parcel,please come and collect.`,
+                body: `Hi, You have received a parcel,please come and collect.`,
                 icon: icons,
                 image: images,
                 extraData: {
