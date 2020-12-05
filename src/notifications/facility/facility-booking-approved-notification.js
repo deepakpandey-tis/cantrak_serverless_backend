@@ -50,7 +50,7 @@ const bookingApprovedNotification = {
             payload: {
                 ...data,
                 subject: 'Facility Booking Approved',
-                body: `Hi!!, ${receiver.name} Your Booking in Facility ${data.payload.facility} made for ${data.payload.date} at ${data.payload.time} is approved.`,
+                body: `Hi, ${receiver.name} Your Booking in Facility ${data.payload.facility} made for ${data.payload.date} at ${data.payload.time} is approved.`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -107,8 +107,8 @@ const bookingApprovedNotification = {
             senderId: sender.id,
             receiverId: receiver.id,
             payload: {
-                subject: 'Test Notification',
-                body: `Hi!!, This is a test notification to all users from ${sender.name}`,
+                subject: 'Booking Approved',
+                body: `Hi, Your booking is approved ${sender.name}`,
                 icon: icons,
                 image: images,
                 extraData: {
