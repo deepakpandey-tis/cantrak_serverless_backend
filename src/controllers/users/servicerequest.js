@@ -614,7 +614,8 @@ const serviceRequestController = {
             "service_problems.categoryId",
             "incident_categories.id"
           )
-
+          .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+          .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
           .select([
             "service_requests.id as S Id",
             "service_requests.houseId as houseId",
@@ -628,7 +629,11 @@ const serviceRequestController = {
             "incident_categories.categoryCode",
             "incident_categories.descriptionEng as categoryDescription",
             "property_units.unitNumber",
-            "service_problems.id as serviceProblemId"
+            "service_problems.id as serviceProblemId",
+            'buildings_and_phases.buildingPhaseCode',
+            'buildings_and_phases.description as buildingDescription',
+            'floor_and_zones.floorZoneCode',
+            'floor_and_zones.description as floorDescription'
 
 
           ])
@@ -638,7 +643,9 @@ const serviceRequestController = {
             "status.id",
             "requested_by.id",
             "service_problems.id",
-            "incident_categories.id"
+            "incident_categories.id",
+            'buildings_and_phases.id',
+            'floor_and_zones.id'
 
           ])
           .where(qb => {
@@ -710,6 +717,8 @@ const serviceRequestController = {
             "service_problems.categoryId",
             "incident_categories.id"
           )
+          .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+          .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
           .select([
             "service_requests.id as S Id",
             "service_requests.houseId as houseId",
@@ -723,8 +732,11 @@ const serviceRequestController = {
             "incident_categories.categoryCode",
             "incident_categories.descriptionEng as categoryDescription",
             "property_units.unitNumber",
-            "service_problems.id as serviceProblemId"
-
+            "service_problems.id as serviceProblemId",
+            'buildings_and_phases.buildingPhaseCode',
+            'buildings_and_phases.description as buildingDescription',
+            'floor_and_zones.floorZoneCode',
+            'floor_and_zones.description as floorDescription'
           ])
           .offset(offset)
           .limit(per_page)
@@ -734,7 +746,9 @@ const serviceRequestController = {
             "status.id",
             "requested_by.id",
             "service_problems.id",
-            "incident_categories.id"
+            "incident_categories.id",
+            'buildings_and_phases.id',
+            'floor_and_zones.id'
 
           ])
           .where(qb => {
@@ -973,7 +987,7 @@ const serviceRequestController = {
       return res.status(200).json({
         data: {
           service_requests: pagination,
-          house:req.me.houseIds
+          house: req.me.houseIds
         },
         message: "Service Request List!"
       });
@@ -1249,7 +1263,7 @@ const serviceRequestController = {
     try {
       let result;
       let orgId = req.orgId;
-      let payload = _.omit(req.body, ["images", "isSo", "mobile", "email", "name",'company','project','floor','userId']);
+      let payload = _.omit(req.body, ["images", "isSo", "mobile", "email", "name", 'company', 'project', 'floor', 'userId']);
 
       await knex.transaction(async trx => {
         let schema;
