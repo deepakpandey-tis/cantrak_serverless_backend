@@ -687,7 +687,7 @@ const serviceRequestController = {
           })
           .where({ "service_requests.orgId": req.orgId })
           .whereIn("service_requests.houseId", houseIds)
-          //.orWhere("service_requests.createdBy", req.me.id)
+          .orWhere("service_requests.createdBy", req.me.id)
           .distinct('service_requests.displayId')
           .orderBy('service_requests.createdAt', 'desc')
 
@@ -794,7 +794,7 @@ const serviceRequestController = {
           })
           .where({ "service_requests.orgId": req.orgId })
           .whereIn("service_requests.houseId", houseIds)
-          //.orWhere("service_requests.createdBy", req.me.id)
+          .orWhere("service_requests.createdBy", req.me.id)
           .distinct('service_requests.displayId')
           .orderBy('service_requests.createdAt', 'desc')
 
@@ -3111,7 +3111,7 @@ const serviceRequestController = {
           })
           .where({ "service_orders.orgId": req.orgId })
           .whereIn("service_requests.houseId", houseIds)
-          //.orWhere("service_requests.createdBy", req.me.id)
+          .orWhere("service_requests.createdBy", req.me.id)
           .distinct('service_orders.displayId')
           .orderBy('service_orders.createdAt', 'desc')
         ,
@@ -3227,7 +3227,7 @@ const serviceRequestController = {
           })
           .where({ "service_orders.orgId": req.orgId })
           .whereIn("service_requests.houseId", houseIds)
-          //.orWhere("service_requests.createdBy", req.me.id)
+          .orWhere("service_requests.createdBy", req.me.id)
           .distinct('service_orders.displayId')
           .orderBy('service_orders.createdAt', 'desc')
 
