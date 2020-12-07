@@ -23,7 +23,7 @@ router.post('/parcel-notification',authMiddleware.isAuthenticated, async(req,res
         let sender = await knex.from('users').where({ id: req.me.id }).first();
         let receiver = await knex.from('users').where({ id: req.body.id }).first();
         // console.log("reciever tenant",receiver)
-        let orgMaster = await knex.from("organisations").where({ id: 56, organisationAdminId: 994 }).orWhere({ id: 89, organisationAdminId: 1188 }).first();
+        let orgMaster = await knex.from("organisations").where({ id: req.orgId, organisationAdminId: 994 }).orWhere({ id: req.orgId, organisationAdminId: 1188 }).first();
         // console.log("requested tenant id for notification orgMaster",orgMaster)
 
 
@@ -61,7 +61,7 @@ router.post('/parcel-acceptance-notification',authMiddleware.isAuthenticated, as
         let receiver = await knex.from('users').where({ id: req.body.id[0] }).first();
         // console.log("reciever tenant",receiver)
         // console.log("total parcel id",req.body.parcelId.join(','))
-        let orgMaster = await knex.from("organisations").where({ id: 56, organisationAdminId: 994 }).orWhere({ id: 89, organisationAdminId: 1188 }).first();
+        let orgMaster = await knex.from("organisations").where({ id: req.orgId, organisationAdminId: 994 }).orWhere({ id: req.orgId, organisationAdminId: 1188 }).first();
 
         let data = {
             payload: {
@@ -91,7 +91,7 @@ router.post('/parcel-pickedUp-notification',authMiddleware.isAuthenticated, asyn
         let sender = await knex.from('users').where({ id: req.me.id }).first();
         let receiver = await knex.from('users').where({ id: req.body.id }).first();
         console.log("reciever tenant",receiver)
-        let orgMaster = await knex.from("organisations").where({ id: 56, organisationAdminId: 994 }).orWhere({ id: 89, organisationAdminId: 1188 }).first();
+        let orgMaster = await knex.from("organisations").where({ id: req.orgId, organisationAdminId: 994 }).orWhere({ id: req.orgId, organisationAdminId: 1188 }).first();
 
 
         let data = {

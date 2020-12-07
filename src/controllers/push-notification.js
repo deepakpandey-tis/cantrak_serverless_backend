@@ -34,7 +34,7 @@ const pushNotificationController = {
                 .into("push_subscribers");
             addedData = addedData[0];
 
-            let orgMaster = await knex.from("users").where({ id: user.id, orgId: 56 }).orWhere({ id: 89, organisationAdminId: 1188 }).first();
+            let orgMaster = await knex.from("users").where({ id: req.orgId, organisationAdminId: 994 }).orWhere({ id: req.orgId, organisationAdminId: 1188 }).first();
 
             let icons;
             let images;
