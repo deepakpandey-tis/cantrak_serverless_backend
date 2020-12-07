@@ -34,14 +34,19 @@ const pushNotificationController = {
                 .into("push_subscribers");
             addedData = addedData[0];
 
-            let orgMaster = await knex.from("users").where({ id: user.id, orgId: 56 }).first();
+            let orgMaster = await knex.from("users").where({ id: req.orgId, organisationAdminId: 994 }).orWhere({ id: req.orgId, organisationAdminId: 1188 }).first();
 
             let icons;
             let images;
             if(orgMaster && orgMaster.orgId == 56){
                 icons = 'assets/icons/cbre-512x512.png';
                 images = 'assets/icons/cbre-512x512.png';
-            }else{
+            }
+            else if(orgData && orgData.id == '89'){
+                icons = 'assets/icons/senses-512x512.png';
+                images = 'assets/icons/senses-512x512.png';
+            }
+            else{
                 icons = 'assets/icons/icon-512x512.png';
                 images = 'assets/icons/icon-512x512.png';
             }

@@ -35,9 +35,13 @@ const bookingApprovedNotification = {
         let  orgData = data.payload.orgData;
         let icons;
         let images;
-        if(orgData.id == 53){
+        if(orgData && orgData.id == '56'){
             icons = 'assets/icons/cbre-512x512.png';
             images = 'assets/icons/cbre-512x512.png';
+        }
+        else if(orgData && orgData.id == '89'){
+            icons = 'assets/icons/senses-512x512.png';
+            images = 'assets/icons/senses-512x512.png';
         }else{
             icons = 'assets/icons/icon-512x512.png';
             images = 'assets/icons/icon-512x512.png';
@@ -50,7 +54,7 @@ const bookingApprovedNotification = {
             payload: {
                 ...data,
                 subject: 'Facility Booking Approved',
-                body: `Hi!!, ${receiver.name} Your Booking in Facility ${data.payload.facility} made for ${data.payload.date} at ${data.payload.time} is approved.`,
+                body: `Hi, ${receiver.name} Your Booking in Facility ${data.payload.facility} made for ${data.payload.date} at ${data.payload.time} is approved.`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -93,10 +97,14 @@ const bookingApprovedNotification = {
         let  orgData = data.payload.orgData;
         let icons;
         let images;
-        if(orgData.id == 53){
+        if(orgData && orgData.id == '56'){
             icons = 'assets/icons/cbre-512x512.png';
             images = 'assets/icons/cbre-512x512.png';
-        }else{
+        }else if(orgData && orgData.id == '89'){
+            icons = 'assets/icons/senses-512x512.png';
+            images = 'assets/icons/senses-512x512.png';
+        }
+        else{
             icons = 'assets/icons/icon-512x512.png';
             images = 'assets/icons/icon-512x512.png';
         }
@@ -107,8 +115,8 @@ const bookingApprovedNotification = {
             senderId: sender.id,
             receiverId: receiver.id,
             payload: {
-                subject: 'Test Notification',
-                body: `Hi!!, This is a test notification to all users from ${sender.name}`,
+                subject: 'Booking Approved',
+                body: `Hi, Your booking is approved ${sender.name}`,
                 icon: icons,
                 image: images,
                 extraData: {

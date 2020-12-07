@@ -34,7 +34,7 @@ const approvalNotification = {
             payload: {
                 ...data,
                 subject: 'Service Request Notification',
-                body: `Hi!!, You have assigned new service request ${sender.name}`,
+                body: `Hi, You have assigned new service request ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
@@ -80,7 +80,7 @@ const approvalNotification = {
             receiverId: receiver.id,
             payload: {
                 subject: 'Service Request Notification',
-                body: `Hi!!,  You have assigned new service request ${sender.name}`,
+                body: `Hi,  You have assigned new service request ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {

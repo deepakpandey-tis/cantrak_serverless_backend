@@ -35,10 +35,14 @@ const bookingCanceledNotification = {
         let  orgData = data.payload.orgData;
         let icons;
         let images;
-        if(orgData.id == 53){
+        if(orgData && orgData.id == '56'){
             icons = 'assets/icons/cbre-512x512.png';
             images = 'assets/icons/cbre-512x512.png';
-        }else{
+        }else if(orgData && orgData.id == '89'){
+            icons = 'assets/icons/senses-512x512.png';
+            images = 'assets/icons/senses-512x512.png';
+        }
+        else{
             icons = 'assets/icons/icon-512x512.png';
             images = 'assets/icons/icon-512x512.png';
         }
@@ -50,7 +54,7 @@ const bookingCanceledNotification = {
             payload: {
                 ...data,
                 subject: 'Facility Booking Canceled',
-                body: `Hi!!, ${receiver.name} Your Booking in Facility ${data.payload.facility} made for ${data.payload.date} at ${data.payload.time} is canceled.`,
+                body: `Hi, ${receiver.name} Your Booking in Facility ${data.payload.facility} made for ${data.payload.date} at ${data.payload.time} is canceled.`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -93,10 +97,14 @@ const bookingCanceledNotification = {
         let  orgData = data.payload.orgData;
         let icons;
         let images;
-        if(orgData.id == 53){
+        if(orgData && orgData.id == '56'){
             icons = 'assets/icons/cbre-512x512.png';
             images = 'assets/icons/cbre-512x512.png';
-        }else{
+        }else if(orgData && orgData.id == '89'){
+            icons = 'assets/icons/senses-512x512.png';
+            images = 'assets/icons/senses-512x512.png';
+        }
+        else{
             icons = 'assets/icons/icon-512x512.png';
             images = 'assets/icons/icon-512x512.png';
         }
@@ -107,7 +115,7 @@ const bookingCanceledNotification = {
             receiverId: receiver.id,
             payload: {
                 subject: 'Facility Booking Canceled ',
-                body: `Hi, This is a test notification to all users from ${sender.name}`,
+                body: `Hi, Your booking has been cancelled ${sender.name}`,
                 icon: icons,
                 image: images,
                 extraData: {

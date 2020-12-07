@@ -139,8 +139,19 @@ router.get('/get-all-status',
 
 /*GET ALL PROPERTY UNIT LIST FOR DROP DOWN */
 router.get("/get-all-property-unit",
-    authMiddleware.isAuthenticated,userMiddleware.customerInfo,
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
     serviceRequestController.getAllPropertyUnit);
+
+/*GET BUILDING LIST ALL FOR USER */
+router.get('/get-building-all-list-for-user',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.getBuildingAllListForUser)
+
+
+/*GET SERVICE APPOINTMENT LIST */
+router.post('/get-service-appointment-list',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.getServiceAppointmentList)
 
 
 module.exports = router;

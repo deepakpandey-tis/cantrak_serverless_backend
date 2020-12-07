@@ -61,7 +61,10 @@ const outgoingParcelNotification = {
     if(orgData && orgData.id == '56'){
         icons = 'assets/icons/cbre-512x512.png';
         images = 'assets/icons/cbre-512x512.png';
-    }else{
+    }else if(orgData && orgData.id == '89'){
+      icons = 'assets/icons/senses-512x512.png';
+      images = 'assets/icons/senses-512x512.png';
+  }else{
         icons = 'assets/icons/icon-512x512.png';
         images = 'assets/icons/icon-512x512.png';
     }
@@ -74,7 +77,7 @@ const outgoingParcelNotification = {
       payload: {
         ...data,
         subject: "Parcel Acceptation",
-        body: `Hi!!, You have received a parcel,Please accept for picked up the parcels.`,
+        body: `Hi, You have received a parcel,Please accept for picked up the parcels.`,
         icon: icons,
         image: images,
         extraData: {
@@ -134,7 +137,10 @@ const outgoingParcelNotification = {
     if(orgData && orgData.id == '56'){
         icons = 'assets/icons/cbre-512x512.png';
         images = 'assets/icons/cbre-512x512.png';
-    }else{
+    }else if(orgData && orgData.id == '89'){
+      icons = 'assets/icons/senses-512x512.png';
+      images = 'assets/icons/senses-512x512.png';
+  }else{
         icons = 'assets/icons/icon-512x512.png';
         images = 'assets/icons/icon-512x512.png';
     }
@@ -145,7 +151,7 @@ const outgoingParcelNotification = {
       receiverId: receiver.id,
       payload: {
         subject: "Acceptation",
-        body: `Hi!!, You have received a parcel,Please accept for picked up the parcels.`,
+        body: `Hi, You have received a parcel,Please accept for picked up the parcels.`,
         icon: icons,
         image: images,
         extraData: {
