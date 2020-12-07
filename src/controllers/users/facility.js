@@ -815,14 +815,14 @@ const facilityBookingController = {
     approveParcel: async (req, res) => {
         try {
             let parcelId = req.body.parcelId;
-            let newParcel = parcelId.split(',');
+            // let newParcel = parcelId.split(',');
 
             const currentTime = new Date().getTime();
             console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7', req.body)
 
             const status = await knex("parcel_management")
                 .update({ parcelStatus: '2', receivedDate: currentTime, receivedBy: req.me.id, isPendingForApproval: false })
-                .whereIn('parcel_management.id', newParcel);
+                .whereIn('parcel_management.id', parcelId);
 
             return res.status(200).json({
                 data: {
