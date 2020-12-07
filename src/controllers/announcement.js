@@ -197,7 +197,7 @@ const announcementController = {
         ALLOWED_CHANNELS.push("SMS");
       }
 
-      let orgMaster = await knex.from("organisations").where({ id: 56, organisationAdminId: 994 }).orWhere({ id: 89, organisationAdminId: 1188 }).first();
+      let orgMaster = await knex.from("organisations").where({ id: req.orgId, organisationAdminId: 994 }).orWhere({ id: req.orgId, organisationAdminId: 1188 }).first();
 
       let dataNos = {
         payload: {
