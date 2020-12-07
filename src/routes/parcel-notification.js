@@ -133,7 +133,7 @@ router.post('/outgoing-parcel-notification',authMiddleware.isAuthenticated, asyn
         //     qrCode = await QRCODE.toDataURL(qrCode1);
         // }
         // console.log("qr code1",qrCode)
-        let orgMaster = await knex.from("organisations").where({ id: 56, organisationAdminId: 994 }).orWhere({ id: 89, organisationAdminId: 1188 }).first();
+        let orgMaster = await knex.from("organisations").where({ id: req.orgId, organisationAdminId: 994 }).orWhere({ id: req.orgId, organisationAdminId: 1188 }).first();
 
 
         let data = {

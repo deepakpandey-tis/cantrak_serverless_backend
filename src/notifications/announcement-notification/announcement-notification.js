@@ -103,6 +103,7 @@ const announcementNotification = {
         let icons;
         let images;
         if(orgData){
+            console.log("org data for notification",orgData)
             if(orgData.id == '56'){
                 icons = 'assets/icons/cbre-512x512.png';
                 images = 'assets/icons/cbre-512x512.png';
