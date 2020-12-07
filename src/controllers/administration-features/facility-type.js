@@ -214,8 +214,6 @@ const FacilityTypeController = {
           for (let image of imagesData) {
             let d = await knex("images")
               .update({
-                // entityType: "facility_type_image",
-                // entityId: facilityTypeResult.id,
                 s3Url: image.s3Url,
                 name: image.filename,
                 title: image.title,
@@ -238,14 +236,10 @@ const FacilityTypeController = {
           for (let icon of iconData){
             let d = await knex("images")
             .update({
-              // entityType:"facility_type_icon",
-              // entityId: facilityTypeResult.id,
                 s3Url: icon.s3Url,
                 name: icon.filename,
                 title: icon.title,
-                // createdAt: currentTime,
                 updatedAt: currentTime,
-                // orgId: req.orgId,
             })
             .where({entityId : req.body.id,entityType:"facility_type_icon"})
           }
