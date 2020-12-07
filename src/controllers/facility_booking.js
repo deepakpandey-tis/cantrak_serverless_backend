@@ -2288,7 +2288,7 @@ const facilityBookingController = {
             });
 
             let ALLOWED_CHANNELS = ["IN_APP", "LINE_NOTIFY"]
-            let orgMaster = await knex.from("organisations").where({ id: 53, organisationAdminId: 766 }).first();
+            let orgMaster = await knex.from("organisations").where({ id: 53, organisationAdminId: 766 }).orWhere({ id: 89, organisationAdminId: 1188 }).first();
 
             let dataNos = {
                 payload: {
@@ -2387,7 +2387,7 @@ const facilityBookingController = {
                 });
 
                 let ALLOWED_CHANNELS = ["IN_APP", "LINE_NOTIFY"]
-                let orgMaster = await knex.from("organisations").where({ id: 53, organisationAdminId: 766 }).first();
+                let orgMaster = await knex.from("organisations").where({ id: 53, organisationAdminId: 766 }).orWhere({ id: 89, organisationAdminId: 1188 }).first();
 
                 console.log("date in body", req.body.startDate)
                 let dataNos = {
