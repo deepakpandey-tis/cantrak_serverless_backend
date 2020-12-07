@@ -480,10 +480,18 @@ const serviceDetailsController = {
                 /*GET UPLOADED IMAGES CLOSE  */
 
 
+                let requestImage;
+                if (incidentRequestPayload.id) {
+                    requestImage = await knex.from('images')
+                        // .where({ "entityId": incidentRequestPayload.id, "entityType": "service_requests", orgId: orgId })
+                        .where({ "entityId": incidentRequestPayload.id, "entityType": "service_requests" })
+                        .select('s3Url', 'title', 'name');
+                }
 
 
                 generalDetails = DataResult;
                 generalDetails.uploadedImages = imagesResult;
+                generalDetails.requestImages = requestImage;
                 trx.commit;
             });
 
