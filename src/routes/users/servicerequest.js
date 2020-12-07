@@ -148,4 +148,10 @@ router.get('/get-building-all-list-for-user',
     serviceRequestController.getBuildingAllListForUser)
 
 
+/*GET SERVICE APPOINTMENT LIST */
+router.post('/get-service-appointment-list',
+    authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+    serviceRequestController.getServiceAppointmentList)
+
+
 module.exports = router;
