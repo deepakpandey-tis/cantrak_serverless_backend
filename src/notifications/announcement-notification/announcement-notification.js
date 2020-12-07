@@ -102,17 +102,29 @@ const announcementNotification = {
         let  orgData = data.payload.orgData;
         let icons;
         let images;
-        if(orgData && orgData.id == '56'){
-            icons = 'assets/icons/cbre-512x512.png';
-            images = 'assets/icons/cbre-512x512.png';
-        }else if(orgData && orgData.id == '89'){
-            icons = 'assets/icons/senses-512x512.png';
-            images = 'assets/icons/senses-512x512.png';
-        }
-        else{
+        if(orgData){
+            if(orgData.id == '56'){
+                icons = 'assets/icons/cbre-512x512.png';
+                images = 'assets/icons/cbre-512x512.png';
+            }else{
+                icons = 'assets/icons/senses-512x512.png';
+                images = 'assets/icons/senses-512x512.png';
+            }
+        }else{
             icons = 'assets/icons/icon-512x512.png';
             images = 'assets/icons/icon-512x512.png';
         }
+        // if(orgData && orgData.id == '56'){
+        //     icons = 'assets/icons/cbre-512x512.png';
+        //     images = 'assets/icons/cbre-512x512.png';
+        // }else if(orgData && orgData.id == '89'){
+        //     icons = 'assets/icons/senses-512x512.png';
+        //     images = 'assets/icons/senses-512x512.png';
+        // }
+        // else{
+        //     icons = 'assets/icons/icon-512x512.png';
+        //     images = 'assets/icons/icon-512x512.png';
+        // }
 
         data = {
             orgId: sender.orgId,
