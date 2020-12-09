@@ -1303,6 +1303,36 @@ const propertyUnitController = {
       });
     }
   },
+  getUnitAndBuildingByUserId : async(req,res) =>{
+    try{
+
+      let orgId = req.orgId
+      
+      let userBuildingInfo = await knex('user_house_allocation')
+      .leftJoin('property_units','user_house_allocation.houseId','property_units.id')
+      .leftJoin('buildings_and_phases','property_units.buildingPhaseId','buildings_and_phases.id')
+      .select([
+        'property_units.unitNumber',
+        'buildings_and_phases.buildingPhaseCode',
+        'buildings_and_phases.buildingDescription'
+      ])
+      .where({'user_house_allocation.userId':req.body.id,'user_house_allocation.orgId':orgId}).first()
+
+      return res.status(200).json({
+        data : {
+          userBuildingInfo
+        }
+      })
+    }catch(err){
+      console.log(
+        "[controllers][propertyUnits][getBuildingAndUnit] :  Error",
+        err
+      );
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  }
 };
 
 module.exports = propertyUnitController;
