@@ -990,7 +990,7 @@ const serviceRequestController = {
 
 
         let imageResult = [];
-        imageResult = await knex('images').where({ "entityId": st["S Id"], "entityType": "service_requests", orgId: req.orgId });
+        imageResult = await knex('images').where({ "entityId": st["S Id"], "entityType": "service_requests" });
         return {
           ...st,
           uploadImages: imageResult,
@@ -1278,7 +1278,7 @@ const serviceRequestController = {
     try {
       let result;
       let orgId = req.orgId;
-      let payload = _.omit(req.body, ["images", "isSo", "mobile", "email", "name", 'company', 'project', 'floor', 'userId']);
+      let payload = _.omit(req.body, ["images", "isSo", "mobile", "email", "name", 'company', 'floor', 'userId']);
 
       await knex.transaction(async trx => {
         let schema;
@@ -1297,7 +1297,7 @@ const serviceRequestController = {
             house: Joi.string().allow('').optional(),
             location: Joi.string().allow("").optional(),
             locationTags: Joi.array().items(Joi.string().optional()),
-            project: Joi.string().allow('').optional(),
+            project: Joi.string().required(),
             serviceType: Joi.string().allow("").optional(),
             unit: Joi.string().required(),
             userId: Joi.string().allow("").optional(),
@@ -1328,7 +1328,7 @@ const serviceRequestController = {
             house: Joi.string().allow('').optional(),
             location: Joi.string().allow("").optional(),
             locationTags: Joi.array().items(Joi.string().optional()),
-            //project: Joi.string().required(),
+            project: Joi.string().required(),
             serviceType: Joi.string().allow("").optional(),
             unit: Joi.string().allow("").optional(),
             userId: Joi.string().allow("").optional(),
@@ -1387,9 +1387,9 @@ const serviceRequestController = {
 
 
         let propertyUnit = await knex
-          .select(['companyId', 'projectId'])
-          .where({ id: payload.house })
-          .into("property_units").first();
+          .select(['companyId', 'id'])
+          .where({ id: payload.project })
+          .into("projects").first();
 
 
         let insertData;
@@ -2221,8 +2221,8 @@ const serviceRequestController = {
         buildingArr = propertyUnit.map(v => v.buildingPhaseId);
 
 
-        // companyHavingProjects = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
-        // companyArr1 = companyHavingProjects.map(v => v.companyId)
+        companyHavingProjects = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+        companyArr1 = companyHavingProjects.map(v => v.companyId)
         rows = await knex("buildings_and_phases")
           .innerJoin(
             "projects",
@@ -2237,7 +2237,7 @@ const serviceRequestController = {
           .innerJoin('property_units', 'buildings_and_phases.id', 'property_units.buildingPhaseId')
           .where({
             "buildings_and_phases.isActive": true,
-            //"buildings_and_phases.projectId": projectId,
+            "buildings_and_phases.projectId": projectId,
             "buildings_and_phases.orgId": orgId,
             'property_units.type': 2
           })
@@ -2248,8 +2248,8 @@ const serviceRequestController = {
             "buildings_and_phases.description",
             "property_types.propertyTypeCode",
           ])
-          .whereIn('buildings_and_phases.id', buildingArr)
-          //.whereIn('projects.companyId', companyArr1)
+          //.whereIn('buildings_and_phases.id', buildingArr)
+          .whereIn('projects.companyId', companyArr1)
           .groupBy(["buildings_and_phases.id",
             "buildings_and_phases.buildingPhaseCode",
             "property_types.propertyType",
@@ -2388,17 +2388,18 @@ const serviceRequestController = {
       let houseIds = req.me.houseIds;
 
 
-      const { floorZoneId, type } = req.body;
+      const { projectId, buildingPhaseId, type } = req.body;
       let unit;
       if (type == 2) {
 
         unit = await knex("property_units")
           .select("*")
-          .where({ "buildingPhaseId": floorZoneId, orgId: orgId, isActive: true, type: type });
+          .where({ "buildingPhaseId": buildingPhaseId, orgId: orgId, isActive: true, type: type });
       } else if (type == 1) {
 
         unit = await knex("property_units")
           .select("*")
+          .where({ projectId })
           .whereIn('property_units.id', houseIds)
           .where({ orgId: orgId, isActive: true, type: type });
 
@@ -2428,9 +2429,9 @@ const serviceRequestController = {
 
       let pagination = {}
       console.log("companyId", companyId);
-      let companyHavingProjects = []
-      let companyArr1 = []
-      let rows = []
+      let companyHavingProjects = [];
+      let companyArr1 = [];
+      let rows = [];
       let pId;
       pId = await knex
         .from("user_house_allocation")
@@ -2444,9 +2445,10 @@ const serviceRequestController = {
         rows = await knex("projects")
           .innerJoin('companies', 'projects.companyId', 'companies.id')
           .innerJoin('property_units', 'projects.id', 'property_units.projectId')
-          .where({ "projects.companyId": companyId, "projects.isActive": true, 'property_units.type': 2 })
+          .where({ "projects.isActive": true, 'property_units.type': 2 })
+          //.where({ "projects.companyId": companyId, "projects.isActive": true, 'property_units.type': 2 })
           .whereIn('projects.companyId', companyArr1)
-          .where('property_units.id', pId.houseId)
+          //.where('property_units.id', pId.houseId)
           .select([
             "projects.id as id",
             "projects.projectName",
@@ -2468,7 +2470,8 @@ const serviceRequestController = {
         rows = await knex("projects")
           .innerJoin('companies', 'projects.companyId', 'companies.id')
           .innerJoin('property_units', 'projects.id', 'property_units.projectId')
-          .where({ "projects.companyId": companyId, "projects.isActive": true, 'property_units.type': 1 })
+          .where({ "projects.isActive": true, 'property_units.type': 1 })
+          //.where({ "projects.companyId": companyId, "projects.isActive": true, 'property_units.type': 1 })
           .whereIn('projects.companyId', companyArr1)
           .where('property_units.id', pId.houseId)
           .select([
@@ -3256,7 +3259,7 @@ const serviceRequestController = {
         }
 
         let imageResult = [];
-        imageResult = await knex('images').where({ "entityId": st["S Id"], "entityType": "service_requests", orgId: req.orgId });
+        imageResult = await knex('images').where({ "entityId": st["S Id"], "entityType": "service_requests" });
         return {
           ...st,
           uploadImages: imageResult,
