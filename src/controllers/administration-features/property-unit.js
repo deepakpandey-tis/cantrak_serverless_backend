@@ -1314,7 +1314,7 @@ const propertyUnitController = {
       .select([
         'property_units.unitNumber',
         'buildings_and_phases.buildingPhaseCode',
-        'buildings_and_phases.buildingDescription'
+        'buildings_and_phases.description'
       ])
       .where({'user_house_allocation.userId':req.body.id,'user_house_allocation.orgId':orgId}).first()
 
