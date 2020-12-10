@@ -2445,10 +2445,11 @@ const serviceRequestController = {
         rows = await knex("projects")
           .innerJoin('companies', 'projects.companyId', 'companies.id')
           .innerJoin('property_units', 'projects.id', 'property_units.projectId')
-          .where({ "projects.isActive": true, 'property_units.type': 2 })
+          //.where({ "projects.isActive": true, 'property_units.type': 2 })
+          .where({ "projects.isActive": true})
           //.where({ "projects.companyId": companyId, "projects.isActive": true, 'property_units.type': 2 })
           .whereIn('projects.companyId', companyArr1)
-          //.where('property_units.id', pId.houseId)
+          .where('property_units.id', pId.houseId)
           .select([
             "projects.id as id",
             "projects.projectName",
