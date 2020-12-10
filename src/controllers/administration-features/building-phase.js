@@ -193,6 +193,8 @@ const buildingPhaseController = {
     },
     getBuildingInfoByBuildingId: async (req, res) => {
         try {
+
+            console.log("get bulding info",req.body)
             let payload = req.body
 
             const schema = Joi.object().keys({
