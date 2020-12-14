@@ -72,7 +72,7 @@ const entranceController = {
             if (!loginResult.emailVerified) {
                 return res.status(400).json({
                     errors: [
-                        { code: 'EMAIL_VERIFICATION_ERROR', message: 'Please verify email id before login !' }
+                        { code: 'EMAIL_VERIFICATION_ERROR', message: 'Your account is pending for approval. Please contact admin' }
                     ],
                 });
             }
