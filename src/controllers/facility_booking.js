@@ -40,6 +40,7 @@ const facilityBookingController = {
                     "descriptionAlternateLang",
                     "statuses",
                     "bookingQuota",
+                    "description"
                 ]);
 
                 const schema = Joi.object().keys({
@@ -49,7 +50,7 @@ const facilityBookingController = {
                     projectId: Joi.string().required(),
                     buildingPhaseId: Joi.string().required(),
                     floorZoneId: Joi.string().required(),
-                    description: Joi.string().required(),
+                    // description: Joi.string().required(),
                     enableCheckIn: Joi.boolean().required(),
                     checkInType: Joi.string().allow("").optional(),
                     enablePreCheckIn: Joi.boolean().required(),
