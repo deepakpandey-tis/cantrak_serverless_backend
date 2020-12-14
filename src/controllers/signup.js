@@ -455,9 +455,9 @@ const singupController = {
         let hash = await bcrypt.hash(payload.password, saltRounds);
         payload.password = hash;
         let uuidv4 = uuid()
-        let currentTime = new Date().getTime()
+        let currentTime = new Date().getTime();
         insertedUser = await knex("users")
-          .insert({ ...payload, verifyToken: uuidv4, emailVerified: true, createdAt: currentTime, updatedAt: currentTime, orgId: orgId })
+          .insert({ ...payload, verifyToken: uuidv4, isActive: false, emailVerified: false, createdAt: currentTime, updatedAt: currentTime, orgId: orgId })
           .returning(["*"])
           .transacting(trx);
         console.log(payload);
@@ -476,15 +476,15 @@ const singupController = {
         let user = insertedUser[0]
         console.log('User: ', insertedUser)
         if (insertedUser && insertedUser.length) {
-          await emailHelper.sendTemplateEmail({
-            to: user.email,
-            subject: 'Verify Account',
-            template: 'test-email.ejs',
-            templateData: {
-              fullName: user.name,
-              OTP: 'https://dj47f2ckirq9d.cloudfront.net/signup/verify-account/' + user.verifyToken
-            }
-          })
+          // await emailHelper.sendTemplateEmail({
+          //   to: user.email,
+          //   subject: 'Verify Account',
+          //   template: 'test-email.ejs',
+          //   templateData: {
+          //     fullName: user.name,
+          //     OTP: 'https://dj47f2ckirq9d.cloudfront.net/signup/verify-account/' + user.verifyToken
+          //   }
+          // })
           let orgAdmins = await knex('application_user_roles')
             .select('userId')
             .where({ 'application_user_roles.orgId': orgId, roleId: 2 })
