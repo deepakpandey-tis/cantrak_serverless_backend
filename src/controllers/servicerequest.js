@@ -3365,6 +3365,13 @@ const serviceRequestController = {
                 await knex("service_requests")
                     .update({ serviceStatusCode: updateStatus, updatedAt: currentTime })
                     .where({ id: serviceRequestId });
+
+                if (updateStatus === 'OH') {
+                    await knex("service_orders")
+                        .update({ comment: comments, updatedAt: currentTime })
+                        .where({ serviceRequestId: serviceRequestId });
+                }
+
             }
 
 
