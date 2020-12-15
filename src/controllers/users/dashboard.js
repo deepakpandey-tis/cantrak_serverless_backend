@@ -183,6 +183,20 @@ const dashboardController = {
 
             const Parallel = require("async-parallel");
             announcement = await Parallel.map(announcement, async (pp) => {
+
+                var yourString = pp.titles; //replace with your string.
+                var maxLength = 130; // maximum number of characters to extract
+                var trimmedString = yourString.substr(0, maxLength);
+               // console.log("yourString",yourString);
+                //console.log("trimmedString",trimmedString);
+                //Trim and re-trim only when necessary (prevent re-trim when string is shorted than maxLength, it causes last word cut) 
+                if(yourString.length > trimmedString.length){
+                    //trim the string to the maximum length
+                    //re-trim if we are in the middle of a word and 
+                    trimmedString = trimmedString.substr(0, Math.min(trimmedString.length, trimmedString.lastIndexOf(" ")))
+                  //  console.log("If trimmedString", trimmedString);
+                }
+
                
                 let imageResult = await knex
                     .from("images")
@@ -205,6 +219,7 @@ const dashboardController = {
 
                 return {
                     ...pp,
+                    titles: trimmedString,
                     img: imageResult,
                     URL: approvalUrl
                 };
