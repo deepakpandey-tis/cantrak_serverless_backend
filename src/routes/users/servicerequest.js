@@ -154,4 +154,16 @@ router.post('/get-service-appointment-list',
     serviceRequestController.getServiceAppointmentList)
 
 
+/*GET COMPLETED SERVICE REQUEST  LIST */
+router.get('/get-completed-service-request-list',
+authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+serviceRequestController.getCompletedRequestList)
+
+
+/*GET PREVIOUS SERVICE APPOINTMENT  LIST */
+router.get('/get-previous-service-order-list',
+authMiddleware.isAuthenticated, userMiddleware.customerInfo,
+serviceRequestController.getPreviousAppointmentList)
+
+
 module.exports = router;
