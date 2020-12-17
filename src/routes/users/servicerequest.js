@@ -52,7 +52,7 @@ router.post('/add-service-problems',
 
 // router.post('/update-service-request', authMiddleware.isAuthenticated, serviceRequestController.updateServiceRequest);
 
-router.post('/get-service-request-list',
+router.get('/get-service-request-list',
     authMiddleware.isAuthenticated, userMiddleware.customerInfo,
     serviceRequestController.getServiceRequestList)
 
@@ -149,7 +149,7 @@ router.get('/get-building-all-list-for-user',
 
 
 /*GET SERVICE APPOINTMENT LIST */
-router.post('/get-service-appointment-list',
+router.get('/get-service-appointment-list',
     authMiddleware.isAuthenticated, userMiddleware.customerInfo,
     serviceRequestController.getServiceAppointmentList)
 
