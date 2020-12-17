@@ -574,7 +574,7 @@ const serviceRequestController = {
         }
 
         let imageResult = [];
-        imageResult = await knex('images').where({ "entityId": st["S Id"], "entityType": "service_requests" });
+        imageResult = await knex('images').where({ "entityId": st["S Id"], "entityType": "service_problems" });
         return {
           ...st,
           uploadImages: imageResult,

@@ -484,7 +484,7 @@ const serviceDetailsController = {
                 if (incidentRequestPayload.id) {
                     requestImage = await knex.from('images')
                         // .where({ "entityId": incidentRequestPayload.id, "entityType": "service_requests", orgId: orgId })
-                        .where({ "entityId": incidentRequestPayload.id, "entityType": "service_requests" })
+                        .where({ "entityId": incidentRequestPayload.id, "entityType": "service_problems" })
                         .select('s3Url', 'title', 'name');
                 }
 
