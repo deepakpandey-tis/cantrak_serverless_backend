@@ -182,7 +182,6 @@ const customerController = {
               if (Object.keys(filters).length || name || organisation) {
 
                 if (name) {
-
                   qb.where('users.name', 'iLIKE', `%${name}%`)
                   qb.orWhere('users.email', 'iLIKE', `%${name}%`)
                   qb.orWhere('users.mobileNo', 'iLIKE', `%${name}%`)
