@@ -538,8 +538,8 @@ const taskGroupController = {
                 createPmTaskGroup = insertPmTemplateResult[0];
 
                 await knex('pm_task_groups')
-                .update({ isActive: true })
-                .where({ isActive: true })
+                    .update({ isActive: true })
+                    .where({ isActive: true })
 
 
                 // console.log("create PM task froup : ",createPmTaskGroup)
@@ -573,7 +573,7 @@ const taskGroupController = {
                 //             orgId: req.orgId
                 //         }
                 // }
-                
+
                 // ASSIGNED TEAM CLOSE
 
                 // TASK GROUP SCHEDULE OPEN
@@ -636,7 +636,7 @@ const taskGroupController = {
                             orgId: req.orgId
                         }
 
-                         assetResult = await knex
+                        assetResult = await knex
                             .insert(insertDataGroup)
                             .returning(["*"])
                             .transacting(trx)
@@ -733,7 +733,7 @@ const taskGroupController = {
                         // CREATE PM TASK CLOSE
                         assetResults.push(assetResult[0]);
 
-                let insertAssignedServiceTeamData;
+                        let insertAssignedServiceTeamData;
 
                         for (let i = 0; i < req.body.consolidatedWorkOrders.length; i++) {
                             insertAssignedServiceTeamData = {
@@ -741,12 +741,12 @@ const taskGroupController = {
                                 userId: req.body.consolidatedWorkOrders[i].mainUserId ? req.body.consolidatedWorkOrders[i].mainUserId : null,
                                 entityId: createPmTaskGroup.id,
                                 entityType: "pm_task_groups",
-                                workOrderId : assetResult[0].id,
+                                workOrderId: assetResult[0].id,
                                 createdAt: currentTime,
                                 updatedAt: currentTime,
                                 orgId: req.orgId
                             }
-                    }
+                        }
                         let assignedServiceTeamResult = await knex.insert(insertAssignedServiceTeamData).returning(['*']).transacting(trx).into('assigned_service_team');
                         assignedServiceTeam = assignedServiceTeamResult[0];
                         // }
@@ -1067,7 +1067,8 @@ const taskGroupController = {
         try {
             let reqData = req.query;
             let payLoad = req.body;
-            let workOrderDate = req.body.workOrderDate
+            let workOrderDate = req.body.workOrderDate;
+            let payloadFilter = req.body;
             console.log("work order list data pm Id", req.body)
 
             const payload = _.omit(payLoad, [
@@ -1147,6 +1148,11 @@ const taskGroupController = {
                         if (req.body.status) {
                             qb.whereIn('task_group_schedule_assign_assets.status', req.body.status)
                         }
+
+                        if (payloadFilter.repeatPeriod) {
+                            qb.where('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod)
+                        }
+
                     }),
                 knex("task_group_schedule")
                     .innerJoin(
@@ -1225,6 +1231,10 @@ const taskGroupController = {
                         if (req.body.status) {
                             qb.whereIn('task_group_schedule_assign_assets.status', req.body.status)
                         }
+
+                        if (payloadFilter.repeatPeriod) {
+                            qb.where('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod)
+                        }
                         // if(req.body.assignedTeam){
                         //     qb.whereIn('')
                         // }
@@ -1232,7 +1242,7 @@ const taskGroupController = {
                     .offset(offset)
                     .limit(per_page)
                     .orderBy("workOrderDate", "asc")
-                    
+
             ]);
 
             const Parallel = require('async-parallel')
@@ -1271,23 +1281,23 @@ const taskGroupController = {
                 // ]).max('asset_location.updatedAt').first()
                 return { ...row, ...location }
             })
-            rowsWithLocations = await Parallel.map(rowsWithLocations, async row =>{
-                console.log("data in row with location",row)
+            rowsWithLocations = await Parallel.map(rowsWithLocations, async row => {
+                console.log("data in row with location", row)
                 const teamData = await knex('assigned_service_team')
-                .select([
-                    "assigned_service_team.teamId",
-                    "assigned_service_team.userId",
-                    "assigned_service_team.entityId as assignedId"
-                ])
-                // .where({'assigned_service_team.workOrderId':row.workOrderId,'assigned_service_team.entityType':'pm_task_groups'})
-                .where({'assigned_service_team.entityId':row.taskGroupId,'assigned_service_team.entityType':'pm_task_groups'})
-                .where(qb=>{
-                    if(req.body.assignedTeam){
-                           qb.whereIn('assigned_service_team.teamId',req.body.assignedTeam)
-                       }
-               })
-                .first()
-                return{...row,...teamData}
+                    .select([
+                        "assigned_service_team.teamId",
+                        "assigned_service_team.userId",
+                        "assigned_service_team.entityId as assignedId"
+                    ])
+                    // .where({'assigned_service_team.workOrderId':row.workOrderId,'assigned_service_team.entityType':'pm_task_groups'})
+                    .where({ 'assigned_service_team.entityId': row.taskGroupId, 'assigned_service_team.entityType': 'pm_task_groups' })
+                    .where(qb => {
+                        if (req.body.assignedTeam) {
+                            qb.whereIn('assigned_service_team.teamId', req.body.assignedTeam)
+                        }
+                    })
+                    .first()
+                return { ...row, ...teamData }
             })
 
             let count = total[0].count;
@@ -1321,8 +1331,9 @@ const taskGroupController = {
         try {
             let reqData = req.query;
             let payLoad = req.body;
-            let workOrderDate = req.body.workOrderDate
-            console.log("work order list data",req.body)
+            let workOrderDate = req.body.workOrderDate;
+            let payloadFilter = req.body;
+            console.log("work order list data", req.body)
 
             const payload = _.omit(payLoad, [
                 "assetCategoryId",
@@ -1361,6 +1372,7 @@ const taskGroupController = {
             let [total, rows] = await Promise.all([
                 knex
                     .count("* as count")
+                    //.disticnct('task_group_schedule_assign_assets.id')
                     .from("task_group_schedule")
                     .innerJoin(
                         "task_group_schedule_assign_assets",
@@ -1377,6 +1389,9 @@ const taskGroupController = {
                         "task_group_schedule.pmId",
                         "pm_master2.id"
                     )
+                    //.leftJoin('pm_task_groups', 'task_group_schedule.taskGroupId', 'pm_task_groups.id')
+                    //.leftJoin('assigned_service_team', 'pm_task_groups.id', 'assigned_service_team.entityId')
+                    //.leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
                     .where({
                         "task_group_schedule.orgId": req.orgId
                     })
@@ -1409,7 +1424,21 @@ const taskGroupController = {
                             console.log("status of wo", req.body.status)
                             qb.whereIn('task_group_schedule_assign_assets.status', req.body.status)
                         }
-                    }),
+
+                        if (payloadFilter.company) {
+                            if (payloadFilter.company.length) {
+
+                                qb.whereIn('pm_master2.companyId', payloadFilter.company);
+                            }
+                        }
+
+                        if (payloadFilter.repeatPeriod) {
+                            qb.where('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod);
+
+                        }
+
+                    })
+                ,
                 knex("task_group_schedule")
                     .innerJoin(
                         "task_group_schedule_assign_assets",
@@ -1481,6 +1510,21 @@ const taskGroupController = {
                             console.log("status of wo", req.body.status)
                             qb.whereIn('task_group_schedule_assign_assets.status', req.body.status)
                         }
+
+                        if (payloadFilter.company) {
+                            if (payloadFilter.company.length) {
+
+                                qb.whereIn('pm_master2.companyId', payloadFilter.company);
+                            }
+                        }
+
+                        if (payloadFilter.repeatPeriod) {
+                            qb.where('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod);
+
+                        }
+
+
+
                     })
                     .offset(offset)
                     .limit(per_page)
@@ -1521,7 +1565,25 @@ const taskGroupController = {
                     .limit('1')
                     .first()
                 // ]).max('asset_location.updatedAt').first()
+
+
+                // let teamResult = await knex('pm_task_groups')
+                //     .leftJoin('pm_task_groups', 'task_group_schedule.taskGroupId', 'pm_task_groups.id')
+                //     .leftJoin('assigned_service_team', 'pm_task_groups.id', 'assigned_service_team.entityId')
+                //     .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                //     .where({
+                //         'pm_task_groups.id': row.taskGroupId,
+                //         'assigned_service_team.entityType': 'pm_task_groups',
+                //     })
+
+
+
+
+
+
+
                 return { ...row, ...location }
+
             })
 
             let count = total[0].count;
@@ -3884,21 +3946,21 @@ const taskGroupController = {
             const updatedWorkOrder = await knex('task_group_schedule_assign_assets')
                 .update({ pmDate: payload.newPmDate })
                 // .where({ id: payload.workOrderId })
-                .whereIn( 'task_group_schedule_assign_assets.id', payload.workOrderId )
+                .whereIn('task_group_schedule_assign_assets.id', payload.workOrderId)
 
-                let teamUsersPayload = {
-                    teamId : payload.teamId,
-                    userId : payload.mainUserId
-                }
-        
-            console.log("update work order team one",updatedWorkOrder)
+            let teamUsersPayload = {
+                teamId: payload.teamId,
+                userId: payload.mainUserId
+            }
+
+            console.log("update work order team one", updatedWorkOrder)
             const updateWorkOrderTeamAndUsers = await knex('assigned_service_team')
-            .update(teamUsersPayload)
-            .where({entityType:'pm_task_groups'})
-            // .whereIn('assigned_service_team.workOrderId',payload.workOrderId)
-            .whereIn('assigned_service_team.entityId',payload.entityId)
+                .update(teamUsersPayload)
+                .where({ entityType: 'pm_task_groups' })
+                // .whereIn('assigned_service_team.workOrderId',payload.workOrderId)
+                .whereIn('assigned_service_team.entityId', payload.entityId)
 
-            
+
             return res.status(200).json({
                 data: {
                     updatedWorkOrder,
