@@ -1150,7 +1150,9 @@ const taskGroupController = {
                         }
 
                         if (payloadFilter.repeatPeriod) {
-                            qb.where('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod)
+                            if (payloadFilter.repeatPeriod.length) {
+                                qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod)
+                            }
                         }
 
                     }),
@@ -1233,8 +1235,11 @@ const taskGroupController = {
                         }
 
                         if (payloadFilter.repeatPeriod) {
-                            qb.where('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod)
+                            if (payloadFilter.repeatPeriod.length) {
+                                qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod)
+                            }
                         }
+
                         // if(req.body.assignedTeam){
                         //     qb.whereIn('')
                         // }
@@ -1368,11 +1373,196 @@ const taskGroupController = {
             let page = reqData.current_page || 1;
             if (page < 1) page = 1;
             let offset = (page - 1) * per_page;
+            let total, rows;
 
-            let [total, rows] = await Promise.all([
+            // if (payloadFilter.assignedTeam && payloadFilter.assignedTeam.length) {
+
+
+            //     [total, rows] = await Promise.all([
+            //         knex
+            //             .count("* as count")
+            //             //.disticnct('task_group_schedule_assign_assets.id')
+            //             .from("task_group_schedule")
+            //             .innerJoin(
+            //                 "task_group_schedule_assign_assets",
+            //                 "task_group_schedule.id",
+            //                 "task_group_schedule_assign_assets.scheduleId"
+            //             )
+            //             .innerJoin(
+            //                 "asset_master",
+            //                 "task_group_schedule_assign_assets.assetId",
+            //                 "asset_master.id"
+            //             )
+            //             .innerJoin(
+            //                 "pm_master2",
+            //                 "task_group_schedule.pmId",
+            //                 "pm_master2.id"
+            //             )
+            //             .leftJoin('pm_task_groups', 'task_group_schedule.taskGroupId', 'pm_task_groups.id')
+            //             .leftJoin('assigned_service_team', 'pm_task_groups.id', 'assigned_service_team.entityId')
+            //             .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+            //             .where({
+            //                 "task_group_schedule.orgId": req.orgId
+            //             })
+            //             .where(qb => {
+            //                 if (payload.workOrderId && payload.workOrderId != null) {
+            //                     qb.where('task_group_schedule_assign_assets.displayId', payload.workOrderId)
+            //                 }
+
+            //                 if (req.body.assetCategoryId && req.body.assetCategoryId.length > 0) {
+            //                     qb.whereIn('asset_master.assetCategoryId', req.body.assetCategoryId)
+            //                 }
+            //                 if (req.body.workOrderDateTo && req.body.workOrderDateFrom) {
+            //                     let workDateFrom = moment(req.body.workOrderDateFrom).startOf('date');
+            //                     let workDateTo = moment(req.body.workOrderDateTo).endOf('date');
+            //                     qb.whereRaw(`to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD') BETWEEN '${req.body.workOrderDateFrom}' and '${req.body.workOrderDateTo}' `);
+            //                     //qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
+            //                 }
+            //                 if (req.body.assetName && req.body.assetName.length > 0) {
+            //                     console.log("Asset name")
+            //                     qb.whereIn('task_group_schedule_assign_assets.assetId', req.body.assetName)
+            //                 }
+            //                 if (req.body.assetSerial && req.body.assetSerial.length > 0) {
+            //                     qb.whereIn('asset_master.id', req.body.assetSerial)
+            //                 }
+            //                 if (req.body.pmName && req.body.pmName != null) {
+            //                     console.log("pm name", req.body.pmName)
+            //                     qb.where('pm_master2.name', 'iLIKE', `%${req.body.pmName}%`)
+            //                 }
+            //                 if (req.body.status) {
+            //                     console.log("status of wo", req.body.status)
+            //                     qb.whereIn('task_group_schedule_assign_assets.status', req.body.status)
+            //                 }
+
+            //                 if (payloadFilter.company) {
+            //                     if (payloadFilter.company.length) {
+
+            //                         qb.whereIn('pm_master2.companyId', payloadFilter.company);
+            //                     }
+            //                 }
+
+            //                 if (payloadFilter.repeatPeriod) {
+            //                     if (payloadFilter.repeatPeriod.length) {
+            //                         qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod);
+            //                     }
+            //                 }
+
+            //                 if (payloadFilter.assignedTeam.length) {
+            //                     qb.whereIn('assigned_service_team.teamId', payloadFilter.assignedTeam)
+            //                 }
+
+            //                 qb.where({ 'assigned_service_team.entityType': 'pm_task_groups' })
+
+
+            //             })
+            //         ,
+            //         knex("task_group_schedule")
+            //             .innerJoin(
+            //                 "task_group_schedule_assign_assets",
+            //                 "task_group_schedule.id",
+            //                 "task_group_schedule_assign_assets.scheduleId"
+            //             )
+            //             .innerJoin(
+            //                 "asset_master",
+            //                 "task_group_schedule_assign_assets.assetId",
+            //                 "asset_master.id"
+            //             )
+            //             .innerJoin(
+            //                 "pm_master2",
+            //                 "task_group_schedule.pmId",
+            //                 "pm_master2.id"
+            //             )
+            //             .leftJoin('pm_task_groups', 'task_group_schedule.taskGroupId', 'pm_task_groups.id')
+            //             .leftJoin('assigned_service_team', 'pm_task_groups.id', 'assigned_service_team.entityId')
+            //             .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+            //             .select([
+            //                 "task_group_schedule_assign_assets.id as workOrderId",
+            //                 "task_group_schedule_assign_assets.displayId as TGAA",
+            //                 "task_group_schedule.id as id",
+            //                 "asset_master.assetName as assetName",
+            //                 "asset_master.model as model",
+            //                 "asset_master.barcode as barcode",
+            //                 "asset_master.areaName as areaName",
+            //                 "asset_master.description as description",
+            //                 "asset_master.assetSerial as assetSerial",
+            //                 "asset_master.id as assetId",
+            //                 "asset_master.assetCategoryId",
+            //                 "pm_master2.name as pmName",
+            //                 "pm_master2.id as pmId",
+            //                 "task_group_schedule_assign_assets.pmDate as pmDate",
+            //                 knex.raw(
+            //                     `DATE("task_group_schedule_assign_assets"."pmDate") as "workOrderDate"`
+            //                 ),
+            //                 "task_group_schedule.repeatPeriod as repeatPeriod",
+            //                 "task_group_schedule.repeatOn as repeatOn",
+            //                 "task_group_schedule.repeatFrequency as repeatFrequency",
+            //                 "task_group_schedule_assign_assets.frequencyTagIds",
+            //                 "task_group_schedule_assign_assets.status"
+            //             ])
+            //             .where({
+            //                 "task_group_schedule.orgId": req.orgId
+            //             })
+            //             .where(qb => {
+            //                 if (payload.workOrderId && payload.workOrderId != null) {
+            //                     qb.where('task_group_schedule_assign_assets.displayId', payload.workOrderId)
+            //                 }
+            //                 if (req.body.assetCategoryId && req.body.assetCategoryId.length > 0) {
+            //                     qb.whereIn('asset_master.assetCategoryId', req.body.assetCategoryId)
+            //                 }
+            //                 if (req.body.workOrderDateTo && req.body.workOrderDateFrom) {
+            //                     let workDateFrom = moment(req.body.workOrderDateFrom).startOf('date');
+            //                     let workDateTo = moment(req.body.workOrderDateTo).endOf('date');
+            //                     console.log("work order date from and to", req.body.workOrderDateTo, workDateTo)
+            //                     qb.whereRaw(`to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD') BETWEEN '${req.body.workOrderDateFrom}' and '${req.body.workOrderDateTo}' `)
+
+            //                     //qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
+            //                 }
+            //                 if (req.body.assetName && req.body.assetName.length > 0) {
+            //                     qb.whereIn('task_group_schedule_assign_assets.assetId', req.body.assetName)
+            //                 }
+            //                 if (req.body.assetSerial && req.body.assetSerial.length > 0) {
+            //                     qb.whereIn('asset_master.id', req.body.assetSerial)
+            //                 }
+            //                 if (req.body.pmName && req.body.pmName != null) {
+            //                     qb.where('pm_master2.name', 'iLIKE', `%${req.body.pmName}%`)
+            //                 }
+            //                 if (req.body.status) {
+            //                     console.log("status of wo", req.body.status)
+            //                     qb.whereIn('task_group_schedule_assign_assets.status', req.body.status)
+            //                 }
+
+            //                 if (payloadFilter.company) {
+            //                     if (payloadFilter.company.length) {
+
+            //                         qb.whereIn('pm_master2.companyId', payloadFilter.company);
+            //                     }
+            //                 }
+
+            //                 if (payloadFilter.repeatPeriod) {
+            //                     if (payloadFilter.repeatPeriod.length) {
+            //                         qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod);
+            //                     }
+            //                 }
+
+            //                 if (payloadFilter.assignedTeam.length) {
+            //                     qb.whereIn('assigned_service_team.teamId', payloadFilter.assignedTeam)
+            //                 }
+            //                 qb.where({ 'assigned_service_team.entityType': 'pm_task_groups' })
+
+
+            //             })
+            //             .offset(offset)
+            //             .limit(per_page)
+            //             .orderBy("workOrderDate", "asc")
+            //     ]);
+
+
+            // } else {
+
+            [total, rows] = await Promise.all([
                 knex
                     .count("* as count")
-                    //.disticnct('task_group_schedule_assign_assets.id')
+                    //.disticnct('task_group_schedule.id')
                     .from("task_group_schedule")
                     .innerJoin(
                         "task_group_schedule_assign_assets",
@@ -1433,8 +1623,9 @@ const taskGroupController = {
                         }
 
                         if (payloadFilter.repeatPeriod) {
-                            qb.where('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod);
-
+                            if (payloadFilter.repeatPeriod.length) {
+                                qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod);
+                            }
                         }
 
                     })
@@ -1455,6 +1646,9 @@ const taskGroupController = {
                         "task_group_schedule.pmId",
                         "pm_master2.id"
                     )
+                    //.leftJoin('pm_task_groups', 'task_group_schedule.taskGroupId', 'pm_task_groups.id')
+                    //.leftJoin('assigned_service_team', 'pm_task_groups.id', 'assigned_service_team.entityId')
+                    //.leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
                     .select([
                         "task_group_schedule_assign_assets.id as workOrderId",
                         "task_group_schedule_assign_assets.displayId as TGAA",
@@ -1519,17 +1713,21 @@ const taskGroupController = {
                         }
 
                         if (payloadFilter.repeatPeriod) {
-                            qb.where('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod);
-
+                            if (payloadFilter.repeatPeriod.length) {
+                                qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod);
+                            }
                         }
 
 
-
                     })
+                    //.distinct(['task_group_schedule.id'])
+                    //.groupBy('task_group_schedule.id')
                     .offset(offset)
                     .limit(per_page)
                     .orderBy("workOrderDate", "asc")
             ]);
+
+            //   }
 
             const Parallel = require('async-parallel')
             const rowsWithLocations = await Parallel.map(rows, async row => {

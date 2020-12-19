@@ -3117,7 +3117,7 @@ const serviceRequestController = {
                         location: payload.location,
                         priority: priority,
                         serviceStatusCode: "O",
-                        createdBy: req.me.id,
+                       // createdBy: req.me.id,
                         orgId: orgId,
                         createdAt: currentTime,
                         updatedAt: currentTime,
@@ -3132,13 +3132,13 @@ const serviceRequestController = {
                         // requestedBy: payload.userId,
                         serviceType: payload.serviceType,
                         location: payload.location,
-                        createdBy: req.me.id,
+                        //createdBy: req.me.id,
                         priority: priority,
                         serviceStatusCode: "O",
                         orgId: orgId,
                         createdAt: currentTime,
                         updatedAt: currentTime,
-                        createdBy: req.me.id,
+                        //createdBy: req.me.id,
                         requestedBy: requestId
                     };
                 }
