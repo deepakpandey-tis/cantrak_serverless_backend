@@ -115,6 +115,13 @@ router.get(
   roleMiddleware.parseUserPermission,
   buildingPhaseController.getBuildingPhaseAllListHavingPropertyUnits
 );
+
+router.get(
+  "/get-building-phase-all-list-having-property-units-and-without-units",
+  roleMiddleware.parseUserPermission,
+  buildingPhaseController.getBuildingPhaseAllListHavingPropertyUnitsAndWithoutUnits
+);
+
 router.post(
   "/get-building-phase-by-Id",
   authMiddleware.isAuthenticated,
