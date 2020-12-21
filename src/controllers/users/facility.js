@@ -133,8 +133,19 @@ const facilityBookingController = {
                 };
             });
 
+
+            totalNewParcelList = await knex.from('parcel_management')
+                .select("parcel_management.id")
+                .leftJoin(
+                    "parcel_user_tis",
+                    "parcel_management.id",
+                    "parcel_user_tis.parcelId"
+                )
+                .where({ 'parcel_user_tis.tenantId': id })
+                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.pickedUpType': parcelType, 'parcel_management.parcelViewStatus': '1' });
+                
             // Update view status as view all outgoing parcel by user
-            await Parallel.map(resultData, async (up) => {
+            await Parallel.map(totalNewParcelList, async (up) => {
                 // Update view status as view all outgoing parcel by user
                 const updateParcelStatus = await knex("parcel_management")
                     .update({ parcelViewStatus: '0'})
@@ -271,7 +282,19 @@ const facilityBookingController = {
             });
 
             console.log("parcelsId",parcelsId);
-            await Parallel.map(resultData, async (up) => {
+
+            totalNewParcelList = await knex.from('parcel_management')
+            .select("parcel_management.id")
+            .leftJoin(
+                "parcel_user_tis",
+                "parcel_management.id",
+                "parcel_user_tis.parcelId"
+            )
+            .where({ 'parcel_user_tis.tenantId': id })
+            .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.pickedUpType': parcelType, 'parcel_management.parcelViewStatus': '1' });
+            
+
+            await Parallel.map(totalNewParcelList, async (up) => {
                 // Update view status as view all outgoing parcel by user
                 const updateParcelStatus = await knex("parcel_management")
                     .update({ parcelViewStatus: '0'})
