@@ -106,6 +106,14 @@ router.post(
   floorZoneController.getFloorZoneListByBuildingIdHavingPropertyUnits
 );
 
+
+router.post(
+  "/get-floor-zone-list-by-building-id-having-property-units-and-without-units",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  floorZoneController.getFloorZoneListByBuildingIdHavingPropertyUnitsAndWithoutUnits
+);
+
 router.post(
   "/get-floor-zone-by-multiple-building",
   authMiddleware.isAuthenticated,

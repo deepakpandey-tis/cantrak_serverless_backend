@@ -1104,6 +1104,71 @@ const floorZoneController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  getFloorZoneListByBuildingIdHavingPropertyUnitsAndWithoutUnits:async(req,res) => {
+    try {
+      let orgId = req.orgId;
+
+      const { buildingPhaseId } = req.body;
+
+      let floor;
+
+      companyHavingProjects = await knex('floor_and_zones').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+      companyArr1 = companyHavingProjects.map(v => v.companyId)
+
+      if(req.query.areaName === 'common'){
+        if (buildingPhaseId) {
+          floor = await knex("floor_and_zones")
+            .leftJoin('property_units','floor_and_zones.id','property_units.floorZoneId')
+            .select("floor_and_zones.*")
+            .where({
+              'floor_and_zones.buildingPhaseId': buildingPhaseId, 'floor_and_zones.isActive': true, 'floor_and_zones.orgId': orgId })
+            .whereIn('floor_and_zones.companyId',companyArr1)
+            .groupBy(['floor_and_zones.id'])
+            
+        } else {
+          floor = await knex("floor_and_zones")
+            .leftJoin('property_units', 'floor_and_zones.id', 'property_units.floorZoneId')
+            .select([
+              'floor_and_zones.floorZoneCode as Floor/Zone',
+              'floor_and_zones.id as id'
+            ])
+            .where({ isActive: true, orgId: orgId })
+            .whereIn('floor_and_zones.companyId', companyArr1)
+            .groupBy(['floor_and_zones.id'])
+
+
+        }
+
+      } else {
+        floor = await knex("floor_and_zones")
+          .leftJoin('property_units', 'floor_and_zones.id', 'property_units.floorZoneId')
+          .select("floor_and_zones.*")
+          .where({
+            'floor_and_zones.buildingPhaseId': buildingPhaseId, 'floor_and_zones.isActive': true, 'floor_and_zones.orgId': orgId
+          })
+          .whereIn('floor_and_zones.companyId', companyArr1)
+          .groupBy(['floor_and_zones.id'])
+
+      }
+
+
+      return res.status(200).json({
+        data: {
+          floor
+        },
+        message: "Floor zone list"
+      });
+    } catch(err)  {
+      console.log(
+        "[controllers][propertysetup][getFloorZoneListByBuildingIdHavingPropertyUnits] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 };
 
