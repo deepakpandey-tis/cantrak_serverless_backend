@@ -3032,7 +3032,7 @@ const taskGroupController = {
                     'pm_task.taskGroupScheduleAssignAssetId': payload.taskGroupScheduleAssignAssetId,
                     'pm_task.orgId': req.orgId
                 })
-                .orderBy('pm_task.taskSerialNumber', 'asc');
+                .orderBy('pm_task.repeatFrequencyId', 'asc');
 
             tasks = tasks.map(v => {
 

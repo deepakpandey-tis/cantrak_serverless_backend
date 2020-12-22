@@ -1053,7 +1053,14 @@ const pmController = {
             let toDate = year + "-" + endMonth + "-" + lastDay;
 
 
+            // let start = new Date(Date.parse(fromDate));
+            // let end = new Date(Date.parse(toDate))
+
+            var allMonthsInPeriod = [];
+
             let monthDifference = moment(toDate).diff(fromDate, "months");
+
+
 
             // if (monthDifference > 3) {
 
@@ -1140,6 +1147,15 @@ const pmController = {
             let dates = genrateWork(p);
 
 
+            console.log("dates in dates",dates)
+            let monthArray = []
+            for(d of dates){
+                let months = moment(d).format('M')
+                monthArray.push(months)
+
+            }
+            console.log("month from date",monthArray)
+
             let arrMonth = [];
 
             let v = 0;
@@ -1155,14 +1171,52 @@ const pmController = {
 
             }
 
-
-
-            for (let i = startWeek; i <= endWeek; i++) {
-
-                arr.push({ "day": i })
-
+            for(let ma of monthArray){
+                if(ma == 1){
+                    arr.push('1','2','3','4','5')
+                }
+                if(ma == 2){
+                    arr.push('5','6','7','8','9')
+                }
+                if(ma == 3){
+                    arr.push('9','10','11','12','13')
+                }
+                if(ma == 4){
+                    arr.push('13','14','15','16','17','18')
+                }
+                if(ma == 5){
+                    arr.push('18','19','20','21','22')
+                }
+                if(ma == 6){
+                    arr.push('22','23','24','25','26')
+                }
+                if(ma == 7){
+                    arr.push('27','28','29','30','31')
+                }
+                if(ma == 8){
+                    arr.push('31','32','33','34','35')
+                }
+                if(ma == 9){
+                    arr.push('36','37','38','39','40')
+                }
+                if(ma == 10){
+                    arr.push('40','41','42','43','44')
+                }
+                if(ma == 11){
+                    arr.push('44','45','46','47','48')
+                }
+                if(ma == 12){
+                    arr.push('49','50','51','52','53')
+                }
             }
 
+            // for (let i = startWeek; i <= endWeek; i++) {
+
+            //     arr.push({ "day": i })
+
+            // }
+
+            // if(sta)
 
 
             let arr1 = [];
@@ -1192,6 +1246,7 @@ const pmController = {
                 endWeek,
                 fromDate,
                 toDate,
+                monthDifference
 
             })
 
