@@ -469,10 +469,32 @@ const singupController = {
           .transacting(trx);
         /*INSERT HOUSE ID CLOSE */
 
+
+        /* GET USER INFO */
+        DataResult = await knex("property_units")
+          .leftJoin("companies", "property_units.companyId", "=", "companies.id")
+          .leftJoin("projects", "property_units.projectId", "=", "projects.id")
+          .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "=", "buildings_and_phases.id")
+          .leftJoin("floor_and_zones", "property_units.floorZoneId", "=", "floor_and_zones.id")
+          .select(
+            "companies.companyName",
+            "projects.projectName",
+            "projects.project as projectCode",
+            "buildings_and_phases.buildingPhaseCode",
+            "buildings_and_phases.description as buildingPhaseDescription",
+            "floor_and_zones.floorZoneCode",
+            "floor_and_zones.description as floorZoneDescription",
+            "property_units.unitNumber as unit",           
+          )
+          .where({
+            "property_units.id": req.body.unitId           
+          }).first();
+        /* END */
+
+
         // Insert this users role as customer
         roleInserted = await knex('application_user_roles').insert({ userId: insertedUser[0].id, roleId: 4, createdAt: currentTime, updatedAt: currentTime, orgId: orgId })
           .returning(['*']).transacting(trx)
-
         let user = insertedUser[0]
         console.log('User: ', insertedUser)
         if (insertedUser && insertedUser.length) {
@@ -482,23 +504,65 @@ const singupController = {
           //   template: 'test-email.ejs',
           //   templateData: {
           //     fullName: user.name,
-          //     OTP: 'https://dj47f2ckirq9d.cloudfront.net/signup/verify-account/' + user.verifyToken
+          //     userName: user.userName,
+          //     emailId: user.email,
+          //     mobileNo: user.mobileNo,
+          //     gender: gender,
+          //     company: DataResult.companyName,
+          //     project: DataResult.projects,
+          //     building: DataResult.buildings_and_phases,
+          //     floor: DataResult.floorZoneCode,
+          //     unit: DataResult.unit,
+          //     OTP: 'http://localhost:4200/login/verify-account/' + user.verifyToken
           //   }
           // })
+
+          if(orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+            url = 'https://cbreconnect.servicemind.asia';
+            org = "CBRE Connect";         
+          }else if(orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+            url = 'https://senses.servicemind.asia';
+            org = "Senses";         
+          }else{
+            url = process.env.SITE_URL;
+            org = "ServiceMind";        
+          }
+
           let orgAdmins = await knex('application_user_roles')
             .select('userId')
             .where({ 'application_user_roles.orgId': orgId, roleId: 2 })
           let Parallel = require('async-parallel')
           let admins = await Parallel.map(orgAdmins, async admin => {
-            let adminres = await knex('users').where({ id: admin.userId }).select(['name', 'email']).first()
+          let adminres = await knex('users').where({ id: admin.userId }).select(['name', 'email']).first()
             return adminres;
           })
           for (let admin of admins) {
+            // await emailHelper.sendTemplateEmail({
+            //   to: admin.email,
+            //   subject: 'New user added to your organization',
+            //   template: 'message.ejs',
+            //   templateData: { fullName: admin.name, message: 'New user ' + insertedUser[0].name + ' added to your organization. username is ' + insertedUser[0].userName + '.' },
+            // })
             await emailHelper.sendTemplateEmail({
               to: admin.email,
-              subject: 'New user added to your organization',
-              template: 'message.ejs',
-              templateData: { fullName: admin.name, message: 'New user ' + insertedUser[0].name + ' added to your organization. username is ' + insertedUser[0].userName + '.' },
+              subject: 'New tenant signup in '+org,
+              template: 'test-email.ejs',
+              templateData: {
+                message: 'A new tenant has signed up in ' + org + ',please check the details and activate the account in order to allow the tenant to use the available services.',
+                fullName: admin.name,
+                userFullName:user.name,
+                userName: user.userName,
+                emailId: user.email,
+                mobileNo: user.mobileNo,
+                gender: user.gender,
+                company: DataResult.companyName,
+                project: DataResult.projectName,
+                building: DataResult.buildingPhaseCode,
+                floor: DataResult.floorZoneCode,
+                unit: DataResult.unit,
+                Org: org,
+                OTP: url +'/verify-account/' + user.verifyToken
+              }
             })
           }
 
@@ -520,7 +584,32 @@ const singupController = {
     try {
       let user = await knex('users').select('*').where({ verifyToken: req.params.token })
       if (user && user.length) {
-        await knex('users').update({ emailVerified: true }).where({ id: user[0].id })
+        await knex('users').update({ emailVerified: true,  isActive: true }).where({ id: user[0].id })
+        /* Send Mail To User After Verify Account By Admin */
+        let orgId = user[0].orgId;
+        if(orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+          url = 'https://cbreconnect.servicemind.asia';
+          org = "CBRE Connect";         
+        }else if(orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+          url = 'https://senses.servicemind.asia';
+          org = "Senses";         
+        }else{
+          url = process.env.SITE_URL;
+          org = "ServiceMind";        
+        }
+
+        await emailHelper.sendTemplateEmail({
+          to: user[0].email,
+          subject: 'Welcome to '+org,
+          template: 'welcome-org-user-email.ejs',
+          templateData: {
+             fullName: user[0].name,
+             Org: org,
+             urlData: url
+          }
+        })
+
+        /* End */
         return res.status(200).json({ verified: true, message: 'Successfully Verified!' })
       } else {
         return res.status(200).json({ verified: false, message: "Failed! Token Invalid." });
