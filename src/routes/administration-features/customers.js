@@ -3,6 +3,9 @@ const router = Router()
 const customerMiddleware = require('../../controllers/administration-features/customers')
 const authMiddleware = require('../../middlewares/auth')
 const roleMiddleware = require('../../middlewares/role')
+const trimmerSpace = require('../../middlewares/trimmerSpace');
+
+
 router.post('/get-customers',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
@@ -10,8 +13,8 @@ router.post('/get-customers',
 router.get('/reset-password', authMiddleware.isAuthenticated, customerMiddleware.resetPassword)
 router.post('/disassociate-house', authMiddleware.isAuthenticated, customerMiddleware.disassociateHouse)
 
-router.post('/create-customer', authMiddleware.isAuthenticated, customerMiddleware.createCustomer)
-router.post('/update-customer', authMiddleware.isAuthenticated, customerMiddleware.updateCustomer)
+router.post('/create-customer', authMiddleware.isAuthenticated, trimmerSpace.signUpTrimmer, customerMiddleware.createCustomer)
+router.post('/update-customer', authMiddleware.isAuthenticated, trimmerSpace.signUpTrimmer, customerMiddleware.updateCustomer)
 
 router.get('/export-tenant-data',
     authMiddleware.isAuthenticated,
@@ -23,7 +26,7 @@ router.post('/import-tenant-data',
     roleMiddleware.parseUserPermission,
     customerMiddleware.importTenantData)
 
-router.post('/get-tenant-list-by-multiple-unit',authMiddleware.isAuthenticated,customerMiddleware.getTenantListByMultiplePropertyUnits)
+router.post('/get-tenant-list-by-multiple-unit', authMiddleware.isAuthenticated, customerMiddleware.getTenantListByMultiplePropertyUnits)
 
 
 module.exports = router
