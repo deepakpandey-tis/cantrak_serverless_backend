@@ -582,9 +582,11 @@ const singupController = {
   },
   verifyAccount: async (req, res) => {
     try {
+      let currentTime = new Date().getTime();
+
       let user = await knex('users').select('*').where({ verifyToken: req.params.token })
       if (user && user.length) {
-        await knex('users').update({ emailVerified: true,  isActive: true }).where({ id: user[0].id })
+        await knex('users').update({ emailVerified: true,  isActive: true, activatedDate: currentTime }).where({ id: user[0].id })
         /* Send Mail To User After Verify Account By Admin */
         let orgId = user[0].orgId;
         if(orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
