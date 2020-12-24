@@ -1804,7 +1804,7 @@ const taskGroupController = {
                             if (req.body.workOrderDateTo && req.body.workOrderDateFrom) {
                                 let workDateFrom = moment(req.body.workOrderDateFrom).startOf('date');
                                 let workDateTo = moment(req.body.workOrderDateTo).endOf('date');
-                                //qb.whereRaw(`to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD') BETWEEN '${req.body.workOrderDateFrom}' and '${req.body.workOrderDateTo}' `);
+                                qb.whereRaw(`to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD') BETWEEN '${req.body.workOrderDateFrom}' and '${req.body.workOrderDateTo}' `);
                                 //qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
                             }
                             if (req.body.assetName && req.body.assetName.length > 0) {
@@ -1892,7 +1892,7 @@ const taskGroupController = {
                                 let workDateFrom = moment(req.body.workOrderDateFrom).startOf('date');
                                 let workDateTo = moment(req.body.workOrderDateTo).endOf('date');
                                 console.log("work order date from and to", req.body.workOrderDateTo, workDateTo)
-                              //  qb.whereRaw(`to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD') BETWEEN '${req.body.workOrderDateFrom}' and '${req.body.workOrderDateTo}' `)
+                                qb.whereRaw(`to_date(task_group_schedule_assign_assets."pmDate",  'YYYY-MM-DD') BETWEEN '${req.body.workOrderDateFrom}' and '${req.body.workOrderDateTo}'`)
 
                                 //qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
                             }
