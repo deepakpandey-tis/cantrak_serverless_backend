@@ -2530,16 +2530,20 @@ const serviceRequestController = {
           todayCreated = 'today';
         }
 
-        let serviceOrderData = await knex('service_orders').where({ "serviceRequestId": st["S Id"] });
-        
-
+        let serviceOrderData = await knex('service_orders').select('id').where({ "serviceRequestId": st["S Id"] }).first();
+        console.log("serviceOrder",serviceOrderData);
+        let serviceOrderAppointment;
+        if(serviceOrderData){
+           serviceOrderAppointment = await knex('service_appointments').where({ "serviceOrderId": serviceOrderData.id }).orderBy('service_appointments.id', 'desc').limit(1).first();
+        }
+  
         let imageResult = [];
         imageResult = await knex('images').where({ "entityId": st["S Id"], "entityType": "service_problems" });
         return {
           ...st,
           uploadImages: imageResult,
           todayCreated: todayCreated,
-          serviceOrder: serviceOrderData
+          serviceOrder: serviceOrderAppointment
         }
 
       })
