@@ -193,6 +193,8 @@ const buildingPhaseController = {
     },
     getBuildingInfoByBuildingId: async (req, res) => {
         try {
+
+            console.log("get bulding info", req.body)
             let payload = req.body
 
             const schema = Joi.object().keys({
@@ -1545,6 +1547,195 @@ const buildingPhaseController = {
             });
         }
     },
+    getBuildingPhaseAllListHavingPropertyUnitsAndWithoutUnits: async (req, res) => {
+        try {
+            let projectId = req.query.projectId;
+            let orgId = req.orgId;
+            console.log("projectId for building", projectId)
+
+            let buildingData = {};
+            //console.log(orgId);
+
+            let companyHavingProjects = []
+            let companyArr1 = []
+            let rows = []
+
+            if (req.query.areaName === 'common') {
+                companyHavingProjects = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+                companyArr1 = companyHavingProjects.map(v => v.companyId)
+                rows = await knex("buildings_and_phases")
+                    .innerJoin(
+                        "projects",
+                        "buildings_and_phases.projectId",
+                        "projects.id"
+                    )
+                    .innerJoin(
+                        "property_types",
+                        "buildings_and_phases.propertyTypeId",
+                        "property_types.id"
+                    )
+                    .leftJoin('property_units', 'buildings_and_phases.id', 'property_units.buildingPhaseId')
+                    .where({
+                        "buildings_and_phases.isActive": true,
+                        "buildings_and_phases.projectId": projectId,
+                        "buildings_and_phases.orgId": orgId,
+                       // 'property_units.type': 2
+                    })
+                    .select([
+                        "buildings_and_phases.id as id",
+                        "buildings_and_phases.buildingPhaseCode",
+                        "property_types.propertyType",
+                        "buildings_and_phases.description",
+                        "property_types.propertyTypeCode",
+                    ])
+                    .whereIn('projects.companyId', companyArr1)
+                    .groupBy(["buildings_and_phases.id",
+                        "buildings_and_phases.buildingPhaseCode",
+                        "property_types.propertyType",
+                        "buildings_and_phases.description",
+                        "property_types.propertyTypeCode",
+                    ])
+
+
+            } else
+                if (req.query.areaName === 'all' && projectId === '') {
+                    companyHavingProjects = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+                    companyArr1 = companyHavingProjects.map(v => v.companyId)
+                    rows = await knex("buildings_and_phases")
+                        .innerJoin(
+                            "projects",
+                            "buildings_and_phases.projectId",
+                            "projects.id"
+                        )
+                        .innerJoin(
+                            "property_types",
+                            "buildings_and_phases.propertyTypeId",
+                            "property_types.id"
+                        )
+                        .leftJoin('property_units', 'buildings_and_phases.id', 'property_units.buildingPhaseId')
+                        .where({
+                            "buildings_and_phases.isActive": true,
+                            "buildings_and_phases.orgId": orgId,
+                        })
+                        .select([
+                            "buildings_and_phases.id as id",
+                            "buildings_and_phases.buildingPhaseCode",
+                            "property_types.propertyType",
+                            "buildings_and_phases.description",
+                            "property_types.propertyTypeCode",
+                        ])
+                        .whereIn('projects.companyId', companyArr1)
+                        .groupBy(["buildings_and_phases.id",
+                            "buildings_and_phases.buildingPhaseCode",
+                            "property_types.propertyType",
+                            "buildings_and_phases.description",
+                            "property_types.propertyTypeCode",
+                        ])
+                } else
+                    if (req.query.areaName === 'all') {
+                        companyHavingProjects = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+                        companyArr1 = companyHavingProjects.map(v => v.companyId)
+                        rows = await knex("buildings_and_phases")
+                            .innerJoin(
+                                "projects",
+                                "buildings_and_phases.projectId",
+                                "projects.id"
+                            )
+                            .innerJoin(
+                                "property_types",
+                                "buildings_and_phases.propertyTypeId",
+                                "property_types.id"
+                            )
+                            .leftJoin('property_units', 'buildings_and_phases.id', 'property_units.buildingPhaseId')
+                            .where({
+                                "buildings_and_phases.isActive": true,
+                                //"buildings_and_phases.projectId": projectId,
+                                "buildings_and_phases.orgId": orgId,
+                            })
+                            .where(qb => {
+                                if (projectId == 'undefined') {
+
+                                } else {
+
+                                    qb.where('buildings_and_phases.projectId', projectId)
+
+                                }
+                            })
+                            .select([
+                                "buildings_and_phases.id as id",
+                                "buildings_and_phases.buildingPhaseCode",
+                                "property_types.propertyType",
+                                "buildings_and_phases.description",
+                                "property_types.propertyTypeCode",
+                            ])
+                            .whereIn('projects.companyId', companyArr1)
+                            .groupBy(["buildings_and_phases.id",
+                                "buildings_and_phases.buildingPhaseCode",
+                                "property_types.propertyType",
+                                "buildings_and_phases.description",
+                                "property_types.propertyTypeCode",
+                            ])
+                    } else {
+                        companyHavingProjects = await knex('projects').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+                        companyArr1 = companyHavingProjects.map(v => v.companyId)
+                        rows = await knex("buildings_and_phases")
+                            .innerJoin(
+                                "projects",
+                                "buildings_and_phases.projectId",
+                                "projects.id"
+                            )
+                            .innerJoin(
+                                "property_types",
+                                "buildings_and_phases.propertyTypeId",
+                                "property_types.id"
+                            )
+                            .leftJoin('property_units', 'buildings_and_phases.id', 'property_units.buildingPhaseId')
+                            .where({
+                                "buildings_and_phases.isActive": true,
+                                "buildings_and_phases.projectId": projectId,
+                                "buildings_and_phases.orgId": orgId,
+                               // 'property_units.type': 1
+                            })
+                            .select([
+                                "buildings_and_phases.id as id",
+                                "buildings_and_phases.buildingPhaseCode",
+                                "property_types.propertyType",
+                                "buildings_and_phases.description",
+                                "property_types.propertyTypeCode",
+                            ])
+                            .whereIn('projects.companyId', companyArr1)
+                            .groupBy(["buildings_and_phases.id",
+                                "buildings_and_phases.buildingPhaseCode",
+                                "property_types.propertyType",
+                                "buildings_and_phases.description",
+                                "property_types.propertyTypeCode",
+                            ])
+
+
+                        console.log('BUILDING LIST:******************************************************************* ', rows)
+                    }
+
+
+            buildingData.data = rows;
+
+            return res.status(200).json({
+                data: {
+                    buildingPhases: buildingData
+                },
+                message: "Building Phases List!"
+            });
+        } catch (err) {
+            console.log(
+                "[controllers][generalsetup][viewbuildingPhase] :  Error",
+                err
+            );
+            //trx.rollback
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
+    },
+    
     getBuildingPhaseById: async (req, res) => {
         try {
             let id = req.body.id

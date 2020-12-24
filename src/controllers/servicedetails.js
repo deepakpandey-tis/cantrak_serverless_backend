@@ -518,7 +518,7 @@ const serviceDetailsController = {
           .leftJoin("images", "service_requests.id", "images.entityId")
           .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
           .leftJoin('users as u', 'service_requests.cancelledBy', 'u.id')
-
+          .leftJoin('service_orders', 'service_requests.id', 'service_orders.serviceRequestId')
           .select(
             "companies.companyName",
             "projects.projectName",
@@ -548,7 +548,8 @@ const serviceDetailsController = {
             "property_types.descriptionEng as propertyDescription",
             'status.descriptionEng as Status',
             "service_requests.displayId as SRS",
-            "companies.id as comId"
+            "companies.id as comId",
+            'service_orders.comment'
 
           )
           .where({
@@ -1876,8 +1877,8 @@ const serviceDetailsController = {
       let displayId = req.query.displayId;
 
       let result;
-     
-       result = await knex.from('service_requests').select('id').where({ displayId: displayId ,orgId:req.orgId}).first();
+
+      result = await knex.from('service_requests').select('id').where({ displayId: displayId, orgId: req.orgId }).first();
 
       return res.status(200).json({
         data: result

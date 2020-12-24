@@ -2833,9 +2833,11 @@ const serviceRequestController = {
         try {
             let unitResult;
             let userResult;
+            let serviceResult;
             await knex.transaction(async trx => {
                 let orgId = req.orgId;
                 let unitId = req.query.unitId;
+                let serviceRequestId = req.query.serviceRequestId;
                 // let result = await knex
                 //   .from("property_units")
                 //   .select("*")
@@ -2856,6 +2858,25 @@ const serviceRequestController = {
                         .select("name", "email", "mobileNo", "id as userId")
                         .where({ "users.id": houseResult[0].userId });
                     userResult = user[0];
+                } else {
+
+                    serviceResult = await knex('service_requests')
+                        .where(qb => {
+                           // if (req.query.serviceRequestId) {
+                                qb.where('id', req.query.serviceRequestId)
+                            //}
+                            qb.where({ orgId: req.orgId })
+                        })
+
+                    if (serviceResult && serviceResult.length) {
+
+                        let user2 = await knex
+                            .from("users")
+                            .select("name", "email", "mobileNo", "id as userId")
+                            .where({ "users.id": serviceResult[0].createdBy });
+                        userResult = user2[0];
+                    }
+
                 }
             });
             return res.status(200).json({
@@ -3117,7 +3138,7 @@ const serviceRequestController = {
                         location: payload.location,
                         priority: priority,
                         serviceStatusCode: "O",
-                        createdBy: req.me.id,
+                        // createdBy: req.me.id,
                         orgId: orgId,
                         createdAt: currentTime,
                         updatedAt: currentTime,
@@ -3132,13 +3153,13 @@ const serviceRequestController = {
                         // requestedBy: payload.userId,
                         serviceType: payload.serviceType,
                         location: payload.location,
-                        createdBy: req.me.id,
+                        //createdBy: req.me.id,
                         priority: priority,
                         serviceStatusCode: "O",
                         orgId: orgId,
                         createdAt: currentTime,
                         updatedAt: currentTime,
-                        createdBy: req.me.id,
+                        //createdBy: req.me.id,
                         requestedBy: requestId
                     };
                 }
@@ -3365,6 +3386,13 @@ const serviceRequestController = {
                 await knex("service_requests")
                     .update({ serviceStatusCode: updateStatus, updatedAt: currentTime })
                     .where({ id: serviceRequestId });
+
+                if (updateStatus === 'OH') {
+                    await knex("service_orders")
+                        .update({ comment: comments, updatedAt: currentTime })
+                        .where({ serviceRequestId: serviceRequestId });
+                }
+
             }
 
 

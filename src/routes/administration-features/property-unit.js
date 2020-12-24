@@ -66,6 +66,8 @@ router.post("/check-house-id",
   authMiddleware.isAuthenticated,
   propertyUnitController.checkHouseId);
 
+router.post("/get-building-and-unit",authMiddleware.isAuthenticated,propertyUnitController.getUnitAndBuildingByUserId)
+
 
 /**IMPORT property unit DATA */
 let tempraryDirectory = null;

@@ -480,539 +480,7 @@ const serviceRequestController = {
   },
 
 
-  getServiceRequestList: async (req, res) => {
-    // We will get service request list
-    try {
-      let reqData = req.query;
-      let {
-        assignedTo,
-        closingDate,
-        completedBy,
-        description,
-        dueDateFrom,
-        dueDateTo,
-        location,
-        priority,
-        requestedBy,
-        serviceFrom,
-        serviceId,
-        serviceTo,
-        serviceType,
-        status,
-        unit
-      } = req.body;
-      let total, rows;
-
-      console.log("customerInfo", req.me.id);
-      console.log("customerHouseInfo", req.me.houseIds);
-      let houseIds = req.me.houseIds;
-
-      let pagination = {};
-      let per_page = reqData.per_page || 10;
-      let page = reqData.current_page || 1;
-      if (page < 1) page = 1;
-      let offset = (page - 1) * per_page;
-
-      let filters = {};
-      if (description) {
-        filters["service_requests.description"] = description;
-      }
-
-      // completedOn -> null means due
-      // serviceFrom -serviceTo = createdAt
-
-      // Service ID
-      if (serviceId) {
-        filters["service_requests.displayId"] = serviceId;
-      }
-
-      // Location
-      if (location) {
-        filters["service_requests.location"] = location;
-      }
-      //  Service Status
-      if (status) {
-        filters["service_requests.serviceStatusCode"] = status;
-      }
-
-      // Service From Data & to Date
-      let serviceFromDate, serviceToDate;
-      if (serviceFrom && serviceTo) {
-        serviceFromDate = new Date(serviceFrom).getTime();
-        serviceToDate = new Date(serviceTo).getTime();
-      } else if (serviceFrom && !serviceTo) {
-        serviceFromDate = new Date(serviceFrom).getTime();
-        serviceToDate = new Date("2030-01-01").getTime();
-      } else if (!serviceFrom && serviceTo) {
-        serviceFromDate = new Date("2000-01-01").getTime();
-        serviceToDate = new Date(serviceTo).getTime();
-      }
-
-      if (closingDate) {
-        filters["service_requests.completedOn"] = closingDate;
-      }
-
-      if (priority) {
-        filters["service_requests.priority"] = priority;
-      }
-
-      if (unit) {
-        filters["property_units.id"] = unit;
-      }
-
-      if (serviceType) {
-        filters["service_requests.serviceType"] = serviceType;
-      }
-
-      if (completedBy) {
-        filters["service_requests.closedBy"] = completedBy;
-      }
-
-      if (assignedTo) {
-        filters["assigned_service_team.userId"] = assignedTo;
-      }
-
-      if (requestedBy) {
-        filters["service_requests.requestedBy"] = requestedBy;
-      }
-      let dueFrom, dueTo;
-      if (dueDateFrom && dueDateTo) {
-        dueFrom = new Date(dueDateFrom).getTime()
-        dueTo = new Date(dueDateTo).getTime()
-      }
-
-      // if (_.isEmpty(filters) && _.isEmpty(serviceFrom && serviceTo) && _.isEmpty(dueDateFrom && dueDateTo)) {
-
-      [total, rows] = await Promise.all([
-        knex
-          .count("* as count")
-          .from("service_requests")
-          .leftJoin(
-            "property_units",
-            "service_requests.houseId",
-            "property_units.id"
-          )
-          .leftJoin(
-            "requested_by",
-            "service_requests.requestedBy",
-            "requested_by.id"
-          )
-
-          .leftJoin(
-            "service_status AS status",
-            "service_requests.serviceStatusCode",
-            "status.statusCode"
-          )
-
-          .leftJoin(
-            "service_problems",
-            "service_requests.id",
-            "service_problems.serviceRequestId"
-          )
-          .leftJoin(
-            "incident_categories",
-            "service_problems.categoryId",
-            "incident_categories.id"
-          )
-          .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
-          .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
-          .select([
-            "service_requests.id as S Id",
-            "service_requests.houseId as houseId",
-            "service_requests.description as Description",
-            "service_requests.priority as Priority",
-            "status.descriptionEng as Status",
-            "property_units.unitNumber as Unit No",
-            "requested_by.name as Requested By",
-            "service_requests.createdAt as Date Created",
-            "service_requests.displayId as SR#",
-            "incident_categories.categoryCode",
-            "incident_categories.descriptionEng as categoryDescription",
-            "property_units.unitNumber",
-            "service_problems.id as serviceProblemId",
-            'buildings_and_phases.buildingPhaseCode',
-            'buildings_and_phases.description as buildingDescription',
-            'floor_and_zones.floorZoneCode',
-            'floor_and_zones.description as floorDescription'
-
-
-          ])
-          .groupBy([
-            "service_requests.id",
-            "property_units.id",
-            "status.id",
-            "requested_by.id",
-            "service_problems.id",
-            "incident_categories.id",
-            'buildings_and_phases.id',
-            'floor_and_zones.id'
-
-          ])
-          .where(qb => {
-            if (serviceId) {
-              qb.where('service_requests.displayId', serviceId)
-            }
-
-            if (status) {
-              qb.where('service_requests.serviceStatusCode', status)
-            }
-
-            if (location) {
-              qb.where('service_requests.location', 'iLIKE', `%${location}%`)
-            }
-
-            if (description) {
-              qb.where('service_requests.description', 'iLIKE', `%${description}%`)
-            }
-
-            if (priority) {
-              qb.where("service_requests.priority", priority);
-            }
-
-            if (serviceFrom && serviceTo) {
-              qb.whereBetween("service_requests.createdAt", [
-                serviceFrom,
-                serviceTo
-              ]);
-            }
-
-            // if (dueDateFrom && dueDateTo) {
-            //   qb.whereBetween("service_requests.createdAt", [
-            //     dueFrom,
-            //     dueTo
-            //   ]);
-
-            // }
-            //qb.where(filters);
-          })
-          .where({ "service_requests.orgId": req.orgId })
-          .whereIn("service_requests.houseId", houseIds)
-          .orWhere("service_requests.createdBy", req.me.id)
-          .distinct('service_requests.displayId')
-          .orderBy('service_requests.createdAt', 'desc')
-
-        ,
-
-        knex
-          .from("service_requests")
-          .leftJoin(
-            "property_units",
-            "service_requests.houseId",
-            "property_units.id"
-          )
-          .leftJoin(
-            "requested_by",
-            "service_requests.requestedBy",
-            "requested_by.id"
-          )
-          .leftJoin(
-            "service_status AS status",
-            "service_requests.serviceStatusCode",
-            "status.statusCode"
-          )
-          .leftJoin(
-            "service_problems",
-            "service_requests.id",
-            "service_problems.serviceRequestId"
-          )
-          .leftJoin(
-            "incident_categories",
-            "service_problems.categoryId",
-            "incident_categories.id"
-          )
-          .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
-          .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
-          .select([
-            "service_requests.id as S Id",
-            "service_requests.houseId as houseId",
-            "service_requests.description as Description",
-            "service_requests.priority as Priority",
-            "status.descriptionEng as Status",
-            "property_units.unitNumber as Unit No",
-            "requested_by.name as Requested By",
-            "service_requests.createdAt as Date Created",
-            "service_requests.displayId as SR#",
-            "incident_categories.categoryCode",
-            "incident_categories.descriptionEng as categoryDescription",
-            "property_units.unitNumber",
-            "service_problems.id as serviceProblemId",
-            'buildings_and_phases.buildingPhaseCode',
-            'buildings_and_phases.description as buildingDescription',
-            'floor_and_zones.floorZoneCode',
-            'floor_and_zones.description as floorDescription'
-          ])
-          .offset(offset)
-          .limit(per_page)
-          .groupBy([
-            "service_requests.id",
-            "property_units.id",
-            "status.id",
-            "requested_by.id",
-            "service_problems.id",
-            "incident_categories.id",
-            'buildings_and_phases.id',
-            'floor_and_zones.id'
-
-          ])
-          .where(qb => {
-            if (serviceId) {
-              qb.where('service_requests.displayId', serviceId)
-            }
-
-            if (status) {
-              qb.where('service_requests.serviceStatusCode', status)
-            }
-
-            if (location) {
-              qb.where('service_requests.location', 'iLIKE', `%${location}%`)
-            }
-
-            if (description) {
-              qb.where('service_requests.description', 'iLIKE', `%${description}%`)
-            }
-
-            if (priority) {
-              qb.where("service_requests.priority", priority);
-            }
-
-            if (serviceFrom && serviceTo) {
-              qb.whereBetween("service_requests.createdAt", [
-                serviceFrom,
-                serviceTo
-              ]);
-            }
-
-            // if (dueDateFrom && dueDateTo) {
-            //   qb.whereBetween("service_requests.createdAt", [
-            //     dueFrom,
-            //     dueTo
-            //   ]);
-
-            // }
-            //qb.where(filters);
-
-          })
-          .where({ "service_requests.orgId": req.orgId })
-          .whereIn("service_requests.houseId", houseIds)
-          .orWhere("service_requests.createdBy", req.me.id)
-          .distinct('service_requests.displayId')
-          .orderBy('service_requests.createdAt', 'desc')
-
-      ]);
-
-      // } else {
-
-      //   [total, rows] = await Promise.all([
-      //     knex
-      //       .count("* as count")
-      //       .from("service_requests")
-      //       .leftJoin(
-      //         "property_units",
-      //         "service_requests.houseId",
-      //         "property_units.id"
-      //       )
-
-      //       .leftJoin(
-      //         "assigned_service_team",
-      //         "service_requests.id",
-      //         "assigned_service_team.entityId"
-      //       )
-      //       .leftJoin(
-      //         "requested_by",
-      //         "service_requests.requestedBy",
-      //         "requested_by.id"
-      //       )
-      //       .leftJoin(
-      //         "service_status AS status",
-      //         "service_requests.serviceStatusCode",
-      //         "status.statusCode"
-      //       )
-      //       .select([
-      //         "service_requests.id as S Id",
-      //         "service_requests.description as Description",
-      //         "service_requests.priority as Priority",
-      //         "status.descriptionEng as Status",
-      //         "property_units.unitNumber as Unit No",
-      //         "requested_by.name as Requested By",
-      //         "service_requests.createdAt as Date Created",
-      //         "service_requests.displayId as SR#"
-      //       ])
-      //       .where({ "service_requests.orgId": req.orgId })
-      //       .where(qb => {
-
-      //         if (serviceId) {
-      //           qb.where('service_requests.displayId', serviceId)
-      //         }
-
-      //         if (status) {
-      //           qb.where('service_requests.serviceStatusCode', status)
-      //         }
-
-      //         if (location) {
-      //           qb.where('service_requests.location', 'iLIKE', `%${location}%`)
-      //         }
-
-      //         if (priority) {
-      //           qb.where("service_requests.priority", priority);
-      //         }
-
-      //         if (description) {
-      //           qb.where('service_requests.description', 'iLIKE', `%${description}%`)
-      //         }
-      //         if (serviceFromDate && serviceToDate) {
-      //           qb.whereBetween("service_requests.createdAt", [
-      //             serviceFromDate,
-      //             serviceToDate
-      //           ]);
-      //         }
-      //         if (dueDateFrom && dueDateTo) {
-      //           console.log("dsfsdfsdfsdfsdfffffffffffffffffff=========")
-      //           qb.whereBetween("service_requests.createdAt", [
-      //             dueFrom,
-      //             dueTo
-      //           ]);
-      //           qb.where({ closedBy: "" })
-      //         }
-      //         //qb.where(filters);
-      //       })
-      //       .whereIn("service_requests.houseId", houseIds)
-      //       .orWhere("service_requests.createdBy", req.me.id)
-      //       .groupBy([
-      //         "service_requests.id",
-      //         "requested_by.id",
-      //         "status.id",
-      //         // "service_problems.id",
-      //         // "incident_categories.id",
-      //         "property_units.id"
-      //       ])
-      //       .distinct('service_requests.displayId'),
-      //     knex
-      //       .from("service_requests")
-      //       .leftJoin(
-      //         "property_units",
-      //         "service_requests.houseId",
-      //         "property_units.id"
-      //       )
-      //       .leftJoin(
-      //         "assigned_service_team",
-      //         "service_requests.id",
-      //         "assigned_service_team.entityId"
-      //       )
-      //       .leftJoin(
-      //         "requested_by",
-      //         "service_requests.requestedBy",
-      //         "requested_by.id"
-      //       )
-      //       .leftJoin(
-      //         "service_status AS status",
-      //         "service_requests.serviceStatusCode",
-      //         "status.statusCode"
-      //       )
-
-      //       .select([
-      //         "service_requests.id as S Id",
-      //         "service_requests.description as Description",
-      //         "service_requests.priority as Priority",
-      //         "status.descriptionEng as Status",
-      //         "property_units.unitNumber as Unit No",
-      //         "requested_by.name as Requested By",
-      //         "service_requests.createdAt as Date Created",
-      //         "service_requests.displayId as SR#"
-      //       ])
-      //       .where({ "service_requests.orgId": req.orgId })
-      //       .where(qb => {
-      //         if (serviceId) {
-      //           qb.where('service_requests.displayId', serviceId)
-      //         }
-
-      //         if (status) {
-      //           qb.where('service_requests.serviceStatusCode', status)
-      //         }
-
-      //         if (location) {
-      //           qb.where('service_requests.location', 'iLIKE', `%${location}%`)
-      //         }
-
-      //         if (description) {
-      //           qb.where('service_requests.description', 'iLIKE', `%${description}%`)
-      //         }
-
-      //         if (priority) {
-      //           qb.where("service_requests.priority", priority);
-      //         }
-
-      //         if (serviceFromDate && serviceToDate) {
-      //           qb.whereBetween("service_requests.createdAt", [
-      //             serviceFromDate,
-      //             serviceToDate
-      //           ]);
-      //         }
-
-      //         if (dueDateFrom && dueDateTo) {
-      //           qb.whereBetween("service_requests.createdAt", [
-      //             dueFrom,
-      //             dueTo
-      //           ]);
-      //           qb.where({ closedBy: "" })
-      //         }
-      //         //qb.where(filters);
-      //       })
-      //       .whereIn("service_requests.houseId", houseIds)
-      //       .orWhere("service_requests.createdBy", req.me.id)
-      //       .offset(offset)
-      //       .limit(per_page)
-      //       .distinct('service_requests.displayId')
-
-      //   ]);
-      // }
-
-      let count = total.length;
-      pagination.total = count;
-      pagination.per_page = per_page;
-      pagination.offset = offset;
-      pagination.to = offset + rows.length;
-      pagination.last_page = Math.ceil(count / per_page);
-      pagination.current_page = page;
-      pagination.from = offset;
-      pagination.data = rows;
-
-      const Parallel = require('async-parallel');
-      pagination.data = await Parallel.map(rows, async (st) => {
-
-        let todayCreated = '';
-        let currentDate = moment().format('YYYY-MM-DD');
-        let createdDate = moment(+st['Date Created']).format('YYYY-MM-DD');
-
-        if (currentDate === createdDate) {
-          todayCreated = 'today';
-        }
-
-
-
-        let imageResult = [];
-        imageResult = await knex('images').where({ "entityId": st["S Id"], "entityType": "service_requests"});
-        return {
-          ...st,
-          uploadImages: imageResult,
-          todayCreated: todayCreated,
-        }
-
-      })
-
-      return res.status(200).json({
-        data: {
-          service_requests: pagination,
-          house: req.me.houseIds
-        },
-        message: "Service Request List!"
-      });
-    } catch (err) {
-      console.log("[controllers][service][request] :  Error", err);
-      return res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-      });
-    }
-  },
+ 
 
 
   getPropertyUnits: async (req, res) => {
@@ -1278,7 +746,7 @@ const serviceRequestController = {
     try {
       let result;
       let orgId = req.orgId;
-      let payload = _.omit(req.body, ["images", "isSo", "mobile", "email", "name", 'company', 'project', 'floor', 'userId']);
+      let payload = _.omit(req.body, ["images", "isSo", "mobile", "email", "name", 'company', 'floor', 'userId']);
 
       await knex.transaction(async trx => {
         let schema;
@@ -1297,7 +765,7 @@ const serviceRequestController = {
             house: Joi.string().allow('').optional(),
             location: Joi.string().allow("").optional(),
             locationTags: Joi.array().items(Joi.string().optional()),
-            project: Joi.string().allow('').optional(),
+            project: Joi.string().required(),
             serviceType: Joi.string().allow("").optional(),
             unit: Joi.string().required(),
             userId: Joi.string().allow("").optional(),
@@ -1328,7 +796,7 @@ const serviceRequestController = {
             house: Joi.string().allow('').optional(),
             location: Joi.string().allow("").optional(),
             locationTags: Joi.array().items(Joi.string().optional()),
-            //project: Joi.string().required(),
+            project: Joi.string().required(),
             serviceType: Joi.string().allow("").optional(),
             unit: Joi.string().allow("").optional(),
             userId: Joi.string().allow("").optional(),
@@ -1387,9 +855,9 @@ const serviceRequestController = {
 
 
         let propertyUnit = await knex
-          .select(['companyId', 'projectId'])
-          .where({ id: payload.house })
-          .into("property_units").first();
+          .select(['companyId', 'id'])
+          .where({ id: payload.project })
+          .into("projects").first();
 
 
         let insertData;
@@ -2221,8 +1689,8 @@ const serviceRequestController = {
         buildingArr = propertyUnit.map(v => v.buildingPhaseId);
 
 
-        // companyHavingProjects = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
-        // companyArr1 = companyHavingProjects.map(v => v.companyId)
+        companyHavingProjects = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+        companyArr1 = companyHavingProjects.map(v => v.companyId)
         rows = await knex("buildings_and_phases")
           .innerJoin(
             "projects",
@@ -2237,7 +1705,7 @@ const serviceRequestController = {
           .innerJoin('property_units', 'buildings_and_phases.id', 'property_units.buildingPhaseId')
           .where({
             "buildings_and_phases.isActive": true,
-            //"buildings_and_phases.projectId": projectId,
+            "buildings_and_phases.projectId": projectId,
             "buildings_and_phases.orgId": orgId,
             'property_units.type': 2
           })
@@ -2248,8 +1716,8 @@ const serviceRequestController = {
             "buildings_and_phases.description",
             "property_types.propertyTypeCode",
           ])
-          .whereIn('buildings_and_phases.id', buildingArr)
-          //.whereIn('projects.companyId', companyArr1)
+          //.whereIn('buildings_and_phases.id', buildingArr)
+          .whereIn('projects.companyId', companyArr1)
           .groupBy(["buildings_and_phases.id",
             "buildings_and_phases.buildingPhaseCode",
             "property_types.propertyType",
@@ -2388,17 +1856,18 @@ const serviceRequestController = {
       let houseIds = req.me.houseIds;
 
 
-      const { floorZoneId, type } = req.body;
+      const { projectId, buildingPhaseId, type } = req.body;
       let unit;
       if (type == 2) {
 
         unit = await knex("property_units")
           .select("*")
-          .where({ "buildingPhaseId": floorZoneId, orgId: orgId, isActive: true, type: type });
+          .where({ "buildingPhaseId": buildingPhaseId, orgId: orgId, isActive: true, type: type });
       } else if (type == 1) {
 
         unit = await knex("property_units")
           .select("*")
+          .where({ projectId })
           .whereIn('property_units.id', houseIds)
           .where({ orgId: orgId, isActive: true, type: type });
 
@@ -2428,9 +1897,9 @@ const serviceRequestController = {
 
       let pagination = {}
       console.log("companyId", companyId);
-      let companyHavingProjects = []
-      let companyArr1 = []
-      let rows = []
+      let companyHavingProjects = [];
+      let companyArr1 = [];
+      let rows = [];
       let pId;
       pId = await knex
         .from("user_house_allocation")
@@ -2444,7 +1913,9 @@ const serviceRequestController = {
         rows = await knex("projects")
           .innerJoin('companies', 'projects.companyId', 'companies.id')
           .innerJoin('property_units', 'projects.id', 'property_units.projectId')
-          .where({ "projects.companyId": companyId, "projects.isActive": true, 'property_units.type': 2 })
+          //.where({ "projects.isActive": true, 'property_units.type': 2 })
+          .where({ "projects.isActive": true })
+          //.where({ "projects.companyId": companyId, "projects.isActive": true, 'property_units.type': 2 })
           .whereIn('projects.companyId', companyArr1)
           .where('property_units.id', pId.houseId)
           .select([
@@ -2468,7 +1939,8 @@ const serviceRequestController = {
         rows = await knex("projects")
           .innerJoin('companies', 'projects.companyId', 'companies.id')
           .innerJoin('property_units', 'projects.id', 'property_units.projectId')
-          .where({ "projects.companyId": companyId, "projects.isActive": true, 'property_units.type': 1 })
+          .where({ "projects.isActive": true, 'property_units.type': 1 })
+          //.where({ "projects.companyId": companyId, "projects.isActive": true, 'property_units.type': 1 })
           .whereIn('projects.companyId', companyArr1)
           .where('property_units.id', pId.houseId)
           .select([
@@ -2964,284 +2436,216 @@ const serviceRequestController = {
     }
 
   },
-  /*GET SERVICE APPOINTMENT LIST */
-  getServiceAppointmentList: async (req, res) => {
 
+  getServiceRequestList: async (req, res) => {
+    // We will get service request list
     try {
-      let reqData = req.query;
-      let {
-        assignedTo,
-        closingDate,
-        completedBy,
-        description,
-        dueDateFrom,
-        dueDateTo,
-        location,
-        priority,
-        requestedBy,
-        serviceFrom,
-        serviceId,
-        serviceTo,
-        serviceType,
-        status,
-        unit
-      } = req.body;
-      let total, rows;
+
+      let rows;
 
       console.log("customerInfo", req.me.id);
       console.log("customerHouseInfo", req.me.houseIds);
       let houseIds = req.me.houseIds;
 
       let pagination = {};
-      let per_page = reqData.per_page || 10;
-      let page = reqData.current_page || 1;
-      if (page < 1) page = 1;
-      let offset = (page - 1) * per_page;
+
+      rows = await knex
+        .from("service_requests")       
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "requested_by",
+          "service_requests.requestedBy",
+          "requested_by.id"
+        )
+        .leftJoin(
+          "service_status AS status",
+          "service_requests.serviceStatusCode",
+          "status.statusCode"
+        )
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+        .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
+        .select([
+          "service_requests.id as S Id",
+          "service_requests.houseId as houseId",
+          "service_requests.description as Description",
+          "service_requests.priority as Priority",
+          "status.descriptionEng as Status",
+          "service_requests.serviceStatusCode",
+          "property_units.unitNumber as Unit No",
+          "requested_by.name as Requested By",
+          "service_requests.createdAt as Date Created",
+          "service_requests.displayId as SR#",
+          "incident_categories.categoryCode",
+          "incident_categories.descriptionEng as categoryDescription",
+          "property_units.unitNumber",
+          "service_problems.id as serviceProblemId",
+          'buildings_and_phases.buildingPhaseCode',
+          'buildings_and_phases.description as buildingDescription',
+          'floor_and_zones.floorZoneCode',
+          'floor_and_zones.description as floorDescription'
+        ])
+        .groupBy([
+          "service_requests.id",
+          "property_units.id",
+          "status.id",
+          "requested_by.id",
+          "service_problems.id",
+          "incident_categories.id",
+          'buildings_and_phases.id',
+          'floor_and_zones.id'
+
+        ])
+        .where({ "service_requests.orgId": req.orgId })
+        .whereIn("service_requests.houseId", houseIds)
+        .orWhere("service_requests.createdBy", req.me.id)
+        .distinct('service_requests.displayId')
+        .orderBy('service_requests.createdAt', 'desc')
 
 
+      pagination.data = rows;
 
-      [total, rows] = await Promise.all([
-        knex
+      const Parallel = require('async-parallel');
+      pagination.data = await Parallel.map(rows, async (st) => {
 
-          .count("* as count")
-          .from("service_orders")
-          .leftJoin(
-            "service_requests",
-            "service_orders.serviceRequestId",
-            "service_requests.id"
-          )
-          .leftJoin(
-            "property_units",
-            "service_requests.houseId",
-            "property_units.id"
-          )
-          .leftJoin(
-            "requested_by",
-            "service_requests.requestedBy",
-            "requested_by.id"
-          )
+        console.log("st+++++-----", st);
+        let todayCreated = '';
+        let currentDate = moment().format('YYYY-MM-DD');
+        let createdDate = moment(+st['Date Created']).format('YYYY-MM-DD');
 
-          .leftJoin(
-            "service_status AS status",
-            "service_requests.serviceStatusCode",
-            "status.statusCode"
-          )
+        if (currentDate === createdDate) {
+          todayCreated = 'today';
+        }
 
-          .leftJoin(
-            "service_problems",
-            "service_requests.id",
-            "service_problems.serviceRequestId"
-          )
-          .leftJoin(
-            "incident_categories",
-            "service_problems.categoryId",
-            "incident_categories.id"
-          )
-          .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
-          .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
-          .select([
-            'service_orders.id as soId',
-            "service_requests.id as S Id",
-            "service_requests.houseId as houseId",
-            "service_requests.description as Description",
-            "service_requests.priority as Priority",
-            "status.descriptionEng as Status",
-            "property_units.unitNumber as Unit No",
-            "requested_by.name as Requested By",
-            "service_requests.createdAt as Date Created",
-            "service_requests.displayId as SR#",
-            "incident_categories.categoryCode",
-            "incident_categories.descriptionEng as categoryDescription",
-            "property_units.unitNumber",
-            "service_problems.id as serviceProblemId",
-            'buildings_and_phases.buildingPhaseCode',
-            'buildings_and_phases.description as buildingDescription',
-            'floor_and_zones.floorZoneCode',
-            'floor_and_zones.description as floorDescription',
-            'service_orders.createdAt',
-            'service_orders.displayId'
-          ])
-          .groupBy([
-            'service_orders.id',
-            "service_requests.id",
-            "property_units.id",
-            "status.id",
-            "requested_by.id",
-            "service_problems.id",
-            "incident_categories.id",
-            'buildings_and_phases.id',
-            'floor_and_zones.id'
-          ])
-          .where(qb => {
-            if (serviceId) {
-              qb.where('service_requests.displayId', serviceId)
-            }
+        let serviceOrderData = await knex('service_orders').where({ "serviceRequestId": st["S Id"] });
+        
 
-            if (status) {
-              qb.where('service_requests.serviceStatusCode', status)
-            }
+        let imageResult = [];
+        imageResult = await knex('images').where({ "entityId": st["S Id"], "entityType": "service_problems" });
+        return {
+          ...st,
+          uploadImages: imageResult,
+          todayCreated: todayCreated,
+          serviceOrder: serviceOrderData
+        }
 
-            if (location) {
-              qb.where('service_requests.location', 'iLIKE', `%${location}%`)
-            }
+      })
 
-            if (description) {
-              qb.where('service_requests.description', 'iLIKE', `%${description}%`)
-            }
+      return res.status(200).json({
+        data: {
+          service_requests: pagination,
+          house: req.me.houseIds
+        },
+        message: "Service Request List!"
+      });
+    } catch (err) {
+      console.log("[controllers][service][request] :  Error", err);
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  /*GET SERVICE APPOINTMENT LIST */
+  getServiceAppointmentList: async (req, res) => {
 
-            if (priority) {
-              qb.where("service_requests.priority", priority);
-            }
+    try {
 
-            if (serviceFrom && serviceTo) {
-              qb.whereBetween("service_requests.createdAt", [
-                serviceFrom,
-                serviceTo
-              ]);
-            }
+      let rows;
+      console.log("customerInfo", req.me.id);
+      console.log("customerHouseInfo", req.me.houseIds);
+      let houseIds = req.me.houseIds;
+      let pagination = {};
 
-            // if (dueDateFrom && dueDateTo) {
-            //   qb.whereBetween("service_requests.createdAt", [
-            //     dueFrom,
-            //     dueTo
-            //   ]);
+      rows = await knex
+        .from("service_orders")
+        .leftJoin(
+          "service_requests",
+          "service_orders.serviceRequestId",
+          "service_requests.id"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "requested_by",
+          "service_requests.requestedBy",
+          "requested_by.id"
+        )
+        .leftJoin(
+          "service_status AS status",
+          "service_requests.serviceStatusCode",
+          "status.statusCode"
+        )
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+        .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
+        .select([
+          'service_orders.id as soId',
+          "service_requests.id as S Id",
+          "service_requests.houseId as houseId",
+          "service_requests.description as Description",
+          "service_requests.priority as Priority",
+          "status.descriptionEng as Status",
+          "property_units.unitNumber as Unit No",
+          "requested_by.name as Requested By",
+          "service_requests.createdAt as Date Created",
+          "service_requests.displayId as SR#",
+          "incident_categories.categoryCode",
+          "incident_categories.descriptionEng as categoryDescription",
+          "property_units.unitNumber",
+          "service_problems.id as serviceProblemId",
+          'buildings_and_phases.buildingPhaseCode',
+          'buildings_and_phases.description as buildingDescription',
+          'floor_and_zones.floorZoneCode',
+          'floor_and_zones.description as floorDescription',
+          'service_orders.displayId',
+          'service_orders.orderDueDate',
+          'service_orders.createdAt',
 
-            // }
-            //qb.where(filters);
-          })
-          .where({ "service_orders.orgId": req.orgId })
-          .whereIn("service_requests.houseId", houseIds)
-          .orWhere("service_requests.createdBy", req.me.id)
-          .distinct('service_orders.displayId')
-          .orderBy('service_orders.createdAt', 'desc')
-        ,
-        knex
+        ])
+        .groupBy([
+          'service_orders.id',
+          "service_requests.id",
+          "property_units.id",
+          "status.id",
+          "requested_by.id",
+          "service_problems.id",
+          "incident_categories.id",
+          'buildings_and_phases.id',
+          'floor_and_zones.id'
 
-          .from("service_orders")
-          .leftJoin(
-            "service_requests",
-            "service_orders.serviceRequestId",
-            "service_requests.id"
-          )
-          .leftJoin(
-            "property_units",
-            "service_requests.houseId",
-            "property_units.id"
-          )
-          .leftJoin(
-            "requested_by",
-            "service_requests.requestedBy",
-            "requested_by.id"
-          )
-          .leftJoin(
-            "service_status AS status",
-            "service_requests.serviceStatusCode",
-            "status.statusCode"
-          )
-          .leftJoin(
-            "service_problems",
-            "service_requests.id",
-            "service_problems.serviceRequestId"
-          )
-          .leftJoin(
-            "incident_categories",
-            "service_problems.categoryId",
-            "incident_categories.id"
-          )
-          .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
-          .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
-          .select([
-            'service_orders.id as soId',
-            "service_requests.id as S Id",
-            "service_requests.houseId as houseId",
-            "service_requests.description as Description",
-            "service_requests.priority as Priority",
-            "status.descriptionEng as Status",
-            "property_units.unitNumber as Unit No",
-            "requested_by.name as Requested By",
-            "service_requests.createdAt as Date Created",
-            "service_requests.displayId as SR#",
-            "incident_categories.categoryCode",
-            "incident_categories.descriptionEng as categoryDescription",
-            "property_units.unitNumber",
-            "service_problems.id as serviceProblemId",
-            'buildings_and_phases.buildingPhaseCode',
-            'buildings_and_phases.description as buildingDescription',
-            'floor_and_zones.floorZoneCode',
-            'floor_and_zones.description as floorDescription',
-            'service_orders.displayId',
-            'service_orders.createdAt'
-
-          ])
-          .offset(offset)
-          .limit(per_page)
-          .groupBy([
-            'service_orders.id',
-            "service_requests.id",
-            "property_units.id",
-            "status.id",
-            "requested_by.id",
-            "service_problems.id",
-            "incident_categories.id",
-            'buildings_and_phases.id',
-            'floor_and_zones.id'
-
-          ])
-          .where(qb => {
-            if (serviceId) {
-              qb.where('service_requests.displayId', serviceId)
-            }
-
-            if (status) {
-              qb.where('service_requests.serviceStatusCode', status)
-            }
-
-            if (location) {
-              qb.where('service_requests.location', 'iLIKE', `%${location}%`)
-            }
-
-            if (description) {
-              qb.where('service_requests.description', 'iLIKE', `%${description}%`)
-            }
-
-            if (priority) {
-              qb.where("service_requests.priority", priority);
-            }
-
-            if (serviceFrom && serviceTo) {
-              qb.whereBetween("service_requests.createdAt", [
-                serviceFrom,
-                serviceTo
-              ]);
-            }
-
-            // if (dueDateFrom && dueDateTo) {
-            //   qb.whereBetween("service_requests.createdAt", [
-            //     dueFrom,
-            //     dueTo
-            //   ]);
-
-            // }
-            //qb.where(filters);
-
-          })
-          .where({ "service_orders.orgId": req.orgId })
-          .whereIn("service_requests.houseId", houseIds)
-          .orWhere("service_requests.createdBy", req.me.id)
-          .distinct('service_orders.displayId')
-          .orderBy('service_orders.createdAt', 'desc')
-
-      ]);
+        ])
+        .where({ "service_orders.orgId": req.orgId })
+        .whereIn("service_requests.houseId", houseIds)
+        .orWhere("service_requests.createdBy", req.me.id)
+        .distinct('service_orders.displayId')
+        .orderBy('service_orders.createdAt', 'desc')
 
 
-      let count = total.length;
-      pagination.total = count;
-      pagination.per_page = per_page;
-      pagination.offset = offset;
-      pagination.to = offset + rows.length;
-      pagination.last_page = Math.ceil(count / per_page);
-      pagination.current_page = page;
-      pagination.from = offset;
       pagination.data = rows;
 
       const Parallel = require('async-parallel');
@@ -3256,7 +2660,7 @@ const serviceRequestController = {
         }
 
         let imageResult = [];
-        imageResult = await knex('images').where({ "entityId": st["S Id"], "entityType": "service_requests"});
+        imageResult = await knex('images').where({ "entityId": st["S Id"], "entityType": "service_requests" });
         return {
           ...st,
           uploadImages: imageResult,
@@ -3279,6 +2683,266 @@ const serviceRequestController = {
       });
     }
   },
+
+
+
+
+
+  getCompletedRequestList: async (req, res) => {
+
+    // We will get service request list
+    try {
+
+      let rows;
+
+      console.log("customerInfo", req.me.id);
+      console.log("customerHouseInfo", req.me.houseIds);
+      let houseIds = req.me.houseIds;
+
+      let pagination = {};
+
+      //  Service Status
+
+
+      rows = await knex
+        .from("service_requests")
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "requested_by",
+          "service_requests.requestedBy",
+          "requested_by.id"
+        )
+        .leftJoin(
+          "service_status AS status",
+          "service_requests.serviceStatusCode",
+          "status.statusCode"
+        )
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+        .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
+        .select([
+          "service_requests.id as S Id",
+          "service_requests.houseId as houseId",
+          "service_requests.description as Description",
+          "service_requests.priority as Priority",
+          "status.descriptionEng as Status",
+          "property_units.unitNumber as Unit No",
+          "requested_by.name as Requested By",
+          "service_requests.createdAt as Date Created",
+          "service_requests.completedOn as Completed On",
+          "service_requests.displayId as SR#",
+          "incident_categories.categoryCode",
+          "incident_categories.descriptionEng as categoryDescription",
+          "property_units.unitNumber",
+          "service_problems.id as serviceProblemId",
+          'buildings_and_phases.buildingPhaseCode',
+          'buildings_and_phases.description as buildingDescription',
+          'floor_and_zones.floorZoneCode',
+          'floor_and_zones.description as floorDescription'
+        ])
+        .groupBy([
+          "service_requests.id",
+          "property_units.id",
+          "status.id",
+          "requested_by.id",
+          "service_problems.id",
+          "incident_categories.id",
+          'buildings_and_phases.id',
+          'floor_and_zones.id'
+
+        ])
+
+        .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'COM' })
+        .whereIn("service_requests.houseId", houseIds)
+        .orWhere("service_requests.createdBy", req.me.id)
+        .distinct('service_requests.displayId')
+        .orderBy('service_requests.createdAt', 'desc')
+
+
+
+
+      pagination.data = rows;
+
+      const Parallel = require('async-parallel');
+      pagination.data = await Parallel.map(rows, async (st) => {
+
+        console.log("st+++++-----", st);
+        let todayCreated = '';
+        let currentDate = moment().format('YYYY-MM-DD');
+        let createdDate = moment(+st['Date Created']).format('YYYY-MM-DD');
+
+        if (currentDate === createdDate) {
+          todayCreated = 'today';
+        }
+        let imageResult = [];
+        imageResult = await knex('images').where({ "entityId": st["S Id"], "entityType": "service_requests" });
+        return {
+          ...st,
+          uploadImages: imageResult,
+          todayCreated: todayCreated,
+        }
+
+      })
+
+      return res.status(200).json({
+        data: {
+          service_requests: pagination,
+          house: req.me.houseIds
+        },
+        message: "Service Request List!"
+      });
+    } catch (err) {
+      console.log("[controllers][service][request] :  Error", err);
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+
+  },
+
+  getPreviousAppointmentList: async (req, res) => {
+
+    try {
+
+      let rows;
+      console.log("customerInfo", req.me.id);
+      console.log("customerHouseInfo", req.me.houseIds);
+      let houseIds = req.me.houseIds;
+
+      let pagination = {};
+
+
+      rows = await knex
+        .from("service_orders")
+        .leftJoin(
+          "service_requests",
+          "service_orders.serviceRequestId",
+          "service_requests.id"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "requested_by",
+          "service_requests.requestedBy",
+          "requested_by.id"
+        )
+        .leftJoin(
+          "service_status AS status",
+          "service_requests.serviceStatusCode",
+          "status.statusCode"
+        )
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+        .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
+        .select([
+          'service_orders.id as soId',
+          "service_requests.id as S Id",
+          "service_requests.houseId as houseId",
+          "service_requests.description as Description",
+          "service_requests.priority as Priority",
+          "status.descriptionEng as Status",
+          "property_units.unitNumber as Unit No",
+          "requested_by.name as Requested By",
+          "service_requests.createdAt as Date Created",
+          "service_requests.displayId as SR#",
+          "incident_categories.categoryCode",
+          "incident_categories.descriptionEng as categoryDescription",
+          "property_units.unitNumber",
+          "service_problems.id as serviceProblemId",
+          'buildings_and_phases.buildingPhaseCode',
+          'buildings_and_phases.description as buildingDescription',
+          'floor_and_zones.floorZoneCode',
+          'floor_and_zones.description as floorDescription',
+          'service_orders.displayId',
+          'service_orders.createdAt'
+
+        ])
+        .groupBy([
+          'service_orders.id',
+          "service_requests.id",
+          "property_units.id",
+          "status.id",
+          "requested_by.id",
+          "service_problems.id",
+          "incident_categories.id",
+          'buildings_and_phases.id',
+          'floor_and_zones.id'
+
+        ])
+        .where({ "service_orders.orgId": req.orgId })
+        .whereIn("service_requests.houseId", houseIds)
+        .orWhere("service_requests.createdBy", req.me.id)
+        .distinct('service_orders.displayId')
+        .orderBy('service_orders.createdAt', 'desc')
+
+
+      pagination.data = rows;
+
+      const Parallel = require('async-parallel');
+      pagination.data = await Parallel.map(rows, async (st) => {
+
+        let todayCreated = '';
+        let currentDate = moment().format('YYYY-MM-DD');
+        let createdDate = moment(+st['Date Created']).format('YYYY-MM-DD');
+
+        if (currentDate === createdDate) {
+          todayCreated = 'today';
+        }
+
+        let imageResult = [];
+        imageResult = await knex('images').where({ "entityId": st["S Id"], "entityType": "service_requests" });
+        return {
+          ...st,
+          uploadImages: imageResult,
+          todayCreated: todayCreated,
+        }
+
+      })
+
+      return res.status(200).json({
+        data: {
+          service_requests: pagination,
+          house: req.me.houseIds
+        },
+        message: "Previous Service Appointment List!"
+      });
+    } catch (err) {
+      console.log("[controllers][service][request] :  Error", err);
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+
+  }
+
+
+
+
 
 };
 

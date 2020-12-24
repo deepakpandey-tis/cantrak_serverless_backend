@@ -173,7 +173,10 @@ const customerController = {
               // "user_house_allocation.houseId as houseId",
               "users.id as userId",
               "property_units.unitNumber",
-              "users.isActive"
+              "users.isActive",
+              "users.createdAt as signUpDate",
+              "users.activatedDate as activationDate",
+              "users.lastLogin as lastVisit"
             ])
             .where({
               "application_user_roles.roleId": 4
@@ -182,7 +185,6 @@ const customerController = {
               if (Object.keys(filters).length || name || organisation) {
 
                 if (name) {
-
                   qb.where('users.name', 'iLIKE', `%${name}%`)
                   qb.orWhere('users.email', 'iLIKE', `%${name}%`)
                   qb.orWhere('users.mobileNo', 'iLIKE', `%${name}%`)
@@ -217,7 +219,10 @@ const customerController = {
               //"user_house_allocation.houseId as houseId",
               "users.id as userId",
               "property_units.unitNumber",
-              "users.isActive"
+              "users.isActive",
+              "users.createdAt as signUpDate",
+              "users.activatedDate as activationDate",
+              "users.lastLogin as lastVisit"
             ])
             .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .where({
@@ -268,7 +273,10 @@ const customerController = {
               //"user_house_allocation.houseId as houseId",
               "users.id as userId",
               "property_units.unitNumber",
-              "users.isActive"
+              "users.isActive",
+              "users.createdAt as signUpDate",
+              "users.activatedDate as activationDate",
+              "users.lastLogin as lastVisit"
             ])
             .where({
               "application_user_roles.roleId": 4,
@@ -314,7 +322,10 @@ const customerController = {
               //"user_house_allocation.houseId as houseId",
               "users.id as userId",
               "property_units.unitNumber",
-              "users.isActive"
+              "users.isActive",
+              "users.createdAt as signUpDate",
+              "users.activatedDate as activationDate",
+              "users.lastLogin as lastVisit"
             ])
             .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .where({

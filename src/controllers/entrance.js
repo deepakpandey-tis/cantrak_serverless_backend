@@ -72,7 +72,7 @@ const entranceController = {
             if (!loginResult.emailVerified) {
                 return res.status(400).json({
                     errors: [
-                        { code: 'EMAIL_VERIFICATION_ERROR', message: 'Please verify email id before login !' }
+                        { code: 'EMAIL_VERIFICATION_ERROR', message: 'Your account is pending for approval. Please contact admin' }
                     ],
                 });
             }
@@ -466,6 +466,7 @@ const entranceController = {
             let payload = req.body;
 
             const schema = Joi.object().keys({
+                oldPassword:Joi.string().required(),
                 newPassword: Joi.string().required(),
                 confirmPassword: Joi.string().required(),
                 id: Joi.string().required(),
@@ -480,6 +481,19 @@ const entranceController = {
                 });
             }
 
+            let oldPassword = await knex('users')
+            .select([
+                'users.password',
+            ])
+            .where({'users.id':req.body.id,'users.orgId':req.orgId}).first()
+
+            console.log("old password ===",oldPassword)
+
+            // let oldPass = await bcrypt.hash(payload.oldPassword,saltRounds)
+            const match = await bcrypt.compare(payload.oldPassword, oldPassword.password);
+
+            console.log("match password",match)
+            if(match){
             if (payload.newPassword == payload.confirmPassword) {
 
                 let userResult = await knex.from('users').where({ id: payload.id }).first();
@@ -507,6 +521,13 @@ const entranceController = {
                 });
 
             }
+        }else{
+            return res.status(400).json({
+                errors: [
+                    { code: 'PASSWORD_MATCH', message: "Old Password is not correct" }
+                ],
+            });
+        }
 
         } catch (err) {
 
@@ -674,6 +695,33 @@ const entranceController = {
             });
 
         }
+    },
+    getOldPassword : async(req,res) =>{
+        try {
+            let oldPassword = await knex('users')
+            .select([
+                'users.password',
+                'users.id'
+            ])
+            .where({'users.id':req.body.id})
+
+            return res.status(200).json({
+                data:{
+                    oldPassword
+                }
+            })
+        } catch (err) {
+
+            console.log(
+                "[controllers][entrance][getOldPassword] :  Error",
+                err
+              );
+              res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+              });
+            
+        }
+
     }
 };
 

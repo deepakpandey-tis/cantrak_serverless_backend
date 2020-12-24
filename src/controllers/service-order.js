@@ -2374,20 +2374,22 @@ const serviceOrderController = {
                 // Insert into assigned_service_additional_users
 
                 let assignedServiceAdditionalUsers = appointmentOrderPayload.additionalUsers;
-                for (user of assignedServiceAdditionalUsers) {
-                    let userResult = await knex
-                        .insert({
-                            userId: user,
-                            entityId: serviceAppointment.id,
-                            entityType: "service_appointments",
-                            orgId: req.orgId,
-                            createdAt: currentTime,
-                            updatedAt: currentTime
-                        })
-                        .returning(["*"])
-                        .transacting(trx)
-                        .into("assigned_service_additional_users");
-                    additionalUsers.push(userResult[0]);
+                if (assignedServiceAdditionalUsers) {
+                    for (user of assignedServiceAdditionalUsers) {
+                        let userResult = await knex
+                            .insert({
+                                userId: user,
+                                entityId: serviceAppointment.id,
+                                entityType: "service_appointments",
+                                orgId: req.orgId,
+                                createdAt: currentTime,
+                                updatedAt: currentTime
+                            })
+                            .returning(["*"])
+                            .transacting(trx)
+                            .into("assigned_service_additional_users");
+                        additionalUsers.push(userResult[0]);
+                    }
                 }
                 trx.commit;
                 res.status(200).json({
