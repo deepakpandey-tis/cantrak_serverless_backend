@@ -3350,7 +3350,8 @@ const taskGroupController = {
                     'pm_task_groups.taskGroupName as taskGroupName',
                     'pm_task_groups.id as taskGroupId',
                     'task_group_schedule_assign_assets.pmDate as pmDate',
-                    'pm_task.taskNameAlternate as taskAlternateName'
+                    'pm_task.taskNameAlternate as taskAlternateName',
+                    'task_group_schedule_assign_assets.status as woStatus'
                 ])
                 .where({
                     'pm_task.id': taskId,
@@ -3394,7 +3395,7 @@ const taskGroupController = {
                     generalDetails: generalDetails,
                     images
                 },
-                message: 'PM Task Details Successfully!'
+                message: 'PM Task Details Successfully! '
             })
 
         } catch (err) {
