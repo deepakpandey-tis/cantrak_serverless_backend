@@ -1790,9 +1790,6 @@ const taskGroupController = {
                             "task_group_schedule.pmId",
                             "pm_master2.id"
                         )
-                        //.leftJoin('pm_task_groups', 'task_group_schedule.taskGroupId', 'pm_task_groups.id')
-                        //.leftJoin('assigned_service_team', 'pm_task_groups.id', 'assigned_service_team.entityId')
-                        //.leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
                         .where({
                             "task_group_schedule.orgId": req.orgId
                         })
@@ -1857,9 +1854,6 @@ const taskGroupController = {
                             "task_group_schedule.pmId",
                             "pm_master2.id"
                         )
-                        //.leftJoin('pm_task_groups', 'task_group_schedule.taskGroupId', 'pm_task_groups.id')
-                        //.leftJoin('assigned_service_team', 'pm_task_groups.id', 'assigned_service_team.entityId')
-                        //.leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
                         .select([
                             "task_group_schedule_assign_assets.id as workOrderId",
                             "task_group_schedule_assign_assets.displayId as TGAA",
@@ -1898,7 +1892,7 @@ const taskGroupController = {
                                 let workDateFrom = moment(req.body.workOrderDateFrom).startOf('date');
                                 let workDateTo = moment(req.body.workOrderDateTo).endOf('date');
                                 console.log("work order date from and to", req.body.workOrderDateTo, workDateTo)
-                                qb.whereRaw(`to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD') BETWEEN '${req.body.workOrderDateFrom}' and '${req.body.workOrderDateTo}' `)
+                                qb.whereRaw(`to_date(task_group_schedule_assign_assets."pmDate",  'YYYY-MM-DD') BETWEEN '${req.body.workOrderDateFrom}' and '${req.body.workOrderDateTo}'`)
 
                                 //qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
                             }
@@ -1931,8 +1925,6 @@ const taskGroupController = {
 
 
                         })
-                        //.distinct(['task_group_schedule.id'])
-                        //.groupBy('task_group_schedule.id')
                         .offset(offset)
                         .limit(per_page)
                         .orderBy("workOrderDate", "asc")
