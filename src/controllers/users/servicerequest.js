@@ -2762,16 +2762,13 @@ const serviceRequestController = {
           "incident_categories.id",
           'buildings_and_phases.id',
           'floor_and_zones.id'
-
         ])
 
-        .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'COM' })
+        .where({ "service_requests.orgId": req.orgId })
         .whereIn("service_requests.houseId", houseIds)
         .orWhere("service_requests.createdBy", req.me.id)
         .distinct('service_requests.displayId')
         .orderBy('service_requests.createdAt', 'desc')
-
-
 
 
       pagination.data = rows;
