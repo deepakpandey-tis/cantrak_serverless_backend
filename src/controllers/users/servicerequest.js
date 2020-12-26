@@ -480,7 +480,7 @@ const serviceRequestController = {
   },
 
 
- 
+
 
 
   getPropertyUnits: async (req, res) => {
@@ -2450,7 +2450,7 @@ const serviceRequestController = {
       let pagination = {};
 
       rows = await knex
-        .from("service_requests")       
+        .from("service_requests")
         .leftJoin(
           "property_units",
           "service_requests.houseId",
@@ -2531,19 +2531,28 @@ const serviceRequestController = {
         }
 
         let serviceOrderData = await knex('service_orders').select('id').where({ "serviceRequestId": st["S Id"] }).first();
-        console.log("serviceOrder",serviceOrderData);
+        console.log("serviceOrder", serviceOrderData);
         let serviceOrderAppointment;
-        if(serviceOrderData){
-           serviceOrderAppointment = await knex('service_appointments').where({ "serviceOrderId": serviceOrderData.id }).orderBy('service_appointments.id', 'desc').limit(1).first();
+        let appointedTimes;
+
+
+        if (serviceOrderData) {
+          serviceOrderAppointment = await knex('service_appointments').where({ "serviceOrderId": serviceOrderData.id }).orderBy('service_appointments.id', 'desc').limit(1).first();
+          console.log("serviceAppoint", serviceOrderAppointment);
+          if (serviceOrderAppointment) {
+            let str = serviceOrderAppointment.appointedTime;
+            appointedTimes = str.substring(0, str.length - 3);
+          }
+
         }
-  
+
         let imageResult = [];
         imageResult = await knex('images').where({ "entityId": st["S Id"], "entityType": "service_problems" });
         return {
           ...st,
           uploadImages: imageResult,
           todayCreated: todayCreated,
-          serviceOrder: serviceOrderAppointment
+          serviceOrder: { ...serviceOrderAppointment, appointedTimes }
         }
 
       })
