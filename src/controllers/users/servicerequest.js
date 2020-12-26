@@ -2507,7 +2507,6 @@ const serviceRequestController = {
           "incident_categories.id",
           'buildings_and_phases.id',
           'floor_and_zones.id'
-
         ])
         .where({ "service_requests.orgId": req.orgId })
         .whereIn("service_requests.houseId", houseIds)
@@ -2543,8 +2542,16 @@ const serviceRequestController = {
             let str = serviceOrderAppointment.appointedTime;
             appointedTimes = str.substring(0, str.length - 3);
           }
-
+        }else{
+          serviceOrderAppointment = await knex('survey_orders').select('*').where({ "serviceRequestId": st["S Id"] }).orderBy('survey_orders.id', 'desc').limit(1).first();
+          if (serviceOrderAppointment) {         
+              let str = serviceOrderAppointment.appointedTime;
+              appointedTimes = str.substring(0, str.length - 3);          
+          }
         }
+
+       
+
 
         let imageResult = [];
         imageResult = await knex('images').where({ "entityId": st["S Id"], "entityType": "service_problems" });
