@@ -63,7 +63,8 @@ const announcementNotification = {
                 {
                     action: "explore",
                     title: "Open",
-                    url: `/user/dashboard/home`
+                    //url: `/user/dashboard/home`,
+                    url: data.payload.redirectUrl
 
                 }
             ]
