@@ -2335,7 +2335,7 @@ const serviceOrderController = {
                     });
                 }
 
-                appointedTime = moment(initialServiceAppointmentPayload.appointedTime, 'HH:mm').hours() + ":" + moment(initialServiceAppointmentPayload.appointedTime, 'HH:mm').minutes();
+             // appointedTime = moment(initialServiceAppointmentPayload.appointedTime, 'HH:mm').hours() + ":" + moment(initialServiceAppointmentPayload.appointedTime, 'HH:mm').minutes();
 
 
                 let currentTime = new Date().getTime();
@@ -2347,7 +2347,7 @@ const serviceOrderController = {
                     createdAt: currentTime,
                     updatedAt: currentTime,
                     isActive: true,
-                    appointedTime
+                    //appointedTime
                 };
                 // Insert into survey_orders table
                 let surveyOrderResult = await knex
@@ -2474,7 +2474,7 @@ const serviceOrderController = {
 
                 return {
                     ...st,
-                    appointedTime
+                    //appointedTime
 
                 }
 
