@@ -2305,6 +2305,7 @@ const serviceOrderController = {
             let serviceAppointment = null;
             let additionalUsers = [];
             let userId = req.me.id;
+            let appointedTime;
 
             await knex.transaction(async trx => {
                 let appointmentOrderPayload = req.body;
@@ -2334,6 +2335,9 @@ const serviceOrderController = {
                     });
                 }
 
+             // appointedTime = moment(initialServiceAppointmentPayload.appointedTime, 'HH:mm').hours() + ":" + moment(initialServiceAppointmentPayload.appointedTime, 'HH:mm').minutes();
+
+
                 let currentTime = new Date().getTime();
                 let insertServiceAppintmentData = {
                     ...initialServiceAppointmentPayload,
@@ -2342,7 +2346,8 @@ const serviceOrderController = {
                     createdBy: userId,
                     createdAt: currentTime,
                     updatedAt: currentTime,
-                    isActive: true
+                    isActive: true,
+                    //appointedTime
                 };
                 // Insert into survey_orders table
                 let surveyOrderResult = await knex
@@ -2396,7 +2401,7 @@ const serviceOrderController = {
                     data: {
                         serviceAppointment,
                         assignedServiceTeam,
-                        assignedAdditionalUsers: additionalUsers
+                        assignedAdditionalUsers: additionalUsers,
                     },
                     message: "Service appointment created successfully !"
                 });
@@ -2459,6 +2464,22 @@ const serviceOrderController = {
                     .groupBy(['service_appointments.id', 'service_requests.id', 'service_orders.id', 'users.id'])
                     .offset(offset).limit(per_page)
             ])
+
+            const Parallel = require('async-parallel');
+
+            rows = await Parallel.map(rows, async st => {
+
+                let str = st.appointedTime;
+                let appointedTime = str.substring(0, str.length - 3);
+
+                return {
+                    ...st,
+                    //appointedTime
+
+                }
+
+            })
+
 
             let count = total.length;
             pagination.total = count;
