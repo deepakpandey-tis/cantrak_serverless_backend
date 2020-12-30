@@ -2536,21 +2536,19 @@ const serviceRequestController = {
 
 
         if (serviceOrderData) {
-          serviceOrderAppointment = await knex('service_appointments').where({ "serviceOrderId": serviceOrderData.id }).orderBy('service_appointments.id', 'desc').limit(1).first();
+          serviceOrderAppointment = await knex('service_appointments').where({ "serviceOrderId": serviceOrderData.id, "status": "Pending" }).orderBy('service_appointments.id', 'desc').limit(1).first();
           console.log("serviceAppoint", serviceOrderAppointment);
           if (serviceOrderAppointment) {
             let str = serviceOrderAppointment.appointedTime;
            // appointedTimes = str.substring(0, str.length - 3);
             appointedTimes = str;
-
           }
         }else{
-          serviceOrderAppointment = await knex('survey_orders').select('*').where({ "serviceRequestId": st["S Id"] }).orderBy('survey_orders.id', 'desc').limit(1).first();
+          serviceOrderAppointment = await knex('survey_orders').select('*').where({ "serviceRequestId": st["S Id"], "surveyOrderStatus": "Pending" }).orderBy('survey_orders.id', 'desc').limit(1).first();
           if (serviceOrderAppointment) {         
               let str = serviceOrderAppointment.appointedTime;
               // appointedTimes = str.substring(0, str.length - 3);     
               appointedTimes = str;          
-
           }
         }
 
