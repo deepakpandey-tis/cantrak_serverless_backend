@@ -40,6 +40,33 @@ const assetController = {
             })
         }
     },
+
+    getAssetCategoryById: async(req,res)=>{
+
+        try {
+            let categories
+            let id =req.body.id
+            // let filters = req.body;
+            categories = await knex('asset_category_master')
+            .select()
+            .where({id:id, orgId: req.orgId, isActive: true })
+            .orderBy('asset_category_master.categoryName', 'asc');
+
+            res.status(200).json({
+                data: {
+                    categories,
+                    message: 'Category Detail'
+                }
+            })
+        } catch (err) {
+            return res.status(200).json({
+                errors: [
+                    { code: 'UNKNOWN SERVER ERROR', message: err.message }
+                ]
+            })
+        }
+
+    },
     addAsset: async (req, res) => {
         try {
 
