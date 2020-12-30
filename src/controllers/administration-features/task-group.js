@@ -435,7 +435,7 @@ const taskGroupController = {
 
         try {
 
-            console.log("Consolidated work orders in body", req.body.consolidatedWorkOrders)
+            // console.log("Consolidated work orders in body", req.body.consolidatedWorkOrders)
 
             let createTemplateTask = null;
             let createTemplate = null;
@@ -1073,7 +1073,7 @@ const taskGroupController = {
             if (payloadFilter.assignedTeam && payloadFilter.assignedTeam.length) {
                 assignedTeam = payloadFilter.assignedTeam;
             }
-            console.log("work order list data pm Id", req.body)
+            console.log("work order list data pm id 1", req.body)
 
             const payload = _.omit(payLoad, [
                 "assetCategoryId",
@@ -1166,6 +1166,12 @@ const taskGroupController = {
                                     qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod)
                                 }
                             }
+                            // if (payloadFilter.repeatPeriod) {
+                            //     console.log("payload repeat period",payloadFilter.repeatPeriod)
+                            //     if (payloadFilter.repeatPeriod.length) {
+                            //         qb.whereIn('task_group_schedule_assign_assets.frequencyTagIds', payloadFilter.repeatPeriod)
+                            //     }
+                            // }
 
                             if (payloadFilter.assignedTeam.length) {
                                 qb.whereIn('assigned_service_team.teamId', payloadFilter.assignedTeam)
@@ -1265,6 +1271,11 @@ const taskGroupController = {
                                     qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod)
                                 }
                             }
+                            // if (payloadFilter.repeatPeriod) {
+                            //     if (payloadFilter.repeatPeriod.length) {
+                            //         qb.whereIn('task_group_schedule_assign_assets.frequencyTagIds', payloadFilter.repeatPeriod)
+                            //     }
+                            // }
 
                             if (payloadFilter.assignedTeam.length) {
                                 qb.whereIn('assigned_service_team.teamId', payloadFilter.assignedTeam)
@@ -1333,6 +1344,11 @@ const taskGroupController = {
                                 qb.whereIn('task_group_schedule_assign_assets.status', req.body.status)
                             }
 
+                            // if (payloadFilter.repeatPeriod) {
+                            //     if (payloadFilter.repeatPeriod.length) {
+                            //         qb.where('task_group_schedule_assign_assets.frequencyTagIds ::jsonb', payloadFilter.repeatPeriod)
+                            //     }
+                            // }
                             if (payloadFilter.repeatPeriod) {
                                 if (payloadFilter.repeatPeriod.length) {
                                     qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod)
@@ -1418,6 +1434,11 @@ const taskGroupController = {
                                 qb.whereIn('task_group_schedule_assign_assets.status', req.body.status)
                             }
 
+                            // if (payloadFilter.repeatPeriod) {
+                            //     if (payloadFilter.repeatPeriod.length) {
+                            //         qb.where('task_group_schedule_assign_assets.frequencyTagIds', payloadFilter.repeatPeriod)
+                            //     }
+                            // }
                             if (payloadFilter.repeatPeriod) {
                                 if (payloadFilter.repeatPeriod.length) {
                                     qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod)

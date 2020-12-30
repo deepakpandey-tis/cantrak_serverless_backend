@@ -92,6 +92,11 @@ router.post(
   roleMiddleware.parseUserPermission,
   assetController.getAssetCategories
 );
+router.post(
+  "/get-asset-category-by-id",
+  authMiddleware.isAuthenticated,
+  assetController.getAssetCategoryById
+)
 
 // TODO: Remove
 // Deprecated
