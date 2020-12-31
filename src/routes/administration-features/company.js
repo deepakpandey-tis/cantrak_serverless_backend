@@ -55,6 +55,10 @@ router.get('/user-company-lists',authMiddleware.isAuthenticated, companyControll
 router.get('/company-lists-having-property-units', authMiddleware.isAuthenticated, companyController.getCompanyListHavingPropertyUnits)
 
 router.post('/get-company-by-Id',authMiddleware.isAuthenticated,companyController.getCompanyById)
+router.get('/get-organization-users-list',authMiddleware.isAuthenticated,companyController.getOrgUserList)
+router.post('/validate-company-admin',authMiddleware.isAuthenticated,companyController.validateCompanyAdmin)
+
+
 
 
 

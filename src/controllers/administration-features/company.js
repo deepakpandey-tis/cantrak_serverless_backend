@@ -20,7 +20,7 @@ const companyController = {
       let company = null;
       await knex.transaction(async trx => {
 
-        const payload = _.omit(req.body, ["logoFile"], ["orgLogoFile"]);
+        const payload = _.omit(req.body, ["logoFile"], ["orgLogoFile"], companyAdmin);
         let orgId;
         if (payload.orgId) {
           orgId = payload.orgId;
@@ -57,6 +57,7 @@ const companyController = {
           telephone: Joi.number().allow("").allow(null).optional(),
           fax: Joi.string().allow("").allow(null).optional(),
           orgLogoFile: Joi.string().allow("").optional(),
+          companyAdmin: Joi.number().allow("").optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -124,6 +125,28 @@ const companyController = {
           .transacting(trx)
           .into("companies");
         company = insertResult[0];
+
+
+        // Insert company  admin while create the company
+
+        if(req.body.companyAdmin){
+
+          let insertCompanyAdminData = {
+            companyId: company.id,
+            userId: req.body.companyAdmin,
+            createdAt: currentTime,
+            updatedAt: currentTime,
+            orgId: orgId
+          };
+
+          let insertResult = await knex
+            .insert(insertCompanyAdminData)
+            .returning(["*"])
+            .transacting(trx)
+            .into("company_admin");
+          companyAdmin = insertResult[0];
+
+        }
 
         trx.commit;
       });
@@ -1183,7 +1206,84 @@ const companyController = {
       });
     }
 
+  },
+  getOrgUserList: async (req, res) => {
+    try {
+
+      let orgId = req.orgId
+      let usersType = ['2', '3'];
+      let userResult = await knex("application_user_roles")
+        .innerJoin('users', 'application_user_roles.userId', 'users.id')
+        .select([
+          "users.id",
+          "users.name",
+        ])
+        .where("application_user_roles.orgId", orgId)
+        .whereIn("application_user_roles.roleId", usersType)
+
+      return res.status(200).json({
+        data: {
+          users: userResult
+        },
+        message: "Users List!"
+      });
+
+    } catch (err) {
+      console.log(
+        "[controllers][companies][userResult] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+
+  },
+  validateCompanyAdmin: async (req, res) => {
+    try {
+      let companyId = req.body.companyId;
+      let userId = req.body.userId;
+      let orgId = req.orgId
+      let userResult;
+      if (companyId) {
+        userResult = await knex("company_admin")
+          .select([
+            "company_admin.id"
+          ])
+          .where("company_admin.orgId", orgId)
+          .where("company_admin.userId", userId)
+          .whereNot("company_admin.companyId", companyId)
+      } else {
+        userResult = await knex("company_admin")
+          .select([
+            "company_admin.id"
+          ])
+          .where("company_admin.orgId", orgId)
+          .where("company_admin.userId", userId)
+      }
+
+
+      return res.status(200).json({
+        data: {
+          users: userResult
+        },
+        message: "Users List!"
+      });
+
+
+    } catch (err) {
+      console.log(
+        "[controllers][companies][userResult] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
+
 };
 
 module.exports = companyController;
