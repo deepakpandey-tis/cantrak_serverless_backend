@@ -1372,6 +1372,8 @@ const teamsController = {
 
     /*GET ADDITIONAL USER BY MAIN ID  */
     getAdditionalUsersByMainId: async (req, res) => {
+
+        console.log("req.body for main user Id",req.body)
         try {
             let vendorUsers = [];
             let teamId = req.body.teamId;
