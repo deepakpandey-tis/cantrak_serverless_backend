@@ -1417,6 +1417,7 @@ const taskGroupController = {
                             if (req.body.assetCategoryId && req.body.assetCategoryId.length > 0) {
                                 qb.whereIn('asset_master.assetCategoryId', req.body.assetCategoryId)
                             }
+                            
                             if (req.body.workOrderDate) {
 
                                 qb.whereRaw(`to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')='${req.body.workOrderDate}'`);
