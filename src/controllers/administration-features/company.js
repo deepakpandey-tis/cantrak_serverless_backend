@@ -18,9 +18,11 @@ const companyController = {
   addCompany: async (req, res) => {
     try {
       let company = null;
+      let companyAdmin = null;
       await knex.transaction(async trx => {
 
-        const payload = _.omit(req.body, ["logoFile"], ["orgLogoFile"], companyAdmin);
+        const payload = _.omit(req.body, ["logoFile"], ["orgLogoFile"], "companyAdmin");
+        console.log("payload", payload);
         let orgId;
         if (payload.orgId) {
           orgId = payload.orgId;
@@ -57,7 +59,6 @@ const companyController = {
           telephone: Joi.number().allow("").allow(null).optional(),
           fax: Joi.string().allow("").allow(null).optional(),
           orgLogoFile: Joi.string().allow("").optional(),
-          companyAdmin: Joi.number().allow("").optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -168,9 +169,10 @@ const companyController = {
   updateCompany: async (req, res) => {
     try {
       let company = null;
+      let companyAdmin = null;
       await knex.transaction(async trx => {
 
-        const payload = _.omit(req.body, ["logoFile"], ["orgLogoFile"]);
+        const payload = _.omit(req.body, ["logoFile"], ["orgLogoFile"], "companyAdmin");
         let orgId;
         if (payload.orgId) {
           orgId = payload.orgId;
@@ -327,7 +329,30 @@ const companyController = {
         company = insertResult[0];
 
 
+
+         // Update company admin while update the company
+
+         if(req.body.companyAdmin){
+
+          let insertCompanyAdminData = {
+            companyId: company.id,
+            userId: req.body.companyAdmin,
+            createdAt: currentTime,
+            updatedAt: currentTime,
+            orgId: orgId
+          };
+
+          let insertResult = await knex
+            .insert(insertCompanyAdminData)
+            .returning(["*"])
+            .transacting(trx)
+            .into("company_admin");
+          companyAdmin = insertResult[0];
+
+        }
+
         trx.commit;
+        
       });
 
       return res.status(200).json({
