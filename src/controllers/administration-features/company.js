@@ -130,7 +130,7 @@ const companyController = {
 
         // Insert company  admin while create the company
 
-        if(req.body.companyAdmin){
+        if (req.body.companyAdmin) {
 
           let insertCompanyAdminData = {
             companyId: company.id,
@@ -330,29 +330,50 @@ const companyController = {
 
 
 
-         // Update company admin while update the company
+        // Update company admin while update the company
 
-         if(req.body.companyAdmin){
+        if (req.body.companyAdmin) {
 
+          userResult = await knex("company_admin")
+            .select([
+              "company_admin.id"
+            ])
+            .where("company_admin.orgId", orgId)
+            .where("company_admin.companyId", payload.id)
+
+          let companyAdminResult;
           let insertCompanyAdminData = {
-            companyId: company.id,
+            companyId: payload.id,
             userId: req.body.companyAdmin,
             createdAt: currentTime,
             updatedAt: currentTime,
             orgId: orgId
           };
 
-          let insertResult = await knex
-            .insert(insertCompanyAdminData)
-            .returning(["*"])
-            .transacting(trx)
-            .into("company_admin");
-          companyAdmin = insertResult[0];
+          console.log("userResults", userResult);
+
+          if (userResult != "") {
+            // Update company admin when company admin already exits  while  updating company info
+            companyAdminResult = await knex
+              .update(insertCompanyAdminData)
+              .where({ companyId: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("company_admin");
+
+          } else {
+            // Insert company admin when company admin not exits while updating company info
+            companyAdminResult = await knex
+              .insert(insertCompanyAdminData)
+              .returning(["*"])
+              .transacting(trx)
+              .into("company_admin");
+          }
 
         }
 
         trx.commit;
-        
+
       });
 
       return res.status(200).json({
@@ -385,6 +406,7 @@ const companyController = {
             ]
           });
         }
+
         let current = new Date().getTime();
 
         let role = req.me.roles[0];
@@ -416,8 +438,21 @@ const companyController = {
             "createdAt",
             "updatedAt"
           ]);
-
         }
+
+        let companyAdminView = await knex("company_admin")
+          .leftJoin("users", "users.id", "company_admin.userId")
+          .where('company_admin.companyId', payload.id)
+          .where({ "company_admin.orgId": req.orgId })
+          .select([
+            "company_admin.userId as companyAdmin",
+            "users.name"
+          ]).first();
+
+          console.log("companyAdmin",  companyAdminView);
+          if(companyAdminView){
+            company = {...company, companyAdminView}
+          }
 
         trx.commit;
       });

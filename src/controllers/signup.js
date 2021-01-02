@@ -477,6 +477,7 @@ const singupController = {
           .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "=", "buildings_and_phases.id")
           .leftJoin("floor_and_zones", "property_units.floorZoneId", "=", "floor_and_zones.id")
           .select(
+            "companies.id",
             "companies.companyName",
             "projects.projectName",
             "projects.project as projectCode",
@@ -484,10 +485,10 @@ const singupController = {
             "buildings_and_phases.description as buildingPhaseDescription",
             "floor_and_zones.floorZoneCode",
             "floor_and_zones.description as floorZoneDescription",
-            "property_units.unitNumber as unit",           
+            "property_units.unitNumber as unit",
           )
           .where({
-            "property_units.id": req.body.unitId           
+            "property_units.id": req.body.unitId
           }).first();
         /* END */
 
@@ -517,40 +518,70 @@ const singupController = {
           //   }
           // })
 
-          if(orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+          if (orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
             url = 'https://cbreconnect.servicemind.asia';
-            org = "CBRE Connect";         
-          }else if(orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+            org = "CBRE Connect";
+          } else if (orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
             url = 'https://senses.servicemind.asia';
-            org = "Senses";         
-          }else{
+            org = "Senses";
+          } else {
             url = process.env.SITE_URL;
-            org = "ServiceMind";        
+            org = "ServiceMind";
           }
 
-          let orgAdmins = await knex('application_user_roles')
+          let orgAdmins;
+
+          companyAdmin = await knex('company_admin')
             .select('userId')
-            .where({ 'application_user_roles.orgId': orgId, roleId: 2 })
+            .where({ 'company_admin.orgId': orgId, 'company_admin.companyId': DataResult.id })
+
+          if (companyAdmin.length > 0) {
+            orgAdmins = await knex('company_admin')
+              .select('userId')
+              .where({ 'company_admin.orgId': orgId, 'company_admin.companyId': DataResult.id })
+          } else {
+            orgAdmins = await knex('application_user_roles')
+              .select('userId')
+              .where({ 'application_user_roles.orgId': orgId, roleId: 2 })
+          }
+
           let Parallel = require('async-parallel')
           let admins = await Parallel.map(orgAdmins, async admin => {
-          let adminres = await knex('users').where({ id: admin.userId }).select(['name', 'email']).first()
+            let adminres = await knex('users').where({ id: admin.userId }).select(['name', 'email']).first()
             return adminres;
           })
+
+          /* Send Notification to other channels */
+
+          // let orgMaster = await knex.from("organisations").where({ id: orgId, organisationAdminId: 994 }).orWhere({ id: orgId, organisationAdminId: 1188 }).first();
+        
+          // let dataNos = {
+          //   payload: {
+          //     title: 'New tenant signup in ' + org,
+          //     description: req.body.description,
+          //     orgData: orgMaster              
+          //   },
+          // };
+
+
+
           for (let admin of admins) {
+
             // await emailHelper.sendTemplateEmail({
             //   to: admin.email,
             //   subject: 'New user added to your organization',
             //   template: 'message.ejs',
             //   templateData: { fullName: admin.name, message: 'New user ' + insertedUser[0].name + ' added to your organization. username is ' + insertedUser[0].userName + '.' },
             // })
+
             await emailHelper.sendTemplateEmail({
               to: admin.email,
-              subject: 'New tenant signup in '+org,
+              subject: 'New tenant signup in ' + org,
               template: 'test-email.ejs',
               templateData: {
                 message: 'A new tenant has signed up in ' + org + ',please check the details and activate the account in order to allow the tenant to use the available services.',
                 fullName: admin.name,
-                userFullName:user.name,
+                userFullName: user.name,
                 userName: user.userName,
                 emailId: user.email,
                 mobileNo: user.mobileNo,
@@ -561,7 +592,7 @@ const singupController = {
                 floor: DataResult.floorZoneCode,
                 unit: DataResult.unit,
                 Org: org,
-                OTP: url +'/verify-account/' + user.verifyToken
+                OTP: url + '/verify-account/' + user.verifyToken
               }
             })
           }
@@ -586,28 +617,28 @@ const singupController = {
 
       let user = await knex('users').select('*').where({ verifyToken: req.params.token })
       if (user && user.length) {
-        await knex('users').update({ emailVerified: true,  isActive: true, activatedDate: currentTime }).where({ id: user[0].id })
+        await knex('users').update({ emailVerified: true, isActive: true, activatedDate: currentTime }).where({ id: user[0].id })
         /* Send Mail To User After Verify Account By Admin */
         let orgId = user[0].orgId;
-        if(orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+        if (orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
           url = 'https://cbreconnect.servicemind.asia';
-          org = "CBRE Connect";         
-        }else if(orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+          org = "CBRE Connect";
+        } else if (orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
           url = 'https://senses.servicemind.asia';
-          org = "Senses";         
-        }else{
+          org = "Senses";
+        } else {
           url = process.env.SITE_URL;
-          org = "ServiceMind";        
+          org = "ServiceMind";
         }
 
         await emailHelper.sendTemplateEmail({
           to: user[0].email,
-          subject: 'Welcome to '+org,
+          subject: 'Welcome to ' + org,
           template: 'welcome-org-user-email.ejs',
           templateData: {
-             fullName: user[0].name,
-             Org: org,
-             urlData: url
+            fullName: user[0].name,
+            Org: org,
+            urlData: url
           }
         })
 
@@ -631,32 +662,32 @@ const singupController = {
 
     try {
       let url;
-      let org;      
+      let org;
       let payload = req.body;
       let emailExistResult = await knex.from('users').where({ email: payload.email }).returning(['*']);
       if (emailExistResult.length) {
 
-        if(emailExistResult[0].orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+        if (emailExistResult[0].orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
           url = 'https://cbreconnect.servicemind.asia';
-          org = "CBRE Connect";         
-        }else if(emailExistResult[0].orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+          org = "CBRE Connect";
+        } else if (emailExistResult[0].orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
           url = 'https://senses.servicemind.asia';
-          org = "Senses";         
-        }else{
+          org = "Senses";
+        } else {
           url = process.env.SITE_URL;
-          org = "ServiceMind";        
+          org = "ServiceMind";
         }
-        
+
 
         let uid = uuid();
         await emailHelper.sendTemplateEmail({
           to: emailExistResult[0].email,
           subject: 'Reset Password',
           template: 'forgot-email.ejs',
-          orgId: emailExistResult[0].orgId,          
+          orgId: emailExistResult[0].orgId,
           templateData: {
             fullName: emailExistResult[0].name,
-            URL: url+'/reset-password/' + uid,
+            URL: url + '/reset-password/' + uid,
             Org: org
           }
         })
@@ -688,7 +719,7 @@ const singupController = {
       if (checkResult.length) {
 
         let hash = await bcrypt.hash(payload.newPassword, saltRounds);
-        let resetResult = await knex.from('users').update({ password: hash, verifyToken: "" ,emailVerified:true}).where({ verifyToken: checkResult[0].verifyToken }).returning(['*']);
+        let resetResult = await knex.from('users').update({ password: hash, verifyToken: "", emailVerified: true }).where({ verifyToken: checkResult[0].verifyToken }).returning(['*']);
         res.status(200).json({ message: "Password reset successfully!" })
 
       } else {
