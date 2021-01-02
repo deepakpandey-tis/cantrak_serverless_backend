@@ -1162,9 +1162,33 @@ const taskGroupController = {
                             }
 
                             if (payloadFilter.repeatPeriod) {
-                                if (payloadFilter.repeatPeriod.length) {
-                                    qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod)
-                                }
+                                // if (payloadFilter.repeatPeriod.length) {
+                                qb.whereRaw(
+                                    `"task_group_schedule_assign_assets"."frequencyTagIds"->>0  iLIKE ? `,
+                                    [payloadFilter.repeatPeriod]
+                                )
+                                    .orWhereRaw(
+                                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>1  iLIKE ? `,
+                                        [payloadFilter.repeatPeriod]
+                                    )
+                                    .orWhereRaw(
+                                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>2  iLIKE ? `,
+                                        [payloadFilter.repeatPeriod]
+                                    )
+                                    .orWhereRaw(
+                                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>3  iLIKE ? `,
+                                        [payloadFilter.repeatPeriod]
+                                    )
+                                    .orWhereRaw(
+                                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>4  iLIKE ? `,
+                                        [payloadFilter.repeatPeriod]
+                                    )
+                                    .orWhereRaw(
+                                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>5  iLIKE ? `,
+                                        [payloadFilter.repeatPeriod]
+                                    )
+                                //  qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod)
+                                //}
                             }
                             // if (payloadFilter.repeatPeriod) {
                             //     console.log("payload repeat period",payloadFilter.repeatPeriod)
@@ -1267,9 +1291,33 @@ const taskGroupController = {
                             }
 
                             if (payloadFilter.repeatPeriod) {
-                                if (payloadFilter.repeatPeriod.length) {
-                                    qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod)
-                                }
+                                //if (payloadFilter.repeatPeriod.length) {
+                                qb.whereRaw(
+                                    `"task_group_schedule_assign_assets"."frequencyTagIds"->>0  iLIKE ? `,
+                                    [payloadFilter.repeatPeriod]
+                                )
+                                    .orWhereRaw(
+                                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>1  iLIKE ? `,
+                                        [payloadFilter.repeatPeriod]
+                                    )
+                                    .orWhereRaw(
+                                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>2  iLIKE ? `,
+                                        [payloadFilter.repeatPeriod]
+                                    )
+                                    .orWhereRaw(
+                                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>3  iLIKE ? `,
+                                        [payloadFilter.repeatPeriod]
+                                    )
+                                    .orWhereRaw(
+                                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>4  iLIKE ? `,
+                                        [payloadFilter.repeatPeriod]
+                                    )
+                                    .orWhereRaw(
+                                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>5  iLIKE ? `,
+                                        [payloadFilter.repeatPeriod]
+                                    )
+                                //  qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod)
+                                // }
                             }
                             // if (payloadFilter.repeatPeriod) {
                             //     if (payloadFilter.repeatPeriod.length) {
@@ -1350,9 +1398,35 @@ const taskGroupController = {
                             //     }
                             // }
                             if (payloadFilter.repeatPeriod) {
-                                if (payloadFilter.repeatPeriod.length) {
-                                    qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod)
-                                }
+                                //if (payloadFilter.repeatPeriod.length) {
+
+                                qb.whereRaw(
+                                    `"task_group_schedule_assign_assets"."frequencyTagIds"->>0  iLIKE ? `,
+                                    [payloadFilter.repeatPeriod]
+                                )
+                                    .orWhereRaw(
+                                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>1  iLIKE ? `,
+                                        [payloadFilter.repeatPeriod]
+                                    )
+                                    .orWhereRaw(
+                                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>2  iLIKE ? `,
+                                        [payloadFilter.repeatPeriod]
+                                    )
+                                    .orWhereRaw(
+                                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>3  iLIKE ? `,
+                                        [payloadFilter.repeatPeriod]
+                                    )
+                                    .orWhereRaw(
+                                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>4  iLIKE ? `,
+                                        [payloadFilter.repeatPeriod]
+                                    )
+                                    .orWhereRaw(
+                                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>5  iLIKE ? `,
+                                        [payloadFilter.repeatPeriod]
+                                    )
+
+                                //  qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod)
+                                //}
                             }
 
                         }),
@@ -1417,7 +1491,7 @@ const taskGroupController = {
                             if (req.body.assetCategoryId && req.body.assetCategoryId.length > 0) {
                                 qb.whereIn('asset_master.assetCategoryId', req.body.assetCategoryId)
                             }
-                            
+
                             if (req.body.workOrderDate) {
 
                                 qb.whereRaw(`to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')='${req.body.workOrderDate}'`);
@@ -1441,9 +1515,39 @@ const taskGroupController = {
                             //     }
                             // }
                             if (payloadFilter.repeatPeriod) {
-                                if (payloadFilter.repeatPeriod.length) {
-                                    qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod)
-                                }
+                                //   if (payloadFilter.repeatPeriod.length) {
+
+                                qb.whereRaw(
+                                    `"task_group_schedule_assign_assets"."frequencyTagIds"->>0  iLIKE ? `,
+                                    [payloadFilter.repeatPeriod]
+                                )
+                                    .orWhereRaw(
+                                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>1  iLIKE ? `,
+                                        [payloadFilter.repeatPeriod]
+                                    )
+                                    .orWhereRaw(
+                                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>2  iLIKE ? `,
+                                        [payloadFilter.repeatPeriod]
+                                    )
+                                    .orWhereRaw(
+                                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>3  iLIKE ? `,
+                                        [payloadFilter.repeatPeriod]
+                                    )
+                                    .orWhereRaw(
+                                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>4  iLIKE ? `,
+                                        [payloadFilter.repeatPeriod]
+                                    )
+                                    .orWhereRaw(
+                                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>5  iLIKE ? `,
+                                        [payloadFilter.repeatPeriod]
+                                    )
+
+
+
+
+                                // qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod)
+                                // qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod)
+                                //  }
                             }
 
                             // if(req.body.assignedTeam){
