@@ -555,6 +555,7 @@ const taskGroupController = {
                             orgId: req.orgId
                         }));
 
+                        insertAssignedAdditionalUserData = _.uniqBy( insertAssignedAdditionalUserData,"entityId")
                         let assignedAdditionalUser = await knex.insert(insertAssignedAdditionalUserData).returning(['*']).transacting(trx).into('assigned_service_additional_users');
                     }
                 }
@@ -4490,6 +4491,8 @@ const taskGroupController = {
             payload.newPmDate = moment(payload.newPmDate);
             payload.newPmDate = payload.newPmDate.format("YYYY-MM-DDTHH:mm:ss.SSSZ");
             console.log('payload.newPmDate and Time::', payload);
+            let currentTime = new Date().getTime();
+            
 
             let updatedWorkOrder;
             if(payload.newPmDate == 'Invalid date'){
@@ -4502,7 +4505,8 @@ const taskGroupController = {
             
             let teamUsersPayload = {
                 teamId: payload.teamId,
-                userId: payload.mainUserId
+                userId: payload.mainUserId,
+                updatedAt : currentTime
             }
 
             const updateWorkOrderTeamAndUsers = await knex('assigned_service_team')
@@ -4511,10 +4515,33 @@ const taskGroupController = {
                 .whereIn('assigned_service_team.entityId', payload.entityId)
 
 
+                let deleteAdditionalUser = knex('assigned_service_additional_users').where({'assigned_service_additional_users.entityType' : 'pm_task_groups'})
+                .whereIn('assigned_service_additional_users.entityId' ,payload.entityId).del()
+
+
+                let additionlUser = payload.additionalUsers
+
+                let updateAdditionalUsers;
+                for(let addUser of additionlUser){
+
+                    console.log("Updated additional user loop",addUser)
+                    updateAdditionalUsers = await knex('assigned_service_additional_users')
+                        .update({
+                            userId : addUser,
+                            updatedAt :currentTime
+
+                        })
+                        .where({'assigned_service_additional_users.entityType' : 'pm_task_groups'})
+                        .whereIn('assigned_service_additional_users.entityId' ,payload.entityId)
+                }
+            
+
+
             return res.status(200).json({
                 data: {
                     updatedWorkOrder,
-                    updateWorkOrderTeamAndUsers
+                    updateWorkOrderTeamAndUsers,
+                    updateAdditionalUsers
                 },
                 message: 'Work order date updated!'
             })

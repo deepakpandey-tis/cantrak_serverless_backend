@@ -17,6 +17,8 @@ const fs = require("fs");
 const https = require("https");
 
 const imageHelper = require("../helpers/image");
+const { innerJoin } = require("../db/knex");
+const surveyAppointmentNotification = require('../notifications/service-request/survey-appointment-notification');
 
 const surveyOrderController = {
 
@@ -30,6 +32,10 @@ const surveyOrderController = {
       let surveyOrderPayload = req.body;
       let surveyOrderId;
       let assignedServiceTeam;
+      let serviceRequestResult;
+      let userResult;
+      let requestResult;
+      let userResult2;
 
       let initialSurveyOrderPayload = _.omit(surveyOrderPayload, [
         "additionalUsers",
@@ -134,6 +140,74 @@ const surveyOrderController = {
           .where({ id: surveyOrderPayload.serviceRequestId })
           .returning(['*'])
 
+        /*GET REQUEST BY & CREATED BY ID OPEN */
+        let createdBy;
+        let requestedBy;
+        serviceRequestResult = await knex('service_requests').where({ id: surveyOrderPayload.serviceRequestId, orgId: req.orgId }).first();
+        if (serviceRequestResult) {
+
+          userResult = await knex('users')
+            .select([
+              "users.*",
+              "application_user_roles.roleId"
+            ])
+            .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+            .where({ 'users.id': serviceRequestResult.createdBy, 'application_user_roles.roleId': 4, 'users.orgId': req.orgId }).first();
+
+          requestResult = await knex('requested_by').where({ id: serviceRequestResult.requestedBy, orgId: req.orgId }).first();
+          if (requestResult) {
+
+            userResult2 = await knex('users')
+              .select([
+                "users.*",
+                "application_user_roles.roleId"
+              ])
+              .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+              .where({ 'users.email': requestResult.email, 'application_user_roles.roleId': 4, 'users.orgId': req.orgId }).first();
+
+          }
+
+
+          let appointmentDate = moment(initialSurveyOrderPayload.appointedDate).format("YYYY-MM-DD");
+          let appointmentTime = initialSurveyOrderPayload.appointedTime;
+
+          let dataNos = {
+            payload: {
+              title: "Survey Appointment has been created",
+              url: "",
+              description: `An Engineer as been appointed  for visit on ${appointmentDate} at ${appointmentTime} to Survey regarding your Service Request`,
+              redirectUrl: "/user/announcement/announcement/1"
+
+            },
+          };
+
+          let sender = await knex.from("users").where({ id: req.me.id }).first();
+          let receiver;
+          let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH"];
+
+          if (userResult) {
+            receiver = userResult;
+          } else {
+            receiver = userResult2;
+          }
+
+          await surveyAppointmentNotification.send(
+            sender,
+            receiver,
+            dataNos,
+            ALLOWED_CHANNELS
+          );
+
+
+
+
+
+
+        }
+
+        /*GET REQUEST BY & CREATED BY ID CLOSE */
+
+
         trx.commit;
       });
 
@@ -145,7 +219,12 @@ const surveyOrderController = {
         data: {
           surveyOrder,
           assignedServiceTeam,
-          assignedAdditionalUsers: additionalUsers
+          assignedAdditionalUsers: additionalUsers,
+          userResult,
+          userResult2,
+          serviceRequestResult,
+          requestResult
+
         },
         message: "Survey Order added successfully !"
       });
