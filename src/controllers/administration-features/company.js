@@ -18,9 +18,11 @@ const companyController = {
   addCompany: async (req, res) => {
     try {
       let company = null;
+      let companyAdmin = null;
       await knex.transaction(async trx => {
 
-        const payload = _.omit(req.body, ["logoFile"], ["orgLogoFile"]);
+        const payload = _.omit(req.body, ["logoFile"], ["orgLogoFile"], "companyAdmin");
+        console.log("payload", payload);
         let orgId;
         if (payload.orgId) {
           orgId = payload.orgId;
@@ -125,6 +127,28 @@ const companyController = {
           .into("companies");
         company = insertResult[0];
 
+
+        // Insert company  admin while create the company
+
+        if (req.body.companyAdmin) {
+
+          let insertCompanyAdminData = {
+            companyId: company.id,
+            userId: req.body.companyAdmin,
+            createdAt: currentTime,
+            updatedAt: currentTime,
+            orgId: orgId
+          };
+
+          let insertResult = await knex
+            .insert(insertCompanyAdminData)
+            .returning(["*"])
+            .transacting(trx)
+            .into("company_admin");
+          companyAdmin = insertResult[0];
+
+        }
+
         trx.commit;
       });
 
@@ -145,9 +169,10 @@ const companyController = {
   updateCompany: async (req, res) => {
     try {
       let company = null;
+      let companyAdmin = null;
       await knex.transaction(async trx => {
 
-        const payload = _.omit(req.body, ["logoFile"], ["orgLogoFile"]);
+        const payload = _.omit(req.body, ["logoFile"], ["orgLogoFile"], "companyAdmin");
         let orgId;
         if (payload.orgId) {
           orgId = payload.orgId;
@@ -304,7 +329,51 @@ const companyController = {
         company = insertResult[0];
 
 
+
+        // Update company admin while update the company
+
+        if (req.body.companyAdmin) {
+
+          userResult = await knex("company_admin")
+            .select([
+              "company_admin.id"
+            ])
+            .where("company_admin.orgId", orgId)
+            .where("company_admin.companyId", payload.id)
+
+          let companyAdminResult;
+          let insertCompanyAdminData = {
+            companyId: payload.id,
+            userId: req.body.companyAdmin,
+            createdAt: currentTime,
+            updatedAt: currentTime,
+            orgId: orgId
+          };
+
+          console.log("userResults", userResult);
+
+          if (userResult != "") {
+            // Update company admin when company admin already exits  while  updating company info
+            companyAdminResult = await knex
+              .update(insertCompanyAdminData)
+              .where({ companyId: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("company_admin");
+
+          } else {
+            // Insert company admin when company admin not exits while updating company info
+            companyAdminResult = await knex
+              .insert(insertCompanyAdminData)
+              .returning(["*"])
+              .transacting(trx)
+              .into("company_admin");
+          }
+
+        }
+
         trx.commit;
+
       });
 
       return res.status(200).json({
@@ -337,6 +406,7 @@ const companyController = {
             ]
           });
         }
+
         let current = new Date().getTime();
 
         let role = req.me.roles[0];
@@ -368,8 +438,21 @@ const companyController = {
             "createdAt",
             "updatedAt"
           ]);
-
         }
+
+        let companyAdminView = await knex("company_admin")
+          .leftJoin("users", "users.id", "company_admin.userId")
+          .where('company_admin.companyId', payload.id)
+          .where({ "company_admin.orgId": req.orgId })
+          .select([
+            "company_admin.userId as companyAdmin",
+            "users.name"
+          ]).first();
+
+          console.log("companyAdmin",  companyAdminView);
+          if(companyAdminView){
+            company = {...company, companyAdminView}
+          }
 
         trx.commit;
       });
@@ -1183,7 +1266,84 @@ const companyController = {
       });
     }
 
+  },
+  getOrgUserList: async (req, res) => {
+    try {
+
+      let orgId = req.orgId
+      let usersType = ['2', '3'];
+      let userResult = await knex("application_user_roles")
+        .innerJoin('users', 'application_user_roles.userId', 'users.id')
+        .select([
+          "users.id",
+          "users.name",
+        ])
+        .where("application_user_roles.orgId", orgId)
+        .whereIn("application_user_roles.roleId", usersType)
+
+      return res.status(200).json({
+        data: {
+          users: userResult
+        },
+        message: "Users List!"
+      });
+
+    } catch (err) {
+      console.log(
+        "[controllers][companies][userResult] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+
+  },
+  validateCompanyAdmin: async (req, res) => {
+    try {
+      let companyId = req.body.companyId;
+      let userId = req.body.userId;
+      let orgId = req.orgId
+      let userResult;
+      if (companyId) {
+        userResult = await knex("company_admin")
+          .select([
+            "company_admin.id"
+          ])
+          .where("company_admin.orgId", orgId)
+          .where("company_admin.userId", userId)
+          .whereNot("company_admin.companyId", companyId)
+      } else {
+        userResult = await knex("company_admin")
+          .select([
+            "company_admin.id"
+          ])
+          .where("company_admin.orgId", orgId)
+          .where("company_admin.userId", userId)
+      }
+
+
+      return res.status(200).json({
+        data: {
+          users: userResult
+        },
+        message: "Users List!"
+      });
+
+
+    } catch (err) {
+      console.log(
+        "[controllers][companies][userResult] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
+
 };
 
 module.exports = companyController;
