@@ -9,6 +9,8 @@ const saltRounds = 10;
 const knex = require("../db/knex");
 const XLSX = require("xlsx");
 const uuid = require('uuid/v4')
+const signupNotification = require("../notifications/signup/signup-notification");
+
 
 const singupController = {
   getCompaniesList: async (req, res) => {
@@ -547,25 +549,46 @@ const singupController = {
 
           let Parallel = require('async-parallel')
           let admins = await Parallel.map(orgAdmins, async admin => {
-            let adminres = await knex('users').where({ id: admin.userId }).select(['name', 'email']).first()
+            let adminres = await knex('users').where({ id: admin.userId }).select(['id', 'name', 'email']).first()
             return adminres;
           })
 
           /* Send Notification to other channels */
 
-          // let orgMaster = await knex.from("organisations").where({ id: orgId, organisationAdminId: 994 }).orWhere({ id: orgId, organisationAdminId: 1188 }).first();
-        
-          // let dataNos = {
-          //   payload: {
-          //     title: 'New tenant signup in ' + org,
-          //     description: req.body.description,
-          //     orgData: orgMaster              
-          //   },
-          // };
+          let orgMaster = await knex.from("organisations").where({ id: orgId, organisationAdminId: 994 }).orWhere({ id: orgId, organisationAdminId: 1188 }).first();
+
+          let dataNos = {
+            payload: {
+              title: 'New tenant signup in ' + org,
+              description: 'A new tenant has signed up in ' + org + ',please check the details and activate the account in order to allow the tenant to use the available services.',
+              orgData: orgMaster
+            },
+          };
+
+          const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH'];
+          console.log('User with in Loop: ', insertedUser);
+          console.log('User with in Loop ID: ', insertedUser[0].id)
+
+
+          // let sender = await knex.from("users").where({ id: insertedUser[0].id }).first();
+
+          // console.log("sender-", sender);
+          console.log("users-",  user);
 
 
 
           for (let admin of admins) {
+
+            let receiver = await knex.from("users").where({ id: admin.id }).first();
+            console.log("receiver", receiver);
+        
+            await signupNotification.send(
+              user,
+              receiver,
+              dataNos,
+              ALLOWED_CHANNELS
+            );
+
 
             // await emailHelper.sendTemplateEmail({
             //   to: admin.email,
@@ -592,7 +615,7 @@ const singupController = {
                 floor: DataResult.floorZoneCode,
                 unit: DataResult.unit,
                 Org: org,
-                OTP: url + '/verify-account/' + user.verifyToken
+                OTP: url + '/admin/administration-features/customers/unapproved-tenants/'
               }
             })
           }

@@ -5,17 +5,17 @@ const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'LINE_NOTIFY', 'SMS'];
 const SHOULD_QUEUE = process.env.IS_OFFLINE ? false : true;
 
 
-const announcementNotification = {
+const signupNotification = {
     send:async(sender, receiver, data, allowedChannels = ALLOWED_CHANNELS)=>{
         try{
-            console.log('[notifications][announcement][announcement-notification][send]: Data:', data);
+            console.log('[notifications][signUp][signup-notification][send]: Data:', data);
 
             if (SHOULD_QUEUE) {
                 await notification.queue(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, __filename);
-                console.log('[notifications][announcement][announcement-notification][send]: All Notifications Queued');
+                console.log('[notifications][signUp][signup-notification][send]: All Notifications Queued');
             } else {
-                await notification.send(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, announcementNotification);
-                console.log('[notifications][announcement][announcement-notification][send]: All Notifications Sent');
+                await notification.send(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, signupNotification);
+                console.log('[notifications][signUp][signup-notification][send]: All Notifications Sent');
             }
 
         }catch(err){
@@ -54,7 +54,7 @@ const announcementNotification = {
                 image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `/user/dashboard/home`,
+                    url: `/admin/administration-features/customers/unapproved-tenants`,
                     primaryKey: Date.now()
                 }
             },
@@ -63,7 +63,7 @@ const announcementNotification = {
                     action: "explore",
                     title: "Open",
                     //url: `/user/dashboard/home`,
-                    url: data.payload.redirectUrl
+                    url: `/admin/administration-features/customers/unapproved-tenants`
 
                 }
             ]
@@ -137,7 +137,7 @@ const announcementNotification = {
                 image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `${process.env.SITE_URL}/admin/dashboard/home`,
+                    url: `/admin/administration-features/customers/unapproved-tenants`,
                     primaryKey: Date.now()
                 }
             },
@@ -145,7 +145,7 @@ const announcementNotification = {
                 {
                     action: "explore",
                     title: "Open Home Page",
-                    url: `${process.env.SITE_URL}/admin/dashboard/home`
+                    url: `/admin/administration-features/customers/unapproved-tenants`
                 }
             ]
         }
@@ -186,4 +186,4 @@ const announcementNotification = {
     }
 
 }
-module.exports = announcementNotification
+module.exports = signupNotification
