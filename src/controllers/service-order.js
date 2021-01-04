@@ -7,6 +7,7 @@ const XLSX = require('xlsx');
 
 
 const serviceRequestNotification = require('../notifications/service-request/approval-notification');
+const serviceAppointmentNotification = require('../notifications/service-request/service-appointment-notification');
 
 
 
@@ -2306,19 +2307,26 @@ const serviceOrderController = {
             let additionalUsers = [];
             let userId = req.me.id;
             let appointedTime;
+            let serviceRequestResult;
+            let userResult;
+            let requestResult;
+            let userResult2;
+
 
             await knex.transaction(async trx => {
                 let appointmentOrderPayload = req.body;
                 let initialServiceAppointmentPayload = _.omit(appointmentOrderPayload, [
                     "additionalUsers",
                     "teamId",
-                    "mainUserId"
+                    "mainUserId",
+                    "serviceReuqestId"
                 ]);
 
                 const schema = Joi.object().keys({
                     serviceOrderId: Joi.string().required(),
                     appointedDate: Joi.string().required(),
-                    appointedTime: Joi.string().required()
+                    appointedTime: Joi.string().required(),
+                    serviceReuqestId: Joi.string().allow("").optional("")
                 });
 
                 let result = Joi.validate(initialServiceAppointmentPayload, schema);
@@ -2335,7 +2343,7 @@ const serviceOrderController = {
                     });
                 }
 
-             // appointedTime = moment(initialServiceAppointmentPayload.appointedTime, 'HH:mm').hours() + ":" + moment(initialServiceAppointmentPayload.appointedTime, 'HH:mm').minutes();
+                // appointedTime = moment(initialServiceAppointmentPayload.appointedTime, 'HH:mm').hours() + ":" + moment(initialServiceAppointmentPayload.appointedTime, 'HH:mm').minutes();
 
 
                 let currentTime = new Date().getTime();
@@ -2396,6 +2404,71 @@ const serviceOrderController = {
                         additionalUsers.push(userResult[0]);
                     }
                 }
+
+
+                /*GET REQUEST BY & CREATED BY ID OPEN */
+                let createdBy;
+                let requestedBy;
+                serviceRequestResult = await knex('service_requests').where({ id: req.body.serviceReuqestId, orgId: req.orgId }).first();
+                if (serviceRequestResult) {
+
+                    userResult = await knex('users')
+                        .select([
+                            "users.*",
+                            "application_user_roles.roleId"
+                        ])
+                        .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+                        .where({ 'users.id': serviceRequestResult.createdBy, 'application_user_roles.roleId': 4, 'users.orgId': req.orgId }).first();
+
+                    requestResult = await knex('requested_by').where({ id: serviceRequestResult.requestedBy, orgId: req.orgId }).first();
+                    if (requestResult) {
+
+                        userResult2 = await knex('users')
+                            .select([
+                                "users.*",
+                                "application_user_roles.roleId"
+                            ])
+                            .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+                            .where({ 'users.email': requestResult.email, 'application_user_roles.roleId': 4, 'users.orgId': req.orgId }).first();
+
+                    }
+
+
+                    let appointmentDate = moment(req.body.appointedDate).format("YYYY-MM-DD");
+                    let appointmentTime = req.body.appointedTime;
+
+                    let dataNos = {
+                        payload: {
+                            title: "Service Appointment has been created",
+                            url: "",
+                            description: `An Engineer as been appointed  for visit on ${appointmentDate} at ${appointmentTime} to service regarding your Service Request`,
+                            redirectUrl: "/user/announcement/announcement/1"
+
+                        },
+                    };
+
+                    let sender = await knex.from("users").where({ id: req.me.id }).first();
+                    let receiver;
+                    let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH"];
+
+                    if (userResult) {
+                        receiver = userResult;
+                    } else {
+                        receiver = userResult2;
+                    }
+
+                    await serviceAppointmentNotification.send(
+                        sender,
+                        receiver,
+                        dataNos,
+                        ALLOWED_CHANNELS
+                    );
+
+                }
+
+                /*GET REQUEST BY & CREATED BY ID CLOSE */
+
+
                 trx.commit;
                 res.status(200).json({
                     data: {
