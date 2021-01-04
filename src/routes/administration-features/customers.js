@@ -27,6 +27,6 @@ router.post('/import-tenant-data',
     customerMiddleware.importTenantData)
 
 router.post('/get-tenant-list-by-multiple-unit', authMiddleware.isAuthenticated, customerMiddleware.getTenantListByMultiplePropertyUnits)
-
+router.post('/get-inactive-customers', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, customerMiddleware.getInactiveCustomers)
 
 module.exports = router
