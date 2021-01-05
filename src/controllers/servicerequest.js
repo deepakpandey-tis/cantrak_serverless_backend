@@ -15,7 +15,7 @@ const fs = require("fs");
 const https = require("https");
 
 const imageHelper = require("../helpers/image");
-
+const serviceRequestUpdateStatusNotification = require('../notifications/service-request/service-request-update-status-notification');
 
 
 
@@ -2862,8 +2862,8 @@ const serviceRequestController = {
 
                     serviceResult = await knex('service_requests')
                         .where(qb => {
-                           // if (req.query.serviceRequestId) {
-                                qb.where('id', req.query.serviceRequestId)
+                            // if (req.query.serviceRequestId) {
+                            qb.where('id', req.query.serviceRequestId)
                             //}
                             qb.where({ orgId: req.orgId })
                         })
@@ -3366,6 +3366,69 @@ const serviceRequestController = {
                     .update({ serviceStatusCode: updateStatus, updatedAt: currentTime, approvedBy: req.me.id, approvedOn: currentTime })
                     .where({ id: serviceRequestId });
 
+
+
+                /*GET REQUEST BY & CREATED BY ID FOR NOTIFICATION OPEN */
+                let userResult;
+                let userResult2
+                let requestResult;
+                let serviceRequestResult = await knex('service_requests').where({ id: serviceRequestId, orgId: req.orgId }).first();
+                if (serviceRequestResult) {
+
+                    userResult = await knex('users')
+                        .select([
+                            "users.*",
+                            "application_user_roles.roleId"
+                        ])
+                        .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+                        .where({ 'users.id': serviceRequestResult.createdBy, 'application_user_roles.roleId': 4, 'users.orgId': req.orgId }).first();
+
+                    requestResult = await knex('requested_by').where({ id: serviceRequestResult.requestedBy, orgId: req.orgId }).first();
+                    if (requestResult) {
+
+                        userResult2 = await knex('users')
+                            .select([
+                                "users.*",
+                                "application_user_roles.roleId"
+                            ])
+                            .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+                            .where({ 'users.email': requestResult.email, 'application_user_roles.roleId': 4, 'users.orgId': req.orgId }).first();
+
+                    }
+
+                    let dataNos = {
+                        payload: {
+                            title: "Service Request has been Approved!",
+                            url: "",
+                            description: `Your service requests has been approved, an engineer will be assigned shortly.`,
+                            redirectUrl: "/user/service-request"
+
+                        },
+                    };
+
+                    let sender = await knex.from("users").where({ id: req.me.id }).first();
+                    let receiver;
+                    let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH"];
+
+                    if (userResult) {
+                        receiver = userResult;
+                    } else {
+                        receiver = userResult2;
+                    }
+
+                    await serviceRequestUpdateStatusNotification.send(
+                        sender,
+                        receiver,
+                        dataNos,
+                        ALLOWED_CHANNELS
+                    );
+
+                }
+
+                /*GET REQUEST BY & CREATED BY ID FOR NOTIFICATIO CLOSE */
+
+
+
             }
 
             if (updateStatus === 'COM') {
@@ -3376,6 +3439,68 @@ const serviceRequestController = {
                 await knex("service_orders")
                     .update({ signature: signatureImg, ratings: ratings, comment: comments, updatedAt: currentTime, completedOn: currentTime })
                     .where({ serviceRequestId: serviceRequestId });
+
+
+
+                /*GET REQUEST BY & CREATED BY ID FOR NOTIFICATION OPEN */
+                let userResult;
+                let userResult2
+                let requestResult;
+                let serviceRequestResult = await knex('service_requests').where({ id: serviceRequestId, orgId: req.orgId }).first();
+                if (serviceRequestResult) {
+
+                    userResult = await knex('users')
+                        .select([
+                            "users.*",
+                            "application_user_roles.roleId"
+                        ])
+                        .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+                        .where({ 'users.id': serviceRequestResult.createdBy, 'application_user_roles.roleId': 4, 'users.orgId': req.orgId }).first();
+
+                    requestResult = await knex('requested_by').where({ id: serviceRequestResult.requestedBy, orgId: req.orgId }).first();
+                    if (requestResult) {
+
+                        userResult2 = await knex('users')
+                            .select([
+                                "users.*",
+                                "application_user_roles.roleId"
+                            ])
+                            .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+                            .where({ 'users.email': requestResult.email, 'application_user_roles.roleId': 4, 'users.orgId': req.orgId }).first();
+
+                    }
+
+                    let dataNos = {
+                        payload: {
+                            title: "Service Request has been Completed!",
+                            url: "",
+                            description: `Your service request has been completed.`,
+                            redirectUrl: "/user/service-request"
+
+                        },
+                    };
+
+                    let sender = await knex.from("users").where({ id: req.me.id }).first();
+                    let receiver;
+                    let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH"];
+
+                    if (userResult) {
+                        receiver = userResult;
+                    } else {
+                        receiver = userResult2;
+                    }
+
+                    await serviceRequestUpdateStatusNotification.send(
+                        sender,
+                        receiver,
+                        dataNos,
+                        ALLOWED_CHANNELS
+                    );
+
+                }
+
+                /*GET REQUEST BY & CREATED BY ID FOR NOTIFICATIO CLOSE */
+
             }
             if (updateStatus === 'C') {
                 await knex("service_requests")

@@ -17,6 +17,7 @@ const fs = require("fs");
 const https = require("https");
 
 const imageHelper = require("../../helpers/image");
+const serviceRequestUserAddNotification = require('../../notifications/service-request/service-request-user-add-notification');
 
 
 const serviceRequestController = {
@@ -747,6 +748,7 @@ const serviceRequestController = {
       let result;
       let orgId = req.orgId;
       let payload = _.omit(req.body, ["images", "isSo", "mobile", "email", "name", 'company', 'floor', 'userId']);
+      let userTeamResult;
 
       await knex.transaction(async trx => {
         let schema;
@@ -974,6 +976,64 @@ const serviceRequestController = {
         }
         /*USER DETAIL UPDATE CLOSE */
 
+
+        /*SEND NOTIFICATION OPEN */
+        let teamProjectResult = await knex('team_roles_project_master').where({ "projectId": payload.project, orgId: req.orgId });
+        let teamIds = teamProjectResult.map(v => v.teamId);
+        userTeamResult = await knex('team_users')
+          .select(["users.*"])
+          .innerJoin('users', 'team_users.userId', 'users.id')
+          .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+          .where({ 'team_users.orgId': req.orgId })
+          .whereIn("team_users.teamId", teamIds)
+          .whereIn('application_user_roles.roleId', [2, 3]);
+
+        let adminResult = await knex('users')
+          .select([
+            "users.*",
+            "application_user_roles.roleId"
+          ])
+          .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+          .where({ 'application_user_roles.roleId': 2, 'users.orgId': req.orgId }).first();
+
+
+
+        let dataNos = {
+          payload: {
+            title: "Service Request new created!",
+            url: "",
+            description: `New service request has been created by tenant`,
+            redirectUrl: "admin/service-request"
+
+          },
+        };
+
+        let sender = await knex.from("users").where({ id: req.me.id }).first();
+        //let receiver;
+        let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH"];
+
+        for (let no of userTeamResult) {
+          await serviceRequestUserAddNotification.send(
+            sender,
+            no,
+            dataNos,
+            ALLOWED_CHANNELS
+          );
+        }
+
+        await serviceRequestUserAddNotification.send(
+          sender,
+          adminResult,
+          dataNos,
+          ALLOWED_CHANNELS
+        );
+
+
+
+        /*SEND NOTIFICATION CLOSE */
+
+
+
         trx.commit;
       });
 
@@ -985,6 +1045,7 @@ const serviceRequestController = {
 
       return res.status(200).json({
         //data:result,
+        userTeamResult,
         message: "Service Request created successfully"
       });
     } catch (err) {
@@ -2540,19 +2601,19 @@ const serviceRequestController = {
           console.log("serviceAppoint", serviceOrderAppointment);
           if (serviceOrderAppointment) {
             let str = serviceOrderAppointment.appointedTime;
-           // appointedTimes = str.substring(0, str.length - 3);
+            // appointedTimes = str.substring(0, str.length - 3);
             appointedTimes = str;
           }
-        }else{
+        } else {
           serviceOrderAppointment = await knex('survey_orders').select('*').where({ "serviceRequestId": st["S Id"], "surveyOrderStatus": "Pending" }).orderBy('survey_orders.id', 'desc').limit(1).first();
-          if (serviceOrderAppointment) {         
-              let str = serviceOrderAppointment.appointedTime;
-              // appointedTimes = str.substring(0, str.length - 3);     
-              appointedTimes = str;          
+          if (serviceOrderAppointment) {
+            let str = serviceOrderAppointment.appointedTime;
+            // appointedTimes = str.substring(0, str.length - 3);     
+            appointedTimes = str;
           }
         }
 
-       
+
 
 
         let imageResult = [];
