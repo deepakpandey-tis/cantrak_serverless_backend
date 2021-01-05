@@ -2442,7 +2442,7 @@ const serviceOrderController = {
                             title: "Service Appointment has been created",
                             url: "",
                             description: `An Engineer as been appointed  for visit on ${appointmentDate} at ${appointmentTime} to service regarding your Service Request`,
-                            redirectUrl: "/user/announcement/announcement/1"
+                            redirectUrl: "/user/service-request"
 
                         },
                     };

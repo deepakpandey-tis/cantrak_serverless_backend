@@ -176,7 +176,7 @@ const surveyOrderController = {
               title: "Survey Appointment has been created",
               url: "",
               description: `An Engineer as been appointed  for visit on ${appointmentDate} at ${appointmentTime} to Survey regarding your Service Request`,
-              redirectUrl: "/user/announcement/announcement/1"
+              redirectUrl: "/user/service-request"
 
             },
           };
@@ -197,12 +197,6 @@ const surveyOrderController = {
             dataNos,
             ALLOWED_CHANNELS
           );
-
-
-
-
-
-
         }
 
         /*GET REQUEST BY & CREATED BY ID CLOSE */

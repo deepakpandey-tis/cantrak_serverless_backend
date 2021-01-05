@@ -90,7 +90,7 @@ const peopleController = {
                 let uid = uuid();
                 payload.verifyToken = uid;
                 let currentTime = new Date().getTime();
-                const people = await knex('users').insert({...payload, mobileNo: mobile, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime, createdBy: req.me.id }).returning(['*'])
+                const people = await knex('users').insert({...payload, mobileNo: mobile, orgId: req.orgId, createdAt: currentTime, updatedAt: currentTime, createdBy: req.me.id, emailVerified: true }).returning(['*'])
 
                 //Insert Application Role
                 let applicationUserRole = await knex(
