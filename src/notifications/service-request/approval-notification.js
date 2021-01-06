@@ -33,8 +33,8 @@ const approvalNotification = {
             receiverId: receiver.id,
             payload: {
                 ...data,
-                subject: 'Service Request Notification',
-                body: `Hi, You have assigned new service request ${sender.name}`,
+                subject: 'Service Request assigned',
+                body: `A new service request has been assigned to you by ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
@@ -46,7 +46,7 @@ const approvalNotification = {
             actions: [
                 {
                     action: "explore",
-                    title: "Service Request",
+                    title: "Service Request assigned",
                     url:`/admin/service-order`
                 }
             ]
@@ -58,13 +58,15 @@ const approvalNotification = {
     sendEmailNotification: async (sender, receiver, data) => {
         data = {
             receiverEmail: receiver.email,
-            template: 'test-email.ejs',
+            template: 'service-request.ejs',
             templateData: {
-                fullName: receiver.name
+                fullName: receiver.name,
+                title: 'Service Request assigned',
+                description: `A new service request has been assigned to you by ${sender.name}`
             },
             payload: {
                 ...data,
-                subject: 'Service Request Email Notification',
+                subject: 'Service Request assigned',
             }
         };
 
@@ -79,8 +81,8 @@ const approvalNotification = {
             senderId: sender.id,
             receiverId: receiver.id,
             payload: {
-                subject: 'Service Request Notification',
-                body: `Hi,  You have assigned new service request ${sender.name}`,
+                subject: 'Service Request assigned',
+                body: `A new service request has been assigned to you by ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
@@ -92,7 +94,7 @@ const approvalNotification = {
             actions: [
                 {
                     action: "explore",
-                    title: "Service Request Page",
+                    title: "Service Request assigned",
                     url: `${process.env.SITE_URL}/admin/service-order`
                 }
             ]

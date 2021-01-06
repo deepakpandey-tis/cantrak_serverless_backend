@@ -559,8 +559,8 @@ const singupController = {
 
           let dataNos = {
             payload: {
-              title: 'New tenant signup in ' + org,
-              description: 'A new tenant has signed up in ' + org + ',please check the details and activate the account in order to allow the tenant to use the available services.',
+              title: 'Tenant signup in ' + org,
+              description: 'A tenant has signed up in ' + org + ', please check the details and activate the account in order to allow the tenant to use the available services.',
               orgData: orgMaster
             },
           };
