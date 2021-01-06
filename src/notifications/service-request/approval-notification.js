@@ -58,9 +58,11 @@ const approvalNotification = {
     sendEmailNotification: async (sender, receiver, data) => {
         data = {
             receiverEmail: receiver.email,
-            template: 'announcement.ejs',
+            template: 'service-request.ejs',
             templateData: {
-                fullName: receiver.name
+                fullName: receiver.name,
+                title: 'Service Request assigned',
+                description: `A new service request has been assigned to you by ${sender.name}`
             },
             payload: {
                 ...data,

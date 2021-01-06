@@ -87,7 +87,7 @@ const serviceRequestUpdateNotification = {
             },
             payload: {
                 ...data,
-                subject: 'Announcement Email Notification',
+                subject: 'Service Request Update Email Notification',
             }
         };
 
