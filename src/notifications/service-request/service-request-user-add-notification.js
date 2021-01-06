@@ -49,7 +49,7 @@ const serviceRequestUserAddNotification = {
             payload: {
                 ...data,
                 subject: title,
-                body: description + `from  ${sender.name}`,
+                body: description,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -133,7 +133,7 @@ const serviceRequestUserAddNotification = {
             receiverId: receiver.id,
             payload: {
                 subject: title,
-                body: description + `from ${sender.name}`,
+                body: description,
                 icon: icons,
                 image: images,
                 extraData: {
