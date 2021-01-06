@@ -435,7 +435,7 @@ const taskGroupController = {
 
         try {
 
-            console.log("Consolidated work orders in body", req.body.consolidatedWorkOrders)
+            console.log("Consolidated work orders in body 1", req.body.consolidatedWorkOrders)
 
             let createTemplateTask = null;
             let createTemplate = null;
@@ -4736,10 +4736,17 @@ const taskGroupController = {
                 updatedAt : currentTime
             }
 
+            console.log("payload.workOrderId to edit",payload.workOrderId)
+
+            let deleteTeamAndUser = knex('assigned_service_team')
+            .where({ entityType: 'pm_task_groups',orgId:req.orgId })
+            .whereIn('assigned_service_team.workOrderId', payload.workOrderId)
+
             const updateWorkOrderTeamAndUsers = await knex('assigned_service_team')
                 .update(teamUsersPayload)
-                .where({ entityType: 'pm_task_groups' })
-                .whereIn('assigned_service_team.entityId', payload.entityId)
+                .where({ entityType: 'pm_task_groups' ,orgId:req.orgId})
+                .whereIn('assigned_service_team.workOrderId', payload.workOrderId)
+
 
 
                 let deleteAdditionalUser = knex('assigned_service_additional_users').where({'assigned_service_additional_users.entityType' : 'pm_task_groups'})

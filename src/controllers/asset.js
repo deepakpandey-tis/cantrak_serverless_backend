@@ -668,7 +668,7 @@ const assetController = {
     getAssetListByCategory: async (req, res) => {
         // name, model, area, category
 
-        console.log("req.body data for assets",req.body)
+        console.log("req.body data for assets 2",req.body)
         try {
 
             let reqData = req.query;
@@ -753,11 +753,11 @@ const assetController = {
                         .where(qb => {
 
                             if (building) {
-                                qb.where('asset_location.buildingId', building)
+                                qb.whereIn('asset_location.buildingId', building)
                             }
 
                             if (floorZone) {
-                                qb.where('asset_location.floorId', floorZone)
+                                qb.whereIn('asset_location.floorId', floorZone)
                             }
 
                             if (assetName) {
@@ -836,11 +836,11 @@ const assetController = {
                         .where(qb => {
 
                             if (building) {
-                                qb.where('asset_location.buildingId', building)
+                                qb.whereIn('asset_location.buildingId', building)
                             }
 
                             if (floorZone) {
-                                qb.where('asset_location.floorId', floorZone)
+                                qb.whereIn('asset_location.floorId', floorZone)
                             }
 
                             if (assetName) {
@@ -907,11 +907,11 @@ const assetController = {
                         .where(qb => {
 
                             if (building) {
-                                qb.where('asset_location.buildingId', building)
+                                qb.whereIn('asset_location.buildingId', building)
                             }
 
                             if (floorZone) {
-                                qb.where('asset_location.floorId', floorZone)
+                                qb.whereIn('asset_location.floorId', floorZone)
                             }
 
                             if (assetName) {
