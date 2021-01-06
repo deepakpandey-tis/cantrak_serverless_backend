@@ -668,7 +668,7 @@ const assetController = {
     getAssetListByCategory: async (req, res) => {
         // name, model, area, category
 
-        console.log("req.body data for assets",req.body)
+        console.log("req.body data for assets 2",req.body)
         try {
 
             let reqData = req.query;
