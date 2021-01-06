@@ -79,7 +79,7 @@ const serviceRequestUserAddNotification = {
         let url = data.payload.url;
         data = {
             receiverEmail: receiver.email,
-            template: 'announcement.ejs',
+            template: 'service-request.ejs',
             templateData: {
                 fullName: receiver.name,
                 description: description,
@@ -87,7 +87,7 @@ const serviceRequestUserAddNotification = {
             },
             payload: {
                 ...data,
-                subject: 'Announcement Email Notification',
+                subject: 'Service Request created',
             }
         };
 

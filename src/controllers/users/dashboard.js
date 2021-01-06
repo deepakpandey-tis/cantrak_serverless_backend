@@ -185,7 +185,8 @@ const dashboardController = {
             announcement = await Parallel.map(announcement, async (pp) => {
 
                 var yourString = pp.titles; //replace with your string.
-                var maxLength = 130; // maximum number of characters to extract
+                var yourStringLength = pp.titles.length;
+                var maxLength = 110; // maximum number of characters to extract
                 var trimmedString = yourString.substr(0, maxLength);
                // console.log("yourString",yourString);
                 //console.log("trimmedString",trimmedString);
@@ -195,6 +196,10 @@ const dashboardController = {
                     //re-trim if we are in the middle of a word and 
                     trimmedString = trimmedString.substr(0, Math.min(trimmedString.length, trimmedString.lastIndexOf(" ")))
                   //  console.log("If trimmedString", trimmedString);
+                }
+
+                if(yourStringLength > maxLength){
+                    trimmedString = trimmedString+"...";
                 }
 
                
@@ -220,6 +225,8 @@ const dashboardController = {
                 return {
                     ...pp,
                     titles: trimmedString,
+                    titleLength: yourStringLength,
+                    maxLength: maxLength,
                     img: imageResult,
                     URL: approvalUrl
                 };

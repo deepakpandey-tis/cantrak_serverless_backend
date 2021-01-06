@@ -3398,7 +3398,7 @@ const serviceRequestController = {
 
                     let dataNos = {
                         payload: {
-                            title: "Service Request has been Approved!",
+                            title: "Service Request approved",
                             url: "",
                             description: `Your service requests has been approved, an engineer will be assigned shortly.`,
                             redirectUrl: "/user/service-request"
@@ -3472,9 +3472,9 @@ const serviceRequestController = {
 
                     let dataNos = {
                         payload: {
-                            title: "Service Request has been Completed!",
+                            title: "Service Request completed",
                             url: "",
-                            description: `Your service request has been completed.`,
+                            description: `Your service request has been completed successfully.`,
                             redirectUrl: "/user/service-request"
 
                         },
