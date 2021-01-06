@@ -173,7 +173,7 @@ const surveyOrderController = {
 
           let dataNos = {
             payload: {
-              title: "Survey Appointment has been created",
+              title: "Survey Appointment",
               url: "",
               description: `An Engineer as been appointed  for visit on ${appointmentDate} at ${appointmentTime} to Survey regarding your Service Request`,
               redirectUrl: "/user/service-request"

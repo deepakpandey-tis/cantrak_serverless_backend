@@ -1000,9 +1000,9 @@ const serviceRequestController = {
 
         let dataNos = {
           payload: {
-            title: "Service Request new created!",
+            title: "Service Request created",
             url: "",
-            description: `New service request has been created by tenant`,
+            description: `A new service request has been created by ${req.me.name}`,
             redirectUrl: "admin/service-request"
 
           },

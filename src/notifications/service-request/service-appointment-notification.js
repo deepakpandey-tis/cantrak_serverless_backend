@@ -79,7 +79,7 @@ const serviceAppointmentNotification = {
         let url = data.payload.url;
         data = {
             receiverEmail: receiver.email,
-            template: 'announcement.ejs',
+            template: 'service-request.ejs',
             templateData: {
                 fullName: receiver.name,
                 description: description,
@@ -87,7 +87,7 @@ const serviceAppointmentNotification = {
             },
             payload: {
                 ...data,
-                subject: 'Announcement Email Notification',
+                subject: 'Service Appointment',
             }
         };
 
@@ -180,7 +180,7 @@ const serviceAppointmentNotification = {
         let url = data.payload.url
         data = {
             receiverMobileNumber: receiver.mobileNo,
-            textMessage: `Hi ${receiver.name} this is simple Announcement message send to test the notification`
+            textMessage: `Hi ${receiver.name} this is simple Service appointment message send to test the notification`
         }
 
         return data;

@@ -2439,9 +2439,9 @@ const serviceOrderController = {
 
                     let dataNos = {
                         payload: {
-                            title: "Service Appointment has been created",
+                            title: "Service Appointment",
                             url: "",
-                            description: `An Engineer as been appointed  for visit on ${appointmentDate} at ${appointmentTime} to service regarding your Service Request`,
+                            description: `An Engineer as been appointed  for visit on ${appointmentDate} at ${appointmentTime} to Service regarding your Service Request`,
                             redirectUrl: "/user/service-request"
 
                         },
