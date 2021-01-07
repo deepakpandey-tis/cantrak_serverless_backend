@@ -3013,15 +3013,30 @@ const serviceRequestController = {
                     .where({ 'requestCode': 'Web-app', 'orgId': req.orgId })
                     .orWhere({ 'requestCode': 'web-app', 'orgId': req.orgId })
                     .orWhere({ 'requestCode': 'Web-App', 'orgId': req.orgId })
+                    .orWhere({ 'requestCode': 'WEB-APP', 'orgId': req.orgId })
+                    .orWhere({ 'requestCode': 'web app', 'orgId': req.orgId })
+                    .orWhere({ 'requestCode': 'Web App', 'orgId': req.orgId })
+                    .orWhere({ 'requestCode': 'WEB APP', 'orgId': req.orgId })
+                    .orWhere({ 'requestCode': 'WEB app', 'orgId': req.orgId })
+                    .orWhere({ 'requestCode': 'web APP', 'orgId': req.orgId })
                     .orWhere({ "descriptionEng": 'Web-app', 'orgId': req.orgId })
                     .orWhere({ "descriptionEng": 'Web-App', 'orgId': req.orgId })
                     .orWhere({ "descriptionEng": 'web-app', 'orgId': req.orgId })
+                    .orWhere({ 'descriptionEng': 'WEB-APP', 'orgId': req.orgId })
+                    .orWhere({ 'descriptionEng': 'web app', 'orgId': req.orgId })
+                    .orWhere({ 'descriptionEng': 'Web App', 'orgId': req.orgId })
+                    .orWhere({ 'descriptionEng': 'WEB APP', 'orgId': req.orgId })
+                    .orWhere({ 'descriptionEng': 'WEB app', 'orgId': req.orgId })
+                    .orWhere({ 'descriptionEng': 'web APP', 'orgId': req.orgId })
+
                     .first();
                 //.orWhere({ 'requestCode': 'Web-App' })
                 //.orWhere({ 'descriptionEng': 'Web-app' })
                 //.orWhere({ 'descriptionEng': 'Web-App' })
                 //.orWhere({ 'descriptionEng': 'web-app' }).first();
-                sourceId = sourceResult.id;
+                if (sourceResult) {
+                    sourceId = sourceResult.id;
+                }
             }
 
             /* GET USER CREATED BY & REQUESTED BY  CLOSE*/
