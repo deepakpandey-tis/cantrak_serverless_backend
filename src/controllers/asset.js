@@ -668,7 +668,7 @@ const assetController = {
     getAssetListByCategory: async (req, res) => {
         // name, model, area, category
 
-        console.log("req.body data for assets 2",req.body)
+        // console.log("req.body data for assets 2",req.body)
         try {
 
             let reqData = req.query;
@@ -746,14 +746,15 @@ const assetController = {
                             "asset_location.unitId",
                             "property_units.id"
                         )
-                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId })
+                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_location.companyId': companyId })
                         .first()
                         .where({ 'asset_master.orgId': req.orgId })
-                        .where('asset_location.endDate', null)
+                        // .where('asset_location.endDate', null)
                         .where(qb => {
 
                             if (building) {
-                                qb.whereIn('asset_location.buildingId', building)
+                                // console.log("building for asset list",building)
+                                qb.whereIn('buildings_and_phases.id', building)
                             }
 
                             if (floorZone) {
@@ -828,15 +829,15 @@ const assetController = {
                             'floor_and_zones.floorZoneCode',
                             'property_units.unitNumber'
                         ])
-                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId })
+                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_location.companyId': companyId })
                         .offset(offset)
                         .limit(per_page)
-                        .where('asset_location.endDate', null)
+                        // .where('asset_location.endDate', null)
                         .where({ 'asset_master.orgId': req.orgId })
                         .where(qb => {
 
                             if (building) {
-                                qb.whereIn('asset_location.buildingId', building)
+                                qb.whereIn('buildings_and_phases.id', building)
                             }
 
                             if (floorZone) {
@@ -901,13 +902,13 @@ const assetController = {
                         'floor_and_zones.floorZoneCode',
                             // "asset_master.assetCode",
                         ])
-                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId })
-                        .where('asset_location.endDate', null)
+                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_location.companyId': companyId })
+                        // .where('asset_location.endDate', null)
                         .where({ 'asset_master.orgId': req.orgId })
                         .where(qb => {
 
                             if (building) {
-                                qb.whereIn('asset_location.buildingId', building)
+                                qb.whereIn('buildings_and_phases.id', building)
                             }
 
                             if (floorZone) {
@@ -950,18 +951,104 @@ const assetController = {
                         })
 
                 ]);
+                const Parallel = require('async-parallel')
+                const rowsWithLocations = await Parallel.map(rows, async row => {
+                    const location = await knex('asset_location')
+                        .innerJoin('companies', 'asset_location.companyId', 'companies.id')
+                        .leftJoin('projects', 'asset_location.projectId', 'projects.id')
+                        .leftJoin(
+                            "buildings_and_phases",
+                            "asset_location.buildingId",
+                            "buildings_and_phases.id"
+                        )
+                        .leftJoin(
+                            "floor_and_zones",
+                            "asset_location.floorId",
+                            "floor_and_zones.id"
+                        )
+                        .leftJoin(
+                            "property_units",
+                            "asset_location.unitId",
+                            "property_units.id"
+                        )
+                        .select([
+                            'companies.companyName',
+                            'projects.projectName',
+                            'buildings_and_phases.buildingPhaseCode',
+                            "buildings_and_phases.description as building",
+                            'floor_and_zones.floorZoneCode',
+                            'property_units.unitNumber'
+                        ]).where({ 'asset_location.assetId': row.id })
+                        .where(qb => {
+                            if (building) {
+                                qb.whereIn('buildings_and_phases.id', building)
+                            }
+
+                            if (floorZone) {
+                                qb.whereIn('floor_and_zones.id', floorZone)
+                            }
+                        })
+                        .orderBy("asset_location.id", "desc")
+                        .limit(1)
+                        .first()
+                    // ]).max('asset_location.updatedAt').first()
+                    return { ...row, ...location }
+                })
+
+                const rowsIdWithLocations = await Parallel.map(rowsId, async row =>{
+
+                    const location = await knex('asset_location')
+                        .innerJoin('companies', 'asset_location.companyId', 'companies.id')
+                        .leftJoin('projects', 'asset_location.projectId', 'projects.id')
+                        .leftJoin(
+                            "buildings_and_phases",
+                            "asset_location.buildingId",
+                            "buildings_and_phases.id"
+                        )
+                        .leftJoin(
+                            "floor_and_zones",
+                            "asset_location.floorId",
+                            "floor_and_zones.id"
+                        )
+                        .leftJoin(
+                            "property_units",
+                            "asset_location.unitId",
+                            "property_units.id"
+                        )
+                        .select([
+                            'floor_and_zones.floorZoneCode',
+                        ]).where({ 'asset_location.assetId': row.id })
+                        .where(qb => {
+                            if (building) {
+                                qb.whereIn('buildings_and_phases.id', building)
+                            }
+
+                            if (floorZone) {
+                                qb.whereIn('floor_and_zones.id', floorZone)
+                            }
+                        })
+                        .orderBy("asset_location.id", "desc")
+                        .limit(1)
+                        .first()
+
+                        return { ...row, ...location }
+                })
+
 
 
                 let count = total.count;
                 pagination.total = count;
                 pagination.per_page = per_page;
                 pagination.offset = offset;
-                pagination.to = offset + rows.length;
+                // pagination.to = offset + rows.length;
+                pagination.to = offset + rowsWithLocations.length;
                 pagination.last_page = Math.ceil(count / per_page);
                 pagination.current_page = page;
                 pagination.from = offset;
-                pagination.data = rows;
-                pagination.totalId = rowsId
+                // pagination.data = rows;
+                pagination.data = rowsWithLocations;
+                // pagination.totalId = rowsId
+                pagination.totalId = rowsIdWithLocations;
                 
 
 
@@ -971,8 +1058,25 @@ const assetController = {
                     knex
                         .count("* as count")
                         .from("asset_master")
-
-                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId })
+                        .leftJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
+                        .innerJoin('companies', 'asset_location.companyId', 'companies.id')
+                        .leftJoin('projects', 'asset_location.projectId', 'projects.id')
+                        .leftJoin(
+                            "buildings_and_phases",
+                            "asset_location.buildingId",
+                            "buildings_and_phases.id"
+                        )
+                        .leftJoin(
+                            "floor_and_zones",
+                            "asset_location.floorId",
+                            "floor_and_zones.id"
+                        )
+                        .leftJoin(
+                            "property_units",
+                            "asset_location.unitId",
+                            "property_units.id"
+                        )
+                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_location.companyId': companyId })
                         .first()
                         .where({ 'asset_master.orgId': req.orgId })
                         .where(qb => {
@@ -1014,7 +1118,24 @@ const assetController = {
                         }),
 
                     knex("asset_master")
-
+                    .leftJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
+                    .innerJoin('companies', 'asset_location.companyId', 'companies.id')
+                    .leftJoin('projects', 'asset_location.projectId', 'projects.id')
+                    .leftJoin(
+                        "buildings_and_phases",
+                        "asset_location.buildingId",
+                        "buildings_and_phases.id"
+                    )
+                    .leftJoin(
+                        "floor_and_zones",
+                        "asset_location.floorId",
+                        "floor_and_zones.id"
+                    )
+                    .leftJoin(
+                        "property_units",
+                        "asset_location.unitId",
+                        "property_units.id"
+                    )
                         .select(["asset_master.id",
                             "asset_master.assetCode",
                             "asset_master.assetName",
@@ -1023,7 +1144,8 @@ const assetController = {
                             "asset_master.areaName", "assetSerial",
 
                         ])
-                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId })
+                        
+                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_location.companyId': companyId })
                         .offset(offset)
                         .limit(per_page)
                         .where({ 'asset_master.orgId': req.orgId })
@@ -1066,15 +1188,27 @@ const assetController = {
                         }),
                         knex("asset_master")
 
+                        .leftJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
+                        .innerJoin('companies', 'asset_location.companyId', 'companies.id')
+                        .leftJoin('projects', 'asset_location.projectId', 'projects.id')
+                        .leftJoin(
+                            "buildings_and_phases",
+                            "asset_location.buildingId",
+                            "buildings_and_phases.id"
+                        )
+                        .leftJoin(
+                            "floor_and_zones",
+                            "asset_location.floorId",
+                            "floor_and_zones.id"
+                        )
+                        .leftJoin(
+                            "property_units",
+                            "asset_location.unitId",
+                            "property_units.id"
+                        )
                         .select(["asset_master.id",
-                            // "asset_master.assetCode",
-                            // "asset_master.assetName",
-                            // "asset_master.model",
-                            // "asset_master.barcode",
-                            // "asset_master.areaName", "assetSerial",
-
                         ])
-                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId })
+                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_location.companyId': companyId })
                         .where({ 'asset_master.orgId': req.orgId })
                         .where(qb => {
 
