@@ -2929,9 +2929,11 @@ const serviceRequestController = {
                         "property_units.floorZoneId as floor",
                         "property_units.projectId as project",
                         "property_units.id as unit",
-                        "property_units.type as type"
+                        "property_units.type as type",
                         //'property_units.',
                         //'property_units.',
+                        'service_requests.createdBy',
+                        'service_requests.requestedBy'
                     )
                     .where({ "service_requests.id": id });
                 serviceResult = result[0];
@@ -3000,12 +3002,41 @@ const serviceRequestController = {
                 locationTags = _.uniqBy(location, 'title')
             });
 
+
+            /* GET USER CREATED BY & REQUESTED BY  OPEN*/
+            let sourceResult;
+            let sourceId;
+            if (serviceResult.createdBy == req.me.id) {
+            } else {
+                sourceResult = await knex('source_of_request')
+                    //.where({ 'orgId': req.orgId })
+                    .where({ 'requestCode': 'Web-app', 'orgId': req.orgId })
+                    .orWhere({ 'requestCode': 'web-app', 'orgId': req.orgId })
+                    .orWhere({ 'requestCode': 'Web-App', 'orgId': req.orgId })
+                    .orWhere({ "descriptionEng": 'Web-app', 'orgId': req.orgId })
+                    .orWhere({ "descriptionEng": 'Web-App', 'orgId': req.orgId })
+                    .orWhere({ "descriptionEng": 'web-app', 'orgId': req.orgId })
+                    .first();
+                //.orWhere({ 'requestCode': 'Web-App' })
+                //.orWhere({ 'descriptionEng': 'Web-app' })
+                //.orWhere({ 'descriptionEng': 'Web-App' })
+                //.orWhere({ 'descriptionEng': 'web-app' }).first();
+                sourceId = sourceResult.id;
+            }
+
+            /* GET USER CREATED BY & REQUESTED BY  CLOSE*/
+
+
+
+
+
             return res.status(200).json({
                 data: {
                     serviceData: {
                         ...serviceResult,
                         locationTags: locationTags,
-                        problemResult
+                        problemResult,
+                        sourceId: sourceId
                     }
                 },
                 message: "Service Request Details Successful!"
