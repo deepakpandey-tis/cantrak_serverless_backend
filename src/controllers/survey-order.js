@@ -19,6 +19,7 @@ const https = require("https");
 const imageHelper = require("../helpers/image");
 const { innerJoin } = require("../db/knex");
 const surveyAppointmentNotification = require('../notifications/service-request/survey-appointment-notification');
+const surveyAppointmentAssignUserNotification = require('../notifications/service-request/survey-appointment-assign-user-notification')
 
 const surveyOrderController = {
 
@@ -36,6 +37,8 @@ const surveyOrderController = {
       let userResult;
       let requestResult;
       let userResult2;
+      let allUserIds = [];
+      let assignUserResult;
 
       let initialSurveyOrderPayload = _.omit(surveyOrderPayload, [
         "additionalUsers",
@@ -65,6 +68,9 @@ const surveyOrderController = {
 
       let currentTime = new Date().getTime();
 
+
+      let sender = await knex.from("users").where({ id: req.me.id }).first();
+      let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH"];
 
       await knex.transaction(async trx => {
 
@@ -141,8 +147,7 @@ const surveyOrderController = {
           .returning(['*'])
 
         /*GET REQUEST BY & CREATED BY ID OPEN */
-        let createdBy;
-        let requestedBy;
+
         serviceRequestResult = await knex('service_requests').where({ id: surveyOrderPayload.serviceRequestId, orgId: req.orgId }).first();
         if (serviceRequestResult) {
 
@@ -181,9 +186,9 @@ const surveyOrderController = {
             },
           };
 
-          let sender = await knex.from("users").where({ id: req.me.id }).first();
+          //let sender = await knex.from("users").where({ id: req.me.id }).first();
           let receiver;
-          let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH"];
+          //let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH"];
 
           if (userResult) {
             receiver = userResult;
@@ -198,8 +203,45 @@ const surveyOrderController = {
             ALLOWED_CHANNELS
           );
         }
-
         /*GET REQUEST BY & CREATED BY ID CLOSE */
+
+        /*  SEND NOTIFICATION TO USER OPEN */
+        let mainUser = surveyOrderPayload.mainUserId;
+        let addUser = surveyOrderPayload.additionalUsers;
+        allUserIds.push(...addUser, mainUser);
+
+        assignUserResult = await knex('users')
+          .where({ orgId: req.orgId })
+          .whereIn('id', allUserIds);
+
+        if (assignUserResult) {
+
+          let dataNos2 = {
+            payload: {
+              title: "Survey Appointment Assigned",
+              url: "",
+              description: `A new survey appointment has been created and assigned to you.`,
+              redirectUrl: "/admin/service-request"
+
+            },
+          };
+
+          for (u of assignUserResult) {
+
+            await surveyAppointmentAssignUserNotification.send(
+              sender,
+              u,
+              dataNos2,
+              ALLOWED_CHANNELS
+            );
+
+          }
+
+        }
+
+
+        /*  SEND NOTIFICATION TO USER CLOSE */
+
 
 
         trx.commit;
@@ -214,11 +256,6 @@ const surveyOrderController = {
           surveyOrder,
           assignedServiceTeam,
           assignedAdditionalUsers: additionalUsers,
-          userResult,
-          userResult2,
-          serviceRequestResult,
-          requestResult
-
         },
         message: "Survey Order added successfully !"
       });

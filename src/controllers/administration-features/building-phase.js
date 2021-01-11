@@ -1077,9 +1077,10 @@ const buildingPhaseController = {
 
             let buildings;
             if (projectId) {
+                console.log("projec id fpr building",projectId)
                 buildings = await knex("buildings_and_phases")
                     .select("*")
-                    .where({ projectId, orgId: orgId, isActive: true })
+                    .where({ projectId:projectId, orgId: orgId, isActive: true })
                     .orderBy('buildings_and_phases.description', 'asc');
 
 
