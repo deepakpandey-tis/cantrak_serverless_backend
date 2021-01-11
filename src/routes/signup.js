@@ -24,5 +24,6 @@ router.post("/updateSignUpUrl", signupController.updateSignUpUrl);
 router.get('/verify-account/:token', signupController.verifyAccount)
 router.post('/forgot-password', signupController.forgotPassword)
 router.post('/reset-password', signupController.resetPassword)
+router.get('/get-user-details', signupController.getUserDetails)
 
 module.exports = router;
