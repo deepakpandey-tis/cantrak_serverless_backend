@@ -573,7 +573,7 @@ const singupController = {
           // let sender = await knex.from("users").where({ id: insertedUser[0].id }).first();
 
           // console.log("sender-", sender);
-          console.log("users-",  user);
+          console.log("users-", user);
 
 
 
@@ -581,7 +581,7 @@ const singupController = {
 
             let receiver = await knex.from("users").where({ id: admin.id }).first();
             console.log("receiver", receiver);
-        
+
             await signupNotification.send(
               user,
               receiver,
@@ -616,7 +616,7 @@ const singupController = {
                 unit: DataResult.unit,
                 Org: org,
                 OTP: url + '/admin/administration-features/customers/unapproved-tenants/',
-                verifiedLink: url +'/verify-account/' + user.verifyToken,
+                verifiedLink: url + '/verify-account/' + user.verifyToken,
               }
             })
           }
@@ -761,7 +761,48 @@ const singupController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-  }
+  },
+  /*GET USER DETAILS */
+  getUserDetails: async (req, res) => {
+    try {
+      let payload = req.query;
+      let userResult = await knex.from('users')
+        .innerJoin('user_house_allocation', 'users.id', 'user_house_allocation.userId')
+        .innerJoin('property_units', 'user_house_allocation.houseId', 'property_units.id')
+        .innerJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
+        .innerJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
+        .innerJoin('projects', 'property_units.projectId', 'projects.id')
+        .innerJoin('companies', 'property_units.companyId', 'companies.id')
+        .select([
+          "users.*",
+          "property_units.unitNumber",
+          "floor_and_zones.floorZoneCode",
+          "floor_and_zones.description as floorDescription",
+          "property_units.description as unitDescription",
+          "buildings_and_phases.buildingPhaseCode",
+          "buildings_and_phases.description as buldingDescription",
+          "projects.project as projectCode",
+          "projects.projectName",
+          "companies.companyId",
+          "companies.companyName",
+        ])
+        .where({ 'users.id': payload.id }).first();
+
+
+
+      return res.status(200).json({ data: userResult, message: "User Details." });
+
+    } catch (err) {
+      console.log(
+        "[controllers][signup][userDetails] :  Error",
+        err
+      );
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+
 };
 
 module.exports = singupController;
