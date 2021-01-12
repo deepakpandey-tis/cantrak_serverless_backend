@@ -668,7 +668,7 @@ const assetController = {
     getAssetListByCategory: async (req, res) => {
         // name, model, area, category
 
-        // console.log("req.body data for assets 2",req.body)
+        console.log("req.body data for assets 2",req.body)
         try {
 
             let reqData = req.query;
@@ -722,7 +722,8 @@ const assetController = {
             }
 
 
-            if (building || floorZone) {
+            if ((building && building.length > 0) || (floorZone && floorZone.length > 0)) {
+                // if(building.length > 0 || floorZone.length > 0)
 
                 [total, rows,rowsId] = await Promise.all([
                     knex
@@ -752,12 +753,13 @@ const assetController = {
                         // .where('asset_location.endDate', null)
                         .where(qb => {
 
-                            if (building) {
+                            if (building && building.length > 0) {
                                 // console.log("building for asset list",building)
                                 qb.whereIn('buildings_and_phases.id', building)
                             }
 
-                            if (floorZone) {
+                            if (floorZone && floorZone.length > 0) {
+                                console.log("length of floor",floorZone.length)
                                 qb.whereIn('asset_location.floorId', floorZone)
                             }
 
@@ -836,11 +838,11 @@ const assetController = {
                         .where({ 'asset_master.orgId': req.orgId })
                         .where(qb => {
 
-                            if (building) {
+                            if (building && building.length > 0) {
                                 qb.whereIn('buildings_and_phases.id', building)
                             }
 
-                            if (floorZone) {
+                            if (floorZone && floorZone.length > 0) {
                                 qb.whereIn('asset_location.floorId', floorZone)
                             }
 
@@ -907,11 +909,11 @@ const assetController = {
                         .where({ 'asset_master.orgId': req.orgId })
                         .where(qb => {
 
-                            if (building) {
+                            if (building && building.length > 0) {
                                 qb.whereIn('buildings_and_phases.id', building)
                             }
 
-                            if (floorZone) {
+                            if (floorZone && floorZone.length > 0) {
                                 qb.whereIn('asset_location.floorId', floorZone)
                             }
 
