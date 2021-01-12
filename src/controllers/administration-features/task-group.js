@@ -435,7 +435,7 @@ const taskGroupController = {
 
         try {
 
-            console.log("Consolidated work orders in body 1", req.body.consolidatedWorkOrders)
+            // console.log("Consolidated work orders in body 2", req.body.taskGroups.startDateTime)
 
             let createTemplateTask = null;
             let createTemplate = null;
@@ -453,20 +453,20 @@ const taskGroupController = {
             // let payload = _.omit(req.body,['additionalUsers','repeatOn','tasks','workOrderDates'])
 
             let currentDate = moment().format("YYYY-MM-DD");
+            console.log("current date",payload.startDateTime)
+            if (!(payload[0].startDateTime >= currentDate)) {
+                console.log(currentDate, "current Date")
+                return res.status(400).json({
+                    errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid start date" }]
+                });
+            }
 
-            // if (!(payload.startDateTime >= currentDate)) {
-            //     console.log(currentDate, "current Date")
-            //     return res.status(400).json({
-            //         errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid start date" }]
-            //     });
-            // }
-
-            // if (!(payload.endDateTime >= currentDate)) {
-            //     console.log(currentDate, "Current Date")
-            //     return res.status(400).json({
-            //         errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid end date" }]
-            //     });
-            // }
+            if (!(payload[0].endDateTime >= currentDate)) {
+                console.log(currentDate, "Current Date")
+                return res.status(400).json({
+                    errors: [{ code: "LESS_THAN_ERROR", message: "Enter valid end date" }]
+                });
+            }
 
 
             const schema = Joi.array().items(Joi.object().keys({
