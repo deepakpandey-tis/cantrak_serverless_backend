@@ -76,6 +76,7 @@ const announcementRouter = require('./announcement');
 const bannersRouter = require("./administration-features/banners");
 
 const dashboardIconRouter = require("./administration-features/dashboard-icons")
+const agmRouter = require("./agm")
 
 /* GET home page. */
 router.get("/", async (req, res, next) => {
@@ -175,5 +176,6 @@ router.use("/service-request",serviceRequestNotificationRouter);
 router.use("/announcement",announcementRouter)
 
 router.use("/dashboard-icon",dashboardIconRouter)
+router.use("/agm",agmRouter)
 
 module.exports = router;

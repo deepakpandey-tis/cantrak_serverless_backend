@@ -19,7 +19,7 @@ const announcementController = {
 
       let announcementResult = null;
       let id = req.body.userId;
-      console.log("req user id for teamuser", req.body)
+      // console.log("req user id for teamuser", req.body)
       userIds = [];
       let images = [];
       let newAnnouncementId = req.body.newAnnouncementId;

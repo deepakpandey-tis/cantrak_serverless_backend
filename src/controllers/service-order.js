@@ -8,7 +8,7 @@ const XLSX = require('xlsx');
 
 const serviceRequestNotification = require('../notifications/service-request/approval-notification');
 const serviceAppointmentNotification = require('../notifications/service-request/service-appointment-notification');
-
+const surveyAppointmentAssignUserNotification = require('../notifications/service-request/survey-appointment-assign-user-notification');
 
 
 const serviceOrderController = {
@@ -2311,6 +2311,11 @@ const serviceOrderController = {
             let userResult;
             let requestResult;
             let userResult2;
+            let allUserIds = [];
+            let assignUserResult;
+
+            let sender = await knex.from("users").where({ id: req.me.id }).first();
+            let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH"];
 
 
             await knex.transaction(async trx => {
@@ -2447,9 +2452,9 @@ const serviceOrderController = {
                         },
                     };
 
-                    let sender = await knex.from("users").where({ id: req.me.id }).first();
+                    //  let sender = await knex.from("users").where({ id: req.me.id }).first();
                     let receiver;
-                    let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH"];
+                    // let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH"];
 
                     if (userResult) {
                         receiver = userResult;
@@ -2465,8 +2470,42 @@ const serviceOrderController = {
                     );
 
                 }
-
                 /*GET REQUEST BY & CREATED BY ID CLOSE */
+
+                /*  SEND NOTIFICATION TO USER OPEN */
+                let mainUser = appointmentOrderPayload.mainUserId;
+                let addUser = appointmentOrderPayload.additionalUsers;
+                allUserIds.push(...addUser, mainUser);
+
+                assignUserResult = await knex('users')
+                    .where({ orgId: req.orgId })
+                    .whereIn('id', allUserIds);
+
+                if (assignUserResult) {
+
+                    let dataNos2 = {
+                        payload: {
+                            title: "Service Appointment Assigned",
+                            url: "",
+                            description: `A new service appointment has been created and assigned to you.`,
+                            redirectUrl: "/admin/service-order"
+
+                        },
+                    };
+
+                    for (u of assignUserResult) {
+
+                        await surveyAppointmentAssignUserNotification.send(
+                            sender,
+                            u,
+                            dataNos2,
+                            ALLOWED_CHANNELS
+                        );
+
+                    }
+
+                }
+                /*  SEND NOTIFICATION TO USER CLOSE */
 
 
                 trx.commit;
