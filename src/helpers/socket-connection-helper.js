@@ -3,10 +3,6 @@ const AWS = require('aws-sdk');
 const knex = require('../db/knex');
 const moment = require('moment');
 
-var jwt = require('jsonwebtoken');
-
-
-const AWS = require('aws-sdk');
 
 
 const socketConnectionHelper = {
@@ -14,12 +10,13 @@ const socketConnectionHelper = {
     getUserFromToken: async (token) => {
         try {
 
+            const jwt = require('jsonwebtoken');
             const decodedTokenData = await jwt.verify(token, process.env.JWT_PRIVATE_KEY);
             console.log(`[helpers][socket-connection-helper][getUserFromToken]: decodedTokenData:`, decodedTokenData);
 
             let currentUser = await knex('users').where({ id: decodedTokenData.id }).first();
 
-            return {userId: decodedTokenData.id, orgId: decodedTokenData.orgId, user: currentUser};
+            return { userId: decodedTokenData.id, orgId: decodedTokenData.orgId, user: currentUser };
 
         } catch (err) {
             console.log(`[helpers][socket-connection-helper][getUserFromToken]: Error:`, err);
@@ -32,7 +29,7 @@ const socketConnectionHelper = {
         try {
 
             const currentTime = moment().valueOf();
-            const expiryTime = moment().add(12, 'hours');
+            const expiryTime = moment().add(12, 'hours').valueOf();
 
             let connection = await knex('socket_connections').where({ userId, deviceId })
                 .where('expiredAt', '<', currentTime).select('*').first();

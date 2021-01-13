@@ -13,6 +13,8 @@ async function sendMessage(connectionId, body) {
       endpoint: ENDPOINT
     });
 
+    body = JSON.stringify(body);
+
     await apig.postToConnection({
       ConnectionId: connectionId,
       Data: body
@@ -51,14 +53,12 @@ async function processRequest( originalRoute, connectionId, methodToCall, body, 
       status: (st) => {
         this.currentStatus = st;
       },
-      json: (obj) => {
-
+      json: async (obj) => {
         const body = {
           route : originalRoute,
           status: this.currentStatus,
           body: obj
         };
-
         await sendMessage(connectionId, body);
       }
     };
@@ -76,33 +76,34 @@ async function processRequest( originalRoute, connectionId, methodToCall, body, 
 
 
 module.exports.handler = async function (event, context, cb) {
-  console.log("EVENT: \n" + JSON.stringify(event, null, 2));
+  console.log("[socket][handler]: EVENT: \n" + JSON.stringify(event, null, 2));
 
   ENDPOINT = process.env.IS_OFFLINE === 'true' ? ENDPOINT : `https://${event.requestContext.domainName}/${event.requestContext.stage}`;
 
   // const ENDPOINT = `https://${event.requestContext.domainName}/${event.requestContext.stage}`;
   // const ENDPOINT = `http://0.0.0.0:3001`
 
-  console.log('ENDPOINT:', ENDPOINT);
-
   console.log('[socket][handler]: ENDPOINT:', ENDPOINT);
-  console.log('[socket][handler]: Body:', body);
-  console.log('[socket][handler]: Event:', event);
 
-  const { body, requestContext: { connectionId, routeKey } } = event;
-  let connections = [];
+  const { body, queryStringParameters, requestContext: { connectionId, routeKey } } = event;
 
   switch (routeKey) {
     
     case '$connect':
-      console.log('New Connection:', event.requestContext.connectionId);
-      const userId = new Date().getTime();
-      // await socketConnectionHelper.addConnection(userId, event.requestContext.connectionId);
+      console.log('[socket][handler]: Connect - New Connection:', connectionId);
+      console.log('[socket][handler]: Connect - User Token:', queryStringParameters.Auth);
+      console.log('[socket][handler]: Connect - Browser Id:', queryStringParameters.deviceId);
+
+      const decodedData = await socketConnectionHelper.getUserFromToken(queryStringParameters.Auth);
+      console.log('[socket][handler]: Connect - Decoded Data:', decodedData);
+      const connectionData = await socketConnectionHelper.addConnection(decodedData.userId, connectionId, queryStringParameters.deviceId, decodedData.orgId);
+      console.log('[socket][handler]: Connection Added/Updated:', connectionData);
+
       break;
 
     case '$disconnect':
       await socketConnectionHelper.removeConnection(event.requestContext.connectionId);
-      console.log('Disconnected:', event.requestContext.connectionId);
+      console.log('[socket][handler]: Disconnected:', event.requestContext.connectionId);
       break;
 
     case 'api':
@@ -143,6 +144,7 @@ module.exports.handler = async function (event, context, cb) {
     case '$default':
     default:
       console.log('[socket][handler]: Received Message on default Route:', body);
+      await sendMessage(connectionId,  { status: 200, route: 'welcome', body : { message: 'This is welcome message' } });
       break;
 
   }
@@ -180,7 +182,7 @@ module.exports.auth = async (event, context, callback) => {
   var condition = {};
   condition.IpAddress = {};
 
-  const { user, orgId } = socketConnectionHelper.getUserFromToken(queryStringParameters.Auth);
+  const { user, orgId } = await socketConnectionHelper.getUserFromToken(queryStringParameters.Auth);
 
   if (user && orgId) {
     const policy = generatePolicy(user.email, 'Allow', event.methodArn);
