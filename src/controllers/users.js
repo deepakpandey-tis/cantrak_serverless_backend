@@ -10,10 +10,6 @@ const usersController = {
     list: async (req, res) => {
         //  const users = await knex.select().from('users');
 
-
-
-
-
         let reqData = req.query;
 
         let pagination = {};
