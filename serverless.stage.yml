@@ -70,6 +70,7 @@ functions:
   
   websocket:
     handler: src/socket.handler
+    memorySize: 2048
     events:
       - websocket:
           # Handles new connection requests
