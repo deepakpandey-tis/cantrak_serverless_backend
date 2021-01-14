@@ -187,6 +187,8 @@ module.exports.auth = async (event, context, callback) => {
   console.log("[socket][auth]:: Decoded User:", user);
   console.log("[socket][auth]:: Decoded Org:", orgId);
 
+  // Lambda was getting timed out...
+  context.callbackWaitsForEmptyEventLoop = false;
 
   if (user && orgId) {
     const policy = generatePolicy(user.email, 'Allow', event.methodArn);
