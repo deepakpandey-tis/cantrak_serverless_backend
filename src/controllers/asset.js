@@ -990,8 +990,8 @@ const assetController = {
                             }
                         })
                         .orderBy("asset_location.id", "desc")
-                        .limit(1)
-                        .first()
+                        // .limit(1)
+                        // .first()
                     // ]).max('asset_location.updatedAt').first()
                     return { ...row, ...location }
                 })
@@ -1029,8 +1029,8 @@ const assetController = {
                             }
                         })
                         .orderBy("asset_location.id", "desc")
-                        .limit(1)
-                        .first()
+                        // .limit(1)
+                        // .first()
 
                         return { ...row, ...location }
                 })
