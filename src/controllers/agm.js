@@ -115,7 +115,7 @@ const agmController = {
           })
           .del();
 
-          
+
 
 
       });
@@ -126,7 +126,152 @@ const agmController = {
     }
   },
 
-  
+  /**IMPORT OWNER DATA */
+  importOwnerData: async (req, res) => {
+
+    try {
+
+      let data = req.body;
+      console.log("+++++++++++++", data[0], "=========");
+      let totalData = data.length - 1;
+      let fail = 0;
+      let success = 0;
+      let result = null;
+      let userId = req.me.id;
+      let errors = [];
+      let header = Object.values(data[0]);
+      header.unshift('Error');
+      errors.push(header)
+
+      if (data[0].A === 'UNIT_NO' &&
+        data[0].B === 'OWNER_NAME' &&
+        data[0].C === 'OWNERSHIP_RATIO' &&
+        data[0].D === 'ELIGIBILITY_TOGGLE'
+      ) {
+        if (data.length > 0) {
+
+          let i = 0;
+          for (let ownerData of data) {
+            i++;
+            if (i > 1) {
+
+              if (!ownerData.A) {
+                let values = _.values(ownerData)
+                values.unshift('Unit no. can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!ownerData.B) {
+                let values = _.values(ownerData)
+                values.unshift('Owner name can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!ownerData.C) {
+                let values = _.values(ownerData)
+                values.unshift('Ownership ratio can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!ownerData.D) {
+                let values = _.values(ownerData)
+                values.unshift('Eligibility can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+              let unitId;
+                let checkExist = await knex("property_units")
+                  .select("id")
+                  .where({
+                    orgId: req.orgId,
+                    unitNumber: ownerData.A.toUpperCase(),
+                  });
+
+                if (checkExist.length > 0) {
+                  unitId = checkExist[0].id;
+                } else {
+                  let values = _.values(ownerData);
+                  values.unshift('Unit Number Does not exist!')
+                  errors.push(values);
+                  fail++;
+                  continue;
+                }
+              
+
+              let insertData = {
+                agmId: 10,
+                unitId: unitId,
+                ownerName: ownerData.B,
+                ownerershipRatio: ownerData.C,
+                eligibility: ownerData.D,
+                orgId: req.orgId,
+                isActive: true,
+                createdAt: new Date().getTime(),
+                updatedAt: new Date().getTime(),
+                importedBy: req.me.id,
+                displayId:1,
+                createdBy:req.me.id
+              };
+
+              let resultData = await knex
+                .insert(insertData)
+                .returning(["*"])
+                .into("agm_owner_master");
+              success++;
+
+            }
+          }
+
+          let message = null;
+          if (totalData == success) {
+            message =
+              "System have processed ( " +
+              totalData +
+              " ) entries and added them successfully!";
+          } else {
+            message =
+              "System have processed ( " +
+              totalData +
+              " ) entries out of which only ( " +
+              success +
+              " ) are added and others are failed ( " +
+              fail +
+              " ) due to validation!";
+          }
+          return res.status(200).json({
+            message: message,
+            errors
+          });
+        }
+
+      } else {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
+          ]
+        });
+      }
+
+    } catch (err) {
+
+      return res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN SERVER ERROR', message: err.message }
+        ]
+      })
+    }
+
+
+  }
+
+
 };
 
 module.exports = agmController;
