@@ -149,6 +149,10 @@ module.exports.handler = async function (event, context, cb) {
 
   }
 
+
+  // Lambda was getting timed out...
+  context.callbackWaitsForEmptyEventLoop = false;
+
   cb(null, {
     statusCode: 200,
   });
