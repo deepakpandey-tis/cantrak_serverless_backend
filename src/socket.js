@@ -182,11 +182,15 @@ module.exports.auth = async (event, context, callback) => {
   var condition = {};
   condition.IpAddress = {};
 
+  console.log("[socket][auth]:: Auth Token:", queryStringParameters.Auth);
   const { user, orgId } = await socketConnectionHelper.getUserFromToken(queryStringParameters.Auth);
+  console.log("[socket][auth]:: Decoded User:", user);
+  console.log("[socket][auth]:: Decoded Org:", orgId);
+
 
   if (user && orgId) {
     const policy = generatePolicy(user.email, 'Allow', event.methodArn);
-    console.log("Auth: Policy::", policy);
+    console.log("[socket][auth]:: Policy Generated::", policy);
     callback(null, policy);
   } else {
     callback("Unauthorized");
