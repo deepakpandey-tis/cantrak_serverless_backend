@@ -85,7 +85,7 @@ functions:
             # See https://docs.aws.amazon.com/apigateway/latest/developerguide/request-response-data-mappings.html
             # for more details on API Gateway mappings.
             identitySource:
-              - "route.request.header.Auth"
+              # - "route.request.header.Auth"
               - "route.request.querystring.Auth"
 
       - websocket:
