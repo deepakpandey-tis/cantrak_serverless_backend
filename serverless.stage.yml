@@ -7,7 +7,7 @@ service:
   # frameworkVersion: "=X.X.X"
   
 plugins:
-  - serverless-apigw-binary
+  # - serverless-apigw-binary
   - serverless-offline
   - serverless-dotenv-plugin
   - serverless-s3-local
