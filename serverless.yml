@@ -7,10 +7,11 @@ service:
 # frameworkVersion: "=X.X.X"
 
 plugins:
-  - serverless-apigw-binary
+  # - serverless-apigw-binary
   - serverless-offline
   - serverless-dotenv-plugin
   - serverless-s3-local
+
 provider:
   name: aws
   runtime: nodejs10.x
@@ -74,6 +75,7 @@ functions:
     events:
       - s3: ${self:custom.bucket}
         event: s3:*
+
   queueProcessor:
     handler: src/app.queueProcessor
     memorySize: 1024
@@ -82,3 +84,40 @@ functions:
     reservedConcurrency: 10                # <-- Concurrency control
     events:
       - sqs: arn:aws:sqs:us-east-1:925816896007:mail-queue
+  
+  websocket:
+    handler: src/socket.handler
+    events:
+      - websocket:
+          # Handles new connection requests
+          route: $connect
+          # Only the '$connect' route supports an authorizer. The other routes
+          # are secured via the connection ID and there it should be handled
+          # like a session ID.
+          authorizer:
+            name: auth
+            # See https://serverless.com/framework/docs/providers/aws/events/websocket#using-authorizers
+            # and https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-apigatewayv2-authorizer.html#cfn-apigatewayv2-authorizer-identitysource
+            # for more details on identitySource.
+            # See https://docs.aws.amazon.com/apigateway/latest/developerguide/request-response-data-mappings.html
+            # for more details on API Gateway mappings.
+            identitySource:
+              - "route.request.header.Auth"
+              - "route.request.querystring.Auth"
+
+      - websocket:
+          # Route messages here if '$request.body.action' is 'routeA'.
+          # You can adjust which property to use for routing by adjusting
+          # 'websocketsApiRouteSelectionExpression'.
+          route: api
+
+      - websocket:
+          # Handles all unrouted messages
+          route: $default
+
+      - websocket:
+          # Handles disconnect messages
+          route: $disconnect
+
+  auth:
+    handler: src/socket.auth
