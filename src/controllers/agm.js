@@ -401,7 +401,50 @@ const agmController = {
 
     }
 
-  }
+  },
+
+  /*GET AGM LIST */
+  getAgmList: async (req, res) => {
+
+    try {
+
+      let payload = req.body;
+
+      const schema = new Joi.object().keys({
+        id: Joi.string().required(),
+        eligibility: Joi.string().required()
+      })
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message },
+          ],
+        });
+      }
+
+      let updateData = {
+        eligibility: payload.eligibility
+      }
+
+      let updateResult = await knex('agm_owner_master').update(updateData).where({ id: payload.id, orgId: req.orgId }).returning(["*"]);
+
+      return res.status(200).json({
+        data: updateResult,
+        message: "Eligibility updated successfully!"
+      })
+
+
+    } catch (err) {
+
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }]
+      });
+
+    }
+
+  },
 
 
 };

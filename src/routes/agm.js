@@ -10,5 +10,6 @@ router.post("/import-owner-data", authMiddleware.isAuthenticated, agmController.
 router.post("/add-owner", authMiddleware.isAuthenticated, agmController.addOwner);
 router.post("/delete-owner", authMiddleware.isAuthenticated, agmController.deleteOwner);
 router.post("/update-eligibility", authMiddleware.isAuthenticated, agmController.updateEligibility);
+router.post("/get-agm-list", authMiddleware.isAuthenticated, agmController.getAgmList);
 
 module.exports = router;
