@@ -668,7 +668,7 @@ const assetController = {
     getAssetListByCategory: async (req, res) => {
         // name, model, area, category
 
-        console.log("req.body data for assets 2",req.body)
+        console.log("req.body data for assets 3",req.body)
         try {
 
             let reqData = req.query;
@@ -722,8 +722,7 @@ const assetController = {
             }
 
 
-            if ((building && building.length > 0) || (floorZone && floorZone.length > 0)) {
-                // if(building.length > 0 || floorZone.length > 0)
+            if (building || floorZone) {
 
                 [total, rows,rowsId] = await Promise.all([
                     knex
@@ -991,8 +990,8 @@ const assetController = {
                             }
                         })
                         .orderBy("asset_location.id", "desc")
-                        .limit(1)
-                        .first()
+                        // .limit(1)
+                        // .first()
                     // ]).max('asset_location.updatedAt').first()
                     return { ...row, ...location }
                 })
@@ -1030,8 +1029,8 @@ const assetController = {
                             }
                         })
                         .orderBy("asset_location.id", "desc")
-                        .limit(1)
-                        .first()
+                        // .limit(1)
+                        // .first()
 
                         return { ...row, ...location }
                 })
