@@ -749,7 +749,7 @@ const assetController = {
                         .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_location.companyId': companyId })
                         .first()
                         .where({ 'asset_master.orgId': req.orgId })
-                        // .where('asset_location.endDate', null)
+                        .where('asset_location.endDate', null)
                         .where(qb => {
 
                             if (building && building.length > 0) {
@@ -833,7 +833,7 @@ const assetController = {
                         .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_location.companyId': companyId })
                         .offset(offset)
                         .limit(per_page)
-                        // .where('asset_location.endDate', null)
+                        .where('asset_location.endDate', null)
                         .where({ 'asset_master.orgId': req.orgId })
                         .where(qb => {
 
@@ -904,7 +904,7 @@ const assetController = {
                             // "asset_master.assetCode",
                         ])
                         .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_location.companyId': companyId })
-                        // .where('asset_location.endDate', null)
+                        .where('asset_location.endDate', null)
                         .where({ 'asset_master.orgId': req.orgId })
                         .where(qb => {
 
