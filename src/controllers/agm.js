@@ -3,6 +3,7 @@ const _ = require("lodash");
 
 const knex = require("../db/knex");
 const moment = require("moment");
+const { join } = require("lodash");
 
 const agmController = {
   generateAGMId: async (req, res) => {
@@ -117,7 +118,7 @@ const agmController = {
 
 
 
-          trx.commit;
+        trx.commit;
       });
     } catch (err) {
       return res.status(200).json({
@@ -187,23 +188,23 @@ const agmController = {
                 continue;
               }
               let unitId;
-                let checkExist = await knex("property_units")
-                  .select("id")
-                  .where({
-                    orgId: req.orgId,
-                    unitNumber: ownerData.A.toUpperCase(),
-                  });
+              let checkExist = await knex("property_units")
+                .select("id")
+                .where({
+                  orgId: req.orgId,
+                  unitNumber: ownerData.A.toUpperCase(),
+                });
 
-                if (checkExist.length > 0) {
-                  unitId = checkExist[0].id;
-                } else {
-                  let values = _.values(ownerData);
-                  values.unshift('Unit Number Does not exist!')
-                  errors.push(values);
-                  fail++;
-                  continue;
-                }
-              
+              if (checkExist.length > 0) {
+                unitId = checkExist[0].id;
+              } else {
+                let values = _.values(ownerData);
+                values.unshift('Unit Number Does not exist!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
 
               let insertData = {
                 agmId: 10,
@@ -216,8 +217,8 @@ const agmController = {
                 createdAt: new Date().getTime(),
                 updatedAt: new Date().getTime(),
                 importedBy: req.me.id,
-                displayId:1,
-                createdBy:req.me.id
+                displayId: 1,
+                createdBy: req.me.id
               };
 
               let resultData = await knex
@@ -268,6 +269,137 @@ const agmController = {
       })
     }
 
+
+  },
+
+  /*ADD OWNER*/
+  addOwner: async (req, res) => {
+
+    try {
+      let payload = req.body;
+      let resultData;
+      await knex.transaction(async (trx) => {
+
+        const schema = Joi.object().keys({
+          agmId: Joi.string().required(),
+          unitId: Joi.string().required(),
+          ownerName: Joi.string().required(),
+          ownerershipRatio: Joi.string().required(),
+          eligibilityToggle: Joi.string().required(),
+        });
+
+        const result = Joi.validate(payload, schema);
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message },
+            ],
+          });
+        }
+
+        let insertData = {
+          agmId: 10,
+          unitId: payload.unitId,
+          ownerName: payload.ownerName,
+          ownerershipRatio: payload.ownerershipRatio,
+          eligibility: payload.eligibilityToggle,
+          orgId: req.orgId,
+          isActive: true,
+          createdAt: new Date().getTime(),
+          updatedAt: new Date().getTime(),
+          displayId: 1,
+          createdBy: req.me.id
+        };
+
+        resultData = await knex
+          .insert(insertData)
+          .returning(["*"])
+          .into("agm_owner_master");
+        trx.commit;
+      })
+      return res.status(200).json({
+        data: resultData,
+        message: "Owner added successfully!"
+      })
+    } catch (err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+      });
+    }
+
+  }
+  ,
+  /*DELETE OWNER */
+  deleteOwner: async (req, res) => {
+
+    try {
+
+      let payload = req.body;
+      const schema = Joi.object().keys({
+        id: Joi.string().required(),
+      });
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message },
+          ],
+        });
+      }
+      let delResult = await knex('agm_owner_master').where({ id: payload.id, orgId: req.orgId }).del().returning(["*"]);
+      return res.status(200).json({
+        data: delResult,
+        message: "Owner deleted successfully!"
+      });
+
+    } catch (err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }]
+      })
+    }
+
+  },
+
+  /*UPDATE ELIGIBILITY */
+  updateEligibility: async (req, res) => {
+
+    try {
+
+      let payload = req.body;
+
+      const schema = new Joi.object().keys({
+        id: Joi.string().required(),
+        eligibility: Joi.string().required()
+      })
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message },
+          ],
+        });
+      }
+
+      let updateData = {
+        eligibility: payload.eligibility
+      }
+
+      let updateResult = await knex('agm_owner_master').update(updateData).where({ id: payload.id, orgId: req.orgId }).returning(["*"]);
+
+      return res.status(200).json({
+        data: updateResult,
+        message: "Eligibility updated successfully!"
+      })
+
+
+    } catch (err) {
+
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }]
+      });
+
+    }
 
   }
 
