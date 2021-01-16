@@ -32,7 +32,7 @@ const socketConnectionHelper = {
             const expiryTime = moment().add(12, 'hours').valueOf();
 
             let connection = await knex('socket_connections').where({ userId, deviceId })
-                .where('expiredAt', '<', currentTime).select('*').first();
+                .where('expiredAt', '>', currentTime).select('*').first();
 
             if (connection) {
                 // Update row with new connection Id...., and reset expired time as well...
@@ -75,7 +75,7 @@ const socketConnectionHelper = {
             const currentTime = moment().valueOf();
 
             let connections = await knex('socket_connections').where({ orgId })
-                .where('expiredAt', '<', currentTime).select('*');
+                .where('expiredAt', '>', currentTime).select('*');
 
             return connections;
 
@@ -86,18 +86,18 @@ const socketConnectionHelper = {
     },
 
 
-    getConnectionByUserId: async (userId) => {
+    getUserConnectionsByUserId: async (userId) => {
         try {
 
             const currentTime = moment().valueOf();
 
             let connections = await knex('socket_connections').where({ userId })
-                .where('expiredAt', '<', currentTime).select('*');
+                .where('expiredAt', '>', currentTime).select('*');
 
             return connections;
 
         } catch (err) {
-            console.log(`[helpers][socket-connection-helper][getConnectionByUserId]: Error:`, err);
+            console.log(`[helpers][socket-connection-helper][getUserConnectionsByUserId]: Error:`, err);
             return err;
         }
     },
@@ -109,7 +109,7 @@ const socketConnectionHelper = {
             const currentTime = moment().valueOf();
 
             let connections = await knex('socket_connections').where({ connectionId })
-                .where('expiredAt', '<', currentTime).select('*');
+                .where('expiredAt', '>', currentTime).select('*');
 
             return connections;
 
