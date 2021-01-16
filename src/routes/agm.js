@@ -11,5 +11,9 @@ router.post("/add-owner", authMiddleware.isAuthenticated, agmController.addOwner
 router.post("/delete-owner", authMiddleware.isAuthenticated, agmController.deleteOwner);
 router.post("/update-eligibility", authMiddleware.isAuthenticated, agmController.updateEligibility);
 router.post("/get-agm-list", authMiddleware.isAuthenticated, agmController.getAgmList);
+router.post("/get-owner-list", authMiddleware.isAuthenticated, agmController.getOwnerList);
+router.post("/get-agm-details", authMiddleware.isAuthenticated, agmController.getAgmDetails);
+router.post("/owner-proxy-registration", authMiddleware.isAuthenticated, agmController.ownerProxyRegistration);
+
 
 module.exports = router;
