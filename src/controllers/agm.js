@@ -105,7 +105,10 @@ const agmController = {
           addedAgenda.push(addedAgendaResult[0]);
         }
 
+
         //insert proxy document
+
+
 
         let proxyDocumentPayload = req.body.proxyDocumentPayload;
 
@@ -269,7 +272,34 @@ const agmController = {
     }
 
 
-  }
+  },
+
+
+
+  // Get AGM Preparation List
+
+  // GetAGMPreparationList : async(req,res)=>{
+  //   try {
+  //     let payload = req.body;
+  //     console.log("payloadData++++++++", payload);
+
+  //     let total,rows ;
+
+  //     let pagination = {};
+  //     let per_page = reqData.per_page || 10;
+  //     let page = reqData.current_page || 1;
+  //     if (page < 1) page = 1;
+  //     let offset = (page - 1) * per_page;
+  //     let agmId ;
+
+  //     let {name , company , project, meetingDate , createdDate} = req.body
+
+  //   } catch (error) {
+      
+  //   }
+  // }
+
+
 
 
 };

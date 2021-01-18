@@ -672,7 +672,7 @@ const assetController = {
         try {
 
             let reqData = req.query;
-            let total, rows,rowsId
+            let total, rows,rowsId;
             let {
                 assetCategoryId,
                 companyId,
@@ -900,8 +900,18 @@ const assetController = {
                             "property_units.id"
                         )
                         .select(["asset_master.id",
-                        'floor_and_zones.floorZoneCode',
                             // "asset_master.assetCode",
+                            // "asset_master.assetName",
+                            // "asset_master.model",
+                            // "asset_master.barcode",
+                            // "asset_master.areaName", "assetSerial",
+                            // 'asset_location.id as locationId',
+                            // 'companies.companyName',
+                            // 'projects.projectName',
+                            // 'buildings_and_phases.buildingPhaseCode',
+                            // "buildings_and_phases.description as building",
+                            // 'floor_and_zones.floorZoneCode',
+                            // 'property_units.unitNumber'
                         ])
                         .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_location.companyId': companyId })
                         .where('asset_location.endDate', null)
@@ -909,6 +919,8 @@ const assetController = {
                         .where(qb => {
 
                             if (building && building.length > 0) {
+
+                                console.log("Buiulding Name with Id")
                                 qb.whereIn('buildings_and_phases.id', building)
                             }
 
@@ -949,7 +961,7 @@ const assetController = {
                                     "asset_master.id",assetId
                                 )
                             }
-                        })
+                        }),
 
                 ]);
                 const Parallel = require('async-parallel')
@@ -996,47 +1008,47 @@ const assetController = {
                     return { ...row, ...location }
                 })
 
-                const rowsIdWithLocations = await Parallel.map(rowsId, async row =>{
+                // const rowsIdWithLocations = await Parallel.map(rowsId, async row =>{
 
-                    const location = await knex('asset_location')
-                        .innerJoin('companies', 'asset_location.companyId', 'companies.id')
-                        .leftJoin('projects', 'asset_location.projectId', 'projects.id')
-                        .leftJoin(
-                            "buildings_and_phases",
-                            "asset_location.buildingId",
-                            "buildings_and_phases.id"
-                        )
-                        .leftJoin(
-                            "floor_and_zones",
-                            "asset_location.floorId",
-                            "floor_and_zones.id"
-                        )
-                        .leftJoin(
-                            "property_units",
-                            "asset_location.unitId",
-                            "property_units.id"
-                        )
-                        .select([
-                            'floor_and_zones.floorZoneCode',
-                        ]).where({ 'asset_location.assetId': row.id })
-                        .where(qb => {
-                            if (building) {
-                                qb.whereIn('buildings_and_phases.id', building)
-                            }
+                //     const location = await knex('asset_location')
+                //         .innerJoin('companies', 'asset_location.companyId', 'companies.id')
+                //         .leftJoin('projects', 'asset_location.projectId', 'projects.id')
+                //         .leftJoin(
+                //             "buildings_and_phases",
+                //             "asset_location.buildingId",
+                //             "buildings_and_phases.id"
+                //         )
+                //         .leftJoin(
+                //             "floor_and_zones",
+                //             "asset_location.floorId",
+                //             "floor_and_zones.id"
+                //         )
+                //         .leftJoin(
+                //             "property_units",
+                //             "asset_location.unitId",
+                //             "property_units.id"
+                //         )
+                //         .select([
+                //             'floor_and_zones.floorZoneCode',
+                //         ]).where({ 'asset_location.assetId': row.id })
+                //         .where(qb => {
+                //             if (building) {
+                //                 qb.whereIn('buildings_and_phases.id', building)
+                //             }
 
-                            if (floorZone) {
-                                qb.whereIn('floor_and_zones.id', floorZone)
-                            }
-                        })
-                        .orderBy("asset_location.id", "desc")
-                        // .limit(1)
-                        // .first()
+                //             if (floorZone) {
+                //                 qb.whereIn('floor_and_zones.id', floorZone)
+                //             }
+                //         })
+                //         .orderBy("asset_location.id", "desc")
+                        
 
-                        return { ...row, ...location }
-                })
-
+                //         return { ...row, ...location }
+                // })
 
 
+
+                console.log("Value of rows Id=======>>>>>>",rowsId )
                 let count = total.count;
                 pagination.total = count;
                 pagination.per_page = per_page;
@@ -1048,8 +1060,8 @@ const assetController = {
                 pagination.from = offset;
                 // pagination.data = rows;
                 pagination.data = rowsWithLocations;
-                // pagination.totalId = rowsId
-                pagination.totalId = rowsIdWithLocations;
+                pagination.totalId = rowsId
+                // pagination.totalId = _.uniqBy(rowsId,"id");
                 
 
 
