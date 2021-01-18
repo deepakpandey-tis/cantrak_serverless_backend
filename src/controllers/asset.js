@@ -668,11 +668,11 @@ const assetController = {
     getAssetListByCategory: async (req, res) => {
         // name, model, area, category
 
-        console.log("req.body data for assets 3",req.body)
+        console.log("req.body data building",req.body)
         try {
 
             let reqData = req.query;
-            let total, rows,rowsId
+            let total, rows,rowsId;
             let {
                 assetCategoryId,
                 companyId,
@@ -724,6 +724,8 @@ const assetController = {
 
             if (building || floorZone) {
 
+                // console.log("Building id with filter",building)
+
                 [total, rows,rowsId] = await Promise.all([
                     knex
                         .count("* as count")
@@ -763,6 +765,7 @@ const assetController = {
                             }
 
                             if (assetName) {
+                                console.log("asset name",assetName)
                                 qb.where(
                                     "asset_master.assetName",
                                     "iLIKE",
@@ -900,8 +903,7 @@ const assetController = {
                             "property_units.id"
                         )
                         .select(["asset_master.id",
-                        'floor_and_zones.floorZoneCode',
-                            // "asset_master.assetCode",
+                           
                         ])
                         .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_location.companyId': companyId })
                         .where('asset_location.endDate', null)
@@ -909,6 +911,8 @@ const assetController = {
                         .where(qb => {
 
                             if (building && building.length > 0) {
+
+                                console.log("Buiulding Name with Id")
                                 qb.whereIn('buildings_and_phases.id', building)
                             }
 
@@ -949,7 +953,7 @@ const assetController = {
                                     "asset_master.id",assetId
                                 )
                             }
-                        })
+                        }),
 
                 ]);
                 const Parallel = require('async-parallel')
@@ -1029,14 +1033,14 @@ const assetController = {
                             }
                         })
                         .orderBy("asset_location.id", "desc")
-                        // .limit(1)
-                        // .first()
+                        .first()
 
                         return { ...row, ...location }
                 })
 
 
 
+                console.log("Value of rows Id=======>>>>>>",rowsId )
                 let count = total.count;
                 pagination.total = count;
                 pagination.per_page = per_page;
@@ -1048,8 +1052,8 @@ const assetController = {
                 pagination.from = offset;
                 // pagination.data = rows;
                 pagination.data = rowsWithLocations;
-                // pagination.totalId = rowsId
-                pagination.totalId = rowsIdWithLocations;
+                pagination.totalId = rowsIdWithLocations
+                // pagination.totalId = _.uniqBy(rowsId,"id");
                 
 
 
@@ -1350,6 +1354,7 @@ const assetController = {
             return res.status(200).json({
                 data: {
                     asset: pagination,
+                    // totalId:rowsId
                 },
                 message: 'Asset List!'
             })
