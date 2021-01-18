@@ -5,6 +5,7 @@ const emailNotification = require('../core/email-notification');
 const webPushNotification = require('../core/web-push-notification');
 const smsNotification = require('../core/sms-notification');
 const lineNotification = require('../core/line-notification');
+const socketNotification = require('../core/socket-notification');
 
 
 const notificationUsageTracker = require('../core/notification-usage-tracker');
@@ -152,7 +153,15 @@ async function handleSocketNotification(sender, receiver, dataPayload, notificat
             let data = await notificationClass.sendSocketNotification(sender, receiver, dataPayload);
             console.log('[notifications][core][notification][send]: Data for Socket Notification:', data);
 
-
+            await socketNotification.send({
+                channel: data.channel,
+                orgId: data.orgId,
+                senderId: data.senderId,
+                receiverId: data.receiverId,
+                payload: data.payload,
+                actions: data.actions
+            });
+            console.log('[notifications][core][notification][send]: Socket Notification sent.');
 
         } else {
             console.log('[notifications][core][notification][send]: No methods found to send socket notification.');

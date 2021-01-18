@@ -105,7 +105,29 @@ const testNotification = {
 
     sendSocketNotification: async (sender, receiver, data) => {
         data = {
-
+            orgId: sender.orgId,
+            senderId: sender.id,
+            receiverId: receiver.id,
+            channel: 'socket-notification',
+            payload: {
+                ...data,
+                subject: 'Test Notification from socket',
+                body: `Hi!!, This is a socket test notification to all users from ${sender.name}.`,
+                icon: 'assets/icons/icon-512x512.png',
+                image: 'assets/icons/icon-512x512.png',
+                extraData: {
+                    dateOfArrival: Date.now(),
+                    url: `${process.env.SITE_URL}/admin/dashboard/home`,
+                    primaryKey: Date.now()
+                }
+            },
+            actions: [
+                {
+                    action: "explore",
+                    title: "Open Home Page",
+                    url: `${process.env.SITE_URL}/admin/dashboard/home`
+                }
+            ]
         }
         return data;
     },
