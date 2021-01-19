@@ -645,8 +645,7 @@ const agmController = {
       let payload = req.body;
       let agendaLists;
       const schema = new Joi.object().keys({
-        agendaId: Joi.number().required(),
-        agmId: Joi.number().required()
+         agmId: Joi.number().required()
       })
 
       const result = Joi.validate(payload, schema);
@@ -658,7 +657,7 @@ const agmController = {
         });
       }
 
-      agendaLists = await knex('agenda_master').where({ 'agenda_master.id': payload.agendaId })
+      agendaLists = await knex('agenda_master').where({ 'agenda_master.agmId': payload.agmId })
         .select([
           'agenda_master.*'
         ])
@@ -697,7 +696,7 @@ const agmController = {
         });
       }
 
-      ownerDetails = await knex('agm_owner_master').where({ 'agm_owner_master.id': payload.ownerId })
+      ownerDetails = await knex('agm_owner_master').where({ 'agm_owner_master.id': payload.ownerId, 'orgId': req.orgId })
         .select([
           'agm_owner_master.*'
         ])
@@ -714,7 +713,89 @@ const agmController = {
       });
 
     }
-  }
+  },
+   /*GET AGENDA LIST */
+  getAgendaList: async (req, res) => {
+
+    try {
+
+      let payload = req.body;
+      let agendaLists;
+      const schema = new Joi.object().keys({
+         agmId: Joi.number().required()
+      })
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message },
+          ],
+        });
+      }
+
+      agendaLists = await knex('agenda_master').where({ 'agenda_master.agmId': payload.agmId })
+        .select([
+          'agenda_master.*'
+        ])
+
+      // let updateResult = await knex('agm_owner_master').update(updateData).where({ id: payload.id, orgId: req.orgId }).returning(["*"]);
+
+      return res.status(200).json({
+        data: agendaLists,
+        message: "Get Agenda Lists!"
+      })
+
+    } catch (err) {
+
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }]
+      });
+    }
+  },
+   /*UPDATE OWNER DATA */
+  updateOwner: async (req, res) => {
+    try {
+
+      let payload = req.body;
+      let updateOwner;
+      const schema = new Joi.object().keys({
+         agmId: Joi.number().required(),
+         unitNo: Joi.number().required(),
+         ownerName: Joi.string().required(),
+         eligibility: Joi.number().required(),
+         ownerId: Joi.number().required(),
+      })
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message },
+          ],
+        });
+      }
+
+      let updateData = {
+        eligibility: payload.eligibility,
+        ownerName: payload.ownerName,
+        unitId: payload.unitId     
+      }
+     
+      let updateOwner = await knex('agm_owner_master').update(updateData).where({ id: payload.ownerId, orgId: req.orgId, agmId: payload.agmId }).returning(["*"]);
+
+      return res.status(200).json({
+        data: updateOwner,
+        message: "Owner updated successfully!"
+      })
+
+    } catch (err) {
+
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }]
+      });
+    }
+  },
 };
 
 module.exports = agmController;
