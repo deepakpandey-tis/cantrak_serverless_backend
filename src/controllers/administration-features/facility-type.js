@@ -148,6 +148,7 @@ const FacilityTypeController = {
       let updatePayload = null;
       let userId = req.me.id;
       let orgId = req.orgId;
+      let images = [];
 
       await knex.transaction(async (trx) => {
         let statusPayload = req.body;
@@ -210,6 +211,7 @@ const FacilityTypeController = {
         updatePayload = updateStatusResult[0];
 
         let imagesData = req.body.logoFile;
+
         if (imagesData && imagesData.length > 0) {
           for (let image of imagesData) {
             let d = await knex("images")
