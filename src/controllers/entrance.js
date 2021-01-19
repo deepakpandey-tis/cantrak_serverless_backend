@@ -63,7 +63,7 @@ const entranceController = {
                     });
                 }
             }
-            /*CHECK ORGANISATION ACTIVE/INACTIVE CLOSE */
+            /* CHECK ORGANISATION ACTIVE/INACTIVE CLOSE */
 
             // // check email is verified
             // const verifyEmail = await knex('users').where({ email: loginResult.email, emailVerified: 'true' });

@@ -782,7 +782,7 @@ const agmController = {
         unitId: payload.unitId     
       }
      
-      let updateOwner = await knex('agm_owner_master').update(updateData).where({ id: payload.ownerId, orgId: req.orgId, agmId: payload.agmId }).returning(["*"]);
+      updateOwner = await knex('agm_owner_master').update(updateData).where({ id: payload.ownerId, orgId: req.orgId, agmId: payload.agmId }).returning(["*"]);
 
       return res.status(200).json({
         data: updateOwner,
