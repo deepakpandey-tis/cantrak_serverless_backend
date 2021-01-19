@@ -1141,6 +1141,7 @@ const pmController = {
 
       let totalWeeks = 0;
       result = await Parallel.map(result, async (item) => {
+        let repeatFrequency = Math.min.apply(Math,item.frequencyTagIds)
         let week;
         week = Math.ceil(moment(item.pmDate).format("D") / 7);
         let month = moment(item.pmDate).month() + 1;
@@ -1166,7 +1167,7 @@ const pmController = {
 
         totalWeeks += weeks;
 
-        return { ...item, week, month, weeks, totalWeeks, newWeek };
+        return { ...item, week, month, weeks, totalWeeks, newWeek,repeatFrequency };
       });
 
       let arr = [];
