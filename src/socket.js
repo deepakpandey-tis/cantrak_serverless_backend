@@ -29,6 +29,8 @@ async function sendMessage(connectionId, body) {
   }
 }
 
+module.exports.sendMessage = sendMessage;
+
 
 async function processRequest( originalRoute, connectionId, methodToCall, body, queryParams, params, me = null, id = null, orgId = null) {
 
@@ -55,7 +57,7 @@ async function processRequest( originalRoute, connectionId, methodToCall, body, 
       },
       json: async (obj) => {
         const body = {
-          route : originalRoute,
+          channel : originalRoute,
           status: this.currentStatus,
           body: obj
         };
@@ -102,7 +104,7 @@ module.exports.handler = async function (event, context, cb) {
       break;
 
     case '$disconnect':
-      await socketConnectionHelper.removeConnection(event.requestContext.connectionId);
+      await socketConnectionHelper.removeConnection(connectionId);
       console.log('[socket][handler]: Disconnected:', event.requestContext.connectionId);
       break;
 
@@ -144,10 +146,14 @@ module.exports.handler = async function (event, context, cb) {
     case '$default':
     default:
       console.log('[socket][handler]: Received Message on default Route:', body);
-      await sendMessage(connectionId,  { status: 200, route: 'welcome', body : { message: 'This is welcome message' } });
+      await sendMessage(connectionId,  { status: 200, channel: 'welcome', body : { message: 'This is welcome message' } });
       break;
 
   }
+
+
+  // Lambda was getting timed out...
+  context.callbackWaitsForEmptyEventLoop = false;
 
   cb(null, {
     statusCode: 200,
@@ -182,11 +188,17 @@ module.exports.auth = async (event, context, callback) => {
   var condition = {};
   condition.IpAddress = {};
 
+  console.log("[socket][auth]:: Auth Token:", queryStringParameters.Auth);
   const { user, orgId } = await socketConnectionHelper.getUserFromToken(queryStringParameters.Auth);
+  console.log("[socket][auth]:: Decoded User:", user);
+  console.log("[socket][auth]:: Decoded Org:", orgId);
+
+  // Lambda was getting timed out...
+  context.callbackWaitsForEmptyEventLoop = false;
 
   if (user && orgId) {
     const policy = generatePolicy(user.email, 'Allow', event.methodArn);
-    console.log("Auth: Policy::", policy);
+    console.log("[socket][auth]:: Policy Generated::", policy);
     callback(null, policy);
   } else {
     callback("Unauthorized");
