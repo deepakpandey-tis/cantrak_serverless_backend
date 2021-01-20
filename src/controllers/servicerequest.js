@@ -3454,7 +3454,7 @@ const serviceRequestController = {
 
                     let sender = await knex.from("users").where({ id: req.me.id }).first();
                     let receiver;
-                    let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH"];
+                    let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH","SOCKET_NOTIFY"];
 
                     if (userResult) {
                         receiver = userResult;
@@ -3528,7 +3528,7 @@ const serviceRequestController = {
 
                     let sender = await knex.from("users").where({ id: req.me.id }).first();
                     let receiver;
-                    let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH"];
+                    let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH","SOCKET_NOTIFY"];
 
                     if (userResult) {
                         receiver = userResult;
