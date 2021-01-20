@@ -114,23 +114,37 @@ const emailHelper = {
                 return { code: 'PARAMS_VALIDATION_ERROR', message: + result.error.message, error: new Error('Could Not Send Mail due to params Validations Failed.') };
             }
 
-            if(orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
-                orgLogoFile = 'https://cbreconnect.servicemind.asia/assets/img/cbre-logo.png';
-                orgNameData = "CBRE Connect";
-                fromSettings = 'important-notifications@cbreconnect.servicemind.asia';
+            let orgMaster = await knex('organisations').select('organisationName','organisationLogo')
+                .where({ id: orgId, isActive: true }).first();
+
+            if(process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
+                if(orgMaster.organisationLogo == ''){
+                    orgLogoFile = 'https://servicemind.asia/wp-content/uploads/thegem-logos/logo_4ecb6ca197a78baa1c9bb3558b2f0c09_1x.png';
+                    orgNameData = "ServiceMind";
+                }else{
+                    orgLogoFile = orgMaster.organisationLogo;
+                    orgNameData = orgMaster.organisationName;
+                }
+                orgLogoFile = orgMaster.organisationLogo;
+                orgNameData = orgMaster.organisationName;
+                fromSettings = 'important-notifications@servicemind.asia';
                 layout='organization-layout.ejs';
-            }else if(orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){                
-                orgLogoFile = 'https://senses.servicemind.asia/assets/img/senses-logo.png';
-                orgNameData = "Senses";
-                fromSettings = 'important-notifications@senses.servicemind.asia';
+            }else if(process.env.SITE_URL == 'https://d3m3k4hno3r3ok.cloudfront.net'){
+                if(orgMaster.organisationLogo == ''){
+                    orgLogoFile = 'https://servicemind.asia/wp-content/uploads/thegem-logos/logo_4ecb6ca197a78baa1c9bb3558b2f0c09_1x.png';
+                    orgNameData = "ServiceMind";
+                }else{
+                    orgLogoFile = orgMaster.organisationLogo;
+                    orgNameData = orgMaster.organisationName;
+                }
+                orgLogoFile = orgMaster.organisationLogo;
+                orgNameData = orgMaster.organisationName;
+                fromSettings = 'important-notifications@servicemind.asia';
                 layout='organization-layout.ejs';
             }else{
                 orgLogoFile = 'https://servicemind.asia/wp-content/uploads/thegem-logos/logo_4ecb6ca197a78baa1c9bb3558b2f0c09_1x.png';
                 orgNameData = "ServiceMind";
                 fromSettings = 'important-notifications@servicemind.asia';
-                // orgLogoFile = 'https://cbreconnect.servicemind.asia/assets/img/cbre-logo.png';
-                // orgNameData = "CBRE Connect";
-                // fromSettings = 'important-notifications@cbreconnect.servicemind.asia';
             }
 
             // CODE FOR COMPILING EMAIL TEMPLATES
