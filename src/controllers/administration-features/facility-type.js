@@ -214,7 +214,16 @@ const FacilityTypeController = {
 
         if (imagesData && imagesData.length > 0) {
           for (let image of imagesData) {
-            let d = await knex("images")
+            let d;
+           // Check If Image Already Exits
+           const existFacilityTypeImage = await knex("images").where({
+            entityType: "facility_type_image", entityId:req.body.id,
+            orgId: req.orgId,
+          });
+
+          if(existFacilityTypeImage.length > 0){
+              // Update If Image is already exits                                    
+              d = await knex("images")
               .update({
                 s3Url: image.s3Url,
                 name: image.filename,
@@ -225,9 +234,26 @@ const FacilityTypeController = {
               })
               .where({entityId : req.body.id,entityType:"facility_type_image"})
               .returning(["*"]);
+          }else{
+
+            // Insert If Image is not exits
+            d = await knex("images")
+            .insert({
+              entityType: "facility_type_image",
+              entityId: req.body.id,
+              s3Url: image.s3Url,
+              name: image.filename,
+              title: image.title,
+              createdAt: currentTime,
+              updatedAt: currentTime,
+              orgId: req.orgId,
+            })
+            .returning(["*"]);
+          }
             // .transacting(trx)
             // .into("images");
             images.push(d[0]);
+
           }
         }
 
@@ -236,14 +262,46 @@ const FacilityTypeController = {
 
         if(iconData && iconData.length > 0){
           for (let icon of iconData){
-            let d = await knex("images")
-            .update({
+            let d;
+           // Check If Icon Already Exits
+           const existFacilityTypeImage = await knex("images").where({
+            entityType: "facility_type_icon", entityId:req.body.id,
+            orgId: req.orgId,
+          });
+
+          if(existFacilityTypeImage.length > 0){
+              // Update If Icon is already exits                                    
+             d = await knex("images")
+              .update({
+                  s3Url: icon.s3Url,
+                  name: icon.filename,
+                  title: icon.title,
+                  updatedAt: currentTime,
+              })
+              .where({entityId : req.body.id,entityType:"facility_type_icon"})
+          }else{
+
+            // Insert If Icon is not exits
+            d = await knex("images")
+            .insert({
+              entityType:"facility_type_icon",
+              entityId: req.body.id,
                 s3Url: icon.s3Url,
                 name: icon.filename,
                 title: icon.title,
+                createdAt: currentTime,
                 updatedAt: currentTime,
+                orgId: req.orgId,
             })
-            .where({entityId : req.body.id,entityType:"facility_type_icon"})
+          }
+            // let d = await knex("images")
+            // .update({
+            //     s3Url: icon.s3Url,
+            //     name: icon.filename,
+            //     title: icon.title,
+            //     updatedAt: currentTime,
+            // })
+            // .where({entityId : req.body.id,entityType:"facility_type_icon"})
           }
         }
 

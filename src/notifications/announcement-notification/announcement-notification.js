@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const notification = require('../core/notification');
 
-const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'LINE_NOTIFY', 'SMS'];
+const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'LINE_NOTIFY','SOCKET_NOTIFY', 'SMS'];
 const SHOULD_QUEUE = process.env.IS_OFFLINE ? false : true;
 
 
@@ -116,18 +116,6 @@ const announcementNotification = {
             icons = 'assets/icons/icon-512x512.png';
             images = 'assets/icons/icon-512x512.png';
         }
-        // if(orgData && orgData.id == '56'){
-        //     icons = 'assets/icons/cbre-512x512.png';
-        //     images = 'assets/icons/cbre-512x512.png';
-        // }else if(orgData && orgData.id == '89'){
-        //     icons = 'assets/icons/senses-512x512.png';
-        //     images = 'assets/icons/senses-512x512.png';
-        // }
-        // else{
-        //     icons = 'assets/icons/icon-512x512.png';
-        //     images = 'assets/icons/icon-512x512.png';
-        // }
-
         data = {
             orgId: sender.orgId,
             senderId: sender.id,
@@ -155,12 +143,51 @@ const announcementNotification = {
         return data;
     },
 
-    // sendSocketNotification: async (sender, receiver, data) => {
-    //     data = {
-
-    //     }
-    //     return data;
-    // },
+    sendSocketNotification: async (sender, receiver, data) => {
+        console.log("Socket Notification called")
+        let title = data.payload.title;
+        let description = data.payload.description;
+        let url = data.payload.url;
+        let  orgData = data.payload.orgData;
+        let icons;
+        let images;
+        if(orgData && orgData.id == '56'){
+            icons = 'assets/icons/cbre-512x512.png';
+            images = 'assets/icons/cbre-512x512.png';
+        }else if(orgData && orgData.id == '89'){
+            icons = 'assets/icons/senses-512x512.png';
+            images = 'assets/icons/senses-512x512.png';
+        }
+        else{
+            icons = 'assets/icons/icon-512x512.png';
+            images = 'assets/icons/icon-512x512.png';
+        }
+        data = {
+            orgId: sender.orgId,
+            senderId: sender.id,
+            receiverId: receiver.id,
+            channel: 'socket-notification',
+            payload: {
+                subject: title,
+                body: description + `from ${sender.name}`,
+                icon: icons,
+                image: images,
+                extraData: {
+                    dateOfArrival: Date.now(),
+                    url: `${process.env.SITE_URL}/admin/dashboard/home`,
+                    primaryKey: Date.now()
+                }
+            },
+            actions: [
+                {
+                    action: "explore",
+                    title: "Open Home Page",
+                    url: `${process.env.SITE_URL}/admin/dashboard/home`
+                }
+            ]
+        }
+        return data;
+    },
 
 
     sendLineNotification: async (sender, receiver, data) => {
