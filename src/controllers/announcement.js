@@ -33,6 +33,7 @@ const announcementController = {
         }
         if (req.body.inApp == true) {
           ALLOWED_CHANNELS.push("IN_APP");
+          ALLOWED_CHANNELS.push("SOCKET_NOTIFY")
         }
         if (req.body.line == true) {
           ALLOWED_CHANNELS.push("LINE_NOTIFY");
@@ -40,6 +41,7 @@ const announcementController = {
         if (req.body.sms == true) {
           ALLOWED_CHANNELS.push("SMS");
         }
+        // if(req.body.email == true || req.body.webPush == true || req.body.inApp == true || req.body.line == true )
         const payload = _.omit(announcementPayload, [
           "userId",
           "newAnnouncementId",
@@ -191,6 +193,7 @@ const announcementController = {
       }
       if (req.body.inApp == true) {
         ALLOWED_CHANNELS.push("IN_APP");
+        ALLOWED_CHANNELS.push("SOCKET_NOTIFY")
       }
       if (req.body.line == true) {
         ALLOWED_CHANNELS.push("LINE_NOTIFY");
