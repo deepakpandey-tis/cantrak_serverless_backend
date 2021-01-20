@@ -1167,7 +1167,7 @@ const pmController = {
 
         totalWeeks += weeks;
 
-        return { ...item, week, month, weeks, totalWeeks, newWeek,repeatFrequency };
+        return { ...item, week, month, weeks, totalWeeks, newWeek,repeatFrequency,year,startMonth,endMonth };
       });
 
       let arr = [];

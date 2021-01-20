@@ -26,12 +26,43 @@ const parcelAcceptanceNotification = {
         }
     },
     sendInAppNotification: async (sender, receiver, data) => {
-        console.log("data of parcel for acceptance",sender,receiver,data)
         let parcelId = data.payload.parcelId
         data = {
             orgId: sender.orgId,
             senderId: sender.id,
             receiverId: receiver.id,
+            payload: {
+                ...data,
+                subject: 'Parcel Acceptation',
+                body: `Hi ,Parcel pickup confirmation is pending please confirm to complete the process.`,
+                icon: 'assets/icons/icon-512x512.png',
+                image: 'assets/icons/icon-512x512.png',
+                extraData: {
+                    dateOfArrival: Date.now(),
+                    url: `/user/parcel/parcel-confirmation?parcels=1,2,3`,
+                    primaryKey: Date.now(),
+                    parcelIds:parcelId
+                }
+            },
+            actions: [
+                {
+                    action: "explore",
+                    title: "Parcel Acceptation",
+                    url:`/user/parcel/parcel-confirmation?parcels=${parcelId}`
+                }
+            ]
+        }
+
+        return data;
+    },
+
+    sendSocketNotification : async (sender , receiver ,data) => {
+        let parcelId = data.payload.parcelId
+        data = {
+            orgId: sender.orgId,
+            senderId: sender.id,
+            receiverId: receiver.id,
+            channel: 'socket-notification',
             payload: {
                 ...data,
                 subject: 'Parcel Acceptation',
