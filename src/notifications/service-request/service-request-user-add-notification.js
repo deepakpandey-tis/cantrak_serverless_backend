@@ -154,12 +154,55 @@ const serviceRequestUserAddNotification = {
         return data;
     },
 
-    // sendSocketNotification: async (sender, receiver, data) => {
-    //     data = {
+    sendSocketNotification: async (sender, receiver, data) => {
+        let title = data.payload.title;
+        let description = data.payload.description;
+        let url = data.payload.url;
+        let orgData = data.payload.orgData;
+        let icons;
+        let images;
+        if (orgData && orgData.id == '56') {
+            icons = 'assets/icons/cbre-512x512.png';
+            images = 'assets/icons/cbre-512x512.png';
+        } else if (orgData && orgData.id == '89') {
+            icons = 'assets/icons/senses-512x512.png';
+            images = 'assets/icons/senses-512x512.png';
+        }
+        else {
+            icons = 'assets/icons/icon-512x512.png';
+            images = 'assets/icons/icon-512x512.png';
+        }
 
-    //     }
-    //     return data;
-    // },
+        data = {
+            orgId: sender.orgId,
+            senderId: sender.id,
+            receiverId: receiver.id,
+            channel: 'socket-notification',
+            payload: {
+                ...data,
+                subject: title,
+                body: description,
+                icon: icons,
+                image: images,
+                extraData: {
+                    dateOfArrival: Date.now(),
+                    url: `/user/dashboard/home`,
+                    primaryKey: Date.now()
+                }
+            },
+            actions: [
+                {
+                    action: "explore",
+                    title: "Open",
+                    //url: `/user/dashboard/home`,
+                    url: data.payload.redirectUrl
+
+                }
+            ]
+        }
+
+        return data;
+    },
 
 
     sendLineNotification: async (sender, receiver, data) => {
