@@ -15,4 +15,7 @@ router.post('/update-organisation', authMiddleware.isAuthenticated, trimmerSpace
 router.post('/delete-organisation', authMiddleware.isAuthenticated, authMiddleware.isSuperAdmin, organisationsController.deleteOrganisation);
 /*GET ALL ORGANISATION LIST FOR DROP DOWN */
 router.get('/get-organisation-all-list', authMiddleware.isAuthenticated, organisationsController.getOrganisationAllList);
+router.post('/update-organisation-logo', authMiddleware.isAuthenticated, organisationsController.updateOrganisationLogo);
+router.get('/get-organisation-logo', authMiddleware.isAuthenticated, organisationsController.getOrganisationLogo);
+
 module.exports = router;
