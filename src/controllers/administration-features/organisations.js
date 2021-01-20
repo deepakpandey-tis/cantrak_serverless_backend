@@ -756,7 +756,82 @@ const organisationsController = {
       });
     }
 
-  }
+  },
+
+  /* GET ORGANISATION LOGO */
+
+  updateOrganisationLogo: async (req, res) => {
+    try {
+      let updatePayload = null;
+      let userId = req.me.id;
+      let orgId = req.orgId;
+      let images = [];
+
+      await knex.transaction(async (trx) => {
+        let logoPayload = req.body;
+        logoPayload = _.omit(req.body, [
+          "orgLogoUrl"          
+        ]);       
+        
+        const currentTime = new Date().getTime();       
+
+        let logoData = req.body.orgLogoUrl;
+
+        if (logoData && logoData.length > 0) {
+          for (let image of logoData) {
+            let d;  
+              // Update If Image is already exits                                    
+              d = await knex("organisations")
+              .update({
+                organisationLogo: image.s3Url,
+                updatedAt: currentTime
+              })
+              .where({id : orgId })
+              .returning(["*"]);          
+            images.push(d[0]);
+          }
+        }  
+        trx.commit;
+      });
+      res.status(200).json({
+        data: {
+          organisationLogo: images,
+        },
+        message: "Organisation Logo updated successfully !",
+      });
+    } catch (err) {
+      console.log("[controllers][organisation][organisationLogo] :  Error", err);
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
+
+   /*GET ALL ORGANISATION LIST FOR DROP DOWN */
+   getOrganisationLogo: async (req, res) => {
+
+    try {
+      
+      let orgId = req.orgId;
+      let result;      
+        result = await knex("organisations").select(['id', 'organisationName','organisationLogo']).returning(['*'])
+          .where({ id: orgId })
+          .orderBy('organisationName', 'asc');
+        ;
+     
+      return res.status(200).json({
+        data: result,
+        message: "Organisation Logo!."
+      });
+
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+
+  },
+
 };
 
 module.exports = organisationsController;

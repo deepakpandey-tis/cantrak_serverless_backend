@@ -199,7 +199,7 @@ const FacilityTypeController = {
             facilityTypeName: statusPayload.facilityTypeName,
             updatedAt: currentTime,
           })
-          .where({ id: statusPayload.id, createdBy: userId, orgId: orgId })
+          .where({ id: statusPayload.id,  orgId: orgId })
           .returning(["*"])
           .transacting(trx)
           .into("facility_type_master");
