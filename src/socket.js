@@ -3,7 +3,8 @@ const AWS = require('aws-sdk');
 
 const socketConnectionHelper = require('./helpers/socket-connection-helper');
 
-let ENDPOINT = `http://0.0.0.0:3001`;
+// let ENDPOINT = `http://0.0.0.0:3001`;
+let ENDPOINT = process.env.SOCKET_ENDPOINT;
 
 async function sendMessage(connectionId, body) {
   try {

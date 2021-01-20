@@ -2387,7 +2387,7 @@ const facilityBookingController = {
                     },
                 });
 
-                let ALLOWED_CHANNELS = ["IN_APP", "LINE_NOTIFY","WEB_PUSH"]
+                let ALLOWED_CHANNELS = ["IN_APP", "LINE_NOTIFY","WEB_PUSH","SOCKET_NOTIFY"]
                 let orgMaster = await knex.from("organisations").where({ id: req.orgId, organisationAdminId: 994 }).orWhere({ id: req.orgId, organisationAdminId: 1188 }).first();
 
                 console.log("date in body", req.body.startDate)
