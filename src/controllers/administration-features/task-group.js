@@ -535,6 +535,7 @@ const taskGroupController = {
                 }
 
                 let insertPmTemplateResult = await knex.insert(insertPmTaskGroupData).returning(['*']).transacting(trx).into('pm_task_groups');
+                console.log("inserted into pm_task_groups step-1", insertPmTemplateResult);
                 createPmTaskGroup = insertPmTemplateResult[0];
 
                 await knex('pm_task_groups')
@@ -555,8 +556,10 @@ const taskGroupController = {
                             orgId: req.orgId
                         }));
 
+
                         insertAssignedAdditionalUserData = _.uniqBy( insertAssignedAdditionalUserData,"entityId")
                         let assignedAdditionalUser = await knex.insert(insertAssignedAdditionalUserData).returning(['*']).transacting(trx).into('assigned_service_additional_users');
+                        console.log("inserted into assigned_service_additional_users step-2", assignedAdditionalUser);
                     }
                 }
                 // ASSIGNED ADDITIONAL USER CLOSE
@@ -600,6 +603,7 @@ const taskGroupController = {
                 }
 
                 let scheduleResult = await knex.insert(insertScheduleData).returning(['*']).transacting(trx).into('task_group_schedule');
+                console.log("inserted into task_group_schedule step-3", scheduleResult);
                 taskSchedule = scheduleResult[0];
 
                 await knex('task_group_schedule')
@@ -643,6 +647,8 @@ const taskGroupController = {
                             .transacting(trx)
                             .into("task_group_schedule_assign_assets");
 
+                            console.log("inserted into task_group_schedule_assign_assets step-4", assetResult);
+
                         // // CREATE PM TASK OPEN
                         // let InsertPmTaskPayload = payload.tasks.map(da => ({
                         //   taskName: da.taskName,
@@ -681,6 +687,8 @@ const taskGroupController = {
                             }
 
                             let insertPmTaskResult = await knex.insert(InsertPmTaskPayload).returning(['*']).transacting(trx).into('pm_task');
+                            console.log("inserted into pm_task step-5", insertPmTaskResult);
+
 
                             createPmTask.push(insertPmTaskResult)
                             if (req.body.consolidatedWorkOrders[i].tasks[l].linkedParts == undefined) {
@@ -720,6 +728,7 @@ const taskGroupController = {
                                     } else {
 
                                         let insertPartResult = await knex.insert(partPayload).returning(['*']).transacting(trx).into('task_assigned_part');
+                                        console.log("inserted into task_assigned_part step-6", insertPartResult);
 
                                         partResult.push(insertPartResult)
                                     }
@@ -750,6 +759,7 @@ const taskGroupController = {
                         }
                         let assignedServiceTeamResult = await knex.insert(insertAssignedServiceTeamData).returning(['*']).transacting(trx).into('assigned_service_team');
                         assignedServiceTeam = assignedServiceTeamResult[0];
+                        console.log("inserted into assigned_service_team step-7", insertPartResult);
                         // }
                     }
                 }
