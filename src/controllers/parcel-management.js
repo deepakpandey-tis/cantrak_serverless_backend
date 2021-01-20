@@ -218,7 +218,7 @@ const parcelManagementController = {
         // console.log("tenantid for notification",tenantId)
 
         if(req.body.pickedUpType[0] == 2 && req.body.isChecked == true){
-          const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH']
+          const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH','SOCKET_NOTIFY']
           let sender = await knex.from("users").where({ id: req.me.id }).first();
 
           let receiver = await knex.from("users").where({ id: tenantId }).first();
@@ -1210,7 +1210,7 @@ const parcelManagementController = {
         let tenantId = req.body.tenantId[0]
 
         if(req.body.pickedUpType[0] == 2 && req.body.isChecked == true){
-          const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH']
+          const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH','SOCKET_NOTIFY']
         let sender = await knex.from("users").where({ id: req.me.id }).first();
 
         let receiver = await knex.from("users").where({ id: tenantId }).first();
