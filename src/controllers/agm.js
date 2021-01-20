@@ -24,7 +24,8 @@ const agmController = {
     }
   },
 
-  addAGMPreparation: async (req, res) => {
+  /* Add Agm Preparation */
+  addAgmPreparation: async (req, res) => {
     try {
       let addedAGMResult = null;
       let agmPrepPayload = req.body;
@@ -106,10 +107,7 @@ const agmController = {
           addedAgenda.push(addedAgendaResult[0]);
         }
 
-
         //insert proxy document
-
-
 
         let proxyDocumentPayload = req.body.proxyDocumentPayload;
 
@@ -119,7 +117,107 @@ const agmController = {
           })
           .del();
 
+        trx.commit;
+      });
+    } catch (err) {
+      return res.status(200).json({
+        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+      });
+    }
+  },
 
+  /* Update Agm Preparation */
+  updateAgmPreparation: async (req, res) => {
+    try {
+      let addedAGMResult = null;
+      let agmPrepPayload = req.body;
+
+      await knex.transaction(async (trx) => {
+        const payload = _.omit(req.body, [
+          "agmId",
+          "votingAgendaName",
+          "description",
+          "proxyDocumentName",
+          "ProxyDocumentTemplateId",
+          "subDocument",
+        ]);
+
+        const schema = Joi.object().keys({
+          name: Joi.string().required(),
+          companyId: Joi.string().required(),
+          projectId: Joi.string().required(),
+          agmdate: Joi.string().required(),
+        });
+        const result = Joi.validate(payload, schema);
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message },
+            ],
+          });
+        }
+
+        let checkUpdate = await knex("agm_master")
+          .where({ id: req.body.agmId })
+          .first();
+
+        if (checkUpdate && checkUpdate.moderationStatus == true) {
+          message = "AGM updated successfully!";
+        } else {
+          message = "AGM added successfully!";
+        }
+
+        let currentTime = new Date().getTime();
+
+        let addAGMResultData = await knex("agm_master")
+          .update({
+            ...payload,
+            updatedAt: currentTime,
+            createdAt: currentTime,
+            orgId: req.orgId,
+            createdBy: req.me.id,
+            moderationStatus: true,
+          })
+          .where({ id: req.body.agmId })
+          .returning(["*"]);
+        addedAGMResult = addAGMResultData[0];
+
+        //insert agenda
+
+        let agendaPayload = req.body.agendaPayload;
+
+        let delAgenda = await knex("agenda_master")
+          .where({
+            agmId: addedAGMResult.id,
+          })
+          .del();
+
+        addedAgenda = [];
+
+        for (let agenda of agendaPayload) {
+          let addedAgendaResult = await knex("agenda_master")
+            .insert({
+              agmId: addedAGMResult.id,
+              entityType: "agenda_master",
+              ...agenda,
+              updatedAt: currentTime,
+              createdAt: currentTime,
+              orgId: req.orgId,
+              createdBy: req.me.id,
+            })
+            .returning(["*"]);
+          addedAgenda.push(addedAgendaResult[0]);
+        }
+
+        //insert proxy document
+
+        let proxyDocumentPayload = req.body.proxyDocumentPayload;
+
+        let delProxyDocument = await knex("proxy_document")
+          .where({
+            entityId: addedAGMResult.id,
+          })
+          .del();
 
         trx.commit;
       });
@@ -129,6 +227,7 @@ const agmController = {
       });
     }
   },
+ 
 
   /**IMPORT OWNER DATA */
   importOwnerData: async (req, res) => {
@@ -271,8 +370,6 @@ const agmController = {
         ]
       })
     }
-
-
   },
 
 
@@ -296,7 +393,7 @@ const agmController = {
   //     let {name , company , project, meetingDate , createdDate} = req.body
 
   //   } catch (error) {
-      
+
   //   }
   // }
 
@@ -356,8 +453,8 @@ const agmController = {
       });
     }
 
-  }
-  ,
+  },
+
   /*DELETE OWNER */
   deleteOwner: async (req, res) => {
 
@@ -637,6 +734,7 @@ const agmController = {
 
     }
   },
+
   /*GET AGENDA LIST */
   getAgendaList: async (req, res) => {
 
@@ -645,7 +743,7 @@ const agmController = {
       let payload = req.body;
       let agendaLists;
       const schema = new Joi.object().keys({
-         agmId: Joi.number().required()
+        agmId: Joi.number().required()
       })
 
       const result = Joi.validate(payload, schema);
@@ -676,7 +774,8 @@ const agmController = {
       });
     }
   },
- /*GET OWNER DETAILS */
+
+  /*GET OWNER DETAILS */
   getOwnerDetails: async (req, res) => {
     try {
 
@@ -714,7 +813,8 @@ const agmController = {
 
     }
   },
-   /*GET AGENDA LIST */
+
+  /*GET AGENDA LIST */
   getAgendaList: async (req, res) => {
 
     try {
@@ -722,7 +822,7 @@ const agmController = {
       let payload = req.body;
       let agendaLists;
       const schema = new Joi.object().keys({
-         agmId: Joi.number().required()
+        agmId: Joi.number().required()
       })
 
       const result = Joi.validate(payload, schema);
@@ -753,18 +853,19 @@ const agmController = {
       });
     }
   },
-   /*UPDATE OWNER DATA */
+
+  /*UPDATE OWNER DATA */
   updateOwner: async (req, res) => {
     try {
 
       let payload = req.body;
       let updateOwner;
       const schema = new Joi.object().keys({
-         agmId: Joi.number().required(),
-         unitNo: Joi.number().required(),
-         ownerName: Joi.string().required(),
-         eligibility: Joi.number().required(),
-         ownerId: Joi.number().required(),
+        agmId: Joi.number().required(),
+        unitNo: Joi.number().required(),
+        ownerName: Joi.string().required(),
+        eligibility: Joi.number().required(),
+        ownerId: Joi.number().required(),
       })
 
       const result = Joi.validate(payload, schema);
@@ -779,9 +880,9 @@ const agmController = {
       let updateData = {
         eligibility: payload.eligibility,
         ownerName: payload.ownerName,
-        unitId: payload.unitId     
+        unitId: payload.unitId
       }
-     
+
       updateOwner = await knex('agm_owner_master').update(updateData).where({ id: payload.ownerId, orgId: req.orgId, agmId: payload.agmId }).returning(["*"]);
 
       return res.status(200).json({
@@ -796,6 +897,43 @@ const agmController = {
       });
     }
   },
+
+  /* Get Proxy Document List */
+  getProxyDocumentList: async (req, res) => {
+    try{
+      let payload = req.body;
+      let documentList;
+      const schema = new Joi.object().keys({
+          agmId: Joi.number().required()
+      })
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message },
+          ],
+        });
+      }
+
+      documentList = await knex('proxy_document').where({ 'proxy_document.agmId': payload.agmId })
+        .select([
+          'proxy_document.*'
+        ])
+
+      // let updateResult = await knex('agm_owner_master').update(updateData).where({ id: payload.id, orgId: req.orgId }).returning(["*"]);
+
+      return res.status(200).json({
+        data: documentList,
+        message: "Proxy Document Lists!"
+      })
+
+    } catch (err) {
+
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }]
+      });
+    }
+  }
 };
 
 module.exports = agmController;
