@@ -6,11 +6,6 @@ const SHOULD_QUEUE = process.env.IS_OFFLINE ? false : true;
 const QRCODE = require("qrcode");
 const fs = require("fs");
 
-// var AWS = require("aws-sdk");
-// AWS.config.loadFromPath(process.env.S3_BUCKET_URL)
-// var s3Bucket = new AWS.S3({params : {s3Bucket:process.env.S3_BUCKET_NAME}})
-
-
 const outgoingParcelNotification = {
   send: async (sender, receiver, data, allowedChannels = ALLOWED_CHANNELS) => {
     try {
@@ -51,10 +46,8 @@ const outgoingParcelNotification = {
     }
   },
   sendInAppNotification: async (sender, receiver, data) => {
-    console.log("data of parcel for acceptance", sender, receiver, data);
     let parcelId = data.payload.parcelId;
     let  orgData = data.payload.orgData;
-    console.log("organisationData",orgData); 
    
     let icons;
     let images;
@@ -99,8 +92,55 @@ const outgoingParcelNotification = {
     return data;
   },
 
+  sendSocketNotification :async (sender ,receiver, data) =>{
+    let parcelId = data.payload.parcelId;
+    let  orgData = data.payload.orgData;
+   
+    let icons;
+    let images;
+    if(orgData && orgData.id == '56'){
+        icons = 'assets/icons/cbre-512x512.png';
+        images = 'assets/icons/cbre-512x512.png';
+    }else if(orgData && orgData.id == '89'){
+      icons = 'assets/icons/senses-512x512.png';
+      images = 'assets/icons/senses-512x512.png';
+  }else{
+        icons = 'assets/icons/icon-512x512.png';
+        images = 'assets/icons/icon-512x512.png';
+    }
+
+
+    data = {
+      orgId: sender.orgId,
+      senderId: sender.id,
+      receiverId: receiver.id,
+      channel: 'socket-notification',
+      payload: {
+        ...data,
+        subject: "Parcel Acceptation",
+        body: `Hi, You have received a parcel,Please accept for picked up the parcels.`,
+        icon: icons,
+        image: images,
+        extraData: {
+          dateOfArrival: Date.now(),
+          url: `/user/parcel/parcel-confirmation?parcels=1,2,3`,
+          primaryKey: Date.now(),
+          parcelIds: parcelId,
+        },
+      },
+      actions: [
+        {
+          action: "explore",
+          title: "Parcel Acceptation",
+          url: `/user/parcel/parcel-confirmation?parcels=${parcelId}`,
+        },
+      ],
+    };
+
+    return data;
+  },
+
   sendEmailNotification: async (sender, receiver, data) => {
-    console.log("receiver detail", data);
     let unitNumber = receiver.unitNumber;
     let parcelId = receiver.parcelId;
 

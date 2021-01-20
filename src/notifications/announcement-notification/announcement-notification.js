@@ -144,7 +144,6 @@ const announcementNotification = {
     },
 
     sendSocketNotification: async (sender, receiver, data) => {
-        console.log("Socket Notification called")
         let title = data.payload.title;
         let description = data.payload.description;
         let url = data.payload.url;
