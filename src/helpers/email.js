@@ -131,6 +131,7 @@ const emailHelper = {
             }else{
                 orgNameData = orgMaster.organisationName;
             }
+            
             fromSettings = 'important-notifications@servicemind.asia';
             layout='organization-layout.ejs';
           

@@ -96,8 +96,7 @@ const announcementController = {
 
         let orgMaster = await knex
           .from("organisations")
-          .where({ id: req.orgId, organisationAdminId: 994 })
-          .orWhere({ id: req.orgId, organisationAdminId: 1188 })
+          .where({ id: req.orgId })
           .first();
 
         let userId = req.body.userId;
@@ -200,8 +199,7 @@ const announcementController = {
 
       let orgMaster = await knex
         .from("organisations")
-        .where({ id: req.orgId, organisationAdminId: 994 })
-        .orWhere({ id: req.orgId, organisationAdminId: 1188 })
+        .where({ id: req.orgId })
         .first();
 
       let dataNos = {
