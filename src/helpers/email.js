@@ -2,6 +2,8 @@ const Joi = require('@hapi/joi');
 const _ = require('lodash');
 const AWS = require('aws-sdk');
 const nodemailer = require("nodemailer");
+const knex = require("../db/knex");
+
 
 const SHOULD_QUEUE = true;   // If true email will be queued and then sent
 
@@ -116,36 +118,22 @@ const emailHelper = {
 
             let orgMaster = await knex('organisations').select('organisationName','organisationLogo')
                 .where({ id: orgId, isActive: true }).first();
+                console.log("orgMasterData", orgMaster);
 
-            if(process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
-                if(orgMaster.organisationLogo == ''){
-                    orgLogoFile = 'https://servicemind.asia/wp-content/uploads/thegem-logos/logo_4ecb6ca197a78baa1c9bb3558b2f0c09_1x.png';
-                    orgNameData = "ServiceMind";
-                }else{
-                    orgLogoFile = orgMaster.organisationLogo;
-                    orgNameData = orgMaster.organisationName;
-                }
-                orgLogoFile = orgMaster.organisationLogo;
-                orgNameData = orgMaster.organisationName;
-                fromSettings = 'important-notifications@servicemind.asia';
-                layout='organization-layout.ejs';
-            }else if(process.env.SITE_URL == 'https://d3m3k4hno3r3ok.cloudfront.net'){
-                if(orgMaster.organisationLogo == ''){
-                    orgLogoFile = 'https://servicemind.asia/wp-content/uploads/thegem-logos/logo_4ecb6ca197a78baa1c9bb3558b2f0c09_1x.png';
-                    orgNameData = "ServiceMind";
-                }else{
-                    orgLogoFile = orgMaster.organisationLogo;
-                    orgNameData = orgMaster.organisationName;
-                }
-                orgLogoFile = orgMaster.organisationLogo;
-                orgNameData = orgMaster.organisationName;
-                fromSettings = 'important-notifications@servicemind.asia';
-                layout='organization-layout.ejs';
+            if(orgMaster.organisationLogo == ''){
+                orgLogoFile = 'https://servicemind.asia/wp-content/uploads/thegem-logos/logo_4ecb6ca197a78baa1c9bb3558b2f0c09_1x.png';               
             }else{
-                orgLogoFile = 'https://servicemind.asia/wp-content/uploads/thegem-logos/logo_4ecb6ca197a78baa1c9bb3558b2f0c09_1x.png';
-                orgNameData = "ServiceMind";
-                fromSettings = 'important-notifications@servicemind.asia';
+                orgLogoFile = orgMaster.organisationLogo;               
             }
+
+            if(orgMaster.organisationName == ''){
+                orgNameData = "ServiceMind";
+            }else{
+                orgNameData = orgMaster.organisationName;
+            }
+            fromSettings = 'important-notifications@servicemind.asia';
+            layout='organization-layout.ejs';
+          
 
             // CODE FOR COMPILING EMAIL TEMPLATES
             const path = require('path');
