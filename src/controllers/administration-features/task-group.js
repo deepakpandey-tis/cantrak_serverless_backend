@@ -792,19 +792,19 @@ const taskGroupController = {
 
         let updatetaskGroup =  await knex('pm_task_groups')
                 .update({ isActive: true })
-                .where({ isActive: true })
+                .where({ isActive: true ,orgId:req.orgId })
                 console.log("STEP - 9 ===========>>>>",updatetaskGroup)
 
         let updategroupSchedule =    await knex('task_group_schedule')
                 .update({ isActive: true })
-                .where({ isActive: true })
+                .where({ isActive: true ,orgId:req.orgId})
 
                 console.log("STEP - 10 ===========>>>>",updategroupSchedule)
 
-        // let updateSchedule =    await knex('task_group_schedule_assign_assets')
-        //         .update({ isActive: true })
-        //         .where({ isActive: true })
-        //         console.log("STEP - 11 ===========>>>>",updateSchedule)
+        let updateSchedule =    await knex('task_group_schedule_assign_assets')
+                .update({ isActive: true })
+                .where({ isActive: true , orgId:req.orgId})
+                console.log("STEP - 11 ===========>>>>",updateSchedule)
 
 
             return res.status(200).json({
@@ -1126,7 +1126,7 @@ const taskGroupController = {
 
             // await knex('task_group_schedule_assign_assets')
             //     .update({ isActive: true })
-            //     .where({ isActive: true })
+            //     .where({ isActive: true ,orgId:req.orgId})
             let total, rows,rowsId = [];
 
             if (payloadFilter.assignedTeam && payloadFilter.assignedTeam.length) {
