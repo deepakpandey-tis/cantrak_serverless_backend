@@ -1124,9 +1124,9 @@ const taskGroupController = {
             if (page < 1) page = 1;
             let offset = (page - 1) * per_page;
 
-            await knex('task_group_schedule_assign_assets')
-                .update({ isActive: true })
-                .where({ isActive: true })
+            // await knex('task_group_schedule_assign_assets')
+            //     .update({ isActive: true })
+            //     .where({ isActive: true })
             let total, rows,rowsId = [];
 
             if (payloadFilter.assignedTeam && payloadFilter.assignedTeam.length) {
