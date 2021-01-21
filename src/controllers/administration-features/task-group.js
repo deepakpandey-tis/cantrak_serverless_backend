@@ -759,7 +759,7 @@ const taskGroupController = {
                         }
                         let assignedServiceTeamResult = await knex.insert(insertAssignedServiceTeamData).returning(['*']).transacting(trx).into('assigned_service_team');
                         assignedServiceTeam = assignedServiceTeamResult[0];
-                        console.log("inserted into assigned_service_team step-7", insertPartResult);
+                        console.log("inserted into assigned_service_team step-7", assignedServiceTeamResult);
                         // }
                     }
                 }
