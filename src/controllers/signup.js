@@ -565,7 +565,7 @@ const singupController = {
             },
           };
 
-          const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH'];
+          const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH','SOCKET_NOTIFY'];
           console.log('User with in Loop: ', insertedUser);
           console.log('User with in Loop ID: ', insertedUser[0].id)
 
