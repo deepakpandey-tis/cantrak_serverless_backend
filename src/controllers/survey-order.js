@@ -70,7 +70,7 @@ const surveyOrderController = {
 
 
       let sender = await knex.from("users").where({ id: req.me.id }).first();
-      let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH"];
+      let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH","SOCKET_NOTIFY"];
 
       await knex.transaction(async trx => {
 

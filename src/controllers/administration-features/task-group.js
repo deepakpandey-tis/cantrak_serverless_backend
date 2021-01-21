@@ -759,7 +759,7 @@ const taskGroupController = {
                         }
                         let assignedServiceTeamResult = await knex.insert(insertAssignedServiceTeamData).returning(['*']).transacting(trx).into('assigned_service_team');
                         assignedServiceTeam = assignedServiceTeamResult[0];
-                        console.log("inserted into assigned_service_team step-7", insertPartResult);
+                        console.log("inserted into assigned_service_team step-7", assignedServiceTeamResult);
                         // }
                     }
                 }
@@ -785,21 +785,27 @@ const taskGroupController = {
 
             })
 
-            await knex('pm_master2')
+        let updatemaster =    await knex('pm_master2')
                 .update({ isActive: true })
                 .where({ id: payload[0].pmId });
+                console.log("STEP - 8=============>",updatemaster)
 
-            await knex('pm_task_groups')
+        let updatetaskGroup =  await knex('pm_task_groups')
+                .update({ isActive: true })
+                .where({ isActive: true })
+                console.log("STEP - 9 ===========>>>>",updatetaskGroup)
+
+        let updategroupSchedule =    await knex('task_group_schedule')
                 .update({ isActive: true })
                 .where({ isActive: true })
 
-            await knex('task_group_schedule')
-                .update({ isActive: true })
-                .where({ isActive: true })
+                console.log("STEP - 10 ===========>>>>",updategroupSchedule)
 
-            await knex('task_group_schedule_assign_assets')
-                .update({ isActive: true })
-                .where({ isActive: true })
+        // let updateSchedule =    await knex('task_group_schedule_assign_assets')
+        //         .update({ isActive: true })
+        //         .where({ isActive: true })
+        //         console.log("STEP - 11 ===========>>>>",updateSchedule)
+
 
             return res.status(200).json({
                 data: {

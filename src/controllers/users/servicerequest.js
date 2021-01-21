@@ -1010,7 +1010,7 @@ const serviceRequestController = {
 
         let sender = await knex.from("users").where({ id: req.me.id }).first();
         //let receiver;
-        let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH"];
+        let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH","SOCKET_NOTIFY"];
 
         for (let no of userTeamResult) {
           await serviceRequestUserAddNotification.send(
