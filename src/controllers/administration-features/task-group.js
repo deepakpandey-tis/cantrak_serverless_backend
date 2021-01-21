@@ -801,10 +801,10 @@ const taskGroupController = {
 
                 console.log("STEP - 10 ===========>>>>",updategroupSchedule)
 
-        let updateSchedule =    await knex('task_group_schedule_assign_assets')
-                .update({ isActive: true })
-                .where({ isActive: true })
-                console.log("STEP - 11 ===========>>>>",updateSchedule)
+        // let updateSchedule =    await knex('task_group_schedule_assign_assets')
+        //         .update({ isActive: true })
+        //         .where({ isActive: true })
+        //         console.log("STEP - 11 ===========>>>>",updateSchedule)
 
 
             return res.status(200).json({
