@@ -2,6 +2,7 @@ const Joi = require('@hapi/joi');
 const _ = require('lodash');
 const AWS = require('aws-sdk');
 const nodemailer = require("nodemailer");
+const knex = require("../db/knex");
 
 
 const SHOULD_QUEUE = true;   // If true email will be queued and then sent
@@ -115,24 +116,24 @@ const emailHelper = {
                 return { code: 'PARAMS_VALIDATION_ERROR', message: + result.error.message, error: new Error('Could Not Send Mail due to params Validations Failed.') };
             }
 
-            if(orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){
-                orgLogoFile = 'https://cbreconnect.servicemind.asia/assets/img/cbre-logo.png';
-                orgNameData = "CBRE Connect";
-                fromSettings = 'important-notifications@cbreconnect.servicemind.asia';
-                layout='organization-layout.ejs';
-            }else if(orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net'){                
-                orgLogoFile = 'https://senses.servicemind.asia/assets/img/senses-logo.png';
-                orgNameData = "Senses";
-                fromSettings = 'important-notifications@senses.servicemind.asia';
-                layout='organization-layout.ejs';
+            let orgMaster = await knex('organisations').select('organisationName','organisationLogo')
+                .where({ id: orgId, isActive: true }).first();
+                console.log("orgMasterData", orgMaster);
+
+            if(orgMaster.organisationLogo == ''){
+                orgLogoFile = 'https://servicemind.asia/wp-content/uploads/thegem-logos/logo_4ecb6ca197a78baa1c9bb3558b2f0c09_1x.png';               
             }else{
-                orgLogoFile = 'https://servicemind.asia/wp-content/uploads/thegem-logos/logo_4ecb6ca197a78baa1c9bb3558b2f0c09_1x.png';
-                orgNameData = "ServiceMind";
-                fromSettings = 'important-notifications@servicemind.asia';
-                // orgLogoFile = 'https://cbreconnect.servicemind.asia/assets/img/cbre-logo.png';
-                // orgNameData = "CBRE Connect";
-                // fromSettings = 'important-notifications@cbreconnect.servicemind.asia';
+                orgLogoFile = orgMaster.organisationLogo;               
             }
+
+            if(orgMaster.organisationName == ''){
+                orgNameData = "ServiceMind";
+            }else{
+                orgNameData = orgMaster.organisationName;
+            }
+            fromSettings = 'important-notifications@servicemind.asia';
+            layout='organization-layout.ejs';
+          
 
             // CODE FOR COMPILING EMAIL TEMPLATES
             const path = require('path');
