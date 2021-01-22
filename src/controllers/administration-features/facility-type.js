@@ -384,6 +384,17 @@ const FacilityTypeController = {
         pagination.from = offset;
         pagination.data = rows;
 
+        const Parallel = require('async-parallel');
+        pagination.data = await Parallel.map(rows, async pd =>{
+
+          let images = await knex.from('images').where({ entityId: pd.id, entityType: "facility_type_icon" })
+
+          return {
+            ...pd,images
+          }
+
+        })
+
         return res.status(200).json({
             data: {
               facilityType: pagination,
