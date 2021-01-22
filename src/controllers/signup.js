@@ -555,7 +555,7 @@ const singupController = {
 
           /* Send Notification to other channels */
 
-          let orgMaster = await knex.from("organisations").where({ id: orgId, organisationAdminId: 994 }).orWhere({ id: orgId, organisationAdminId: 1188 }).first();
+          let orgMaster = await knex.from("organisations").where({ id: orgId}).first();
 
           let dataNos = {
             payload: {
