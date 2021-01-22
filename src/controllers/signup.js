@@ -601,6 +601,7 @@ const singupController = {
               to: admin.email,
               subject: 'New tenant signup in ' + org,
               template: 'test-email.ejs',
+              orgId: orgId,
               templateData: {
                 message: 'A new tenant has signed up in ' + org + ',please check the details and activate the account in order to allow the tenant to use the available services.',
                 fullName: admin.name,
@@ -659,6 +660,7 @@ const singupController = {
           to: user[0].email,
           subject: 'Welcome to ' + org,
           template: 'welcome-org-user-email.ejs',
+          orgId: orgId,
           templateData: {
             fullName: user[0].name,
             Org: org,

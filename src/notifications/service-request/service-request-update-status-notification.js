@@ -30,7 +30,6 @@ const serviceRequestUpdateStatusNotification = {
         let orgData = data.payload.orgData;
         let icons;
         let images;
-
         if(orgData && orgData.organisationLogo == ''){
             icons = 'assets/icons/icon-512x512.png';
             images = 'assets/icons/icon-512x512.png';
@@ -111,7 +110,6 @@ const serviceRequestUpdateStatusNotification = {
         let orgData = data.payload.orgData;
         let icons;
         let images;
-
         if(orgData && orgData.organisationLogo == ''){
             icons = 'assets/icons/icon-512x512.png';
             images = 'assets/icons/icon-512x512.png';
@@ -179,7 +177,6 @@ const serviceRequestUpdateStatusNotification = {
         let orgData = data.payload.orgData;
         let icons;
         let images;
-
         if(orgData && orgData.organisationLogo == ''){
             icons = 'assets/icons/icon-512x512.png';
             images = 'assets/icons/icon-512x512.png';
