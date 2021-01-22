@@ -804,6 +804,52 @@ const singupController = {
       });
     }
   },
+  rejectAccount: async (req, res) => {
+    try {
+      
+      let user = await knex('users').select('*').where({ verifyToken: req.params.token })
+      if (user && user.length) {
+        await knex('users').update({ emailVerified: false, isActive: false }).where({ id: user[0].id })
+        /* Send Mail To User After Verify Account By Admin */
+        // let orgId = user[0].orgId;
+        // if (orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
+        //   url = 'https://cbreconnect.servicemind.asia';
+        //   org = "CBRE Connect";
+        // } else if (orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
+        //   url = 'https://senses.servicemind.asia';
+        //   org = "Senses";
+        // } else {
+        //   url = process.env.SITE_URL;
+        //   org = "ServiceMind";
+        // }
+
+        // await emailHelper.sendTemplateEmail({
+        //   to: user[0].email,
+        //   subject: 'Welcome to ' + org,
+        //   template: 'welcome-org-user-email.ejs',
+        //   orgId: orgId,
+        //   templateData: {
+        //     fullName: user[0].name,
+        //     Org: org,
+        //     urlData: url
+        //   }
+        // })
+
+        /* End */
+        return res.status(200).json({ verified: false, message: 'Account has been rejected!' })
+      } else {
+        return res.status(200).json({ verified: false, message: "Failed! Token Invalid." });
+      }
+    } catch (err) {
+      console.log(
+        "[controllers][survey Orders][getSurveyOrders] :  Error",
+        err
+      );
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
 
 };
 
