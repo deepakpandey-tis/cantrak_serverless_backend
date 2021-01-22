@@ -3442,13 +3442,15 @@ const serviceRequestController = {
 
                     }
 
+                    let orgMaster = await knex.from("organisations").where({ id: req.orgId }).first();
+
                     let dataNos = {
                         payload: {
                             title: "Service Request approved",
                             url: "",
                             description: `Your service requests has been approved, an engineer will be assigned shortly.`,
-                            redirectUrl: "/user/service-request"
-
+                            redirectUrl: "/user/service-request",
+                            orgData : orgMaster
                         },
                     };
 
@@ -3516,12 +3518,15 @@ const serviceRequestController = {
 
                     }
 
+                    let orgMaster = await knex.from("organisations").where({ id: req.orgId }).first();
+                    
                     let dataNos = {
                         payload: {
                             title: "Service Request completed",
                             url: "",
                             description: `Your service request has been completed successfully.`,
-                            redirectUrl: "/user/service-request"
+                            redirectUrl: "/user/service-request",
+                            orgData : orgMaster
 
                         },
                     };
@@ -3553,14 +3558,15 @@ const serviceRequestController = {
                     .update({ serviceStatusCode: updateStatus, cancellationReason: cancelReason, updatedAt: currentTime, cancelledBy: req.me.id, cancelledOn: currentTime })
                     .where({ id: serviceRequestId });
 
+                    let orgMaster = await knex.from("organisations").where({ id: req.orgId }).first();
 
                     let dataNos = {
                         payload: {
                             title: "Service Request cancelled",
                             url: "",
                             description: `Your service requests has been cancelled.`,
-                            redirectUrl: "/user/service-request"
-
+                            redirectUrl: "/user/service-request",
+                            orgData : orgMaster
                         },
                     };
 
