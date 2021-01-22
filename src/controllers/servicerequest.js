@@ -3533,7 +3533,7 @@ const serviceRequestController = {
 
                     let sender = await knex.from("users").where({ id: req.me.id }).first();
                     let receiver;
-                    let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH","SOCKET_NOTIFY"];
+                    let ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH','SOCKET_NOTIFY'];
 
                     if (userResult) {
                         receiver = userResult;
@@ -3558,8 +3558,36 @@ const serviceRequestController = {
                     .update({ serviceStatusCode: updateStatus, cancellationReason: cancelReason, updatedAt: currentTime, cancelledBy: req.me.id, cancelledOn: currentTime })
                     .where({ id: serviceRequestId });
 
-                    let orgMaster = await knex.from("organisations").where({ id: req.orgId }).first();
+                     /*GET REQUEST BY & CREATED BY ID FOR NOTIFICATION OPEN */
+                let userResult;
+                let userResult2
+                let requestResult;
+                let serviceRequestResult = await knex('service_requests').where({ id: serviceRequestId, orgId: req.orgId }).first();
+                if (serviceRequestResult) {
 
+                    userResult = await knex('users')
+                        .select([
+                            "users.*",
+                            "application_user_roles.roleId"
+                        ])
+                        .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+                        .where({ 'users.id': serviceRequestResult.createdBy, 'application_user_roles.roleId': 4, 'users.orgId': req.orgId }).first();
+
+                    requestResult = await knex('requested_by').where({ id: serviceRequestResult.requestedBy, orgId: req.orgId }).first();
+                    if (requestResult) {
+
+                        userResult2 = await knex('users')
+                            .select([
+                                "users.*",
+                                "application_user_roles.roleId"
+                            ])
+                            .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+                            .where({ 'users.email': requestResult.email, 'application_user_roles.roleId': 4, 'users.orgId': req.orgId }).first();
+
+                    }
+
+                    let orgMaster = await knex.from("organisations").where({ id: req.orgId }).first();
+                    
                     let dataNos = {
                         payload: {
                             title: "Service Request cancelled",
@@ -3567,12 +3595,13 @@ const serviceRequestController = {
                             description: `Your service requests has been cancelled.`,
                             redirectUrl: "/user/service-request",
                             orgData : orgMaster
+
                         },
                     };
 
                     let sender = await knex.from("users").where({ id: req.me.id }).first();
                     let receiver;
-                    let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH","SOCKET_NOTIFY"];
+                    let ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH','SOCKET_NOTIFY'];
 
                     if (userResult) {
                         receiver = userResult;
@@ -3586,6 +3615,41 @@ const serviceRequestController = {
                         dataNos,
                         ALLOWED_CHANNELS
                     );
+
+                }
+
+                /*GET REQUEST BY & CREATED BY ID FOR NOTIFICATIO CLOSE */
+
+                    
+
+                    // let orgMaster = await knex.from("organisations").where({ id: req.orgId }).first();
+
+                    // let dataNos = {
+                    //     payload: {
+                    //         title: "Service Request cancelled",
+                    //         url: "",
+                    //         description: `Your service requests has been cancelled.`,
+                    //         redirectUrl: "/user/service-request",
+                    //         orgData : orgMaster
+                    //     },
+                    // };
+
+                    // let sender = await knex.from("users").where({ id: req.me.id }).first();
+                    // let receiver;
+                    // let ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH','SOCKET_NOTIFY'];
+
+                    // if (userResult) {
+                    //     receiver = userResult;
+                    // } else {
+                    //     receiver = userResult2;
+                    // }
+
+                    // await serviceRequestUpdateStatusNotification.send(
+                    //     sender,
+                    //     receiver,
+                    //     dataNos,
+                    //     ALLOWED_CHANNELS
+                    // );
 
 
             }
