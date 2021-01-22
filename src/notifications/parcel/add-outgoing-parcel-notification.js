@@ -70,47 +70,6 @@ const addOutGoingNotification = {
         return data;
     },
 
-    sendSocketNotification: async (sender ,receiver ,data) =>{
-        let  orgData = data.payload.orgData;
-        let icons;
-        let images;
-        if(orgData && orgData.organisationLogo == ''){
-            icons = 'assets/icons/icon-512x512.png';
-            images = 'assets/icons/icon-512x512.png';
-        }
-        else{
-            icons = orgData.organisationLogo;
-            images = orgData.organisationLogo;
-        }
-
-        data = {
-            orgId: sender.orgId,
-            senderId: sender.id,
-            receiverId: receiver.id,
-            channel: 'socket-notification',
-            payload: {
-                ...data,
-                subject: 'Parcel Notification',
-                body: `Hi, ${receiver.name} your outgoing parcel is added.`,
-                icon: icons,
-                image: images,
-                extraData: {
-                    dateOfArrival: Date.now(),
-                    url: `/user/dashboard/home`,
-                    primaryKey: Date.now()
-                }
-            },
-            actions: [
-                {
-                    action: "explore",
-                    title: "Open",
-                    url: `/user/parcel`
-                }
-            ]
-        }
-
-        return data;
-    },
 
     sendEmailNotification: async (sender, receiver, data) => {
         data = {
@@ -171,9 +130,44 @@ const addOutGoingNotification = {
     },
 
     sendSocketNotification: async (sender, receiver, data) => {
-        data = {
-
+        let  orgData = data.payload.orgData;
+        let icons;
+        let images;
+        if(orgData && orgData.organisationLogo == ''){
+            icons = 'assets/icons/icon-512x512.png';
+            images = 'assets/icons/icon-512x512.png';
         }
+        else{
+            icons = orgData.organisationLogo;
+            images = orgData.organisationLogo;
+        }
+
+        data = {
+            orgId: sender.orgId,
+            senderId: sender.id,
+            receiverId: receiver.id,
+            channel: 'socket-notification',
+            payload: {
+                ...data,
+                subject: 'Parcel Notification',
+                body: `Hi, ${receiver.name} your outgoing parcel is added.`,
+                icon: icons,
+                image: images,
+                extraData: {
+                    dateOfArrival: Date.now(),
+                    url: `/user/dashboard/home`,
+                    primaryKey: Date.now()
+                }
+            },
+            actions: [
+                {
+                    action: "explore",
+                    title: "Open",
+                    url: `/user/parcel`
+                }
+            ]
+        }
+
         return data;
     },
 

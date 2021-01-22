@@ -27,6 +27,17 @@ const parcelAcceptanceNotification = {
     },
     sendInAppNotification: async (sender, receiver, data) => {
         let parcelId = data.payload.parcelId
+        let  orgData = data.payload.orgData;
+        let icons;
+        let images;
+        if(orgData && orgData.organisationLogo == ''){
+            icons = 'assets/icons/icon-512x512.png';
+            images = 'assets/icons/icon-512x512.png';
+        }
+        else{
+            icons = orgData.organisationLogo;
+            images = orgData.organisationLogo;
+        }
         data = {
             orgId: sender.orgId,
             senderId: sender.id,
@@ -58,6 +69,17 @@ const parcelAcceptanceNotification = {
 
     sendSocketNotification : async (sender , receiver ,data) => {
         let parcelId = data.payload.parcelId
+        let  orgData = data.payload.orgData;
+        let icons;
+        let images;
+        if(orgData && orgData.organisationLogo == ''){
+            icons = 'assets/icons/icon-512x512.png';
+            images = 'assets/icons/icon-512x512.png';
+        }
+        else{
+            icons = orgData.organisationLogo;
+            images = orgData.organisationLogo;
+        }
         data = {
             orgId: sender.orgId,
             senderId: sender.id,
@@ -108,6 +130,17 @@ const parcelAcceptanceNotification = {
     sendWebPushNotification: async (sender, receiver, data) => {
         console.log("web push parcel for acceptance",sender,receiver,data)
         let parcelId = data.payload.parcelId
+        let  orgData = data.payload.orgData;
+        let icons;
+        let images;
+        if(orgData && orgData.organisationLogo == ''){
+            icons = 'assets/icons/icon-512x512.png';
+            images = 'assets/icons/icon-512x512.png';
+        }
+        else{
+            icons = orgData.organisationLogo;
+            images = orgData.organisationLogo;
+        }
         data = {
             orgId: sender.orgId,
             senderId: sender.id,
