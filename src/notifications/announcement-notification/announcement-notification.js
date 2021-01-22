@@ -100,20 +100,16 @@ const announcementNotification = {
         let  orgData = data.payload.orgData;
         let icons;
         let images;
-        if(orgData){
-            console.log("org data for notification",orgData)
-            if(orgData && orgData.organisationLogo == ''){
-                icons = 'assets/icons/icon-512x512.png';
-                images = 'assets/icons/icon-512x512.png';
-            }
-            else{
-                icons = orgData.organisationLogo;
-                images = orgData.organisationLogo;
-            }
-        }else{
+       
+        if(orgData && orgData.organisationLogo == ''){
             icons = 'assets/icons/icon-512x512.png';
             images = 'assets/icons/icon-512x512.png';
         }
+        else{
+            icons = orgData.organisationLogo;
+            images = orgData.organisationLogo;
+        }
+        
         data = {
             orgId: sender.orgId,
             senderId: sender.id,
