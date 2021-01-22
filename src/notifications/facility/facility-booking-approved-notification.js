@@ -7,7 +7,7 @@ const SHOULD_QUEUE = process.env.IS_OFFLINE ? false : true;
 const bookingApprovedNotification = {
     send: async (sender, receiver, data, allowedChannels = ALLOWED_CHANNELS) => {
         try {
-
+            console.log('[ALLOWED CHANNELS]',allowedChannels)
             // console.log('[notifications][test][test-notification][send]: Sender:', sender);
             // console.log('[notifications][test][test-notification][send]: Receiver:', receiver);
             console.log('[notifications][facility-booking-approved][facility-booking-approved-notification][send]: Data:', data);
@@ -29,22 +29,31 @@ const bookingApprovedNotification = {
 
 
     sendInAppNotification: async (sender, receiver, data) => {
+        console.log("Reciever Id =========>>>",receiver.id)
         let  orgData = data.payload.orgData;
         let icons;
         let images;
-        if(orgData && orgData.id == '56'){
-            icons = 'assets/icons/cbre-512x512.png';
-            images = 'assets/icons/cbre-512x512.png';
-        }
-        else if(orgData && orgData.id == '89'){
-            icons = 'assets/icons/senses-512x512.png';
-            images = 'assets/icons/senses-512x512.png';
-        }else{
+        // if(orgData && orgData.id == '56'){
+        //     icons = 'assets/icons/cbre-512x512.png';
+        //     images = 'assets/icons/cbre-512x512.png';
+        // }
+        // else if(orgData && orgData.id == '89'){
+        //     icons = 'assets/icons/senses-512x512.png';
+        //     images = 'assets/icons/senses-512x512.png';
+        // }else{
+        //     icons = 'assets/icons/icon-512x512.png';
+        //     images = 'assets/icons/icon-512x512.png';
+        // }
+        if(orgData && orgData.organisationLogo == ''){
             icons = 'assets/icons/icon-512x512.png';
             images = 'assets/icons/icon-512x512.png';
         }
-
+        else{
+            icons = orgData.organisationLogo;
+            images = orgData.organisationLogo;
+        }
         data = {
+            
             orgId: sender.orgId,
             senderId: sender.id,
             receiverId: receiver.id,
@@ -71,52 +80,7 @@ const bookingApprovedNotification = {
 
         return data;
     },
-    sendSocketNotification : async (sender, receiver, data) => {
-        let  orgData = data.payload.orgData;
-        let icons;
-        let images;
-        if(orgData && orgData.id == '56'){
-            icons = 'assets/icons/cbre-512x512.png';
-            images = 'assets/icons/cbre-512x512.png';
-        }
-        else if(orgData && orgData.id == '89'){
-            icons = 'assets/icons/senses-512x512.png';
-            images = 'assets/icons/senses-512x512.png';
-        }else{
-            icons = 'assets/icons/icon-512x512.png';
-            images = 'assets/icons/icon-512x512.png';
-        }
-
-        data = {
-            orgId: sender.orgId,
-            senderId: sender.id,
-            receiverId: receiver.id,
-            channel: 'socket-notification',
-            payload: {
-                ...data,
-                subject: 'Facility Booking Approved',
-                body: `Hi, ${receiver.name} Your Booking in Facility ${data.payload.facility} made for ${data.payload.date} at ${data.payload.time} is approved.`,
-                icon: icons,
-                image: images,
-                extraData: {
-                    dateOfArrival: Date.now(),
-                    url: `/user/dashboard/home`,
-                    primaryKey: Date.now()
-                }
-            },
-            actions: [
-                {
-                    action: "explore",
-                    title: "Open",
-                    url: `/user/facility/your-bookings`
-                }
-            ]
-        }
-
-        return data;
-    },
-
-
+    
     sendEmailNotification: async (sender, receiver, data) => {
         data = {
             receiverEmail: receiver.email,
@@ -138,18 +102,26 @@ const bookingApprovedNotification = {
         let  orgData = data.payload.orgData;
         let icons;
         let images;
-        if(orgData && orgData.id == '56'){
-            icons = 'assets/icons/cbre-512x512.png';
-            images = 'assets/icons/cbre-512x512.png';
-        }else if(orgData && orgData.id == '89'){
-            icons = 'assets/icons/senses-512x512.png';
-            images = 'assets/icons/senses-512x512.png';
-        }
-        else{
+        // if(orgData && orgData.id == '56'){
+        //     icons = 'assets/icons/cbre-512x512.png';
+        //     images = 'assets/icons/cbre-512x512.png';
+        // }else if(orgData && orgData.id == '89'){
+        //     icons = 'assets/icons/senses-512x512.png';
+        //     images = 'assets/icons/senses-512x512.png';
+        // }
+        // else{
+        //     icons = 'assets/icons/icon-512x512.png';
+        //     images = 'assets/icons/icon-512x512.png';
+        // }
+
+        if(orgData && orgData.organisationLogo == ''){
             icons = 'assets/icons/icon-512x512.png';
             images = 'assets/icons/icon-512x512.png';
         }
-
+        else{
+            icons = orgData.organisationLogo;
+            images = orgData.organisationLogo;
+        }
 
         data = {
             orgId: sender.orgId,
@@ -179,9 +151,55 @@ const bookingApprovedNotification = {
     },
 
     sendSocketNotification: async (sender, receiver, data) => {
-        data = {
-
+        console.log("Reciever Id for socket =========>>>",receiver.id)
+        let  orgData = data.payload.orgData;
+        let icons;
+        let images;
+        // if(orgData && orgData.id == '56'){
+        //     icons = 'assets/icons/cbre-512x512.png';
+        //     images = 'assets/icons/cbre-512x512.png';
+        // }
+        // else if(orgData && orgData.id == '89'){
+        //     icons = 'assets/icons/senses-512x512.png';
+        //     images = 'assets/icons/senses-512x512.png';
+        // }else{
+        //     icons = 'assets/icons/icon-512x512.png';
+        //     images = 'assets/icons/icon-512x512.png';
+        // }
+        if(orgData && orgData.organisationLogo == ''){
+            icons = 'assets/icons/icon-512x512.png';
+            images = 'assets/icons/icon-512x512.png';
         }
+        else{
+            icons = orgData.organisationLogo;
+            images = orgData.organisationLogo;
+        }
+        data = {
+            orgId: sender.orgId,
+            senderId: sender.id,
+            receiverId: receiver.id,
+            channel: 'socket-notification',
+            payload: {
+                ...data,
+                subject: 'Facility Booking Approved',
+                body: `Hi, ${receiver.name} Your Booking in Facility ${data.payload.facility} made for ${data.payload.date} at ${data.payload.time} is approved.`,
+                icon: icons,
+                image: images,
+                extraData: {
+                    dateOfArrival: Date.now(),
+                    url: `/user/dashboard/home`,
+                    primaryKey: Date.now()
+                }
+            },
+            actions: [
+                {
+                    action: "explore",
+                    title: "Open",
+                    url: `/user/facility/your-bookings`
+                }
+            ]
+        }
+
         return data;
     },
 
