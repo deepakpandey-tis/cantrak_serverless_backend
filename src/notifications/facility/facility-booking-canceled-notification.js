@@ -32,16 +32,24 @@ const bookingCanceledNotification = {
         let  orgData = data.payload.orgData;
         let icons;
         let images;
-        if(orgData && orgData.id == '56'){
-            icons = 'assets/icons/cbre-512x512.png';
-            images = 'assets/icons/cbre-512x512.png';
-        }else if(orgData && orgData.id == '89'){
-            icons = 'assets/icons/senses-512x512.png';
-            images = 'assets/icons/senses-512x512.png';
-        }
-        else{
+        // if(orgData && orgData.id == '56'){
+        //     icons = 'assets/icons/cbre-512x512.png';
+        //     images = 'assets/icons/cbre-512x512.png';
+        // }else if(orgData && orgData.id == '89'){
+        //     icons = 'assets/icons/senses-512x512.png';
+        //     images = 'assets/icons/senses-512x512.png';
+        // }
+        // else{
+        //     icons = 'assets/icons/icon-512x512.png';
+        //     images = 'assets/icons/icon-512x512.png';
+        // }
+        if(orgData && orgData.organisationLogo == ''){
             icons = 'assets/icons/icon-512x512.png';
             images = 'assets/icons/icon-512x512.png';
+        }
+        else{
+            icons = orgData.organisationLogo;
+            images = orgData.organisationLogo;
         }
 
         data = {
@@ -71,52 +79,6 @@ const bookingCanceledNotification = {
 
         return data;
     },
-
-    sendSocketNotification : async(sender,receiver,data) =>{
-        let  orgData = data.payload.orgData;
-        let icons;
-        let images;
-        if(orgData && orgData.id == '56'){
-            icons = 'assets/icons/cbre-512x512.png';
-            images = 'assets/icons/cbre-512x512.png';
-        }else if(orgData && orgData.id == '89'){
-            icons = 'assets/icons/senses-512x512.png';
-            images = 'assets/icons/senses-512x512.png';
-        }
-        else{
-            icons = 'assets/icons/icon-512x512.png';
-            images = 'assets/icons/icon-512x512.png';
-        }
-
-        data = {
-            orgId: sender.orgId,
-            senderId: sender.id,
-            receiverId: receiver.id,
-            channel: 'socket-notification',
-            payload: {
-                ...data,
-                subject: 'Facility Booking Canceled',
-                body: `Hi, ${receiver.name} Your Booking in Facility ${data.payload.facility} made for ${data.payload.date} at ${data.payload.time} is canceled.`,
-                icon: icons,
-                image: images,
-                extraData: {
-                    dateOfArrival: Date.now(),
-                    url: `/user/dashboard/home`,
-                    primaryKey: Date.now()
-                }
-            },
-            actions: [
-                {
-                    action: "explore",
-                    title: "Open",
-                    url: `/user/facility/your-bookings`
-                }
-            ]
-        }
-
-        return data;
-    },
-
 
     sendEmailNotification: async (sender, receiver, data) => {
         data = {
@@ -139,18 +101,26 @@ const bookingCanceledNotification = {
         let  orgData = data.payload.orgData;
         let icons;
         let images;
-        if(orgData && orgData.id == '56'){
-            icons = 'assets/icons/cbre-512x512.png';
-            images = 'assets/icons/cbre-512x512.png';
-        }else if(orgData && orgData.id == '89'){
-            icons = 'assets/icons/senses-512x512.png';
-            images = 'assets/icons/senses-512x512.png';
-        }
-        else{
+        // if(orgData && orgData.id == '56'){
+        //     icons = 'assets/icons/cbre-512x512.png';
+        //     images = 'assets/icons/cbre-512x512.png';
+        // }else if(orgData && orgData.id == '89'){
+        //     icons = 'assets/icons/senses-512x512.png';
+        //     images = 'assets/icons/senses-512x512.png';
+        // }
+        // else{
+        //     icons = 'assets/icons/icon-512x512.png';
+        //     images = 'assets/icons/icon-512x512.png';
+        // }
+
+        if(orgData && orgData.organisationLogo == ''){
             icons = 'assets/icons/icon-512x512.png';
             images = 'assets/icons/icon-512x512.png';
         }
-
+        else{
+            icons = orgData.organisationLogo;
+            images = orgData.organisationLogo;
+        }
         data = {
             orgId: sender.orgId,
             senderId: sender.id,
@@ -179,9 +149,55 @@ const bookingCanceledNotification = {
     },
 
     sendSocketNotification: async (sender, receiver, data) => {
-        data = {
+        let  orgData = data.payload.orgData;
+        let icons;
+        let images;
+        // if(orgData && orgData.id == '56'){
+        //     icons = 'assets/icons/cbre-512x512.png';
+        //     images = 'assets/icons/cbre-512x512.png';
+        // }else if(orgData && orgData.id == '89'){
+        //     icons = 'assets/icons/senses-512x512.png';
+        //     images = 'assets/icons/senses-512x512.png';
+        // }
+        // else{
+        //     icons = 'assets/icons/icon-512x512.png';
+        //     images = 'assets/icons/icon-512x512.png';
+        // }
 
+        if(orgData && orgData.organisationLogo == ''){
+            icons = 'assets/icons/icon-512x512.png';
+            images = 'assets/icons/icon-512x512.png';
         }
+        else{
+            icons = orgData.organisationLogo;
+            images = orgData.organisationLogo;
+        }
+        data = {
+            orgId: sender.orgId,
+            senderId: sender.id,
+            receiverId: receiver.id,
+            channel: 'socket-notification',
+            payload: {
+                ...data,
+                subject: 'Facility Booking Canceled',
+                body: `Hi, ${receiver.name} Your Booking in Facility ${data.payload.facility} made for ${data.payload.date} at ${data.payload.time} is canceled.`,
+                icon: icons,
+                image: images,
+                extraData: {
+                    dateOfArrival: Date.now(),
+                    url: `/user/dashboard/home`,
+                    primaryKey: Date.now()
+                }
+            },
+            actions: [
+                {
+                    action: "explore",
+                    title: "Open",
+                    url: `/user/facility/your-bookings`
+                }
+            ]
+        }
+
         return data;
     },
 

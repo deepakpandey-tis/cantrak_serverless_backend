@@ -3552,6 +3552,36 @@ const serviceRequestController = {
                 await knex("service_requests")
                     .update({ serviceStatusCode: updateStatus, cancellationReason: cancelReason, updatedAt: currentTime, cancelledBy: req.me.id, cancelledOn: currentTime })
                     .where({ id: serviceRequestId });
+
+
+                    let dataNos = {
+                        payload: {
+                            title: "Service Request cancelled",
+                            url: "",
+                            description: `Your service requests has been cancelled.`,
+                            redirectUrl: "/user/service-request"
+
+                        },
+                    };
+
+                    let sender = await knex.from("users").where({ id: req.me.id }).first();
+                    let receiver;
+                    let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH","SOCKET_NOTIFY"];
+
+                    if (userResult) {
+                        receiver = userResult;
+                    } else {
+                        receiver = userResult2;
+                    }
+
+                    await serviceRequestUpdateStatusNotification.send(
+                        sender,
+                        receiver,
+                        dataNos,
+                        ALLOWED_CHANNELS
+                    );
+
+
             }
             if (updateStatus === 'IP' || updateStatus === 'OH') {
                 await knex("service_requests")
