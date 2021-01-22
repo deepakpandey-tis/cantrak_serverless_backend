@@ -41,6 +41,7 @@ const parcelNotification = {
         //     icons = 'assets/icons/icon-512x512.png';
         //     images = 'assets/icons/icon-512x512.png';
         // }
+        console.log("Organization logo========>>>>>>>",orgData)
         if(orgData && orgData.organisationLogo == ''){
             icons = 'assets/icons/icon-512x512.png';
             images = 'assets/icons/icon-512x512.png';

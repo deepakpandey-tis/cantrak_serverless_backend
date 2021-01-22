@@ -20,7 +20,7 @@ router.post('/parcel-notification',authMiddleware.isAuthenticated, async(req,res
     try{
         let sender = await knex.from('users').where({ id: req.me.id }).first();
         let receiver = await knex.from('users').where({ id: req.body.id }).first();
-        let orgMaster = await knex.from("organisations").where({ id: req.orgId, organisationAdminId: 994 }).orWhere({ id: req.orgId, organisationAdminId: 1188 }).first();
+        let orgMaster = await knex.from("organisations").where({ id: req.orgId}).first();
 
 
 
@@ -55,7 +55,7 @@ router.post('/parcel-acceptance-notification',authMiddleware.isAuthenticated, as
         console.log("requested tenant id for notification",req.body.id)
         let sender = await knex.from('users').where({ id: req.me.id }).first();
         let receiver = await knex.from('users').where({ id: req.body.id[0] }).first();
-        let orgMaster = await knex.from("organisations").where({ id: req.orgId, organisationAdminId: 994 }).orWhere({ id: req.orgId, organisationAdminId: 1188 }).first();
+        let orgMaster = await knex.from("organisations").where({ id: req.orgId}).first();
 
         let data = {
             payload: {
@@ -85,7 +85,7 @@ router.post('/parcel-pickedUp-notification',authMiddleware.isAuthenticated, asyn
         let sender = await knex.from('users').where({ id: req.me.id }).first();
         let receiver = await knex.from('users').where({ id: req.body.id }).first();
         console.log("reciever tenant",receiver)
-        let orgMaster = await knex.from("organisations").where({ id: req.orgId, organisationAdminId: 994 }).orWhere({ id: req.orgId, organisationAdminId: 1188 }).first();
+        let orgMaster = await knex.from("organisations").where({ id: req.orgId}).first();
 
 
         let data = {
@@ -118,7 +118,7 @@ router.post('/outgoing-parcel-notification',authMiddleware.isAuthenticated, asyn
         console.log("requested receiver for notification",req.body)
         let sender = await knex.from('users').where({ id: req.me.id }).first();
         let receiver = req.body
-        let orgMaster = await knex.from("organisations").where({ id: req.orgId, organisationAdminId: 994 }).orWhere({ id: req.orgId, organisationAdminId: 1188 }).first();
+        let orgMaster = await knex.from("organisations").where({ id: req.orgId}).first();
 
 
         let data = {
