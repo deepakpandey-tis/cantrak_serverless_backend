@@ -31,7 +31,7 @@ const teamsController = {
             let vendorTeam;
             await knex.transaction(async (trx) => {
                 const teamsPayload = req.body;
-                const payload = _.omit(req.body, ['roleProjectData'], ['roleId'], 'projectId', ['userIds'], ['vendorIds'])
+                const payload = _.omit(req.body, ['roleProjectData'], ['roleId'], 'projectId', ['userIds'], ['vendorIds'],'filterTerm')
 
                 console.log('[controllers][teams][addNewTeam]', teamsPayload);
 
@@ -196,7 +196,7 @@ const teamsController = {
             let vendorTeam;
             await knex.transaction(async (trx) => {
                 const upTeamsPayload = req.body;
-                const payload = _.omit(req.body, ['roleId'], 'projectId', ['userIds'], ['roleProjectData'], ['vendorIds'])
+                const payload = _.omit(req.body, ['roleId'], 'projectId', ['userIds'], ['roleProjectData'], ['vendorIds'],'filterTerm')
                 console.log('[controllers][teams][updateTeams] : Request Body', upTeams);
 
                 // validate keys
