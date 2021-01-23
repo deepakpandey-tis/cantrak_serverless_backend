@@ -742,15 +742,15 @@ const teamsController = {
 
             //additionalUsers = additionalUsers.map(user => _.omit(user, ['password','username']))
 
-            const Parallel = require('async-parallel')
-            const usersWithRoles = await Parallel.map(additionalUsers, async user => {
-                const roles = await knex('organisation_user_roles').select('roleId').where({ userId: user.id, orgId: req.orgId });
-                const roleNames = await Parallel.map(roles, async role => {
-                    const roleNames = await knex('organisation_roles').select('name').where({ id: role.roleId, orgId: req.orgId }).whereNotIn('name', ['superAdmin', 'admin', 'customer'])
-                    return roleNames.map(role => role.name).join(',')
-                })
-                return { ...user, roleNames: roleNames.filter(v => v).join(',') };
-            })
+            // const Parallel = require('async-parallel')
+            // const usersWithRoles = await Parallel.map(additionalUsers, async user => {
+            //     const roles = await knex('organisation_user_roles').select('roleId').where({ userId: user.id, orgId: req.orgId });
+            //     const roleNames = await Parallel.map(roles, async role => {
+            //         const roleNames = await knex('organisation_roles').select('name').where({ id: role.roleId, orgId: req.orgId }).whereNotIn('name', ['superAdmin', 'admin', 'customer'])
+            //         return roleNames.map(role => role.name).join(',')
+            //     })
+            //     return { ...user, roleNames: roleNames.filter(v => v).join(',') };
+            // })
 
             res.status(200).json({
                 data: {
