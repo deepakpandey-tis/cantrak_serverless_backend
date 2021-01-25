@@ -513,6 +513,8 @@ const taskGroupController = {
             //     errors: [{ code: "TEST", data: { consolidatedWorkOrders: consolidatedWorkOrders } }]
             // });
 
+            await knex('pm_master2').update({ companyId: payload[0].companyId, projectId: payload[0].projectId }).where({ id: payload[0].pmId, orgId: req.orgId });
+
             let currentPmMaster = await knex('pm_master2').select('*').where({ id: payload[0].pmId, orgId: req.orgId }).first();
             if (!currentPmMaster) {
                 return res.status(400).json({
@@ -526,10 +528,6 @@ const taskGroupController = {
             // Amar now make the changes from here...
 
             await knex.transaction(async trx => {
-
-                // Update PM Company and Project
-
-                await knex('pm_master2').update({ companyId: payload[0].companyId, projectId: payload[0].projectId }).where({ id: payload[0].pmId, orgId: req.orgId });
 
 
                 let currentTime = new Date().getTime();
