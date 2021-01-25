@@ -234,8 +234,9 @@ const agmController = {
 
     try {
 
-      let data = req.body;
-      console.log("+++++++++++++", data[0], "=========");
+      let data = req.body.arrayToObject;
+
+      console.log("+++++++++++++", data, "=========");
       let totalData = data.length - 1;
       let fail = 0;
       let success = 0;
@@ -309,7 +310,7 @@ const agmController = {
 
 
               let insertData = {
-                agmId: 10,
+                agmId: req.body.agmId,
                 unitId: unitId,
                 ownerName: ownerData.B,
                 ownerershipRatio: ownerData.C,
@@ -319,7 +320,7 @@ const agmController = {
                 createdAt: new Date().getTime(),
                 updatedAt: new Date().getTime(),
                 importedBy: req.me.id,
-                displayId: 1,
+                // displayId: 1,
                 createdBy: req.me.id
               };
 
