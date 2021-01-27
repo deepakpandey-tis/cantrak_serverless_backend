@@ -681,6 +681,9 @@ const assetController = {
                 assetSerial,
                 assetCode,
                 floorZone,
+                floorZoneCode,
+                unitNumber,
+                locationId,
                 building,
                 assetId
             } = req.body;
@@ -722,7 +725,7 @@ const assetController = {
             }
 
 
-            if (building || floorZone) {
+            if (building || floorZone || floorZoneCode || unitNumber || locationId) {
 
                 // console.log("Building id with filter",building)
 
@@ -763,7 +766,17 @@ const assetController = {
                                 console.log("length of floor",floorZone.length)
                                 qb.whereIn('asset_location.floorId', floorZone)
                             }
+                            if (floorZoneCode && floorZoneCode.length > 0) {
+                                qb.whereIn('floor_and_zones.floorZoneCode', floorZoneCode)
+                            }
 
+                            if(unitNumber && unitNumber.length > 0){
+                                qb.whereIn('property_units.unitNumber',unitNumber)
+                            }
+
+                            if(locationId && locationId.length >0){
+                                qb.whereIn('asset_location.id',locationId)
+                            }
                             if (assetName) {
                                 console.log("asset name",assetName)
                                 qb.where(
@@ -848,6 +861,16 @@ const assetController = {
                                 qb.whereIn('asset_location.floorId', floorZone)
                             }
 
+                            if (floorZoneCode && floorZoneCode.length > 0) {
+                                qb.whereIn('floor_and_zones.floorZoneCode', floorZoneCode)
+                            }
+                            if(unitNumber && unitNumber.length > 0){
+                                qb.whereIn('property_units.unitNumber',unitNumber)
+                            }
+
+                            if(locationId && locationId.length >0){
+                                qb.whereIn('asset_location.id',locationId)
+                            }
                             if (assetName) {
                                 qb.where(
                                     "asset_master.assetName",
@@ -918,6 +941,16 @@ const assetController = {
 
                             if (floorZone && floorZone.length > 0) {
                                 qb.whereIn('asset_location.floorId', floorZone)
+                            }
+                            if (floorZoneCode && floorZoneCode.length > 0) {
+                                qb.whereIn('floor_and_zones.floorZoneCode', floorZoneCode)
+                            }
+                            if(unitNumber && unitNumber.length > 0){
+                                qb.whereIn('property_units.unitNumber',unitNumber)
+                            }
+
+                            if(locationId && locationId.length >0){
+                                qb.whereIn('asset_location.id',locationId)
                             }
 
                             if (assetName) {
@@ -992,6 +1025,12 @@ const assetController = {
                             if (floorZone) {
                                 qb.whereIn('floor_and_zones.id', floorZone)
                             }
+                            if (floorZoneCode && floorZoneCode.length > 0) {
+                                qb.whereIn('floor_and_zones.floorZoneCode', floorZoneCode)
+                            }
+                            if(unitNumber && unitNumber.length > 0){
+                                qb.whereIn('property_units.unitNumber',unitNumber)
+                            }
                         })
                         .orderBy("asset_location.id", "desc")
                         // .limit(1)
@@ -1029,7 +1068,14 @@ const assetController = {
                             }
 
                             if (floorZone) {
+                                console.log()
                                 qb.whereIn('floor_and_zones.id', floorZone)
+                            }
+                            if (floorZoneCode && floorZoneCode.length > 0) {
+                                qb.whereIn('floor_and_zones.floorZoneCode', floorZoneCode)
+                            }
+                            if(unitNumber && unitNumber.length > 0){
+                                qb.whereIn('property_units.unitNumber',unitNumber)
                             }
                         })
                         .orderBy("asset_location.id", "desc")
