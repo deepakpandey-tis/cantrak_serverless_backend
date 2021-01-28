@@ -3,41 +3,34 @@ const Joi = require("@hapi/joi");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const Moment = require("moment");
-const MomentRange = require('moment-range');
+const MomentRange = require("moment-range");
 const moment = MomentRange.extendMoment(Moment);
 
 const uuidv4 = require("uuid/v4");
 var jwt = require("jsonwebtoken");
 const _ = require("lodash");
 
-
-
-
 const dashboardController = {
   getDashboardData: async (req, res) => {
     try {
-
       let orgId = req.orgId;
       let accessibleProjects = req.userProjectResources[0].projects;
       let payload = req.body;
       let projectResult = [];
       let projectIds = [];
       if (payload.companyIds.length) {
-
-        projectResult = await knex.from('projects').select(['id', 'companyId', 'projectName', 'project as projectCode'])
-          .where(qb => {
-
+        projectResult = await knex
+          .from("projects")
+          .select(["id", "companyId", "projectName", "project as projectCode"])
+          .where((qb) => {
             if (payload.companyIds.includes("all")) {
-
             } else {
-              qb.whereIn('projects.companyId', payload.companyIds);
+              qb.whereIn("projects.companyId", payload.companyIds);
             }
-
           })
           .where({ orgId: req.orgId });
-
       }
-      projectIds = projectResult.map(v => v.id);
+      projectIds = projectResult.map((v) => v.id);
       projectIds = _.uniqBy(projectIds);
 
       let prioritySeq = await knex("incident_priority")
@@ -51,7 +44,7 @@ const dashboardController = {
           .where({ sequenceNo: maxSeq, orgId: orgId })
           .groupBy([
             "incident_priority.incidentPriorityCode",
-            "incident_priority.id"
+            "incident_priority.id",
           ])
           .first();
         priorityValue = priority.incidentPriorityCode;
@@ -62,10 +55,9 @@ const dashboardController = {
           .from("service_requests")
           .select("service_requests.serviceStatusCode as status")
           .distinct("service_requests.id")
-          .where({ "moderationStatus": true, orgId: req.orgId })
+          .where({ moderationStatus: true, orgId: req.orgId })
           .whereIn("service_requests.projectId", projectIds)
-          .whereIn("serviceStatusCode", ["US", "O"])
-        ,
+          .whereIn("serviceStatusCode", ["US", "O"]),
         //.whereIn("service_requests.projectId", accessibleProjects)
         // .where({ serviceStatusCode: "US", orgId: orgId, "moderationStatus": true })
         //.orWhere({ serviceStatusCode: "O", orgId: orgId, "moderationStatus": true }),
@@ -91,7 +83,7 @@ const dashboardController = {
           .where({
             priority: priorityValue,
             orgId: orgId,
-            "moderationStatus": true
+            moderationStatus: true,
           })
           .whereIn("serviceStatusCode", ["US", "O"]),
 
@@ -113,7 +105,7 @@ const dashboardController = {
           .where({
             // serviceStatusCode: "A",
             orgId: orgId,
-            priority: priorityValue
+            priority: priorityValue,
           })
           .whereIn("serviceStatusCode", ["A", "IP", "OH"]),
         // .orWhere({
@@ -130,8 +122,12 @@ const dashboardController = {
 
       let open_service_requests = projectIds.length ? openRequests.length : 0;
       let open_service_orders = projectIds.length ? openOrders.length : 0;
-      let open_service_requests_high_priority = projectIds.length ? srhp.length : 0;
-      let open_service_orders_high_priority = projectIds.length ? sohp.length : 0;
+      let open_service_requests_high_priority = projectIds.length
+        ? srhp.length
+        : 0;
+      let open_service_orders_high_priority = projectIds.length
+        ? sohp.length
+        : 0;
 
       return res.status(200).json({
         data: {
@@ -143,14 +139,14 @@ const dashboardController = {
           o: openRequests,
           projectResult,
           projectIds,
-          openRequests
+          openRequests,
         },
-        message: "Dashboard data"
+        message: "Dashboard data",
       });
     } catch (err) {
       console.log("[controllers][parts][getParts] :  Error", err);
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
     }
   },
@@ -173,12 +169,12 @@ const dashboardController = {
 
       res.status(200).json({
         data: assestProbResult,
-        message: "Top Assest & Problem Results !"
+        message: "Top Assest & Problem Results !",
       });
     } catch (err) {
       console.log("[controllers][dashboard][getAssesList] : Error", err);
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
     }
   },
@@ -196,22 +192,19 @@ const dashboardController = {
       let projectResult = [];
       let projectIds = [];
       if (payload.companyIds.length) {
-
-        projectResult = await knex.from('projects').select(['id', 'companyId', 'projectName', 'project as projectCode'])
-          .where(qb => {
-
+        projectResult = await knex
+          .from("projects")
+          .select(["id", "companyId", "projectName", "project as projectCode"])
+          .where((qb) => {
             if (payload.companyIds.includes("all")) {
-
             } else {
-              qb.whereIn('projects.companyId', payload.companyIds);
+              qb.whereIn("projects.companyId", payload.companyIds);
             }
-
           })
           //.whereIn('projects.companyId', payload.companyIds)
           .where({ orgId: req.orgId });
-
       }
-      projectIds = projectResult.map(v => v.id);
+      projectIds = projectResult.map((v) => v.id);
       projectIds = _.uniqBy(projectIds);
 
       if (roles.includes("superAdmin") || roles.includes("orgAdmin")) {
@@ -247,7 +240,7 @@ const dashboardController = {
             "service_requests.createdAt as dateCreated",
             "service_appointments.appointedDate as appointedDate",
             "teams.teamName as teamName",
-            "users.name as user_name"
+            "users.name as user_name",
           ])
           .where({ "service_requests.orgId": req.orgId })
           .where({ "service_appointments.appointedDate": currentDate });
@@ -288,19 +281,19 @@ const dashboardController = {
             "service_requests.requestedBy as requestedBy",
             "service_requests.createdAt as dateCreated",
             "teams.teamName as teamName",
-            "users.name as user_name"
+            "users.name as user_name",
           ])
-          .whereIn('service_requests.projectId', projectIds)
+          .whereIn("service_requests.projectId", projectIds)
           .where({ "service_requests.orgId": req.orgId })
           .where("service_appointments.appointedDate", "=", currentDate)
           .where({
             "assigned_service_team.userId": id,
-            "assigned_service_team.entityType": "service_appointments"
+            "assigned_service_team.entityType": "service_appointments",
           })
           .orWhere({
             "assigned_service_additional_users.userId": id,
             "assigned_service_additional_users.entityType":
-              "service_appointments"
+              "service_appointments",
           })
           .distinct("service_requests.id")
           .orderBy("service_requests.id", "desc");
@@ -308,7 +301,7 @@ const dashboardController = {
 
       return res.status(200).json({
         data: _.uniqBy(result, "id"),
-        message: " Today Service appointment List!"
+        message: " Today Service appointment List!",
       });
     } catch (err) {
       console.log(
@@ -316,7 +309,7 @@ const dashboardController = {
         err
       );
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
     }
   },
@@ -330,12 +323,8 @@ const dashboardController = {
       let currentDate = moment().format("L");
       let currentTime = new Date(currentDate).getTime();
 
-      let startNewDate = moment(currentDate)
-        .startOf("date")
-        .format();
-      let endNewDate = moment(currentDate)
-        .endOf("date", "day")
-        .format();
+      let startNewDate = moment(currentDate).startOf("date").format();
+      let endNewDate = moment(currentDate).endOf("date", "day").format();
       // let startNewDate = moment(currentDate).startOf('date').format();
       // let endNewDate = moment(currentDate).endOf('date', 'day').format();
       let result;
@@ -344,28 +333,25 @@ const dashboardController = {
       let projectResult = [];
       let projectIds = [];
       if (payload.companyIds.length) {
-
-        projectResult = await knex.from('projects').select(['id', 'companyId', 'projectName', 'project as projectCode'])
-          .where(qb => {
-
+        projectResult = await knex
+          .from("projects")
+          .select(["id", "companyId", "projectName", "project as projectCode"])
+          .where((qb) => {
             if (payload.companyIds.includes("all")) {
-
             } else {
-              qb.whereIn('projects.companyId', payload.companyIds);
+              qb.whereIn("projects.companyId", payload.companyIds);
             }
-
           })
           //.whereIn('projects.companyId', payload.companyIds)
           .where({ orgId: req.orgId });
-
       }
-      projectIds = projectResult.map(v => v.id);
+      projectIds = projectResult.map((v) => v.id);
       projectIds = _.uniqBy(projectIds);
 
       if (roles.includes("superAdmin") || roles.includes("orgAdmin")) {
         result = await knex
           .from("survey_orders As o")
-          .where(qb => {
+          .where((qb) => {
             qb.where("o.orgId", req.orgId);
           })
           .where({ "assigned_service_team.entityType": "survey_orders" })
@@ -436,7 +422,7 @@ const dashboardController = {
       } else {
         result = await knex
           .from("survey_orders As o")
-          .where(qb => {
+          .where((qb) => {
             qb.where("o.orgId", req.orgId);
           })
           .where({ "assigned_service_team.entityType": "survey_orders" })
@@ -507,14 +493,14 @@ const dashboardController = {
             "teams.teamName as teamCode"
           )
           .whereBetween("o.appointedDate", [startNewDate, endNewDate])
-          .whereIn('s.projectId', projectIds)
+          .whereIn("s.projectId", projectIds)
           .where({
             "assigned_service_team.userId": id,
-            "assigned_service_team.entityType": "survey_orders"
+            "assigned_service_team.entityType": "survey_orders",
           })
           .orWhere({
             "assigned_service_additional_users.userId": id,
-            "assigned_service_additional_users.entityType": "survey_orders"
+            "assigned_service_additional_users.entityType": "survey_orders",
           })
           .groupBy([
             "o.id",
@@ -536,7 +522,7 @@ const dashboardController = {
             "assignUser.name",
             "teams.teamName",
             "assigned_service_additional_users.id",
-            "assigned_service_team.id"
+            "assigned_service_team.id",
           ])
           .distinct("o.id")
           .orderBy("o.id", "desc");
@@ -544,7 +530,7 @@ const dashboardController = {
 
       return res.status(200).json({
         data: _.uniqBy(result, "id"),
-        message: " Today Survey appointment List!"
+        message: " Today Survey appointment List!",
       });
     } catch (err) {
       console.log(
@@ -552,7 +538,7 @@ const dashboardController = {
         err
       );
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
     }
   },
@@ -562,12 +548,8 @@ const dashboardController = {
       let usersDetails = req.me;
       let roles = usersDetails.roles;
       let id = usersDetails.id;
-      let startDate = moment()
-        .startOf("date", "day")
-        .format();
-      let endDate = moment()
-        .endOf("date", "day")
-        .format();
+      let startDate = moment().startOf("date", "day").format();
+      let endDate = moment().endOf("date", "day").format();
       let currentTime = new Date(startDate).getTime();
       let result;
 
@@ -575,33 +557,34 @@ const dashboardController = {
       let projectResult = [];
       let projectIds = [];
       if (payload.companyIds.length) {
-
-        projectResult = await knex.from('projects').select(['id', 'companyId', 'projectName', 'project as projectCode'])
-          .where(qb => {
-
+        projectResult = await knex
+          .from("projects")
+          .select(["id", "companyId", "projectName", "project as projectCode"])
+          .where((qb) => {
             if (payload.companyIds.includes("all")) {
-
             } else {
-              qb.whereIn('projects.companyId', payload.companyIds);
+              qb.whereIn("projects.companyId", payload.companyIds);
             }
-
           })
           //.whereIn('projects.companyId', payload.companyIds)
           .where({ orgId: req.orgId });
-
       }
-      projectIds = projectResult.map(v => v.id);
+      projectIds = projectResult.map((v) => v.id);
       projectIds = _.uniqBy(projectIds);
-
 
       let orgId = req.orgId;
       if (roles.includes("superAdmin") || roles.includes("orgAdmin")) {
         result = await knex
-          .from("task_group_schedule_assign_assets")
-          .leftJoin(
-            "task_group_schedule",
-            "task_group_schedule_assign_assets.scheduleId",
-            "task_group_schedule.id"
+          .from("task_group_schedule")
+          .innerJoin(
+            "task_group_schedule_assign_assets",
+            "task_group_schedule.id",
+            "task_group_schedule_assign_assets.scheduleId"
+          )
+          .innerJoin(
+            "asset_master",
+            "task_group_schedule_assign_assets.assetId",
+            "asset_master.id"
           )
           .leftJoin(
             "pm_task_groups",
@@ -615,29 +598,63 @@ const dashboardController = {
           )
           .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
           .leftJoin("users", "assigned_service_team.userId", "users.id")
-          .leftJoin(
-            "assigned_service_additional_users",
-            "pm_task_groups.id",
-            "assigned_service_additional_users.entityId"
-          )
-          .leftJoin(
-            "asset_master",
-            "task_group_schedule_assign_assets.assetId",
-            "asset_master.id"
-          )
           .select([
+            "task_group_schedule_assign_assets.id as workOrderId",
+            "task_group_schedule_assign_assets.displayId",
             "task_group_schedule.id as scheduleId",
-            "task_group_schedule_assign_assets.*",
+            "asset_master.assetName as assetName",
+            "task_group_schedule_assign_assets.pmDate as pmDate",
             "teams.teamName as teamName",
             "assigned_service_team.userId as mainUserId",
             "users.name as mainUser",
-            "asset_master.assetName as assetName"
           ])
-          .where({ "task_group_schedule_assign_assets.orgId": orgId })
-          .whereBetween("task_group_schedule_assign_assets.pmDate", [
-            startDate,
-            endDate
-          ])
+          .where({
+            "task_group_schedule.orgId": req.orgId,
+          })
+          .whereRaw(
+            `DATE("task_group_schedule_assign_assets"."pmDate") = date(now())`
+          )
+          // .from("task_group_schedule_assign_assets")
+          // .leftJoin(
+          //   "task_group_schedule",
+          //   "task_group_schedule_assign_assets.scheduleId",
+          //   "task_group_schedule.id"
+          // )
+          // .leftJoin(
+          //   "pm_task_groups",
+          //   "task_group_schedule.taskGroupId",
+          //   "pm_task_groups.id"
+          // )
+          // .leftJoin(
+          //   "assigned_service_team",
+          //   "pm_task_groups.id",
+          //   "assigned_service_team.entityId"
+          // )
+          // .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+          // .leftJoin("users", "assigned_service_team.userId", "users.id")
+          // .leftJoin(
+          //   "assigned_service_additional_users",
+          //   "pm_task_groups.id",
+          //   "assigned_service_additional_users.entityId"
+          // )
+          // .leftJoin(
+          //   "asset_master",
+          //   "task_group_schedule_assign_assets.assetId",
+          //   "asset_master.id"
+          // )
+          // .select([
+          //   "task_group_schedule.id as scheduleId",
+          //   "task_group_schedule_assign_assets.*",
+          //   "teams.teamName as teamName",
+          //   "assigned_service_team.userId as mainUserId",
+          //   "users.name as mainUser",
+          //   "asset_master.assetName as assetName"
+          // ])
+          // .where({ "task_group_schedule_assign_assets.orgId": orgId })
+          // .whereBetween("task_group_schedule_assign_assets.pmDate", [
+          //   startDate,
+          //   endDate
+          // ])
           .orderBy("task_group_schedule_assign_assets.id", "desc");
       } else {
         result = await knex
@@ -675,25 +692,24 @@ const dashboardController = {
             "teams.teamName as teamName",
             "assigned_service_team.userId as mainUserId",
             "users.name as mainUser",
-            "asset_master.assetName as assetName"
+            "asset_master.assetName as assetName",
           ])
           .where({
             "task_group_schedule_assign_assets.orgId": orgId,
             "assigned_service_team.userId": id,
-            "assigned_service_team.entityType": "pm_task_groups"
+            "assigned_service_team.entityType": "pm_task_groups",
           })
-          .whereIn('pm_task_groups.companyId', payload.companyIds)
+          .whereIn("pm_task_groups.companyId", payload.companyIds)
           // .orWhere({ 'assigned_service_additional_users.userId': id, 'assigned_service_additional_users.entityType': 'pm_task_groups' })
           .whereBetween("task_group_schedule_assign_assets.pmDate", [
             startDate,
-            endDate
+            endDate,
           ])
           .orderBy("task_group_schedule_assign_assets.id", "desc");
       }
-
       return res.status(200).json({
         data: _.uniqBy(result, "id"),
-        message: " Today Schedule Work order List!"
+        message: " Today Schedule Work order List!",
       });
     } catch (err) {
       console.log(
@@ -701,7 +717,7 @@ const dashboardController = {
         err
       );
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
     }
   },
@@ -731,38 +747,28 @@ const dashboardController = {
       let projectResult = [];
       let projectIds = [];
       if (reqData.formData.companyIds.length) {
-
-        projectResult = await knex.from('projects').select(['id', 'companyId', 'projectName', 'project as projectCode'])
-          .where(qb => {
-
+        projectResult = await knex
+          .from("projects")
+          .select(["id", "companyId", "projectName", "project as projectCode"])
+          .where((qb) => {
             if (reqData.formData.companyIds.includes("all")) {
-
             } else {
-              qb.whereIn('projects.companyId', reqData.formData.companyIds);
+              qb.whereIn("projects.companyId", reqData.formData.companyIds);
             }
-
           })
           //.whereIn('projects.companyId', reqData.formData.companyIds)
           .where({ orgId: req.orgId });
-
       }
-      projectIds = projectResult.map(v => v.id);
+      projectIds = projectResult.map((v) => v.id);
       projectIds = _.uniqBy(projectIds);
-
 
       let final = [];
       for (let d of dates) {
-        let startNewDate = moment(d)
-          .startOf("date")
-          .format();
-        let endNewDate = moment(d)
-          .endOf("date", "day")
-          .format();
+        let startNewDate = moment(d).startOf("date").format();
+        let endNewDate = moment(d).endOf("date", "day").format();
 
         let currentStartTime = new Date(startNewDate).getTime();
         let currentEndTime = new Date(endNewDate).getTime();
-
-
 
         [totalServiceRequest, totalServiceOrder] = await Promise.all([
           knex
@@ -805,15 +811,15 @@ const dashboardController = {
               "service_requests.requestedBy as requestedBy",
               "service_requests.createdAt as dateCreated",
               "teams.teamName",
-              "teams.teamCode"
+              "teams.teamCode",
             ])
             .where({ "service_requests.orgId": req.orgId })
             .whereBetween("service_requests.createdAt", [
               currentStartTime,
-              currentEndTime
+              currentEndTime,
             ])
             .where({ "service_requests.isCreatedFromSo": false })
-            .whereIn('service_requests.projectId', projectIds)
+            .whereIn("service_requests.projectId", projectIds)
             .distinct("service_requests.id")
             .orderBy("service_requests.id", "desc"),
           // .offset(offset).limit(per_page)
@@ -826,71 +832,63 @@ const dashboardController = {
             )
             .select([
               "service_orders.id as SoId",
-              "service_orders.createdAt as dateCreated"
+              "service_orders.createdAt as dateCreated",
             ])
             .orderBy("service_orders.id", "desc")
             .where({ "service_orders.orgId": req.orgId })
             .whereBetween("service_orders.createdAt", [
               currentStartTime,
-              currentEndTime
+              currentEndTime,
             ])
             //.whereIn("service_requests.projectId", accessibleProjects)
-            .whereIn("service_requests.projectId", projectIds)
+            .whereIn("service_requests.projectId", projectIds),
         ]);
 
         final.push({
           date: moment(d).format("L"),
           totalServiceRequest: _.uniqBy(totalServiceRequest, "id").length,
-          totalServiceOrder: _.uniqBy(totalServiceOrder, "SoId").length
+          totalServiceOrder: _.uniqBy(totalServiceOrder, "SoId").length,
         });
       }
 
       res.status(200).json({
         data: { final },
         message: "records",
-        projectIds
+        projectIds,
       });
     } catch (err) {
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
     }
   },
 
   getMainDataForPieChart: async (req, res) => {
     try {
-
       let reqData = req.body;
       let projectResult = [];
       let projectIds = [];
       if (reqData.formData.companyIds.length) {
-
-        projectResult = await knex.from('projects').select(['id', 'companyId', 'projectName', 'project as projectCode'])
-          .where(qb => {
-
+        projectResult = await knex
+          .from("projects")
+          .select(["id", "companyId", "projectName", "project as projectCode"])
+          .where((qb) => {
             if (reqData.formData.companyIds.includes("all")) {
-
             } else {
-              qb.whereIn('projects.companyId', reqData.formData.companyIds);
+              qb.whereIn("projects.companyId", reqData.formData.companyIds);
             }
-
           })
           //.whereIn('projects.companyId', reqData.formData.companyIds)
           .where({ orgId: req.orgId });
-
       }
-      projectIds = projectResult.map(v => v.id);
+      projectIds = projectResult.map((v) => v.id);
       projectIds = _.uniqBy(projectIds);
 
       // let startDate = moment(req.body.startDate).format('L'); // TODO
       // let endDate = moment(req.body.endDate).format('L') // TODO
       let currentDate = moment().format("L");
-      let startNewDate = moment(currentDate)
-        .startOf("date")
-        .format();
-      let endNewDate = moment(currentDate)
-        .endOf("date", "day")
-        .format();
+      let startNewDate = moment(currentDate).startOf("date").format();
+      let endNewDate = moment(currentDate).endOf("date", "day").format();
 
       let usersDetails = req.me;
       let roles = usersDetails.roles;
@@ -925,7 +923,7 @@ const dashboardController = {
             "service_requests.serviceStatusCode as status",
             "service_requests.requestedBy as requestedBy",
             "service_requests.createdAt as dateCreated",
-            "service_appointments.appointedDate as appointedDate"
+            "service_appointments.appointedDate as appointedDate",
           ])
           .where({ "service_requests.orgId": req.orgId })
           .where({ "service_appointments.appointedDate": currentDate });
@@ -960,18 +958,18 @@ const dashboardController = {
             "service_requests.priority",
             "service_requests.serviceStatusCode as status",
             "service_requests.requestedBy as requestedBy",
-            "service_requests.createdAt as dateCreated"
+            "service_requests.createdAt as dateCreated",
           ])
           .where({ "service_requests.orgId": req.orgId })
           .where("service_appointments.appointedDate", "=", currentDate)
           .where({
             "assigned_service_team.userId": id,
-            "assigned_service_team.entityType": "service_appointments"
+            "assigned_service_team.entityType": "service_appointments",
           })
           .orWhere({
             "assigned_service_additional_users.userId": id,
             "assigned_service_additional_users.entityType":
-              "service_appointments"
+              "service_appointments",
           })
           .whereIn("service_requests.projectId", projectIds)
           .distinct("service_requests.id")
@@ -982,7 +980,7 @@ const dashboardController = {
       if (roles.includes("superAdmin") || roles.includes("orgAdmin")) {
         result2 = await knex
           .from("survey_orders As o")
-          .where(qb => {
+          .where((qb) => {
             qb.where("o.orgId", req.orgId);
           })
           .where({ "assigned_service_team.entityType": "survey_orders" })
@@ -1053,7 +1051,7 @@ const dashboardController = {
       } else {
         result2 = await knex
           .from("survey_orders As o")
-          .where(qb => {
+          .where((qb) => {
             qb.where("o.orgId", req.orgId);
           })
           .where({ "assigned_service_team.entityType": "survey_orders" })
@@ -1126,11 +1124,11 @@ const dashboardController = {
           .whereBetween("o.appointedDate", [startNewDate, endNewDate])
           .where({
             "assigned_service_team.userId": id,
-            "assigned_service_team.entityType": "survey_orders"
+            "assigned_service_team.entityType": "survey_orders",
           })
           .orWhere({
             "assigned_service_additional_users.userId": id,
-            "assigned_service_additional_users.entityType": "survey_orders"
+            "assigned_service_additional_users.entityType": "survey_orders",
           })
           .whereIn("s.projectId", projectIds)
           .groupBy([
@@ -1153,7 +1151,7 @@ const dashboardController = {
             "assignUser.name",
             "teams.teamName",
             "assigned_service_additional_users.id",
-            "assigned_service_team.id"
+            "assigned_service_team.id",
           ])
           .distinct("o.id")
           .orderBy("o.id", "desc");
@@ -1191,12 +1189,12 @@ const dashboardController = {
             "task_group_schedule_assign_assets.*",
             "teams.teamName as teamName",
             "assigned_service_team.userId as mainUserId",
-            "users.name as mainUser"
+            "users.name as mainUser",
           ])
           .where({ "task_group_schedule_assign_assets.orgId": req.orgId })
           .whereBetween("task_group_schedule_assign_assets.pmDate", [
             startNewDate,
-            endNewDate
+            endNewDate,
           ])
           .orderBy("task_group_schedule_assign_assets.id", "desc");
       } else {
@@ -1229,19 +1227,19 @@ const dashboardController = {
             "task_group_schedule_assign_assets.*",
             "teams.teamName as teamName",
             "assigned_service_team.userId as mainUserId",
-            "users.name as mainUser"
+            "users.name as mainUser",
           ])
           .where({
             "task_group_schedule_assign_assets.orgId": req.orgId,
             "assigned_service_team.userId": id,
-            "assigned_service_team.entityType": "pm_task_groups"
+            "assigned_service_team.entityType": "pm_task_groups",
           })
           // .orWhere({ 'assigned_service_additional_users.userId': id, 'assigned_service_additional_users.entityType': 'pm_task_groups' })
           .whereBetween("task_group_schedule_assign_assets.pmDate", [
             startNewDate,
-            endNewDate
+            endNewDate,
           ])
-          .whereIn('pm_task_groups.companyId', reqData.formData.companyIds)
+          .whereIn("pm_task_groups.companyId", reqData.formData.companyIds)
           .orderBy("task_group_schedule_assign_assets.id", "desc");
       }
 
@@ -1249,13 +1247,13 @@ const dashboardController = {
         data: {
           ServiceAppointments: _.uniqBy(result, "id").length,
           SurveyAppointments: _.uniqBy(result2, "id").length,
-          WorkOrders: result3.length
-        }
+          WorkOrders: result3.length,
+        },
       });
     } catch (err) {
       console.log("[controllers][dashboard][getAssesList] : Error", err);
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
     }
   },
@@ -1282,12 +1280,8 @@ const dashboardController = {
       );
       let final = [];
       for (let d of dates) {
-        let startNewDate = moment(d)
-          .startOf("date")
-          .format();
-        let endNewDate = moment(d)
-          .endOf("date", "day")
-          .format();
+        let startNewDate = moment(d).startOf("date").format();
+        let endNewDate = moment(d).endOf("date", "day").format();
         let currentStartTime = new Date(startNewDate).getTime();
         let currentEndTime = new Date(endNewDate).getTime();
         problems = await knex
@@ -1321,15 +1315,15 @@ const dashboardController = {
           .select([
             "service_problems.serviceRequestId",
             "incident_categories.categoryCode",
-            "incident_categories.descriptionEng"
+            "incident_categories.descriptionEng",
           ])
           .where({
             "service_requests.orgId": req.orgId,
-            "incident_sub_categories.incidentTypeId": problemTypeId
+            "incident_sub_categories.incidentTypeId": problemTypeId,
           })
           .whereBetween("service_requests.createdAt", [
             currentStartTime,
-            currentEndTime
+            currentEndTime,
           ])
           .where({ "service_requests.isCreatedFromSo": false })
           .distinct("service_requests.id")
@@ -1338,17 +1332,17 @@ const dashboardController = {
         // let problemCounts = Object.keys(grouped).map(category => ({totalServiceRequests:grouped[category].length,category}))
         final.push({
           date: moment(d).format("L"),
-          totalServiceRequest: problems.length
+          totalServiceRequest: problems.length,
         });
       }
 
       return res.status(200).json({
-        data: final
+        data: final,
       });
     } catch (err) {
       console.log("[controllers][dashboard][getAssesList] : Error", err);
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
     }
   },
@@ -1371,12 +1365,8 @@ const dashboardController = {
       );
       let final = [];
       for (let d of dates) {
-        let startNewDate = moment(d)
-          .startOf("date")
-          .format();
-        let endNewDate = moment(d)
-          .endOf("date", "day")
-          .format();
+        let startNewDate = moment(d).startOf("date").format();
+        let endNewDate = moment(d).endOf("date", "day").format();
         let currentStartTime = new Date(startNewDate).getTime();
         let currentEndTime = new Date(endNewDate).getTime();
         problems = await knex
@@ -1410,16 +1400,16 @@ const dashboardController = {
           .select([
             "service_problems.serviceRequestId",
             "incident_categories.categoryCode",
-            "incident_categories.descriptionEng"
+            "incident_categories.descriptionEng",
           ])
           .where({
             "service_requests.orgId": req.orgId,
-            "incident_sub_categories.incidentTypeId": problemTypeId
+            "incident_sub_categories.incidentTypeId": problemTypeId,
           })
           .where({ "service_requests.orgId": req.orgId })
           .whereBetween("service_requests.createdAt", [
             currentStartTime,
-            currentEndTime
+            currentEndTime,
           ])
           .where({ "service_requests.isCreatedFromSo": false })
           .distinct("service_requests.id")
@@ -1431,8 +1421,8 @@ const dashboardController = {
       }
       let finalData = _.flatten(
         final
-          .filter(v => !_.isEmpty(v))
-          .map(v => _.keys(v).map(p => ({ [p]: v[p].length })))
+          .filter((v) => !_.isEmpty(v))
+          .map((v) => _.keys(v).map((p) => ({ [p]: v[p].length })))
       ).reduce((a, p) => {
         let l = _.keys(p)[0];
         if (a[l]) {
@@ -1443,12 +1433,12 @@ const dashboardController = {
         return a;
       }, {});
       return res.status(200).json({
-        data: finalData
+        data: finalData,
       });
     } catch (err) {
       console.log("[controllers][dashboard][getAssesList] : Error", err);
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
     }
   },
@@ -1456,10 +1446,8 @@ const dashboardController = {
     try {
       let problems = null;
 
-
       let final = [];
       // for (let d of dates) {
-
 
       problems = await knex
         .from("service_requests")
@@ -1497,7 +1485,7 @@ const dashboardController = {
         .select([
           "service_problems.serviceRequestId",
           "incident_type.typeCode as categoryCode",
-          "incident_categories.descriptionEng"
+          "incident_categories.descriptionEng",
         ])
         .where({
           "service_requests.orgId": req.orgId,
@@ -1509,24 +1497,20 @@ const dashboardController = {
         .orderBy("service_requests.id", "desc");
       let grouped = _.groupBy(problems, "categoryCode");
 
-
-
-
       // let problemWise = _.keys(grouped).map(category => ({totalServiceRequests:grouped[category].length,category}))
       final.push(grouped); //totalServiceRequest: problems.length })
       //}
 
-
-      final = final.map(obj => {
-        obj["Others"] = obj[null]
+      final = final.map((obj) => {
+        obj["Others"] = obj[null];
         delete obj[null];
         return obj;
-      })
+      });
 
       let finalData = _.flatten(
         final
-          .filter(v => !_.isEmpty(v))
-          .map(v => _.keys(v).map(p => ({ [p]: v[p].length })))
+          .filter((v) => !_.isEmpty(v))
+          .map((v) => _.keys(v).map((p) => ({ [p]: v[p].length })))
       ).reduce((a, p) => {
         let l = _.keys(p)[0];
         if (a[l]) {
@@ -1542,26 +1526,25 @@ const dashboardController = {
     } catch (err) {
       console.log("[controllers][dashboard][getAssesList] : Error", err);
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
     }
-  }
-  ,
+  },
   /* GET ALL ALLOW COMPANY LIST */
   getAllowAllCompanyList: async (req, res) => {
-
     try {
-
       let projectIds = [];
       const accessibleProjects = req.userProjectResources;
 
       if (accessibleProjects.length) {
         for (let pro of accessibleProjects) {
-
           if (pro.projects.length) {
-
             for (let projectId of pro.projects) {
-              console.log("project=========", pro.projects, "===========================================")
+              console.log(
+                "project=========",
+                pro.projects,
+                "==========================================="
+              );
 
               projectIds.push(projectId);
             }
@@ -1571,43 +1554,40 @@ const dashboardController = {
 
       projectIds = _.uniqBy(projectIds);
 
-      let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
-        .whereIn('projects.id', projectIds)
+      let companyResult = await knex
+        .from("projects")
+        .select(["companyId", "projectName", "project as projectCode"])
+        .whereIn("projects.id", projectIds)
         .where({ orgId: req.orgId });
 
-      let companyIds = companyResult.map(v => v.companyId);
+      let companyIds = companyResult.map((v) => v.companyId);
 
       companyIds = _.uniqBy(companyIds);
 
-      let companyData = await knex.from('companies').select(['id', 'companyName', 'companyId'])
-        .whereIn('companies.id', companyIds)
-        .orderBy("companies.companyName", 'asc')
+      let companyData = await knex
+        .from("companies")
+        .select(["id", "companyName", "companyId"])
+        .whereIn("companies.id", companyIds)
+        .orderBy("companies.companyName", "asc")
         .where({ isActive: true, orgId: req.orgId });
-
 
       return res.status(200).json({
         data: {
           companyData,
-          companyIds
+          companyIds,
         },
-        message: "Company List Successfully!"
+        message: "Company List Successfully!",
       });
-
     } catch (err) {
       console.log("[controllers][dashboard][getAssesList] : Error", err);
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
     }
-
-
-  }
-  ,
+  },
   /*GET SERVICE REQUEST DATA BY PROBLEM TYPE FOR CHART */
   getServiceRequestByProblemTypeChartdata: async (req, res) => {
-
     try {
-
       let problems = null;
       problems = await knex
         .from("service_requests")
@@ -1653,7 +1633,10 @@ const dashboardController = {
         })
         .where({ "service_requests.orgId": req.orgId })
 
-        .where({ "service_requests.isCreatedFromSo": false, 'service_requests.moderationStatus': true })
+        .where({
+          "service_requests.isCreatedFromSo": false,
+          "service_requests.moderationStatus": true,
+        })
         .distinct("service_requests.id")
         .orderBy("service_requests.id", "desc");
 
@@ -1663,8 +1646,8 @@ const dashboardController = {
 
       let chartData = _.flatten(
         final
-          .filter(v => !_.isEmpty(v))
-          .map(v => _.keys(v).map(p => ({ [p]: v[p].length })))
+          .filter((v) => !_.isEmpty(v))
+          .map((v) => _.keys(v).map((p) => ({ [p]: v[p].length })))
       ).reduce((a, p) => {
         let l = _.keys(p)[0];
         if (a[l]) {
@@ -1681,7 +1664,6 @@ const dashboardController = {
       //   final
       //     .filter(v => !_.isEmpty(v))
       //     .map(v => _.keys(v).map(p => ({
-
 
       //       [p]: Array(_.groupBy(v[p], "priority")).map(x => _.keys(x).map(y => ({ [y]: x[y].length })))
 
@@ -1705,7 +1687,6 @@ const dashboardController = {
       //     ))
       // )
 
-
       // final2.push(ch);
 
       // let chart2 = _.flatten(
@@ -1719,17 +1700,13 @@ const dashboardController = {
 
       //       //console.log("vvvvvvvvvv",_.keys(v),"vvvvvvvvvvvvvvvvvvvvvvvvvvv")
 
-      //       //   _.keys(v).map(p => ({ 
+      //       //   _.keys(v).map(p => ({
 
-
-      //       //   //[p]: v[p] 
+      //       //   //[p]: v[p]
 
       //       // }))
       //     )
       // )
-
-
-
 
       let priorityGroup = _.groupBy(problems, "priority");
       let finalPriority = [];
@@ -1737,10 +1714,12 @@ const dashboardController = {
 
       let priorityChartData = _.flatten(
         finalPriority
-          .filter(v => !_.isEmpty(v))
-          .map(v => _.keys(v).map(p => ({
-            [p]: v[p]
-          })))
+          .filter((v) => !_.isEmpty(v))
+          .map((v) =>
+            _.keys(v).map((p) => ({
+              [p]: v[p],
+            }))
+          )
       ).reduce((a, p) => {
         let l = _.keys(p)[0];
         if (a[l]) {
@@ -1753,14 +1732,12 @@ const dashboardController = {
 
       let priorityKeys = Object.keys(priorityChartData);
 
-
       let barChartData = [];
 
       let i = 0;
       let arrKey = [];
 
       for (let p of priorityKeys) {
-
         let m = [];
 
         for (let n of priorityKeys) {
@@ -1774,12 +1751,11 @@ const dashboardController = {
         let l = m.length;
 
         barChartData.push({
-          priority: p, data: d, m
-        })
-
+          priority: p,
+          data: d,
+          m,
+        });
       }
-
-
 
       let prG = _.groupBy(problems, "priority");
       let f = [];
@@ -1788,11 +1764,12 @@ const dashboardController = {
 
       let x = _.flatten(
         f
-          .filter(v => !_.isEmpty(v))
-          .map(v => _.keys(v).map(p => ({
-            [p]: v[p]
-
-          })))
+          .filter((v) => !_.isEmpty(v))
+          .map((v) =>
+            _.keys(v).map((p) => ({
+              [p]: v[p],
+            }))
+          )
       ).reduce((a, p) => {
         let l = _.keys(p)[0];
         if (a[l]) {
@@ -1803,9 +1780,7 @@ const dashboardController = {
         return a;
       }, {});
 
-
       let ky = Object.keys(x);
-
 
       // let m = chart2.map(v =>
 
@@ -1826,7 +1801,6 @@ const dashboardController = {
 
       // })
 
-
       let yrr = [];
 
       // let i = 0;
@@ -1842,17 +1816,12 @@ const dashboardController = {
       //     d = [0, 1];
       //   }
 
-
-
-
-
       //   //let d = problems.filter(v => v.priority == a);
       //   yrr.push({
       //     priority: a, data: d, b: b
       //   })
 
       // }
-
 
       res.status(200).json({
         data: {
@@ -1868,27 +1837,19 @@ const dashboardController = {
           x,
           ky,
           yrr,
-          barChartData
+          barChartData,
         },
-        message: "Service Request by problem type data successfully!"
-      })
-
-
+        message: "Service Request by problem type data successfully!",
+      });
     } catch (err) {
-
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-      })
-
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
     }
-  }
-  ,
-
+  },
   /*GET SERVICE REQUEST DATA BY PRIORITY  FOR CHART */
   getServiceRequestByPriorityChartdata: async (req, res) => {
-
     try {
-
       let problems = null;
       problems = await knex
         .from("service_requests")
@@ -1934,18 +1895,18 @@ const dashboardController = {
           "incident_categories.descriptionEng",
           "service_requests.priority",
           "status.descriptionEng as status",
-
         ])
         .where({
           "service_requests.orgId": req.orgId,
         })
         .where({ "service_requests.orgId": req.orgId })
 
-        .where({ "service_requests.isCreatedFromSo": false, 'service_requests.moderationStatus': true })
+        .where({
+          "service_requests.isCreatedFromSo": false,
+          "service_requests.moderationStatus": true,
+        })
         .distinct("service_requests.id")
         .orderBy("service_requests.id", "desc");
-
-
 
       let final = [];
       let grouped = _.groupBy(problems, "priority");
@@ -1953,8 +1914,8 @@ const dashboardController = {
 
       let chartData = _.flatten(
         final
-          .filter(v => !_.isEmpty(v))
-          .map(v => _.keys(v).map(p => ({ [p]: v[p].length })))
+          .filter((v) => !_.isEmpty(v))
+          .map((v) => _.keys(v).map((p) => ({ [p]: v[p].length })))
       ).reduce((a, p) => {
         let l = _.keys(p)[0];
         if (a[l]) {
@@ -1964,20 +1925,17 @@ const dashboardController = {
         }
         return a;
       }, {});
-
-
 
       let final2 = [];
 
       let ch = _.flatten(
         final
-          .filter(v => !_.isEmpty(v))
-          .map(v => _.keys(v).map(p => ({
-
-
-            [p]: _.groupBy(v[p], "priority")
-
-          })))
+          .filter((v) => !_.isEmpty(v))
+          .map((v) =>
+            _.keys(v).map((p) => ({
+              [p]: _.groupBy(v[p], "priority"),
+            }))
+          )
       ).reduce((a, p) => {
         let l = _.keys(p)[0];
         if (a[l]) {
@@ -1988,43 +1946,31 @@ const dashboardController = {
         return a;
       }, {});
 
-
       let ch2 = _.flatten(
         final
-          .filter(v => !_.isEmpty(v))
-          .map(v => Object.keys(v).map(p =>
-            p
-
-          ))
-      )
-
+          .filter((v) => !_.isEmpty(v))
+          .map((v) => Object.keys(v).map((p) => p))
+      );
 
       final2.push(ch);
 
       let chart2 = _.flatten(
         final2
-          .filter(v => !_.isEmpty(v))
-          .map(v =>
-
-            _.keys(v).map(p => ({ [p]: v[p] }))
+          .filter((v) => !_.isEmpty(v))
+          .map(
+            (v) => _.keys(v).map((p) => ({ [p]: v[p] }))
 
             //_.keys(v).map(p => ({ [p]: v[p].map(x => _.keys(x).map(y => ({ [y]: x[y] }))) }))
 
             //console.log("vvvvvvvvvv",_.keys(v),"vvvvvvvvvvvvvvvvvvvvvvvvvvv")
 
-            //   _.keys(v).map(p => ({ 
+            //   _.keys(v).map(p => ({
 
-
-            //   //[p]: v[p] 
-
-
+            //   //[p]: v[p]
 
             // }))
           )
-      )
-
-
-
+      );
 
       let prG = _.groupBy(problems, "priority");
       let f = [];
@@ -2033,11 +1979,12 @@ const dashboardController = {
 
       let x = _.flatten(
         f
-          .filter(v => !_.isEmpty(v))
-          .map(v => _.keys(v).map(p => ({
-            [p]: v[p]
-
-          })))
+          .filter((v) => !_.isEmpty(v))
+          .map((v) =>
+            _.keys(v).map((p) => ({
+              [p]: v[p],
+            }))
+          )
       ).reduce((a, p) => {
         let l = _.keys(p)[0];
         if (a[l]) {
@@ -2056,17 +2003,14 @@ const dashboardController = {
 
       // )
 
-      const Parallel = require('async-parallel');
+      const Parallel = require("async-parallel");
 
-      problems = await Parallel.map(problems, async st => {
-
+      problems = await Parallel.map(problems, async (st) => {
         return {
           ...st,
           chartData,
-        }
-
-      })
-
+        };
+      });
 
       let statusGroup = _.groupBy(problems, "status");
       let finalStatus = [];
@@ -2074,10 +2018,12 @@ const dashboardController = {
 
       let statusChartData = _.flatten(
         finalStatus
-          .filter(v => !_.isEmpty(v))
-          .map(v => _.keys(v).map(p => ({
-            [p]: v[p]
-          })))
+          .filter((v) => !_.isEmpty(v))
+          .map((v) =>
+            _.keys(v).map((p) => ({
+              [p]: v[p],
+            }))
+          )
       ).reduce((a, p) => {
         let l = _.keys(p)[0];
         if (a[l]) {
@@ -2090,14 +2036,12 @@ const dashboardController = {
 
       let statusKeys = Object.keys(statusChartData);
 
-
       let barChartData = [];
 
       let i = 0;
       let arrKey = [];
 
       for (let p of statusKeys) {
-
         let m = [];
 
         for (let n of statusKeys) {
@@ -2111,11 +2055,11 @@ const dashboardController = {
         let l = m.length;
 
         barChartData.push({
-          status: p, data: d, m
-        })
-
+          status: p,
+          data: d,
+          m,
+        });
       }
-
 
       res.status(200).json({
         data: {
@@ -2129,46 +2073,31 @@ const dashboardController = {
           prG,
           arr1,
           x,
-          barChartData
-
-
-
+          barChartData,
         },
-        message: "Service Request by priority data successfully!"
-      })
-
-
+        message: "Service Request by priority data successfully!",
+      });
     } catch (err) {
-
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-      })
-
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
     }
-
-  }
-  ,
+  },
   /*GET SERVICE REQUEST DATA BY MONTH PRIORITY  FOR CHART */
   getServiceRequestByMonthPriorityChartdata: async (req, res) => {
-
     try {
-
       let payload = req.body;
       let startMonth;
       let endMonth;
 
       if (Number(payload.startMonth) <= 9) {
-
         startMonth = "0" + Number(payload.startMonth);
-
       } else {
         startMonth = Number(payload.startMonth);
       }
 
       if (Number(payload.endMonth) <= 9) {
-
         endMonth = "0" + Number(payload.endMonth);
-
       } else {
         endMonth = Number(payload.endMonth);
       }
@@ -2201,7 +2130,7 @@ const dashboardController = {
         lastDay = 31;
       }
       let year = payload.startYear;
-      let fromDate = year + "-" + startMonth + "-" + '01';
+      let fromDate = year + "-" + startMonth + "-" + "01";
       let toDate = year + "-" + endMonth + "-" + lastDay;
 
       let problems = null;
@@ -2243,20 +2172,25 @@ const dashboardController = {
           "incident_type.typeCode as Type",
           "incident_categories.descriptionEng",
           "service_requests.priority",
-          knex.raw(`to_char(to_timestamp(service_requests."createdAt"/1000),'YYYY-mm') as Date`)
+          knex.raw(
+            `to_char(to_timestamp(service_requests."createdAt"/1000),'YYYY-mm') as Date`
+          ),
         ])
-        .whereRaw(`to_char(to_timestamp(service_requests."createdAt"/1000),'YYYY-MM-DD') BETWEEN '${fromDate}' and '${toDate}'`)
+        .whereRaw(
+          `to_char(to_timestamp(service_requests."createdAt"/1000),'YYYY-MM-DD') BETWEEN '${fromDate}' and '${toDate}'`
+        )
         //.whereRaw(`to_char(to_timestamp(sr."createdAt"/1000),'YYYY-MM') = '${period}')`)
         .where({
           "service_requests.orgId": req.orgId,
         })
         .where({ "service_requests.orgId": req.orgId })
 
-        .where({ "service_requests.isCreatedFromSo": false, 'service_requests.moderationStatus': true })
+        .where({
+          "service_requests.isCreatedFromSo": false,
+          "service_requests.moderationStatus": true,
+        })
         .distinct("service_requests.id")
         .orderBy("service_requests.id", "asc");
-
-
 
       let final = [];
       let grouped = _.groupBy(problems, "date");
@@ -2264,8 +2198,8 @@ const dashboardController = {
 
       let chartData = _.flatten(
         final
-          .filter(v => !_.isEmpty(v))
-          .map(v => _.keys(v).map(p => ({ [p]: v[p].length })))
+          .filter((v) => !_.isEmpty(v))
+          .map((v) => _.keys(v).map((p) => ({ [p]: v[p].length })))
       ).reduce((a, p) => {
         let l = _.keys(p)[0];
         if (a[l]) {
@@ -2276,17 +2210,18 @@ const dashboardController = {
         return a;
       }, {});
 
-
       let priorityGroup = _.groupBy(problems, "priority");
       let finalPriority = [];
       finalPriority.push(priorityGroup);
 
       let priorityChartData = _.flatten(
         finalPriority
-          .filter(v => !_.isEmpty(v))
-          .map(v => _.keys(v).map(p => ({
-            [p]: v[p]
-          })))
+          .filter((v) => !_.isEmpty(v))
+          .map((v) =>
+            _.keys(v).map((p) => ({
+              [p]: v[p],
+            }))
+          )
       ).reduce((a, p) => {
         let l = _.keys(p)[0];
         if (a[l]) {
@@ -2299,14 +2234,12 @@ const dashboardController = {
 
       let priorityKeys = Object.keys(priorityChartData);
 
-
       let barChartData = [];
 
       let i = 0;
       let arrKey = [];
 
       for (let p of priorityKeys) {
-
         let m = [];
 
         for (let n of priorityKeys) {
@@ -2320,9 +2253,10 @@ const dashboardController = {
         let l = m.length;
 
         barChartData.push({
-          priority: p, data: d, m
-        })
-
+          priority: p,
+          data: d,
+          m,
+        });
       }
 
       res.status(200).json({
@@ -2331,27 +2265,19 @@ const dashboardController = {
           chartData,
           grouped,
           final,
-          barChartData
+          barChartData,
         },
-        message: "Service Request by month priority data successfully!"
-      })
-
-
+        message: "Service Request by month priority data successfully!",
+      });
     } catch (err) {
-
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-      })
-
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
     }
-
-  }
-
+  },
 };
 
-
 function getProblemTypeChart(priority, data) {
-
   let d = _.groupBy(data, "Type");
 
   let n = Object.keys(d);
@@ -2360,22 +2286,15 @@ function getProblemTypeChart(priority, data) {
 
   let i = 0;
   for (let g of n) {
-
-
-
     for (let k of n) {
       //arr1.push("");
     }
 
-
     let ind = n.indexOf(g);
-
-
 
     let l = Object.values(d)[i].length;
     let l2;
     if (l) {
-
       l2 = l;
     } else {
       l2 = 0;
@@ -2385,16 +2304,12 @@ function getProblemTypeChart(priority, data) {
     arr1.splice(ind + 1 - 1, 0, l);
 
     arr.push(arr1, ind);
-
   }
 
   return arr1;
-
 }
 
-
 function getPriorityChart(priority, data) {
-
   let d = _.groupBy(data, "priority");
 
   let n = Object.keys(d);
@@ -2403,22 +2318,15 @@ function getPriorityChart(priority, data) {
 
   let i = 0;
   for (let g of n) {
-
-
-
     for (let k of n) {
       //arr1.push("");
     }
 
-
     let ind = n.indexOf(g);
-
-
 
     let l = Object.values(d)[i].length;
     let l2;
     if (l) {
-
       l2 = l;
     } else {
       l2 = 0;
@@ -2428,16 +2336,12 @@ function getPriorityChart(priority, data) {
     arr1.splice(ind + 1 - 1, 0, l);
 
     arr.push(arr1, ind);
-
   }
 
   return arr1;
-
 }
 
-
 function getMonthChart(priority, data) {
-
   let d = _.groupBy(data, "date");
 
   let n = Object.keys(d);
@@ -2446,21 +2350,15 @@ function getMonthChart(priority, data) {
 
   let i = 0;
   for (let g of n) {
-
-
     for (let k of n) {
       //arr1.push("");
     }
 
-
     let ind = n.indexOf(g);
-
-
 
     let l = Object.values(d)[i].length;
     let l2;
     if (l) {
-
       l2 = l;
     } else {
       l2 = 0;
@@ -2470,14 +2368,9 @@ function getMonthChart(priority, data) {
     arr1.splice(ind + 1 - 1, 0, l);
 
     arr.push(arr1, ind);
-
   }
 
   return arr1;
-
 }
 
 module.exports = dashboardController;
-
-
-
