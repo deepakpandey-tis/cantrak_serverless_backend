@@ -1706,7 +1706,7 @@ const customerController = {
         .select(["users.name", "users.id"])
         .whereIn("user_house_allocation.houseId", propertyUnit)
         //.groupBy(['users.name', 'users.id'])
-        .where("user_house_allocation.orgId", orgId);
+        .where({"user_house_allocation.orgId":orgId, "users.isActive": true});
 
       let tenant = _.uniqBy(tenantList, "id");
 
