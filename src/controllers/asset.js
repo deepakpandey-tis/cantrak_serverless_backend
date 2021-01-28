@@ -722,7 +722,7 @@ const assetController = {
             }
 
 
-            if (building && building.length > 0 || floorZone || floorZoneCode || unitNumber || locationId) {
+            if (building && building.length > 0 || floorZone && floorZone.length >0 || floorZoneCode && floorZoneCode.length > 0 || unitNumber && unitNumber.length > 0 || locationId && locationId.length >0) {
                 [total, rows,rowsId] = await Promise.all([
                     knex
                         .count("* as count")
@@ -750,13 +750,11 @@ const assetController = {
                         .where({ 'asset_master.orgId': req.orgId })
                         .where('asset_location.endDate', null)
                         .where(qb => {
-                            console.log("building length",building.length)
                             if (building && building.length > 0) {
                                 qb.whereIn('buildings_and_phases.id', building)
                             }
 
                             if (floorZone && floorZone.length > 0) {
-                                console.log("length of floor",floorZone.length)
                                 qb.whereIn('asset_location.floorId', floorZone)
                             }
                             if (floorZoneCode && floorZoneCode.length > 0) {
@@ -862,6 +860,7 @@ const assetController = {
                             }
 
                             if(locationId && locationId.length >0){
+                                console.log("location id ======>>>>>",locationId)
                                 qb.whereIn('asset_location.id',locationId)
                             }
                             if (assetName) {
@@ -1310,7 +1309,8 @@ const assetController = {
                             'buildings_and_phases.buildingPhaseCode',
                             "buildings_and_phases.description as building",
                             'floor_and_zones.floorZoneCode',
-                            'property_units.unitNumber'
+                            'property_units.unitNumber',
+                            'asset_location.id as locationId'
                         ]).where({ 'asset_location.assetId': row.id})
                         // .where(qb => {
                         //     if (building && building.length) {
