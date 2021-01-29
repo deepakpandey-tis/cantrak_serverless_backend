@@ -365,7 +365,7 @@ const dashboardController = {
                     "building_info.title as titles",
                     "building_info.description as details"
                 )
-                .orderBy('building_info.id', 'desc')
+                .orderBy('building_info.id', 'asc')
 
             let imageResult = await knex
                 .from("images")
