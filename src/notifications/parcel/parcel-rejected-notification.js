@@ -4,7 +4,7 @@ const notification = require('../core/notification');
 const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY'];
 const SHOULD_QUEUE = process.env.IS_OFFLINE ? false : true;
 
-const parcelPickedUpNotification = {
+const parcelRejectedNotification = {
     send:async (sender, receiver, data, allowedChannels = ALLOWED_CHANNELS) =>{
         try{
 
@@ -28,7 +28,7 @@ const parcelPickedUpNotification = {
     sendInAppNotification: async (sender, receiver, data) => {
         let parcelId = data.payload.parcelId
         let  orgData = data.payload.orgData;
-       
+       console.log("In App Notification")
         let icons;
         let images;
         if(orgData && orgData.organisationLogo == ''){
@@ -47,7 +47,7 @@ const parcelPickedUpNotification = {
             payload: {
                 ...data,
                 subject: 'Parcel Picked Up',
-                body: `Hi, Your parcel picked up.`,
+                body: `Hi, Your parcel has been reject.`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -93,7 +93,7 @@ const parcelPickedUpNotification = {
             payload: {
                 ...data,
                 subject: 'Parcel Picked Up',
-                body: `Hi, Your parcel picked up.`,
+                body: `Hi, Your parcel has been reject.`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -139,16 +139,6 @@ const parcelPickedUpNotification = {
        
         let icons;
         let images;
-        // if(orgData && orgData.id == '56'){
-        //     icons = 'assets/icons/cbre-512x512.png';
-        //     images = 'assets/icons/cbre-512x512.png';
-        // }else if(orgData && orgData.id == '89'){
-        //     icons = 'assets/icons/senses-512x512.png';
-        //     images = 'assets/icons/senses-512x512.png';
-        // }else{
-        //     icons = 'assets/icons/icon-512x512.png';
-        //     images = 'assets/icons/icon-512x512.png';
-        // }
         if(orgData && orgData.organisationLogo == ''){
             icons = 'assets/icons/icon-512x512.png';
             images = 'assets/icons/icon-512x512.png';
@@ -164,7 +154,7 @@ const parcelPickedUpNotification = {
             receiverId: receiver.id,
             payload: {
                 subject: 'Parcel Picked up',
-                body: `Hi, "Your parcel picked up.`,
+                body: `Hi, Your parcel has been reject.`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -188,7 +178,7 @@ const parcelPickedUpNotification = {
     sendLineNotification: async (sender, receiver, data) => {
         data = {
             receiverId: receiver.id,
-            message: `Hi ${receiver.name} Your parcel picked up.`
+            message: `Hi ${receiver.name} Your parcel has been reject.`
         };
 
         return data;
@@ -202,4 +192,4 @@ const parcelPickedUpNotification = {
         return data;
     }
 }
-module.exports = parcelPickedUpNotification;
+module.exports = parcelRejectedNotification;
