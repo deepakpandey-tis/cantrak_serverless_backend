@@ -918,6 +918,10 @@ const assetController = {
                             "property_units.id"
                         )
                         .select(["asset_master.id",
+                        'asset_location.id as locationId',
+                        'floor_and_zones.floorZoneCode',
+                        'property_units.unitNumber'
+
                            
                         ])
                         .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_location.companyId': companyId })
@@ -1350,6 +1354,8 @@ const assetController = {
                         )
                         .select([
                             'floor_and_zones.floorZoneCode',
+                            'property_units.unitNumber',
+                            'asset_location.id as locationId'
                         ]).where({ 'asset_location.assetId': row.id})
                         // .where(qb => {
                         //     if (building) {
