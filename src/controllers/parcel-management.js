@@ -16,7 +16,8 @@ const { whereIn } = require("../db/knex");
 const parcelCollectedNotification = require("../notifications/parcel/parcel-collected-notification");
 const addOutGoingNotification = require("../notifications/parcel/add-outgoing-parcel-notification");
 const parcelRejectedNotification = require("../notifications/parcel/parcel-rejected-notification");
-const parcelReturnedNotification = require("../notifications/parcel/parcel-return-notification")
+const parcelReturnedNotification = require("../notifications/parcel/parcel-return-notification");
+const parcelPickedUpNotification = require("../notifications/parcel/parcel-pickedup-notification");
 
 const parcelManagementController = {
   getCompanyListHavingPropertyUnit: async (req, res) => {
@@ -1188,15 +1189,15 @@ const parcelManagementController = {
       }
       const currentTime = new Date().getTime();
 
-      // let deliverParcelResult = await knex("parcel_management")
-      //   .update({
-      //     ...payload,
-      //     updatedAt: currentTime,
-      //     receivedDate: currentTime,
-      //   })
-      //   .whereIn("parcel_management.id", id)
-      //   .where("parcel_management.orgId", req.orgId)
-      //   .returning(["*"]);
+      let deliverParcelResult = await knex("parcel_management")
+        .update({
+          ...payload,
+          updatedAt: currentTime,
+          receivedDate: currentTime,
+        })
+        .whereIn("parcel_management.id", id)
+        .where("parcel_management.orgId", req.orgId)
+        .returning(["*"]);
 
 
         let orgMaster = await knex.from("organisations").where({ id: req.orgId}).first();
@@ -1212,23 +1213,36 @@ const parcelManagementController = {
         const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH','SOCKET_NOTIFY']
         let sender = await knex.from("users").where({ id: req.me.id }).first();
         let receiver = await knex.from("users").where({ id: tenantId }).first();
-
-        if(req.body.pickedUpType[0] == 2 && req.body.isChecked == true){
+        console.log("parcel rejected=====>>>>>>",req.body.parcelStatus[0],req.body.isChecked)
+        if(req.body.pickedUpType[0] == 2 && req.body.parcelStatus == 2 && req.body.isChecked == true){
+          console.log("parcel pickedup")
         await parcelCollectedNotification.send(
           sender,
           receiver,
           dataNos,
           ALLOWED_CHANNELS
         );
-        }else if(req.body.pickedUpType[0] == 3 && req.body.isChecked == true){
-          console.log("parcel reject=====>>>>>",req.body.pickedUpType[0])
+        }else
+        if(req.body.pickedUpType[0] == 1 && req.body.parcelStatus == 2 && req.body.isChecked == true){
+          console.log("parcel pickedup=====>>>>>",req.body.pickedUpType[0])
+          await parcelPickedUpNotification.send(
+            sender,
+            receiver,
+            dataNos,
+            ALLOWED_CHANNELS
+          );
+        }else
+        if(req.body.parcelStatus == 3 && req.body.isChecked == true){
+          console.log("parcel rejected=====>>>>>",req.body.pickedUpType[0])
           await parcelRejectedNotification.send(
             sender,
             receiver,
             dataNos,
             ALLOWED_CHANNELS
           );
-        }else if(req.body.pickedUpType[0] == 4 && req.body.isChecked == true){
+        }else
+        if(req.body.parcelStatus == 4 && req.body.isChecked == true){
+          console.log("parcel returned=====>>>>>",req.body.pickedUpType[0])
           await parcelReturnedNotification.send(
             sender,
             receiver,

@@ -14,7 +14,7 @@ const parcelReturnedNotification = {
                 await notification.queue(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, __filename);
                 console.log('[notifications][parcel][parcel-notification][send]: All Notifications Queued');
             } else {
-                await notification.send(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, parcelPickedUpNotification);
+                await notification.send(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, parcelReturnedNotification);
                 console.log('[notifications][parcel][parcel-notification][send]: All Notifications Sent');
             }
 
@@ -46,7 +46,7 @@ const parcelReturnedNotification = {
             receiverId: receiver.id,
             payload: {
                 ...data,
-                subject: 'Parcel Picked Up',
+                subject: 'Parcel Returned',
                 body: `Hi,Your parcel has been return.`,
                 icon: icons,
                 image: images,
@@ -92,7 +92,7 @@ const parcelReturnedNotification = {
             channel: 'socket-notification',
             payload: {
                 ...data,
-                subject: 'Parcel Picked Up',
+                subject: 'Parcel Returned',
                 body: `Hi, Your parcel has been return.`,
                 icon: icons,
                 image: images,
