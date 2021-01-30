@@ -1,6 +1,5 @@
 const _ = require('lodash');
 const notification = require('../core/notification');
-const parcelRejectedNotification = require('./parcel-rejected-notification');
 
 const ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY'];
 const SHOULD_QUEUE = process.env.IS_OFFLINE ? false : true;
@@ -15,7 +14,7 @@ const parcelReturnedNotification = {
                 await notification.queue(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, __filename);
                 console.log('[notifications][parcel][parcel-notification][send]: All Notifications Queued');
             } else {
-                await notification.send(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, parcelRejectedNotification);
+                await notification.send(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, parcelReturnedNotification);
                 console.log('[notifications][parcel][parcel-notification][send]: All Notifications Sent');
             }
 
