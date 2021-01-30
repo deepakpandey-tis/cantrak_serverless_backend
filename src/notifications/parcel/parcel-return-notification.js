@@ -47,7 +47,7 @@ const parcelReturnedNotification = {
             receiverId: receiver.id,
             payload: {
                 ...data,
-                subject: 'Parcel Picked Up',
+                subject: 'Parcel Returned',
                 body: `Hi,Your parcel has been return.`,
                 icon: icons,
                 image: images,
@@ -93,7 +93,7 @@ const parcelReturnedNotification = {
             channel: 'socket-notification',
             payload: {
                 ...data,
-                subject: 'Parcel Picked Up',
+                subject: 'Parcel Returned',
                 body: `Hi, Your parcel has been return.`,
                 icon: icons,
                 image: images,

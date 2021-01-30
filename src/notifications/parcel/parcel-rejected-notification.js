@@ -46,7 +46,7 @@ const parcelRejectedNotification = {
             receiverId: receiver.id,
             payload: {
                 ...data,
-                subject: 'Parcel Picked Up',
+                subject: 'Parcel Rejected',
                 body: `Hi, Your parcel has been reject.`,
                 icon: icons,
                 image: images,
@@ -92,7 +92,7 @@ const parcelRejectedNotification = {
             channel: 'socket-notification',
             payload: {
                 ...data,
-                subject: 'Parcel Picked Up',
+                subject: 'Parcel Rejected',
                 body: `Hi, Your parcel has been reject.`,
                 icon: icons,
                 image: images,
