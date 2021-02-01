@@ -23,7 +23,7 @@ const serviceRequestUserAddNotification = {
     },
 
     sendInAppNotification: async (sender, receiver, data) => {
-        console.log("Site url", process.env.SITE_URL)
+        console.log("Site data====>>>>",data.payload)
         let title = data.payload.title;
         let description = data.payload.description;
         let url = data.payload.url;
