@@ -996,6 +996,10 @@ const serviceRequestController = {
           .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
           .where({ 'application_user_roles.roleId': 2, 'users.orgId': req.orgId }).first();
 
+          let orgMaster = await knex
+          .from("organisations")
+          .where({ id: req.orgId })
+          .first();
 
 
         let dataNos = {
@@ -1003,7 +1007,8 @@ const serviceRequestController = {
             title: "Service Request created",
             url: "",
             description: `A new service request has been created by ${req.me.name}`,
-            redirectUrl: "admin/service-request"
+            redirectUrl: "admin/service-request",
+            orgData : orgMaster
 
           },
         };
