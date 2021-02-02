@@ -918,6 +918,8 @@ const assetController = {
                             "property_units.id"
                         )
                         .select(["asset_master.id",
+                        "asset_master.assetName",
+                        "asset_master.assetSerial",
                         'asset_location.id as locationId',
                         'floor_and_zones.floorZoneCode',
                         'property_units.unitNumber'
@@ -1245,6 +1247,8 @@ const assetController = {
                         //     "property_units.id"
                         // )
                         .select(["asset_master.id",
+                        "asset_master.assetName",
+                        "asset_master.assetSerial"
                         ])
                         .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId})
                         .where({ 'asset_master.orgId': req.orgId })
