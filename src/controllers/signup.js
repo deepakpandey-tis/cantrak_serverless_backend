@@ -580,7 +580,7 @@ const singupController = {
           for (let admin of admins) {
 
             let receiver = await knex.from("users").where({ id: admin.id }).first();
-            console.log("receiver", receiver);
+            console.log("receiver====>", admin);
 
             await signupNotification.send(
               user,

@@ -1017,7 +1017,6 @@ const parcelManagementController = {
       console.log("update parcel payload", req.body);
       await knex.transaction(async (trx) => {
         const payload = req.body;
-
         parcelPayload = _.omit(
           payload,
           "image",
