@@ -52,7 +52,8 @@ router.get(
   '/get-asset-list-for-work-order',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  // resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isPMAccessible,
   assetCategoryController.getAssetListForWorkOrderList
 )
 
