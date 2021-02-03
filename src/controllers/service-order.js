@@ -23,6 +23,7 @@ const serviceOrderController = {
 
             await knex.transaction(async trx => {
                 let ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY'];
+                let orgMaster = await knex.from("organisations").where({ id: req.orgId}).first();
 
                 images = req.body.images
                 let serviceRequestId = req.body.serviceRequestId
@@ -154,7 +155,9 @@ const serviceOrderController = {
                 //  console.log("receiver tenant",receiver)
 
                 let dataNos = {
-                    payload: {}
+                    payload: {
+                        orgData: orgMaster
+                    }
                 };
 
                 await serviceRequestNotification.send(sender, receiver, dataNos, ALLOWED_CHANNELS);
@@ -1384,6 +1387,7 @@ const serviceOrderController = {
     updateServiceOrder: async (req, res) => {
         try {
             let ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY'];
+            let orgMaster = await knex.from("organisations").where({ id: req.orgId}).first();
 
             await knex.transaction(async trx => {
                 let serviceOrder = null;
@@ -1450,7 +1454,9 @@ const serviceOrderController = {
                     //  console.log("receiver tenant",receiver)
 
                     let dataNos = {
-                        payload: {}
+                        payload: {
+                            orgData: orgMaster
+                        }
                     };
 
                     await serviceRequestNotification.send(sender, receiver, dataNos, ALLOWED_CHANNELS);
@@ -1492,7 +1498,9 @@ const serviceOrderController = {
 
                     // Insert New Users
                     let dataNos = {
-                        payload: {}
+                        payload: {
+                            orgData: orgMaster
+                        }
                     };
 
                     for (user of assignedServiceAdditionalUsers) {
@@ -2415,6 +2423,9 @@ const serviceOrderController = {
                 let createdBy;
                 let requestedBy;
                 serviceRequestResult = await knex('service_requests').where({ id: req.body.serviceReuqestId, orgId: req.orgId }).first();
+                let orgMaster = await knex.from("organisations").where({ id: req.orgId}).first();
+
+       
                 if (serviceRequestResult) {
 
                     userResult = await knex('users')
@@ -2447,8 +2458,8 @@ const serviceOrderController = {
                             title: "Service Appointment",
                             url: "",
                             description: `An Engineer as been appointed  for visit on ${appointmentDate} at ${appointmentTime} to Service regarding your Service Request`,
-                            redirectUrl: "/user/service-request"
-
+                            redirectUrl: "/user/service-request",
+                            orgData: orgMaster
                         },
                     };
 
@@ -2488,7 +2499,8 @@ const serviceOrderController = {
                             title: "Service Appointment Assigned",
                             url: "",
                             description: `A new service appointment has been created and assigned to you.`,
-                            redirectUrl: "/admin/service-order"
+                            redirectUrl: "/admin/service-order",
+                            orgData: orgMaster
 
                         },
                     };
