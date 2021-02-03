@@ -70,7 +70,7 @@ const surveyOrderController = {
 
 
       let sender = await knex.from("users").where({ id: req.me.id }).first();
-      let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH","SOCKET_NOTIFY"];
+      let ALLOWED_CHANNELS = ["IN_APP","EMAIL","WEB_PUSH","SOCKET_NOTIFY"];
 
       await knex.transaction(async trx => {
 
@@ -147,6 +147,7 @@ const surveyOrderController = {
           .returning(['*'])
 
         /*GET REQUEST BY & CREATED BY ID OPEN */
+        let orgMaster = await knex.from("organisations").where({ id: req.orgId}).first();
 
         serviceRequestResult = await knex('service_requests').where({ id: surveyOrderPayload.serviceRequestId, orgId: req.orgId }).first();
         if (serviceRequestResult) {
@@ -181,8 +182,8 @@ const surveyOrderController = {
               title: "Survey Appointment",
               url: "",
               description: `An Engineer as been appointed  for visit on ${appointmentDate} at ${appointmentTime} to Survey regarding your Service Request`,
-              redirectUrl: "/user/service-request"
-
+              redirectUrl: "/user/service-request",
+              orgData: orgMaster
             },
           };
 
@@ -221,8 +222,8 @@ const surveyOrderController = {
               title: "Survey Appointment Assigned",
               url: "",
               description: `A new survey appointment has been created and assigned to you.`,
-              redirectUrl: "/admin/service-request"
-
+              redirectUrl: "/admin/service-request",
+              orgData: orgMaster
             },
           };
 
