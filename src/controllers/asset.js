@@ -359,7 +359,7 @@ const assetController = {
             let reqData = req.query;
 
             //let filters = {}
-            let total, rows
+            let total, rows,rowsWithPm
             let {
                 assetName,
                 assetModel,
@@ -611,7 +611,7 @@ const assetController = {
 
                 let houseResult = await knex.from('asset_location')
                     .leftJoin('property_units', 'asset_location.unitId', 'property_units.id')
-                    .select(['property_units.unitNumber', 'property_units.houseId', 'property_units.description'])
+                    .select(['property_units.unitNumber', 'property_units.houseId', 'property_units.description','asset_location.id as locationId'])
                     .where({ "asset_location.assetId": pd.ID }).first().orderBy('asset_location.id', 'desc')
 
                 if (houseResult) {
@@ -629,8 +629,24 @@ const assetController = {
                 }
 
             })
+            
+            pagination.data = await Parallel.map(pagination.data,async pd => {
+                let assetAssignedPm = await knex.from('task_group_schedule_assign_assets')
+                .leftJoin('asset_location','task_group_schedule_assign_assets.assetId','asset_location.assetId')
+                .leftJoin('task_group_schedule','task_group_schedule_assign_assets.scheduleId','task_group_schedule.id')
+                .leftJoin('pm_master2','task_group_schedule.pmId','pm_master2.id')
+                .select([
+                    'pm_master2.name as pmName'
+                ])
+                .where('task_group_schedule_assign_assets.assetId',pd.ID)
+                // .where('asset_location.id',pd.locationId)
+                .limit(1)
+                .first()
 
+                return {...pd,...assetAssignedPm}
+            })
 
+            console.log("pagination data====>>>>>",pagination)
             return res.status(200).json({
                 data: {
                     asset: pagination,
@@ -996,8 +1012,8 @@ const assetController = {
                     ])
                     .where('task_group_schedule_assign_assets.assetId',row.id)
                     .where('asset_location.id',row.locationId)
-                    // .limit(1)
-                    // .first()
+                    .limit(1)
+                    .first()
 
                     return {...row,...pm}
  
