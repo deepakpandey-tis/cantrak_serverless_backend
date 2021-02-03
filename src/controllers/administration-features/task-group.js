@@ -905,6 +905,8 @@ const taskGroupController = {
             //   filters['asset_category_master.id'] = assetCategoryId;
             // }
 
+            const accessibleProjects = req.userProjectResources[0].projects
+
             startDate = startDate ? moment(startDate).startOf('date').format("YYYY-MM-DD HH:mm:ss") : ''
             endDate = endDate ? moment(endDate).endOf('date').format("YYYY-MM-DD HH:mm:ss") : ''
 
@@ -950,6 +952,7 @@ const taskGroupController = {
                             qb.whereBetween('pm_master2.createdAt', [payload.startDate, payload.endDate])
                             // qb.where('task_group_schedule.endDate', '<=', endDate)
                         }
+                        
                         // if (startDate && endDate) {
                         //   qb.where('task_group_schedule.startDate', '>=', startDate)
                         //   qb.where('task_group_schedule.endDate', '<=', endDate)
@@ -957,6 +960,7 @@ const taskGroupController = {
                         if (endDate) {
                             //  qb.where({ 'task_group_schedule.endDate': endDate })
                         }
+                        qb.whereIn('pm_master2.projectId', accessibleProjects)
                     }),
                 knex.from('pm_master2')
                     .innerJoin('asset_category_master', 'pm_master2.assetCategoryId', 'asset_category_master.id')
@@ -998,6 +1002,7 @@ const taskGroupController = {
                         if (endDate) {
                             //  qb.where({ 'task_group_schedule.endDate': endDate })
                         }
+                        qb.whereIn('pm_master2.projectId', accessibleProjects)
                     })
                     .orderBy("pm_master2.createdAt", 'desc')
                     .offset(offset).limit(per_page)
@@ -1916,6 +1921,8 @@ const taskGroupController = {
                 'company'
             ]);
 
+            const accessibleProjects = req.userProjectResources[0].projects
+
             const schema = Joi.object().keys({
                 category: Joi.string().allow("").allow(null).optional(),
                 workOrderId: Joi.string().allow("").allow(null).optional(),
@@ -2012,6 +2019,7 @@ const taskGroupController = {
                             if (payloadFilter.assignedTeam.length) {
                                 qb.whereIn('assigned_service_team.teamId', payloadFilter.assignedTeam)
                             }
+                            qb.whereIn('pm_master2.projectId', accessibleProjects)
 
                             qb.where({ 'assigned_service_team.entityType': 'pm_task_groups' })
 
@@ -2113,6 +2121,8 @@ const taskGroupController = {
                             if (payloadFilter.assignedTeam.length) {
                                 qb.whereIn('assigned_service_team.teamId', payloadFilter.assignedTeam)
                             }
+                            qb.whereIn('pm_master2.projectId', accessibleProjects)
+
                             qb.where({ 'assigned_service_team.entityType': 'pm_task_groups' })
 
 
@@ -2196,6 +2206,7 @@ const taskGroupController = {
                                     qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod);
                                 }
                             }
+                            qb.whereIn('pm_master2.projectId', accessibleProjects)
 
                         })
                     ,
@@ -2283,6 +2294,7 @@ const taskGroupController = {
                                     qb.whereIn('task_group_schedule.repeatPeriod', payloadFilter.repeatPeriod);
                                 }
                             }
+                            qb.whereIn('pm_master2.projectId', accessibleProjects)
 
 
                         })
