@@ -830,6 +830,7 @@ const assetController = {
                             "asset_master.barcode",
                             "asset_master.areaName", "assetSerial",
                             'asset_location.id as locationId',
+                            // 'asset_location.isSelected',
                             'companies.companyName',
                             'projects.projectName',
                             'buildings_and_phases.buildingPhaseCode',
@@ -984,113 +985,35 @@ const assetController = {
                 ]);
 
                 console.log("if building called======>>>>")
-                // const Parallel = require('async-parallel')
-                // const rowsWithLocations = await Parallel.map(rows, async row => {
-                //     const location = await knex('asset_location')
-                //         .innerJoin('companies', 'asset_location.companyId', 'companies.id')
-                //         .leftJoin('projects', 'asset_location.projectId', 'projects.id')
-                //         .leftJoin(
-                //             "buildings_and_phases",
-                //             "asset_location.buildingId",
-                //             "buildings_and_phases.id"
-                //         )
-                //         .leftJoin(
-                //             "floor_and_zones",
-                //             "asset_location.floorId",
-                //             "floor_and_zones.id"
-                //         )
-                //         .leftJoin(
-                //             "property_units",
-                //             "asset_location.unitId",
-                //             "property_units.id"
-                //         )
-                //         .select([
-                //             'companies.companyName',
-                //             'projects.projectName',
-                //             'buildings_and_phases.buildingPhaseCode',
-                //             "buildings_and_phases.description as building",
-                //             'floor_and_zones.floorZoneCode',
-                //             'property_units.unitNumber'
-                //         ]).where({ 'asset_location.assetId': row.id })
-                //         .where(qb => {
-                //             if (building) {
-                //                 qb.whereIn('buildings_and_phases.id', building)
-                //             }
+                const Parallel = require('async-parallel')
+                const rowsWithSelectedAssets = await Parallel.map(rows,async row =>{
+                    const pm = await knex('task_group_schedule_assign_assets')
+                    .leftJoin('asset_location','task_group_schedule_assign_assets.assetId','asset_location.assetId')
+                    .leftJoin('task_group_schedule','task_group_schedule_assign_assets.scheduleId','task_group_schedule.id')
+                    .leftJoin('pm_master2','task_group_schedule.pmId','pm_master2.id')
+                    .select([
+                        'pm_master2.name as pmName'
+                    ])
+                    .where('task_group_schedule_assign_assets.assetId',row.id)
+                    .where('asset_location.id',row.locationId)
+                    // .limit(1)
+                    // .first()
 
-                //             if (floorZone) {
-                //                 qb.whereIn('floor_and_zones.id', floorZone)
-                //             }
-                //             if (floorZoneCode && floorZoneCode.length > 0) {
-                //                 qb.whereIn('floor_and_zones.floorZoneCode', floorZoneCode)
-                //             }
-                //             if(unitNumber && unitNumber.length > 0){
-                //                 qb.whereIn('property_units.unitNumber',unitNumber)
-                //             }
-                //         })
-                //         .orderBy("asset_location.id", "desc")
-                       
-                //     return { ...row, ...location }
-                // })
-
-                // const rowsIdWithLocations = await Parallel.map(rowsId, async row =>{
-
-                //     const location = await knex('asset_location')
-                //         .innerJoin('companies', 'asset_location.companyId', 'companies.id')
-                //         .leftJoin('projects', 'asset_location.projectId', 'projects.id')
-                //         .leftJoin(
-                //             "buildings_and_phases",
-                //             "asset_location.buildingId",
-                //             "buildings_and_phases.id"
-                //         )
-                //         .leftJoin(
-                //             "floor_and_zones",
-                //             "asset_location.floorId",
-                //             "floor_and_zones.id"
-                //         )
-                //         .leftJoin(
-                //             "property_units",
-                //             "asset_location.unitId",
-                //             "property_units.id"
-                //         )
-                //         .select([
-                //             'floor_and_zones.floorZoneCode',
-                //         ]).where({ 'asset_location.assetId': row.id })
-                //         .where(qb => {
-                //             if (building) {
-                //                 qb.whereIn('buildings_and_phases.id', building)
-                //             }
-
-                //             if (floorZone) {
-                //                 console.log()
-                //                 qb.whereIn('floor_and_zones.id', floorZone)
-                //             }
-                //             if (floorZoneCode && floorZoneCode.length > 0) {
-                //                 qb.whereIn('floor_and_zones.floorZoneCode', floorZoneCode)
-                //             }
-                //             if(unitNumber && unitNumber.length > 0){
-                //                 qb.whereIn('property_units.unitNumber',unitNumber)
-                //             }
-                //         })
-                //         .orderBy("asset_location.id", "desc")
-                //         .first()
-
-                //         return { ...row, ...location }
-                // })
-
-
-
+                    return {...row,...pm}
+ 
+                })
                 console.log("Value of rows Id=======>>>>>>",rowsId )
                 let count = total.count;
                 pagination.total = count;
                 pagination.per_page = per_page;
                 pagination.offset = offset;
-                pagination.to = offset + rows.length;
+                pagination.to = offset + rowsWithSelectedAssets.length;
                 // pagination.to = offset + rowsWithLocations.length;
                 pagination.last_page = Math.ceil(count / per_page);
                 pagination.current_page = page;
                 pagination.from = offset;
-                pagination.data = rows;
-                // pagination.data = rowsWithLocations;
+                // pagination.data = rows;
+                pagination.data = rowsWithSelectedAssets;
                 // pagination.totalId = rowsIdWithLocations
                 pagination.totalId = rowsId;
             } else {
@@ -1098,24 +1021,6 @@ const assetController = {
                     knex
                         .count("* as count")
                         .from("asset_master")
-                        // .leftJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
-                        // .innerJoin('companies', 'asset_location.companyId', 'companies.id')
-                        // .leftJoin('projects', 'asset_location.projectId', 'projects.id')
-                        // .leftJoin(
-                        //     "buildings_and_phases",
-                        //     "asset_location.buildingId",
-                        //     "buildings_and_phases.id"
-                        // )
-                        // .leftJoin(
-                        //     "floor_and_zones",
-                        //     "asset_location.floorId",
-                        //     "floor_and_zones.id"
-                        // )
-                        // .leftJoin(
-                        //     "property_units",
-                        //     "asset_location.unitId",
-                        //     "property_units.id"
-                        // )
                         .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId})
                         .first()
                         .where({ 'asset_master.orgId': req.orgId })
@@ -1157,24 +1062,6 @@ const assetController = {
                         }),
 
                     knex("asset_master")
-                    // .leftJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
-                    // .innerJoin('companies', 'asset_location.companyId', 'companies.id')
-                    // .leftJoin('projects', 'asset_location.projectId', 'projects.id')
-                    // .leftJoin(
-                    //     "buildings_and_phases",
-                    //     "asset_location.buildingId",
-                    //     "buildings_and_phases.id"
-                    // )
-                    // .leftJoin(
-                    //     "floor_and_zones",
-                    //     "asset_location.floorId",
-                    //     "floor_and_zones.id"
-                    // )
-                    // .leftJoin(
-                    //     "property_units",
-                    //     "asset_location.unitId",
-                    //     "property_units.id"
-                    // )
                         .select(["asset_master.id",
                             "asset_master.assetCode",
                             "asset_master.assetName",
@@ -1227,25 +1114,6 @@ const assetController = {
                             }
                         }),
                         knex("asset_master")
-
-                        // .leftJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
-                        // .innerJoin('companies', 'asset_location.companyId', 'companies.id')
-                        // .leftJoin('projects', 'asset_location.projectId', 'projects.id')
-                        // .leftJoin(
-                        //     "buildings_and_phases",
-                        //     "asset_location.buildingId",
-                        //     "buildings_and_phases.id"
-                        // )
-                        // .leftJoin(
-                        //     "floor_and_zones",
-                        //     "asset_location.floorId",
-                        //     "floor_and_zones.id"
-                        // )
-                        // .leftJoin(
-                        //     "property_units",
-                        //     "asset_location.unitId",
-                        //     "property_units.id"
-                        // )
                         .select(["asset_master.id",
                         "asset_master.assetName",
                         "asset_master.assetSerial"
@@ -1318,7 +1186,9 @@ const assetController = {
                             "buildings_and_phases.description as building",
                             'floor_and_zones.floorZoneCode',
                             'property_units.unitNumber',
-                            'asset_location.id as locationId'
+                            'asset_location.id as locationId',
+                            // 'asset_location.isSelected',
+
                         ]).where({ 'asset_location.assetId': row.id})
                         // .where(qb => {
                         //     if (building && building.length) {
@@ -1377,15 +1247,32 @@ const assetController = {
                         return { ...row, ...location }
                 })
 
+                const rowsWithSelectedAssets = await Parallel.map(rowsWithLocations,async row =>{
+                    const pm = await knex('task_group_schedule_assign_assets')
+                    .leftJoin('asset_location','task_group_schedule_assign_assets.assetId','asset_location.assetId')
+                    .leftJoin('task_group_schedule','task_group_schedule_assign_assets.scheduleId','task_group_schedule.id')
+                    .leftJoin('pm_master2','task_group_schedule.pmId','pm_master2.id')
+                    .select([
+                        'pm_master2.name as pmName'
+                    ])
+                    .where('task_group_schedule_assign_assets.assetId',row.id)
+                    .where('asset_location.id',row.locationId)
+                    .limit(1)
+                    .first()
+
+                    return {...row,...pm}
+ 
+                })
+
                 let count = total.count;
                 pagination.total = count;
                 pagination.per_page = per_page;
                 pagination.offset = offset;
-                pagination.to = offset + rowsWithLocations.length;
+                pagination.to = offset + rowsWithSelectedAssets.length;
                 pagination.last_page = Math.ceil(count / per_page);
                 pagination.current_page = page;
                 pagination.from = offset;
-                pagination.data = rowsWithLocations;
+                pagination.data = rowsWithSelectedAssets;
                 pagination.totalId = rowsIdWithLocations
 
             }
@@ -3768,7 +3655,31 @@ const assetController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
-    }
+    },
+    // checkAssetsLocation:async (req,res) => {
+    //     try {
+
+    //         await knex.transaction(async trx=>{
+    //             let payload = req.body
+    //             const schema = Joi.object().keys({
+    //                 id: Joi.string().required()
+    //               });
+
+    //               const result = Joi.validate(payload, schema);
+    //               if (result && result.hasOwnProperty("error") && result.error) {
+    //                 return res.status(400).json({
+    //                   errors: [
+    //                     { code: "VALIDATION_ERROR", message: result.error.message }
+    //                   ]
+    //                 });
+    //               }
+
+    //               let locationResult;
+    //         })
+    //     } catch(err){
+
+    //     }
+    // }
 }
 
 module.exports = assetController;
