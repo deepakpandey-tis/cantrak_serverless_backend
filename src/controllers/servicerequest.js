@@ -3416,7 +3416,7 @@ const serviceRequestController = {
 
                 /*GET REQUEST BY & CREATED BY ID FOR NOTIFICATION OPEN */
                 let userResult;
-                let userResult2
+                let userResult2;
                 let requestResult;
                 let serviceRequestResult = await knex('service_requests').where({ id: serviceRequestId, orgId: req.orgId }).first();
                 if (serviceRequestResult) {
@@ -3450,7 +3450,9 @@ const serviceRequestController = {
                             url: "",
                             description: `Your service requests has been approved, an engineer will be assigned shortly.`,
                             redirectUrl: "/user/service-request",
-                            orgData : orgMaster
+                            orgData : orgMaster,
+                            thaiTitle: "อนุมัติคำขอบริการแล้ว",
+                            thaiDetails: "ใบแจ้งคำร้องของท่านได้รับการอนุมัติแล้ว กำลังมอบหมายทีมช่างเพื่อดำเนินการต่อ"
                         },
                     };
 
@@ -3526,7 +3528,9 @@ const serviceRequestController = {
                             url: "",
                             description: `Your service request has been completed successfully.`,
                             redirectUrl: "/user/service-request",
-                            orgData : orgMaster
+                            orgData : orgMaster,
+                            thaiTitle: "คำขอบริการเสร็จสมบูรณ",
+                            thaiDetails: "ระบบได้รับใบแจ้งคำร้องของท่านเรียบร้อย"
 
                         },
                     };
@@ -3594,8 +3598,9 @@ const serviceRequestController = {
                             url: "",
                             description: `Your service requests has been cancelled.`,
                             redirectUrl: "/user/service-request",
-                            orgData : orgMaster
-
+                            orgData : orgMaster,
+                            thaiTitle: "ยกเลิกคำขอบริการ",
+                            thaiDetails: "คำขอบริการของคุณถูกยกเลิก"
                         },
                     };
 

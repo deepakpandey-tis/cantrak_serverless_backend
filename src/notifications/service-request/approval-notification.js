@@ -43,6 +43,18 @@ const approvalNotification = {
                     primaryKey: Date.now()
                 }
             },
+            payloadThai: {
+                ...data,
+                subject: 'มอบหมายคำขอบริการแล้ว',
+                body: `ท่านได้รับมอบหมายงานแจ้งซ่อมใหม่จาก ${sender.name}`,
+                icon: icons,
+                image: images,
+                extraData: {
+                    dateOfArrival: Date.now(),
+                    url: `/admin/service-order`,
+                    primaryKey: Date.now()
+                }
+            },
             actions: [
                 {
                     action: "explore",

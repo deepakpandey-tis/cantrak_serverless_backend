@@ -1008,8 +1008,9 @@ const serviceRequestController = {
             url: "",
             description: `A new service request has been created by ${req.me.name}`,
             redirectUrl: "admin/service-request",
-            orgData : orgMaster
-
+            orgData : orgMaster,
+            thaiTitle: 'สร้างคำขอบริการแล้ว',
+            thaiDetails: `สร้างคำขอบริการใหม่โดย ${req.me.name}`
           },
         };
 

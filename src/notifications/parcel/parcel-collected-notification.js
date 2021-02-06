@@ -61,7 +61,19 @@ const parcelCollectedNotification = {
             payload: {
                 ...data,
                 subject: 'Parcel Collected',
-                body: `Hi, Your parcel is collected`,
+                body: `Hi, Your parcel has been collected`,
+                icon: icons,
+                image: images,
+                extraData: {
+                    dateOfArrival: Date.now(),
+                    url: `/user/parcel`,
+                    primaryKey: Date.now()
+                }
+            },
+            payloadThai: {
+                ...data,
+                subject: 'รวบรวมพัสด',
+                body: `ส่งมอบพัสดุเรียบร้อย`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -132,7 +144,7 @@ const parcelCollectedNotification = {
             receiverId: receiver.id,
             payload: {
                 subject: 'Parcel Collected',
-                body: `Hi, "Your parcel has been collected.`,
+                body: `Hi, Your parcel has been collected`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -187,7 +199,7 @@ const parcelCollectedNotification = {
             payload: {
                 ...data,
                 subject: 'Parcel Collected',
-                body: `Hi, Your parcel is collected`,
+                body: `Hi, Your parcel has been collected`,
                 icon: icons,
                 image: images,
                 extraData: {

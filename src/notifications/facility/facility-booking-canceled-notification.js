@@ -64,7 +64,19 @@ const bookingCanceledNotification = {
                 image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `/user/dashboard/home`,
+                    url: `/user/facility/your-bookings`,
+                    primaryKey: Date.now()
+                }
+            },
+            payloadThai: {
+                ...data,
+                subject: 'ยกเลิกการจองสิ่งอำนวยความสะดวก',
+                body: `สวัสดี ${receiver.name} การจองของคุณในสิ่งอำนวยความสะดวก ${data.payload.facility} สำหรับ ${data.payload.date} ที่ ${data.payload.time} ถูกยกเลิก.`,
+                icon: icons,
+                image: images,
+                extraData: {
+                    dateOfArrival: Date.now(),
+                    url: `/user/facility/your-bookings`,
                     primaryKey: Date.now()
                 }
             },
@@ -126,8 +138,8 @@ const bookingCanceledNotification = {
             senderId: sender.id,
             receiverId: receiver.id,
             payload: {
-                subject: 'Facility Booking Canceled ',
-                body: `Hi, Your booking has been cancelled ${sender.name}`,
+                subject: 'Facility Booking Canceled',
+                body: `Hi, ${receiver.name} Your Booking in Facility ${data.payload.facility} made for ${data.payload.date} at ${data.payload.time} is canceled.`,
                 icon: icons,
                 image: images,
                 extraData: {

@@ -52,9 +52,21 @@ const parcelReturnedNotification = {
                 image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `/user/parcel/parcel-confirmation?parcels=1,2,3`,
+                    url: `/user/parcel`,
                     primaryKey: Date.now(),
                     parcelIds:parcelId
+                }
+            },
+            payloadThai: {
+                ...data,
+                subject: 'ส่งคืนพัสด',
+                body: `คุณส่งพัสดุคืนต้นทาง`,
+                icon: icons,
+                image: images,
+                extraData: {
+                    dateOfArrival: Date.now(),
+                    url: `/user/parcel`,
+                    primaryKey: Date.now()
                 }
             },
             actions: [

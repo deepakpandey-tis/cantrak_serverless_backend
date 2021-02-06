@@ -3,7 +3,7 @@ const knex = require('../../db/knex');
 
 
 const inAppNotification = {
-    send: async ({ orgId, senderId, receiverId, payload, actions }) => {
+    send: async ({ orgId, senderId, receiverId, payload, payloadThai, actions }) => {
         try {
             const currentTime = new Date().getTime();
 
@@ -12,6 +12,7 @@ const inAppNotification = {
                 senderId,
                 receiverId,
                 payload: JSON.stringify(payload),
+                payloadThai: JSON.stringify(payloadThai),
                 actions: JSON.stringify(actions)
             }
 
