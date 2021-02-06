@@ -47,29 +47,29 @@ const outgoingParcelNotification = {
   },
   sendInAppNotification: async (sender, receiver, data) => {
     let parcelId = data.payload.parcelId;
-    let  orgData = data.payload.orgData;
-   
+    let orgData = data.payload.orgData;
+
     let icons;
     let images;
-  //   if(orgData && orgData.id == '56'){
-  //       icons = 'assets/icons/cbre-512x512.png';
-  //       images = 'assets/icons/cbre-512x512.png';
-  //   }else if(orgData && orgData.id == '89'){
-  //     icons = 'assets/icons/senses-512x512.png';
-  //     images = 'assets/icons/senses-512x512.png';
-  // }else{
-  //       icons = 'assets/icons/icon-512x512.png';
-  //       images = 'assets/icons/icon-512x512.png';
-  //   }
+    //   if(orgData && orgData.id == '56'){
+    //       icons = 'assets/icons/cbre-512x512.png';
+    //       images = 'assets/icons/cbre-512x512.png';
+    //   }else if(orgData && orgData.id == '89'){
+    //     icons = 'assets/icons/senses-512x512.png';
+    //     images = 'assets/icons/senses-512x512.png';
+    // }else{
+    //       icons = 'assets/icons/icon-512x512.png';
+    //       images = 'assets/icons/icon-512x512.png';
+    //   }
 
-  if(orgData && orgData.organisationLogo == ''){
-    icons = 'assets/icons/icon-512x512.png';
-    images = 'assets/icons/icon-512x512.png';
-}
-else{
-    icons = orgData.organisationLogo;
-    images = orgData.organisationLogo;
-}
+    if (orgData && orgData.organisationLogo == '') {
+      icons = 'assets/icons/icon-512x512.png';
+      images = 'assets/icons/icon-512x512.png';
+    }
+    else {
+      icons = orgData.organisationLogo;
+      images = orgData.organisationLogo;
+    }
 
     data = {
       orgId: sender.orgId,
@@ -83,10 +83,22 @@ else{
         image: images,
         extraData: {
           dateOfArrival: Date.now(),
-          url: `/user/parcel/parcel-confirmation?parcels=1,2,3`,
+          url: `/user/parcel/parcel-confirmation?parcels=${parcelId}`,
           primaryKey: Date.now(),
           parcelIds: parcelId,
         },
+      },
+      payloadThai: {
+        ...data,
+        subject: 'การรับพัสด',
+        body: `มีพัสดุจัดส่งถึงคุณ`,
+        icon: icons,
+        image: images,
+        extraData: {
+          dateOfArrival: Date.now(),
+          url: `/user/parcel/parcel-confirmation?parcels=${parcelId}`,
+          primaryKey: Date.now()
+        }
       },
       actions: [
         {
@@ -100,31 +112,31 @@ else{
     return data;
   },
 
-  sendSocketNotification :async (sender ,receiver, data) =>{
+  sendSocketNotification: async (sender, receiver, data) => {
     let parcelId = data.payload.parcelId;
-    let  orgData = data.payload.orgData;
-   
+    let orgData = data.payload.orgData;
+
     let icons;
     let images;
-  //   if(orgData && orgData.id == '56'){
-  //       icons = 'assets/icons/cbre-512x512.png';
-  //       images = 'assets/icons/cbre-512x512.png';
-  //   }else if(orgData && orgData.id == '89'){
-  //     icons = 'assets/icons/senses-512x512.png';
-  //     images = 'assets/icons/senses-512x512.png';
-  // }else{
-  //       icons = 'assets/icons/icon-512x512.png';
-  //       images = 'assets/icons/icon-512x512.png';
-  //   }
+    //   if(orgData && orgData.id == '56'){
+    //       icons = 'assets/icons/cbre-512x512.png';
+    //       images = 'assets/icons/cbre-512x512.png';
+    //   }else if(orgData && orgData.id == '89'){
+    //     icons = 'assets/icons/senses-512x512.png';
+    //     images = 'assets/icons/senses-512x512.png';
+    // }else{
+    //       icons = 'assets/icons/icon-512x512.png';
+    //       images = 'assets/icons/icon-512x512.png';
+    //   }
 
-  if(orgData && orgData.organisationLogo == ''){
-    icons = 'assets/icons/icon-512x512.png';
-    images = 'assets/icons/icon-512x512.png';
-}
-else{
-    icons = orgData.organisationLogo;
-    images = orgData.organisationLogo;
-}
+    if (orgData && orgData.organisationLogo == '') {
+      icons = 'assets/icons/icon-512x512.png';
+      images = 'assets/icons/icon-512x512.png';
+    }
+    else {
+      icons = orgData.organisationLogo;
+      images = orgData.organisationLogo;
+    }
 
     data = {
       orgId: sender.orgId,
@@ -168,7 +180,7 @@ else{
       qrCode = await QRCODE.toDataURL(qrCode1);
     }
 
-    
+
     data = {
       receiverEmail: receiver.email,
       template: "outgoing-parcel-notification.ejs",
@@ -189,25 +201,25 @@ else{
 
     let icons;
     let images;
-    let  orgData = data.payload.orgData;
-  //   if(orgData && orgData.id == '56'){
-  //       icons = 'assets/icons/cbre-512x512.png';
-  //       images = 'assets/icons/cbre-512x512.png';
-  //   }else if(orgData && orgData.id == '89'){
-  //     icons = 'assets/icons/senses-512x512.png';
-  //     images = 'assets/icons/senses-512x512.png';
-  // }else{
-  //       icons = 'assets/icons/icon-512x512.png';
-  //       images = 'assets/icons/icon-512x512.png';
-  //   }
-  if(orgData && orgData.organisationLogo == ''){
-    icons = 'assets/icons/icon-512x512.png';
-    images = 'assets/icons/icon-512x512.png';
-}
-else{
-    icons = orgData.organisationLogo;
-    images = orgData.organisationLogo;
-}
+    let orgData = data.payload.orgData;
+    //   if(orgData && orgData.id == '56'){
+    //       icons = 'assets/icons/cbre-512x512.png';
+    //       images = 'assets/icons/cbre-512x512.png';
+    //   }else if(orgData && orgData.id == '89'){
+    //     icons = 'assets/icons/senses-512x512.png';
+    //     images = 'assets/icons/senses-512x512.png';
+    // }else{
+    //       icons = 'assets/icons/icon-512x512.png';
+    //       images = 'assets/icons/icon-512x512.png';
+    //   }
+    if (orgData && orgData.organisationLogo == '') {
+      icons = 'assets/icons/icon-512x512.png';
+      images = 'assets/icons/icon-512x512.png';
+    }
+    else {
+      icons = orgData.organisationLogo;
+      images = orgData.organisationLogo;
+    }
 
     data = {
       orgId: sender.orgId,
@@ -239,7 +251,7 @@ else{
   sendLineNotification: async (sender, receiver, data) => {
     data = {
       receiverId: receiver.id,
-      message: `Hi ${receiver.name} You have received a parcel,Please accept for picked up the parcels.`,
+      message: `Hi, You have received a parcel,Please accept for picked up the parcels.`,
     };
 
     return data;

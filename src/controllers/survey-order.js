@@ -183,7 +183,9 @@ const surveyOrderController = {
               url: "",
               description: `An Engineer as been appointed  for visit on ${appointmentDate} at ${appointmentTime} to Survey regarding your Service Request`,
               redirectUrl: "/user/service-request",
-              orgData: orgMaster
+              orgData: orgMaster,
+              thaiTitle: 'นัดสำรวจ',
+              thaiDetails: `นัดหมายช่างซ่อมเพื่อตรวจสอบ ในวัน ${appointmentDate} เวลา ${appointmentTime} ตามใบแจ้งคำร้องของท่านเรียบร้อย`
             },
           };
 

@@ -27,6 +27,8 @@ const serviceRequestUserAddNotification = {
         let title = data.payload.title;
         let description = data.payload.description;
         let url = data.payload.url;
+        let thaiTitle = data.payload.thaiTitle;
+        let thaiDetails = data.payload.thaiDetails;
         let orgData = data.payload.orgData;
         let icons;
         let images;
@@ -49,6 +51,18 @@ const serviceRequestUserAddNotification = {
                 ...data,
                 subject: title,
                 body: description,
+                icon: icons,
+                image: images,
+                extraData: {
+                    dateOfArrival: Date.now(),
+                    url: `/user/dashboard/home`,
+                    primaryKey: Date.now()
+                }
+            },
+            payloadThai: {
+                ...data,
+                subject: thaiTitle,
+                body: thaiDetails,
                 icon: icons,
                 image: images,
                 extraData: {

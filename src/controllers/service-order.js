@@ -2459,7 +2459,9 @@ const serviceOrderController = {
                             url: "",
                             description: `An Engineer as been appointed  for visit on ${appointmentDate} at ${appointmentTime} to Service regarding your Service Request`,
                             redirectUrl: "/user/service-request",
-                            orgData: orgMaster
+                            orgData: orgMaster,
+                            appointmentDate: appointmentDate,
+                            appointmentTime: appointmentTime
                         },
                     };
 
@@ -2500,8 +2502,9 @@ const serviceOrderController = {
                             url: "",
                             description: `A new service appointment has been created and assigned to you.`,
                             redirectUrl: "/admin/service-order",
-                            orgData: orgMaster
-
+                            orgData: orgMaster,
+                            thaiTitle: 'มอบหมายการนัดหมายบริการ',
+                            thaiDetails: 'สร้างและมอบหมายการนัดหมายบริการใหม่ให้คุณแล้ว'
                         },
                     };
 

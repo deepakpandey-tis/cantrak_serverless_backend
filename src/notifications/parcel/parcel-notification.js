@@ -58,7 +58,19 @@ const parcelNotification = {
             payload: {
                 ...data,
                 subject: 'Parcel Notification',
-                body: `Hi, You have received a parcel,Please Pick up your parcel.`,
+                body: `Hi,You have received a parcel,please come and collect.`,
+                icon: icons,
+                image: images,
+                extraData: {
+                    dateOfArrival: Date.now(),
+                    url: `/user/parcel`,
+                    primaryKey: Date.now()
+                }
+            },
+            payloadThai: {
+                ...data,
+                subject: 'แจ้งพัสดุ',
+                body: `มีพัสดุฝากส่งถึงคุณ`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -130,7 +142,7 @@ const parcelNotification = {
             receiverId: receiver.id,
             payload: {
                 subject: 'Parcel Notification',
-                body: `Hi, You have received a parcel,please come and collect.`,
+                body: `Hi,You have received a parcel,please come and collect.`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -181,7 +193,7 @@ const parcelNotification = {
             channel: 'socket-notification',
             payload: {
                 subject: 'Parcel Notification',
-                body: `Hi, You have received a parcel,please come and collect.`,
+                body: `Hi,You have received a parcel,please come and collect.`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -203,7 +215,7 @@ const parcelNotification = {
     sendLineNotification: async (sender, receiver, data) => {
         data = {
             receiverId: receiver.id,
-            message: `Hi ${receiver.name} You have received a parcel,please come and collect.`
+            message: `Hi ${receiver.name} Hi,You have received a parcel,please come and collect.`
         };
 
         return data;

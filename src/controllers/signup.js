@@ -561,7 +561,9 @@ const singupController = {
             payload: {
               title: 'Tenant signup in ' + org,
               description: 'A tenant has signed up in ' + org + ', please check the details and activate the account in order to allow the tenant to use the available services.',
-              orgData: orgMaster
+              orgData: orgMaster,
+              thaiTitle: 'ผู้เช่าลงทะเบียนใน '+ org,
+              thaiDetails: 'ลูกบ้านลงทะเบียนใหม่จากโครงการ ' + org + ', โปรดตรวจสอบข้อมูลและทำการยืนยันเพื่อให้ลูกบ้านสามารถเข้าใช้งานระบบได้'
             },
           };
 
