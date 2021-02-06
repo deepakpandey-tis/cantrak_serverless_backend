@@ -279,6 +279,12 @@ router.post(
   taskGroupController.getWorkOrderReport
 );
 
+router.post('/cancel-pm-plan',authMiddleware.isAuthenticated,
+roleMiddleware.parseUserPermission,
+resourceAccessMiddleware.isPMAccessible,
+taskGroupController.cancelPmPlan
+)
+
 
 
 module.exports = router
