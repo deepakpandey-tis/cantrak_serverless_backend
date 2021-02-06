@@ -4859,6 +4859,44 @@ const taskGroupController = {
 
         }
     },
+    // cancelPm: async (req,res) => {
+    //     try {
+    //         const id = req.body.pmId;
+    //         const cancelReason = req.body.cancelReason;
+    //         let currentTime = new Date().getTime();
+
+    //         const insertData = {
+    //             entityId: id,
+    //             entityType: 'preventive-maintenance',
+    //             description: cancelReason,
+    //             orgId: req.orgId,
+    //             createdBy: req.me.id,
+    //             createdAt: currentTime,
+    //             updatedAt: currentTime
+    //         };
+
+    //         const resultRemarksNotes = await knex
+    //         .insert(insertData)
+    //         .returning(["*"])
+    //         .into("remarks_master");
+
+    //     const updatedWorkOrder = await knex('pm_master2')
+    //         .update({ isActive: false })
+    //         .where({ id: id })
+
+    //     return res.status(200).json({
+    //         data: resultRemarksNotes,
+    //         message: 'PM cancelled successfully!'
+    //     })
+
+    //     } catch (err) {
+    //         res.status(500).json({
+    //             errors: [
+    //                 { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+    //             ],
+    //         });
+    //     }
+    // },
     generateWorkDate: async (req, res) => {
 
         try {
