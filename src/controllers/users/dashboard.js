@@ -9,6 +9,7 @@ const moment = MomentRange.extendMoment(Moment);
 const uuidv4 = require("uuid/v4");
 var jwt = require("jsonwebtoken");
 const _ = require("lodash");
+const { orWhere, select } = require("../../db/knex");
 
 
 
@@ -155,6 +156,14 @@ const dashboardController = {
             let announcementTitle;
             let approvalUrl;
 
+            // console.log("houseId====>>>>",req.me)
+            let projectId = await knex
+            .from("property_units")
+            .select("property_units.projectId")
+            .whereIn("property_units.id",req.me.houseIds)
+            .first()
+
+            // console.log("project id=======>>>>>>>>>",projectId)
 
             announcement = await knex
                 .from("announcement_master")
@@ -170,6 +179,14 @@ const dashboardController = {
                     "announcement_master.status": true,
                     "announcement_master.userType": 2
                 })
+                .orWhere({
+                    "announcement_master.savedStatus": 2,
+                    "announcement_user_master.orgId": req.orgId,
+                    "announcement_master.status": true,
+                    "announcement_master.userType": 3,
+                    "announcement_master.isGeneral":true
+                })
+                .whereRaw('? = ANY("announcement_master"."projectId")',[projectId.projectId])
                 .select(
                     "announcement_master.id as Id",
                     "announcement_master.title as titles",

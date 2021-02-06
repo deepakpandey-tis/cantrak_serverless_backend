@@ -64,6 +64,7 @@ const announcementController = {
             Joi.number().allow(null).optional()
           ),
           teamId: Joi.array().items(Joi.number().allow(null).optional()),
+          isGeneral:Joi.boolean().required()
         });
 
         let result = Joi.validate(payload, schema);
@@ -178,7 +179,7 @@ const announcementController = {
     try {
       let userId = req.body.userId;
       let id = req.body.id;
-
+      
       let ALLOWED_CHANNELS = [];
       if (req.body.email == true) {
         ALLOWED_CHANNELS.push("EMAIL");
@@ -586,6 +587,7 @@ const announcementController = {
             "announcement_master.floorZoneId",
             "announcement_master.propertyUnitId",
             "announcement_master.teamId",
+            "announcement_master.isGeneral"
           ])
           .where("announcement_master.id", id)
           .first(),
