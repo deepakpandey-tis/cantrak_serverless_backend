@@ -1723,6 +1723,36 @@ const customerController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
     }
+  },
+  getTenantListByProject:async(req,res)=>{
+    try {
+      let projectId =  req.body.projectId
+      let orgId = req.orgId
+
+      let tenantList = await knex("user_house_allocation")
+      .leftJoin("users", "user_house_allocation.userId", "users.id")
+      .leftJoin("property_units","user_house_allocation.houseId","property_units.id")
+      // .leftJoin("projects","property_units.projectId","projects.id")
+      .select(["users.name", "users.id"])
+      .whereIn("property_units.projectId",projectId)
+      .where({"user_house_allocation.orgId":orgId, "users.isActive": true});
+
+      let tenant = _.uniqBy(tenantList, "id");
+
+      return res.status(200).json({
+        data: {
+          tenants: tenant,
+        },
+        message: " Tenant list"
+
+      });
+
+
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
   }
 };
 
