@@ -28,6 +28,9 @@ const serviceAppointmentNotification = {
         let description = data.payload.description;
         let url = data.payload.url;
         let orgData = data.payload.orgData;
+        let appointmentDate = data.payload.appointmentDate;
+        let appointmentTime = data.payload.appointmentTime;
+        
         let icons;
         let images;
         // if (orgData && orgData.id == '56') {
@@ -59,6 +62,18 @@ const serviceAppointmentNotification = {
                 ...data,
                 subject: title,
                 body: description,
+                icon: icons,
+                image: images,
+                extraData: {
+                    dateOfArrival: Date.now(),
+                    url: `/user/dashboard/home`,
+                    primaryKey: Date.now()
+                }
+            },
+            payloadThai: {
+                ...data,
+                subject: 'นัดหมายบริการ',
+                body: `นัดหมายช่างซ่อมเพื่อทำการแก้ไข ในวัน ${appointmentDate} เวลา ${appointmentTime} ตามใบแจ้งคำร้องของท่านเรียบร้อย`,
                 icon: icons,
                 image: images,
                 extraData: {

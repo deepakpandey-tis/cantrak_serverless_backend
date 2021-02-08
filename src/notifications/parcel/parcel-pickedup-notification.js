@@ -47,14 +47,26 @@ const parcelPickedUpNotification = {
             payload: {
                 ...data,
                 subject: 'Parcel Picked Up',
-                body: `Hi, Your parcel picked up.`,
+                body: `Hi,Your parcel picked up.`,
                 icon: icons,
                 image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `/user/parcel/parcel-confirmation?parcels=1,2,3`,
+                    url: `/user/parcel`,
                     primaryKey: Date.now(),
                     parcelIds:parcelId
+                }
+            },
+            payloadThai: {
+                ...data,
+                subject: 'รับพัสด',
+                body: `รับพัสดุเรียบร้อย`,
+                icon: icons,
+                image: images,
+                extraData: {
+                    dateOfArrival: Date.now(),
+                    url: `/user/parcel`,
+                    primaryKey: Date.now()
                 }
             },
             actions: [
@@ -93,7 +105,7 @@ const parcelPickedUpNotification = {
             payload: {
                 ...data,
                 subject: 'Parcel Picked Up',
-                body: `Hi, Your parcel picked up.`,
+                body: `Hi,Your parcel picked up.`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -164,7 +176,7 @@ const parcelPickedUpNotification = {
             receiverId: receiver.id,
             payload: {
                 subject: 'Parcel Picked up',
-                body: `Hi, "Your parcel picked up.`,
+                body: `Hi,Your parcel picked up.`,
                 icon: icons,
                 image: images,
                 extraData: {
