@@ -756,6 +756,10 @@ const taskGroupController = {
 
             })
 
+            let updateAssetMaster = await knex('asset_master')
+            .update({isEngaged:true})
+            .whereIn("id",payload[0].assets)
+
             let updatemaster = await knex('pm_master2')
                 .update({ isActive: true })
                 .where({ id: payload[0].pmId });
@@ -4864,6 +4868,8 @@ const taskGroupController = {
             const id = req.body.pmId;
             const cancelReason = req.body.cancelReason;
             let currentTime = new Date().getTime();
+            let assets = []
+
 
             const insertData = {
                 entityId: id,
@@ -4874,6 +4880,20 @@ const taskGroupController = {
                 createdAt: currentTime,
                 updatedAt: currentTime
             };
+
+        let assetId = await knex('task_group_schedule_assign_assets')
+        .leftJoin('asset_location','task_group_schedule_assign_assets.assetId','asset_location.assetId')
+        .leftJoin('task_group_schedule','task_group_schedule_assign_assets.scheduleId','task_group_schedule.id')
+        .leftJoin('pm_master2','task_group_schedule.pmId','pm_master2.id')
+        .select(['asset_location.assetId'])
+        .where('pm_master2.id',id)
+        
+        assetId = _.uniqBy(assetId,"assetId")
+
+        assets = assetId.map(a=>{
+            return a.assetId;
+        })
+
 
             const resultRemarksNotes = await knex
             .insert(insertData)
@@ -4904,7 +4924,7 @@ const taskGroupController = {
             .select("task_group_schedule.id")
             .where("task_group_schedule.pmId",id)
 
-            console.log("task group id=====>>>>",taskGroupId[0].id)
+            // console.log("task group id=====>>>>",taskGroupId[0].id)
 
 
 
@@ -4912,8 +4932,16 @@ const taskGroupController = {
         .update({isActive: false, status: 'C'})
         .where({scheduleId:taskGroupId[0].id,status:'O'})
 
+        
+        // console.log("asset Id for cancellation=====>>>>>",assets)
+
+        let updateAssetMaster = await knex('asset_master')
+        .update({isEngaged:false})
+        .whereIn('asset_master.id',assets)
+        
+
         return res.status(200).json({
-            data: {resultRemarksNotes,resultWORemarksNotes},
+            // data: {resultRemarksNotes,resultWORemarksNotes},
             message: 'PM cancelled successfully!'
         })
 

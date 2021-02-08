@@ -1255,6 +1255,7 @@ const propertyUnitController = {
       let propertyUnit = await knex("property_units")
         .where({ "property_units.isActive": true, "property_units.orgId": orgId })
         .whereIn("property_units.floorZoneId", floorZoneId)
+        .where("property_units.type",1)
         .select("*")
         .orderBy("property_units.description", "asc")
 

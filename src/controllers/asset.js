@@ -535,7 +535,8 @@ const assetController = {
                             "projects.project",
                             "projects.projectName",
                             "asset_master.displayId as AsNo",
-                            "asset_master.assetCode"
+                            "asset_master.assetCode",
+                            "asset_master.isEngaged"
                         ])
                         .where({ 'asset_master.orgId': req.orgId })
                         .where(qb => {
@@ -845,8 +846,8 @@ const assetController = {
                             "asset_master.model",
                             "asset_master.barcode",
                             "asset_master.areaName", "assetSerial",
+                            "asset_master.isEngaged",
                             'asset_location.id as locationId',
-                            // 'asset_location.isSelected',
                             'companies.companyName',
                             'projects.projectName',
                             'buildings_and_phases.buildingPhaseCode',
@@ -1084,6 +1085,7 @@ const assetController = {
                             "asset_master.model",
                             "asset_master.barcode",
                             "asset_master.areaName", "assetSerial",
+                            "asset_master.isEngaged"
 
                         ])
                         
