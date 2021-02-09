@@ -96,7 +96,8 @@ const approvalNotification = {
             templateData: {
                 fullName: receiver.name,
                 title: 'Service Request assigned',
-                description: `A new service request has been assigned to you by ${sender.name}`
+                description: `A new service request has been assigned to you by ${sender.name}`,
+                orgId:receiver.orgId
             },
             payload: {
                 ...data,

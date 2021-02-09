@@ -95,6 +95,7 @@ const sendSQSMessage = async (messageBody) => {
 
 const emailHelper = {
     sendTemplateEmail: async ({ to, subject, template, templateData, orgId }) => {
+        console.log("template data======>>>>>",templateData.orgId)
         try {
             var layout;
             console.log('[helpers][email][sendTemplateEmail] To:', to);
@@ -117,7 +118,7 @@ const emailHelper = {
             }
 
             let orgMaster = await knex('organisations').select('organisationName','organisationLogo')
-                .where({ id: orgId, isActive: true }).first();
+                .where({ id: templateData.orgId, isActive: true }).first();
                 console.log("orgMasterData", orgMaster);
 
             if(orgMaster.organisationLogo == ''){
