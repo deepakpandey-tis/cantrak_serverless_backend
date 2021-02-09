@@ -60,6 +60,8 @@ const bookingCanceledNotification = {
                 ...data,
                 subject: 'Facility Booking Canceled',
                 body: `Hi, ${receiver.name} Your Booking in Facility ${data.payload.facility} made for ${data.payload.date} at ${data.payload.time} is canceled.`,
+                subjectThai: 'ยกเลิกการจองสิ่งอำนวยความสะดวก',
+                bodyThai: `สวัสดี ${receiver.name} การจองของคุณในสิ่งอำนวยความสะดวก ${data.payload.facility} สำหรับ ${data.payload.date} ที่ ${data.payload.time} ถูกยกเลิก.`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -67,19 +69,7 @@ const bookingCanceledNotification = {
                     url: `/user/facility/your-bookings`,
                     primaryKey: Date.now()
                 }
-            },
-            payloadThai: {
-                ...data,
-                subject: 'ยกเลิกการจองสิ่งอำนวยความสะดวก',
-                body: `สวัสดี ${receiver.name} การจองของคุณในสิ่งอำนวยความสะดวก ${data.payload.facility} สำหรับ ${data.payload.date} ที่ ${data.payload.time} ถูกยกเลิก.`,
-                icon: icons,
-                image: images,
-                extraData: {
-                    dateOfArrival: Date.now(),
-                    url: `/user/facility/your-bookings`,
-                    primaryKey: Date.now()
-                }
-            },
+            },            
             actions: [
                 {
                     action: "explore",
@@ -193,6 +183,8 @@ const bookingCanceledNotification = {
                 ...data,
                 subject: 'Facility Booking Canceled',
                 body: `Hi, ${receiver.name} Your Booking in Facility ${data.payload.facility} made for ${data.payload.date} at ${data.payload.time} is canceled.`,
+                subjectThai: 'ยกเลิกการจองสิ่งอำนวยความสะดวก',
+                bodyThai: `สวัสดี ${receiver.name} การจองของคุณในสิ่งอำนวยความสะดวก ${data.payload.facility} สำหรับ ${data.payload.date} ที่ ${data.payload.time} ถูกยกเลิก.`,
                 icon: icons,
                 image: images,
                 extraData: {

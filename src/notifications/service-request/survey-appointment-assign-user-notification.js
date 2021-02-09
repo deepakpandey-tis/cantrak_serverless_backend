@@ -52,18 +52,8 @@ const surveyAppointmentAssignUserNotification = {
                 ...data,
                 subject: title,
                 body: description,
-                icon: icons,
-                image: images,
-                extraData: {
-                    dateOfArrival: Date.now(),
-                    url: `/user/dashboard/home`,
-                    primaryKey: Date.now()
-                }
-            },
-            payloadThai: {
-                ...data,
-                subject: thaiTitle,
-                body: thaiDetails,
+                subjectThai: thaiTitle,
+                bodyThai: thaiDetails,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -162,6 +152,9 @@ const surveyAppointmentAssignUserNotification = {
         let description = data.payload.description;
         let url = data.payload.url;
         let orgData = data.payload.orgData;
+        let thaiTitle = data.payload.thaiTitle;
+        let thaiDetails = data.payload.thaiDetails;
+        
         let icons;
         let images;
         if (orgData && orgData.id == '56') {
@@ -185,6 +178,8 @@ const surveyAppointmentAssignUserNotification = {
                 ...data,
                 subject: title,
                 body: description,
+                subjectThai: thaiTitle,
+                bodyThai: thaiDetails,
                 icon: icons,
                 image: images,
                 extraData: {
