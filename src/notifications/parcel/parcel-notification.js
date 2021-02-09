@@ -92,16 +92,19 @@ const parcelNotification = {
     },
 
     sendEmailNotification: async (sender, receiver, data) => {
+        console.log("parcel reciever data====>>>>>",receiver)
         data = {
             receiverEmail: receiver.email,
             template: 'parcel-notification.ejs',
             templateData: {
-                fullName: receiver.name
+                fullName: receiver.name,
+                orgId:receiver.orgId
             },
             payload: {
                 ...data,
                 subject: 'Parcel Email Notification',
-            }
+            },
+            
         };
 
         return data;

@@ -23,7 +23,7 @@ const serviceRequestUserAddNotification = {
     },
 
     sendInAppNotification: async (sender, receiver, data) => {
-        console.log("Site data====>>>>",data.payload)
+        console.log("Site reciever data====>>>>",receiver)
         let title = data.payload.title;
         let description = data.payload.description;
         let url = data.payload.url;
@@ -90,18 +90,21 @@ const serviceRequestUserAddNotification = {
         let title = data.payload.title;
         let description = data.payload.description;
         let url = data.payload.url;
+        console.log("notification emails ====>>>>",receiver)
         data = {
             receiverEmail: receiver.email,
             template: 'service-request.ejs',
             templateData: {
                 fullName: receiver.name,
                 description: description,
-                title: title
+                title: title,
+                orgId:receiver.orgId
             },
             payload: {
                 ...data,
                 subject: 'Service Request created',
-            }
+            },
+            orgId:receiver.orgId
         };
 
         return data;

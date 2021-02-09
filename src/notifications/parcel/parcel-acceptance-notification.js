@@ -126,7 +126,8 @@ const parcelAcceptanceNotification = {
             receiverEmail: receiver.email,
             template: 'test-email.ejs',
             templateData: {
-                fullName: receiver.name
+                fullName: receiver.name,
+                orgId:receiver.orgId
             },
             payload: {
                 ...data,

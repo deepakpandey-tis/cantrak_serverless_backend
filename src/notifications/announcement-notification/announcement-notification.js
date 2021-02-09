@@ -81,7 +81,8 @@ const announcementNotification = {
             templateData: {
                 fullName: receiver.name,
                 description:description,
-                title:title
+                title:title,
+                orgId:receiver.orgId
             },
             payload: {
                 ...data,
