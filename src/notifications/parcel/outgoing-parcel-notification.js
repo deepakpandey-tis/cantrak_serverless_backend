@@ -68,6 +68,8 @@ const outgoingParcelNotification = {
         ...data,
         subject: "Parcel Acceptation",
         body: `Hi, You have received a parcel,Please accept for picked up the parcels.`,
+        subjectThai: 'การรับพัสด',
+        bodyThai: `มีพัสดุจัดส่งถึงคุณ`,
         icon: icons,
         image: images,
         extraData: {
@@ -76,19 +78,7 @@ const outgoingParcelNotification = {
           primaryKey: Date.now(),
           parcelIds: parcelId,
         },
-      },
-      payloadThai: {
-        ...data,
-        subject: 'การรับพัสด',
-        body: `มีพัสดุจัดส่งถึงคุณ`,
-        icon: icons,
-        image: images,
-        extraData: {
-          dateOfArrival: Date.now(),
-          url: `/user/parcel/parcel-confirmation?parcels=${parcelId}`,
-          primaryKey: Date.now()
-        }
-      },
+      },     
       actions: [
         {
           action: "explore",
@@ -125,6 +115,8 @@ const outgoingParcelNotification = {
         ...data,
         subject: "Parcel Acceptation",
         body: `Hi, You have received a parcel,Please accept for picked up the parcels.`,
+        subjectThai: 'การรับพัสด',
+        bodyThai: `มีพัสดุจัดส่งถึงคุณ`,
         icon: icons,
         image: images,
         extraData: {
@@ -142,7 +134,6 @@ const outgoingParcelNotification = {
         },
       ],
     };
-
     return data;
   },
 

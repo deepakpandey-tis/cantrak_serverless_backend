@@ -45,6 +45,8 @@ const parcelAcceptanceNotification = {
                 ...data,
                 subject: 'Parcel Acceptation',
                 body: `Hi,Parcel pickup confirmation is pending please confirm to complete the process.`,
+                subjectThai: 'การรับพัสด',
+                bodyThai: `การยืนยันรับพัสดุยังไม่เสร็จสิ้น โปรดรีบดำเนินการ`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
@@ -53,19 +55,7 @@ const parcelAcceptanceNotification = {
                     primaryKey: Date.now(),
                     parcelIds: parcelId
                 }
-            },
-            payloadThai: {
-                ...data,
-                subject: 'การรับพัสด',
-                body: `การยืนยันรับพัสดุยังไม่เสร็จสิ้น โปรดรีบดำเนินการ`,
-                icon: icons,
-                image: images,
-                extraData: {
-                    dateOfArrival: Date.now(),
-                    url: `/user/parcel/parcel-confirmation?parcels=${parcelId}`,
-                    primaryKey: Date.now()
-                }
-            },
+            },            
             actions: [
                 {
                     action: "explore",
@@ -100,6 +90,8 @@ const parcelAcceptanceNotification = {
                 ...data,
                 subject: 'Parcel Acceptation',
                 body: `Hi,Parcel pickup confirmation is pending please confirm to complete the process.`,
+                subjectThai: 'การรับพัสด',
+                bodyThai: `การยืนยันรับพัสดุยังไม่เสร็จสิ้น โปรดรีบดำเนินการ`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {

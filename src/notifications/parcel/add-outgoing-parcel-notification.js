@@ -50,6 +50,8 @@ const addOutGoingNotification = {
                 ...data,
                 subject: 'Parcel Notification',
                 body: `Hi, ${receiver.name} your outgoing parcel is added.`,
+                subjectThai: 'แจ้งพัสด',
+                bodyThai: `พัสดุฝากส่งของคุณ ${receiver.name} รับเข้าระบบเรียบร้อยแล้ว`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -57,19 +59,7 @@ const addOutGoingNotification = {
                     url: `/user/dashboard/home`,
                     primaryKey: Date.now()
                 }
-            },
-            payloadThai: {
-                ...data,
-                subject: 'แจ้งพัสด',
-                body: `พัสดุฝากส่งของคุณ ${receiver.name} รับเข้าระบบเรียบร้อยแล้ว`,
-                icon: icons,
-                image: images,
-                extraData: {
-                    dateOfArrival: Date.now(),
-                    url: `/user/dashboard/home`,
-                    primaryKey: Date.now()
-                }
-            },
+            },            
             actions: [
                 {
                     action: "explore",
@@ -164,6 +154,8 @@ const addOutGoingNotification = {
                 ...data,
                 subject: 'Parcel Notification',
                 body: `Hi, ${receiver.name} your outgoing parcel is added.`,
+                subjectThai: 'แจ้งพัสด',
+                bodyThai: `พัสดุฝากส่งของคุณ ${receiver.name} รับเข้าระบบเรียบร้อยแล้ว`,
                 icon: icons,
                 image: images,
                 extraData: {

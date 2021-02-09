@@ -48,6 +48,8 @@ const parcelPickedUpNotification = {
                 ...data,
                 subject: 'Parcel Picked Up',
                 body: `Hi,Your parcel picked up.`,
+                subjectThai: 'รับพัสด',
+                bodyThai: `รับพัสดุเรียบร้อย`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -56,19 +58,7 @@ const parcelPickedUpNotification = {
                     primaryKey: Date.now(),
                     parcelIds:parcelId
                 }
-            },
-            payloadThai: {
-                ...data,
-                subject: 'รับพัสด',
-                body: `รับพัสดุเรียบร้อย`,
-                icon: icons,
-                image: images,
-                extraData: {
-                    dateOfArrival: Date.now(),
-                    url: `/user/parcel`,
-                    primaryKey: Date.now()
-                }
-            },
+            },            
             actions: [
                 {
                     action: "explore",
@@ -106,6 +96,8 @@ const parcelPickedUpNotification = {
                 ...data,
                 subject: 'Parcel Picked Up',
                 body: `Hi,Your parcel picked up.`,
+                subjectThai: 'รับพัสด',
+                bodyThai: `รับพัสดุเรียบร้อย`,
                 icon: icons,
                 image: images,
                 extraData: {
