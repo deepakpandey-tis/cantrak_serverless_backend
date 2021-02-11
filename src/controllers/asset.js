@@ -637,14 +637,23 @@ const assetController = {
                 .leftJoin('task_group_schedule','task_group_schedule_assign_assets.scheduleId','task_group_schedule.id')
                 .leftJoin('pm_master2','task_group_schedule.pmId','pm_master2.id')
                 .select([
-                    'pm_master2.name as pmName'
+                    'pm_master2.name as pmName',
+                    'pm_master2.id as pmId'
                 ])
-                .where('task_group_schedule_assign_assets.assetId',pd.ID)
+                .where({'task_group_schedule_assign_assets.assetId':pd.ID,'pm_master2.isActive':true})
                 // .where('asset_location.id',pd.locationId)
-                .limit(1)
-                .first()
+                // .limit(1)
+                // .first()
+                let pmName = []
+                assetAssignedPm = _.uniqBy(assetAssignedPm,"pmId")
 
-                return {...pd,...assetAssignedPm}
+                assetAssignedPm = assetAssignedPm.map(d=>{
+                   return d.pmName;
+                })
+                console.log("PM data for assets=====>>>>>",assetAssignedPm)
+                pmName.push(assetAssignedPm)
+
+                return {...pd,...pmName}
             })
 
             console.log("pagination data====>>>>>",pagination)
@@ -1004,19 +1013,26 @@ const assetController = {
                 console.log("if building called======>>>>")
                 const Parallel = require('async-parallel')
                 const rowsWithSelectedAssets = await Parallel.map(rows,async row =>{
-                    const pm = await knex('task_group_schedule_assign_assets')
+                    let pm = await knex('task_group_schedule_assign_assets')
                     .leftJoin('asset_location','task_group_schedule_assign_assets.assetId','asset_location.assetId')
                     .leftJoin('task_group_schedule','task_group_schedule_assign_assets.scheduleId','task_group_schedule.id')
                     .leftJoin('pm_master2','task_group_schedule.pmId','pm_master2.id')
                     .select([
                         'pm_master2.name as pmName'
                     ])
-                    .where('task_group_schedule_assign_assets.assetId',row.id)
-                    .where('asset_location.id',row.locationId)
-                    .limit(1)
-                    .first()
-
-                    return {...row,...pm}
+                    // .where('pm_master2.isActive',)
+                    .where({'task_group_schedule_assign_assets.assetId':row.id,'pm_master2.isActive':true,'asset_location.id':row.locationId})
+                    // .where('asset_location.id',row.locationId)
+                    // .limit(1)
+                    // .first()
+                    let pmName = []
+                    pm = _.uniqBy(pm,"PmId")
+                    pm = pm.map(d=>{
+                        return d.pmName;
+                    })
+                    pmName.push(pm)
+                    console.log("pm data=====>>>>",pmName)
+                    return {...row,...pmName}
  
                 })
                 console.log("Value of rows Id=======>>>>>>",rowsId )
@@ -1266,19 +1282,26 @@ const assetController = {
                 })
 
                 const rowsWithSelectedAssets = await Parallel.map(rowsWithLocations,async row =>{
-                    const pm = await knex('task_group_schedule_assign_assets')
+                    let pm = await knex('task_group_schedule_assign_assets')
                     .leftJoin('asset_location','task_group_schedule_assign_assets.assetId','asset_location.assetId')
                     .leftJoin('task_group_schedule','task_group_schedule_assign_assets.scheduleId','task_group_schedule.id')
                     .leftJoin('pm_master2','task_group_schedule.pmId','pm_master2.id')
                     .select([
-                        'pm_master2.name as pmName'
+                        'pm_master2.name as pmName',
+                        'pm_master2.id as PmId'
                     ])
-                    .where('task_group_schedule_assign_assets.assetId',row.id)
-                    .where('asset_location.id',row.locationId)
-                    .limit(1)
-                    .first()
-
-                    return {...row,...pm}
+                    .where({'task_group_schedule_assign_assets.assetId':row.id,'asset_location.id':row.locationId,'pm_master2.isActive':true})
+                    // .where('asset_location.id',row.locationId)
+                    // .limit(1)
+                    // .first()
+                    let pmName = []
+                    pm = _.uniqBy(pm,"PmId")
+                    pm = pm.map(d=>{
+                        return d.pmName;
+                    })
+                    pmName.push(pm)
+                    console.log("pm data=====>>>>",pmName)
+                    return {...row,...pmName}
  
                 })
 
@@ -1542,8 +1565,6 @@ const assetController = {
 
             //   }serviceOrders
             // }
-
-
             res.status(200).json({
                 data: { asset: { ...omitedAssetDataResult, additionalAttributes, files, partData, images, assetLocation, qrcode, serviceOrders: service_orders, teamName: team ? team.teamName : '', UserName: user ? user.name : '' } },
                 message: "Asset Details",
