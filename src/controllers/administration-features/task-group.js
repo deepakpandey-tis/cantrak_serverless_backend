@@ -11,7 +11,9 @@ const path = require("path");
 const moment = require("moment-timezone");
 
 const emailHelper = require("../../helpers/email");
-const creatPmHelper = require("../../helpers/preventive-maintenance")
+const creatPmHelper = require("../../helpers/preventive-maintenance");
+
+
 const taskGroupController = {
   // Create Task Group Template
   createTaskGroupTemplate: async (req, res) => {
@@ -553,40 +555,37 @@ const taskGroupController = {
 
       let consolidatedWorkOrders = req.body.consolidatedWorkOrders;
 
-      console.log("consolidated work orders======>>>>>>",consolidatedWorkOrders)
+      console.log("consolidated work orders======>>>>>>", consolidatedWorkOrders)
       let workOrderLength;
-      for(let i = 0; i < consolidatedWorkOrders.length; i++){
-        for(let j = 0; j < consolidatedWorkOrders[i].assets.length; j++){
-          workOrderLength = i*j
+      for (let i = 0; i < consolidatedWorkOrders.length; i++) {
+        for (let j = 0; j < consolidatedWorkOrders[i].assets.length; j++) {
+          workOrderLength = i * j
         }
       }
 
-      console.log("work order length======>>>>>",workOrderLength)
+      console.log("work order length======>>>>>", workOrderLength)
 
-      if(workOrderLength <= 50){
-       pmWorkOrder = await creatPmHelper.createWorkOrders({consolidatedWorkOrders,payload,orgId});
-      }else{
-        console.log("Work order number is > 50")
+      if (workOrderLength <= 50) {
+        pmWorkOrder = await creatPmHelper.createWorkOrders({ consolidatedWorkOrders, payload, orgId });
+        console.log("pmWorkOrder result ======>>>>>", pmWorkOrder);
+
+        return res.status(200).json({
+          data: { pmWorkOrder },
+          message: "Create Pm Task Group Schedule Successfully!",
+        });
+
+      } else {
+        console.log("Work order length is > 50");
+        // Import SQS Helper..
+        const queueHelper = require('../../helpers/queue');
+        await queueHelper.addToQueue({ consolidatedWorkOrders, payload, orgId, requestedBy: req.me }, 'long-jobs', 'PM_WORK_ORDER_GENERATE');
+
+        return res.status(200).json({
+          message: "Request is accepted and is being processed. We will notify you once it it done.",
+        });
+
       }
 
-      console.log("pmWorkOrder result ======>>>>>",pmWorkOrder)
-
-
-      
-      return res.status(200).json({
-        data: {
-        //   templateData: createTemplate,
-        //   taskTemplateData: createTemplateTask,
-        //   pmTaskGroupData: createPmTaskGroup,
-        //   assignedAdditionalUserData: assignedAdditionalUser,
-        //   assignedServiceTeamData: assignedServiceTeam,
-        //   taskScheduleData: taskSchedule,
-        //   assetResultData: assetResults,
-        //   createdPmTasks: createPmTask,
-        //   partResult: partResult,
-        },
-        message: "Create Pm Task Group Schedule Successfully!",
-      });
     } catch (err) {
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
@@ -2647,19 +2646,19 @@ const taskGroupController = {
           key = cur["pmId"] + cur["pmDate"];
           acc[key] = acc[key]
             ? Object.assign({}, acc[key], {
-                repeatPeriod: (
-                  acc[key]["repeatPeriod"] +
-                  "," +
-                  cur["repeatPeriod"]
-                )
-                  .split(",")
-                  .filter((d, index, arr) => arr.indexOf(d) === index)
-                  .join(","),
-                workOrderId: (Array.isArray(acc[key]["workOrderId"])
-                  ? acc[key]["workOrderId"].concat([cur["workOrderId"]])
-                  : [acc[key]["workOrderId"], cur["workOrderId"]]
-                ).filter((d, index, arr) => arr.indexOf(d) === index),
-              })
+              repeatPeriod: (
+                acc[key]["repeatPeriod"] +
+                "," +
+                cur["repeatPeriod"]
+              )
+                .split(",")
+                .filter((d, index, arr) => arr.indexOf(d) === index)
+                .join(","),
+              workOrderId: (Array.isArray(acc[key]["workOrderId"])
+                ? acc[key]["workOrderId"].concat([cur["workOrderId"]])
+                : [acc[key]["workOrderId"], cur["workOrderId"]]
+              ).filter((d, index, arr) => arr.indexOf(d) === index),
+            })
             : cur;
           return acc;
         }, {})
@@ -5055,7 +5054,7 @@ const taskGroupController = {
       });
     }
   },
-  importTaskGroup: async (req, res) => {},
+  importTaskGroup: async (req, res) => { },
   togglePmTemplateStatus: async (req, res) => {
     try {
       const id = req.body.id;
@@ -5252,7 +5251,7 @@ const taskGroupController = {
         data: deletedWorkOrder,
         message: "Deleted Work order successfully!",
       });
-    } catch (err) {}
+    } catch (err) { }
   },
 
   cancelWorkOrder: async (req, res) => {
@@ -5284,7 +5283,7 @@ const taskGroupController = {
         data: resultRemarksNotes,
         message: "Work order cancelled successfully!",
       });
-    } catch (err) {}
+    } catch (err) { }
   },
   cancelPmPlan: async (req, res) => {
     try {
@@ -5364,26 +5363,26 @@ const taskGroupController = {
       // console.log("asset Id for cancellation=====>>>>>",assets)
 
       let assetAssignedPm = await knex.from('task_group_schedule_assign_assets')
-      .leftJoin('asset_location','task_group_schedule_assign_assets.assetId','asset_location.assetId')
-      .leftJoin('task_group_schedule','task_group_schedule_assign_assets.scheduleId','task_group_schedule.id')
-      .leftJoin('pm_master2','task_group_schedule.pmId','pm_master2.id')
-      .select([
+        .leftJoin('asset_location', 'task_group_schedule_assign_assets.assetId', 'asset_location.assetId')
+        .leftJoin('task_group_schedule', 'task_group_schedule_assign_assets.scheduleId', 'task_group_schedule.id')
+        .leftJoin('pm_master2', 'task_group_schedule.pmId', 'pm_master2.id')
+        .select([
           'pm_master2.name as pmName',
           'pm_master2.id as pmId'
-      ])
-      .whereIn('task_group_schedule_assign_assets.assetId',assets)
-      .where({'pm_master2.isActive':true})
+        ])
+        .whereIn('task_group_schedule_assign_assets.assetId', assets)
+        .where({ 'pm_master2.isActive': true })
 
-      assetAssignedPm = _.uniqBy(assetAssignedPm,"pmId")
+      assetAssignedPm = _.uniqBy(assetAssignedPm, "pmId")
 
-      console.log("total pm data====>>>>",assetAssignedPm.length)
-      if(assetAssignedPm.length == 0){
+      console.log("total pm data====>>>>", assetAssignedPm.length)
+      if (assetAssignedPm.length == 0) {
         let updateAssetMaster = await knex("asset_master")
-        .update({ isEngaged: false })
-        .whereIn("asset_master.id", assets);
+          .update({ isEngaged: false })
+          .whereIn("asset_master.id", assets);
 
       }
-   
+
       return res.status(200).json({
         // data: {resultRemarksNotes,resultWORemarksNotes},
         message: "PM cancelled successfully!",
