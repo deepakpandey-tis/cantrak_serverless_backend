@@ -158,3 +158,4 @@ const createPmLongJobsNotification = {
 
 
 }
+module.exports = createPmLongJobsNotification;
