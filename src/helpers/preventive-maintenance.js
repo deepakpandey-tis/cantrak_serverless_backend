@@ -20,6 +20,7 @@ const pmHelper = {
       let assetResults = [];
       let createPmTask = [];
       let partResult = [];
+      let assignedAdditionalUser;
 
       await knex("pm_master2")
         .update({
@@ -96,7 +97,7 @@ const pmHelper = {
               insertAssignedAdditionalUserData,
               "entityId"
             );
-            let assignedAdditionalUser = await knex
+             assignedAdditionalUser = await knex
               .insert(insertAssignedAdditionalUserData)
               .returning(["*"])
               .transacting(trx)

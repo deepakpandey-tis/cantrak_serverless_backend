@@ -555,15 +555,12 @@ const taskGroupController = {
 
       let consolidatedWorkOrders = req.body.consolidatedWorkOrders;
 
-      console.log("consolidated work orders======>>>>>>", consolidatedWorkOrders)
-      let workOrderLength;
+      let workOrderLength = 0
       for (let i = 0; i < consolidatedWorkOrders.length; i++) {
-        for (let j = 0; j < consolidatedWorkOrders[i].assets.length; j++) {
-          workOrderLength = i * j
-        }
+        workOrderLength = workOrderLength + consolidatedWorkOrders[i].assets.length
       }
 
-      console.log("work order length======>>>>>", workOrderLength)
+      console.log("work order lengths======>>>>>", workOrderLength)
 
       if (workOrderLength <= 50) {
         pmWorkOrder = await creatPmHelper.createWorkOrders({ consolidatedWorkOrders, payload, orgId });
