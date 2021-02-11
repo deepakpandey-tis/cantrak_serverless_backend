@@ -11,7 +11,7 @@ const path = require("path");
 const moment = require("moment-timezone");
 
 const emailHelper = require("../../helpers/email");
-
+const creatPmHelper = require("../../helpers/preventive-maintenance")
 const taskGroupController = {
   // Create Task Group Template
   createTaskGroupTemplate: async (req, res) => {
@@ -483,22 +483,9 @@ const taskGroupController = {
   // CREATE PM TASK GROUP SCHEDULE
   createPmTaskgroupSchedule: async (req, res) => {
     try {
-      // console.log("Consolidated work orders in body 2", req.body.taskGroups.startDateTime)
-
-      let createTemplateTask = null;
-      let createTemplate = null;
-      let createPM = null;
-      let createPmTaskGroup = null;
-      let assignedServiceTeam = null;
-      let taskSchedule = null;
-      let assignedAdditionalUser = null;
-      let assetResults = [];
-      let createPmTask = [];
-      let partResult = [];
-
-      // let payload = req.body.taskGroups
+      let orgId = req.orgId;
+      let pmWorkOrder;
       let payload = req.body.taskGroups;
-      // let payload = _.omit(req.body,['additionalUsers','repeatOn','tasks','workOrderDates'])
 
       let currentDate = moment().format("YYYY-MM-DD");
       console.log("current date", payload.startDateTime);
@@ -564,356 +551,39 @@ const taskGroupController = {
         });
       }
 
-      const consolidatedWorkOrders = req.body.consolidatedWorkOrders;
-      // console.log('Consolidated Work Orders:', consolidatedWorkOrders);
+      let consolidatedWorkOrders = req.body.consolidatedWorkOrders;
 
-      /// Testing...
-      // return res.status(200).json({
-      //     errors: [{ code: "TEST", data: { consolidatedWorkOrders: consolidatedWorkOrders } }]
-      // });
-
-      await knex("pm_master2")
-        .update({
-          companyId: payload[0].companyId,
-          projectId: payload[0].projectId,
-        })
-        .where({ id: payload[0].pmId, orgId: req.orgId });
-
-      let currentPmMaster = await knex("pm_master2")
-        .select("*")
-        .where({ id: payload[0].pmId, orgId: req.orgId })
-        .first();
-      if (!currentPmMaster) {
-        return res.status(400).json({
-          errors: [
-            {
-              code: "CREATE_ERROR",
-              message: "Failed to create PM! Please try again...",
-            },
-          ],
-        });
+      console.log("consolidated work orders======>>>>>>",consolidatedWorkOrders)
+      let workOrderLength;
+      for(let i = 0; i < consolidatedWorkOrders.length; i++){
+        for(let j = 0; j < consolidatedWorkOrders[i].assets.length; j++){
+          workOrderLength = i*j
+        }
       }
-      console.log(
-        "[controllers][task-group]: createPmTaskgroupSchedule: currentPmMaster::",
-        currentPmMaster
-      );
 
-      // Amar now make the changes from here...
+      console.log("work order length======>>>>>",workOrderLength)
 
-      await knex.transaction(async (trx) => {
-        let currentTime = new Date().getTime();
+      if(workOrderLength <= 50){
+       pmWorkOrder = await creatPmHelper.createWorkOrders({consolidatedWorkOrders,payload,orgId});
+      }else{
+        console.log("Work order number is > 50")
+      }
 
-        // CREATE PM TASK GROUP OPEN
-        let insertPmTaskGroupData = {
-          pmId: payload[0].pmId,
-          assetCategoryId: payload[0].assetCategoryId,
-          taskGroupName: payload[0].taskGroupName,
-          createdAt: currentTime,
-          updatedAt: currentTime,
-          orgId: req.orgId,
-          companyId: currentPmMaster.companyId,
-        };
+      console.log("pmWorkOrder result ======>>>>>",pmWorkOrder)
 
-        let insertPmTemplateResult = await knex
-          .insert(insertPmTaskGroupData)
-          .returning(["*"])
-          .transacting(trx)
-          .into("pm_task_groups");
-        console.log(
-          "inserted into pm_task_groups step-1",
-          insertPmTemplateResult
-        );
-        createPmTaskGroup = insertPmTemplateResult[0];
 
-        await knex("pm_task_groups")
-          .update({ isActive: true })
-          .where({ isActive: true });
-
-        // ASSIGNED ADDITIONAL USER OPEN
-        for (let i = 0; i < req.body.taskGroups.length; i++) {
-          if (
-            req.body.taskGroups[i].additionalUsers &&
-            req.body.taskGroups[i].additionalUsers.length
-          ) {
-            let insertAssignedAdditionalUserData = req.body.taskGroups[
-              i
-            ].additionalUsers.map((user) => ({
-              userId: user,
-              entityId: createPmTaskGroup.id,
-              entityType: "pm_task_groups",
-              createdAt: currentTime,
-              updatedAt: currentTime,
-              orgId: req.orgId,
-            }));
-
-            insertAssignedAdditionalUserData = _.uniqBy(
-              insertAssignedAdditionalUserData,
-              "entityId"
-            );
-            let assignedAdditionalUser = await knex
-              .insert(insertAssignedAdditionalUserData)
-              .returning(["*"])
-              .transacting(trx)
-              .into("assigned_service_additional_users");
-            console.log(
-              "inserted into assigned_service_additional_users step-2",
-              assignedAdditionalUser
-            );
-          }
-        }
-        // ASSIGNED ADDITIONAL USER CLOSE
-
-        // TASK GROUP SCHEDULE OPEN
-        let insertScheduleData;
-        for (let i = 0; i < req.body.taskGroups.length; i++) {
-          // for(let j = 0;j<req.body.consolidatedWorkOrders.length;j++){
-
-          // console.log("consolidated frequency tags",req.body.consolidatedWorkOrders[j].frequencyTags)
-          insertScheduleData = {
-            taskGroupId: createPmTaskGroup.id,
-            pmId: payload[0].pmId,
-            startDate: payload[i].startDateTime,
-            endDate: payload[i].endDateTime,
-            repeatPeriod: payload[i].repeatPeriod,
-            repeatOn: payload[i].repeatOn,
-            repeatFrequency: payload[i].repeatFrequency,
-            createdAt: currentTime,
-            updatedAt: currentTime,
-            orgId: req.orgId,
-            companyId: currentPmMaster.companyId,
-          };
-          // }
-        }
-
-        let scheduleResult = await knex
-          .insert(insertScheduleData)
-          .returning(["*"])
-          .transacting(trx)
-          .into("task_group_schedule");
-        console.log("inserted into task_group_schedule step-3", scheduleResult);
-        taskSchedule = scheduleResult[0];
-
-        await knex("task_group_schedule")
-          .update({ isActive: true })
-          .where({ isActive: true });
-        // TASK GROUP SCHEDULE CLOSE
-
-        let assetResult;
-        for (let i = 0; i < req.body.consolidatedWorkOrders.length; i++) {
-          console.log("[count][consolidated][i]",i)
-          for (
-            let j = 0;
-            j < req.body.consolidatedWorkOrders[i].assets.length;
-            j++
-          ) {
-            console.log("[count][assets][j]",j)
-            const assetId = req.body.consolidatedWorkOrders[i].assets[j];
-
-            const date = req.body.consolidatedWorkOrders[i].workOrderDate;
-            const frequencyTag =
-              req.body.consolidatedWorkOrders[i].frequencyTags;
-
-            console.log(
-              "pmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm1",
-              date,
-              "========================"
-            );
-
-            let insertDataGroup = {
-              pmDate: date,
-              frequencyTagIds: JSON.stringify(frequencyTag),
-              scheduleId: taskSchedule.id,
-              assetId,
-              createdAt: currentTime,
-              updatedAt: currentTime,
-              orgId: req.orgId,
-            };
-
-            assetResult = await knex
-              .insert(insertDataGroup)
-              .returning(["*"])
-              .transacting(trx)
-              .into("task_group_schedule_assign_assets");
-
-            console.log(
-              "inserted into task_group_schedule_assign_assets step-4",
-              assetResult
-            );
-
-            for (
-              let l = 0;
-              l < req.body.consolidatedWorkOrders[i].tasks.length;
-              l++
-            ) {
-              let InsertPmTaskPayload = {
-                taskName: req.body.consolidatedWorkOrders[i].tasks[l].taskName,
-                taskNameAlternate:
-                  req.body.consolidatedWorkOrders[i].tasks[l].taskNameAlternate,
-                taskSerialNumber:
-                  req.body.consolidatedWorkOrders[i].tasks[l].taskSerialNumber,
-                taskGroupId: createPmTaskGroup.id,
-                taskGroupScheduleAssignAssetId: assetResult[0].id,
-                createdAt: currentTime,
-                updatedAt: currentTime,
-                orgId: req.orgId,
-                status: "O",
-                repeatFrequencyId:
-                  req.body.consolidatedWorkOrders[i].tasks[l].frequencyTagId,
-                duration: req.body.consolidatedWorkOrders[i].tasks[l].duration
-                  ? req.body.consolidatedWorkOrders[i].tasks[l].duration
-                  : 0.0,
-                hourlyRate: req.body.consolidatedWorkOrders[i].tasks[l]
-                  .hourlyRate
-                  ? req.body.consolidatedWorkOrders[i].tasks[l].hourlyRate
-                  : 0.0,
-              };
-
-              let insertPmTaskResult = await knex
-                .insert(InsertPmTaskPayload)
-                .returning(["*"])
-                .transacting(trx)
-                .into("pm_task");
-              console.log("inserted into pm_task step-5", insertPmTaskResult);
-
-              createPmTask.push(insertPmTaskResult);
-              if (
-                req.body.consolidatedWorkOrders[i].tasks[l].linkedParts ==
-                undefined
-              ) {
-              } else {
-                // let partPayload = payload.tasks[k].linkedParts.map(ta => ({
-
-                //   taskId: insertPmTaskResult[0].id,
-                //   partId: ta.partId,
-                //   quantity: ta.quantity,
-                //   createdAt: currentTime,
-                //   updatedAt: currentTime,
-                //   orgId: req.orgId,
-                // }))
-
-                for (let part of req.body.consolidatedWorkOrders[i].tasks[l]
-                  .linkedParts) {
-                  let partPayload = {
-                    taskId: insertPmTaskResult[0].id,
-                    partId: part.partId,
-                    quantity: part.quantity,
-                    createdAt: currentTime,
-                    updatedAt: currentTime,
-                    orgId: req.orgId,
-                    workOrderId: assetResult[0].id,
-                  };
-
-                  let check = await knex.from("task_assigned_part").where({
-                    taskId: insertPmTaskResult[0].id,
-                    partId: part.partId,
-                    quantity: part.quantity,
-                    orgId: req.orgId,
-                  });
-
-                  if (check && check.length) {
-                  } else {
-                    let insertPartResult = await knex
-                      .insert(partPayload)
-                      .returning(["*"])
-                      .transacting(trx)
-                      .into("task_assigned_part");
-                    console.log(
-                      "inserted into task_assigned_part step-6",
-                      insertPartResult
-                    );
-
-                    partResult.push(insertPartResult);
-                  }
-                }
-              }
-            }
-
-            // CREATE PM TASK CLOSE
-            assetResults.push(assetResult[0]);
-
-            let insertAssignedServiceTeamData;
-
-            for (let i = 0; i < req.body.consolidatedWorkOrders.length; i++) {
-              insertAssignedServiceTeamData = {
-                teamId: req.body.consolidatedWorkOrders[i].teamId
-                  ? req.body.consolidatedWorkOrders[i].teamId
-                  : null,
-                userId: req.body.consolidatedWorkOrders[i].mainUserId
-                  ? req.body.consolidatedWorkOrders[i].mainUserId
-                  : null,
-                entityId: createPmTaskGroup.id,
-                entityType: "pm_task_groups",
-                workOrderId: assetResult[0].id,
-                createdAt: currentTime,
-                updatedAt: currentTime,
-                orgId: req.orgId,
-              };
-            }
-            let assignedServiceTeamResult = await knex
-              .insert(insertAssignedServiceTeamData)
-              .returning(["*"])
-              .transacting(trx)
-              .into("assigned_service_team");
-            assignedServiceTeam = assignedServiceTeamResult[0];
-            console.log(
-              "inserted into assigned_service_team step-7",
-              assignedServiceTeamResult
-            );
-            // }
-          }
-        }
-        // Send email to the team about pm plan
-        // let mainUserId = payload.mainUserId;
-        // let mainUser = await knex('users').where({id:mainUserId}).select(['name','email']).first()
-        // let Parallel = require('async-parallel')
-        // if (payload.additionalUsers.length){
-        //   let additionalUserNameIds = await Parallel.map(payload.additionalUsers, async additionalUser => {
-        //     let u = await knex('users').where({ id: additionalUser.userId}).select(['name','email'])
-        //     return u;
-        //   })
-        //   let finalUsers = [...additionalUserNameIds,mainUser]
-        //   for (let u of finalUsers){
-        //     await emailHelper.sendTemplateEmail({
-        //       to:u.email,
-        //       subject:'[PM] Upcoming PM Plan & Schedule',
-        //       template:'pm-plan.ejs',
-        //       templateData: { pmSchedules: assetResults }
-        //     })
-        //   }
-        // }
-      });
-
-      let updateAssetMaster = await knex("asset_master")
-        .update({ isEngaged: true })
-        .whereIn("id", payload[0].assets);
-
-      let updatemaster = await knex("pm_master2")
-        .update({ isActive: true })
-        .where({ id: payload[0].pmId });
-      console.log("STEP - 8=============>", updatemaster);
-
-      let updatetaskGroup = await knex("pm_task_groups")
-        .update({ isActive: true })
-        .where({ isActive: true, orgId: req.orgId });
-      console.log("STEP - 9 ===========>>>>", updatetaskGroup);
-
-      let updategroupSchedule = await knex("task_group_schedule")
-        .update({ isActive: true })
-        .where({ isActive: true, orgId: req.orgId });
-
-      console.log("STEP - 10 ===========>>>>", updategroupSchedule);
-
+      
       return res.status(200).json({
         data: {
-          templateData: createTemplate,
-          taskTemplateData: createTemplateTask,
-          pmTaskGroupData: createPmTaskGroup,
-          assignedAdditionalUserData: assignedAdditionalUser,
-          assignedServiceTeamData: assignedServiceTeam,
-          taskScheduleData: taskSchedule,
-          assetResultData: assetResults,
-          createdPmTasks: createPmTask,
-          partResult: partResult,
+        //   templateData: createTemplate,
+        //   taskTemplateData: createTemplateTask,
+        //   pmTaskGroupData: createPmTaskGroup,
+        //   assignedAdditionalUserData: assignedAdditionalUser,
+        //   assignedServiceTeamData: assignedServiceTeam,
+        //   taskScheduleData: taskSchedule,
+        //   assetResultData: assetResults,
+        //   createdPmTasks: createPmTask,
+        //   partResult: partResult,
         },
         message: "Create Pm Task Group Schedule Successfully!",
       });
