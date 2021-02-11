@@ -56,6 +56,7 @@ functions:
           path: /{proxy+}
           method: ANY
           # cors: true
+
   queueProcessor:
     handler: src/app.queueProcessor
     batchSize: 1                           # Using a batchSize of 1, so that messages succeed or fail on their own.
@@ -64,6 +65,17 @@ functions:
     reservedConcurrency: 10                # <-- Concurrency control
     events:
       - sqs: arn:aws:sqs:us-east-1:037792882519:mail-queue
+
+
+  longJobsProcessor:
+    handler: src/app.longJobsProcessor
+    batchSize: 1                           # Using a batchSize of 1, so that messages succeed or fail on their own.
+    memorySize: 2048
+    timeout: 900                           # 15 Mins...
+    reservedConcurrency: 10                # <-- Concurrency control
+    events:
+      - sqs: arn:aws:sqs:us-east-1:037792882519:long-jobs
+
 
   websocket:
     handler: src/socket.handler

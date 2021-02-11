@@ -157,3 +157,33 @@ module.exports.queueProcessor = async (event, context) => {
 
   return true;
 };
+
+
+module.exports.longJobsProcessor = async (event, context) => {
+  // console.log('Event:', JSON.stringify(event));
+  // console.log('Context:', JSON.stringify(context));
+
+  const recordsFromSQS = event.Records;
+  const currentRecord = recordsFromSQS[0];    // Since we have kept the batchSize to only 1
+  console.log('[longJobsProcessor] Current Record:', JSON.stringify(currentRecord));
+
+  let messageType = 'PM_WORK_ORDER_GENERATE';
+
+  if (currentRecord.messageAttributes && currentRecord.messageAttributes.messageType) {
+    messageType = currentRecord.messageAttributes.messageType.stringValue;
+  }
+  console.log('[app][longJobsProcessor]', 'Message Type:', messageType);
+
+
+  if (messageType === 'PM_WORK_ORDER_GENERATE') {
+
+    // const emailHelper = require('./helpers/email');
+    // const mailOptions = JSON.parse(currentRecord.body);
+    // await emailHelper.sendEmail(mailOptions);
+
+    console.log('[app][longJobsProcessor]: Task Completed Successfully');
+
+  }
+
+  return true;
+};
