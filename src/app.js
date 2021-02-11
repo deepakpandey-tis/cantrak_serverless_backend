@@ -178,11 +178,11 @@ module.exports.longJobsProcessor = async (event, context) => {
   if (messageType === 'PM_WORK_ORDER_GENERATE') {
 
     const creatPmHelper = require("./helpers/preventive-maintenance");
-    const { consolidatedWorkOrders, payload, orgId, requestedBy } = JSON.parse(currentRecord.body);
+    const { consolidatedWorkOrders, payload, orgId, requestedBy } = JSON.parse(currentRecord.body.messageBody);
     
 
-    // pmWorkOrder = await creatPmHelper.createWorkOrders({ consolidatedWorkOrders, payload, orgId });
-    // console.log("pmWorkOrder result ======>>>>>", pmWorkOrder);
+    pmWorkOrder = await creatPmHelper.createWorkOrders({ consolidatedWorkOrders, payload, orgId });
+    console.log("pmWorkOrder result ======>>>>>", pmWorkOrder);
 
     console.log('[app][longJobsProcessor]: Task Completed Successfully');
 
