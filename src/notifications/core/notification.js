@@ -62,13 +62,13 @@ const sendSQSMessage = async (messageBody) => {
 
 
 
-async function handleInAppNotification(sender, receiver, dataPayload, notificationClass, payloadThai) {
+async function handleInAppNotification(sender, receiver, dataPayload, notificationClass) {
 
     try {
 
         if ('sendInAppNotification' in notificationClass) {
 
-            let data = await notificationClass.sendInAppNotification(sender, receiver, dataPayload, payloadThai);
+            let data = await notificationClass.sendInAppNotification(sender, receiver, dataPayload);
             console.log('[notifications][core][notification][send]: Data for InApp Notification:', data);
 
             await inAppNotification.send({
@@ -76,8 +76,7 @@ async function handleInAppNotification(sender, receiver, dataPayload, notificati
                 senderId: data.senderId,
                 receiverId: data.receiverId,
                 payload: data.payload,
-                actions: data.actions,
-                payloadThai: data.payloadThai
+                actions: data.actions
             });
             console.log('[notifications][core][notification][send]: InApp Notification sent.');
 
@@ -230,7 +229,7 @@ async function handleSMSNotification(sender, receiver, dataPayload, notification
 
 
 const notification = {
-    send: async (sender, receiver, dataPayload, channels, notificationClass,payloadThai) => {
+    send: async (sender, receiver, dataPayload, channels, notificationClass) => {
         try {
 
             const Parallel = require('async-parallel');
@@ -239,7 +238,7 @@ const notification = {
 
                 switch (channel) {
                     case 'IN_APP':
-                        await handleInAppNotification(sender, receiver, dataPayload, notificationClass, payloadThai);
+                        await handleInAppNotification(sender, receiver, dataPayload, notificationClass);
                         break;
 
                     case 'EMAIL':

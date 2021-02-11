@@ -51,17 +51,6 @@ const outgoingParcelNotification = {
 
     let icons;
     let images;
-    //   if(orgData && orgData.id == '56'){
-    //       icons = 'assets/icons/cbre-512x512.png';
-    //       images = 'assets/icons/cbre-512x512.png';
-    //   }else if(orgData && orgData.id == '89'){
-    //     icons = 'assets/icons/senses-512x512.png';
-    //     images = 'assets/icons/senses-512x512.png';
-    // }else{
-    //       icons = 'assets/icons/icon-512x512.png';
-    //       images = 'assets/icons/icon-512x512.png';
-    //   }
-
     if (orgData && orgData.organisationLogo == '') {
       icons = 'assets/icons/icon-512x512.png';
       images = 'assets/icons/icon-512x512.png';
@@ -79,6 +68,8 @@ const outgoingParcelNotification = {
         ...data,
         subject: "Parcel Acceptation",
         body: `Hi, You have received a parcel,Please accept for picked up the parcels.`,
+        subjectThai: 'การรับพัสด',
+        bodyThai: `มีพัสดุจัดส่งถึงคุณ`,
         icon: icons,
         image: images,
         extraData: {
@@ -87,19 +78,7 @@ const outgoingParcelNotification = {
           primaryKey: Date.now(),
           parcelIds: parcelId,
         },
-      },
-      payloadThai: {
-        ...data,
-        subject: 'การรับพัสด',
-        body: `มีพัสดุจัดส่งถึงคุณ`,
-        icon: icons,
-        image: images,
-        extraData: {
-          dateOfArrival: Date.now(),
-          url: `/user/parcel/parcel-confirmation?parcels=${parcelId}`,
-          primaryKey: Date.now()
-        }
-      },
+      },     
       actions: [
         {
           action: "explore",
@@ -118,17 +97,6 @@ const outgoingParcelNotification = {
 
     let icons;
     let images;
-    //   if(orgData && orgData.id == '56'){
-    //       icons = 'assets/icons/cbre-512x512.png';
-    //       images = 'assets/icons/cbre-512x512.png';
-    //   }else if(orgData && orgData.id == '89'){
-    //     icons = 'assets/icons/senses-512x512.png';
-    //     images = 'assets/icons/senses-512x512.png';
-    // }else{
-    //       icons = 'assets/icons/icon-512x512.png';
-    //       images = 'assets/icons/icon-512x512.png';
-    //   }
-
     if (orgData && orgData.organisationLogo == '') {
       icons = 'assets/icons/icon-512x512.png';
       images = 'assets/icons/icon-512x512.png';
@@ -147,6 +115,8 @@ const outgoingParcelNotification = {
         ...data,
         subject: "Parcel Acceptation",
         body: `Hi, You have received a parcel,Please accept for picked up the parcels.`,
+        subjectThai: 'การรับพัสด',
+        bodyThai: `มีพัสดุจัดส่งถึงคุณ`,
         icon: icons,
         image: images,
         extraData: {
@@ -164,7 +134,6 @@ const outgoingParcelNotification = {
         },
       ],
     };
-
     return data;
   },
 
@@ -187,6 +156,7 @@ const outgoingParcelNotification = {
       templateData: {
         fullName: receiver.name,
         qrCode: receiver.url,
+        orgId:receiver.orgId
       },
       payload: {
         ...data,

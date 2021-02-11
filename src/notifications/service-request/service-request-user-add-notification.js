@@ -23,7 +23,7 @@ const serviceRequestUserAddNotification = {
     },
 
     sendInAppNotification: async (sender, receiver, data) => {
-        console.log("Site data====>>>>",data.payload)
+        console.log("Site reciever data====>>>>",receiver)
         let title = data.payload.title;
         let description = data.payload.description;
         let url = data.payload.url;
@@ -51,6 +51,8 @@ const serviceRequestUserAddNotification = {
                 ...data,
                 subject: title,
                 body: description,
+                subjectThai: thaiTitle,
+                bodyThai: thaiDetails,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -58,19 +60,7 @@ const serviceRequestUserAddNotification = {
                     url: `/user/dashboard/home`,
                     primaryKey: Date.now()
                 }
-            },
-            payloadThai: {
-                ...data,
-                subject: thaiTitle,
-                body: thaiDetails,
-                icon: icons,
-                image: images,
-                extraData: {
-                    dateOfArrival: Date.now(),
-                    url: `/user/dashboard/home`,
-                    primaryKey: Date.now()
-                }
-            },
+            },           
             actions: [
                 {
                     action: "explore",
@@ -90,18 +80,21 @@ const serviceRequestUserAddNotification = {
         let title = data.payload.title;
         let description = data.payload.description;
         let url = data.payload.url;
+        console.log("notification emails ====>>>>",receiver)
         data = {
             receiverEmail: receiver.email,
             template: 'service-request.ejs',
             templateData: {
                 fullName: receiver.name,
                 description: description,
-                title: title
+                title: title,
+                orgId:receiver.orgId
             },
             payload: {
                 ...data,
                 subject: 'Service Request created',
-            }
+            },
+            orgId:receiver.orgId
         };
 
         return data;
@@ -155,6 +148,9 @@ const serviceRequestUserAddNotification = {
         let description = data.payload.description;
         let url = data.payload.url;
         let orgData = data.payload.orgData;
+        let thaiTitle = data.payload.thaiTitle;
+        let thaiDetails = data.payload.thaiDetails;
+        
         let icons;
         let images;
         if(orgData && orgData.organisationLogo == ''){
@@ -175,6 +171,8 @@ const serviceRequestUserAddNotification = {
                 ...data,
                 subject: title,
                 body: description,
+                subjectThai: thaiTitle,
+                bodyThai: thaiDetails,
                 icon: icons,
                 image: images,
                 extraData: {

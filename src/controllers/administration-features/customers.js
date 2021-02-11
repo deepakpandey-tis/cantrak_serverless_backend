@@ -450,7 +450,7 @@ const customerController = {
             "property_units.description as propertyUnitDescription"
 
           ])
-          .where({ 'users.id': customerId, 'users.isActive': false, 'users.emailVerified': false });
+          .where({ 'users.id': customerId, 'users.isActive': false, 'users.emailVerified': false, 'users.deactivationStatus': false });
 
 
         // Users property units start
@@ -572,7 +572,8 @@ const customerController = {
             .where({
               "application_user_roles.roleId": 4,
               'users.isActive': false, 
-              'users.emailVerified': false
+              'users.emailVerified': false,
+              'users.deactivationStatus': false
             })
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
@@ -622,7 +623,8 @@ const customerController = {
             .where({
               "application_user_roles.roleId": 4,
               'users.isActive': false,
-              'users.emailVerified': false
+              'users.emailVerified': false,
+              'users.deactivationStatus': false
             })
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
@@ -679,7 +681,8 @@ const customerController = {
               "application_user_roles.roleId": 4,
               "users.orgId": req.orgId,
               'users.isActive': false,
-              'users.emailVerified': false
+              'users.emailVerified': false,
+              'users.deactivationStatus': false
             })
             .groupBy(['users.id', 'property_units.id'])
             .distinct(['users.id'])
@@ -732,7 +735,8 @@ const customerController = {
               "application_user_roles.roleId": 4,
               "users.orgId": req.orgId,
               'users.isActive': false,
-              'users.emailVerified': false
+              'users.emailVerified': false,
+              'users.deactivationStatus': false
             })
             .whereIn('property_units.projectId', resourceProject)
             .andWhere(qb => {
@@ -1753,7 +1757,72 @@ const customerController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
     }
-  }
+  },
+  rejectAccount: async (req, res) => {
+    try {
+      let currentTime = new Date().getTime();
+      let userToken = req.body.userToken;
+      let rejectedMessage = req.body.cancelReason;
+      let user = await knex('users').select('*').where({ verifyToken: userToken })
+      if (user && user.length) {
+        await knex('users').update({ emailVerified: false, isActive: false, updatedAt: currentTime, deactivationStatus: true }).where({ id: user[0].id })
+        /* Send Mail To User After Verify Account By Admin */
+         // Insert into remarks master table
+         const insertData = {
+          entityId: user[0].id,
+          entityType: 'users_rejected_message',
+          description: rejectedMessage,
+          orgId: req.orgId,
+          createdBy: req.me.id,
+          createdAt: currentTime,
+          updatedAt: currentTime
+        };
+       
+        const resultRemarksNotes = await knex
+          .insert(insertData)
+          .returning(["*"])
+          .into("remarks_master");
+
+        let orgId = user[0].orgId;
+        if (orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
+          url = 'https://cbreconnect.servicemind.asia';
+          org = "CBRE Connect";
+        } else if (orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
+          url = 'https://senses.servicemind.asia';
+          org = "Senses";
+        } else {
+          url = process.env.SITE_URL;
+          org = "ServiceMind";
+        }
+
+
+        await emailHelper.sendTemplateEmail({
+          to: user[0].email,
+          subject: 'Signup Request Rejected',
+          template: 'rejected-org-user-email.ejs',
+          orgId: orgId,
+          templateData: {
+            fullName: user[0].name,
+            Org: org,
+            urlData: url
+          }
+        })
+
+        /* End */
+        return res.status(200).json({ verified: true, message: 'Account has been rejected!' })
+      } else {
+        return res.status(200).json({ verified: false, message: "Failed! Token Invalid." });
+      }
+    } catch (err) {
+      console.log(
+        "[controllers][survey Orders][getSurveyOrders] :  Error",
+        err
+      );
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
 };
 
 module.exports = customerController

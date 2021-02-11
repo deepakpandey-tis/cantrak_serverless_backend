@@ -48,6 +48,8 @@ const parcelReturnedNotification = {
                 ...data,
                 subject: 'Parcel Returned',
                 body: `Hi,Your parcel has been return.`,
+                subjectThai: 'ส่งคืนพัสด',
+                bodyThai: `คุณส่งพัสดุคืนต้นทาง`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -55,18 +57,6 @@ const parcelReturnedNotification = {
                     url: `/user/parcel`,
                     primaryKey: Date.now(),
                     parcelIds:parcelId
-                }
-            },
-            payloadThai: {
-                ...data,
-                subject: 'ส่งคืนพัสด',
-                body: `คุณส่งพัสดุคืนต้นทาง`,
-                icon: icons,
-                image: images,
-                extraData: {
-                    dateOfArrival: Date.now(),
-                    url: `/user/parcel`,
-                    primaryKey: Date.now()
                 }
             },
             actions: [
@@ -106,6 +96,8 @@ const parcelReturnedNotification = {
                 ...data,
                 subject: 'Parcel Returned',
                 body: `Hi, Your parcel has been return.`,
+                subjectThai: 'ส่งคืนพัสด',
+                bodyThai: `คุณส่งพัสดุคืนต้นทาง`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -132,7 +124,8 @@ const parcelReturnedNotification = {
             receiverEmail: receiver.email,
             template: 'parcel-notification.ejs',
             templateData: {
-                fullName: receiver.name
+                fullName: receiver.name,
+                orgId:receiver.orgId
             },
             payload: {
                 ...data,

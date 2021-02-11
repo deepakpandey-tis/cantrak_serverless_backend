@@ -35,20 +35,10 @@ const approvalNotification = {
                 ...data,
                 subject: 'Service Request assigned',
                 body: `A new service request has been assigned to you by ${sender.name}`,
+                subjectThai: 'มอบหมายคำขอบริการแล้ว',
+                bodyThai: `ท่านได้รับมอบหมายงานแจ้งซ่อมใหม่จาก ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
-                extraData: {
-                    dateOfArrival: Date.now(),
-                    url: `/admin/service-order`,
-                    primaryKey: Date.now()
-                }
-            },
-            payloadThai: {
-                ...data,
-                subject: 'มอบหมายคำขอบริการแล้ว',
-                body: `ท่านได้รับมอบหมายงานแจ้งซ่อมใหม่จาก ${sender.name}`,
-                icon: icons,
-                image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
                     url: `/admin/service-order`,
@@ -77,6 +67,8 @@ const approvalNotification = {
                 ...data,
                 subject: 'Service Request assigned',
                 body: `A new service request has been assigned to you by ${sender.name}`,
+                subjectThai: 'มอบหมายคำขอบริการแล้ว',
+                bodyThai: `ท่านได้รับมอบหมายงานแจ้งซ่อมใหม่จาก ${sender.name}`,
                 icon: 'assets/icons/icon-512x512.png',
                 image: 'assets/icons/icon-512x512.png',
                 extraData: {
@@ -104,7 +96,8 @@ const approvalNotification = {
             templateData: {
                 fullName: receiver.name,
                 title: 'Service Request assigned',
-                description: `A new service request has been assigned to you by ${sender.name}`
+                description: `A new service request has been assigned to you by ${sender.name}`,
+                orgId:receiver.orgId
             },
             payload: {
                 ...data,

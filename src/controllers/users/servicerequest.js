@@ -1018,6 +1018,7 @@ const serviceRequestController = {
         //let receiver;
         let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH","SOCKET_NOTIFY"];
 
+        console.log("user team result=====>>>>>",userTeamResult)
         for (let no of userTeamResult) {
           await serviceRequestUserAddNotification.send(
             sender,
@@ -1026,6 +1027,8 @@ const serviceRequestController = {
             ALLOWED_CHANNELS
           );
         }
+
+        console.log("admin team result=====>>>>>",adminResult)
 
         await serviceRequestUserAddNotification.send(
           sender,

@@ -48,6 +48,8 @@ const parcelRejectedNotification = {
                 ...data,
                 subject: 'Parcel Rejected',
                 body: `Hi,Your parcel has been reject.`,
+                subjectThai: 'พัสดุถูกปฏิเสธ',
+                bodyThai: `คุณปฏิเสธการรับพัสดุ`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -55,18 +57,6 @@ const parcelRejectedNotification = {
                     url: `/user/parcel/parcel-confirmation?parcels=1,2,3`,
                     primaryKey: Date.now(),
                     parcelIds:parcelId
-                }
-            },
-            payloadThai: {
-                ...data,
-                subject: 'พัสดุถูกปฏิเสธ',
-                body: `คุณปฏิเสธการรับพัสดุ`,
-                icon: icons,
-                image: images,
-                extraData: {
-                    dateOfArrival: Date.now(),
-                    url: `/user/parcel`,
-                    primaryKey: Date.now()
                 }
             },
             actions: [
@@ -106,6 +96,8 @@ const parcelRejectedNotification = {
                 ...data,
                 subject: 'Parcel Rejected',
                 body: `Hi,Your parcel has been reject.`,
+                subjectThai: 'พัสดุถูกปฏิเสธ',
+                bodyThai: `คุณปฏิเสธการรับพัสดุ`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -132,7 +124,8 @@ const parcelRejectedNotification = {
             receiverEmail: receiver.email,
             template: 'parcel-notification.ejs',
             templateData: {
-                fullName: receiver.name
+                fullName: receiver.name,
+                orgId:receiver.orgId
             },
             payload: {
                 ...data,

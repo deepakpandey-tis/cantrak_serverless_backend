@@ -49,6 +49,8 @@ const signupNotification = {
                 ...data,
                 subject: title,
                 body: description +`from  ${sender.name}`,
+                subjectThai: thaiTitle,
+                bodyThai: thaiDetails +`จาก  ${sender.name}`,                
                 icon: icons,
                 image: images,
                 extraData: {
@@ -56,19 +58,7 @@ const signupNotification = {
                     url: `/admin/administration-features/customers/unapproved-tenants`,
                     primaryKey: Date.now()
                 }
-            },
-            payloadThai: {
-                ...data,
-                subject: thaiTitle,
-                body: thaiDetails +`จาก  ${sender.name}`,
-                icon: icons,
-                image: images,
-                extraData: {
-                    dateOfArrival: Date.now(),
-                    url: `/admin/administration-features/customers/unapproved-tenants`,
-                    primaryKey: Date.now()
-                }
-            },
+            },            
             actions: [
                 {
                     action: "explore",
@@ -94,7 +84,8 @@ const signupNotification = {
             templateData: {
                 fullName: receiver.name,
                 description:description,
-                title:title
+                title:title,
+                orgId:receiver.orgId
             },
             payload: {
                 ...data,
@@ -151,6 +142,9 @@ const signupNotification = {
         let title = data.payload.title;
         let description = data.payload.description;
         let  orgData = data.payload.orgData;
+        let thaiTitle = data.payload.thaiTitle;
+        let thaiDetails = data.payload.thaiDetails;
+        
         let icons;
         let images;
         if(orgData && orgData.organisationLogo == ''){
@@ -170,6 +164,8 @@ const signupNotification = {
                 ...data,
                 subject: title,
                 body: description +`from  ${sender.name}`,
+                subjectThai: thaiTitle,
+                bodyThai: thaiDetails +`จาก  ${sender.name}`,                
                 icon: icons,
                 image: images,
                 extraData: {

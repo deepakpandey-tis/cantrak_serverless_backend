@@ -62,18 +62,8 @@ const serviceAppointmentNotification = {
                 ...data,
                 subject: title,
                 body: description,
-                icon: icons,
-                image: images,
-                extraData: {
-                    dateOfArrival: Date.now(),
-                    url: `/user/dashboard/home`,
-                    primaryKey: Date.now()
-                }
-            },
-            payloadThai: {
-                ...data,
-                subject: 'นัดหมายบริการ',
-                body: `นัดหมายช่างซ่อมเพื่อทำการแก้ไข ในวัน ${appointmentDate} เวลา ${appointmentTime} ตามใบแจ้งคำร้องของท่านเรียบร้อย`,
+                subjectThai: 'นัดหมายบริการ',
+                bodyThai: `นัดหมายช่างซ่อมเพื่อทำการแก้ไข ในวัน ${appointmentDate} เวลา ${appointmentTime} ตามใบแจ้งคำร้องของท่านเรียบร้อย`,
                 icon: icons,
                 image: images,
                 extraData: {
@@ -107,7 +97,8 @@ const serviceAppointmentNotification = {
             templateData: {
                 fullName: receiver.name,
                 description: description,
-                title: title
+                title: title,
+                orgId:receiver.orgId
             },
             payload: {
                 ...data,
@@ -135,30 +126,6 @@ const serviceAppointmentNotification = {
             icons = orgData.organisationLogo;
             images = orgData.organisationLogo;
         }
-        // if (orgData) {
-        //     console.log("org data for notification", orgData)
-        //     if (orgData.id == '56') {
-        //         icons = 'assets/icons/cbre-512x512.png';
-        //         images = 'assets/icons/cbre-512x512.png';
-        //     } else {
-        //         icons = 'assets/icons/senses-512x512.png';
-        //         images = 'assets/icons/senses-512x512.png';
-        //     }
-        // } else {
-        //     icons = 'assets/icons/icon-512x512.png';
-        //     images = 'assets/icons/icon-512x512.png';
-        // }
-        // if(orgData && orgData.id == '56'){
-        //     icons = 'assets/icons/cbre-512x512.png';
-        //     images = 'assets/icons/cbre-512x512.png';
-        // }else if(orgData && orgData.id == '89'){
-        //     icons = 'assets/icons/senses-512x512.png';
-        //     images = 'assets/icons/senses-512x512.png';
-        // }
-        // else{
-        //     icons = 'assets/icons/icon-512x512.png';
-        //     images = 'assets/icons/icon-512x512.png';
-        // }
 
         data = {
             orgId: sender.orgId,
@@ -192,20 +159,11 @@ const serviceAppointmentNotification = {
         let description = data.payload.description;
         let url = data.payload.url;
         let orgData = data.payload.orgData;
+        let appointmentDate = data.payload.appointmentDate;
+        let appointmentTime = data.payload.appointmentTime;
+        
         let icons;
         let images;
-        // if (orgData && orgData.id == '56') {
-        //     icons = 'assets/icons/cbre-512x512.png';
-        //     images = 'assets/icons/cbre-512x512.png';
-        // } else if (orgData && orgData.id == '89') {
-        //     icons = 'assets/icons/senses-512x512.png';
-        //     images = 'assets/icons/senses-512x512.png';
-        // }
-        // else {
-        //     icons = 'assets/icons/icon-512x512.png';
-        //     images = 'assets/icons/icon-512x512.png';
-        // }
-
         if(orgData && orgData.organisationLogo == ''){
             icons = 'assets/icons/icon-512x512.png';
             images = 'assets/icons/icon-512x512.png';
@@ -224,6 +182,8 @@ const serviceAppointmentNotification = {
                 ...data,
                 subject: title,
                 body: description,
+                subjectThai: 'นัดหมายบริการ',
+                bodyThai: `นัดหมายช่างซ่อมเพื่อทำการแก้ไข ในวัน ${appointmentDate} เวลา ${appointmentTime} ตามใบแจ้งคำร้องของท่านเรียบร้อย`,
                 icon: icons,
                 image: images,
                 extraData: {
