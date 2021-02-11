@@ -177,9 +177,12 @@ module.exports.longJobsProcessor = async (event, context) => {
 
   if (messageType === 'PM_WORK_ORDER_GENERATE') {
 
-    // const emailHelper = require('./helpers/email');
-    // const mailOptions = JSON.parse(currentRecord.body);
-    // await emailHelper.sendEmail(mailOptions);
+    const creatPmHelper = require("./helpers/preventive-maintenance");
+    const { consolidatedWorkOrders, payload, orgId, requestedBy } = JSON.parse(currentRecord.body);
+    
+
+    // pmWorkOrder = await creatPmHelper.createWorkOrders({ consolidatedWorkOrders, payload, orgId });
+    // console.log("pmWorkOrder result ======>>>>>", pmWorkOrder);
 
     console.log('[app][longJobsProcessor]: Task Completed Successfully');
 

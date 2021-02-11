@@ -7,9 +7,8 @@ const smsNotification = require('../core/sms-notification');
 const lineNotification = require('../core/line-notification');
 const socketNotification = require('../core/socket-notification');
 
-
 const notificationUsageTracker = require('../core/notification-usage-tracker');
-
+const queueHelper = require('../../helpers/queue');
 
 
 
@@ -287,10 +286,10 @@ const notification = {
 
     queue: async (sender, receiver, dataPayload, channels, notificationClassPath) => {
         try {
+
             console.log('[notifications][core][notification][queue]: Queuing Notification:', notificationClassPath);
-            await sendSQSMessage(JSON.stringify({
-                sender, receiver, dataPayload, channels, notificationClassPath
-            }));
+            await queueHelper.addToQueue({ sender, receiver, dataPayload, channels, notificationClassPath }, 'mail-queue', 'NOTIFICATION');
+
         } catch (err) {
             console.log('[notifications][core][notification][queue]: Error:', err);
         }
