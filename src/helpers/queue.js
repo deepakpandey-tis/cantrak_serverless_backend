@@ -83,10 +83,10 @@ const sendSQSMessage = async (messageBody, queueName, messageType) => {
 
 const queueHelper = {
 
-    addToQueue: async ({ messageBody, queueName, messageType }) => {
+    addToQueue: async ( messageBody, queueName, messageType ) => {
         try {
 
-            console.log('[helpers][queue][addToQueue] : Going to Queue Job');
+            console.log('[helpers][queue][addToQueue] : Going to Queue Job',messageBody,queueName);
 
             const sqsMessageBody = JSON.stringify({ messageBody });
             const messageSendResult = await sendSQSMessage(sqsMessageBody, queueName, messageType);
