@@ -135,8 +135,10 @@ const createPmLongJobsNotification = {
             receiverId: receiver.id,
             channel: 'socket-notification',
             payload: {
-                subject: title,
-                body: description + `from ${sender.name}`,
+                subject: 'PM Plan',
+                body: `Hi, ${receiver.name} Your PM Plan is created successfully`,
+                subjectThai: 'PM Plan',
+                bodyThai: `สวัสดี ${receiver.name} Your PM Plan is created successfully `,
                 icon: icons,
                 image: images,
                 extraData: {
