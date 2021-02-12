@@ -18,15 +18,13 @@ const createPmLongJobsNotification = {
             }
 
         }catch(err){
-
+            console.log('[notifications][long-job-notification][long-job-notification][send]:  Error', err);
+            return { code: 'UNKNOWN_ERROR', message: err.message, error: err };
         }
     },
 
     sendInAppNotification: async (sender, receiver, data) => {
-        console.log("Site url",process.env.SITE_URL)
-        let title = data.payload.title;
-        let description = data.payload.description;
-        let url = data.payload.url;
+        console.log("Reciever Id =========>>>",receiver.id)
         let  orgData = data.payload.orgData;
         let icons;
         let images;
@@ -72,10 +70,6 @@ const createPmLongJobsNotification = {
     },
 
     sendWebPushNotification: async (sender, receiver, data) => {
-        let title = data.payload.title;
-        let description = data.payload.description;
-        let url = data.payload.url;
-
         let  orgData = data.payload.orgData;
         let icons;
         let images;
@@ -119,10 +113,6 @@ const createPmLongJobsNotification = {
     },
 
     sendSocketNotification: async (sender, receiver, data) => {
-        console.log("notification reciever=====",receiver)
-        let title = data.payload.title;
-        let description = data.payload.description;
-        let url = data.payload.url;
         let  orgData = data.payload.orgData;
         let icons;
         let images;
