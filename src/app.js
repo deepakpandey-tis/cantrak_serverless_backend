@@ -4,6 +4,8 @@ const createError = require('http-errors');
 const path = require('path');
 const i18n = require('i18n');
 const indexRouter = require('./routes/index');
+const createPmLongJobsNotification = require('./notifications/preventive-maintenance')
+
 
 
 /**
