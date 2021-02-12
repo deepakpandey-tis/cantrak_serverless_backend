@@ -180,7 +180,7 @@ module.exports.longJobsProcessor = async (event, context) => {
   if (messageType === 'PM_WORK_ORDER_GENERATE') {
 
     const creatPmHelper = require("./helpers/preventive-maintenance");
-    const { consolidatedWorkOrders, payload, orgId, requestedBy } = JSON.parse(currentRecord.body);
+    const { consolidatedWorkOrders, payload, orgId, requestedBy ,orgMaster } = JSON.parse(currentRecord.body);
     
     console.log('work orders ==============>>>>>>>>>>',consolidatedWorkOrders)
     pmWorkOrder = await creatPmHelper.createWorkOrders({ consolidatedWorkOrders, payload, orgId });
@@ -189,10 +189,6 @@ module.exports.longJobsProcessor = async (event, context) => {
 
     if(pmWorkOrder){
       const ALLOWED_CHANNELS = ['IN_APP','WEB_PUSH','SOCKET_NOTIFY']
-      let orgMaster = await knex
-      .from("organisations")
-      .where({ id:orgId })
-      .first();
 
       let dataNos = {
           payload: {
@@ -200,9 +196,8 @@ module.exports.longJobsProcessor = async (event, context) => {
           },
       };
 
-      let receiver = await knex.from("users").where({ id: requestedBy.id }).first();
-      let sender = await knex.from("users").where({ id: requestedBy.id }).first();
-
+      
+      let receiver = requestedBy
 
       await createPmLongJobsNotification.send(
           sender,
