@@ -89,7 +89,7 @@ const queueHelper = {
 
             console.log('[helpers][queue][addToQueue] : Going to Queue Job',messageBody,queueName);
 
-            const sqsMessageBody = JSON.stringify({ messageBody });
+            const sqsMessageBody = JSON.stringify( messageBody );
             const messageSendResult = await sendSQSMessage(sqsMessageBody, queueName, messageType);
 
            
