@@ -9,6 +9,9 @@ const createPmLongJobsNotification = {
         try{
             console.log('[notifications][pm-jobs][pm-jobs-notification][send]: Data:', data);
 
+            console.log('[notifications][pm-jobs][pm-jobs-notification][send]: Notification:', notification);
+
+
             if (SHOULD_QUEUE) {
                 await notification.queue(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, __filename);
                 console.log('[notifications][pm-jobs][pm-jobs-notification][send]: All Notifications Queued');
