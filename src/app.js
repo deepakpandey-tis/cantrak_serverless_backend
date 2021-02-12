@@ -4,7 +4,6 @@ const createError = require('http-errors');
 const path = require('path');
 const i18n = require('i18n');
 const indexRouter = require('./routes/index');
-const createPmLongJobsNotification = require('./notifications/preventive-maintenance')
 
 
 
@@ -190,6 +189,8 @@ module.exports.longJobsProcessor = async (event, context) => {
 
 
     if(pmWorkOrder){
+      const createPmLongJobsNotification = require("./notifications/preventive-maintenance/long-jobs-notification");
+
       const ALLOWED_CHANNELS = ['IN_APP','WEB_PUSH','SOCKET_NOTIFY']
 
       let dataNos = {
