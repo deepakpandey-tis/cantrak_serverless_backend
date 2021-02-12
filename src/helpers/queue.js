@@ -92,28 +92,7 @@ const queueHelper = {
             const sqsMessageBody = JSON.stringify({ messageBody });
             const messageSendResult = await sendSQSMessage(sqsMessageBody, queueName, messageType);
 
-            const ALLOWED_CHANNELS = ['IN_APP','WEB_PUSH','SOCKET_NOTIFY']
-            let orgMaster = await knex
-            .from("organisations")
-            .where({ id: messageBody.orgId })
-            .first();
-
-            let dataNos = {
-                payload: {
-                    orgData : orgMaster
-                },
-            };
-
-            let receiver = await knex.from("users").where({ id: messageBody.requestedBy.id }).first();
-            let sender = await knex.from("users").where({ id: messageBody.requestedBy.id }).first();
-
-
-            await createPmLongJobsNotification.send(
-                sender,
-                receiver,
-                dataNos,
-                ALLOWED_CHANNELS
-            )
+           
 
 
 
