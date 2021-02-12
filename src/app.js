@@ -201,6 +201,7 @@ module.exports.longJobsProcessor = async (event, context) => {
 
       
       let receiver = requestedBy
+      let sender = requestedBy
 
       await createPmLongJobsNotification.send(
           sender,
