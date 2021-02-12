@@ -45,13 +45,15 @@ const createPmLongJobsNotification = {
             receiverId: receiver.id,
             payload: {
                 ...data,
-                subject: title,
-                body: description +`from  ${sender.name}`,
+                subject: 'PM Plan',
+                body: `Hi, ${receiver.name} Your PM Plan is created successfully`,
+                subjectThai: 'PM Plan',
+                bodyThai: `สวัสดี ${receiver.name} Your PM Plan is created successfully `,
                 icon: icons,
                 image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `/user/dashboard/home`,
+                    url: `/admin/preventive-maintenance`,
                     primaryKey: Date.now()
                 }
             },
@@ -92,13 +94,15 @@ const createPmLongJobsNotification = {
             senderId: sender.id,
             receiverId: receiver.id,
             payload: {
-                subject: title,
-                body: description + `from ${sender.name}`,
+                subject: 'PM Plan',
+                body: `Hi, ${receiver.name} Your PM Plan is created successfully`,
+                subjectThai: 'PM Plan',
+                bodyThai: `สวัสดี ${receiver.name} Your PM Plan is created successfully `,
                 icon: icons,
                 image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `${process.env.SITE_URL}/admin/dashboard/home`,
+                    url: `${process.env.SITE_URL}/admin/preventive-maintenance`,
                     primaryKey: Date.now()
                 }
             },
@@ -106,7 +110,7 @@ const createPmLongJobsNotification = {
                 {
                     action: "explore",
                     title: "Open Home Page",
-                    url: `${process.env.SITE_URL}/admin/dashboard/home`
+                    url: `${process.env.SITE_URL}/admin/preventive-maintenance`
                 }
             ]
         }
@@ -143,7 +147,7 @@ const createPmLongJobsNotification = {
                 image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `${process.env.SITE_URL}/admin/dashboard/home`,
+                    url: `${process.env.SITE_URL}/admin/preventive-maintenance`,
                     primaryKey: Date.now()
                 }
             },
@@ -151,7 +155,7 @@ const createPmLongJobsNotification = {
                 {
                     action: "explore",
                     title: "Open Home Page",
-                    url: `${process.env.SITE_URL}/admin/dashboard/home`
+                    url: `${process.env.SITE_URL}/admin/preventive-maintenance`
                 }
             ]
         }
