@@ -562,7 +562,7 @@ const taskGroupController = {
 
       console.log("work order lengths======>>>>>", workOrderLength)
 
-      if (workOrderLength <= 50) {
+      if (workOrderLength <= 200) {
         pmWorkOrder = await creatPmHelper.createWorkOrders({ consolidatedWorkOrders, payload, orgId });
         console.log("pmWorkOrder result ======>>>>>", pmWorkOrder);
 
@@ -572,7 +572,7 @@ const taskGroupController = {
         });
 
       } else {
-        console.log("Work order length is > 50");
+        console.log("Work order length is > 200");
 
         let orgMaster = await knex
       .from("organisations")
@@ -580,7 +580,7 @@ const taskGroupController = {
       .first();
         // Import SQS Helper..
         const queueHelper = require('../../helpers/queue');
-        await queueHelper.addToQueue({ consolidatedWorkOrders, payload, orgId, requestedBy: req.me ,orgMaster}, 'long-jobs', 'PM_WORK_ORDER_GENERATE');
+        await queueHelper.addToQueue({ consolidatedWorkOrders, payload, orgId, requestedBy: req.me ,orgMaster:orgMaster}, 'long-jobs', 'PM_WORK_ORDER_GENERATE');
 
         return res.status(200).json({
           message: "Request is accepted and is being processed. We will notify you once it it done.",
