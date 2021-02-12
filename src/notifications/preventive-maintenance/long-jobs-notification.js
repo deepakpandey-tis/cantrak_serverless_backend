@@ -9,6 +9,9 @@ const createPmLongJobsNotification = {
         try{
             console.log('[notifications][pm-jobs][pm-jobs-notification][send]: Data:', data);
 
+            console.log('[notifications][pm-jobs][pm-jobs-notification][send]: Notification:', notification);
+
+
             if (SHOULD_QUEUE) {
                 await notification.queue(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, __filename);
                 console.log('[notifications][pm-jobs][pm-jobs-notification][send]: All Notifications Queued');
@@ -18,15 +21,13 @@ const createPmLongJobsNotification = {
             }
 
         }catch(err){
-
+            console.log('[notifications][long-job-notification][long-job-notification][send]:  Error', err);
+            return { code: 'UNKNOWN_ERROR', message: err.message, error: err };
         }
     },
 
     sendInAppNotification: async (sender, receiver, data) => {
-        console.log("Site url",process.env.SITE_URL)
-        let title = data.payload.title;
-        let description = data.payload.description;
-        let url = data.payload.url;
+        console.log("Reciever Id =========>>>",receiver.id)
         let  orgData = data.payload.orgData;
         let icons;
         let images;
@@ -72,10 +73,6 @@ const createPmLongJobsNotification = {
     },
 
     sendWebPushNotification: async (sender, receiver, data) => {
-        let title = data.payload.title;
-        let description = data.payload.description;
-        let url = data.payload.url;
-
         let  orgData = data.payload.orgData;
         let icons;
         let images;
@@ -119,9 +116,6 @@ const createPmLongJobsNotification = {
     },
 
     sendSocketNotification: async (sender, receiver, data) => {
-        let title = data.payload.title;
-        let description = data.payload.description;
-        let url = data.payload.url;
         let  orgData = data.payload.orgData;
         let icons;
         let images;
