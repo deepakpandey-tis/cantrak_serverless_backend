@@ -183,7 +183,7 @@ module.exports.longJobsProcessor = async (event, context) => {
     const creatPmHelper = require("./helpers/preventive-maintenance");
     const { consolidatedWorkOrders, payload, orgId, requestedBy ,orgMaster } = JSON.parse(currentRecord.body);
     
-    console.log('work orders ==============>>>>>>>>>>',consolidatedWorkOrders)
+    console.log('work orders ==============>>>>>>>>>>',consolidatedWorkOrders,orgMaster)
     pmWorkOrder = await creatPmHelper.createWorkOrders({ consolidatedWorkOrders, payload, orgId });
     console.log("pmWorkOrder result ======>>>>>", pmWorkOrder);
 
