@@ -119,6 +119,7 @@ const createPmLongJobsNotification = {
     },
 
     sendSocketNotification: async (sender, receiver, data) => {
+        console.log("notification reciever=====",receiver)
         let title = data.payload.title;
         let description = data.payload.description;
         let url = data.payload.url;
