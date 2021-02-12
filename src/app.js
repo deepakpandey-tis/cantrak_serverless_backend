@@ -126,7 +126,7 @@ module.exports.queueProcessor = async (event, context) => {
 
   const recordsFromSQS = event.Records;
   const currentRecord = recordsFromSQS[0];    // Since we have kept the batchSize to only 1
-  console.log('Current Record:', JSON.stringify(currentRecord));
+  console.log('Current Record:', JSON.parse(currentRecord));
 
   let messageType = 'EMAIL';
 
@@ -180,7 +180,7 @@ module.exports.longJobsProcessor = async (event, context) => {
   if (messageType === 'PM_WORK_ORDER_GENERATE') {
 
     const creatPmHelper = require("./helpers/preventive-maintenance");
-    const { consolidatedWorkOrders, payload, orgId, requestedBy } = JSON.stringify(currentRecord.body);
+    const { consolidatedWorkOrders, payload, orgId, requestedBy } = JSON.parse(currentRecord.body);
     
     console.log('work orders ==============>>>>>>>>>>',consolidatedWorkOrders)
     pmWorkOrder = await creatPmHelper.createWorkOrders({ consolidatedWorkOrders, payload, orgId });
