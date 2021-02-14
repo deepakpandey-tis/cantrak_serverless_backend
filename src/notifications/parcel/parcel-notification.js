@@ -7,8 +7,10 @@ const SHOULD_QUEUE = process.env.IS_OFFLINE ? false : true;
 const parcelNotification = {
     send:async (sender, receiver, data, allowedChannels = ALLOWED_CHANNELS) =>{
         try{
-
             console.log('[notifications][parcel][parcel-notification][send]: Data:', data);
+
+            console.log('[notifications][pm-jobs][pm-jobs-notification][send]: Notification:', notification);
+
 
             if (SHOULD_QUEUE) {
                 await notification.queue(sender, receiver, JSON.parse(JSON.stringify(data)), allowedChannels, __filename);
