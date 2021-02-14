@@ -3,7 +3,6 @@ const _ = require('lodash');
 const AWS = require('aws-sdk');
 const knex = require("../db/knex");
 
-const createPmLongJobsNotification = require('../notifications/preventive-maintenance/long-jobs-notification')
 
 const sendSQSMessage = async (messageBody, queueName, messageType) => {
 

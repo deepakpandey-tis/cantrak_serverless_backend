@@ -64,7 +64,8 @@ const announcementController = {
             Joi.number().allow(null).optional()
           ),
           teamId: Joi.array().items(Joi.number().allow(null).optional()),
-          isGeneral:Joi.boolean().required()
+          isGeneral:Joi.boolean().required(),
+          publishedDate: Joi.string().allow(null).optional()         
         });
 
         let result = Joi.validate(payload, schema);
@@ -85,6 +86,7 @@ const announcementController = {
           updatedAt: currentTime,
           createdBy: req.me.id,
           orgId: req.orgId,
+          publishedDate: currentTime
         };
 
         let announcementNotificationResult = await knex
@@ -442,6 +444,7 @@ const announcementController = {
                 "announcement_master.createdAt",
                 "announcement_master.url",
                 "announcement_master.userType",
+                "announcement_master.publishedDate"
               ])
               .where("announcement_master.orgId", req.orgId)
               .where("announcement_master.status", true)
@@ -504,6 +507,7 @@ const announcementController = {
               "announcement_master.createdAt",
               "announcement_master.url",
               "announcement_master.userType",
+              "announcement_master.publishedDate"
             ])
             .where("announcement_master.orgId", req.orgId)
             .where("announcement_master.status", true)
