@@ -1656,10 +1656,10 @@ const taskGroupController = {
             )
             .select([
               "task_group_schedule_assign_assets.id as workOrderId",
-              "task_group_schedule.id as id",
-              "asset_master.assetName as assetName",
-              "task_group_schedule.taskGroupId",
-              "assigned_service_team.entityId as assignedId",
+              // "task_group_schedule.id as id",
+              // "asset_master.assetName as assetName",
+              // "task_group_schedule.taskGroupId",
+              // "assigned_service_team.entityId as assignedId",
             ])
             .where({
               "task_group_schedule.pmId": payload.pmId,
