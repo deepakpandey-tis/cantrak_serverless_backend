@@ -928,7 +928,7 @@ const taskGroupController = {
       let workOrderTime = moment(req.body.workOrderDate)
         .endOf("date")
         .format("YYYY-MM-DD");
-      console.log("work order time", workOrderTime, req.body.workOrderDate);
+      // console.log("work order time", workOrderTime, req.body.workOrderDate);
 
       let pagination = {};
       let per_page = reqData.per_page || 10;
