@@ -1367,33 +1367,33 @@ const taskGroupController = {
               "task_group_schedule_assign_assets.assetId",
               "asset_master.id"
             )
-            .leftJoin(
-              "assigned_service_team",
-              "task_group_schedule.taskGroupId",
-              "assigned_service_team.entityId"
-            )
-            .leftJoin(
-              "asset_location",
-              "asset_master.id",
-              "asset_location.assetId"
-            )
-            .leftJoin("companies", "asset_location.companyId", "companies.id")
-            .leftJoin("projects", "asset_location.projectId", "projects.id")
-            .leftJoin(
-              "buildings_and_phases",
-              "asset_location.buildingId",
-              "buildings_and_phases.id"
-            )
-            .leftJoin(
-              "floor_and_zones",
-              "asset_location.floorId",
-              "floor_and_zones.id"
-            )
-            .leftJoin(
-              "property_units",
-              "asset_location.unitId",
-              "property_units.id"
-            )
+            // .leftJoin(
+            //   "assigned_service_team",
+            //   "task_group_schedule.taskGroupId",
+            //   "assigned_service_team.entityId"
+            // )
+            // .leftJoin(
+            //   "asset_location",
+            //   "asset_master.id",
+            //   "asset_location.assetId"
+            // )
+            // .leftJoin("companies", "asset_location.companyId", "companies.id")
+            // .leftJoin("projects", "asset_location.projectId", "projects.id")
+            // .leftJoin(
+            //   "buildings_and_phases",
+            //   "asset_location.buildingId",
+            //   "buildings_and_phases.id"
+            // )
+            // .leftJoin(
+            //   "floor_and_zones",
+            //   "asset_location.floorId",
+            //   "floor_and_zones.id"
+            // )
+            // .leftJoin(
+            //   "property_units",
+            //   "asset_location.unitId",
+            //   "property_units.id"
+            // )
 
             .where({
               "task_group_schedule.pmId": payload.pmId,
@@ -1462,30 +1462,6 @@ const taskGroupController = {
                   );
               }
             }),
-          // knex.raw(
-          //   `select distinct on ("workOrderId") "workOrderId", * from (
-          //     select "task_group_schedule_assign_assets"."id" as "workOrderId",
-          //     "task_group_schedule_assign_assets"."displayId" as "TGAA",
-          //     "task_group_schedule_assign_assets"."isActive" as "status",
-          //     "task_group_schedule"."id" as "id", "asset_master"."assetName",
-          //     "asset_master"."model","asset_master"."assetSerial",
-          //     "asset_master"."id" as "assetId", "asset_master"."assetCategoryId",
-          //     "task_group_schedule_assign_assets"."pmDate" as "pmDate",
-          //     DATE("task_group_schedule_assign_assets"."pmDate") as "workOrderDate",
-          //     "task_group_schedule_assign_assets"."frequencyTagIds"::text, 
-          //     "task_group_schedule_assign_assets"."status",
-          //     "task_group_schedule"."taskGroupId",
-          //     "assigned_service_team"."teamId",
-          //     "assigned_service_team"."entityId" as "assignedId"
-          //     from "task_group_schedule"
-          //     inner join "task_group_schedule_assign_assets" on "task_group_schedule"."id" = "task_group_schedule_assign_assets"."scheduleId"
-          //     inner join "asset_master" on "task_group_schedule_assign_assets"."assetId" = "asset_master"."id"  
-          //     left join "assigned_service_team" on "task_group_schedule"."taskGroupId" = "assigned_service_team"."entityId" 
-
-          //     where "task_group_schedule"."pmId" = ${payload.pmId} and "task_group_schedule"."orgId" = ${req.orgId}
-
-          //   ) as "X" order by "workOrderId" asc limit ${per_page}`
-          // ),
           knex
             .distinct ("workOrderId")
             .select("*")
@@ -1768,7 +1744,6 @@ const taskGroupController = {
         data: {
           taskGroupAssetPmsData: pagination,
         },
-        total,
         message: "Task Group PMs Asset List Successfully!",
       });
     } catch (err) {
