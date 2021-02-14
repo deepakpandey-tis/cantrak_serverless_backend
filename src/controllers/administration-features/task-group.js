@@ -1607,7 +1607,11 @@ const taskGroupController = {
             .limit(per_page)
             .orderBy("workOrderDate", "asc"),
 
-          knex("task_group_schedule")
+            knex
+            .distinct ("workOrderId")
+            .select("*")
+            .from(function () {
+          this.from("task_group_schedule")
             .innerJoin(
               "task_group_schedule_assign_assets",
               "task_group_schedule.id",
@@ -1722,12 +1726,14 @@ const taskGroupController = {
                   .orWhereRaw(
                     `"task_group_schedule_assign_assets"."frequencyTagIds"->>5  iLIKE ? `,
                     [payloadFilter.repeatPeriod]
-                  );
+                  )
               }
-            }),
+            })
+            .as("X");
+          })
         ]);
       }
-      rowsId = _.uniqBy(rowsId,"workOrderId")
+      // rowsId = _.uniqBy(rowsId,"workOrderId")
 
       let count = rowsId.length;
       pagination.total = count;
