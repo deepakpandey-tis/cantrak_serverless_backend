@@ -1,6 +1,7 @@
 const createError = require('http-errors')
 
 const resourceAccessMiddleware = {
+  
   isPMAccessible: async (req, res, next) => {
     if (req.superAdmin) {
       return next();
@@ -14,6 +15,8 @@ const resourceAccessMiddleware = {
       return next(createError(403));
     }
   },
+
+
   isCMAccessible: async (req, res, next) => {
     if (req.superAdmin) {
       return next();
@@ -27,6 +30,8 @@ const resourceAccessMiddleware = {
       next(createError(403));
     }
   },
+
+
   isPartAccessible: async (req, res, next) => {
     if (req.superAdmin) {
       return next();
@@ -40,6 +45,8 @@ const resourceAccessMiddleware = {
       next(createError(403));
     }
   },
+
+
   isAssetAccessible: async (req, res, next) => {
     if (req.superAdmin) {
       return next();
@@ -53,6 +60,8 @@ const resourceAccessMiddleware = {
       next(createError(403));
     }
   },
+
+
   isBillingAccessible: async (req, res, next) => {
     if (req.superAdmin) {
       return next();
@@ -66,6 +75,8 @@ const resourceAccessMiddleware = {
       next(createError(403));
     }
   },
+
+
   isPropertySetupAccessible: async (req, res, next) => {
     if (req.superAdmin) {
       return next();
@@ -78,7 +89,38 @@ const resourceAccessMiddleware = {
       console.log('[middleware][resourceAccessMiddleware]: isPropertySetupAccessible: ', false);
       next(createError(403));
     }
-  }
+  },
+
+
+  isFacilityManagementAccessible: async (req, res, next) => {
+    if (req.superAdmin) {
+      return next();
+    }
+    let keys = req.userProjectResources.map(v => v.id);
+    if (keys.includes(9) || keys.includes("9")) {
+      console.log('[middleware][resourceAccessMiddleware]: isFacilityManagementAccessible: ', true);
+      next();
+    } else {
+      console.log('[middleware][resourceAccessMiddleware]: isFacilityManagementAccessible: ', false);
+      next(createError(403));
+    }
+  },
+
+  
+  isParcelManagementAccessible: async (req, res, next) => {
+    if (req.superAdmin) {
+      return next();
+    }
+    let keys = req.userProjectResources.map(v => v.id);
+    if (keys.includes(10) || keys.includes("10")) {
+      console.log('[middleware][resourceAccessMiddleware]: isParcelManagementAccessible: ', true);
+      next();
+    } else {
+      console.log('[middleware][resourceAccessMiddleware]: isParcelManagementAccessible: ', false);
+      next(createError(403));
+    }
+  },
+
 };
 
 module.exports = resourceAccessMiddleware;

@@ -73,8 +73,9 @@ functions:
   s3hook:
     handler: src/app.s3hook
     events:
-      - s3: ${self:custom.bucket}
-        event: s3:*
+      - s3: 
+         bucket: ${self:custom.bucket}
+         event: s3:*
 
   queueProcessor:
     handler: src/app.queueProcessor

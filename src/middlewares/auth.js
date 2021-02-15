@@ -1,7 +1,7 @@
 const knex = require('../db/knex');
 const createError = require('http-errors');
 var jwt = require('jsonwebtoken');
-
+const redisHelper = require('../helpers/redis');
 
 
 const authMiddleware = {
@@ -33,8 +33,16 @@ const authMiddleware = {
 
                 if (currentUser.isActive) {
 
-                    // An user can have atmost one application role
-                    let userApplicationRole = await knex('application_user_roles').where({ userId: Number(currentUser.id) }).select('roleId', 'orgId').first();
+                    // Trying to get application role from cache..
+                    const key = `user_application_roles-${currentUser.id}`;
+                    let userApplicationRole = await redisHelper.getValue(key);
+                    console.log(`[middleware][auth][isAuthenticated]: From Redis userApplicationRole:`, userApplicationRole);
+                    if (!userApplicationRole) {
+                        // An user can have atmost one application role
+                        userApplicationRole = await knex('application_user_roles').where({ userId: Number(currentUser.id) }).select('roleId', 'orgId').first();
+                        await redisHelper.setValueWithExpiry(key, userApplicationRole, 180);
+                    }
+
                     currentUser.roles = userApplicationRole;
 
                     switch (Number(userApplicationRole.roleId)) {
@@ -63,7 +71,7 @@ const authMiddleware = {
                     // currentUser.roles = [roleName];
 
                     req.me = currentUser;
-                    
+
                     console.log('[middleware][auth]: Current User:', currentUser.id, currentUser.email, currentUser.orgId);
                     return next();
                 }
