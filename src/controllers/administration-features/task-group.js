@@ -3423,7 +3423,6 @@ const taskGroupController = {
             "users.name as additionalUser",
           ])
           .where({
-            // "assigned_service_additional_users.entityType": "pm_task_groups",
             "assigned_service_additional_users.entityType": "work_order",
             "assigned_service_additional_users.entityId":
               pmResult[0].workOrderId,
