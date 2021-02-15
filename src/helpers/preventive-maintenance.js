@@ -21,6 +21,7 @@ const pmHelper = {
       let createPmTask = [];
       let partResult = [];
       let assignedAdditionalUser;
+      let workOrderResult = null;
 
       await knex("pm_master2")
         .update({
@@ -80,33 +81,33 @@ const pmHelper = {
           .where({ isActive: true });
 
         // ASSIGNED ADDITIONAL USER OPEN
-        for (let i = 0; i < payload.length; i++) {
-          if (payload[i].additionalUsers && payload[i].additionalUsers.length) {
-            let insertAssignedAdditionalUserData = payload[
-              i
-            ].additionalUsers.map((user) => ({
-              userId: user,
-              entityId: createPmTaskGroup.id,
-              entityType: "pm_task_groups",
-              createdAt: currentTime,
-              updatedAt: currentTime,
-              orgId: orgId,
-            }));
+        for (let i = 0; i < consolidatedWorkOrders.length; i++) {
+          // if (consolidatedWorkOrders[i].additionalUsers && consolidatedWorkOrders[i].additionalUsers.length) {
+          //   let insertAssignedAdditionalUserData = payload[
+          //     i
+          //   ].additionalUsers.map((user) => ({
+          //     userId: user,
+          //     entityId: createPmTaskGroup.id,
+          //     entityType: "pm_task_groups",
+          //     createdAt: currentTime,
+          //     updatedAt: currentTime,
+          //     orgId: orgId,
+          //   }));
 
-            insertAssignedAdditionalUserData = _.uniqBy(
-              insertAssignedAdditionalUserData,
-              "entityId"
-            );
-             assignedAdditionalUser = await knex
-              .insert(insertAssignedAdditionalUserData)
-              .returning(["*"])
-              .transacting(trx)
-              .into("assigned_service_additional_users");
-            console.log(
-              "inserted into assigned_service_additional_users step-2",
-              assignedAdditionalUser
-            );
-          }
+          //   insertAssignedAdditionalUserData = _.uniqBy(
+          //     insertAssignedAdditionalUserData,
+          //     "entityId"
+          //   );
+          //    assignedAdditionalUser = await knex
+          //     .insert(insertAssignedAdditionalUserData)
+          //     .returning(["*"])
+          //     .transacting(trx)
+          //     .into("assigned_service_additional_users");
+          //   console.log(
+          //     "inserted into assigned_service_additional_users step-2",
+          //     assignedAdditionalUser
+          //   );
+          // }
         }
         // ASSIGNED ADDITIONAL USER CLOSE
 
@@ -178,6 +179,8 @@ const pmHelper = {
               "inserted into task_group_schedule_assign_assets step-4",
               assetResult
             );
+
+            workOrderResult = assetResult[0]
 
             for (let l = 0; l < consolidatedWorkOrders[i].tasks.length; l++) {
               let InsertPmTaskPayload = {
@@ -254,7 +257,7 @@ const pmHelper = {
 
             let insertAssignedServiceTeamData;
 
-            for (let i = 0; i < consolidatedWorkOrders.length; i++) {
+            // for (let i = 0; i < consolidatedWorkOrders.length; i++) {
               insertAssignedServiceTeamData = {
                 teamId: consolidatedWorkOrders[i].teamId
                   ? consolidatedWorkOrders[i].teamId
@@ -262,14 +265,14 @@ const pmHelper = {
                 userId: consolidatedWorkOrders[i].mainUserId
                   ? consolidatedWorkOrders[i].mainUserId
                   : null,
-                entityId: createPmTaskGroup.id,
-                entityType: "pm_task_groups",
+                entityId: workOrderResult.id,
+                entityType: "work_order",
                 workOrderId: assetResult[0].id,
                 createdAt: currentTime,
                 updatedAt: currentTime,
                 orgId: orgId,
               };
-            }
+            // }
             let assignedServiceTeamResult = await knex
               .insert(insertAssignedServiceTeamData)
               .returning(["*"])
@@ -281,6 +284,35 @@ const pmHelper = {
               assignedServiceTeamResult
             );
             // }
+
+
+
+             if (consolidatedWorkOrders[i].additionalUsers && consolidatedWorkOrders[i].additionalUsers.length) {
+            let insertAssignedAdditionalUserData = consolidatedWorkOrders[
+              i
+            ].additionalUsers.map((user) => ({
+              userId: user,
+              entityId: workOrderResult.id,
+              entityType: "work_order",
+              createdAt: currentTime,
+              updatedAt: currentTime,
+              orgId: orgId,
+            }));
+
+            // insertAssignedAdditionalUserData = _.uniqBy(
+            //   insertAssignedAdditionalUserData,
+            //   "entityId"
+            // );
+             assignedAdditionalUser = await knex
+              .insert(insertAssignedAdditionalUserData)
+              .returning(["*"])
+              .transacting(trx)
+              .into("assigned_service_additional_users");
+            console.log(
+              "inserted into assigned_service_additional_users step-2",
+              assignedAdditionalUser
+            );
+          }
           }
         }
       });
