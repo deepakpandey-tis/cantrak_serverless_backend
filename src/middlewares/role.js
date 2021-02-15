@@ -2,6 +2,8 @@ const knex = require("../db/knex");
 var jwt = require("jsonwebtoken");
 var _ = require("lodash");
 const createError = require("http-errors");
+const redisHelper = require('../helpers/redis');
+
 
 const roleMiddleware = {
 
@@ -29,31 +31,46 @@ const roleMiddleware = {
         req.orgId = decodedTokenData.orgId;
         console.log('[middleware][role]: parseUserPermission:', userId, orgId);
 
+
+        const projectsKey = `user_role_parse_permission-projects-${userId}`;
+        const companieskey = `user_role_parse_permission-companies-${userId}`;
+
+        let userProjectResources = await redisHelper.getValue(projectsKey);
+        let userCompanyResources = await redisHelper.getValue(companieskey);
+
         if (req.orgAdmin) {
 
           console.log('[middleware][role]: parseUserPermission:', "User is orgAdmin");
-          // get all the projects of this admin
-          const projects = await knex("projects")
-            .select("id")
-            .where({ orgId: req.orgId });
 
-          const companies = await knex("companies")
-            .select("id")
-            .where({ orgId: req.orgId });
+          if (!userProjectResources || !userCompanyResources) {
+            // get all the projects of this admin
+            const projects = await knex("projects")
+              .select("id")
+              .where({ orgId: req.orgId });
 
-          const resources = await knex("organisation_resources_master")
-            .select("resourceId as id")
-            .where({ orgId: req.orgId });
+            const companies = await knex("companies")
+              .select("id")
+              .where({ orgId: req.orgId });
 
-          const userProjectResources = _.uniqBy(resources, "id").map(v => ({
-            id: v.id,
-            projects: projects.map(v => v.id)
-          }));
+            const resources = await knex("organisation_resources_master")
+              .select("resourceId as id")
+              .where({ orgId: req.orgId });
 
-          const userCompanyResources = _.uniqBy(resources, "id").map(v => ({
-            id: v.id,
-            companies: companies.map(v => v.id)
-          }));
+            userProjectResources = _.uniqBy(resources, "id").map(v => ({
+              id: v.id,
+              projects: projects.map(v => v.id)
+            }));
+
+            userCompanyResources = _.uniqBy(resources, "id").map(v => ({
+              id: v.id,
+              companies: companies.map(v => v.id)
+            }));
+
+            console.log('[middleware][role]: parseUserPermission: userCompanyResources (From DB) :: ', userCompanyResources);
+            console.log('[middleware][role]: parseUserPermission: userProjectResources (From DB) :: ', userProjectResources);
+            await redisHelper.setValueWithExpiry(projectsKey, userProjectResources, 180);
+            await redisHelper.setValueWithExpiry(companieskey, userCompanyResources, 180);
+          }
 
           if (userProjectResources.length === 0) {
             return next(createError(403))
@@ -61,79 +78,56 @@ const roleMiddleware = {
 
           req.userCompanyResources = userCompanyResources;
           req.userProjectResources = userProjectResources;
-
-          // console.log('[middleware][role]: parseUserPermission: userCompanyResources :: ', userCompanyResources);
-          console.log('[middleware][role]: parseUserPermission: userProjectResources :: ', userProjectResources);
-
         }
 
         if (req.orgUser) {
 
           console.log('[middleware][role]: parseUserPermission:', "User is orgUser");
 
-          const result = await knex("team_users")
-            .innerJoin(
-              "team_roles_project_master",
-              "team_users.teamId",
-              "team_roles_project_master.teamId"
-            )
-            .innerJoin(
-              "role_resource_master",
-              "team_roles_project_master.roleId",
-              "role_resource_master.roleId"
-            )
-            .select([
-              "team_roles_project_master.projectId as projectId",
-              "role_resource_master.resourceId as resourceId"
-            ]).where({ 'team_users.userId': userId, 'team_users.orgId': req.orgId })//.whereIn('team_users.teamId',teams);
+          if (!userProjectResources) {
+            const result = await knex("team_users")
+              .innerJoin(
+                "team_roles_project_master",
+                "team_users.teamId",
+                "team_roles_project_master.teamId"
+              )
+              .innerJoin(
+                "role_resource_master",
+                "team_roles_project_master.roleId",
+                "role_resource_master.roleId"
+              )
+              .select([
+                "team_roles_project_master.projectId as projectId",
+                "role_resource_master.resourceId as resourceId"
+              ]).where({ 'team_users.userId': userId, 'team_users.orgId': req.orgId })//.whereIn('team_users.teamId',teams);
 
-          console.log(
-            "result***********************************************************",
-            result
-          );
-          if (result.length === 0) {
-            next(createError(403))
+            // console.log(
+            //   "result***********************************************************",
+            //   result
+            // );
+
+            userProjectResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, projects: value.map(a => a.projectId) })).value();
+
+            console.log('[middleware][role]: parseUserPermission: userProjectResources (From DB) :: ', userProjectResources);
+
+            await redisHelper.setValueWithExpiry(projectsKey, userProjectResources, 180);
           }
 
-          let userProjectResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, projects: value.map(a => a.projectId) })).value();
+          if (userProjectResources.length === 0) {
+            return next(createError(403))
+          }
+
           req.userProjectResources = userProjectResources;
-          console.log('[middleware][role]: parseUserPermission: userProjectResources :: ', userProjectResources);
-
-          //req.userCompanyResources = userProjectResources
-
-          //let projects = result.map(v => v.projectId)
-          //  let companyResources = []
-          //  for(let i=0;i<result.length;i++){
-          //    let projectId = result[i].projectId
-          //    let resourceId = result[i].resourceId;
-          //    let companyresult = await knex('projects').where({id:projectId}).select('companyId')
-          //    companyResources.push({resourceId, companyId:companyresult[0].companyId})
-          //companyResources.push({id:resourceId, companies})
-          //  }
-          //console.log("++++++++++++++++++++++++++++", companyResources, '++++++++++++++++++++++++++++++++');
-          //   let userCompanyResources = _.chain(companyResources)
-          //     .groupBy("resourceId")
-          //     .map((value, key) => ({
-          //       id: key,
-          //       companies: value.map(a => a.companyId)
-          //     }))
-          //     .value();
-          //  req.userCompanyResources = userCompanyResources;
-
-
-
         }
 
-        // let currentUser = await knex("users").where({
-        //   id: userId,
-        //   orgId: orgId
-        // });
-        // currentUser = currentUser[0];
+        // console.log('[middleware][role]: parseUserPermission: userCompanyResources (From REDIS) :: ', userCompanyResources);
+        // console.log('[middleware][role]: parseUserPermission: userProjectResources (From REDIS) :: ', userProjectResources);
+
         next();
       }
     } catch (err) {
-      console.log(err);
-      next(createError(403));
+      console.error(`'[middleware][role][parseUserPermission] Error:`, err);
+      // next(createError(403));
       return res.status(200).json({ error: err });
     }
   }
