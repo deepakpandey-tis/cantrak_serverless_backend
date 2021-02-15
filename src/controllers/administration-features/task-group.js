@@ -563,12 +563,16 @@ const taskGroupController = {
       console.log("work order lengths======>>>>>", workOrderLength);
 
       if (workOrderLength <= 200) {
+
+        
         pmWorkOrder = await creatPmHelper.createWorkOrders({
           consolidatedWorkOrders,
           payload,
           orgId,
         });
-        console.log("pmWorkOrder result ======>>>>>", pmWorkOrder);
+        console.log("consolidatedWorkOrders result ======>>>>>", consolidatedWorkOrders);
+
+        console.log("taskgroup data=======",payload)
 
         return res.status(200).json({
           data: { pmWorkOrder },
@@ -940,132 +944,133 @@ const taskGroupController = {
         rowsId = [];
 
       if (payloadFilter.assignedTeam && payloadFilter.assignedTeam.length) {
-        ([rows, rowsId] = await Promise.all([
-          // knex
-          //   .count("* as count")
-          //   .from("task_group_schedule")
-          //   .innerJoin(
-          //     "task_group_schedule_assign_assets",
-          //     "task_group_schedule.id",
-          //     "task_group_schedule_assign_assets.scheduleId"
-          //   )
-          //   .innerJoin(
-          //     "asset_master",
-          //     "task_group_schedule_assign_assets.assetId",
-          //     "asset_master.id"
-          //   )
-          //   .leftJoin(
-          //     "pm_task_groups",
-          //     "task_group_schedule.taskGroupId",
-          //     "pm_task_groups.id"
-          //   )
-          //   .leftJoin(
-          //     "assigned_service_team",
-          //     "pm_task_groups.id",
-          //     "assigned_service_team.entityId"
-          //   )
-          //   .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
-          //   .leftJoin(
-          //     "asset_location",
-          //     "asset_master.id",
-          //     "asset_location.assetId"
-          //   )
-          //   .leftJoin("companies", "asset_location.companyId", "companies.id")
-          //   .leftJoin("projects", "asset_location.projectId", "projects.id")
-          //   .leftJoin(
-          //     "buildings_and_phases",
-          //     "asset_location.buildingId",
-          //     "buildings_and_phases.id"
-          //   )
-          //   .leftJoin(
-          //     "floor_and_zones",
-          //     "asset_location.floorId",
-          //     "floor_and_zones.id"
-          //   )
-          //   .leftJoin(
-          //     "property_units",
-          //     "asset_location.unitId",
-          //     "property_units.id"
-          //   )
-          //   .where({
-          //     "task_group_schedule.pmId": payload.pmId,
-          //     "task_group_schedule.orgId": req.orgId,
-          //   })
-          //   .where((qb) => {
-          //     if (payload.workOrderId && payload.workOrderId != null) {
-          //       qb.where(
-          //         "task_group_schedule_assign_assets.displayId",
-          //         payload.workOrderId
-          //       );
-          //     }
-          //     if (
-          //       req.body.assetCategoryId &&
-          //       req.body.assetCategoryId.length > 0
-          //     ) {
-          //       qb.whereIn(
-          //         "asset_master.assetCategoryId",
-          //         req.body.assetCategoryId
-          //       );
-          //     }
-          //     if (req.body.workOrderDate) {
-          //       qb.whereRaw(
-          //         `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')='${req.body.workOrderDate}'`
-          //       );
-          //     }
-          //     if (req.body.assetName && req.body.assetName.length > 0) {
-          //       qb.whereIn(
-          //         "task_group_schedule_assign_assets.assetId",
-          //         req.body.assetName
-          //       );
-          //     }
-          //     if (req.body.assetSerial && req.body.assetSerial.length > 0) {
-          //       qb.whereIn("asset_master.id", req.body.assetSerial);
-          //     }
-          //     if (req.body.status) {
-          //       qb.whereIn(
-          //         "task_group_schedule_assign_assets.status",
-          //         req.body.status
-          //       );
-          //     }
 
-          //     if (payloadFilter.repeatPeriod) {
-          //       qb.whereRaw(
-          //         `"task_group_schedule_assign_assets"."frequencyTagIds"->>0  iLIKE ? `,
-          //         [payloadFilter.repeatPeriod]
-          //       )
-          //         .orWhereRaw(
-          //           `"task_group_schedule_assign_assets"."frequencyTagIds"->>1  iLIKE ? `,
-          //           [payloadFilter.repeatPeriod]
-          //         )
-          //         .orWhereRaw(
-          //           `"task_group_schedule_assign_assets"."frequencyTagIds"->>2  iLIKE ? `,
-          //           [payloadFilter.repeatPeriod]
-          //         )
-          //         .orWhereRaw(
-          //           `"task_group_schedule_assign_assets"."frequencyTagIds"->>3  iLIKE ? `,
-          //           [payloadFilter.repeatPeriod]
-          //         )
-          //         .orWhereRaw(
-          //           `"task_group_schedule_assign_assets"."frequencyTagIds"->>4  iLIKE ? `,
-          //           [payloadFilter.repeatPeriod]
-          //         )
-          //         .orWhereRaw(
-          //           `"task_group_schedule_assign_assets"."frequencyTagIds"->>5  iLIKE ? `,
-          //           [payloadFilter.repeatPeriod]
-          //         );
-          //     }
-          //     if (payloadFilter.assignedTeam.length) {
-          //       qb.whereIn(
-          //         "assigned_service_team.teamId",
-          //         payloadFilter.assignedTeam
-          //       );
-          //     }
+        [total,rows, rowsId] = await Promise.all([
+          knex
+            .count("* as count")
+            .from("task_group_schedule")
+            .innerJoin(
+              "task_group_schedule_assign_assets",
+              "task_group_schedule.id",
+              "task_group_schedule_assign_assets.scheduleId"
+            )
+            .innerJoin(
+              "asset_master",
+              "task_group_schedule_assign_assets.assetId",
+              "asset_master.id"
+            )
+            .leftJoin(
+              "pm_task_groups",
+              "task_group_schedule.taskGroupId",
+              "pm_task_groups.id"
+            )
+            .leftJoin(
+              "assigned_service_team",
+              "pm_task_groups.id",
+              "assigned_service_team.entityId"
+            )
+            .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+            .leftJoin(
+              "asset_location",
+              "asset_master.id",
+              "asset_location.assetId"
+            )
+            .leftJoin("companies", "asset_location.companyId", "companies.id")
+            .leftJoin("projects", "asset_location.projectId", "projects.id")
+            .leftJoin(
+              "buildings_and_phases",
+              "asset_location.buildingId",
+              "buildings_and_phases.id"
+            )
+            .leftJoin(
+              "floor_and_zones",
+              "asset_location.floorId",
+              "floor_and_zones.id"
+            )
+            .leftJoin(
+              "property_units",
+              "asset_location.unitId",
+              "property_units.id"
+            )
+            .where({
+              "task_group_schedule.pmId": payload.pmId,
+              "task_group_schedule.orgId": req.orgId,
+            })
+            .where((qb) => {
+              if (payload.workOrderId && payload.workOrderId != null) {
+                qb.where(
+                  "task_group_schedule_assign_assets.id",
+                  payload.workOrderId
+                );
+              }
+              if (
+                req.body.assetCategoryId &&
+                req.body.assetCategoryId.length > 0
+              ) {
+                qb.whereIn(
+                  "asset_master.assetCategoryId",
+                  req.body.assetCategoryId
+                );
+              }
+              if (req.body.workOrderDate) {
+                qb.whereRaw(
+                  `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')='${req.body.workOrderDate}'`
+                );
+              }
+              if (req.body.assetName && req.body.assetName.length > 0) {
+                qb.whereIn(
+                  "task_group_schedule_assign_assets.assetId",
+                  req.body.assetName
+                );
+              }
+              if (req.body.assetSerial && req.body.assetSerial.length > 0) {
+                qb.whereIn("asset_master.id", req.body.assetSerial);
+              }
+              if (req.body.status) {
+                qb.whereIn(
+                  "task_group_schedule_assign_assets.status",
+                  req.body.status
+                );
+              }
 
-          //     qb.where({
-          //       "assigned_service_team.entityType": "pm_task_groups",
-          //     });
-          //   })
-          //   .groupBy(["task_group_schedule_assign_assets.id"]),
+              if (payloadFilter.repeatPeriod) {
+                qb.whereRaw(
+                  `"task_group_schedule_assign_assets"."frequencyTagIds"->>0  iLIKE ? `,
+                  [payloadFilter.repeatPeriod]
+                )
+                  .orWhereRaw(
+                    `"task_group_schedule_assign_assets"."frequencyTagIds"->>1  iLIKE ? `,
+                    [payloadFilter.repeatPeriod]
+                  )
+                  .orWhereRaw(
+                    `"task_group_schedule_assign_assets"."frequencyTagIds"->>2  iLIKE ? `,
+                    [payloadFilter.repeatPeriod]
+                  )
+                  .orWhereRaw(
+                    `"task_group_schedule_assign_assets"."frequencyTagIds"->>3  iLIKE ? `,
+                    [payloadFilter.repeatPeriod]
+                  )
+                  .orWhereRaw(
+                    `"task_group_schedule_assign_assets"."frequencyTagIds"->>4  iLIKE ? `,
+                    [payloadFilter.repeatPeriod]
+                  )
+                  .orWhereRaw(
+                    `"task_group_schedule_assign_assets"."frequencyTagIds"->>5  iLIKE ? `,
+                    [payloadFilter.repeatPeriod]
+                  );
+              }
+              if (payloadFilter.assignedTeam.length) {
+                qb.whereIn(
+                  "assigned_service_team.teamId",
+                  payloadFilter.assignedTeam
+                );
+              }
+
+              qb.where({
+                "assigned_service_team.entityType": "work_order",
+              });
+            }),
+            // .groupBy(["task_group_schedule_assign_assets.id"]),
           knex("task_group_schedule")
             .innerJoin(
               "task_group_schedule_assign_assets",
@@ -1207,18 +1212,18 @@ const taskGroupController = {
               }
 
               qb.where({
-                "assigned_service_team.entityType": "pm_task_groups",
+                "assigned_service_team.entityType": "work_order",
               });
             })
-            .groupBy([
-              "task_group_schedule_assign_assets.id",
-              "task_group_schedule.id",
-              "asset_master.id",
-            ])
+            // .groupBy([
+            //   "task_group_schedule_assign_assets.id",
+            //   "task_group_schedule.id",
+            //   "asset_master.id",
+            // ])
             .offset(offset)
             .limit(per_page)
             .orderBy("workOrderDate", "asc"),
-        ])),
+        ]),
           knex("task_group_schedule")
             .innerJoin(
               "task_group_schedule_assign_assets",
@@ -1344,16 +1349,11 @@ const taskGroupController = {
               }
 
               qb.where({
-                "assigned_service_team.entityType": "pm_task_groups",
+                "assigned_service_team.entityType": "work_order",
               });
             })
-            .groupBy([
-              "task_group_schedule_assign_assets.id",
-              "task_group_schedule.id",
-              "asset_master.id",
-            ]);
       } else {
-        [total,rows] = await Promise.all([
+        [total,rows,rowsId] = await Promise.all([
           knex
             .count("* as count")
             .from("task_group_schedule")
@@ -1367,34 +1367,6 @@ const taskGroupController = {
               "task_group_schedule_assign_assets.assetId",
               "asset_master.id"
             )
-            // .leftJoin(
-            //   "assigned_service_team",
-            //   "task_group_schedule.taskGroupId",
-            //   "assigned_service_team.entityId"
-            // )
-            // .leftJoin(
-            //   "asset_location",
-            //   "asset_master.id",
-            //   "asset_location.assetId"
-            // )
-            // .leftJoin("companies", "asset_location.companyId", "companies.id")
-            // .leftJoin("projects", "asset_location.projectId", "projects.id")
-            // .leftJoin(
-            //   "buildings_and_phases",
-            //   "asset_location.buildingId",
-            //   "buildings_and_phases.id"
-            // )
-            // .leftJoin(
-            //   "floor_and_zones",
-            //   "asset_location.floorId",
-            //   "floor_and_zones.id"
-            // )
-            // .leftJoin(
-            //   "property_units",
-            //   "asset_location.unitId",
-            //   "property_units.id"
-            // )
-
             .where({
               "task_group_schedule.pmId": payload.pmId,
               "task_group_schedule.orgId": req.orgId,
@@ -1462,7 +1434,6 @@ const taskGroupController = {
                   );
               }
             }),
-            // .groupBy(["task_group_schedule_assign_assets.pmDate"]),
           knex
             .distinct ("workOrderId")
             .select("*")
@@ -1477,11 +1448,6 @@ const taskGroupController = {
                   "asset_master",
                   "task_group_schedule_assign_assets.assetId",
                   "asset_master.id"
-                )
-                .leftJoin(
-                  "assigned_service_team",
-                  "task_group_schedule.taskGroupId",
-                  "assigned_service_team.entityId"
                 )
                 .leftJoin(
                   "asset_location",
@@ -1527,8 +1493,6 @@ const taskGroupController = {
                   ),
                   "task_group_schedule_assign_assets.status",
                   "task_group_schedule.taskGroupId",
-                  "assigned_service_team.teamId",
-                  "assigned_service_team.entityId as assignedId",
                   "buildings_and_phases.buildingPhaseCode",
                   "floor_and_zones.floorZoneCode",
                   "property_units.unitNumber"
@@ -1608,132 +1572,160 @@ const taskGroupController = {
             .limit(per_page)
             .orderBy("workOrderId", "asc"),
 
-        //     knex
-        //     .distinct ("workOrderId")
-        //     .select("*")
-        //     .from(function () {
-        //   this.from("task_group_schedule")
-        //     .innerJoin(
-        //       "task_group_schedule_assign_assets",
-        //       "task_group_schedule.id",
-        //       "task_group_schedule_assign_assets.scheduleId"
-        //     )
-        //     .innerJoin(
-        //       "asset_master",
-        //       "task_group_schedule_assign_assets.assetId",
-        //       "asset_master.id"
-        //     )
-        //     .leftJoin(
-        //       "assigned_service_team",
-        //       "task_group_schedule.taskGroupId",
-        //       "assigned_service_team.entityId"
-        //     )
-        //     .leftJoin(
-        //       "asset_location",
-        //       "asset_master.id",
-        //       "asset_location.assetId"
-        //     )
-        //     .leftJoin("companies", "asset_location.companyId", "companies.id")
-        //     .leftJoin("projects", "asset_location.projectId", "projects.id")
-        //     .leftJoin(
-        //       "buildings_and_phases",
-        //       "asset_location.buildingId",
-        //       "buildings_and_phases.id"
-        //     )
-        //     .leftJoin(
-        //       "floor_and_zones",
-        //       "asset_location.floorId",
-        //       "floor_and_zones.id"
-        //     )
-        //     .leftJoin(
-        //       "property_units",
-        //       "asset_location.unitId",
-        //       "property_units.id"
-        //     )
-        //     .select([
-        //       "task_group_schedule_assign_assets.id as workOrderId",
-        //       "task_group_schedule.id as id",
-        //       "asset_master.assetName as assetName",
-        //       "task_group_schedule.taskGroupId",
-        //       "assigned_service_team.entityId as assignedId",
-        //     ])
-        //     .where({
-        //       "task_group_schedule.pmId": payload.pmId,
-        //       "task_group_schedule.orgId": req.orgId,
-        //     })
-        //     .where((qb) => {
-        //       if (payload.workOrderId && payload.workOrderId != null) {
-        //         qb.where(
-        //           "task_group_schedule_assign_assets.displayId",
-        //           payload.workOrderId
-        //         );
-        //       }
-        //       if (
-        //         req.body.assetCategoryId &&
-        //         req.body.assetCategoryId.length > 0
-        //       ) {
-        //         qb.whereIn(
-        //           "asset_master.assetCategoryId",
-        //           req.body.assetCategoryId
-        //         );
-        //       }
+            knex
+            .distinct ("workOrderId")
+            .select("*")
+            .from(function () {
+              this.from("task_group_schedule")
+                .innerJoin(
+                  "task_group_schedule_assign_assets",
+                  "task_group_schedule.id",
+                  "task_group_schedule_assign_assets.scheduleId"
+                )
+                .innerJoin(
+                  "asset_master",
+                  "task_group_schedule_assign_assets.assetId",
+                  "asset_master.id"
+                )
+                .leftJoin(
+                  "asset_location",
+                  "asset_master.id",
+                  "asset_location.assetId"
+                )
+                .leftJoin("companies", "asset_location.companyId", "companies.id")
+                .leftJoin("projects", "asset_location.projectId", "projects.id")
+                .leftJoin(
+                  "buildings_and_phases",
+                  "asset_location.buildingId",
+                  "buildings_and_phases.id"
+                )
+                .leftJoin(
+                  "floor_and_zones",
+                  "asset_location.floorId",
+                  "floor_and_zones.id"
+                )
+                .leftJoin(
+                  "property_units",
+                  "asset_location.unitId",
+                  "property_units.id"
+                )
+                .select([
+                  "task_group_schedule_assign_assets.id as workOrderId",
+                ])
+                .where({
+                  "task_group_schedule.pmId": payload.pmId,
+                  "task_group_schedule.orgId": req.orgId,
+                })
+                .where((qb) => {
+                  if (payload.workOrderId && payload.workOrderId != null) {
+                    qb.where(
+                      "task_group_schedule_assign_assets.displayId",
+                      payload.workOrderId
+                    );
+                  }
 
-        //       if (req.body.workOrderDate) {
-        //         qb.whereRaw(
-        //           `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')='${req.body.workOrderDate}'`
-        //         );
-        //       }
-        //       if (req.body.assetName && req.body.assetName.length > 0) {
-        //         qb.whereIn(
-        //           "task_group_schedule_assign_assets.assetId",
-        //           req.body.assetName
-        //         );
-        //       }
-        //       if (req.body.assetSerial && req.body.assetSerial.length > 0) {
-        //         qb.whereIn("asset_master.id", req.body.assetSerial);
-        //       }
-        //       if (req.body.status) {
-        //         qb.whereIn(
-        //           "task_group_schedule_assign_assets.status",
-        //           req.body.status
-        //         );
-        //       }
-        //       if (payloadFilter.repeatPeriod) {
-        //         qb.whereRaw(
-        //           `"task_group_schedule_assign_assets"."frequencyTagIds"->>0  iLIKE ? `,
-        //           [payloadFilter.repeatPeriod]
-        //         )
-        //           .orWhereRaw(
-        //             `"task_group_schedule_assign_assets"."frequencyTagIds"->>1  iLIKE ? `,
-        //             [payloadFilter.repeatPeriod]
-        //           )
-        //           .orWhereRaw(
-        //             `"task_group_schedule_assign_assets"."frequencyTagIds"->>2  iLIKE ? `,
-        //             [payloadFilter.repeatPeriod]
-        //           )
-        //           .orWhereRaw(
-        //             `"task_group_schedule_assign_assets"."frequencyTagIds"->>3  iLIKE ? `,
-        //             [payloadFilter.repeatPeriod]
-        //           )
-        //           .orWhereRaw(
-        //             `"task_group_schedule_assign_assets"."frequencyTagIds"->>4  iLIKE ? `,
-        //             [payloadFilter.repeatPeriod]
-        //           )
-        //           .orWhereRaw(
-        //             `"task_group_schedule_assign_assets"."frequencyTagIds"->>5  iLIKE ? `,
-        //             [payloadFilter.repeatPeriod]
-        //           )
-        //       }
-        //     })
-        //     .as("X");
-        //   })
+                  if (
+                    req.body.assetCategoryId &&
+                    req.body.assetCategoryId.length > 0
+                  ) {
+                    qb.whereIn(
+                      "asset_master.assetCategoryId",
+                      req.body.assetCategoryId
+                    );
+                  }
+
+                  if (req.body.workOrderDate) {
+                    qb.whereRaw(
+                      `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')='${req.body.workOrderDate}'`
+                    );
+                  }
+                  if (req.body.assetName && req.body.assetName.length > 0) {
+                    qb.whereIn(
+                      "task_group_schedule_assign_assets.assetId",
+                      req.body.assetName
+                    );
+                  }
+                  if (req.body.assetSerial && req.body.assetSerial.length > 0) {
+                    qb.whereIn("asset_master.id", req.body.assetSerial);
+                  }
+                  if (req.body.status) {
+                    qb.whereIn(
+                      "task_group_schedule_assign_assets.status",
+                      req.body.status
+                    );
+                  }
+                  if (payloadFilter.repeatPeriod) {
+                    qb.whereRaw(
+                      `"task_group_schedule_assign_assets"."frequencyTagIds"->>0  iLIKE ? `,
+                      [payloadFilter.repeatPeriod]
+                    )
+                      .orWhereRaw(
+                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>1  iLIKE ? `,
+                        [payloadFilter.repeatPeriod]
+                      )
+                      .orWhereRaw(
+                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>2  iLIKE ? `,
+                        [payloadFilter.repeatPeriod]
+                      )
+                      .orWhereRaw(
+                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>3  iLIKE ? `,
+                        [payloadFilter.repeatPeriod]
+                      )
+                      .orWhereRaw(
+                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>4  iLIKE ? `,
+                        [payloadFilter.repeatPeriod]
+                      )
+                      .orWhereRaw(
+                        `"task_group_schedule_assign_assets"."frequencyTagIds"->>5  iLIKE ? `,
+                        [payloadFilter.repeatPeriod]
+                      );
+                  }
+                })
+                .as("X");
+            })
+
         ]);
       }
 
+      const Parallel = require("async-parallel");
 
-      // rowsId = _.uniqBy(rowsId,"workOrderId")
+      rows = await Parallel.map(rows,async (row)=>{
+        const teamData = await knex
+        .from("assigned_service_team")
+        .select([
+          "assigned_service_team.teamId",
+        ])
+        .where({
+          "assigned_service_team.entityId": row.workOrderId,
+          "assigned_service_team.entityType": "work_order",
+        })
+        .where((qb) => {
+          if (req.body.assignedTeam) {
+            qb.whereIn("assigned_service_team.teamId", req.body.assignedTeam);
+          }
+        })
+        .first();
+        return { ...row, ...teamData };
+      })
 
-      // let count = rowsId.length;
+      rowsId = await Parallel.map(rowsId,async (row)=>{
+        const teamData = await knex
+        .from("assigned_service_team")
+        .select([
+          "assigned_service_team.teamId",
+        ])
+        .where({
+          "assigned_service_team.entityId": row.workOrderId,
+          "assigned_service_team.entityType": "work_order",
+        })
+        .where((qb) => {
+          if (req.body.assignedTeam) {
+            qb.whereIn("assigned_service_team.teamId", req.body.assignedTeam);
+          }
+        })
+        .first();
+        return { ...row, ...teamData };
+      })
 
 
       console.log("total length of data=====>",total)
@@ -1930,7 +1922,7 @@ const taskGroupController = {
               qb.whereIn("pm_master2.projectId", accessibleProjects);
 
               qb.where({
-                "assigned_service_team.entityType": "pm_task_groups",
+                "assigned_service_team.entityType": "work_order",
               });
             })
             .groupBy("task_group_schedule_assign_assets.id"),
@@ -2066,7 +2058,7 @@ const taskGroupController = {
               qb.whereIn("pm_master2.projectId", accessibleProjects);
 
               qb.where({
-                "assigned_service_team.entityType": "pm_task_groups",
+                "assigned_service_team.entityType": "work_order",
               });
             })
             .groupBy([
@@ -3309,7 +3301,7 @@ const taskGroupController = {
         )
         .leftJoin(
           "assigned_service_team",
-          "pm_task_groups.id",
+          "task_group_schedule_assign_assets.id",
           "assigned_service_team.entityId"
         )
         .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
@@ -3330,10 +3322,6 @@ const taskGroupController = {
           "asset_master.assetCode",
           "companies.logoFile",
           "companies.companyAddressEng",
-          // 'projects.projectName',
-          // 'buildings_and_phases.buildingPhaseCode',
-          // 'floor_and_zones.floorZoneCode',
-          // 'property_units.unitNumber',
           "task_group_schedule.startDate as startDate",
           "task_group_schedule.endDate as endDate",
           "task_group_schedule.repeatFrequency as repeatFrequency",
@@ -3345,18 +3333,16 @@ const taskGroupController = {
           "task_group_schedule_assign_assets.pmDate as pmDate",
           "task_group_schedule_assign_assets.displayId",
           "task_group_schedule_assign_assets.status as woStatus",
+          "task_group_schedule_assign_assets.id as workOrderId",
           "companies.taxId",
           "companies.telephone",
         ])
         .where({
-          "task_group_schedule.id": payload.taskGroupScheduleId,
           "task_group_schedule_assign_assets.id":
             payload.taskGroupScheduleAssignAssetId,
-          //'task_group_schedule.taskGroupId':payload.taskGroupId,
-          "assigned_service_team.entityType": "pm_task_groups",
-          "task_group_schedule.orgId": req.orgId,
+          "assigned_service_team.entityType": "work_order",
+          "task_group_schedule_assign_assets.orgId": req.orgId,
         });
-      // .where(knex.raw('"asset_location"."updatedAt" = (select max("updatedAt") from asset_location)'))
 
       /// Update by Deepak Tiwari
       console.log("Details for team user", pmResult2);
@@ -3437,9 +3423,9 @@ const taskGroupController = {
             "users.name as additionalUser",
           ])
           .where({
-            "assigned_service_additional_users.entityType": "pm_task_groups",
+            "assigned_service_additional_users.entityType": "work_order",
             "assigned_service_additional_users.entityId":
-              pmResult[0].taskGroupId,
+              pmResult[0].workOrderId,
             "assigned_service_additional_users.orgId": req.orgId,
           });
 
@@ -3636,7 +3622,7 @@ const taskGroupController = {
           "task_group_schedule_assign_assets.id":
             payload.taskGroupScheduleAssignAssetId,
           //'task_group_schedule.taskGroupId':payload.taskGroupId,
-          "assigned_service_team.entityType": "pm_task_groups",
+          "assigned_service_team.entityType": "work_order",
           "task_group_schedule.orgId": req.orgId,
         });
       // .where(knex.raw('"asset_location"."updatedAt" = (select max("updatedAt") from asset_location)'))
@@ -3719,7 +3705,7 @@ const taskGroupController = {
             "users.name as additionalUser",
           ])
           .where({
-            "assigned_service_additional_users.entityType": "pm_task_groups",
+            "assigned_service_additional_users.entityType": "work_order",
             "assigned_service_additional_users.entityId":
               pmResult[0].taskGroupId,
             "assigned_service_additional_users.orgId": req.orgId,
@@ -4705,14 +4691,14 @@ const taskGroupController = {
       const team = await knex("assigned_service_team")
         .select(["teamId", "userId"])
         .where({
-          entityType: "pm_task_groups",
+          entityType: "work_order",
           entityId: taskGroupId,
           orgId: req.orgId,
         });
       const additionalUsers = await knex("assigned_service_additional_users")
         .select("userId")
         .where({
-          entityType: "pm_task_groups",
+          entityType: "work_order",
           entityId: taskGroupId,
           orgId: req.orgId,
         });
@@ -4862,7 +4848,7 @@ const taskGroupController = {
         .update({ teamId, userId: mainUserId })
         .where({
           entityId: taskGroupId,
-          entityType: "pm_task_groups",
+          entityType: "work_order",
           orgId: req.orgId,
         });
       let updatedAdditionalUsers = [];
@@ -4872,7 +4858,7 @@ const taskGroupController = {
         )
           .update({ userId: id })
           .where({
-            entityType: "pm_task_groups",
+            entityType: "work_order",
             entityId: taskGroupId,
             orgId: req.orgId,
           });
@@ -5094,17 +5080,17 @@ const taskGroupController = {
       console.log("payload.workOrderId to edit", payload.workOrderId);
 
       let deleteTeamAndUser = knex("assigned_service_team")
-        .where({ entityType: "pm_task_groups", orgId: req.orgId })
+        .where({ entityType: "work_order", orgId: req.orgId })
         .whereIn("assigned_service_team.workOrderId", payload.workOrderId);
 
       const updateWorkOrderTeamAndUsers = await knex("assigned_service_team")
         .update(teamUsersPayload)
-        .where({ entityType: "pm_task_groups", orgId: req.orgId })
+        .where({ entityType: "work_order", orgId: req.orgId })
         .whereIn("assigned_service_team.workOrderId", payload.workOrderId);
 
       let deleteAdditionalUser = knex("assigned_service_additional_users")
         .where({
-          "assigned_service_additional_users.entityType": "pm_task_groups",
+          "assigned_service_additional_users.entityType": "work_order",
         })
         .whereIn("assigned_service_additional_users.entityId", payload.entityId)
         .del();
@@ -5120,7 +5106,7 @@ const taskGroupController = {
             updatedAt: currentTime,
           })
           .where({
-            "assigned_service_additional_users.entityType": "pm_task_groups",
+            "assigned_service_additional_users.entityType": "work_order",
           })
           .whereIn(
             "assigned_service_additional_users.entityId",
@@ -6108,10 +6094,6 @@ const taskGroupController = {
           "asset_master.assetCode",
           "companies.logoFile",
           "companies.companyAddressEng",
-          // 'projects.projectName',
-          // 'buildings_and_phases.buildingPhaseCode',
-          // 'floor_and_zones.floorZoneCode',
-          // 'property_units.unitNumber',
           "task_group_schedule.startDate as startDate",
           "task_group_schedule.endDate as endDate",
           "task_group_schedule.repeatFrequency as repeatFrequency",
@@ -6130,11 +6112,8 @@ const taskGroupController = {
           "task_group_schedule.id": payload.taskGroupScheduleId,
           "task_group_schedule_assign_assets.id":
             payload.taskGroupScheduleAssignAssetId,
-          //'task_group_schedule.taskGroupId':payload.taskGroupId,
-          // 'assigned_service_team.entityType': 'pm_task_groups',
           "task_group_schedule.orgId": req.orgId,
         });
-      // .where(knex.raw('"asset_location"."updatedAt" = (select max("updatedAt") from asset_location)'))
 
       /// Update by Deepak Tiwari
       console.log("Details for team user", pmResult2);
@@ -6215,7 +6194,7 @@ const taskGroupController = {
             "users.name as additionalUser",
           ])
           .where({
-            "assigned_service_additional_users.entityType": "pm_task_groups",
+            "assigned_service_additional_users.entityType": "work_order",
             "assigned_service_additional_users.entityId":
               pmResult[0].taskGroupId,
             "assigned_service_additional_users.orgId": req.orgId,

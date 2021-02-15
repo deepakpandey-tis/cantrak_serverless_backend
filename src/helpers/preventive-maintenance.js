@@ -1,19 +1,23 @@
-const Joi = require('@hapi/joi');
-const _ = require('lodash');
-const AWS = require('aws-sdk');
-const knex = require('../db/knex');
-const moment = require('moment-timezone');
+const Joi = require("@hapi/joi");
+const _ = require("lodash");
+const AWS = require("aws-sdk");
+const knex = require("../db/knex");
+const moment = require("moment-timezone");
 
 AWS.config.update({
   accessKeyId: process.env.ACCESS_KEY_ID,
   secretAccessKey: process.env.SECRET_ACCESS_KEY,
-  region: process.env.REGION || 'us-east-1',
+  region: process.env.REGION || "us-east-1",
 });
 
 const pmHelper = {
   createWorkOrders: async ({ consolidatedWorkOrders, payload, orgId }) => {
-
-    console.log("consolidatedWorkOrders, payload, orgId =======>>>>>",consolidatedWorkOrders, payload, orgId)
+    console.log(
+      "consolidatedWorkOrders, payload, orgId =======>>>>>",
+      consolidatedWorkOrders,
+      payload,
+      orgId
+    );
     try {
       let createPmTaskGroup = null;
       let taskSchedule = null;
@@ -21,6 +25,7 @@ const pmHelper = {
       let createPmTask = [];
       let partResult = [];
       let assignedAdditionalUser;
+      let workOrderResult = null;
 
       await knex("pm_master2")
         .update({
@@ -78,37 +83,6 @@ const pmHelper = {
         await knex("pm_task_groups")
           .update({ isActive: true })
           .where({ isActive: true });
-
-        // ASSIGNED ADDITIONAL USER OPEN
-        for (let i = 0; i < payload.length; i++) {
-          if (payload[i].additionalUsers && payload[i].additionalUsers.length) {
-            let insertAssignedAdditionalUserData = payload[
-              i
-            ].additionalUsers.map((user) => ({
-              userId: user,
-              entityId: createPmTaskGroup.id,
-              entityType: "pm_task_groups",
-              createdAt: currentTime,
-              updatedAt: currentTime,
-              orgId: orgId,
-            }));
-
-            insertAssignedAdditionalUserData = _.uniqBy(
-              insertAssignedAdditionalUserData,
-              "entityId"
-            );
-             assignedAdditionalUser = await knex
-              .insert(insertAssignedAdditionalUserData)
-              .returning(["*"])
-              .transacting(trx)
-              .into("assigned_service_additional_users");
-            console.log(
-              "inserted into assigned_service_additional_users step-2",
-              assignedAdditionalUser
-            );
-          }
-        }
-        // ASSIGNED ADDITIONAL USER CLOSE
 
         // TASK GROUP SCHEDULE OPEN
         let insertScheduleData;
@@ -178,6 +152,8 @@ const pmHelper = {
               "inserted into task_group_schedule_assign_assets step-4",
               assetResult
             );
+
+            workOrderResult = assetResult[0];
 
             for (let l = 0; l < consolidatedWorkOrders[i].tasks.length; l++) {
               let InsertPmTaskPayload = {
@@ -252,24 +228,25 @@ const pmHelper = {
             // CREATE PM TASK CLOSE
             assetResults.push(assetResult[0]);
 
+            // ASSIGNED ADDITIONAL USER OPEN
+
             let insertAssignedServiceTeamData;
 
-            for (let i = 0; i < consolidatedWorkOrders.length; i++) {
-              insertAssignedServiceTeamData = {
-                teamId: consolidatedWorkOrders[i].teamId
-                  ? consolidatedWorkOrders[i].teamId
-                  : null,
-                userId: consolidatedWorkOrders[i].mainUserId
-                  ? consolidatedWorkOrders[i].mainUserId
-                  : null,
-                entityId: createPmTaskGroup.id,
-                entityType: "pm_task_groups",
-                workOrderId: assetResult[0].id,
-                createdAt: currentTime,
-                updatedAt: currentTime,
-                orgId: orgId,
-              };
-            }
+            insertAssignedServiceTeamData = {
+              teamId: consolidatedWorkOrders[i].teamId
+                ? consolidatedWorkOrders[i].teamId
+                : null,
+              userId: consolidatedWorkOrders[i].mainUserId
+                ? consolidatedWorkOrders[i].mainUserId
+                : null,
+              entityId: workOrderResult.id,
+              entityType: "work_order",
+              workOrderId: assetResult[0].id,
+              createdAt: currentTime,
+              updatedAt: currentTime,
+              orgId: orgId,
+            };
+            // }
             let assignedServiceTeamResult = await knex
               .insert(insertAssignedServiceTeamData)
               .returning(["*"])
@@ -280,7 +257,33 @@ const pmHelper = {
               "inserted into assigned_service_team step-7",
               assignedServiceTeamResult
             );
-            // }
+            // ASSIGNED ADDITIONAL USER CLOSE
+
+            if (
+              consolidatedWorkOrders[i].additionalUsers &&
+              consolidatedWorkOrders[i].additionalUsers.length
+            ) {
+              let insertAssignedAdditionalUserData = consolidatedWorkOrders[
+                i
+              ].additionalUsers.map((user) => ({
+                userId: user,
+                entityId: workOrderResult.id,
+                entityType: "work_order",
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                orgId: orgId,
+              }));
+
+              assignedAdditionalUser = await knex
+                .insert(insertAssignedAdditionalUserData)
+                .returning(["*"])
+                .transacting(trx)
+                .into("assigned_service_additional_users");
+              console.log(
+                "inserted into assigned_service_additional_users step-2",
+                assignedAdditionalUser
+              );
+            }
           }
         }
       });
@@ -305,24 +308,21 @@ const pmHelper = {
 
       console.log("STEP - 10 ===========>>>>", updategroupSchedule);
 
-      
-
       return {
-        // data: {
-        //   templateData: createTemplate,
-        //   taskTemplateData: createTemplateTask,
-          pmTaskGroupData: createPmTaskGroup,
-          assignedAdditionalUserData: assignedAdditionalUser,
-          assignedServiceTeamData: assignedServiceTeam,
-          taskScheduleData: taskSchedule,
-          assetResultData: assetResults,
-          createdPmTasks: createPmTask,
-          partResult: partResult,
-        // },
+        pmTaskGroupData: createPmTaskGroup,
+        assignedAdditionalUserData: assignedAdditionalUser,
+        assignedServiceTeamData: assignedServiceTeam,
+        taskScheduleData: taskSchedule,
+        assetResultData: assetResults,
+        createdPmTasks: createPmTask,
+        partResult: partResult,
       };
     } catch (err) {
-        console.log('[helpers][preventive-maintenance][create-work-orders]:  Error', err);
-        return { code: 'UNKNOWN_ERROR', message: err.message, error: err };
+      console.log(
+        "[helpers][preventive-maintenance][create-work-orders]:  Error",
+        err
+      );
+      return { code: "UNKNOWN_ERROR", message: err.message, error: err };
     }
   },
 };

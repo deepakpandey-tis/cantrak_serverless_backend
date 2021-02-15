@@ -697,7 +697,7 @@ const dashboardController = {
           .where({
             "task_group_schedule_assign_assets.orgId": orgId,
             "assigned_service_team.userId": id,
-            "assigned_service_team.entityType": "pm_task_groups",
+            "assigned_service_team.entityType": "work_order",
           })
           .whereIn("pm_task_groups.companyId", payload.companyIds)
           // .orWhere({ 'assigned_service_additional_users.userId': id, 'assigned_service_additional_users.entityType': 'pm_task_groups' })
@@ -1232,7 +1232,7 @@ const dashboardController = {
           .where({
             "task_group_schedule_assign_assets.orgId": req.orgId,
             "assigned_service_team.userId": id,
-            "assigned_service_team.entityType": "pm_task_groups",
+            "assigned_service_team.entityType": "work_order",
           })
           // .orWhere({ 'assigned_service_additional_users.userId': id, 'assigned_service_additional_users.entityType': 'pm_task_groups' })
           .whereBetween("task_group_schedule_assign_assets.pmDate", [
