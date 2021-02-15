@@ -43,6 +43,7 @@
     "nodemailer": "^6.4.17",
     "pg": "^8.5.1",
     "qrcode": "^1.4.4",
+    "redis": "^3.0.2",
     "request": "^2.88.2",
     "rrule": "^2.6.6",
     "serverless-http": "^2.6.0",
