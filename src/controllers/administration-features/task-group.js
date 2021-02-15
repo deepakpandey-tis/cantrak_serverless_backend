@@ -1353,7 +1353,6 @@ const taskGroupController = {
               "asset_master.id",
             ]);
       } else {
-        console.log("Else called=======")
         [total,rows] = await Promise.all([
           knex
             .count("* as count")
@@ -1368,33 +1367,33 @@ const taskGroupController = {
               "task_group_schedule_assign_assets.assetId",
               "asset_master.id"
             )
-            .leftJoin(
-              "assigned_service_team",
-              "task_group_schedule.taskGroupId",
-              "assigned_service_team.entityId"
-            )
-            .leftJoin(
-              "asset_location",
-              "asset_master.id",
-              "asset_location.assetId"
-            )
-            .leftJoin("companies", "asset_location.companyId", "companies.id")
-            .leftJoin("projects", "asset_location.projectId", "projects.id")
-            .leftJoin(
-              "buildings_and_phases",
-              "asset_location.buildingId",
-              "buildings_and_phases.id"
-            )
-            .leftJoin(
-              "floor_and_zones",
-              "asset_location.floorId",
-              "floor_and_zones.id"
-            )
-            .leftJoin(
-              "property_units",
-              "asset_location.unitId",
-              "property_units.id"
-            )
+            // .leftJoin(
+            //   "assigned_service_team",
+            //   "task_group_schedule.taskGroupId",
+            //   "assigned_service_team.entityId"
+            // )
+            // .leftJoin(
+            //   "asset_location",
+            //   "asset_master.id",
+            //   "asset_location.assetId"
+            // )
+            // .leftJoin("companies", "asset_location.companyId", "companies.id")
+            // .leftJoin("projects", "asset_location.projectId", "projects.id")
+            // .leftJoin(
+            //   "buildings_and_phases",
+            //   "asset_location.buildingId",
+            //   "buildings_and_phases.id"
+            // )
+            // .leftJoin(
+            //   "floor_and_zones",
+            //   "asset_location.floorId",
+            //   "floor_and_zones.id"
+            // )
+            // .leftJoin(
+            //   "property_units",
+            //   "asset_location.unitId",
+            //   "property_units.id"
+            // )
 
             .where({
               "task_group_schedule.pmId": payload.pmId,
@@ -1462,7 +1461,8 @@ const taskGroupController = {
                     [payloadFilter.repeatPeriod]
                   );
               }
-            }).groupBy(["task_group_schedule_assign_assets.pmDate"]),
+            }),
+            // .groupBy(["task_group_schedule_assign_assets.pmDate"]),
           knex
             .distinct ("workOrderId")
             .select("*")
