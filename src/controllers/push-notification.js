@@ -34,23 +34,22 @@ const pushNotificationController = {
                 .into("push_subscribers");
             addedData = addedData[0];
 
-            let orgMaster = await knex.from("users").where({ id: req.orgId, organisationAdminId: 994 }).orWhere({ id: req.orgId, organisationAdminId: 1188 }).first();
-
+            let orgMaster = await knex
+            .from("organisations")
+            .where({ id: req.orgId })
+            .first();
+            
             let icons;
             let images;
-            if(orgMaster && orgMaster.orgId == 56){
-                icons = 'assets/icons/cbre-512x512.png';
-                images = 'assets/icons/cbre-512x512.png';
-            }
-            else if(orgData && orgData.id == '89'){
-                icons = 'assets/icons/senses-512x512.png';
-                images = 'assets/icons/senses-512x512.png';
-            }
-            else{
+
+            if(orgMaster && orgMaster.organisationLogo == ''){
                 icons = 'assets/icons/icon-512x512.png';
                 images = 'assets/icons/icon-512x512.png';
             }
-
+            else{
+                icons = orgMaster.organisationLogo;
+                images = orgMaster.organisationLogo;
+            }
 
             let notification = {
                 title: 'TIS - New Notification',
