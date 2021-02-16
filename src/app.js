@@ -122,7 +122,7 @@ module.exports.s3hook = (event, context) => {
 
 // EMAIL HANDLER (Triggered From SQS)
 module.exports.queueProcessor = async (event, context) => {
-  // console.log('Event:', JSON.stringify(event));
+  console.log('Event:', JSON.stringify(event));
   // console.log('Context:', JSON.stringify(context));
 
   const recordsFromSQS = event.Records;
