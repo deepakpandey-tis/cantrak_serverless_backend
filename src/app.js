@@ -127,7 +127,7 @@ module.exports.queueProcessor = async (event, context) => {
 
   const recordsFromSQS = event.Records;
   const currentRecord = recordsFromSQS[0];    // Since we have kept the batchSize to only 1
-  console.log('Current Record:', JSON.parse(currentRecord));
+  console.log('Current Record:', currentRecord);
 
   let messageType = 'EMAIL';
 
@@ -151,6 +151,8 @@ module.exports.queueProcessor = async (event, context) => {
     console.log('[app][queueProcessor]', 'Received message is notification.');
     const notificationHandler = require('./notifications/core/notification');
     const notificationOptions = JSON.parse(currentRecord.body);
+    
+    console.log('[app][queueProcessor]: Notification Options:', notificationOptions);
     await notificationHandler.processQueue(notificationOptions);
 
     console.log('[app][queueProcessor]: Notification Sent Successfully');
