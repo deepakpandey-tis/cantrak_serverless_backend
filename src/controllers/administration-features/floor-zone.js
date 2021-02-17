@@ -1060,6 +1060,7 @@ const floorZoneController = {
               'floor_and_zones.buildingPhaseId': buildingPhaseId, 'floor_and_zones.isActive': true, 'floor_and_zones.orgId': orgId,'property_units.type':2 })
             .whereIn('floor_and_zones.companyId',companyArr1)
             .groupBy(['floor_and_zones.id'])
+            .orderBy('floor_and_zones.floorZoneCode','asc')
             
         } else {
           floor = await knex("floor_and_zones")
@@ -1071,7 +1072,7 @@ const floorZoneController = {
             .where({ isActive: true, orgId: orgId,"property_units.type":1 })
             .whereIn('floor_and_zones.companyId', companyArr1)
             .groupBy(['floor_and_zones.id'])
-
+            .orderBy('floor_and_zones.floorZoneCode','asc')
 
         }
 
@@ -1084,7 +1085,7 @@ const floorZoneController = {
           })
           .whereIn('floor_and_zones.companyId', companyArr1)
           .groupBy(['floor_and_zones.id'])
-
+          .orderBy('floor_and_zones.floorZoneCode','asc')
       }
 
 
@@ -1125,6 +1126,7 @@ const floorZoneController = {
               'floor_and_zones.buildingPhaseId': buildingPhaseId, 'floor_and_zones.isActive': true, 'floor_and_zones.orgId': orgId })
             .whereIn('floor_and_zones.companyId',companyArr1)
             .groupBy(['floor_and_zones.id'])
+            .orderBy('floor_and_zones.floorZoneCode','asc')
             
         } else {
           floor = await knex("floor_and_zones")
@@ -1136,6 +1138,7 @@ const floorZoneController = {
             .where({ isActive: true, orgId: orgId })
             .whereIn('floor_and_zones.companyId', companyArr1)
             .groupBy(['floor_and_zones.id'])
+            .orderBy('floor_and_zones.floorZoneCode','asc')
 
 
         }
@@ -1149,6 +1152,7 @@ const floorZoneController = {
           })
           .whereIn('floor_and_zones.companyId', companyArr1)
           .groupBy(['floor_and_zones.id'])
+          .orderBy('floor_and_zones.floorZoneCode','asc')
 
       }
 
