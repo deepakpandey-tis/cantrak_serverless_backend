@@ -709,7 +709,7 @@ const floorZoneController = {
         floor = await knex("floor_and_zones")
           .select("*")
           .where({ buildingPhaseId, isActive: true, orgId: orgId })
-          .orderBy('floor_and_zones.description','asc');
+          .orderBy('floor_and_zones.floorZoneCode','asc');
 
       } else {
         floor = await knex("floor_and_zones")
@@ -717,7 +717,7 @@ const floorZoneController = {
             'floor_and_zones.floorZoneCode as Floor/Zone',
             'floor_and_zones.id as id'
           ])
-          .orderBy('floor_and_zones.description','asc')
+          .orderBy('floor_and_zones.floorZoneCode','asc')
           .where({ isActive: true, orgId: orgId });
       }
       return res.status(200).json({
@@ -746,8 +746,8 @@ const floorZoneController = {
           .where({ "floor_and_zones.isActive": true, "floor_and_zones.orgId": orgId })
           .whereIn('floor_and_zones.buildingPhaseId',buildingPhaseId)
           .select("*")
-          .orderBy('floor_and_zones.description','asc')
           .groupBy(['floor_and_zones.floorZoneCode','floor_and_zones.id'])
+          .orderBy('floor_and_zones.floorZoneCode','asc')
           //.distinct()
 
        
