@@ -92,7 +92,7 @@ const bookingCanceledNotification = {
             },
             payload: {
                 ...data,
-                subject: 'Test Email Notification',
+                subject: 'Facility Booking Canceled Notification',
             }
         };
 
