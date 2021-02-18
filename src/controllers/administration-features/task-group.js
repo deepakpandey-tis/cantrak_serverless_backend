@@ -959,15 +959,15 @@ const taskGroupController = {
               "task_group_schedule_assign_assets.assetId",
               "asset_master.id"
             )
-            .leftJoin(
-              "pm_task_groups",
-              "task_group_schedule.taskGroupId",
-              "pm_task_groups.id"
-            )
+            // .leftJoin(
+            //   "pm_task_groups",
+            //   "task_group_schedule.taskGroupId",
+            //   "pm_task_groups.id"
+            // )
             .leftJoin(
               "assigned_service_team",
-              "pm_task_groups.id",
-              "assigned_service_team.entityId"
+              "task_group_schedule_assign_assets.id",
+              "assigned_service_team.workOrderId"
             )
             .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
             .leftJoin(
@@ -1060,6 +1060,7 @@ const taskGroupController = {
                   );
               }
               if (payloadFilter.assignedTeam.length) {
+                console.log("assigned team value ====>>>>>",payloadFilter.assignedTeam)
                 qb.whereIn(
                   "assigned_service_team.teamId",
                   payloadFilter.assignedTeam
@@ -1082,15 +1083,15 @@ const taskGroupController = {
               "task_group_schedule_assign_assets.assetId",
               "asset_master.id"
             )
-            .leftJoin(
-              "pm_task_groups",
-              "task_group_schedule.taskGroupId",
-              "pm_task_groups.id"
-            )
+            // .leftJoin(
+            //   "pm_task_groups",
+            //   "task_group_schedule.taskGroupId",
+            //   "pm_task_groups.id"
+            // )
             .leftJoin(
               "assigned_service_team",
-              "pm_task_groups.id",
-              "assigned_service_team.entityId"
+              "task_group_schedule_assign_assets.id",
+              "assigned_service_team.workOrderId"
             )
             .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
             .leftJoin(
@@ -1135,7 +1136,10 @@ const taskGroupController = {
               "task_group_schedule.taskGroupId",
               "buildings_and_phases.buildingPhaseCode",
               "floor_and_zones.floorZoneCode",
-              "property_units.unitNumber"
+              "property_units.unitNumber",
+              "assigned_service_team.teamId",
+              "teams.teamName",
+              "teams.description"
             ])
             .where({
               "task_group_schedule.pmId": payload.pmId,
@@ -1235,15 +1239,15 @@ const taskGroupController = {
               "task_group_schedule_assign_assets.assetId",
               "asset_master.id"
             )
-            .leftJoin(
-              "pm_task_groups",
-              "task_group_schedule.taskGroupId",
-              "pm_task_groups.id"
-            )
+            // .leftJoin(
+            //   "pm_task_groups",
+            //   "task_group_schedule.taskGroupId",
+            //   "pm_task_groups.id"
+            // )
             .leftJoin(
               "assigned_service_team",
-              "pm_task_groups.id",
-              "assigned_service_team.entityId"
+              "task_group_schedule_assign_assets.id",
+              "assigned_service_team.workOrderId"
             )
             .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
             .leftJoin(
@@ -1369,7 +1373,7 @@ const taskGroupController = {
             )
             .where({
               "task_group_schedule.pmId": payload.pmId,
-              "task_group_schedule.orgId": req.orgId,
+              "task_group_schedule.orgId": req.orgId
             })
             .where((qb) => {
               if (payload.workOrderId && payload.workOrderId != null) {
@@ -1435,10 +1439,11 @@ const taskGroupController = {
               }
             }),
           knex
-            .distinct ("workOrderId")
-            .select("*")
-            .from(function () {
-              this.from("task_group_schedule")
+            // .distinct ("workOrderId")
+            // .select("*")
+            // .from(function () {
+            //   this.from("task_group_schedule")
+            .from("task_group_schedule")
                 .innerJoin(
                   "task_group_schedule_assign_assets",
                   "task_group_schedule.id",
@@ -1488,9 +1493,10 @@ const taskGroupController = {
                   "task_group_schedule.repeatPeriod as repeatPeriod",
                   "task_group_schedule.repeatOn as repeatOn",
                   "task_group_schedule.repeatFrequency as repeatFrequency",
-                  knex.raw(
-                    `("task_group_schedule_assign_assets"."frequencyTagIds"::text)`
-                  ),
+                  "task_group_schedule_assign_assets.frequencyTagIds",
+                  // knex.raw(
+                  //   `("task_group_schedule_assign_assets"."frequencyTagIds"::text)`
+                  // ),
                   "task_group_schedule_assign_assets.status",
                   "task_group_schedule.taskGroupId",
                   "buildings_and_phases.buildingPhaseCode",
@@ -1566,8 +1572,8 @@ const taskGroupController = {
                       );
                   }
                 })
-                .as("X");
-            })
+                // .as("X");
+            // })
             .offset(offset)
             .limit(per_page)
             .orderBy("workOrderId", "asc"),
@@ -1692,8 +1698,11 @@ const taskGroupController = {
       rows = await Parallel.map(rows,async (row)=>{
         const teamData = await knex
         .from("assigned_service_team")
+        .leftJoin("teams","assigned_service_team.teamId","teams.teamId")
         .select([
           "assigned_service_team.teamId",
+          "teams.teamName",
+          "teams.description"
         ])
         .where({
           "assigned_service_team.entityId": row.workOrderId,
