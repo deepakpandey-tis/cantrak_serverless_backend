@@ -325,5 +325,29 @@ const pmHelper = {
       return { code: "UNKNOWN_ERROR", message: err.message, error: err };
     }
   },
+
+  markWorkOrdersOverDue: async () => {
+    try {
+
+      // const moment = require("moment-timezone");
+      // let timezone = 'Asia/Bangkok';
+      // moment.tz.setDefault(timezone);
+      // let currentTime = moment().valueOf();
+      // console.log('[helpers][preventive-maintenance][markWorkOrdersOverDue]:  Current Time:', currentTime);
+
+      const res = await knex.raw(
+        `update task_group_schedule_assign_assets set "isOverdue" = true where (extract(epoch from ("pmDate"::date + interval '1 days')) *1000) < (extract(epoch from now()) * 1000) 
+        and (extract(epoch from ("pmDate"::date)) *1000) > (extract(epoch from (now() - interval '2 days')) * 1000) and status = 'O' and "isOverdue" = false returning *;`
+      );
+
+      if (res && res.rows) {
+        console.log('[helpers][preventive-maintenance][markWorkOrdersOverDue]: WorkOrders Marked as Overdue Count:', res.rows.length);
+      }
+
+    } catch (err) {
+      console.error('[helpers][preventive-maintenance][markWorkOrdersOverDue]:  Error', err);
+      return { code: 'UNKNOWN_ERROR', message: err.message, error: err };
+    }
+  }
 };
 module.exports = pmHelper;

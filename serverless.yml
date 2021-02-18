@@ -133,3 +133,22 @@ functions:
 
   auth:
     handler: src/socket.auth
+
+  workOrderOverdueProcessor:
+    handler: src/app.workOrderOverdueProcessor
+    memorySize: 1024
+    timeout: 300
+    events:
+      - schedule:
+          rate: rate(1 hour)
+          enabled: true
+
+
+  dailyDigestProcessor:
+    handler: src/app.dailyDigestProcessor
+    memorySize: 1024
+    timeout: 300
+    events:
+      - schedule:
+          rate: cron(* 1 * * ? *)    # Utc 1 am every day i.e 8 am Morning Thai Time..
+          enabled: true        
