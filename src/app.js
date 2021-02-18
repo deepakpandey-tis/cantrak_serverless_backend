@@ -151,7 +151,7 @@ module.exports.queueProcessor = async (event, context) => {
     console.log('[app][queueProcessor]', 'Received message is notification.');
     const notificationHandler = require('./notifications/core/notification');
     const notificationOptions = JSON.parse(currentRecord.body);
-    
+
     console.log('[app][queueProcessor]: Notification Options:', notificationOptions);
     await notificationHandler.processQueue(notificationOptions);
 
@@ -183,33 +183,33 @@ module.exports.longJobsProcessor = async (event, context) => {
   if (messageType === 'PM_WORK_ORDER_GENERATE') {
 
     const creatPmHelper = require("./helpers/preventive-maintenance");
-    const { consolidatedWorkOrders, payload, orgId, requestedBy ,orgMaster } = JSON.parse(currentRecord.body);
-    
-    console.log('work orders ==============>>>>>>>>>>',consolidatedWorkOrders,orgMaster)
+    const { consolidatedWorkOrders, payload, orgId, requestedBy, orgMaster } = JSON.parse(currentRecord.body);
+
+    console.log('work orders ==============>>>>>>>>>>', consolidatedWorkOrders, orgMaster)
     pmWorkOrder = await creatPmHelper.createWorkOrders({ consolidatedWorkOrders, payload, orgId });
     console.log("pmWorkOrder result ======>>>>>", pmWorkOrder);
 
 
-    if(pmWorkOrder){
+    if (pmWorkOrder) {
       const createPmLongJobsNotification = require("./notifications/preventive-maintenance/long-jobs-notification");
 
-      const ALLOWED_CHANNELS = ['IN_APP','WEB_PUSH','SOCKET_NOTIFY']
+      const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH', 'SOCKET_NOTIFY']
 
       let dataNos = {
-          payload: {
-              orgData : orgMaster
-          },
+        payload: {
+          orgData: orgMaster
+        },
       };
 
-      
+
       let receiver = requestedBy
       let sender = requestedBy
 
       await createPmLongJobsNotification.send(
-          sender,
-          receiver,
-          dataNos,
-          ALLOWED_CHANNELS
+        sender,
+        receiver,
+        dataNos,
+        ALLOWED_CHANNELS
       )
     }
 
@@ -217,5 +217,30 @@ module.exports.longJobsProcessor = async (event, context) => {
 
   }
 
+  return true;
+};
+
+
+module.exports.workOrderOverdueProcessor = async (event, context) => {
+  // console.log('[app][workOrderOverdueProcessor]: Event:', JSON.stringify(event));
+  // console.log('[app][workOrderOverdueProcessor]: Context:', JSON.stringify(context));
+
+  const pmHelper = require("./helpers/preventive-maintenance");
+  await pmHelper.markWorkOrdersOverDue();
+
+  console.log('[app][workOrderOverdueProcessor]: Task Completed Successfully');
+
+  return true;
+};
+
+
+module.exports.dailyDigestProcessor = async (event, context) => {
+  console.log('[app][dailyDigestProcessor]: Event:', JSON.stringify(event));
+  // console.log('[app][workOrderOverdueProcessor]: Context:', JSON.stringify(context));
+
+  const dailyDigestHelper = require("./helpers/daily-digest");
+  await dailyDigestHelper.prepareDailyDigestForUsers();
+
+  console.log('[app][dailyDigestProcessor]: Task Completed Successfully');
   return true;
 };

@@ -618,6 +618,7 @@ const singupController = {
                 floor: DataResult.floorZoneCode,
                 unit: DataResult.unit,
                 Org: org,
+                orgId:orgId,
                 OTP: url + '/admin/administration-features/customers/unapproved-tenants/',
                 verifiedLink: url + '/verify-account/' + user.verifyToken,
               }
