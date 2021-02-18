@@ -504,6 +504,7 @@ const facilityBookingController = {
                             bookingEndDateTime: moment(+bookedByUser.bookingEndDateTime).format("YYYY-MM-DD hh:mm A"),
                             noOfSeats: bookedByUser.noOfSeats,
                             facilityName: checkStatus.name,
+                            orgId:req.orgId
                         },
                     });
                 }
@@ -2192,6 +2193,7 @@ const facilityBookingController = {
                         ),
                         noOfSeats: resultData.noOfSeats,
                         facilityName: facilityData.name,
+                        orgId:req.orgId
                     },
                 });
 
@@ -2209,6 +2211,7 @@ const facilityBookingController = {
                         ),
                         noOfSeats: resultData.noOfSeats,
                         facilityName: facilityData.name,
+                        orgId:req.orgId
                     },
                 });
             } else {
@@ -2226,6 +2229,7 @@ const facilityBookingController = {
                         ),
                         noOfSeats: resultData.noOfSeats,
                         facilityName: facilityData.name,
+                        orgId:req.orgId
                     },
                 });
             }
@@ -2285,10 +2289,11 @@ const facilityBookingController = {
                     ),
                     noOfSeats: bookedByUser.noOfSeats,
                     facilityName: facilityData.name,
+                    orgId:req.orgId
                 },
             });
 
-            const ALLOWED_CHANNELS = ['IN_APP', 'LINE_NOTIFY','WEB_PUSH','SOCKET_NOTIFY']
+            const ALLOWED_CHANNELS = ['IN_APP', 'LINE_NOTIFY','WEB_PUSH','SOCKET_NOTIFY','EMAIL']
             let orgMaster = await knex.from("organisations").where({ id: req.orgId}).first();
 
             let dataNos = {
@@ -2384,10 +2389,11 @@ const facilityBookingController = {
                         bookingEndDateTime: moment(+resultData[0].bookingEndDateTime).format("YYYY-MM-DD hh:mm A"),
                         noOfSeats: resultData[0].noOfSeats,
                         facilityName: facilityData.name,
+                        orgId:req.orgId
                     },
                 });
 
-                const ALLOWED_CHANNELS = ['IN_APP', 'LINE_NOTIFY','WEB_PUSH','SOCKET_NOTIFY']
+                const ALLOWED_CHANNELS = ['IN_APP', 'LINE_NOTIFY','WEB_PUSH','SOCKET_NOTIFY','EMAIL']
                 let orgMaster = await knex.from("organisations").where({ id: req.orgId}).first();
 
                 console.log("date in body", req.body.startDate)
@@ -2850,6 +2856,7 @@ const facilityBookingController = {
                                                 ).format("YYYY-MM-DD hh:mm A"),
                                                 bookingEndDateTime: moment(+booked.bookingEndDateTime).format("YYYY-MM-DD hh:mm A"),
                                                 noOfSeats: booked.noOfSeats,
+                                                orgId:req.orgId
                                             },
                                         });
                                     }

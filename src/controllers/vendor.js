@@ -120,7 +120,7 @@ const vendorController = {
                 if (insertedUser && insertedUser.length) {
 
 
-                    await emailHelper.sendTemplateEmail({ to: payload.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, uuid: uuidv4 } })
+                    await emailHelper.sendTemplateEmail({ to: payload.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, uuid: uuidv4,orgId:req.orgId } })
 
                 }
                 trx.commit;

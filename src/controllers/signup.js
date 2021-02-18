@@ -667,7 +667,8 @@ const singupController = {
           templateData: {
             fullName: user[0].name,
             Org: org,
-            urlData: url
+            urlData: url,
+            orgId:req.orgId
           }
         })
 
@@ -717,7 +718,8 @@ const singupController = {
           templateData: {
             fullName: emailExistResult[0].name,
             URL: url + '/reset-password/' + uid,
-            Org: org
+            Org: org,
+            orgId: emailExistResult[0].orgId
           }
         })
         let result = await knex.from('users').update({ verifyToken: uid }).where({ email: emailExistResult[0].email }).returning(['*']);

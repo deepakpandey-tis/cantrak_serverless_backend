@@ -186,7 +186,7 @@ const organisationsController = {
 
        
 
-        await emailHelper.sendTemplateEmail({ to: payloadData.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payloadData.name, username: payloadData.userName, password: pass, layout: 'welcome-org-admin.ejs' } })
+        await emailHelper.sendTemplateEmail({ to: payloadData.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payloadData.name, username: payloadData.userName, password: pass, layout: 'welcome-org-admin.ejs',orgId:req.orgId } })
 
         trx.commit;
       });
@@ -394,7 +394,7 @@ const organisationsController = {
               to: user.email,
               subject: `[Deactivation] ${organisation.organisationName} Deactivated`,
               template: 'message.ejs',
-              templateData: { fullName: user.name, message: `Your organization ${organisation.organisationName} has been deactivated.` }
+              templateData: { fullName: user.name, message: `Your organization ${organisation.organisationName} has been deactivated.`,orgId:req.orgId }
             })
           } else {
             organisationResult = await knex
@@ -419,7 +419,7 @@ const organisationsController = {
               to: user.email,
               subject: `[Activation] ${organisation.organisationName} Activated Successfully.`,
               template: 'message.ejs',
-              templateData: { fullName: user.name, message: `Your organization ${organisation.organisationName} has been activated.` }
+              templateData: { fullName: user.name, message: `Your organization ${organisation.organisationName} has been activated.`,orgId:req.orgId }
             })
           }
         }

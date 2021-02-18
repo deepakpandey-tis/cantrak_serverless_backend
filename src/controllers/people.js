@@ -127,7 +127,7 @@ const peopleController = {
                 // let roleResult = await knex.insert(insertRoleData).returning(['*']).transacting(trx).into('organisation_user_roles');
                 // role = roleResult[0];
 
-                await emailHelper.sendTemplateEmail({ to: payload.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, uuid: uid } })
+                await emailHelper.sendTemplateEmail({ to: payload.email, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, uuid: uid, orgId:req.orgId } })
 
                 trx.commit;
                 res.status(200).json({
@@ -851,7 +851,7 @@ const peopleController = {
 
                                 if (resultData && resultData.length) {
                                     success++;
-                                    await emailHelper.sendTemplateEmail({ to: peopleData.B, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: peopleData.A, username: peopleData.B, password: pass, uuid: uuidv4 } });
+                                    await emailHelper.sendTemplateEmail({ to: peopleData.B, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: peopleData.A, username: peopleData.B, password: pass, uuid: uuidv4, orgId:req.orgId } });
                                 }
                             } else {
 

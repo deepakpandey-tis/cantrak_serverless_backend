@@ -153,7 +153,7 @@ const teamsController = {
                         to: user.email,
                         subject: 'Added to team ' + payload.teamName + ' at service mind',
                         template: 'message.ejs',
-                        templateData: { fullName: user.name, message: 'You have been succesfully added to team ' + payload.teamName + ' at service mind.' },
+                        templateData: { fullName: user.name, message: 'You have been succesfully added to team ' + payload.teamName + ' at service mind.' ,orgId:req.orgId},
                     })
                 }
 
