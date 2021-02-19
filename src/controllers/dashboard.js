@@ -181,14 +181,25 @@ const dashboardController = {
   /*GET CURRENT DATE SERVICE APPOINTMENT LIST */
   getCurrentDateServiceAppointmentList: async (req, res) => {
     try {
+      console.log("reqBody",)
+      let payload = req.body;
       let usersDetails = req.me;
       let roles = usersDetails.roles;
-      let id = usersDetails.id;
-      let currentDate = moment().format("YYYY-MM-DD");
+      let id = usersDetails.id;    
+      let currentDate;
+
+      if (payload.todayDate.length) {
+        currentDate = moment().format("YYYY-MM-DD");
+      }else if (payload.tomorrowDate.length) {
+        currentDate = payload.tomorrowDate;
+      }else{
+        currentDate = moment().format("YYYY-MM-DD");
+      }
+
 
       let result;
 
-      let payload = req.body;
+      
       let projectResult = [];
       let projectIds = [];
       if (payload.companyIds.length) {
@@ -320,7 +331,20 @@ const dashboardController = {
       let usersDetails = req.me;
       let roles = usersDetails.roles;
       let id = usersDetails.id;
-      let currentDate = moment().format("L");
+      let payload = req.body;
+
+      // let currentDate = moment().format("L");
+     
+      let currentDate;
+
+      if (payload.todayDate.length) {
+        currentDate = moment().format("L");
+      }else if (payload.tomorrowDate.length) {
+        currentDate = moment(payload.tomorrowDate).format("L");
+      }else{
+        currentDate = moment().format("L");
+      }
+
       let currentTime = new Date(currentDate).getTime();
 
       let startNewDate = moment(currentDate).startOf("date").format();
@@ -329,7 +353,6 @@ const dashboardController = {
       // let endNewDate = moment(currentDate).endOf('date', 'day').format();
       let result;
 
-      let payload = req.body;
       let projectResult = [];
       let projectIds = [];
       if (payload.companyIds.length) {
@@ -548,12 +571,27 @@ const dashboardController = {
       let usersDetails = req.me;
       let roles = usersDetails.roles;
       let id = usersDetails.id;
-      let startDate = moment().startOf("date", "day").format();
-      let endDate = moment().endOf("date", "day").format();
+      let payload = req.body;
+     // let currentDate;
+      let startDate;
+      let endDate;
+
+
+      if (payload.todayDate.length) {
+        startDate = moment().startOf("date", "day").format();
+        endDate = moment().endOf("date", "day").format();
+      } else if (payload.tomorrowDate.length) {
+        startDate = moment(payload.tomorrowDate).startOf("date", "day").format();
+        endDate = moment(payload.tomorrowDate).endOf("date", "day").format();
+      } else {
+        startDate = moment().startOf("date", "day").format();
+        endDate = moment().endOf("date", "day").format();
+      }
+
       let currentTime = new Date(startDate).getTime();
       let result;
 
-      let payload = req.body;
+     
       let projectResult = [];
       let projectIds = [];
       if (payload.companyIds.length) {
