@@ -754,11 +754,11 @@ const taskGroupController = {
           .innerJoin("companies", "pm_master2.companyId", "companies.id")
 
           .where((qb) => {
-            qb.where(filters);
+            // qb.where(filters);
             qb.where({ "pm_master2.orgId": req.orgId });
             qb.whereIn("pm_master2.projectId", projects);
             if (companyId) {
-              qb.where("pm_master2.assetCategoryId", companyId);
+              qb.where("pm_master2.companyId", companyId);
             }
             if (assetCategoryId) {
               qb.whereIn("pm_master2.assetCategoryId", assetCategoryId);
@@ -783,9 +783,9 @@ const taskGroupController = {
             //   qb.where('task_group_schedule.startDate', '>=', startDate)
             //   qb.where('task_group_schedule.endDate', '<=', endDate)
             // }
-            if (endDate) {
-              //  qb.where({ 'task_group_schedule.endDate': endDate })
-            }
+            // if (endDate) {
+            //    qb.where({ 'task_group_schedule.endDate': endDate })
+            // }
             qb.whereIn("pm_master2.projectId", accessibleProjects);
           }),
         knex
