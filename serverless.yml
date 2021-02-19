@@ -150,5 +150,5 @@ functions:
     timeout: 300
     events:
       - schedule:
-          rate: cron(* 1 * * ? *)    # Utc 1 am every day i.e 8 am Morning Thai Time..
+          rate: cron(0 1 * * ? *)    # Utc 1 am every day i.e 8 am Morning Thai Time..
           enabled: true        

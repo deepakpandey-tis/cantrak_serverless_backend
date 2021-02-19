@@ -283,7 +283,15 @@ router.post('/cancel-pm-plan',authMiddleware.isAuthenticated,
 roleMiddleware.parseUserPermission,
 resourceAccessMiddleware.isPMAccessible,
 taskGroupController.cancelPmPlan
+);
+
+router.post('/get-team-data-from-workOrderId',authMiddleware.isAuthenticated,
+roleMiddleware.parseUserPermission,
+resourceAccessMiddleware.isPMAccessible,
+taskGroupController.getTeamDataByWorkOrderId
 )
+
+
 
 
 

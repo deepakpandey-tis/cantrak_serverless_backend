@@ -815,7 +815,7 @@ const customerController = {
       let subject = "Reset Password"
       updatedCustomer = await knex('users').update({ "verifyToken": uuidv4, "password": "" }).where({ id: id }).returning(['*'])
       let email = updatedCustomer[0].email;
-      await emailHelper.sendTemplateEmail({ to: email, subject: subject, template: 'test-email.ejs', templateData: { fullName: updatedCustomer[0].name, OTP: 'https://dj47f2ckirq9d.cloudfront.net/reset-password/' + uuidv4 } })
+      await emailHelper.sendTemplateEmail({ to: email, subject: subject, template: 'test-email.ejs', templateData: { fullName: updatedCustomer[0].name, OTP: 'https://dj47f2ckirq9d.cloudfront.net/reset-password/' + uuidv4, orgId:req.orgId } })
       return res.status(200).json({
         data: updatedCustomer[0],
         message: "Password reset link sent. Please check your email!"
@@ -1009,7 +1009,7 @@ const customerController = {
             subjectData = 'Welcome to Service Mind';            
           }
 
-          await emailHelper.sendTemplateEmail({ to: payload.email, subject: subjectData, orgId:orgId,  template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, uuid: uuidv4, urlData : url,  orgData : org  } })
+          await emailHelper.sendTemplateEmail({ to: payload.email, subject: subjectData, orgId:orgId,  template: 'welcome-org-admin-email.ejs', templateData: { fullName: payload.name, username: payload.userName, password: pass, uuid: uuidv4, urlData : url,  orgData : org,orgId:req.orgId  } })
 
         }
         trx.commit;
@@ -1609,7 +1609,7 @@ const customerController = {
                 console.log('User: ', result)
                 if (result && result.length) {
 
-                  await emailHelper.sendTemplateEmail({ to: tenantData.D, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: tenantData.B, username: tenantData.C, password: pass, uuid: uuidv4 } });
+                  await emailHelper.sendTemplateEmail({ to: tenantData.D, subject: 'Welcome to Service Mind', template: 'welcome-org-admin-email.ejs', templateData: { fullName: tenantData.B, username: tenantData.C, password: pass, uuid: uuidv4, orgId:req.orgId } });
 
                 }
 
@@ -1804,7 +1804,8 @@ const customerController = {
           templateData: {
             fullName: user[0].name,
             Org: org,
-            urlData: url
+            urlData: url,
+            orgId:req.orgId
           }
         })
 

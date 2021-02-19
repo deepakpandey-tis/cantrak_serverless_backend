@@ -12,6 +12,7 @@ const moment = require("moment-timezone");
 
 const emailHelper = require("../../helpers/email");
 const creatPmHelper = require("../../helpers/preventive-maintenance");
+const { response } = require("express");
 
 const taskGroupController = {
   // Create Task Group Template
@@ -6300,6 +6301,44 @@ const taskGroupController = {
       });
     }
   },
+
+  getTeamDataByWorkOrderId : async(req,res) =>{
+    try {
+      let workOrderId = req.body.workOrderId[0]
+      let orgId = req.orgId
+
+  console.log("team work order id====>>>>>",workOrderId)
+      let teamData = await knex
+      .from("assigned_service_team")
+      .select([
+        "assigned_service_team.teamId",
+        "assigned_service_team.userId"
+      ])
+      .where({"assigned_service_team.entityId":workOrderId,"assigned_service_team.orgId":orgId})
+
+
+      let additionalUsers = await knex
+      .from("assigned_service_additional_users")
+      .select([
+        "assigned_service_additional_users.userId as addUser"
+      ])
+      .where({"assigned_service_additional_users.entityId":workOrderId,"assigned_service_additional_users.orgId":orgId})
+
+      return res.status(200).json({
+        data: {
+          teamData:teamData,
+          additionalUsers: additionalUsers,
+        },
+        message: "Work Order team data Successfully!",
+      });
+    } catch (err) {
+      console.log(
+        "[controllers][task-group][get-taskgroup-asset-pm-details] :  Error",
+        err
+      );
+      
+    }
+  }
 };
 
 module.exports = taskGroupController;

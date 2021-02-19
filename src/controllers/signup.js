@@ -667,7 +667,8 @@ const singupController = {
           templateData: {
             fullName: user[0].name,
             Org: org,
-            urlData: url
+            urlData: url,
+            orgId:req.orgId
           }
         })
 

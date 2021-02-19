@@ -7,6 +7,7 @@ const emailHelper = require('../../helpers/email')
 
 const facilityHelper = require('../../helpers/facility');
 const QRCODE = require("qrcode");
+const facilityBookingApprovalNotification = require('../../notifications/facility/facility-booking-approval-notification')
 
 
 var arrayCompare = require("array-compare");
@@ -1544,24 +1545,54 @@ const facilityBookingController = {
 
                 let orgAdminResult = await knex('organisations').select('organisationAdminId').where({ id: req.orgId }).first();
 
+                
+
                 let adminEmail;
+                let receiver;
+
                 if (orgAdminResult) {
 
-                    let adminUser = await knex('users').select('email').where({ id: orgAdminResult.organisationAdminId }).first();
+                    let adminUser = await knex('users').select('*').where({ id: orgAdminResult.organisationAdminId }).first();
                     adminEmail = adminUser.email;
+                    receiver = adminUser
+
+                    console.log("admin info  detail ====>>>>>",adminUser)
+
+                    // receiver = await knex
 
                 }
 
 
-                await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Approved Required', template: 'booking-confirmed-required.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
+                await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Approval Required', template: 'booking-confirmed-required.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name,orgId:req.orgId } })
 
-                await emailHelper.sendTemplateEmail({ to: adminEmail, subject: 'Booking Approved Required ', template: 'booking-confirmed-admin.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
+                await emailHelper.sendTemplateEmail({ to: adminEmail, subject: 'Booking Approval Required ', template: 'booking-confirmed-admin.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name,orgId:req.orgId } })
+
+
+                let sender = await knex.from("users").where({ id: req.me.id }).first();
+                let orgMaster = await knex.from("organisations").where({ id: req.orgId }).first();
+                let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH","SOCKET_NOTIFY"];
+
+                let dataNos = {
+                    payload: {
+                        orgData : orgMaster,
+                        // thaiTitle: "อนุมัติคำขอบริการแล้ว",
+                        // thaiDetails: "ใบแจ้งคำร้องของท่านได้รับการอนุมัติแล้ว กำลังมอบหมายทีมช่างเพื่อดำเนินการต่อ"
+                    },
+                };
+
+                await facilityBookingApprovalNotification.send(
+                    sender,
+                    receiver,
+                    dataNos,
+                    ALLOWED_CHANNELS
+                );
+                
 
 
             } else {
 
 
-                await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Confirmed', template: 'booking-confirmed.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name } })
+                await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Confirmed', template: 'booking-confirmed.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name ,orgId:req.orgId} })
 
             }
             let updateDisplayId = await knex('entity_bookings').update({ isActive: true }).where({ isActive: true });
@@ -2268,7 +2299,7 @@ const facilityBookingController = {
             const cancelled = await knex('entity_bookings').update({ cancellationReason, cancelledAt: currentTime, cancelledBy: req.me.id, isBookingCancelled: true, isBookingConfirmed: false }).where({ id: bookingId }).returning(['*'])
             const bookedByUser = await knex('entity_bookings').select('*').where({ id: bookingId }).first()
             const user = await knex('users').select(['email', 'name']).where({ id: bookedByUser.bookedBy }).first()
-            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName: user.name, reason: cancellationReason, bookingStartDateTime: moment(Number(bookedByUser.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+bookedByUser.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: bookedByUser.noOfSeats } })
+            await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Cancelled', template: 'booking-cancelled.ejs', templateData: { fullName: user.name, reason: cancellationReason, bookingStartDateTime: moment(Number(bookedByUser.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+bookedByUser.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: bookedByUser.noOfSeats,orgId:req.orgId } })
             return res.status(200).json({ message: 'cancelled!', data: cancelled })
         } catch (err) {
             res.status(500).json({
