@@ -754,11 +754,11 @@ const taskGroupController = {
           .innerJoin("companies", "pm_master2.companyId", "companies.id")
 
           .where((qb) => {
-            qb.where(filters);
+            // qb.where(filters);
             qb.where({ "pm_master2.orgId": req.orgId });
             qb.whereIn("pm_master2.projectId", projects);
             if (companyId) {
-              qb.where("pm_master2.assetCategoryId", companyId);
+              qb.where("pm_master2.companyId", companyId);
             }
             if (assetCategoryId) {
               qb.whereIn("pm_master2.assetCategoryId", assetCategoryId);
@@ -783,9 +783,9 @@ const taskGroupController = {
             //   qb.where('task_group_schedule.startDate', '>=', startDate)
             //   qb.where('task_group_schedule.endDate', '<=', endDate)
             // }
-            if (endDate) {
-              //  qb.where({ 'task_group_schedule.endDate': endDate })
-            }
+            // if (endDate) {
+            //    qb.where({ 'task_group_schedule.endDate': endDate })
+            // }
             qb.whereIn("pm_master2.projectId", accessibleProjects);
           }),
         knex
@@ -5091,18 +5091,18 @@ const taskGroupController = {
 
       let deleteTeamAndUser = knex("assigned_service_team")
         .where({ entityType: "work_order", orgId: req.orgId })
-        .whereIn("assigned_service_team.workOrderId", payload.workOrderId);
+        .whereIn("assigned_service_team.workOrderId", payload.workOrderId).del();
 
       const updateWorkOrderTeamAndUsers = await knex("assigned_service_team")
         .update(teamUsersPayload)
         .where({ entityType: "work_order", orgId: req.orgId })
-        .whereIn("assigned_service_team.workOrderId", payload.workOrderId);
+        .whereIn("assigned_service_team.entityId", payload.workOrderId);
 
       let deleteAdditionalUser = knex("assigned_service_additional_users")
         .where({
-          "assigned_service_additional_users.entityType": "work_order",
+          "assigned_service_additional_users.entityType": "work_order", orgId: req.orgId
         })
-        .whereIn("assigned_service_additional_users.entityId", payload.entityId)
+        .whereIn("assigned_service_additional_users.entityId", payload.workOrderId)
         .del();
 
       let additionlUser = payload.additionalUsers;
@@ -5116,11 +5116,11 @@ const taskGroupController = {
             updatedAt: currentTime,
           })
           .where({
-            "assigned_service_additional_users.entityType": "work_order",
+            "assigned_service_additional_users.entityType": "work_order", orgId: req.orgId
           })
           .whereIn(
             "assigned_service_additional_users.entityId",
-            payload.entityId
+            payload.workOrderId
           );
       }
 
@@ -6316,18 +6316,9 @@ const taskGroupController = {
       ])
       .where({"assigned_service_team.entityId":workOrderId,"assigned_service_team.orgId":orgId})
 
-
-      let additionalUsers = await knex
-      .from("assigned_service_additional_users")
-      .select([
-        "assigned_service_additional_users.userId as addUser"
-      ])
-      .where({"assigned_service_additional_users.entityId":workOrderId,"assigned_service_additional_users.orgId":orgId})
-
       return res.status(200).json({
         data: {
           teamData:teamData,
-          additionalUsers: additionalUsers,
         },
         message: "Work Order team data Successfully!",
       });
@@ -6336,6 +6327,31 @@ const taskGroupController = {
         "[controllers][task-group][get-taskgroup-asset-pm-details] :  Error",
         err
       );
+      
+    }
+  },
+
+  getAdditionalUsersByWorkOrderId:async(req,res)=>{
+    try {
+      let workOrderId = req.body.workOrderId[0]
+      let orgId = req.orgId
+
+      let additionalUsers = await knex
+      .from("assigned_service_additional_users")
+      .select([
+        "assigned_service_additional_users.userId as addUser"
+      ])
+      .where({"assigned_service_additional_users.entityId":workOrderId,"assigned_service_additional_users.orgId":orgId})
+
+
+      return res.status(200).json({
+        data: {
+          additionalUsers: additionalUsers,
+        },
+        message: "Work Order additional user list!",
+      });
+
+    } catch (err) {
       
     }
   }

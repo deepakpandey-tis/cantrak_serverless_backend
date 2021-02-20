@@ -291,6 +291,12 @@ resourceAccessMiddleware.isPMAccessible,
 taskGroupController.getTeamDataByWorkOrderId
 )
 
+router.post('/get-additional-user-by-workOrderId',authMiddleware.isAuthenticated,
+roleMiddleware.parseUserPermission,
+resourceAccessMiddleware.isPMAccessible,
+taskGroupController.getAdditionalUsersByWorkOrderId
+)
+
 
 
 
