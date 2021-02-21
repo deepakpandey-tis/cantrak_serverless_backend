@@ -1642,6 +1642,7 @@ const taskGroupController = {
                   }
 
                   if (req.body.workOrderDate) {
+                    console.log("work order date====>>>>>",req.body.workOrderDate)
                     qb.whereRaw(
                       `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')='${req.body.workOrderDate}'`
                     );
@@ -1765,6 +1766,157 @@ const taskGroupController = {
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
+    }
+  },
+  getWorkOrderListFromDate:async(req,res)=>{
+    try {
+      let payload = req.body;
+      let reqData = req.query;
+
+      console.log("data in payload===>>>>>",payload)
+      let workOrderDate = moment(payload.workOrderDate).format("YYYY-MM-DD");
+
+
+      const accessibleProjects = req.userProjectResources[0].projects;
+
+      const schema = Joi.object().keys({
+        pmId:Joi.string().allow("").allow(null).optional(),
+        workOrderDate: Joi.string().allow("").allow(null).optional(),
+      });
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+        });
+      }
+
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+      let total, rows;
+
+      [total, rows] = await Promise.all([
+        knex
+        .count("* as count")
+        .from("task_group_schedule")
+        .innerJoin(
+          "task_group_schedule_assign_assets",
+          "task_group_schedule.id",
+          "task_group_schedule_assign_assets.scheduleId"
+        )
+        .innerJoin(
+          "asset_master",
+          "task_group_schedule_assign_assets.assetId",
+          "asset_master.id"
+        )
+        .where({
+          "task_group_schedule.pmId": payload.pmId,
+          "task_group_schedule.orgId": req.orgId,
+          
+        })
+        .whereRaw(
+          `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')='${workOrderDate}'`
+        )
+        ,
+      knex
+        .from("task_group_schedule")
+            .innerJoin(
+              "task_group_schedule_assign_assets",
+              "task_group_schedule.id",
+              "task_group_schedule_assign_assets.scheduleId"
+            )
+            .innerJoin(
+              "asset_master",
+              "task_group_schedule_assign_assets.assetId",
+              "asset_master.id"
+            )
+            .leftJoin(
+              "asset_location",
+              "asset_master.id",
+              "asset_location.assetId"
+            )
+            .leftJoin("companies", "asset_location.companyId", "companies.id")
+            .leftJoin("projects", "asset_location.projectId", "projects.id")
+            .leftJoin(
+              "buildings_and_phases",
+              "asset_location.buildingId",
+              "buildings_and_phases.id"
+            )
+            .leftJoin(
+              "floor_and_zones",
+              "asset_location.floorId",
+              "floor_and_zones.id"
+            )
+            .leftJoin(
+              "property_units",
+              "asset_location.unitId",
+              "property_units.id"
+            )
+            .select([
+              "task_group_schedule_assign_assets.id as workOrderId",
+              "task_group_schedule_assign_assets.displayId as TGAA",
+              "task_group_schedule_assign_assets.isActive as status",
+              "task_group_schedule.id as id",
+              "asset_master.assetName",
+              "asset_master.model",
+              "asset_master.assetSerial",
+              "asset_master.id as assetId",
+              "asset_master.assetCategoryId",
+              "task_group_schedule_assign_assets.pmDate as pmDate",
+              knex.raw(
+                `DATE("task_group_schedule_assign_assets"."pmDate") as "workOrderDate"`
+              ),
+              "task_group_schedule.repeatPeriod as repeatPeriod",
+              "task_group_schedule.repeatOn as repeatOn",
+              "task_group_schedule.repeatFrequency as repeatFrequency",
+              "task_group_schedule_assign_assets.frequencyTagIds",
+              // knex.raw(
+              //   `("task_group_schedule_assign_assets"."frequencyTagIds"::text)`
+              // ),
+              "task_group_schedule_assign_assets.status",
+              "task_group_schedule.taskGroupId",
+              "buildings_and_phases.buildingPhaseCode",
+              "floor_and_zones.floorZoneCode",
+              "property_units.unitNumber"
+            ])
+            .where({
+              "task_group_schedule.pmId": payload.pmId,
+              "task_group_schedule.orgId": req.orgId,
+            })
+            .whereRaw(
+              `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')='${workOrderDate}'`
+            )
+        .orderBy("workOrderId", "asc")
+
+      ])
+      let count = total.length ? total[0].count : 0;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+      return res.status(200).json({
+        data: {
+          taskGroupAssetPmsData: pagination,
+        },
+        message: "Task Group PMs Asset List Successfully!",
+      });
+    } catch (err) {
+      console.log(
+        "[controllers][task-group][get-task-group-asset-pms-list] :  Error",
+        err
+      );
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+      
     }
   },
   getWorkOrderList: async (req, res) => {
@@ -6352,9 +6504,99 @@ const taskGroupController = {
       });
 
     } catch (err) {
+      console.log(
+        "[controllers][task-group][get-taskgroup-workOrderDate] :  Error",
+        err
+      );
+      
+    }
+  },
+  getWorkOrderDateFromPmId:async(req,res)=>{
+    try {
+
+      let pmId = req.body.pmId
+
+      console.log("value of PM id====>>>>",pmId)
+
+      let workDate = await knex("task_group_schedule_assign_assets")
+      .leftJoin("task_group_schedule","task_group_schedule_assign_assets.scheduleId","task_group_schedule.id")
+      .select([
+        // "task_group_schedule_assign_assets.pmDate"
+        knex.raw(
+          `DATE("task_group_schedule_assign_assets"."pmDate") as "workOrderDate"`
+        )
+      ])
+      .where({
+        "task_group_schedule.pmId":pmId,
+        "task_group_schedule_assign_assets.orgId":req.orgId
+      })
+      workDate = _.uniqBy(workDate,"workOrderDate")
+
+      console.log("work order date",workDate)
+      return res.status(200).json({
+        data: {
+          workOrderDate:workDate
+        },
+        message: "Work Order Date!",
+      }); 
+    } catch (err) {
+      console.log(
+        "[controllers][task-group][get-taskgroup-pm-workDate] :  Error",
+        err
+      );
+      
+    }
+  },
+
+  getTaskNameFromWorkOrderDate:async(req,res)=>{
+    try {
+
+      let payload = req.body
+      let workOrderDate = moment(payload.workOrderDate).format("YYYY-MM-DD");
+
+      console.log("payload data====>>>>",workOrderDate)
+      
+     let tasks = await knex("pm_task")
+      .leftJoin(
+        "task_group_schedule",
+        "pm_task.taskGroupId",
+        "task_group_schedule.taskGroupId"
+      )
+      .leftJoin(
+        "task_group_schedule_assign_assets",
+        "task_group_schedule.id",
+        "task_group_schedule_assign_assets.scheduleId"
+      )
+      .select([
+        "pm_task.id as taskId",
+        "pm_task.taskName as taskName",
+      ])
+      .where({
+       "task_group_schedule.pmId":payload.pmId,
+        "pm_task.orgId": req.orgId,
+      })
+      .whereRaw(
+        `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')='${workOrderDate}'`
+      )
+      
+      tasks = _.uniqBy(tasks,"taskId")
+      tasks = _.uniqBy(tasks,"taskName")
+
+    return res.status(200).json({
+      data: {
+        tasks: tasks
+      },
+      message: "Work Order task list!",
+    });
+    } catch (err) {
+      console.log(
+        "[controllers][task-group][get-taskgroup-pm-task] :  Error",
+        err
+      );
       
     }
   }
+ 
 };
 
 module.exports = taskGroupController;
