@@ -296,6 +296,23 @@ roleMiddleware.parseUserPermission,
 resourceAccessMiddleware.isPMAccessible,
 taskGroupController.getAdditionalUsersByWorkOrderId
 )
+router.post('/get-task-name-by-workOrderDate',authMiddleware.isAuthenticated,
+roleMiddleware.parseUserPermission,
+resourceAccessMiddleware.isPMAccessible,
+taskGroupController.getTaskNameFromWorkOrderDate
+)
+
+router.post('/get-workDate-by-pmId',authMiddleware.isAuthenticated,
+roleMiddleware.parseUserPermission,
+resourceAccessMiddleware.isPMAccessible,
+taskGroupController.getWorkOrderDateFromPmId
+)
+
+router.post('/get-workOrderList-By-Date',authMiddleware.isAuthenticated,
+roleMiddleware.parseUserPermission,
+resourceAccessMiddleware.isPMAccessible,
+taskGroupController.getWorkOrderListFromDate
+)
 
 
 
