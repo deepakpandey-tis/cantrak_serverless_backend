@@ -50,7 +50,52 @@ const dashboardController = {
         priorityValue = priority.incidentPriorityCode;
       }
 
-      const [openRequests, openOrders, srhp, sohp] = await Promise.all([
+
+
+      serviceReqId = await knex
+        .from("service_requests")
+        .select("service_requests.id")
+        .distinct("service_requests.id")
+        .where({ orgId: req.orgId })
+        .whereIn("service_requests.projectId", projectIds)
+        //.whereIn("service_requests.projectId", accessibleProjects)
+        .where({
+          orgId: orgId,
+          moderationStatus: true,
+        })
+
+      serviceReqId = serviceReqId.map((v) => v.id);
+      serviceReqId = _.uniqBy(serviceReqId);
+      console.log("serviceORequestId", serviceReqId);
+
+
+
+      pmMaster = await knex
+        .from("pm_master2")
+        .select("pm_master2.id")
+        .distinct("pm_master2.id")
+        .where({ orgId: req.orgId })
+        .whereIn("pm_master2.projectId", projectIds)
+      //.whereIn("service_requests.projectId", accessibleProjects)
+      pmMaster = pmMaster.map((v) => v.id);
+      pmMaster = _.uniqBy(pmMaster);
+      console.log("pmMaster+!1111111", pmMaster);
+
+
+
+      pmScheduleMaster = await knex
+        .from("task_group_schedule")
+        .select("task_group_schedule.id")
+        .distinct("task_group_schedule.id")
+        .where({ orgId: req.orgId })
+        .whereIn("task_group_schedule.pmId", pmMaster)
+      //.whereIn("service_requests.projectId", accessibleProjects)
+      pmScheduleMaster = pmScheduleMaster.map((v) => v.id);
+      pmScheduleMaster = _.uniqBy(pmScheduleMaster);
+      console.log("pmScheduleMaster+!1111111", pmScheduleMaster);
+
+
+      const [openRequests, openOrders, openSurveys, overDueWOrders] = await Promise.all([
         knex
           .from("service_requests")
           .select("service_requests.serviceStatusCode as status")
@@ -74,18 +119,15 @@ const dashboardController = {
         //.orWhere({ serviceStatusCode: "IP", orgId: orgId })
         //.orWhere({ serviceStatusCode: "OH", orgId: orgId }),
         knex
-          .from("service_requests")
-          .select("service_requests.serviceStatusCode as status")
-          .distinct("service_requests.id")
-          .where({ orgId: req.orgId })
-          .whereIn("service_requests.projectId", projectIds)
+          .from("survey_orders")
+          .select("survey_orders.surveyOrderStatus as status")
+          .distinct("survey_orders.id")
           //.whereIn("service_requests.projectId", accessibleProjects)
           .where({
-            priority: priorityValue,
             orgId: orgId,
-            moderationStatus: true,
+            surveyOrderStatus: 'Pending',
           })
-          .whereIn("serviceStatusCode", ["US", "O"]),
+          .whereIn("survey_orders.serviceRequestId", serviceReqId),
 
         // .orWhere({
         //   serviceStatusCode: "O",
@@ -97,17 +139,17 @@ const dashboardController = {
         // .whereIn('service_requests.projectId', accessibleProjects)
         //.distinct('service_requests.id')
         knex
-          .from("service_requests")
-          .select("service_requests.serviceStatusCode as status")
-          .distinct("service_requests.id")
-          .whereIn("service_requests.projectId", projectIds)
+          .from("task_group_schedule_assign_assets")
+          .select("task_group_schedule_assign_assets.id")
+          .distinct("task_group_schedule_assign_assets.id")
+          .whereIn("task_group_schedule_assign_assets.scheduleId", pmScheduleMaster)
           //.whereIn("service_requests.projectId", accessibleProjects)
           .where({
             // serviceStatusCode: "A",
             orgId: orgId,
-            priority: priorityValue,
+            status: 'O',
+            isOverdue: true
           })
-          .whereIn("serviceStatusCode", ["A", "IP", "OH"]),
         // .orWhere({
         //   serviceStatusCode: "IP",
         //   orgId: orgId,
@@ -122,19 +164,15 @@ const dashboardController = {
 
       let open_service_requests = projectIds.length ? openRequests.length : 0;
       let open_service_orders = projectIds.length ? openOrders.length : 0;
-      let open_service_requests_high_priority = projectIds.length
-        ? srhp.length
-        : 0;
-      let open_service_orders_high_priority = projectIds.length
-        ? sohp.length
-        : 0;
+      let open_survey_orders = projectIds.length ? openSurveys.length : 0;
+      let open_overdue_work_orders = projectIds.length ? overDueWOrders.length : 0;
 
       return res.status(200).json({
         data: {
           open_service_requests,
           open_service_orders,
-          open_service_requests_high_priority,
-          open_service_orders_high_priority,
+          open_survey_orders,
+          open_overdue_work_orders,
           priorityValue,
           o: openRequests,
           projectResult,
@@ -185,21 +223,21 @@ const dashboardController = {
       let payload = req.body;
       let usersDetails = req.me;
       let roles = usersDetails.roles;
-      let id = usersDetails.id;    
+      let id = usersDetails.id;
       let currentDate;
 
       if (payload.todayDate.length) {
         currentDate = moment().format("YYYY-MM-DD");
-      }else if (payload.tomorrowDate.length) {
+      } else if (payload.tomorrowDate.length) {
         currentDate = payload.tomorrowDate;
-      }else{
+      } else {
         currentDate = moment().format("YYYY-MM-DD");
       }
 
 
       let result;
 
-      
+
       let projectResult = [];
       let projectIds = [];
       if (payload.companyIds.length) {
@@ -334,14 +372,14 @@ const dashboardController = {
       let payload = req.body;
 
       // let currentDate = moment().format("L");
-     
+
       let currentDate;
 
       if (payload.todayDate.length) {
         currentDate = moment().format("L");
-      }else if (payload.tomorrowDate.length) {
+      } else if (payload.tomorrowDate.length) {
         currentDate = moment(payload.tomorrowDate).format("L");
-      }else{
+      } else {
         currentDate = moment().format("L");
       }
 
@@ -572,7 +610,7 @@ const dashboardController = {
       let roles = usersDetails.roles;
       let id = usersDetails.id;
       let payload = req.body;
-     // let currentDate;
+      // let currentDate;
       let startDate;
       let endDate;
 
@@ -591,7 +629,7 @@ const dashboardController = {
       let currentTime = new Date(startDate).getTime();
       let result;
 
-     
+
       let projectResult = [];
       let projectIds = [];
       if (payload.companyIds.length) {
