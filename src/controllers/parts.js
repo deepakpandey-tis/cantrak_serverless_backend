@@ -14,23 +14,11 @@ const partsController = {
         try {
 
             let projectIds = [];
-            const accessibleProjects = req.userProjectResources;
-
-            if (accessibleProjects.length) {
-                for (let pro of accessibleProjects) {
-
-                    if (pro.projects.length) {
-
-                        for (let projectId of pro.projects) {
-                            console.log("project=========", pro.projects, "================")
-
-                            projectIds.push(projectId);
-                        }
-                    }
-                }
-            }
-
+            let accessibleProjects = req.userProjectResources;
+            accessibleProjects = accessibleProjects.map(ap => ap.projects);
+            projectIds = _.flatten(accessibleProjects);
             projectIds = _.uniqBy(projectIds);
+            console.log('ProjectIds:', projectIds);
 
             let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
                 .whereIn('projects.id', projectIds)
@@ -50,10 +38,11 @@ const partsController = {
                 partCode,
                 partCategory,
                 partId,
-                company
+                company,
+                lowStock
             } = req.body;
 
-            if (partName || partCode || partCategory || partId || company) {
+            if (partName || partCode || partCategory || partId || company || lowStock) {
 
                 let per_page = reqData.per_page || 10;
                 let page = reqData.current_page || 1;
@@ -62,6 +51,7 @@ const partsController = {
                 [total, rows] = await Promise.all([
                     knex.from("part_master")
                         .leftJoin('part_category_master', 'part_master.partCategory', 'part_category_master.id')
+                        .leftJoin('part_ledger', 'part_master.id', 'part_ledger.partId')
                         .where({ 'part_master.orgId': req.orgId, 'part_category_master.orgId': req.orgId })
                         .where(qb => {
                             if (partName) {
@@ -79,6 +69,15 @@ const partsController = {
                             }
                             if (company) {
                                 qb.where({ 'part_master.companyId': company })
+                            }
+                            if (lowStock) {
+                                console.log('We have some filter [parts]: lowstock', lowStock);
+                                qb.havingRaw('SUM("part_ledger"."quantity") > "part_master"."minimumQuantity"')
+                            }
+                        })
+                        .modify((qb) => {
+                            if (lowStock) {
+                                qb.havingRaw('SUM("part_ledger"."quantity") < "part_master"."minimumQuantity"')
                             }
                         })
                         .whereIn('part_master.companyId', companyIds)
@@ -101,6 +100,7 @@ const partsController = {
                             'part_master.barcode as Barcode',
                             'part_master.createdAt as Date Added',
                             'part_master.isActive',
+                            'part_master.minimumQuantity',
                             'part_master.displayId as PNo',
                             "companies.companyName",
                             "companies.companyId",
@@ -122,6 +122,11 @@ const partsController = {
                             }
                             if (company) {
                                 qb.where({ 'part_master.companyId': company })
+                            }
+                        })
+                        .modify((qb) => {
+                            if (lowStock) {
+                                qb.havingRaw('SUM("part_ledger"."quantity") < "part_master"."minimumQuantity"')
                             }
                         })
                         .whereIn('part_master.companyId', companyIds)
@@ -172,6 +177,7 @@ const partsController = {
                             'part_master.barcode as Barcode',
                             'part_master.createdAt as Date Added',
                             'part_master.isActive',
+                            'part_master.minimumQuantity',
                             'part_master.displayId as PNo',
                             "companies.companyName",
                             "companies.companyId",

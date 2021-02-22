@@ -13,8 +13,8 @@ const ALLOWED_CHANNELS = ['IN_APP', 'SOCKET_NOTIFY'];
 router.get('/', async (req, res) => {
     try {
 
-        let sender = await knex.from('users').where({ id: 406 }).first();
-        let receiver = await knex.from('users').where({ id: 1121 }).first();
+        // let sender = await knex.from('users').where({ id: 406 }).first();
+        // let receiver = await knex.from('users').where({ id: 1121 }).first();
         // let receiver = await knex.from('users').where({ id: 406 }).first();    // Admin - TrainingAdmin
         // let receiver = await knex.from('users').where({ id: 1121 }).first();  // Tenant - daniel15@mailinator.com
 
@@ -24,7 +24,11 @@ router.get('/', async (req, res) => {
         };
 
         // await testNotification.send(sender, receiver, data);
-        await testNotification.send(sender, receiver, data, ALLOWED_CHANNELS);
+        // await testNotification.send(sender, receiver, data, ALLOWED_CHANNELS);
+
+        // Trigger Daily Digest emails...
+        const dailyDigestHelper = require("../helpers/daily-digest");
+        await dailyDigestHelper.prepareDailyDigestForUsers();
 
         let a;
 
