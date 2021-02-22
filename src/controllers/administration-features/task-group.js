@@ -960,17 +960,13 @@ const taskGroupController = {
               "task_group_schedule_assign_assets.assetId",
               "asset_master.id"
             )
-            // .leftJoin(
-            //   "pm_task_groups",
-            //   "task_group_schedule.taskGroupId",
-            //   "pm_task_groups.id"
-            // )
             .leftJoin(
               "assigned_service_team",
               "task_group_schedule_assign_assets.id",
               "assigned_service_team.workOrderId"
             )
             .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+            .leftJoin("users","assigned_service_team.userId","users.id")
             .leftJoin(
               "asset_location",
               "asset_master.id",
@@ -1061,18 +1057,15 @@ const taskGroupController = {
                   );
               }
               if (payloadFilter.assignedTeam.length) {
-                console.log("assigned team value ====>>>>>",payloadFilter.assignedTeam)
                 qb.whereIn(
                   "assigned_service_team.teamId",
                   payloadFilter.assignedTeam
                 );
               }
-
               qb.where({
                 "assigned_service_team.entityType": "work_order",
               });
             }),
-            // .groupBy(["task_group_schedule_assign_assets.id"]),
           knex("task_group_schedule")
             .innerJoin(
               "task_group_schedule_assign_assets",
@@ -1084,17 +1077,13 @@ const taskGroupController = {
               "task_group_schedule_assign_assets.assetId",
               "asset_master.id"
             )
-            // .leftJoin(
-            //   "pm_task_groups",
-            //   "task_group_schedule.taskGroupId",
-            //   "pm_task_groups.id"
-            // )
             .leftJoin(
               "assigned_service_team",
               "task_group_schedule_assign_assets.id",
               "assigned_service_team.workOrderId"
             )
             .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+            .leftJoin("users","assigned_service_team.userId","users.id")
             .leftJoin(
               "asset_location",
               "asset_master.id",
@@ -1121,6 +1110,7 @@ const taskGroupController = {
               "task_group_schedule_assign_assets.id as workOrderId",
               "task_group_schedule_assign_assets.displayId as TGAA",
               "task_group_schedule_assign_assets.isActive as status",
+              "task_group_schedule_assign_assets.isOverdue",
               "task_group_schedule.id as id",
               "asset_master.assetName as assetName",
               "asset_master.model as model",
@@ -1140,7 +1130,8 @@ const taskGroupController = {
               "property_units.unitNumber",
               "assigned_service_team.teamId",
               "teams.teamName",
-              "teams.description"
+              "teams.description",
+              "users.userName"
             ])
             .where({
               "task_group_schedule.pmId": payload.pmId,
@@ -1220,11 +1211,6 @@ const taskGroupController = {
                 "assigned_service_team.entityType": "work_order",
               });
             })
-            // .groupBy([
-            //   "task_group_schedule_assign_assets.id",
-            //   "task_group_schedule.id",
-            //   "asset_master.id",
-            // ])
             .offset(offset)
             .limit(per_page)
             .orderBy("workOrderDate", "asc"),
@@ -1240,17 +1226,18 @@ const taskGroupController = {
               "task_group_schedule_assign_assets.assetId",
               "asset_master.id"
             )
-            // .leftJoin(
-            //   "pm_task_groups",
-            //   "task_group_schedule.taskGroupId",
-            //   "pm_task_groups.id"
-            // )
             .leftJoin(
               "assigned_service_team",
               "task_group_schedule_assign_assets.id",
               "assigned_service_team.workOrderId"
             )
+            .leftJoin(
+              "users",
+              "assigned_service_team.userId",
+              "users.id"
+            )
             .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+            .leftJoin("users","assigned_service_team.userId","users.id")
             .leftJoin(
               "asset_location",
               "asset_master.id",
@@ -1440,10 +1427,6 @@ const taskGroupController = {
               }
             }),
           knex
-            // .distinct ("workOrderId")
-            // .select("*")
-            // .from(function () {
-            //   this.from("task_group_schedule")
             .from("task_group_schedule")
                 .innerJoin(
                   "task_group_schedule_assign_assets",
@@ -1481,6 +1464,7 @@ const taskGroupController = {
                   "task_group_schedule_assign_assets.id as workOrderId",
                   "task_group_schedule_assign_assets.displayId as TGAA",
                   "task_group_schedule_assign_assets.isActive as status",
+                  "task_group_schedule_assign_assets.isOverdue",
                   "task_group_schedule.id as id",
                   "asset_master.assetName",
                   "asset_master.model",
@@ -1495,9 +1479,6 @@ const taskGroupController = {
                   "task_group_schedule.repeatOn as repeatOn",
                   "task_group_schedule.repeatFrequency as repeatFrequency",
                   "task_group_schedule_assign_assets.frequencyTagIds",
-                  // knex.raw(
-                  //   `("task_group_schedule_assign_assets"."frequencyTagIds"::text)`
-                  // ),
                   "task_group_schedule_assign_assets.status",
                   "task_group_schedule.taskGroupId",
                   "buildings_and_phases.buildingPhaseCode",
@@ -1701,10 +1682,12 @@ const taskGroupController = {
         const teamData = await knex
         .from("assigned_service_team")
         .leftJoin("teams","assigned_service_team.teamId","teams.teamId")
+        .leftJoin("users","assigned_service_team.userId","users.id")
         .select([
           "assigned_service_team.teamId",
           "teams.teamName",
-          "teams.description"
+          "teams.description",
+          "users.userName"
         ])
         .where({
           "assigned_service_team.entityId": row.workOrderId,
@@ -1739,8 +1722,7 @@ const taskGroupController = {
       })
 
 
-      console.log("total length of data=====>",total)
-      console.log(("value of rows========>",rows))
+     
       let count = total.length ? total[0].count : 0;
       pagination.total = count;
       pagination.per_page = per_page;
@@ -1980,7 +1962,6 @@ const taskGroupController = {
         [total, rows] = await Promise.all([
           knex
             .count("* as count")
-            //.distinct('task_group_schedule_assign_assets.id')
             .from("task_group_schedule")
             .innerJoin(
               "task_group_schedule_assign_assets",
@@ -1998,16 +1979,34 @@ const taskGroupController = {
               "pm_master2.id"
             )
             .leftJoin(
-              "pm_task_groups",
-              "task_group_schedule.taskGroupId",
-              "pm_task_groups.id"
-            )
-            .leftJoin(
               "assigned_service_team",
-              "pm_task_groups.id",
-              "assigned_service_team.entityId"
+              "task_group_schedule_assign_assets.id",
+              "assigned_service_team.workOrderId"
             )
             .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+            .leftJoin("users","assigned_service_team.userId","users.id")
+            .leftJoin(
+              "asset_location",
+              "asset_master.id",
+              "asset_location.assetId"
+            )
+            .leftJoin("companies", "asset_location.companyId", "companies.id")
+            .leftJoin("projects", "asset_location.projectId", "projects.id")
+            .leftJoin(
+              "buildings_and_phases",
+              "asset_location.buildingId",
+              "buildings_and_phases.id"
+            )
+            .leftJoin(
+              "floor_and_zones",
+              "asset_location.floorId",
+              "floor_and_zones.id"
+            )
+            .leftJoin(
+              "property_units",
+              "asset_location.unitId",
+              "property_units.id"
+            )
             .where({
               "task_group_schedule.orgId": req.orgId,
             })
@@ -2029,17 +2028,11 @@ const taskGroupController = {
                 );
               }
               if (req.body.workOrderDateTo && req.body.workOrderDateFrom) {
-                let workDateFrom = moment(req.body.workOrderDateFrom).startOf(
-                  "date"
-                );
-                let workDateTo = moment(req.body.workOrderDateTo).endOf("date");
                 qb.whereRaw(
                   `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD') BETWEEN '${req.body.workOrderDateFrom}' and '${req.body.workOrderDateTo}' `
                 );
-                //qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
               }
               if (req.body.assetName && req.body.assetName.length > 0) {
-                console.log("Asset name");
                 qb.whereIn(
                   "task_group_schedule_assign_assets.assetId",
                   req.body.assetName
@@ -2053,7 +2046,6 @@ const taskGroupController = {
                 qb.where("pm_master2.name", "iLIKE", `%${req.body.pmName}%`);
               }
               if (req.body.status) {
-                console.log("status of wo", req.body.status);
                 qb.whereIn(
                   "task_group_schedule_assign_assets.status",
                   req.body.status
@@ -2076,6 +2068,7 @@ const taskGroupController = {
               }
 
               if (payloadFilter.assignedTeam.length) {
+                console.log("assigned team",payloadFilter.assignedTeam)
                 qb.whereIn(
                   "assigned_service_team.teamId",
                   payloadFilter.assignedTeam
@@ -2086,10 +2079,8 @@ const taskGroupController = {
               qb.where({
                 "assigned_service_team.entityType": "work_order",
               });
-            })
-            .groupBy("task_group_schedule_assign_assets.id"),
+            }),
           knex("task_group_schedule")
-            // .distinct('task_group_schedule_assign_assets.id')
             .innerJoin(
               "task_group_schedule_assign_assets",
               "task_group_schedule.id",
@@ -2106,16 +2097,34 @@ const taskGroupController = {
               "pm_master2.id"
             )
             .leftJoin(
-              "pm_task_groups",
-              "task_group_schedule.taskGroupId",
-              "pm_task_groups.id"
-            )
-            .leftJoin(
               "assigned_service_team",
-              "pm_task_groups.id",
-              "assigned_service_team.entityId"
+              "task_group_schedule_assign_assets.id",
+              "assigned_service_team.workOrderId"
             )
             .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+            .leftJoin("users","assigned_service_team.userId","users.id")
+            .leftJoin(
+              "asset_location",
+              "asset_master.id",
+              "asset_location.assetId"
+            )
+            .leftJoin("companies", "asset_location.companyId", "companies.id")
+            .leftJoin("projects", "asset_location.projectId", "projects.id")
+            .leftJoin(
+              "buildings_and_phases",
+              "asset_location.buildingId",
+              "buildings_and_phases.id"
+            )
+            .leftJoin(
+              "floor_and_zones",
+              "asset_location.floorId",
+              "floor_and_zones.id"
+            )
+            .leftJoin(
+              "property_units",
+              "asset_location.unitId",
+              "property_units.id"
+            )
             .select([
               "task_group_schedule_assign_assets.id as workOrderId",
               "task_group_schedule_assign_assets.displayId as TGAA",
@@ -2140,6 +2149,12 @@ const taskGroupController = {
               "task_group_schedule_assign_assets.frequencyTagIds",
               "task_group_schedule_assign_assets.status",
               "task_group_schedule_assign_assets.id",
+              "buildings_and_phases.buildingPhaseCode",
+              "floor_and_zones.floorZoneCode",
+              "property_units.unitNumber",
+              "assigned_service_team.teamId",
+              "teams.teamName",
+              "teams.description"
             ])
             .where({
               "task_group_schedule.orgId": req.orgId,
@@ -2174,7 +2189,6 @@ const taskGroupController = {
                   `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD') BETWEEN '${req.body.workOrderDateFrom}' and '${req.body.workOrderDateTo}' `
                 );
 
-                //qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
               }
               if (req.body.assetName && req.body.assetName.length > 0) {
                 qb.whereIn(
@@ -2223,12 +2237,6 @@ const taskGroupController = {
                 "assigned_service_team.entityType": "work_order",
               });
             })
-            .groupBy([
-              "task_group_schedule_assign_assets.id",
-              "task_group_schedule.id",
-              "asset_master.id",
-              "pm_master2.id",
-            ])
             .offset(offset)
             .limit(per_page)
             .orderBy("workOrderDate", "asc"),
@@ -2237,7 +2245,6 @@ const taskGroupController = {
         [total, rows] = await Promise.all([
           knex
             .count("* as count")
-            //.disticnct('task_group_schedule_assign_assets.id')
             .from("task_group_schedule")
             .innerJoin(
               "task_group_schedule_assign_assets",
@@ -2264,7 +2271,6 @@ const taskGroupController = {
                   payload.workOrderId
                 );
               }
-
               if (
                 req.body.assetCategoryId &&
                 req.body.assetCategoryId.length > 0
@@ -2282,7 +2288,6 @@ const taskGroupController = {
                 qb.whereRaw(
                   `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD') BETWEEN '${req.body.workOrderDateFrom}' and '${req.body.workOrderDateTo}' `
                 );
-                //qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
               }
               if (req.body.assetName && req.body.assetName.length > 0) {
                 console.log("Asset name");
@@ -2338,6 +2343,28 @@ const taskGroupController = {
               "task_group_schedule.pmId",
               "pm_master2.id"
             )
+            .leftJoin(
+              "asset_location",
+              "asset_master.id",
+              "asset_location.assetId"
+            )
+            .leftJoin("companies", "asset_location.companyId", "companies.id")
+            .leftJoin("projects", "asset_location.projectId", "projects.id")
+            .leftJoin(
+              "buildings_and_phases",
+              "asset_location.buildingId",
+              "buildings_and_phases.id"
+            )
+            .leftJoin(
+              "floor_and_zones",
+              "asset_location.floorId",
+              "floor_and_zones.id"
+            )
+            .leftJoin(
+              "property_units",
+              "asset_location.unitId",
+              "property_units.id"
+            )
             .select([
               "task_group_schedule_assign_assets.id as workOrderId",
               "task_group_schedule_assign_assets.displayId as TGAA",
@@ -2361,6 +2388,9 @@ const taskGroupController = {
               "task_group_schedule.repeatFrequency as repeatFrequency",
               "task_group_schedule_assign_assets.frequencyTagIds",
               "task_group_schedule_assign_assets.status",
+              "buildings_and_phases.buildingPhaseCode",
+              "floor_and_zones.floorZoneCode",
+              "property_units.unitNumber"
             ])
             .where({
               "task_group_schedule.orgId": req.orgId,
@@ -2394,8 +2424,6 @@ const taskGroupController = {
                 qb.whereRaw(
                   `to_date(task_group_schedule_assign_assets."pmDate",  'YYYY-MM-DD') BETWEEN '${req.body.workOrderDateFrom}' and '${req.body.workOrderDateTo}'`
                 );
-
-                //qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
               }
               if (req.body.assetName && req.body.assetName.length > 0) {
                 qb.whereIn(
@@ -2416,7 +2444,6 @@ const taskGroupController = {
                   req.body.status
                 );
               }
-
               if (payloadFilter.company) {
                 if (payloadFilter.company.length) {
                   qb.whereIn("pm_master2.companyId", payloadFilter.company);
@@ -2440,61 +2467,42 @@ const taskGroupController = {
       }
 
       const Parallel = require("async-parallel");
-      const rowsWithLocations = await Parallel.map(rows, async (row) => {
-        console.log("rows", row);
 
-        const location = await knex("asset_location")
-          .innerJoin("companies", "asset_location.companyId", "companies.id")
-          .innerJoin("projects", "asset_location.projectId", "projects.id")
-          .innerJoin(
-            "buildings_and_phases",
-            "asset_location.buildingId",
-            "buildings_and_phases.id"
-          )
-          .innerJoin(
-            "floor_and_zones",
-            "asset_location.floorId",
-            "floor_and_zones.id"
-          )
-          .innerJoin(
-            "property_units",
-            "asset_location.unitId",
-            "property_units.id"
-          )
-          .select([
-            "companies.companyName",
-            "projects.projectName",
-            "buildings_and_phases.buildingPhaseCode",
-            "floor_and_zones.floorZoneCode",
-            "property_units.unitNumber",
-          ])
-          .where({ "asset_location.assetId": row.assetId })
-          .orderBy("asset_location", "desc")
-          .limit("1")
-          .first();
-        // ]).max('asset_location.updatedAt').first()
+      rows = await Parallel.map(rows,async (row)=>{
+        console.log("team called")
+        const teamData = await knex
+        .from("assigned_service_team")
+        .leftJoin("teams","assigned_service_team.teamId","teams.teamId")
+        .leftJoin("users","assigned_service_team.userId","users.id")
+        .select([
+          "assigned_service_team.teamId",
+          "teams.teamName",
+          "teams.description",
+          "users.userName"
+        ])
+        .where({
+          "assigned_service_team.entityId": row.workOrderId,
+          "assigned_service_team.entityType": "work_order",
+        })
+        .where((qb) => {
+          if (req.body.assignedTeam) {
+            qb.whereIn("assigned_service_team.teamId", req.body.assignedTeam);
+          }
+        })
+        .first();
+        return { ...row, ...teamData };
+      })
 
-        // let teamResult = await knex('pm_task_groups')
-        //     .leftJoin('pm_task_groups', 'task_group_schedule.taskGroupId', 'pm_task_groups.id')
-        //     .leftJoin('assigned_service_team', 'pm_task_groups.id', 'assigned_service_team.entityId')
-        //     .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
-        //     .where({
-        //         'pm_task_groups.id': row.taskGroupId,
-        //         'assigned_service_team.entityType': 'pm_task_groups',
-        //     })
-
-        return { ...row, ...location };
-      });
-
-      let count = assignedTeam.length ? total.length : total[0].count;
+      console.log("total rows====>>>",total)
+      let count = total.length ? total[0].count : 0;
       pagination.total = count;
       pagination.per_page = per_page;
       pagination.offset = offset;
-      pagination.to = offset + rowsWithLocations.length;
+      pagination.to = offset + rows.length;
       pagination.last_page = Math.ceil(count / per_page);
       pagination.current_page = page;
       pagination.from = offset;
-      pagination.data = rowsWithLocations;
+      pagination.data = rows;
 
       return res.status(200).json({
         data: {
@@ -2514,335 +2522,7 @@ const taskGroupController = {
       });
     }
   },
-  getWorkOrderList1: async (req, res) => {
-    try {
-      let reqData = req.query;
-      let payLoad = req.body;
-      let workOrderDate = req.body.workOrderDate;
-      // console.log("work order list data",req.body)
 
-      const payload = _.omit(payLoad, [
-        "assetCategoryId",
-        "workOrderDate",
-        "assetName",
-        "assetSerial",
-        "pmName",
-        "status",
-        "workOrderDateTo",
-        "workOrderDateFrom",
-      ]);
-
-      const schema = Joi.object().keys({
-        category: Joi.string().allow("").allow(null).optional(),
-        workOrderId: Joi.string().allow("").allow(null).optional(),
-        // workOrderDateTo:Joi.string().required(),
-        // workOrderDateFrom: Joi.string().required()
-      });
-
-      const result = Joi.validate(payload, schema);
-      if (result && result.hasOwnProperty("error") && result.error) {
-        return res.status(400).json({
-          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
-        });
-      }
-
-      let pagination = {};
-      let per_page = reqData.per_page || 10;
-      let page = reqData.current_page || 1;
-      if (page < 1) page = 1;
-      let offset = (page - 1) * per_page;
-
-      let [total, rows] = await Promise.all([
-        knex
-          .count("* as count")
-          .from("task_group_schedule")
-          .innerJoin(
-            "task_group_schedule_assign_assets",
-            "task_group_schedule.id",
-            "task_group_schedule_assign_assets.scheduleId"
-          )
-          .innerJoin(
-            "asset_master",
-            "task_group_schedule_assign_assets.assetId",
-            "asset_master.id"
-          )
-          .innerJoin("pm_master2", "task_group_schedule.pmId", "pm_master2.id")
-          .where({
-            "task_group_schedule.orgId": req.orgId,
-          })
-          .where((qb) => {
-            if (payload.workOrderId && payload.workOrderId != null) {
-              qb.where(
-                "task_group_schedule_assign_assets.displayId",
-                payload.workOrderId
-              );
-            }
-
-            if (
-              req.body.assetCategoryId &&
-              req.body.assetCategoryId.length > 0
-            ) {
-              qb.whereIn(
-                "asset_master.assetCategoryId",
-                req.body.assetCategoryId
-              );
-            }
-            if (req.body.workOrderDateTo && req.body.workOrderDateFrom) {
-              let workDateFrom = moment(req.body.workOrderDateFrom).startOf(
-                "date"
-              );
-              let workDateTo = moment(req.body.workOrderDateTo).endOf("date");
-              qb.whereRaw(
-                `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD') BETWEEN '${req.body.workOrderDateFrom}' and '${req.body.workOrderDateTo}' `
-              );
-              //qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
-            }
-            if (req.body.assetName && req.body.assetName.length > 0) {
-              console.log("Asset name");
-              qb.whereIn(
-                "task_group_schedule_assign_assets.assetId",
-                req.body.assetName
-              );
-            }
-            if (req.body.assetSerial && req.body.assetSerial.length > 0) {
-              qb.whereIn("asset_master.id", req.body.assetSerial);
-            }
-            if (req.body.pmName && req.body.pmName != null) {
-              console.log("pm name", req.body.pmName);
-              qb.where("pm_master2.name", "iLIKE", `%${req.body.pmName}%`);
-            }
-            if (req.body.status) {
-              console.log("status of wo", req.body.status);
-              qb.whereIn(
-                "task_group_schedule_assign_assets.status",
-                req.body.status
-              );
-            }
-          }),
-        knex("task_group_schedule")
-          .innerJoin(
-            "task_group_schedule_assign_assets",
-            "task_group_schedule.id",
-            "task_group_schedule_assign_assets.scheduleId"
-          )
-          .innerJoin(
-            "asset_master",
-            "task_group_schedule_assign_assets.assetId",
-            "asset_master.id"
-          )
-          .innerJoin("pm_master2", "task_group_schedule.pmId", "pm_master2.id")
-          .select([
-            "task_group_schedule_assign_assets.id as workOrderId",
-            "task_group_schedule_assign_assets.displayId as TGAA",
-            "task_group_schedule.id as id",
-            "asset_master.assetName as assetName",
-            "asset_master.model as model",
-            "asset_master.barcode as barcode",
-            "asset_master.areaName as areaName",
-            "asset_master.description as description",
-            "asset_master.assetSerial as assetSerial",
-            "asset_master.id as assetId",
-            "asset_master.assetCategoryId",
-            "pm_master2.name as pmName",
-            "pm_master2.id as pmId",
-            "task_group_schedule_assign_assets.pmDate as pmDate",
-            knex.raw(
-              `DATE("task_group_schedule_assign_assets"."pmDate") as "workOrderDate"`
-            ),
-            "task_group_schedule.repeatPeriod as repeatPeriod",
-            "task_group_schedule.frequencyTagIds",
-            "task_group_schedule.repeatOn as repeatOn",
-            "task_group_schedule.repeatFrequency as repeatFrequency",
-            "task_group_schedule_assign_assets.status",
-          ])
-          .where({
-            "task_group_schedule.orgId": req.orgId,
-          })
-          .where((qb) => {
-            if (payload.workOrderId && payload.workOrderId != null) {
-              qb.where(
-                "task_group_schedule_assign_assets.displayId",
-                payload.workOrderId
-              );
-            }
-            if (
-              req.body.assetCategoryId &&
-              req.body.assetCategoryId.length > 0
-            ) {
-              qb.whereIn(
-                "asset_master.assetCategoryId",
-                req.body.assetCategoryId
-              );
-            }
-            if (req.body.workOrderDateTo && req.body.workOrderDateFrom) {
-              let workDateFrom = moment(req.body.workOrderDateFrom).startOf(
-                "date"
-              );
-              let workDateTo = moment(req.body.workOrderDateTo).endOf("date");
-              console.log(
-                "work order date from and to",
-                req.body.workOrderDateTo,
-                workDateTo
-              );
-              qb.whereRaw(
-                `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD') BETWEEN '${req.body.workOrderDateFrom}' and '${req.body.workOrderDateTo}' `
-              );
-
-              //qb.whereBetween('task_group_schedule_assign_assets.pmDate', [workDateFrom, workDateTo])
-            }
-            if (req.body.assetName && req.body.assetName.length > 0) {
-              qb.whereIn(
-                "task_group_schedule_assign_assets.assetId",
-                req.body.assetName
-              );
-            }
-            if (req.body.assetSerial && req.body.assetSerial.length > 0) {
-              qb.whereIn("asset_master.id", req.body.assetSerial);
-            }
-            if (req.body.pmName && req.body.pmName != null) {
-              qb.where("pm_master2.name", "iLIKE", `%${req.body.pmName}%`);
-            }
-            if (req.body.status) {
-              console.log("status of wo", req.body.status);
-              qb.whereIn(
-                "task_group_schedule_assign_assets.status",
-                req.body.status
-              );
-            }
-          })
-          .offset(offset)
-          .limit(per_page)
-          .orderBy("workOrderDate", "asc"),
-      ]);
-
-      // const newData2 = Object.values(
-      //     rows.reduce((acc, cur) => {
-      //       key = cur["pmId"] + cur["pmDate"];
-      //       acc[key] = acc[key]
-      //         ? Object.assign({}, acc[key], {
-      //             repeatPeriod: [acc[key]["repeatPeriod"], cur["repeatPeriod"]]
-      //               .filter(
-      //                 (item, index, inputArray) => inputArray.indexOf(item) == index
-      //               )
-      //               .join(","),
-      //           })
-      //         : cur;
-      //       return acc;
-      //     }, {})
-      //   );
-      const newData2 = Object.values(
-        rows.reduce((acc, cur) => {
-          key = cur["pmId"] + cur["pmDate"];
-          acc[key] = acc[key]
-            ? Object.assign({}, acc[key], {
-                repeatPeriod: (
-                  acc[key]["repeatPeriod"] +
-                  "," +
-                  cur["repeatPeriod"]
-                )
-                  .split(",")
-                  .filter((d, index, arr) => arr.indexOf(d) === index)
-                  .join(","),
-                workOrderId: (Array.isArray(acc[key]["workOrderId"])
-                  ? acc[key]["workOrderId"].concat([cur["workOrderId"]])
-                  : [acc[key]["workOrderId"], cur["workOrderId"]]
-                ).filter((d, index, arr) => arr.indexOf(d) === index),
-              })
-            : cur;
-          return acc;
-        }, {})
-      );
-
-      console.log("data in newdata", newData2);
-
-      const Parallel = require("async-parallel");
-
-      const rowsWithLocations = await Parallel.map(newData2, async (row) => {
-        // const workRow = await knex('task_group_schedule')
-        // .innerJoin(
-        //     "task_group_schedule_assign_assets",
-        //     "task_group_schedule.id",
-        //     "task_group_schedule_assign_assets.scheduleId"
-        // )
-        // .innerJoin(
-        //     "asset_master",
-        //     "task_group_schedule_assign_assets.assetId",
-        //     "asset_master.id"
-        // )
-        // .innerJoin(
-        //     "pm_master2",
-        //     "task_group_schedule.pmId",
-        //     "pm_master2.id"
-        // )
-        // .where({
-        //     "task_group_schedule.pmId": row.pmId
-        // })
-        // .where({
-        //     "task_group_schedule.pmDate": row.pmId
-        // })
-
-        console.log("rows of data", rows);
-
-        const location = await knex("asset_location")
-          .innerJoin("companies", "asset_location.companyId", "companies.id")
-          .innerJoin("projects", "asset_location.projectId", "projects.id")
-          .innerJoin(
-            "buildings_and_phases",
-            "asset_location.buildingId",
-            "buildings_and_phases.id"
-          )
-          .innerJoin(
-            "floor_and_zones",
-            "asset_location.floorId",
-            "floor_and_zones.id"
-          )
-          .innerJoin(
-            "property_units",
-            "asset_location.unitId",
-            "property_units.id"
-          )
-          .select([
-            "companies.companyName",
-            "projects.projectName",
-            "buildings_and_phases.buildingPhaseCode",
-            "floor_and_zones.floorZoneCode",
-            "property_units.unitNumber",
-          ])
-          .where({ "asset_location.assetId": row.assetId })
-          .orderBy("asset_location", "desc")
-          .limit("1")
-          .first();
-        // ]).max('asset_location.updatedAt').first()
-        return { ...row, ...location };
-      });
-
-      let count = total[0].count;
-      pagination.total = count;
-      pagination.per_page = per_page;
-      pagination.offset = offset;
-      pagination.to = offset + rowsWithLocations.length;
-      pagination.last_page = Math.ceil(count / per_page);
-      pagination.current_page = page;
-      pagination.from = offset;
-      pagination.data = rowsWithLocations;
-
-      return res.status(200).json({
-        data: {
-          taskGroupAssetPmsData: pagination,
-        },
-        message: "Task Group PMs Asset List Successfully!",
-      });
-    } catch (err) {
-      console.log(
-        "[controllers][task-group][get-task-group-asset-pms-list] :  Error",
-        err
-      );
-      //trx.rollback
-      res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
-      });
-    }
-  },
   getTaskGroupAssetPmsListOnToday: async (req, res) => {
     try {
       let reqData = req.query;
@@ -6530,7 +6210,7 @@ const taskGroupController = {
         "task_group_schedule.pmId":pmId,
         "task_group_schedule_assign_assets.orgId":req.orgId
       })
-      workDate = _.uniqBy(workDate,"workOrderDate")
+      .orderBy("task_group_schedule_assign_assets.pmDate","asc")
 
       console.log("work order date",workDate)
       return res.status(200).json({
@@ -6570,6 +6250,8 @@ const taskGroupController = {
       .select([
         "pm_task.id as taskId",
         "pm_task.taskName as taskName",
+        "pm_task.repeatFrequencyId"
+
       ])
       .where({
        "task_group_schedule.pmId":payload.pmId,
@@ -6595,7 +6277,19 @@ const taskGroupController = {
       );
       
     }
-  }
+  },
+  // getAssetCategoryFromPmId:async(req,res)=>{
+  //   try {
+  //     let payload = req.body
+
+  //     let pmAssetCategory = await knex("asset_category_master")
+      
+  //     .select()
+  //     .where({orgId: req.orgId, isActive: true})
+  //   } catch (err) {
+      
+  //   }
+  // }
  
 };
 
