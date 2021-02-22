@@ -14,6 +14,8 @@ const dailyDigestHelper = {
       let currentTime = moment().valueOf();
       console.log('[helpers][daily-digest][prepareDailyDigestForUsers]:  Current Time:', moment().format("YYYY-MM-DD hh:mm A"));
 
+      // Stream on each users who has logged in past 7 days...
+
 
     } catch (err) {
       console.error('[helpers][daily-digest][prepareDailyDigestForUsers]:  Error', err);
