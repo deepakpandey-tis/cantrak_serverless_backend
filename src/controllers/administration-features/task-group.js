@@ -1913,12 +1913,6 @@ const taskGroupController = {
         assignedTeam = payloadFilter.assignedTeam;
       }
 
-      //assignedTeam = payloadFilter.assignedTeam ? payloadFilter.assignedTeam : [];
-
-      // if(assignedTeam.length){
-      //     assignedTeam =
-      // }
-
       console.log("work order list data", req.body);
 
       const payload = _.omit(payLoad, [
@@ -2128,6 +2122,7 @@ const taskGroupController = {
             .select([
               "task_group_schedule_assign_assets.id as workOrderId",
               "task_group_schedule_assign_assets.displayId as TGAA",
+              "task_group_schedule_assign_assets.isOverdue",
               "task_group_schedule.id as id",
               "asset_master.assetName as assetName",
               "asset_master.model as model",
@@ -2368,6 +2363,7 @@ const taskGroupController = {
             .select([
               "task_group_schedule_assign_assets.id as workOrderId",
               "task_group_schedule_assign_assets.displayId as TGAA",
+              "task_group_schedule_assign_assets.isOverdue",
               "task_group_schedule.id as id",
               "asset_master.assetName as assetName",
               "asset_master.model as model",
