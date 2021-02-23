@@ -4,48 +4,61 @@ const moment = require("moment-timezone");
 
 const knex = require("../db/knex");
 const emailHelper = require("../helpers/email");
+const redisHelper = require("../helpers/redis");
 
 const timezone = 'Asia/Bangkok';
 moment.tz.setDefault(timezone);
 
 const getCardsData = async (orgId) => {
-  const [openRequests, openOrders, openSurveys, overDueWOrders] = await Promise.all([
-    knex
-      .from("service_requests")
-      .distinct("service_requests.id")
-      .where({ moderationStatus: true, orgId })
-      .whereIn("serviceStatusCode", ["US", "O"]),
 
-    knex
-      .from("service_requests")
-      .distinct("service_requests.id")
-      .where({ orgId: orgId })
-      .whereIn("serviceStatusCode", ["A", "IP", "OH"]),
+  // use redis-cache here ...., so this query is not executed multiple times...
+  const cardsDataKey = `cards-data-for-org-${orgId}`;
+  let cardsData = await redisHelper.getValue(cardsDataKey);
 
-    knex
-      .from("survey_orders")
-      .distinct("survey_orders.id")
-      .where({
-        orgId: orgId,
-        surveyOrderStatus: 'Pending',
-      }),
+  if (!cardsData) {
+    const [openRequests, openOrders, openSurveys, overDueWOrders] = await Promise.all([
+      knex
+        .from("service_requests")
+        .distinct("service_requests.id")
+        .where({ moderationStatus: true, orgId })
+        .whereIn("serviceStatusCode", ["US", "O"]),
 
-    knex
-      .from("task_group_schedule_assign_assets")
-      .distinct("task_group_schedule_assign_assets.id")
-      .where({
-        orgId: orgId,
-        status: 'O',
-        isOverdue: true
-      })
-  ]);
+      knex
+        .from("service_requests")
+        .distinct("service_requests.id")
+        .where({ orgId: orgId })
+        .whereIn("serviceStatusCode", ["A", "IP", "OH"]),
 
-  return {
-    openServiceRequestCount: openRequests ? openRequests.length : 0,
-    openServiceOrdersCount: openOrders ? openOrders.length : 0,
-    openSurveysCount: openSurveys ? openSurveys.length : 0,
-    overDueWorkOrdersCount: overDueWOrders ? overDueWOrders.length : 0,
-  };
+      knex
+        .from("survey_orders")
+        .distinct("survey_orders.id")
+        .where({
+          orgId: orgId,
+          surveyOrderStatus: 'Pending',
+        }),
+
+      knex
+        .from("task_group_schedule_assign_assets")
+        .distinct("task_group_schedule_assign_assets.id")
+        .where({
+          orgId: orgId,
+          status: 'O',
+          isOverdue: true
+        })
+    ]);
+
+    cardsData = {
+      openServiceRequestCount: openRequests ? openRequests.length : 0,
+      openServiceOrdersCount: openOrders ? openOrders.length : 0,
+      openSurveysCount: openSurveys ? openSurveys.length : 0,
+      overDueWorkOrdersCount: overDueWOrders ? overDueWOrders.length : 0,
+    };
+
+    // Save value to redis for future requests...
+    await redisHelper.setValueWithExpiry(cardsDataKey, cardsData, 1800);
+  }
+
+  return cardsData;
 }
 
 const sendDailyDigestToOrgAdmins = async () => {
@@ -97,13 +110,17 @@ const sendDailyDigestToOrgUsers = async () => {
   await Parallel.each(users, async (user) => {
     console.log('[helpers][daily-digest][sendDailyDigestToOrgUsers]: For User:', user.email);
 
+    let cardData = await getCardsData(user.orgId);
+    console.log('[helpers][daily-digest][sendDailyDigestToOrgUsers]: Card Data:', cardData);
+
     await emailHelper.sendTemplateEmail({
       to: user.email,
       subject: `Daily Digest - ${moment().format("YYYY-MM-DD")}`,
       template: "daily-digest/to-org-users.ejs",
       templateData: {
         fullName: user.name,
-        orgId: user.orgId
+        orgId: user.orgId,
+        cardData: cardData,
       },
       orgId: user.orgId
     });
@@ -125,7 +142,7 @@ const dailyDigestHelper = {
       }
 
       try {
-        // await sendDailyDigestToOrgUsers();
+        await sendDailyDigestToOrgUsers();
       } catch (err) {
         console.log('[helpers][daily-digest][prepareDailyDigestForUsers]: Some error occured in preparing daily digest for org users', err);
       }
