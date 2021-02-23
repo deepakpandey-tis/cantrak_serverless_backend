@@ -222,7 +222,51 @@ const sendDailyDigestToOrgUsers = async () => {
         workOrders, serviceAppointments, surveyAppointments
       }
 
-      if (workOrders.length > 0 || serviceAppointments.length > 0 || surveyAppointments.length > 0) {
+
+      let overDueWorkOrders = await knex
+        .from("task_group_schedule_assign_assets")
+        .leftJoin(
+          "task_group_schedule",
+          "task_group_schedule_assign_assets.scheduleId",
+          "task_group_schedule.id"
+        )
+        .leftJoin(
+          "pm_master2",
+          "task_group_schedule.pmId",
+          "pm_master2.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "task_group_schedule_assign_assets.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin(
+          "asset_master",
+          "task_group_schedule_assign_assets.assetId",
+          "asset_master.id"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "pm_master2.id", "pm_master2.name", "asset_master.assetName", "teams.teamName"
+        ])
+        .where({
+          "task_group_schedule_assign_assets.orgId": user.orgId,
+          "assigned_service_team.entityType": "work_order",
+        })
+        .whereIn("pm_master2.projectId", projectIds)
+        .where("task_group_schedule_assign_assets.isOverdue", true)
+        .where("task_group_schedule_assign_assets.status", 'O')
+        .where("task_group_schedule_assign_assets.pmDate", "<", startNewDate)
+        .orderBy("task_group_schedule_assign_assets.id", "desc");
+
+      console.log('[helpers][daily-digest][sendDailyDigestToOrgUsers]: Overdue workOrders:', overDueWorkOrders);
+
+      let overDueData = {
+        workOrders: overDueWorkOrders
+      }
+
+
+      if (workOrders.length > 0 || serviceAppointments.length > 0 || surveyAppointments.length > 0 || overDueWorkOrders.length > 0) {
         await emailHelper.sendTemplateEmail({
           to: user.email,
           subject: `Daily Digest - ${moment().format("YYYY-MM-DD")}`,
@@ -231,7 +275,8 @@ const sendDailyDigestToOrgUsers = async () => {
             fullName: user.name,
             orgId: user.orgId,
             cardData,
-            todaysData
+            todaysData,
+            overDueData,
           },
           orgId: user.orgId
         });

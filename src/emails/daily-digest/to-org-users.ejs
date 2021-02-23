@@ -153,6 +153,51 @@
                                                                                     <p style="color: gray;">LISTS</p>
                                                                                 </td>
                                                                             </tr> -->
+
+                                                                            <%if (overDueData && overDueData.workOrders.length > 0) { %>
+                                                                                <tr>
+                                                                                    <td align="left">
+                                                                                        <table class="table table-striped">
+                                                                                            <thead>
+                                                                                                <tr>
+                                                                                                    <th colspan="4">
+                                                                                                        <h3 style="text-align: left; padding: 0; margin: 0; color: #b9185b;">Overdue - Work Orders!</h3>
+                                                                                                    </th>
+                                                                                                </tr>
+                                                                                            </thead>
+                                                                                            <tbody style="font-size: 15px;padding: .5rem .5rem;">
+                                                                                                <% for (var i = 0; i < overDueData.workOrders.length;  i++ ) { %>
+                                                                                                    <% if ( i % 2 ) { %>
+                                                                                                        <tr style="padding: .5rem .5rem;">
+                                                                                                            <td style="padding: .5rem .5rem;"> <%= i + 1 %> </td>
+                                                                                                            <td style="width: 48%;max-width: 48%;padding: .5rem .5rem;"><p style="text-overflow: ellipsis;font-size: 15px;"> <%= overDueData.workOrders[i].name  %> </p></td>
+                                                                                                            <td style="padding: .5rem .5rem;"> <%= overDueData.workOrders[i].teamName  %> </td>
+                                                                                                            <td style="padding: .5rem .5rem;">
+                                                                                                                <p style="padding:2px 20px; text-align: center; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
+                                                                                                                    <%= overDueData.workOrders[i].assetName  %>
+                                                                                                                </p>
+                                                                                                            </td>
+                                                                                                        </tr>
+                                                                                                    <% }else{ %> 
+                                                                                                        <tr style="padding: .5rem .5rem;" bgcolor="#d2d2d2">
+                                                                                                            <td style="padding: .5rem .5rem;"> <%= i + 1 %> </td>
+                                                                                                            <td style="width: 48%;max-width: 48%;padding: .5rem .5rem;"><p style="text-overflow: ellipsis;font-size: 15px;"> <%= overDueData.workOrders[i].name  %> </p></td>
+                                                                                                            <td style="padding: .5rem .5rem;"> <%= overDueData.workOrders[i].teamName  %> </td>
+                                                                                                            <td style="padding: .5rem .5rem;">
+                                                                                                                <p style="padding:2px 20px; text-align: center; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
+                                                                                                                    <%= overDueData.workOrders[i].assetName  %>
+                                                                                                                </p>
+                                                                                                            </td>
+                                                                                                        </tr> 
+                                                                                                    <% } %>
+                                                                                                <% } %>   
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            <% } %>
+
+
                                                                             <%if (todaysData && todaysData.surveyAppointments.length > 0) { %>
                                                                                 <tr>
                                                                                     <td align="left">
