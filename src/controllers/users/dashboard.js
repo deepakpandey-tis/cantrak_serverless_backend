@@ -158,10 +158,10 @@ const dashboardController = {
 
             // console.log("houseId====>>>>",req.me)
             let projectId = await knex
-            .from("property_units")
-            .select("property_units.projectId")
-            .whereIn("property_units.id",req.me.houseIds)
-            .first()
+                .from("property_units")
+                .select("property_units.projectId")
+                .whereIn("property_units.id", req.me.houseIds)
+                .first()
 
             // console.log("project id=======>>>>>>>>>",projectId)
 
@@ -184,9 +184,9 @@ const dashboardController = {
                     "announcement_user_master.orgId": req.orgId,
                     "announcement_master.status": true,
                     "announcement_master.userType": 3,
-                    "announcement_master.isGeneral":true
+                    "announcement_master.isGeneral": true
                 })
-                .whereRaw('? = ANY("announcement_master"."projectId")',[projectId.projectId])
+                .whereRaw('? = ANY("announcement_master"."projectId")', [projectId.projectId])
                 .select(
                     "announcement_master.id as Id",
                     "announcement_master.title as titles",
@@ -205,21 +205,21 @@ const dashboardController = {
                 var yourStringLength = pp.titles.length;
                 var maxLength = 110; // maximum number of characters to extract
                 var trimmedString = yourString.substr(0, maxLength);
-               // console.log("yourString",yourString);
+                // console.log("yourString",yourString);
                 //console.log("trimmedString",trimmedString);
                 //Trim and re-trim only when necessary (prevent re-trim when string is shorted than maxLength, it causes last word cut) 
-                if(yourString.length > trimmedString.length){
+                if (yourString.length > trimmedString.length) {
                     //trim the string to the maximum length
                     //re-trim if we are in the middle of a word and 
                     trimmedString = trimmedString.substr(0, Math.min(trimmedString.length, trimmedString.lastIndexOf(" ")))
-                  //  console.log("If trimmedString", trimmedString);
+                    //  console.log("If trimmedString", trimmedString);
                 }
 
-                if(yourStringLength > maxLength){
-                    trimmedString = trimmedString+"...";
+                if (yourStringLength > maxLength) {
+                    trimmedString = trimmedString + "...";
                 }
 
-               
+
                 let imageResult = await knex
                     .from("images")
                     .select("s3Url", "title", "name")
@@ -431,6 +431,8 @@ const dashboardController = {
             let faxInfo;
             let emailInfo;
             let descriptionInfo;
+            let telInfo;
+            let lineInfo;
 
             contactInfo = await knex
                 .from("contact_info")
@@ -490,6 +492,45 @@ const dashboardController = {
                 .orderBy('contact_info.id', 'desc')
 
 
+            telInfo = await knex
+                .from("contact_info")
+                .innerJoin(
+                    "buildings_and_phases",
+                    "contact_info.buildingId",
+                    "buildings_and_phases.id"
+                )
+                .where({
+                    "contact_info.orgId": req.orgId,
+                    "contact_info.isActive": true,
+                    "contact_info.contactId": 4,
+                })
+                .whereIn("contact_info.buildingId", buildingArray)
+                .select(
+                    "contact_info.contactId as Id",
+                    "contact_info.contactValue as contactValue"
+                )
+                .orderBy('contact_info.id', 'desc')
+
+            lineInfo = await knex
+                .from("contact_info")
+                .innerJoin(
+                    "buildings_and_phases",
+                    "contact_info.buildingId",
+                    "buildings_and_phases.id"
+                )
+                .where({
+                    "contact_info.orgId": req.orgId,
+                    "contact_info.isActive": true,
+                    "contact_info.contactId": 5,
+                })
+                .whereIn("contact_info.buildingId", buildingArray)
+                .select(
+                    "contact_info.contactId as Id",
+                    "contact_info.contactValue as contactValue"
+                )
+                .orderBy('contact_info.id', 'desc')
+
+
             descriptionInfo = await knex
                 .from("contact_info")
                 .innerJoin(
@@ -527,6 +568,8 @@ const dashboardController = {
                         faxData: faxInfo,
                         emailData: emailInfo,
                         description: descriptionInfo,
+                        telData: telInfo,
+                        lineData: lineInfo,
                         imageResult
                     }
                 },

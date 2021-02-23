@@ -1610,6 +1610,8 @@ const dashboardController = {
   getAllowAllCompanyList: async (req, res) => {
     try {
       let projectIds = [];
+      let userId = req.me.id;
+
       const accessibleProjects = req.userProjectResources;
 
       if (accessibleProjects.length) {
@@ -1647,10 +1649,15 @@ const dashboardController = {
         .orderBy("companies.companyName", "asc")
         .where({ isActive: true, orgId: req.orgId });
 
+
+      let userInfo = await knex("application_user_roles")
+        .where({ userId: userId, roleId: 3 });
+
       return res.status(200).json({
         data: {
           companyData,
           companyIds,
+          userInfo
         },
         message: "Company List Successfully!",
       });
