@@ -7,6 +7,8 @@ const emailHelper = require("../helpers/email");
 const redisHelper = require("../helpers/redis");
 
 const timezone = 'Asia/Bangkok';
+// const timezone = 'Asia/Calcutta';
+
 moment.tz.setDefault(timezone);
 
 const getCardsData = async (orgId) => {
@@ -147,7 +149,7 @@ const sendDailyDigestToOrgUsers = async () => {
         .where((qb) => {
           qb.where("o.orgId", user.orgId);
         })
-        .select(['s.description', "teams.teamName"])
+        .select(['s.description', "teams.teamName", "o.appointedTime"])
         .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
         .leftJoin("assigned_service_team", "o.id", "assigned_service_team.entityId")
         .where({ "assigned_service_team.entityType": "survey_orders" })
@@ -168,7 +170,7 @@ const sendDailyDigestToOrgUsers = async () => {
         .where({ "assigned_service_team.entityType": "service_appointments" })
         .whereBetween("service_appointments.appointedDate", [startNewDate, endNewDate])
         .select([
-          "service_requests.id", "service_requests.description", "teams.teamName"
+          "service_requests.id", "service_requests.description", "teams.teamName", "service_appointments.appointedTime"
         ])
         .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
         .whereIn("service_requests.projectId", projectIds)
@@ -211,7 +213,7 @@ const sendDailyDigestToOrgUsers = async () => {
           "assigned_service_team.entityType": "work_order",
         })
         .whereIn("pm_master2.projectId", projectIds)
-        .whereBetween("task_group_schedule_assign_assets.pmDate",  [startNewDate, endNewDate])
+        .whereBetween("task_group_schedule_assign_assets.pmDate", [startNewDate, endNewDate])
         .orderBy("task_group_schedule_assign_assets.id", "desc");
 
       console.log('[helpers][daily-digest][sendDailyDigestToOrgUsers]: Todays workOrders:', workOrders);
@@ -220,18 +222,22 @@ const sendDailyDigestToOrgUsers = async () => {
         workOrders, serviceAppointments, surveyAppointments
       }
 
-      // await emailHelper.sendTemplateEmail({
-      //   to: user.email,
-      //   subject: `Daily Digest - ${moment().format("YYYY-MM-DD")}`,
-      //   template: "daily-digest/to-org-users.ejs",
-      //   templateData: {
-      //     fullName: user.name,
-      //     orgId: user.orgId,
-      //     cardData,
-      //     todaysData
-      //   },
-      //   orgId: user.orgId
-      // });
+      if (workOrders.length > 0 || serviceAppointments.length > 0 || surveyAppointments.length > 0) {
+        await emailHelper.sendTemplateEmail({
+          to: user.email,
+          subject: `Daily Digest - ${moment().format("YYYY-MM-DD")}`,
+          template: "daily-digest/to-org-users.ejs",
+          templateData: {
+            fullName: user.name,
+            orgId: user.orgId,
+            cardData,
+            todaysData
+          },
+          orgId: user.orgId
+        });
+      } else {
+        console.log('[helpers][daily-digest][sendDailyDigestToOrgUsers]: Not enough data for user...');
+      }
 
     } else {
       console.log('[helpers][daily-digest][sendDailyDigestToOrgUsers]: User has access to no projects...');
@@ -249,7 +255,7 @@ const dailyDigestHelper = {
       console.log('[helpers][daily-digest][prepareDailyDigestForUsers]: Processing Start - Current Time:', moment().format("YYYY-MM-DD hh:mm A"));
 
       try {
-        // await sendDailyDigestToOrgAdmins();
+        await sendDailyDigestToOrgAdmins();
       } catch (err) {
         console.log('[helpers][daily-digest][prepareDailyDigestForUsers]: Some error occured in preparing daily digest for admins', err);
       }
