@@ -155,7 +155,7 @@
                                                                             </tr> -->
                                                                             <tr>
                                                                                 <td align="left">
-                                                                                    <table class="table table-striped">
+                                                                                    <!-- <table class="table table-striped">
                                                                                         <thead>
                                                                                             <tr>
                                                                                                 <th colspan="4">
@@ -206,6 +206,107 @@
                                                                                             </tr>
                                                                                             <% } %>
                                                                                             <% } %>
+                                                                                        </tbody>
+                                                                                    </table> -->
+                                                                                    <table class="table table-striped" style="--bs-table-bg: transparent;
+                                                                                    --bs-table-striped-color: #212529;
+                                                                                    --bs-table-striped-bg: rgba(0, 0, 0, 0.05);
+                                                                                    --bs-table-active-color: #212529;
+                                                                                    --bs-table-active-bg: rgba(0, 0, 0, 0.1);
+                                                                                    --bs-table-hover-color: #212529;
+                                                                                    --bs-table-hover-bg: rgba(0, 0, 0, 0.075);
+                                                                                    width: 100%;
+                                                                                    margin-bottom: 1rem;
+                                                                                    color: #212529;
+                                                                                    vertical-align: top;
+                                                                                    border-color: #dee2e6;
+                                                                                    caption-side: bottom;
+                                                                                    border-collapse: collapse;
+                                                                                    display: table;
+                                                                                    border-collapse: separate;
+                                                                                    box-sizing: border-box;
+                                                                                    text-indent: initial;
+                                                                                    border-spacing: 2px;
+                                                                                    border-color: grey;
+                                                                                    padding: .5rem .5rem;
+                                                                                    background-color: var(--bs-table-bg);
+                                                                                    border-bottom-width: 1px;
+                                                                                    box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);">
+                                                                                        <thead style="display: table-header-group;background-color: var(--bs-table-bg);
+                                                                                        border-bottom-width: 1px;padding: .5rem .5rem;
+                                                                                        box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);">
+                                                                                            <tr style="background-color: var(--bs-table-bg);
+                                                                                            border-bottom-width: 1px;padding: .5rem .5rem;
+                                                                                            box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);">
+                                                                                                <th colspan="4" style="background-color: var(--bs-table-bg);
+                                                                                                border-bottom-width: 1px;padding: .5rem .5rem;
+                                                                                                box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);">
+                                                                                                    <h3 style="text-align: left; padding: 0; margin: 0; color: #3C94DC;">Parts - Having Low stock</h3>
+                                                                                                </th>
+                                                                                            </tr>
+                                                                                        </thead>
+                                                                                        <tbody style="font-size: 15px;background-color: var(--bs-table-bg);
+                                                                                        border-bottom-width: 1px;padding: .5rem .5rem;
+                                                                                        box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);">
+                                                                                        <% for (var i = 0; i < parts.length;  i++ ) { %>
+                                                                                            <% if ( i % 2 ) { %>
+                                                                                                <tr style="display: table-row;
+                                                                                                vertical-align: inherit;
+                                                                                                border-color: inherit;background-color: var(--bs-table-bg);
+                                                                                                border-bottom-width: 1px;
+                                                                                                box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);
+                                                                                                --bs-table-accent-bg: var(--bs-table-striped-bg);
+                                                                                                color: var(--bs-table-striped-color);">
+                                                                                                    <td style="background-color: var(--bs-table-bg);
+                                                                                                    border-bottom-width: 1px;padding: .5rem .5rem;
+                                                                                                    box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);"><%= i + 1 %></td>
+                                                                                                    <td style="width: 48%;max-width: 48%;background-color: var(--bs-table-bg);
+                                                                                                    border-bottom-width: 1px;padding: .5rem .5rem;
+                                                                                                    box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);"><p style="text-overflow: ellipsis;font-size: 15px;"> <%= parts[i].partName %> </p></td>
+                                                                                                    <td style="background-color: var(--bs-table-bg);
+                                                                                                    border-bottom-width: 1px;padding: .5rem .5rem;
+                                                                                                    box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);"><%= parts[i].partCode %></td>
+                                                                                                    <td style="background-color: var(--bs-table-bg);
+                                                                                                    border-bottom-width: 1px;padding: .5rem .5rem;
+                                                                                                    box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);"><%= parts[i].minimumQuantity %></td>
+                                                                                                    <td style="background-color: var(--bs-table-bg);
+                                                                                                    border-bottom-width: 1px;padding: .5rem .5rem;
+                                                                                                    box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);">
+                                                                                                        <span style="padding:2px 20px; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
+                                                                                                            <%= parts[i].minimumQuantity - parts[i].totalQuantity %> Less
+                                                                                                        </span>
+                                                                                                    </td>
+                                                                                            <% } %>
+                                                                                                </tr>
+                                                                                            <% }else{ %>
+                                                                                                <tr style="display: table-row;
+                                                                                                vertical-align: inherit;
+                                                                                                border-color: inherit;background-color: var(--bs-table-bg);
+                                                                                                border-bottom-width: 1px;
+                                                                                                box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);">
+                                                                                                    <td style="background-color: var(--bs-table-bg);
+                                                                                                    border-bottom-width: 1px;padding: .5rem .5rem;
+                                                                                                    box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);"><%= i + 1 %></td>
+                                                                                                    <td style="width: 48%;max-width: 48%;background-color: var(--bs-table-bg);
+                                                                                                    border-bottom-width: 1px;padding: .5rem .5rem;
+                                                                                                    box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);"><p style="text-overflow: ellipsis;font-size: 15px;"> <%= parts[i].partName %> </p></td>
+                                                                                                    <td style="background-color: var(--bs-table-bg);
+                                                                                                    border-bottom-width: 1px;padding: .5rem .5rem;
+                                                                                                    box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);"><%= parts[i].partCode %></td>
+                                                                                                    <td style="background-color: var(--bs-table-bg);
+                                                                                                    border-bottom-width: 1px;padding: .5rem .5rem;
+                                                                                                    box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);"><%= parts[i].minimumQuantity %></td>
+                                                                                                    <td style="background-color: var(--bs-table-bg);
+                                                                                                    border-bottom-width: 1px;padding: .5rem .5rem;
+                                                                                                    box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);">
+                                                                                                        <span style="padding:2px 20px; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
+                                                                                                            <%= parts[i].minimumQuantity - parts[i].totalQuantity %> Less
+                                                                                                        </span>
+                                                                                                    </td>
+                                                                                            <% } %>
+                                                                                                </tr>
+                                                                                            <% } %>
+                                                                                        <% } %>
                                                                                         </tbody>
                                                                                     </table>
                                                                                 </td>
