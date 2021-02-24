@@ -116,25 +116,25 @@
                                                                                 <td align="left">
                                                                                     <div style="padding:5px; width: 120px;height: 100px;background-color: #FBB877;text-align: center;border-radius: 10px;">
                                                                                         <p style="margin: 0;padding: 5px; font-size: 10px;">Open Service Request</p>
-                                                                                        <h1 style="margin: 0;padding: 17px 10px;background-color: white;">1</h1>
+                                                                                        <h1 style="margin: 0;padding: 17px 10px;background-color: white;"><%= cardData.openServiceRequestCount %></h1>
                                                                                     </div>
                                                                                 </td>
                                                                                 <td align="left">
                                                                                     <div style="padding:5px; width: 120px;height: 100px;background-color: #DCE8C5;text-align: center;border-radius: 10px;">
                                                                                         <p style="margin: 0;padding: 5px; font-size: 10px;">Open Service Order</p>
-                                                                                        <h1 style="margin: 0;padding: 17px 10px;background-color: white;">25</h1>
+                                                                                        <h1 style="margin: 0;padding: 17px 10px;background-color: white;"><%= cardData.openServiceOrdersCount %></h1>
                                                                                     </div>
                                                                                 </td>
                                                                                 <td align="left">
                                                                                     <div style="padding:5px; width: 120px;height: 100px;background-color: #8ACAF9;text-align: center;border-radius: 10px;">
                                                                                         <p style="margin: 0;padding: 5px; font-size: 10px;">Open Survey Order</p>
-                                                                                        <h1 style="margin: 0;padding: 17px 10px;background-color: white;">311</h1>
+                                                                                        <h1 style="margin: 0;padding: 17px 10px;background-color: white;"><%= cardData.openSurveysCount %></h1>
                                                                                     </div>
                                                                                 </td>
                                                                                 <td align="left">
                                                                                     <div style="padding:5px; width: 120px;height: 100px;background-color: #EDDE8A;text-align: center;border-radius: 10px;">
                                                                                         <p style="margin: 0;padding: 5px; font-size: 10px;">Overdue Work Order</p>
-                                                                                        <h1 style="margin: 0;padding: 17px 10px;background-color: white;">4121</h1>
+                                                                                        <h1 style="margin: 0;padding: 17px 10px;background-color: white;"><%= cardData.overDueWorkOrdersCount %></h1>
                                                                                     </div>
                                                                                 </td>
                                                                             </tr>
@@ -153,141 +153,179 @@
                                                                                     <p style="color: gray;">LISTS</p>
                                                                                 </td>
                                                                             </tr> -->
-                                                                            <tr>
-                                                                                <td align="left">
-                                                                                    <table class="table table-striped">
-                                                                                        <thead>
-                                                                                            <tr>
-                                                                                                <th colspan="4">
-                                                                                                    <h3 style="text-align: left; padding: 0; margin: 0; color: #3C94DC;">Overdue Tasks - focus on these & get it done!</h3>
-                                                                                                </th>
-                                                                                            </tr>
-                                                                                        </thead>
-                                                                                        <tbody style="font-size: 15px;">
-                                                                                            <tr>
-                                                                                                <td>1</td>
-                                                                                                <td style="width: 48%;max-width: 48%;"><p style="text-overflow: ellipsis;font-size: 15px;"> Task Name Task Name Task Name Task Name </p></td>
-                                                                                                <td>Survey Order</td>
-                                                                                                <td>
-                                                                                                    <span style="padding:2px 20px; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
-                                                                                                        3 days overdue
-                                                                                                    </span>
-                                                                                                </td>
-                                                                                            </tr>
-                                                                                            <tr>
-                                                                                                <td>2</td>
-                                                                                                <td style="width: 48%;max-width: 48%;"><p style="text-overflow: ellipsis;font-size: 15px;"> Task Name Task Name Task Name </p></td>
-                                                                                                <td>Work Order</td>
-                                                                                                <td>
-                                                                                                    <span style="padding:2px 20px; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
-                                                                                                        3 days overdue
-                                                                                                    </span>
-                                                                                                </td>
-                                                                                            </tr>
-                                                                                            <tr>
-                                                                                                <td>3</td>
-                                                                                                <td style="width: 48%;max-width: 48%;"><p style="text-overflow: ellipsis;font-size: 15px;"> Task Name Task Name Task Name </p></td>
-                                                                                                <td>Survey Order</td>
-                                                                                                <td>
-                                                                                                    <span style="padding:2px 20px; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
-                                                                                                        3 days overdue
-                                                                                                    </span>
-                                                                                                </td>
-                                                                                            </tr>
-                                                                                        </tbody>
-                                                                                    </table>
-                                                                                </td>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td align="left">
-                                                                                    <table class="table table-striped">
-                                                                                        <thead>
-                                                                                            <tr>
-                                                                                                <th colspan="4">
-                                                                                                    <h3 style="text-align: left; padding: 0; margin: 0; color: #3C94DC;">Overdue Tasks - focus on these & get it done!</h3>
-                                                                                                </th>
-                                                                                            </tr>
-                                                                                        </thead>
-                                                                                        <tbody style="font-size: 15px;">
-                                                                                            <tr>
-                                                                                                <td>1</td>
-                                                                                                <td style="width: 48%;max-width: 48%;"><p style="text-overflow: ellipsis;font-size: 15px;"> Task Name Task Name Task Name Task Name </p></td>
-                                                                                                <td>Survey Order</td>
-                                                                                                <td>
-                                                                                                    <span style="padding:2px 20px; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
-                                                                                                        3 days overdue
-                                                                                                    </span>
-                                                                                                </td>
-                                                                                            </tr>
-                                                                                            <tr>
-                                                                                                <td>2</td>
-                                                                                                <td style="width: 48%;max-width: 48%;"><p style="text-overflow: ellipsis;font-size: 15px;"> Task Name Task Name Task Name </p></td>
-                                                                                                <td>Work Order</td>
-                                                                                                <td>
-                                                                                                    <span style="padding:2px 20px; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
-                                                                                                        3 days overdue
-                                                                                                    </span>
-                                                                                                </td>
-                                                                                            </tr>
-                                                                                            <tr>
-                                                                                                <td>3</td>
-                                                                                                <td style="width: 48%;max-width: 48%;"><p style="text-overflow: ellipsis;font-size: 15px;"> Task Name Task Name Task Name </p></td>
-                                                                                                <td>Survey Order</td>
-                                                                                                <td>
-                                                                                                    <span style="padding:2px 20px; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
-                                                                                                        3 days overdue
-                                                                                                    </span>
-                                                                                                </td>
-                                                                                            </tr>
-                                                                                        </tbody>
-                                                                                    </table>
-                                                                                </td>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td align="left">
-                                                                                    <table class="table table-striped">
-                                                                                        <thead>
-                                                                                            <tr>
-                                                                                                <th colspan="4">
-                                                                                                    <h3 style="text-align: left; padding: 0; margin: 0; color: #3C94DC;">Overdue Tasks - focus on these & get it done!</h3>
-                                                                                                </th>
-                                                                                            </tr>
-                                                                                        </thead>
-                                                                                        <tbody style="font-size: 15px;">
-                                                                                            <tr>
-                                                                                                <td>1</td>
-                                                                                                <td style="width: 48%;max-width: 48%;"><p style="text-overflow: ellipsis;font-size: 15px;"> Task Name Task Name Task Name Task Name </p></td>
-                                                                                                <td>Survey Order</td>
-                                                                                                <td>
-                                                                                                    <span style="padding:2px 20px; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
-                                                                                                        3 days overdue
-                                                                                                    </span>
-                                                                                                </td>
-                                                                                            </tr>
-                                                                                            <tr>
-                                                                                                <td>2</td>
-                                                                                                <td style="width: 48%;max-width: 48%;"><p style="text-overflow: ellipsis;font-size: 15px;"> Task Name Task Name Task Name </p></td>
-                                                                                                <td>Work Order</td>
-                                                                                                <td>
-                                                                                                    <span style="padding:2px 20px; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
-                                                                                                        3 days overdue
-                                                                                                    </span>
-                                                                                                </td>
-                                                                                            </tr>
-                                                                                            <tr>
-                                                                                                <td>3</td>
-                                                                                                <td style="width: 48%;max-width: 48%;"><p style="text-overflow: ellipsis;font-size: 15px;"> Task Name Task Name Task Name </p></td>
-                                                                                                <td>Survey Order</td>
-                                                                                                <td>
-                                                                                                    <span style="padding:2px 20px; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
-                                                                                                        3 days overdue
-                                                                                                    </span>
-                                                                                                </td>
-                                                                                            </tr>
-                                                                                        </tbody>
-                                                                                    </table>
-                                                                                </td>
-                                                                            </tr>
+
+                                                                            <%if (overDueData && overDueData.workOrders.length > 0) { %>
+                                                                                <tr>
+                                                                                    <td align="left">
+                                                                                        <table class="table table-striped">
+                                                                                            <thead>
+                                                                                                <tr>
+                                                                                                    <th colspan="4">
+                                                                                                        <h3 style="text-align: left; padding: 0; margin: 0; color: #b9185b;">Overdue - Work Orders!</h3>
+                                                                                                    </th>
+                                                                                                </tr>
+                                                                                            </thead>
+                                                                                            <tbody style="font-size: 15px;padding: .5rem .5rem;">
+                                                                                                <% for (var i = 0; i < overDueData.workOrders.length;  i++ ) { %>
+                                                                                                    <% if ( i % 2 ) { %>
+                                                                                                        <tr style="padding: .5rem .5rem;">
+                                                                                                            <td style="padding: .5rem .5rem;"> <%= i + 1 %> </td>
+                                                                                                            <td style="width: 48%;max-width: 48%;padding: .5rem .5rem;"><p style="text-overflow: ellipsis;font-size: 15px;"> <%= overDueData.workOrders[i].name  %> </p></td>
+                                                                                                            <td style="padding: .5rem .5rem;"> <%= overDueData.workOrders[i].teamName  %> </td>
+                                                                                                            <td style="padding: .5rem .5rem;">
+                                                                                                                <p style="padding:2px 20px; text-align: center; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
+                                                                                                                    <%= overDueData.workOrders[i].assetName  %>
+                                                                                                                </p>
+                                                                                                            </td>
+                                                                                                        </tr>
+                                                                                                    <% }else{ %> 
+                                                                                                        <tr style="padding: .5rem .5rem;" bgcolor="#d2d2d2">
+                                                                                                            <td style="padding: .5rem .5rem;"> <%= i + 1 %> </td>
+                                                                                                            <td style="width: 48%;max-width: 48%;padding: .5rem .5rem;"><p style="text-overflow: ellipsis;font-size: 15px;"> <%= overDueData.workOrders[i].name  %> </p></td>
+                                                                                                            <td style="padding: .5rem .5rem;"> <%= overDueData.workOrders[i].teamName  %> </td>
+                                                                                                            <td style="padding: .5rem .5rem;">
+                                                                                                                <p style="padding:2px 20px; text-align: center; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
+                                                                                                                    <%= overDueData.workOrders[i].assetName  %>
+                                                                                                                </p>
+                                                                                                            </td>
+                                                                                                        </tr> 
+                                                                                                    <% } %>
+                                                                                                <% } %>   
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            <% } %>
+
+
+                                                                            <%if (todaysData && todaysData.surveyAppointments.length > 0) { %>
+                                                                                <tr>
+                                                                                    <td align="left">
+                                                                                        <table class="table table-striped">
+                                                                                            <thead>
+                                                                                                <tr>
+                                                                                                    <th colspan="4">
+                                                                                                        <h3 style="text-align: left; padding: 0; margin: 0; color: #3C94DC;">Todays - Survey Appointments!</h3>
+                                                                                                    </th>
+                                                                                                </tr>
+                                                                                            </thead>
+                                                                                            <tbody style="font-size: 15px;padding: .5rem .5rem;">
+                                                                                                <% for (var i = 0; i < todaysData.surveyAppointments.length;  i++ ) { %>
+                                                                                                    <% if ( i % 2 ) { %>
+                                                                                                        <tr style="padding: .5rem .5rem;">
+                                                                                                            <td style="padding: .5rem .5rem;"> <%= i + 1 %> </td>
+                                                                                                            <td style="width: 48%;max-width: 48%;padding: .5rem .5rem;"><p style="text-overflow: ellipsis;font-size: 15px;"> <%= todaysData.surveyAppointments[i].description  %> </p></td>
+                                                                                                            <td style="padding: .5rem .5rem;"> <%= todaysData.surveyAppointments[i].teamName  %> </td>
+                                                                                                            <td style="padding: .5rem .5rem;">
+                                                                                                                <p style="padding:2px 20px; text-align: center; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
+                                                                                                                    <%= todaysData.surveyAppointments[i].appointedTime  %>
+                                                                                                                </p>
+                                                                                                            </td>
+                                                                                                        </tr>
+                                                                                                    <% }else{ %> 
+                                                                                                        <tr style="padding: .5rem .5rem;" bgcolor="#d2d2d2">
+                                                                                                            <td style="padding: .5rem .5rem;"> <%= i + 1 %> </td>
+                                                                                                            <td style="width: 48%;max-width: 48%;padding: .5rem .5rem;"><p style="text-overflow: ellipsis;font-size: 15px;"> <%= todaysData.surveyAppointments[i].description  %> </p></td>
+                                                                                                            <td style="padding: .5rem .5rem;"> <%= todaysData.surveyAppointments[i].teamName  %> </td>
+                                                                                                            <td style="padding: .5rem .5rem;">
+                                                                                                                <p style="padding:2px 20px; text-align: center; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
+                                                                                                                    <%= todaysData.surveyAppointments[i].appointedTime  %>
+                                                                                                                </p>
+                                                                                                            </td>
+                                                                                                        </tr> 
+                                                                                                    <% } %>
+                                                                                                <% } %>   
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            <% } %>
+
+                                                                            <%if (todaysData && todaysData.serviceAppointments.length > 0) { %>
+                                                                                <tr>
+                                                                                    <td align="left">
+                                                                                        <table class="table table-striped">
+                                                                                            <thead>
+                                                                                                <tr>
+                                                                                                    <th colspan="4">
+                                                                                                        <h3 style="text-align: left; padding: 0; margin: 0; color: #3C94DC;">Todays - Service Appointments!</h3>
+                                                                                                    </th>
+                                                                                                </tr>
+                                                                                            </thead>
+                                                                                            <tbody style="font-size: 15px;padding: .5rem .5rem;">
+                                                                                                <% for (var i = 0; i < todaysData.serviceAppointments.length;  i++ ) { %>
+                                                                                                    <% if ( i % 2 ) { %>
+                                                                                                        <tr style="padding: .5rem .5rem;">
+                                                                                                            <td style="padding: .5rem .5rem;"> <%= i + 1 %> </td>
+                                                                                                            <td style="width: 48%;max-width: 48%;padding: .5rem .5rem;"><p style="text-overflow: ellipsis;font-size: 15px;"> <%= todaysData.serviceAppointments[i].description  %> </p></td>
+                                                                                                            <td style="padding: .5rem .5rem;"> <%= todaysData.serviceAppointments[i].teamName  %> </td>
+                                                                                                            <td style="padding: .5rem .5rem;">
+                                                                                                                <p style="padding:2px 20px; text-align: center; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
+                                                                                                                    <%= todaysData.serviceAppointments[i].appointedTime  %>
+                                                                                                                </p>
+                                                                                                            </td>
+                                                                                                        </tr>
+                                                                                                    <% }else{ %> 
+                                                                                                        <tr style="padding: .5rem .5rem;" bgcolor="#d2d2d2">
+                                                                                                            <td style="padding: .5rem .5rem;"> <%= i + 1 %> </td>
+                                                                                                            <td style="width: 48%;max-width: 48%;padding: .5rem .5rem;"><p style="text-overflow: ellipsis;font-size: 15px;"> <%= todaysData.serviceAppointments[i].description  %> </p></td>
+                                                                                                            <td style="padding: .5rem .5rem;"> <%= todaysData.serviceAppointments[i].teamName  %> </td>
+                                                                                                            <td style="padding: .5rem .5rem;">
+                                                                                                                <p style="padding:2px 20px; text-align: center; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
+                                                                                                                    <%= todaysData.serviceAppointments[i].appointedTime  %>
+                                                                                                                </p>
+                                                                                                            </td>
+                                                                                                        </tr> 
+                                                                                                    <% } %>
+                                                                                                <% } %>   
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            <% } %>
+
+                                                                            <%if (todaysData && todaysData.workOrders.length > 0) { %>
+                                                                                <tr>
+                                                                                    <td align="left">
+                                                                                        <table class="table table-striped">
+                                                                                            <thead>
+                                                                                                <tr>
+                                                                                                    <th colspan="4">
+                                                                                                        <h3 style="text-align: left; padding: 0; margin: 0; color: #3C94DC;">Todays - Work Orders!</h3>
+                                                                                                    </th>
+                                                                                                </tr>
+                                                                                            </thead>
+                                                                                            <tbody style="font-size: 15px;padding: .5rem .5rem;">
+                                                                                                <% for (var i = 0; i < todaysData.workOrders.length;  i++ ) { %>
+                                                                                                    <% if ( i % 2 ) { %>
+                                                                                                        <tr style="padding: .5rem .5rem;">
+                                                                                                            <td style="padding: .5rem .5rem;"> <%= i + 1 %> </td>
+                                                                                                            <td style="width: 48%;max-width: 48%;padding: .5rem .5rem;"><p style="text-overflow: ellipsis;font-size: 15px;"> <%= todaysData.workOrders[i].name  %> </p></td>
+                                                                                                            <td style="padding: .5rem .5rem;"> <%= todaysData.workOrders[i].teamName  %> </td>
+                                                                                                            <td style="padding: .5rem .5rem;">
+                                                                                                                <p style="padding:2px 20px; text-align: center; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
+                                                                                                                    <%= todaysData.workOrders[i].assetName  %>
+                                                                                                                </p>
+                                                                                                            </td>
+                                                                                                        </tr>
+                                                                                                    <% }else{ %> 
+                                                                                                        <tr style="padding: .5rem .5rem;" bgcolor="#d2d2d2">
+                                                                                                            <td style="padding: .5rem .5rem;"> <%= i + 1 %> </td>
+                                                                                                            <td style="width: 48%;max-width: 48%;padding: .5rem .5rem;"><p style="text-overflow: ellipsis;font-size: 15px;"> <%= todaysData.workOrders[i].name  %> </p></td>
+                                                                                                            <td style="padding: .5rem .5rem;"> <%= todaysData.workOrders[i].teamName  %> </td>
+                                                                                                            <td style="padding: .5rem .5rem;">
+                                                                                                                <p style="padding:2px 20px; text-align: center; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
+                                                                                                                    <%= todaysData.workOrders[i].assetName  %>
+                                                                                                                </p>
+                                                                                                            </td>
+                                                                                                        </tr> 
+                                                                                                    <% } %>
+                                                                                                <% } %>   
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            <% } %>    
                                                                             
                                                                         </tbody>
                                                                     </table>
