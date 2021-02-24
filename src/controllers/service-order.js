@@ -433,11 +433,11 @@ const serviceOrderController = {
                         .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
                         .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
                         .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                        .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
-                        .leftJoin('users', 'assigned_service_team.userId', 'users.id')
+                        // .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
+                        // .leftJoin('users', 'assigned_service_team.userId', 'users.id')
                         .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
                         .leftJoin("users AS u", "service_requests.createdBy", "u.id")
-                        .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                        // .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
                         .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
                         .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
                         .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
@@ -451,6 +451,7 @@ const serviceOrderController = {
                             'service_requests.description as Description',
                             'service_requests.location as Location',
                             'service_requests.id as Sr Id',
+                            'service_requests.id',
                             'incident_categories.descriptionEng as Problem',
                             'priority as Priority',
                             'orderDueDate as Due Date',
@@ -459,8 +460,8 @@ const serviceOrderController = {
                             'service_orders.createdAt as Date Created',
                             'service_requests.houseId as houseId',
                             "buildings_and_phases.description as Building Name",
-                            "users.userName as Assigned Main User",
-                            "teams.teamName as Team Name",
+                            // "users.userName as Assigned Main User",
+                            // "teams.teamName as Team Name",
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
                             "property_units.id as unitId",
@@ -511,31 +512,33 @@ const serviceOrderController = {
 
                         }).groupBy([
                             'buildings_and_phases.id',
-                            'teams.teamId',
+                            // 'teams.teamId',
                             'requested_by.id',
                             'property_units.id',
                             'service_requests.id',
                             'service_orders.id',
                             'service_problems.id',
                             'incident_categories.id',
-                            'assigned_service_team.id',
-                            'users.id', 'u.id',
+                            // 'assigned_service_team.id',
+                            // 'users.id',
+                             'u.id',
                             "companies.id",
                             "projects.id",
                             // "assignUser.id",
                             // "user_house_allocation.id",
-                            'status.id', 'users.id'
+                            'status.id', 
+                            // 'users.id'
                         ]),
 
                     knex.from('service_orders')
                         .leftJoin('service_requests', 'service_orders.serviceRequestId', 'service_requests.id')
                         .leftJoin('service_problems', 'service_requests.id', 'service_problems.serviceRequestId')
                         .leftJoin('incident_categories', 'service_problems.categoryId', 'incident_categories.id')
-                        .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
-                        .leftJoin('users', 'assigned_service_team.userId', 'users.id')
+                        // .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
+                        // .leftJoin('users', 'assigned_service_team.userId', 'users.id')
                         .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
                         .leftJoin("users AS u", "service_requests.createdBy", "u.id")
-                        .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                        // .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
                         .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
                         //.leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
                         // .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
@@ -553,6 +556,7 @@ const serviceOrderController = {
                             'service_requests.description as Description',
                             'service_requests.location as Location',
                             'service_requests.id as Sr Id',
+                            'service_requests.id',
                             'incident_categories.descriptionEng as Problem',
                             'priority as Priority',
                             'service_requests.createdBy as Created By',
@@ -562,8 +566,8 @@ const serviceOrderController = {
                             'service_orders.createdAt as Date Created',
                             'service_requests.houseId as houseId',
                             "buildings_and_phases.description as Building Name",
-                            "users.userName as Assigned Main User",
-                            "teams.teamName as Team Name",
+                            // "users.userName as Assigned Main User",
+                            // "teams.teamName as Team Name",
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
                             "property_units.id as unitId",
@@ -616,7 +620,7 @@ const serviceOrderController = {
             } else if (_.isEmpty(filters)) {
                 [total, rows] = await Promise.all([
                     knex
-
+                    .count("* as count")
                         .from("service_orders")
                         .leftJoin(
                             "service_requests",
@@ -633,59 +637,29 @@ const serviceOrderController = {
                             "service_problems.categoryId",
                             "incident_categories.id"
                         )
-                        .leftJoin(
-                            "assigned_service_team",
-                            "service_requests.id",
-                            "assigned_service_team.entityId"
-                        )
-                        .leftJoin(
-                            "users",
-                            "assigned_service_team.userId",
-                            "users.id"
-                        )
+                        // .leftJoin(
+                        //     "assigned_service_team",
+                        //     "service_requests.id",
+                        //     "assigned_service_team.entityId"
+                        // )
+                        // .leftJoin(
+                        //     "users",
+                        //     "assigned_service_team.userId",
+                        //     "users.id"
+                        // )
                         .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
                         .leftJoin("users AS u", "service_requests.createdBy", "u.id")
-                        .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                        // .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
                         .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
                         .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
                         .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
-                        // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-                        // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
                         .leftJoin('companies', 'service_orders.companyId', 'companies.id')
                         .leftJoin('projects', 'property_units.projectId', 'projects.id')
-
-                        .select([
-                            "service_orders.id as So Id",
-                            "service_requests.description as Description",
-                            "service_requests.location as Location",
-                            "service_requests.id as Sr Id",
-                            "incident_categories.descriptionEng as Problem",
-                            "priority as Priority",
-                            "orderDueDate as Due Date",
-                            "status.descriptionEng as Status",
-                            "u.name as Created By",
-                            "service_orders.createdAt as Date Created",
-                            'service_requests.houseId as houseId',
-                            "buildings_and_phases.description as Building Name",
-                            "users.userName as Assigned Main User",
-                            "teams.teamName as Team Name",
-                            "requested_by.name as Requested By",
-                            "property_units.unitNumber as Unit Number",
-                            "property_units.id as unitId",
-                            "service_orders.displayId as SO#",
-                            "service_requests.displayId as SR#",
-                            "companies.companyName",
-                            "companies.companyId",
-                            "projects.project",
-                            "projects.projectName",
-
-                            // "assignUser.name as Tenant Name"
-                        ])
+                        .where({ "service_orders.orgId": req.orgId })
+                        .whereIn('service_requests.projectId', accessibleProjects)
                         .where(qb => {
-                            qb.where({ "service_orders.orgId": req.orgId });
-                            qb.whereIn('service_requests.projectId', accessibleProjects)
-
-
+                            console.log("callleddddd==========>>>>")
+                            
                             if (filters) {
                                 qb.where(filters);
                             }
@@ -716,10 +690,6 @@ const serviceOrderController = {
                             if (description) {
                                 qb.where('service_requests.description', 'iLIKE', `%${description}%`)
                             }
-
-                            // if(tenantName){
-                            //     qb.where('assignUser.name','ilike',`%${tenantName}%`)
-                            // }
                             if (requestedBy) {
                                 qb.where('requested_by.name', 'ilike', `%${requestedBy}%`)
                             }
@@ -733,19 +703,15 @@ const serviceOrderController = {
                             "service_orders.id",
                             "service_problems.id",
                             "incident_categories.id",
-                            "assigned_service_team.id",
-                            "users.id",
+                            // "assigned_service_team.id",
                             "u.id",
                             "status.id",
                             'buildings_and_phases.id',
-                            'teams.teamId',
+                            // 'teams.teamId',
                             'requested_by.id',
                             'property_units.id',
                             "companies.id",
                             "projects.id",
-                            // "assignUser.id",
-                            // "user_house_allocation.id"
-
                         ]),
                     knex
                         .from("service_orders")
@@ -764,32 +730,30 @@ const serviceOrderController = {
                             "service_problems.categoryId",
                             "incident_categories.id"
                         )
-                        .leftJoin(
-                            "assigned_service_team",
-                            "service_requests.id",
-                            "assigned_service_team.entityId"
-                        )
-                        .leftJoin(
-                            "users",
-                            "assigned_service_team.userId",
-                            "users.id"
-                        )
+                        // .leftJoin(
+                        //     "assigned_service_team",
+                        //     "service_requests.id",
+                        //     "assigned_service_team.entityId"
+                        // )
+                        // .leftJoin(
+                        //     "users",
+                        //     "assigned_service_team.userId",
+                        //     "users.id"
+                        // )
                         .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
                         .leftJoin("users AS u", "service_requests.createdBy", "u.id")
-                        .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                        // .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
                         .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
                         .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
                         .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
-                        // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-                        // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
                         .leftJoin('companies', 'service_orders.companyId', 'companies.id')
                         .leftJoin('projects', 'property_units.projectId', 'projects.id')
-
                         .select([
                             "service_orders.id as So Id",
                             "service_requests.description as Description",
                             "service_requests.location as Location",
                             "service_requests.id as Sr Id",
+                            "service_requests.id",
                             "incident_categories.descriptionEng as Problem",
                             "priority as Priority",
                             "u.name as Created By",
@@ -798,8 +762,8 @@ const serviceOrderController = {
                             "status.descriptionEng as Status",
                             "service_orders.createdAt as Date Created",
                             "buildings_and_phases.description as Building Name",
-                            "users.userName as Assigned Main User",
-                            "teams.teamName as Team Name",
+                            // "users.userName as Assigned Main User",
+                            // "teams.teamName as Team Name",
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
                             "property_units.id as unitId",
@@ -809,15 +773,12 @@ const serviceOrderController = {
                             "companies.companyId",
                             "projects.project",
                             "projects.projectName",
-
-                            // "assignUser.name as Tenant Name"
-
                         ])
+                        .where({ "service_orders.orgId": req.orgId })
+                        .whereIn('service_requests.projectId', accessibleProjects)
                         .where(qb => {
-                            qb.where({ "service_orders.orgId": req.orgId });
-                            qb.whereIn('service_requests.projectId', accessibleProjects)
 
-
+                            console.log("value1 callleddddd==========>>>>")
                             if (filters) {
                                 qb.where(filters);
                             }
@@ -848,167 +809,32 @@ const serviceOrderController = {
                             if (description) {
                                 qb.where('service_requests.description', 'iLIKE', `%${description}%`)
                             }
-                            // if (tenantName) {
-                            //     qb.where('assignUser.name', 'ilike', `%${tenantName}%`)
-                            // }
                             if (requestedBy) {
                                 qb.where('requested_by.name', 'ilike', `%${requestedBy}%`)
                             }
                             if (priority) {
                                 qb.where('service_requests.priority', 'ilike', `%${priority}%`)
                             }
-
                         }).groupBy([
                             "service_requests.id",
                             "service_orders.id",
                             "service_problems.id",
                             "incident_categories.id",
-                            "assigned_service_team.id",
-                            "users.id",
+                            // "assigned_service_team.id",
+                            // "users.id",
                             "u.id",
                             "status.id",
                             'buildings_and_phases.id',
-                            'teams.teamId',
+                            // 'teams.teamId',
                             'requested_by.id',
                             'property_units.id',
                             "companies.id",
                             "projects.id",
-                            // "assignUser.id",
-                            // "user_house_allocation.id"
                         ])
                         .offset(offset)
-                        .limit(per_page).orderBy('service_orders.id', 'desc')
+                        .limit(per_page)
+                        .orderBy('service_orders.id', 'desc')
                 ]);
-                // [total, rows] = await Promise.all([
-                //     knex
-
-                //         .from("service_orders")
-                //         .leftJoin(
-                //             "service_requests",
-                //             "service_orders.serviceRequestId",
-                //             "service_requests.id"
-                //         )
-                //         .leftJoin(
-                //             "service_problems",
-                //             "service_requests.id",
-                //             "service_problems.serviceRequestId"
-                //         )
-                //         .leftJoin(
-                //             "incident_categories",
-                //             "service_problems.categoryId",
-                //             "incident_categories.id"
-                //         )
-                //         .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
-
-                //         .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
-                //         .leftJoin("users AS u", "service_requests.createdBy", "u.id")
-                //         .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
-                //         .leftJoin('users', 'assigned_service_team.userId', 'users.id')
-
-                //         .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
-                //         .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
-                //         .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
-                //         .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-                //         .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
-
-                //         .select([
-                //             "service_orders.id as So Id",
-                //             "service_requests.description as Description",
-                //             "service_requests.location as Location",
-                //             "service_requests.id as Sr Id",
-                //             "incident_categories.descriptionEng as Problem",
-                //             "priority as Priority",
-
-                //             //   "service_orders.createdBy as Created By",
-                //             "orderDueDate as Due Date",
-                //             'u.name as Created By',
-                //             'status.descriptionEng as Status',
-                //             'service_orders.createdAt as Date Created',
-                //             'service_requests.houseId as houseId',
-                //             "buildings_and_phases.description as Building Name",
-                //             "users.userName as Assigned Main User",
-                //             "teams.teamName as Team Name",
-                //             "requested_by.name as Requested By",
-                //             "property_units.unitNumber as Unit Number",
-                //             "assignUser.name as Tenant Name"
-                //         ])
-                //         .groupBy([
-                //             "service_requests.id",
-                //             "service_orders.id",
-                //             "service_problems.id",
-                //             "incident_categories.id",
-                //             "u.id",
-                //             "status.id",
-                //             'buildings_and_phases.id',
-                //             'teams.teamId',
-                //             'requested_by.id',
-                //             'property_units.id',
-                //             'users.id',
-                //             "assignUser.id",
-                //             "user_house_allocation.id"
-
-                //         ])
-                //         .where({ "service_orders.orgId": req.orgId })
-                //         .whereIn('service_requests.projectId', accessibleProjects),
-
-                //     knex
-                //         .from("service_orders")
-                //         .leftJoin(
-                //             "service_requests",
-                //             "service_orders.serviceRequestId",
-                //             "service_requests.id"
-                //         )
-                //         .leftJoin(
-                //             "service_problems",
-                //             "service_requests.id",
-                //             "service_problems.serviceRequestId"
-                //         )
-                //         .leftJoin(
-                //             "incident_categories",
-                //             "service_problems.categoryId",
-                //             "incident_categories.id"
-                //         )
-                //         .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
-
-                //         .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
-                //         .leftJoin("users AS u", "service_requests.createdBy", "u.id")
-                //         .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
-                //         .leftJoin('users', 'assigned_service_team.userId', 'users.id')
-
-                //         .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
-                //         .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
-                //         .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
-                //         .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-                //         .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
-
-                //         .select([
-                //             "service_orders.id as So Id",
-                //             "service_requests.description as Description",
-                //             "service_requests.location as Location",
-                //             "service_requests.id as Sr Id",
-                //             "incident_categories.descriptionEng as Problem",
-                //             "service_requests.priority as Priority",
-                //             "u.name as Created By",
-                //             //   "service_orders.createdBy as Created By",
-                //             "orderDueDate as Due Date",
-                //             "status.descriptionEng as Status",
-                //             "service_orders.createdAt as Date Created",
-                //             'service_requests.houseId as houseId',
-                //             "buildings_and_phases.description as Building Name",
-                //             "users.userName as Assigned Main User",
-                //             "teams.teamName as Team Name",
-                //             "requested_by.name as Requested By",
-                //             "property_units.unitNumber as Unit Number",
-                //             "assignUser.name as Tenant Name"
-
-                //         ])
-                //         .distinct('service_requests.id')
-                //         .orderBy('service_orders.id', 'desc')
-                //         .offset(offset)
-                //         .limit(per_page)
-                //         .where({ "service_orders.orgId": req.orgId })
-                //         .whereIn('service_requests.projectId', accessibleProjects).orderBy('service_orders.id', 'desc'),
-                // ]);
             } else {
 
                 [total, rows] = await Promise.all([
@@ -1030,19 +856,19 @@ const serviceOrderController = {
                             "service_problems.categoryId",
                             "incident_categories.id"
                         )
-                        .leftJoin(
-                            "assigned_service_team",
-                            "service_requests.id",
-                            "assigned_service_team.entityId"
-                        )
-                        .leftJoin(
-                            "users",
-                            "assigned_service_team.userId",
-                            "users.id"
-                        )
+                        // .leftJoin(
+                        //     "assigned_service_team",
+                        //     "service_requests.id",
+                        //     "assigned_service_team.entityId"
+                        // )
+                        // .leftJoin(
+                        //     "users",
+                        //     "assigned_service_team.userId",
+                        //     "users.id"
+                        // )
                         .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
                         .leftJoin("users AS u", "service_requests.createdBy", "u.id")
-                        .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                        // .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
                         .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
                         .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
                         .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
@@ -1064,8 +890,8 @@ const serviceOrderController = {
                             "service_orders.createdAt as Date Created",
                             'service_requests.houseId as houseId',
                             "buildings_and_phases.description as Building Name",
-                            "users.userName as Assigned Main User",
-                            "teams.teamName as Team Name",
+                            // "users.userName as Assigned Main User",
+                            // "teams.teamName as Team Name",
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
                             "property_units.id as unitId",
@@ -1130,18 +956,17 @@ const serviceOrderController = {
                             "service_orders.id",
                             "service_problems.id",
                             "incident_categories.id",
-                            "assigned_service_team.id",
-                            "users.id",
+                            // "assigned_service_team.id",
+                            // "users.id",
                             "u.id",
                             "status.id",
                             'buildings_and_phases.id',
-                            'teams.teamId',
+                            // 'teams.teamId',
                             'requested_by.id',
                             'property_units.id',
                             "companies.id",
                             "projects.id",
-                            // "assignUser.id",
-                            // "user_house_allocation.id"
+                            
 
                         ]),
                     knex
@@ -1161,19 +986,19 @@ const serviceOrderController = {
                             "service_problems.categoryId",
                             "incident_categories.id"
                         )
-                        .leftJoin(
-                            "assigned_service_team",
-                            "service_requests.id",
-                            "assigned_service_team.entityId"
-                        )
-                        .leftJoin(
-                            "users",
-                            "assigned_service_team.userId",
-                            "users.id"
-                        )
+                        // .leftJoin(
+                        //     "assigned_service_team",
+                        //     "service_requests.id",
+                        //     "assigned_service_team.entityId"
+                        // )
+                        // .leftJoin(
+                        //     "users",
+                        //     "assigned_service_team.userId",
+                        //     "users.id"
+                        // )
                         .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
                         .leftJoin("users AS u", "service_requests.createdBy", "u.id")
-                        .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                        // .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
                         .leftJoin('property_units', 'service_requests.houseId', 'property_units.id')
                         .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
                         .leftJoin('requested_by', 'service_requests.requestedBy', 'requested_by.id')
@@ -1187,6 +1012,7 @@ const serviceOrderController = {
                             "service_requests.description as Description",
                             "service_requests.location as Location",
                             "service_requests.id as Sr Id",
+                            "service_requests.id",
                             "incident_categories.descriptionEng as Problem",
                             "priority as Priority",
                             "u.name as Created By",
@@ -1210,6 +1036,7 @@ const serviceOrderController = {
 
                         ])
                         .where(qb => {
+
                             qb.where({ "service_orders.orgId": req.orgId });
                             qb.whereIn('service_requests.projectId', accessibleProjects)
 
@@ -1260,21 +1087,43 @@ const serviceOrderController = {
                 ]);
 
             }
+            const Parallel = require('async-parallel');
+
+            rows = await Parallel.map(rows, async(row)=>{
+                const teamData = await knex
+                    .from("assigned_service_team")
+                    .leftJoin("teams","assigned_service_team.teamId","teams.teamId")
+                    .leftJoin("users","assigned_service_team.userId","users.id")
+                    .select([
+                        "users.userName as Assigned Main User",
+                        "teams.teamName as Team Name",
+                        // "users.name as Created By",
+                      ])
+                      .where({
+                        "assigned_service_team.entityId": row.id,
+                        "assigned_service_team.entityType": "service_requests",
+                      })
+                      .first()
+
+                      return { ...row, ...teamData };
+            })
+
+
 
             let count = total.length;
             pagination.total = count;
             pagination.per_page = per_page;
             pagination.offset = offset;
-            pagination.to = offset + _.uniqBy(rows, 'So Id').length;
+            pagination.to = offset + rows.length
+            // pagination.to = offset + _.uniqBy(rows, 'So Id').length;
             pagination.last_page = Math.ceil(count / per_page);
             pagination.current_page = page;
             pagination.from = offset;
-            // pagination.data = _.uniqBy(rows,'So Id');
+            pagination.data = rows;
 
 
 
-            let Parallel = require('async-parallel');
-            pagination.data = await Parallel.map(_.uniqBy(rows, 'So Id'), async pd => {
+            pagination.data = await Parallel.map(rows, async pd => {
 
                 let houseResult = await knex.from('user_house_allocation').select('userId').where({ houseId: pd.unitId }).first().orderBy('id', 'desc')
 

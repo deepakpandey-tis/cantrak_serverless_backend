@@ -1677,7 +1677,6 @@ const taskGroupController = {
       }
 
       const Parallel = require("async-parallel");
-
       rows = await Parallel.map(rows,async (row)=>{
         const teamData = await knex
         .from("assigned_service_team")
