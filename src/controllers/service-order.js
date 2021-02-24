@@ -2810,9 +2810,9 @@ const serviceOrderController = {
                     "service_requests.id",
                     "service_problems.serviceRequestId"
                 )
-                // .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
-                // .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
-                // .leftJoin('users as mainUsers', 'assigned_service_team.userId', 'mainUsers.id')
+                .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
+                .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
+                .leftJoin('users as mainUsers', 'assigned_service_team.userId', 'mainUsers.id')
                 .leftJoin(
                     "incident_categories",
                     "service_problems.categoryId",
@@ -2838,9 +2838,9 @@ const serviceOrderController = {
                     "buildings_and_phases.description as buildingDescription",
                     "incident_categories.descriptionEng as problemDescription",
                     // "requested_by.email as requestedByEmail",
-                    // "teams.teamName",
-                    // "teams.teamCode",
-                    // "mainUsers.name as mainUser",
+                    "teams.teamName",
+                    "teams.teamCode",
+                    "mainUsers.name as mainUser",
                     "service_orders.id as SO Id",
                     "property_units.id as unitId",
                     "service_orders.orderDueDate",
@@ -2861,9 +2861,9 @@ const serviceOrderController = {
                     "buildings_and_phases.id",
                     "service_problems.id",
                     // "requested_by.id",
-                    // "assigned_service_team.id",
-                    // "teams.teamId",
-                    // "mainUsers.id",
+                    "assigned_service_team.id",
+                    "teams.teamId",
+                    "mainUsers.id",
                     "incident_categories.id",
                     "service_orders.id",
                     "c.id",
@@ -2878,9 +2878,9 @@ const serviceOrderController = {
                     if (payload.fromDate && payload.toDate) {
                         qb.whereBetween('service_orders.orderDueDate', [payload.fromDate, payload.toDate])
                     }
-                    // if (payload.teamId && payload.teamId.length) {
-                    //     qb.whereIn('teams.teamId', payload.teamId)
-                    // }
+                    if (payload.teamId && payload.teamId.length) {
+                        qb.whereIn('teams.teamId', payload.teamId)
+                    }
                     if (payload.buildingId && payload.buildingId.length) {
                         qb.whereIn('buildings_and_phases.id', payload.buildingId)
                     }
@@ -2909,37 +2909,38 @@ const serviceOrderController = {
                         qb.whereBetween('service_orders.createdAt', [payload.createFromDate, payload.createToDate])
                     }
                 })
+                .where({"assigned_service_team.entityType": "service_requests"})
                 .whereIn('service_requests.projectId', accessibleProjects)
                 .distinct('service_requests.id')
                 .orderBy('service_requests.id', 'desc')
 
             const Parallel = require('async-parallel')
 
-            sr = await Parallel.map(sr, async(row)=>{
-                const teamData = await knex
-                    .from("assigned_service_team")
-                    .leftJoin("teams","assigned_service_team.teamId","teams.teamId")
-                    .leftJoin("users","assigned_service_team.userId","users.id")
-                    .select([
-                            "assigned_service_team.teamId",
-                            "teams.teamName",
-                            "teams.teamCode",
-                            "users.name as mainUser",
-                            // "users.userName"
-                           ])
-                            .where({
-                                "assigned_service_team.entityId": row.id,
-                                "assigned_service_team.entityType": "service_requests",
-                            })
-                            .where((qb) => {
-                                console.log("Team Id======>>>>",payload.teamId)
-                                if (payload.teamId && payload.teamId.length) {
-                                qb.whereIn('teams.teamId', payload.teamId)
-                            }
-                            })
-                            .first();
-                            return { ...row, ...teamData };
-                                })
+            // sr = await Parallel.map(sr, async(row)=>{
+            //     const teamData = await knex
+            //         .from("assigned_service_team")
+            //         .leftJoin("teams","assigned_service_team.teamId","teams.teamId")
+            //         .leftJoin("users","assigned_service_team.userId","users.id")
+            //         .select([
+            //                 "assigned_service_team.teamId",
+            //                 "teams.teamName",
+            //                 "teams.teamCode",
+            //                 "users.name as mainUser",
+            //                 // "users.userName"
+            //                ])
+            //                 .where({
+            //                     "assigned_service_team.entityId": row.id,
+            //                     "assigned_service_team.entityType": "service_requests",
+            //                 })
+            //                 .where((qb) => {
+            //                     console.log("Team Id======>>>>",payload.teamId)
+            //                     if (payload.teamId && payload.teamId.length) {
+            //                     qb.whereIn('teams.teamId', payload.teamId)
+            //                 }
+            //                 })
+            //                 .first();
+            //                 return { ...row, ...teamData };
+            //                     })
 
 
 
