@@ -304,7 +304,9 @@ const parcelManagementController = {
         buildingPhaseId,
       } = req.body;
 
-      // console.log("request body", req.body);
+      const accessibleProjects = req.userProjectResources[0].projects;
+
+
       if (
         unitId ||
         trackingNo ||
@@ -348,6 +350,7 @@ const parcelManagementController = {
               )
               // .leftJoin("images", "parcel_management.id", "images.entityId")
               .where("parcel_management.orgId", req.orgId)
+              .whereIn("projects.id",accessibleProjects)
               .where((qb) => {
                 if (unitId) {
                   qb.where("property_units.id", unitId);
@@ -593,6 +596,7 @@ const parcelManagementController = {
             )
             // .leftJoin("images", "parcel_management.id", "images.entityId")
             .where("parcel_management.orgId", req.orgId)
+            .whereIn("projects.id",accessibleProjects)
             .groupBy(["parcel_management.id", "property_units.id", "users.id"]),
           knex
             .from("parcel_management")
@@ -653,7 +657,7 @@ const parcelManagementController = {
             .offset(offset)
             .limit(per_page),
         ]);
-        console.log("rows", rows);
+        // console.log("rows", rows);
         const Parallel = require("async-parallel");
         rows = await Parallel.map(rows, async (pd) => {
           let imageResult = await knex
@@ -709,15 +713,9 @@ const parcelManagementController = {
         id,
         parcelId,
       } = req.body;
-      console.log(
-        "parcel payload for filter",
-        unitId,
-        tenantId,
-        buildingPhaseId,
-        trackingNumber,
-        id,
-        parcelId
-      );
+
+      const accessibleProjects = req.userProjectResources[0].projects;
+     
       if (
         unitId ||
         tenantId ||
@@ -755,6 +753,8 @@ const parcelManagementController = {
               "property_units.id"
             )
             .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+            // .leftJoin("companies", "parcel_user_tis.companyId", "companies.id")
+            .leftJoin("projects", "parcel_user_tis.projectId", "projects.id")
             .leftJoin(
               "buildings_and_phases",
               "parcel_user_tis.buildingPhaseId",
@@ -776,6 +776,7 @@ const parcelManagementController = {
             ])
             .where("parcel_management.orgId", req.orgId)
             .where("parcel_management.parcelStatus", 1)
+            .whereIn("projects.id",accessibleProjects)
             .where((qb) => {
               if (unitId) {
                 qb.where("property_units.unitNumber", unitId);
@@ -831,6 +832,8 @@ const parcelManagementController = {
             "property_units.id"
           )
           .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+          // .leftJoin("companies", "parcel_user_tis.companyId", "companies.id")
+            .leftJoin("projects", "parcel_user_tis.projectId", "projects.id")
           .leftJoin(
             "buildings_and_phases",
             "parcel_user_tis.buildingPhaseId",
@@ -852,6 +855,7 @@ const parcelManagementController = {
           ])
           .where("parcel_management.orgId", req.orgId)
           .where("parcel_management.parcelStatus", 1)
+          .whereIn("projects.id",accessibleProjects)
           .groupBy([
             "parcel_management.id",
             "property_units.id",

@@ -2825,6 +2825,7 @@ const serviceOrderController = {
 
                 .select([
                     "service_requests.id as S Id",
+                    "service_requests.id",
                     "service_requests.houseId as houseId",
                     "service_requests.description as Description",
                     "service_requests.priority as Priority",
@@ -2908,15 +2909,42 @@ const serviceOrderController = {
                         qb.whereBetween('service_orders.createdAt', [payload.createFromDate, payload.createToDate])
                     }
                 })
+                .where({"assigned_service_team.entityType": "service_requests"})
                 .whereIn('service_requests.projectId', accessibleProjects)
                 .distinct('service_requests.id')
                 .orderBy('service_requests.id', 'desc')
 
-
             const Parallel = require('async-parallel')
+
+            // sr = await Parallel.map(sr, async(row)=>{
+            //     const teamData = await knex
+            //         .from("assigned_service_team")
+            //         .leftJoin("teams","assigned_service_team.teamId","teams.teamId")
+            //         .leftJoin("users","assigned_service_team.userId","users.id")
+            //         .select([
+            //                 "assigned_service_team.teamId",
+            //                 "teams.teamName",
+            //                 "teams.teamCode",
+            //                 "users.name as mainUser",
+            //                 // "users.userName"
+            //                ])
+            //                 .where({
+            //                     "assigned_service_team.entityId": row.id,
+            //                     "assigned_service_team.entityType": "service_requests",
+            //                 })
+            //                 .where((qb) => {
+            //                     console.log("Team Id======>>>>",payload.teamId)
+            //                     if (payload.teamId && payload.teamId.length) {
+            //                     qb.whereIn('teams.teamId', payload.teamId)
+            //                 }
+            //                 })
+            //                 .first();
+            //                 return { ...row, ...teamData };
+            //                     })
+
+
+
             let srWithTenant = await Parallel.map(sr, async pd => {
-
-
                 let tagsResult = [];
                 tagsResult = await knex('location_tags')
                     .leftJoin('location_tags_master', 'location_tags.locationTagId', 'location_tags_master.id')
