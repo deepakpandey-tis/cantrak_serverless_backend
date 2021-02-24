@@ -1905,6 +1905,7 @@ const taskGroupController = {
       let reqData = req.query;
       let payLoad = req.body;
       let workOrderDate = req.body.workOrderDate;
+      let overDueStatus = req.body.overdue;
       let payloadFilter = req.body;
       let assignedTeam = [];
 
@@ -1926,6 +1927,7 @@ const taskGroupController = {
         "assignedTeam",
         "repeatPeriod",
         "company",
+        "overdue"
       ]);
 
       const accessibleProjects = req.userProjectResources[0].projects;
@@ -2008,6 +2010,13 @@ const taskGroupController = {
                 qb.where(
                   "task_group_schedule_assign_assets.displayId",
                   payload.workOrderId
+                );
+              }
+
+              if (req.body.overdue && req.body.overdue != null) {
+                qb.where(
+                  "task_group_schedule_assign_assets.isOverdue",
+                  req.body.overdue
                 );
               }
 
@@ -2160,6 +2169,13 @@ const taskGroupController = {
                   payload.workOrderId
                 );
               }
+
+              if (req.body.overdue && req.body.overdue != null) {
+                qb.where(
+                  "task_group_schedule_assign_assets.isOverdue",
+                  req.body.overdue
+                );
+              }
               if (
                 req.body.assetCategoryId &&
                 req.body.assetCategoryId.length > 0
@@ -2265,6 +2281,14 @@ const taskGroupController = {
                   payload.workOrderId
                 );
               }
+
+              if (req.body.overdue && req.body.overdue != null) {
+                qb.where(
+                  "task_group_schedule_assign_assets.isOverdue",
+                  req.body.overdue
+                );
+              }
+
               if (
                 req.body.assetCategoryId &&
                 req.body.assetCategoryId.length > 0
@@ -2397,6 +2421,14 @@ const taskGroupController = {
                   payload.workOrderId
                 );
               }
+
+              if (req.body.overdue && req.body.overdue != null) {
+                qb.where(
+                  "task_group_schedule_assign_assets.isOverdue",
+                  req.body.overdue
+                );
+              }
+              
               if (
                 req.body.assetCategoryId &&
                 req.body.assetCategoryId.length > 0

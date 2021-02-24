@@ -143,7 +143,6 @@ const dashboardController = {
           .select("task_group_schedule_assign_assets.id")
           .distinct("task_group_schedule_assign_assets.id")
           .whereIn("task_group_schedule_assign_assets.scheduleId", pmScheduleMaster)
-          //.whereIn("service_requests.projectId", accessibleProjects)
           .where({
             // serviceStatusCode: "A",
             orgId: orgId,
