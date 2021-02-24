@@ -14,10 +14,12 @@ const partsController = {
         try {
 
             let projectIds = [];
-            let accessibleProjects = req.userProjectResources;
-            accessibleProjects = accessibleProjects.map(ap => ap.projects);
-            projectIds = _.flatten(accessibleProjects);
-            projectIds = _.uniqBy(projectIds);
+            let projectsForParts = req.userProjectResources;
+            projectsForParts = projectsForParts.find(pfp => pfp.id == 3);   // 3 means parts ... 
+            console.log('Project For Parts:', projectsForParts);
+            let accessibleProjects = projectsForParts.projects;
+            console.log('Project For Parts:', accessibleProjects);
+            projectIds = _.uniqBy(accessibleProjects);
             console.log('ProjectIds:', projectIds);
 
             let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
