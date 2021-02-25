@@ -165,34 +165,45 @@
                                                                                         </thead>
                                                                                         <tbody style="font-size: 15px;">
                                                                                             <% for (var i = 0; i < parts.length;  i++ ) { %>
-                                                                                            <% if ( i % 2 ) { %>
-                                                                                                <tr style="padding: .5rem .5rem;">
-                                                                                                    <td style="padding: .5rem .5rem;"><%= i + 1 %></td>
-                                                                                                    <td style="width: 48%;max-width: 48%;padding: .5rem .5rem;"><p style="text-overflow: ellipsis;font-size: 15px;"> <%= parts[i].partName %> </p></td>
-                                                                                                    <td style="padding: .5rem .5rem;"><%= parts[i].partCode %></td>
-                                                                                                    <td style="padding: .5rem .5rem;"><%= parts[i].totalQuantity %></td>
-                                                                                                    <td style="padding: .5rem .5rem;"><%= parts[i].minimumQuantity %></td>
-                                                                                                    <td style="padding: .5rem .5rem;">
-                                                                                                        <p style="padding:2px 20px; text-align: center; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
-                                                                                                            <%= parts[i].minimumQuantity - parts[i].totalQuantity %> Less
-                                                                                                        </p>
-                                                                                                    </td>
-                                                                                                </tr>
-                                                                                            <% }else{ %>
-                                                                                                <tr style="padding: .5rem .5rem;" bgcolor="#d2d2d2">
-                                                                                                    <td style="padding: .5rem .5rem;"><%= i + 1 %></td>
-                                                                                                    <td style="width: 48%;max-width: 48%;padding: .5rem .5rem;"><p style="text-overflow: ellipsis;font-size: 15px;"> <%= parts[i].partName %> </p></td>
-                                                                                                    <td style="padding: .5rem .5rem;"><%= parts[i].partCode %></td>
-                                                                                                    <td style="padding: .5rem .5rem;"><%= parts[i].totalQuantity %></td>
-                                                                                                    <td style="padding: .5rem .5rem;"><%= parts[i].minimumQuantity %></td>
-                                                                                                    <td style="padding: .5rem .5rem;">
-                                                                                                        <p style="padding:2px 20px; text-align: center; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
-                                                                                                            <%= parts[i].minimumQuantity - parts[i].totalQuantity %> Less
-                                                                                                        </p>
-                                                                                                    </td>
-                                                                                                </tr>
+
+                                                                                                <% if ( i < 10 ) { %>
+
+                                                                                                    <% if ( i % 2 ) { %>
+                                                                                                        <tr style="padding: .5rem .5rem;">
+                                                                                                            <td style="padding: .5rem .5rem;"><%= i + 1 %></td>
+                                                                                                            <td style="width: 48%;max-width: 48%;padding: .5rem .5rem;"><p style="text-overflow: ellipsis;font-size: 15px;"> <%= parts[i].partName %> </p></td>
+                                                                                                            <td style="padding: .5rem .5rem;"><%= parts[i].partCode %></td>
+                                                                                                            <td style="padding: .5rem .5rem;"><%= parts[i].totalQuantity %></td>
+                                                                                                            <td style="padding: .5rem .5rem;"><%= parts[i].minimumQuantity %></td>
+                                                                                                            <td style="padding: .5rem .5rem;">
+                                                                                                                <p style="padding:2px 20px; text-align: center; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
+                                                                                                                    <%= parts[i].minimumQuantity - parts[i].totalQuantity %> Less
+                                                                                                                </p>
+                                                                                                            </td>
+                                                                                                        </tr>
+                                                                                                    <% } else { %>
+                                                                                                        <tr style="padding: .5rem .5rem;" bgcolor="#d2d2d2">
+                                                                                                            <td style="padding: .5rem .5rem;"><%= i + 1 %></td>
+                                                                                                            <td style="width: 48%;max-width: 48%;padding: .5rem .5rem;"><p style="text-overflow: ellipsis;font-size: 15px;"> <%= parts[i].partName %> </p></td>
+                                                                                                            <td style="padding: .5rem .5rem;"><%= parts[i].partCode %></td>
+                                                                                                            <td style="padding: .5rem .5rem;"><%= parts[i].totalQuantity %></td>
+                                                                                                            <td style="padding: .5rem .5rem;"><%= parts[i].minimumQuantity %></td>
+                                                                                                            <td style="padding: .5rem .5rem;">
+                                                                                                                <p style="padding:2px 20px; text-align: center; font-size: 12px; background-color: #D54E55; color: white; border-radius: 5px;">
+                                                                                                                    <%= parts[i].minimumQuantity - parts[i].totalQuantity %> Less
+                                                                                                                </p>
+                                                                                                            </td>
+                                                                                                        </tr>
+                                                                                                    <% } %>
+
+                                                                                                <% } %> 
+
                                                                                             <% } %>
-                                                                                            <% } %>
+                                                                                            <% if ( parts.length > 10 ) { %>
+                                                                                                <tr style="padding: .5rem .5rem; text-align: center;"  bgcolor="#d2d2d2">
+                                                                                                    <td colspan="6" style="padding: .5rem .5rem;"> <a href="https://app.servicemind.asia/admin/part">View More</a> </td>
+                                                                                                </tr>
+                                                                                            <% } %>   
                                                                                         </tbody>
                                                                                     </table> 
                                                                                 </td>

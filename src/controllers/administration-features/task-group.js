@@ -737,7 +737,10 @@ const taskGroupController = {
       let projects = _.flatten(
         req.userProjectResources.map((v) => v.projects)
       ).map((v) => Number(v));
+
+      projects = _.uniq(projects);
       console.log("Projects Resources: ", projects);
+
       //console.log('Projects: ',projects)
       //console.log('pppppppppppppppppp',req.userProjectResources)
       // let projects = _.flatten(req.userProjectResources.map(v => v.projects))
