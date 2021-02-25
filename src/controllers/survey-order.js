@@ -1150,33 +1150,33 @@ const surveyOrderController = {
             "service_problems.categoryId",
             "incident_categories.id"
           )
-          .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
-          .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+          // .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
+          // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
           .leftJoin('companies', 'o.companyId', 'companies.id')
           .leftJoin('projects', 'property_units.projectId', 'projects.id')
 
-          .select(
-            "o.id AS surveyId",
-            "o.serviceRequestId",
-            "o.surveyOrderStatus as Status",
-            "status.statusCode AS surveyStatusCode",
-            "u.id As createdUserId",
-            "u.name AS appointedBy",
-            "users.name AS assignedTo",
-            "u.name AS createdBy",
-            "o.appointedDate AS appointmentDate",
-            "o.appointedTime AS appointmentTime",
-            "o.createdAt AS createdAt",
-            "teams.teamName as teamName",
-            "assignUser.name  as Tenant Name",
-            "o.displayId as SU#",
-            "s.displayId as SR#",
-            "companies.companyName",
-            "companies.companyId",
-            "projects.project",
-            "projects.projectName",
+          // .select(
+          //   "o.id AS surveyId",
+          //   "o.serviceRequestId",
+          //   "o.surveyOrderStatus as Status",
+          //   "status.statusCode AS surveyStatusCode",
+          //   "u.id As createdUserId",
+          //   "u.name AS appointedBy",
+          //   "users.name AS assignedTo",
+          //   "u.name AS createdBy",
+          //   "o.appointedDate AS appointmentDate",
+          //   "o.appointedTime AS appointmentTime",
+          //   "o.createdAt AS createdAt",
+          //   "teams.teamName as teamName",
+          //   "assignUser.name  as Tenant Name",
+          //   "o.displayId as SU#",
+          //   "s.displayId as SR#",
+          //   "companies.companyName",
+          //   "companies.companyId",
+          //   "projects.project",
+          //   "projects.projectName",
 
-          )
+          // )
           .where({ "assigned_service_team.entityType": "survey_orders" })
           .whereIn('s.projectId', accessibleProjects)
           .groupBy([
@@ -1188,8 +1188,8 @@ const surveyOrderController = {
             "users.id",
             "teams.teamId",
             "assigned_service_team.entityType",
-            "assignUser.id",
-            "user_house_allocation.id",
+            // "assignUser.id",
+            // "user_house_allocation.id",
             "companies.id",
             "projects.id"
           ]), knex
@@ -1210,7 +1210,7 @@ const surveyOrderController = {
               "property_units.unitNumber",
               "incident_categories.descriptionEng as problemDescription",
               "requested_by.name as requestedBy",
-              "assignUser.name  as Tenant Name",
+              // "assignUser.name  as Tenant Name",
               "o.displayId as SU#",
               "s.displayId as SR#",
               "companies.companyName",
@@ -1277,8 +1277,8 @@ const surveyOrderController = {
               "service_problems.categoryId",
               "incident_categories.id"
             )
-            .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
-            .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+            // .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
+            // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
             .leftJoin('companies', 'o.companyId', 'companies.id')
             .leftJoin('projects', 'property_units.projectId', 'projects.id')
             .groupBy([
@@ -1290,8 +1290,8 @@ const surveyOrderController = {
               "users.id",
               "teams.teamId",
               "assigned_service_team.entityType",
-              "assignUser.id",
-              "user_house_allocation.id",
+              // "assignUser.id",
+              // "user_house_allocation.id",
               "companies.id",
               "projects.id",
               "buildings_and_phases.id",

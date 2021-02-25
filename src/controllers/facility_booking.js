@@ -3280,8 +3280,8 @@ const facilityBookingController = {
                 .from("user_house_allocation")
                 .leftJoin("users", "user_house_allocation.userId", "users.id")
                 .select(["users.name", "users.id"])
-                .where("user_house_allocation.houseId", unitId);
-            console.log("getTenants", getTenants);
+                .where({"user_house_allocation.houseId": unitId,"users.isActive":true});
+            // console.log("getTenants", getTenants);
             return res.status(200).json({
                 data: {
                     tenants: getTenants,
