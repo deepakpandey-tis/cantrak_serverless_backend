@@ -4,6 +4,7 @@ const router = express.Router();
 const parcelManageController = require('../controllers/parcel-management');
 const authMiddleware = require('../middlewares/auth');
 const parcelManagementController = require('../controllers/parcel-management');
+const roleMiddleware = require('../middlewares/role');
 
 
 router.get('/companylist-having-property-units',authMiddleware.isAuthenticated,parcelManageController.getCompanyListHavingPropertyUnit)
@@ -12,11 +13,11 @@ router.post('/add-parcel',authMiddleware.isAuthenticated,parcelManageController.
 
 router.get('/generate-parcel-id', authMiddleware.isAuthenticated, parcelManageController.generateParcelId)
 
-router.post('/get-parcel-list',authMiddleware.isAuthenticated,parcelManageController.getParcelList)
+router.post('/get-parcel-list',authMiddleware.isAuthenticated,roleMiddleware.parseUserPermission,parcelManageController.getParcelList)
 
 router.post('/get-parcel-details',authMiddleware.isAuthenticated,parcelManageController.getParcelDetails)
 
-router.post('/get-pending-parcel-list',authMiddleware.isAuthenticated,parcelManageController.getPendingParcelList)
+router.post('/get-pending-parcel-list',authMiddleware.isAuthenticated,roleMiddleware.parseUserPermission,parcelManageController.getPendingParcelList)
 
 router.get('/get-tracking-number-list',authMiddleware.isAuthenticated,parcelManageController.getTrackingNumberList)
 
