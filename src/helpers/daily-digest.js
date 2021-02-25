@@ -79,7 +79,7 @@ const sendDailyDigestToOrgAdmins = async () => {
     // Find parts of given organisation...
     const partsQuery = await knex.raw(`select distinct pm.id, sum(pl.quantity) as "totalQuantity", pm."minimumQuantity",  pm."partName", pm."partCode", pm."orgId" 
                               from part_master pm left join part_ledger pl on pm.id = pl."partId" 
-                        where pm."orgId" = 89 group by pm.id having sum(pl.quantity) < pm."minimumQuantity";`);
+                        where pm."orgId" = ${user.orgId} group by pm.id having sum(pl.quantity) < pm."minimumQuantity" limit 15 ;`);
 
     let parts = partsQuery.rows;
 
@@ -257,7 +257,8 @@ const sendDailyDigestToOrgUsers = async () => {
         .where("task_group_schedule_assign_assets.isOverdue", true)
         .where("task_group_schedule_assign_assets.status", 'O')
         .where("task_group_schedule_assign_assets.pmDate", "<", startNewDate)
-        .orderBy("task_group_schedule_assign_assets.id", "desc");
+        .orderBy("task_group_schedule_assign_assets.id", "desc")
+        .limit(15);
 
       console.log('[helpers][daily-digest][sendDailyDigestToOrgUsers]: Overdue workOrders:', overDueWorkOrders);
 
