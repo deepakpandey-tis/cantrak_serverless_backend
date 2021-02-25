@@ -1102,6 +1102,7 @@ const companyController = {
       });
     }
   },
+
   getCompanyListHavingPropertyUnits: async (req, res) => {
     try {
       let pagination = {};
@@ -1143,7 +1144,9 @@ const companyController = {
 
       if (req.query.areaName === 'common') {
         companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true, type: 2 })
-        companyArr1 = companyHavingPU1.map(v => v.companyId)
+        companyArr1 = companyHavingPU1.map(v => v.companyId);
+        companyArr1 = _.uniq(companyArr1);
+
         result = await knex("companies")
           .innerJoin('property_units', 'companies.id', 'property_units.companyId')
           .select("companies.id",
@@ -1173,6 +1176,9 @@ const companyController = {
       } else if (req.query.areaName === 'all') {
         companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true, type: 2 })
         companyArr1 = companyHavingPU1.map(v => v.companyId)
+        companyArr1 = _.uniq(companyArr1);
+
+
         result = await knex("companies")
           .innerJoin('property_units', 'companies.id', 'property_units.companyId')
           .select("companies.id",
@@ -1198,6 +1204,9 @@ const companyController = {
 
         companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true, type: 1 })
         companyArr1 = companyHavingPU1.map(v => v.companyId)
+        companyArr1 = _.uniq(companyArr1);
+
+
         result = await knex("companies")
           .innerJoin('property_units', 'companies.id', 'property_units.companyId')
           .select("companies.id",
