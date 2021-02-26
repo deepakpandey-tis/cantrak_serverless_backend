@@ -1207,9 +1207,9 @@ const parcelManagementController = {
         const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH','SOCKET_NOTIFY', 'EMAIL']
         let sender = await knex.from("users").where({ id: req.me.id }).first();
         let receiver = await knex.from("users").where({ id: tenantId }).first();
-        console.log("parcel rejected=====>>>>>>",req.body.parcelStatus[0],req.body.isChecked)
+        // console.log("parcel rejected=====>>>>>>",req.body.parcelStatus[0],req.body.isChecked)
         if(req.body.pickedUpType[0] == 2 && req.body.parcelStatus == 2 && req.body.isChecked == true){
-          console.log("parcel pickedup")
+          // console.log("parcel pickedup")
         await parcelCollectedNotification.send(
           sender,
           receiver,
@@ -1218,7 +1218,7 @@ const parcelManagementController = {
         );
         }else
         if(req.body.pickedUpType[0] == 1 && req.body.parcelStatus == 2 && req.body.isChecked == true){
-          console.log("parcel pickedup=====>>>>>",req.body.pickedUpType[0])
+          // console.log("parcel pickedup=====>>>>>",req.body.pickedUpType[0])
           await parcelPickedUpNotification.send(
             sender,
             receiver,
@@ -1227,7 +1227,7 @@ const parcelManagementController = {
           );
         }else
         if(req.body.parcelStatus == 3 && req.body.isChecked == true){
-          console.log("parcel rejected=====>>>>>",req.body.pickedUpType[0])
+          // console.log("parcel rejected=====>>>>>",req.body.pickedUpType[0])
           await parcelRejectedNotification.send(
             sender,
             receiver,
@@ -1236,7 +1236,7 @@ const parcelManagementController = {
           );
         }else
         if(req.body.parcelStatus == 4 && req.body.isChecked == true){
-          console.log("parcel returned=====>>>>>",req.body.pickedUpType[0])
+          // console.log("parcel returned=====>>>>>",req.body.pickedUpType[0])
           await parcelReturnedNotification.send(
             sender,
             receiver,
