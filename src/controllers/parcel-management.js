@@ -274,6 +274,17 @@ const parcelManagementController = {
 
   getParcelList: async (req, res) => {
     try {
+
+      let projectIds = [];
+      let projectsForPracel = req.userProjectResources
+      projectsForPracel = projectsForPracel.find(pfp => pfp.id == 10)
+      console.log('Project For Parcel:', projectsForPracel);
+      let accessibleProjects = projectsForPracel.projects;
+      console.log('Project For Parcel:', accessibleProjects);
+      projectIds =  _.uniqBy(accessibleProjects);
+      console.log('ProjectIds:', projectIds);
+
+
       let reqData = req.query;
       // console.log("requested data parcel", reqData);
       let total, rows;
@@ -294,8 +305,17 @@ const parcelManagementController = {
         projectId,
         buildingPhaseId,
       } = req.body;
+      
 
-      const accessibleProjects = req.userProjectResources[0].projects;
+      // let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
+      // .whereIn('projects.id', projectIds)
+      // .where({ orgId: req.orgId });
+      
+
+
+
+
+      // const accessibleProjects = req.userProjectResources[0].projects;
 
 
       if (
@@ -341,7 +361,7 @@ const parcelManagementController = {
               )
               // .leftJoin("images", "parcel_management.id", "images.entityId")
               .where("parcel_management.orgId", req.orgId)
-              .whereIn("projects.id",accessibleProjects)
+              .whereIn("projects.id",projectIds)
               .where((qb) => {
                 if (unitId) {
                   qb.where("property_units.id", unitId);
@@ -459,6 +479,7 @@ const parcelManagementController = {
                 // "images.s3Url",
               ])
               .where("parcel_management.orgId", req.orgId)
+              .whereIn("projects.id",projectIds)
               .where((qb) => {
                 if (unitId) {
                   qb.where("property_units.id", unitId);
@@ -587,7 +608,7 @@ const parcelManagementController = {
             )
             // .leftJoin("images", "parcel_management.id", "images.entityId")
             .where("parcel_management.orgId", req.orgId)
-            .whereIn("projects.id",accessibleProjects)
+            .whereIn("projects.id",projectIds)
             .groupBy(["parcel_management.id", "property_units.id", "users.id"]),
           knex
             .from("parcel_management")
@@ -633,6 +654,7 @@ const parcelManagementController = {
               "parcel_management.updatedAt",
             ])
             .where("parcel_management.orgId", req.orgId)
+            .whereIn("projects.id",projectIds)
             .groupBy([
               "parcel_management.id",
               "property_units.id",
@@ -694,6 +716,17 @@ const parcelManagementController = {
 
   getPendingParcelList: async (req, res) => {
     try {
+
+      let projectIds = [];
+      let projectsForPracel = req.userProjectResources
+      projectsForPracel = projectsForPracel.find(pfp => pfp.id == 10)
+      console.log('Project For Parcel:', projectsForPracel);
+      let accessibleProjects = projectsForPracel.projects;
+      console.log('Project For pickup Parcel 1:', accessibleProjects);
+      projectIds =  _.uniqBy(accessibleProjects);
+      console.log('ProjectIds:', projectIds);
+
+
       let payload = req.body;
       let parcelList;
       let {
@@ -705,7 +738,9 @@ const parcelManagementController = {
         parcelId,
       } = req.body;
 
-      const accessibleProjects = req.userProjectResources[0].projects;
+      // const accessibleProjects = req.userProjectResources[0].projects;
+
+      // console.log('Project For pickup Parcel 2:', accessibleProjects);
      
       if (
         unitId ||
@@ -767,7 +802,7 @@ const parcelManagementController = {
             ])
             .where("parcel_management.orgId", req.orgId)
             .where("parcel_management.parcelStatus", 1)
-            .whereIn("projects.id",accessibleProjects)
+            .whereIn("projects.id",projectIds)
             .where((qb) => {
               if (unitId) {
                 qb.where("property_units.unitNumber", unitId);
@@ -846,7 +881,7 @@ const parcelManagementController = {
           ])
           .where("parcel_management.orgId", req.orgId)
           .where("parcel_management.parcelStatus", 1)
-          .whereIn("projects.id",accessibleProjects)
+          .whereIn("projects.id",projectIds)
           .groupBy([
             "parcel_management.id",
             "property_units.id",
@@ -892,6 +927,17 @@ const parcelManagementController = {
   /*Parcel Details */
   getParcelDetails: async (req, res) => {
     try {
+
+      let projectIds = [];
+      let projectsForPracel = req.userProjectResources
+      projectsForPracel = projectsForPracel.find(pfp => pfp.id == 10)
+      console.log('Project For Parcel:', projectsForPracel);
+      let accessibleProjects = projectsForPracel.projects;
+      console.log('Project For Parcel:', accessibleProjects);
+      projectIds =  _.uniqBy(accessibleProjects);
+      console.log('ProjectIds:', projectIds);
+
+
       let payload = req.body;
       const schema = Joi.object().keys({
         id: Joi.string().required(),
@@ -963,6 +1009,7 @@ const parcelManagementController = {
             "parcel_management.barcode",
           ])
           .where("parcel_management.id", payload.id)
+          .whereIn("projects.id",projectIds)
           .first(),
         knex
           .from("images")
