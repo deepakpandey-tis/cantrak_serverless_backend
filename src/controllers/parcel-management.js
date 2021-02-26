@@ -18,6 +18,7 @@ const addOutGoingNotification = require("../notifications/parcel/add-outgoing-pa
 const parcelRejectedNotification = require("../notifications/parcel/parcel-rejected-notification");
 const parcelReturnedNotification = require("../notifications/parcel/parcel-return-notification");
 const parcelPickedUpNotification = require("../notifications/parcel/parcel-pickedup-notification");
+const parcelCanceledNotification = require("../notifications/parcel/parcel-canceled-notification");
 
 const parcelManagementController = {
   getCompanyListHavingPropertyUnit: async (req, res) => {
@@ -176,16 +177,6 @@ const parcelManagementController = {
           .transacting(trx)
           .where({ id: parcelResult.id });
 
-        // let insertResult = await knex.raw(`update "parcel_management" set "qrCode" = ${qrCode} where "id" = ${parcelResult.id} `)
-
-        // console.log("inserted result qr",insertResult)
-
-        // let updateResult = await knex
-        // .update({qrCode : qrCode})
-        // .where({id:parcelResult.id})
-        // .returning(["*"])
-        // .into("parcel_management");
-
         let imagesData = req.body.image;
         console.log("imagesData", imagesData);
         if (imagesData && imagesData.length > 0) {
@@ -221,7 +212,7 @@ const parcelManagementController = {
         // console.log("tenantid for notification",tenantId)
 
         if(req.body.pickedUpType[0] == 2 && req.body.isChecked == true){
-          const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH','SOCKET_NOTIFY']
+          const ALLOWED_CHANNELS = ['IN_APP','EMAIL', 'WEB_PUSH','SOCKET_NOTIFY']
           let sender = await knex.from("users").where({ id: req.me.id }).first();
 
           let receiver = await knex.from("users").where({ id: tenantId }).first();
@@ -1213,7 +1204,7 @@ const parcelManagementController = {
           },
         };
         let tenantId = req.body.tenantId[0]
-        const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH','SOCKET_NOTIFY']
+        const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH','SOCKET_NOTIFY', 'EMAIL']
         let sender = await knex.from("users").where({ id: req.me.id }).first();
         let receiver = await knex.from("users").where({ id: tenantId }).first();
         console.log("parcel rejected=====>>>>>>",req.body.parcelStatus[0],req.body.isChecked)
@@ -1252,7 +1243,17 @@ const parcelManagementController = {
             dataNos,
             ALLOWED_CHANNELS
           );
+        }else if(req.body.parcelStatus == 5 && req.body.isChecked == true){
+          await parcelCanceledNotification.send(
+            sender,
+            receiver,
+            dataNos,
+            ALLOWED_CHANNELS
+          )
         }
+
+
+
       let description = req.body.description;
       let idLength = req.body.id.length;
       for (let i = 0; i < idLength; i++) {
