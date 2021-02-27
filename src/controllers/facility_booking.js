@@ -1135,6 +1135,16 @@ const facilityBookingController = {
 
     facilityListing: async (req, res) => {
         try {
+
+            let projectIds = [];
+            let projectsForFacilities = req.userProjectResources
+            projectsForFacilities = projectsForFacilities.find(pfp => pfp.id == 10)
+            console.log('Project For Facilities:', projectsForFacilities);
+            let accessibleProjects = projectsForFacilities.projects;
+            console.log('Project For Parcel:', accessibleProjects);
+            projectIds =  _.uniqBy(accessibleProjects);
+            console.log('ProjectIds:', projectIds);
+
             let reqData = req.query;
             //let filters = req.body;
             let total, rows;
@@ -1183,6 +1193,7 @@ const facilityBookingController = {
                                 "facility_master.floorZoneId",
                                 "floor_and_zones.id"
                             )
+                            .whereIn("facility_master.projectId",projectIds)
 
                             .where((qb) => {
                                 if (facilityName) {
@@ -1247,6 +1258,7 @@ const facilityBookingController = {
                                 "facility_master.isActive",
                                 "facility_master.status",
                             ])
+                            .whereIn("facility_master.projectId",projectIds)
                             .where((qb) => {
                                 if (facilityName) {
                                     qb.where(
@@ -1305,6 +1317,7 @@ const facilityBookingController = {
                         )
                         .from("facility_master")
                         .where("facility_master.orgId", req.orgId)
+                        .whereIn("facility_master.projectId",projectIds)
                         .groupBy([
                             "facility_master.id",
                             "companies.id",
@@ -1327,6 +1340,7 @@ const facilityBookingController = {
                             "floor_and_zones.id"
                         )
                         .where("facility_master.orgId", req.orgId)
+                        .whereIn("facility_master.projectId",projectIds)
                         .select([
                             "facility_master.displayId as No",
                             "facility_master.id",
@@ -3147,6 +3161,16 @@ const facilityBookingController = {
     /*GET FACILITY LISTING */
     getFacilityListing: async (req, res) => {
         try {
+
+            let projectIds = [];
+            let projectsForFacilities = req.userProjectResources
+            projectsForFacilities = projectsForFacilities.find(pfp => pfp.id == 10)
+            console.log('Project For Facilities:', projectsForFacilities);
+            let accessibleProjects = projectsForFacilities.projects;
+            console.log('Project For Parcel:', accessibleProjects);
+            projectIds =  _.uniqBy(accessibleProjects);
+            console.log('ProjectIds:', projectIds);
+
             let payload = req.body;
             console.log("payloadData++++++++", payload);
             let rows;
@@ -3156,6 +3180,7 @@ const facilityBookingController = {
                 [rows] = await Promise.all([
                     knex
                         .from("facility_master")
+                        .whereIn("facility_master.projectId",projectIds)
                         .where({
                             "facility_master.orgId": req.orgId,
                             "facility_master.isActive": true,
@@ -3169,6 +3194,7 @@ const facilityBookingController = {
                 [rows] = await Promise.all([
                     knex
                         .from("facility_master")
+                        .whereIn("facility_master.projectId",projectIds)
                         .where({
                             "facility_master.orgId": req.orgId,
                             "facility_master.isActive": true,
@@ -5291,6 +5317,16 @@ const facilityBookingController = {
     },
     getFacilityListByProject: async (req, res) => {
         try {
+
+            let projectIds = [];
+            let projectsForFacilities = req.userProjectResources
+            projectsForFacilities = projectsForFacilities.find(pfp => pfp.id == 10)
+            console.log('Project For Facilities:', projectsForFacilities);
+            let accessibleProjects = projectsForFacilities.projects;
+            console.log('Project For Parcel:', accessibleProjects);
+            projectIds =  _.uniqBy(accessibleProjects);
+            console.log('ProjectIds:', projectIds);
+
             let payload = req.body
             let { projectId } = req.body
             let facilityList;
@@ -5307,6 +5343,7 @@ const facilityBookingController = {
                         "facility_master.id",
                         "facility_master.name",
                     ])
+                    .whereIn("facility_master.projectId", projectIds)
                     .whereIn("facility_master.projectId", projectId)
                     .where({ "facility_master.orgId": orgId, "facility_master.isActive": true })
             } else {
@@ -5316,6 +5353,7 @@ const facilityBookingController = {
                         "facility_master.id",
                         "facility_master.name",
                     ])
+                    .whereIn("facility_master.projectId", projectIds)
                     .where({ "facility_master.orgId": orgId, "facility_master.isActive": true })
 
             }
@@ -5333,6 +5371,16 @@ const facilityBookingController = {
     },
     getFacilityListByFacilityId: async (req, res) => {
         try {
+
+            let projectIds = [];
+            let projectsForFacilities = req.userProjectResources
+            projectsForFacilities = projectsForFacilities.find(pfp => pfp.id == 10)
+            console.log('Project For Facilities:', projectsForFacilities);
+            let accessibleProjects = projectsForFacilities.projects;
+            console.log('Project For Parcel:', accessibleProjects);
+            projectIds =  _.uniqBy(accessibleProjects);
+            console.log('ProjectIds:', projectIds);
+
             console.log("facility id for list", req.body)
             let payload = req.body
             const schema = Joi.object().keys({
@@ -5354,6 +5402,7 @@ const facilityBookingController = {
                     "facility_master.id",
                     "facility_master.name",
                 ])
+                .whereIn("facility_master.projectId",projectIds)
                 .where({ "facility_master.orgId": req.orgId, "facility_master.isActive": true })
                 .whereIn("facility_master.id", payload.id)
 
