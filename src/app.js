@@ -198,7 +198,7 @@ module.exports.longJobsProcessor = async (event, context) => {
     console.log('[longJobsProcessor] Got S3 Link, Sqs Message (as json file):', recordData.s3FileKey);
     let jsonData = await readJsonFile(process.env.S3_BUCKET_NAME, recordData.s3FileKey);
     console.log('[longJobsProcessor] Json Data from s3:', jsonData);
-    jsonData = JSON.parse(jsonData);
+    recordData = JSON.parse(jsonData);
   }
 
 
