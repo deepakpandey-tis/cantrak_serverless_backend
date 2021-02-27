@@ -108,14 +108,35 @@ if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
 
 
 
-
-
 global.appRoot = path.resolve(__dirname);
 
 module.exports.s3hook = (event, context) => {
   console.log('S3 Hook: Event   :: ', JSON.stringify(event));
   console.log('S3 Hook: Context ::', JSON.stringify(context));
   // console.log(JSON.stringify(process.env));
+};
+
+
+const readJsonFile = async (Bucket, Key) => {
+
+  AWS.config.update({
+    accessKeyId: process.env.ACCESS_KEY_ID,
+    secretAccessKey: process.env.SECRET_ACCESS_KEY,
+    region: process.env.REGION || "us-east-1"
+  });
+
+  const params = {
+    Bucket,
+    Key,
+    ResponseContentType: 'application/json',
+  };
+
+  const s3 = new AWS.S3({
+    'signatureVersion': 'v4'
+  });
+
+  const f = await s3.getObject(params).promise();
+  return f.Body.toString('utf-8');
 };
 
 
@@ -169,7 +190,17 @@ module.exports.longJobsProcessor = async (event, context) => {
   const recordsFromSQS = event.Records;
   const currentRecord = recordsFromSQS[0];    // Since we have kept the batchSize to only 1
   console.log('[longJobsProcessor] Current Record:', JSON.stringify(currentRecord));
-  // console.log('[longJobsProcessor] Current Record1:', currentRecord);
+  console.log('[longJobsProcessor] Current Record1:', currentRecord);
+
+  let recordData = currentRecord.body;
+
+  if (currentRecord && recordData.payloadType && recordData.payloadType == 's3') {
+    console.log('[longJobsProcessor] Got S3 Link, Sqs Message (as json file):', recordData.s3FileKey);
+    let jsonData = await readJsonFile(process.env.S3_BUCKET_NAME, recordData.s3FileKey);
+    console.log('[longJobsProcessor] Json Data from s3:', jsonData);
+    recordData = JSON.parse(jsonData);
+  }
+
 
 
   let messageType = 'PM_WORK_ORDER_GENERATE';
@@ -183,34 +214,38 @@ module.exports.longJobsProcessor = async (event, context) => {
   if (messageType === 'PM_WORK_ORDER_GENERATE') {
 
     const creatPmHelper = require("./helpers/preventive-maintenance");
-    const { consolidatedWorkOrders, payload, orgId, requestedBy, orgMaster } = JSON.parse(currentRecord.body);
+    const { consolidatedWorkOrders, payload, orgId, requestedBy, orgMaster } = JSON.parse(recordData);
 
-    console.log('work orders ==============>>>>>>>>>>', consolidatedWorkOrders, orgMaster)
-    pmWorkOrder = await creatPmHelper.createWorkOrders({ consolidatedWorkOrders, payload, orgId });
-    console.log("pmWorkOrder result ======>>>>>", pmWorkOrder);
+    if (consolidatedWorkOrders && payload) {
+      console.log('work orders ==============>>>>>>>>>>', consolidatedWorkOrders, orgMaster)
+      pmWorkOrder = await creatPmHelper.createWorkOrders({ consolidatedWorkOrders, payload, orgId });
+      console.log("pmWorkOrder result ======>>>>>", pmWorkOrder);
+
+      if (pmWorkOrder) {
+        const createPmLongJobsNotification = require("./notifications/preventive-maintenance/long-jobs-notification");
+
+        const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH', 'SOCKET_NOTIFY']
+
+        let dataNos = {
+          payload: {
+            orgData: orgMaster
+          },
+        };
 
 
-    if (pmWorkOrder) {
-      const createPmLongJobsNotification = require("./notifications/preventive-maintenance/long-jobs-notification");
+        let receiver = requestedBy
+        let sender = requestedBy
 
-      const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH', 'SOCKET_NOTIFY']
-
-      let dataNos = {
-        payload: {
-          orgData: orgMaster
-        },
-      };
-
-
-      let receiver = requestedBy
-      let sender = requestedBy
-
-      await createPmLongJobsNotification.send(
-        sender,
-        receiver,
-        dataNos,
-        ALLOWED_CHANNELS
-      )
+        await createPmLongJobsNotification.send(
+          sender,
+          receiver,
+          dataNos,
+          ALLOWED_CHANNELS
+        )
+      }
+    } else {
+      console.log('[app][longJobsProcessor]', 'Work Orders Cannot be generated. Wrong Data in Payload');
+      throw Error('Work Orders Cannot be generated. Wrong Data in Payload');
     }
 
     console.log('[app][longJobsProcessor]: Task Completed Successfully');
