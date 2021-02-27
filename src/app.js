@@ -189,10 +189,11 @@ module.exports.longJobsProcessor = async (event, context) => {
 
   const recordsFromSQS = event.Records;
   const currentRecord = recordsFromSQS[0];    // Since we have kept the batchSize to only 1
-  console.log('[longJobsProcessor] Current Record:', JSON.stringify(currentRecord));
-  console.log('[longJobsProcessor] Current Record1:', currentRecord);
+  console.log('[longJobsProcessor] Current Record:', currentRecord);
 
-  let recordData = currentRecord.body;
+  let recordData = JSON.parse(currentRecord.body);
+  console.log('[longJobsProcessor] recordData:', recordData);
+
 
   if (currentRecord && recordData.payloadType && recordData.payloadType == 's3') {
     console.log('[longJobsProcessor] Got S3 Link, Sqs Message (as json file):', recordData.s3FileKey);
@@ -200,8 +201,6 @@ module.exports.longJobsProcessor = async (event, context) => {
     console.log('[longJobsProcessor] Json Data from s3:', jsonData);
     recordData = JSON.parse(jsonData);
   }
-
-
 
   let messageType = 'PM_WORK_ORDER_GENERATE';
 
@@ -214,7 +213,7 @@ module.exports.longJobsProcessor = async (event, context) => {
   if (messageType === 'PM_WORK_ORDER_GENERATE') {
 
     const creatPmHelper = require("./helpers/preventive-maintenance");
-    const { consolidatedWorkOrders, payload, orgId, requestedBy, orgMaster } = JSON.parse(recordData);
+    const { consolidatedWorkOrders, payload, orgId, requestedBy, orgMaster } = recordData;
 
     if (consolidatedWorkOrders && payload) {
       console.log('work orders ==============>>>>>>>>>>', consolidatedWorkOrders, orgMaster)
