@@ -1138,7 +1138,7 @@ const facilityBookingController = {
 
             let projectIds = [];
             let projectsForFacilities = req.userProjectResources
-            projectsForFacilities = projectsForFacilities.find(pfp => pfp.id == 10)
+            projectsForFacilities = projectsForFacilities.find(pfp => pfp.id == 9)
             console.log('Project For Facilities:', projectsForFacilities);
             let accessibleProjects = projectsForFacilities.projects;
             console.log('Project For Parcel:', accessibleProjects);
@@ -3164,7 +3164,7 @@ const facilityBookingController = {
 
             let projectIds = [];
             let projectsForFacilities = req.userProjectResources
-            projectsForFacilities = projectsForFacilities.find(pfp => pfp.id == 10)
+            projectsForFacilities = projectsForFacilities.find(pfp => pfp.id == 9)
             console.log('Project For Facilities:', projectsForFacilities);
             let accessibleProjects = projectsForFacilities.projects;
             console.log('Project For Parcel:', accessibleProjects);
@@ -5320,7 +5320,7 @@ const facilityBookingController = {
 
             let projectIds = [];
             let projectsForFacilities = req.userProjectResources
-            projectsForFacilities = projectsForFacilities.find(pfp => pfp.id == 10)
+            projectsForFacilities = projectsForFacilities.find(pfp => pfp.id == 9)
             console.log('Project For Facilities:', projectsForFacilities);
             let accessibleProjects = projectsForFacilities.projects;
             console.log('Project For Parcel:', accessibleProjects);
@@ -5374,7 +5374,7 @@ const facilityBookingController = {
 
             let projectIds = [];
             let projectsForFacilities = req.userProjectResources
-            projectsForFacilities = projectsForFacilities.find(pfp => pfp.id == 10)
+            projectsForFacilities = projectsForFacilities.find(pfp => pfp.id == 9)
             console.log('Project For Facilities:', projectsForFacilities);
             let accessibleProjects = projectsForFacilities.projects;
             console.log('Project For Parcel:', accessibleProjects);
