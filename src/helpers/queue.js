@@ -127,7 +127,7 @@ const queueHelper = {
                     'payloadType': 's3',
                     's3FileKey': `sqs/jobs/payloads/${actionId}.json`
                 };
-                newSqsMessage = Json.stringify(newSqsMessage);
+                newSqsMessage = JSON.stringify(newSqsMessage);
 
                 const messageSendResult = await sendSQSMessage(newSqsMessage, queueName, messageType);
                 return { success: true, message: 'Job added to Queue with s3 Payload...', data: messageSendResult };
