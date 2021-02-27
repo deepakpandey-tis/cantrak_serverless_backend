@@ -1,6 +1,7 @@
 const Joi = require('@hapi/joi');
 const _ = require('lodash');
 const AWS = require('aws-sdk');
+const uuidv4 = require('uuid/v4');
 const knex = require("../db/knex");
 
 
