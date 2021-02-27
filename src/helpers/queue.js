@@ -1,6 +1,7 @@
 const Joi = require('@hapi/joi');
 const _ = require('lodash');
 const AWS = require('aws-sdk');
+const uuidv4 = require('uuid/v4');
 const knex = require("../db/knex");
 
 
@@ -83,20 +84,58 @@ const sendSQSMessage = async (messageBody, queueName, messageType) => {
 
 const queueHelper = {
 
-    addToQueue: async ( messageBody, queueName, messageType ) => {
+    addToQueue: async (messageBody, queueName, messageType) => {
         try {
 
-            console.log('[helpers][queue][addToQueue] : Going to Queue Job',messageBody,queueName);
+            console.log('[helpers][queue][addToQueue] : Going to Queue Job', messageBody, queueName);
 
-            const sqsMessageBody = JSON.stringify( messageBody );
-            const messageSendResult = await sendSQSMessage(sqsMessageBody, queueName, messageType);
+            const sqsMessageBody = JSON.stringify(messageBody);
 
-           
+            // Check if message body is greater than 250 KB
+            const size = Buffer.byteLength(sqsMessageBody);
+            console.log('[helpers][queue][addToQueue] : Size of Message Payload:', size);
 
+            if (size > 200 * 1024) {
 
+                let bufferObject = new Buffer.from(sqsMessageBody);
 
+                console.log('[helpers][queue][addToQueue] : Size of Message Payload > 250 KB', size);
+                AWS.config.update({
+                    accessKeyId: process.env.ACCESS_KEY_ID,
+                    secretAccessKey: process.env.SECRET_ACCESS_KEY,
+                    region: process.env.REGION || "us-east-1"
+                });
 
-            return { success: true, message: 'Job added to Queue', data: messageSendResult };
+                const actionId = uuidv4();
+                const s3Params = {
+                    Bucket: process.env.S3_BUCKET_NAME,
+                    Key: `sqs/jobs/payloads/${actionId}.json`,
+                    ContentType: 'application/json',
+                    Body: bufferObject,
+                    ACL: "public-read"
+                };
+
+                const s3 = new AWS.S3({
+                    'signatureVersion': 'v4'
+                });
+
+                // Upload the object to s3...
+                await s3.putObject(s3Params).promise();
+
+                // prepare new Message Body for Sqs with s3 key...
+                let newSqsMessage = {
+                    'payloadType': 's3',
+                    's3FileKey': `sqs/jobs/payloads/${actionId}.json`
+                };
+                newSqsMessage = JSON.stringify(newSqsMessage);
+
+                const messageSendResult = await sendSQSMessage(newSqsMessage, queueName, messageType);
+                return { success: true, message: 'Job added to Queue with s3 Payload...', data: messageSendResult };
+
+            } else {
+                const messageSendResult = await sendSQSMessage(sqsMessageBody, queueName, messageType);
+                return { success: true, message: 'Job added to Queue', data: messageSendResult };
+            }
 
         } catch (err) {
             console.log('[helpers][queue][addToQueue]:  Error', err);
