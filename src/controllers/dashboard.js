@@ -102,7 +102,7 @@ const dashboardController = {
           .distinct("service_requests.id")
           .where({ moderationStatus: true, orgId: req.orgId })
           .whereIn("service_requests.projectId", projectIds)
-          .whereIn("serviceStatusCode", ["US", "O"]),
+          .whereIn("serviceStatusCode", ["O"]),
         //.whereIn("service_requests.projectId", accessibleProjects)
         // .where({ serviceStatusCode: "US", orgId: orgId, "moderationStatus": true })
         //.orWhere({ serviceStatusCode: "O", orgId: orgId, "moderationStatus": true }),
@@ -138,17 +138,46 @@ const dashboardController = {
         //.where({ serviceStatusCode: 'O', orgId, priority: priorityValue })
         // .whereIn('service_requests.projectId', accessibleProjects)
         //.distinct('service_requests.id')
-        knex
-          .from("task_group_schedule_assign_assets")
-          .select("task_group_schedule_assign_assets.id")
-          .distinct("task_group_schedule_assign_assets.id")
-          .whereIn("task_group_schedule_assign_assets.scheduleId", pmScheduleMaster)
-          .where({
-            // serviceStatusCode: "A",
-            orgId: orgId,
-            status: 'O',
-            isOverdue: true
-          })
+        // knex
+        //   .from("task_group_schedule_assign_assets")
+        //   .select("task_group_schedule_assign_assets.id")
+        //   .distinct("task_group_schedule_assign_assets.id")
+        //   .whereIn("task_group_schedule_assign_assets.scheduleId", pmScheduleMaster)
+        //   .where({
+        //     // serviceStatusCode: "A",
+        //     orgId: orgId,
+        //     status: 'O',
+        //     isOverdue: true
+        //   })
+
+          knex
+            .from("task_group_schedule")
+            .distinct("task_group_schedule_assign_assets.id")
+            .innerJoin(
+              "task_group_schedule_assign_assets",
+              "task_group_schedule.id",
+              "task_group_schedule_assign_assets.scheduleId"
+            )
+            .innerJoin(
+              "asset_master",
+              "task_group_schedule_assign_assets.assetId",
+              "asset_master.id"
+            )
+            .innerJoin(
+              "pm_master2",
+              "task_group_schedule.pmId",
+              "pm_master2.id"
+            )
+            .where({
+              "task_group_schedule.orgId": req.orgId,
+              "task_group_schedule_assign_assets.status" : 'O',
+              "task_group_schedule_assign_assets.isOverdue" : true
+            })
+            .whereIn(
+              "pm_master2.projectId", accessibleProjects
+            )  
+
+
         // .orWhere({
         //   serviceStatusCode: "IP",
         //   orgId: orgId,
