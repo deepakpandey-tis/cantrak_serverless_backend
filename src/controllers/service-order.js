@@ -619,7 +619,6 @@ const serviceOrderController = {
                 ])
             } else if (_.isEmpty(filters)) {
 
-                console.log("else if called")
                 [total, rows] = await Promise.all([
                     knex
                     .count("* as count")

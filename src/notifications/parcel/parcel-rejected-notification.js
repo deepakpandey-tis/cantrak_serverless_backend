@@ -122,7 +122,7 @@ const parcelRejectedNotification = {
     sendEmailNotification: async (sender, receiver, data) => {
         data = {
             receiverEmail: receiver.email,
-            template: 'parcel-notification.ejs',
+            template: 'parcel-rejected.ejs',
             templateData: {
                 fullName: receiver.name,
                 orgId:receiver.orgId
