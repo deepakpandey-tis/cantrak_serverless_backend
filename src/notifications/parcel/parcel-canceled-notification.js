@@ -120,11 +120,13 @@ const parcelCanceledNotification = {
     },
 
     sendEmailNotification: async (sender, receiver, data) => {
+        let parcelId = data.payload.parcelId
         data = {
             receiverEmail: receiver.email,
             template: 'parcel-canceled.ejs',
             templateData: {
                 fullName: receiver.name,
+                parcelId:parcelId,
                 orgId:receiver.orgId
             },
             payload: {
