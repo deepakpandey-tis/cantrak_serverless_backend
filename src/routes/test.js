@@ -27,8 +27,9 @@ router.get('/', async (req, res) => {
         // await testNotification.send(sender, receiver, data, ALLOWED_CHANNELS);
 
         // Trigger Daily Digest emails...
-        const dailyDigestHelper = require("../helpers/daily-digest");
-        await dailyDigestHelper.prepareDailyDigestForUsers();
+        // const dailyDigestHelper = require("../helpers/daily-digest");
+        // await dailyDigestHelper.prepareDailyDigestForUsers();
+        await knex.raw(`ALTER TABLE public.users ADD "deactivationStatus" bool NULL DEFAULT false`)
 
         let a;
 
