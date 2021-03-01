@@ -1246,7 +1246,8 @@ const parcelManagementController = {
         
         let dataNos = {
           payload: {
-            orgData : orgMaster
+            orgData : orgMaster,
+            parcelId:id
             
           },
         };
