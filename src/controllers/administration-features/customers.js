@@ -1730,15 +1730,14 @@ const customerController = {
   },
   getTenantListByProject:async(req,res)=>{
     try {
-      let projectId =  req.body.projectId
+      let buildingPhaseId =  req.body.buildingPhaseId
       let orgId = req.orgId
 
       let tenantList = await knex("user_house_allocation")
       .leftJoin("users", "user_house_allocation.userId", "users.id")
       .leftJoin("property_units","user_house_allocation.houseId","property_units.id")
-      // .leftJoin("projects","property_units.projectId","projects.id")
       .select(["users.name", "users.id"])
-      .whereIn("property_units.projectId",projectId)
+      .whereIn("property_units.buildingPhaseId",buildingPhaseId)
       .where({"user_house_allocation.orgId":orgId, "users.isActive": true});
 
       let tenant = _.uniqBy(tenantList, "id");
