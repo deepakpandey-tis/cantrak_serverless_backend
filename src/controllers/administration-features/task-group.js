@@ -5984,6 +5984,7 @@ const taskGroupController = {
           "task_group_schedule_assign_assets.status as woStatus",
           "companies.taxId",
           "companies.telephone",
+          "task_group_schedule.orgId"
         ])
         .where({
           "task_group_schedule.id": payload.taskGroupScheduleId,
