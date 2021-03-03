@@ -3663,6 +3663,82 @@ const serviceRequestController = {
                     .update({ serviceStatusCode: updateStatus, updatedAt: currentTime })
                     .where({ id: serviceRequestId });
 
+                    let userResult;
+                    let userResult2
+                    let requestResult;
+                    let serviceRequestResult = await knex('service_requests').where({ id: serviceRequestId, orgId: req.orgId }).first();
+                    if (serviceRequestResult) {
+    
+                        userResult = await knex('users')
+                            .select([
+                                "users.*",
+                                "application_user_roles.roleId"
+                            ])
+                            .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+                            .where({ 'users.id': serviceRequestResult.createdBy, 'application_user_roles.roleId': 4, 'users.orgId': req.orgId }).first();
+    
+                        requestResult = await knex('requested_by').where({ id: serviceRequestResult.requestedBy, orgId: req.orgId }).first();
+                        if (requestResult) {
+    
+                            userResult2 = await knex('users')
+                                .select([
+                                    "users.*",
+                                    "application_user_roles.roleId"
+                                ])
+                                .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+                                .where({ 'users.email': requestResult.email, 'application_user_roles.roleId': 4, 'users.orgId': req.orgId }).first();
+    
+                        }
+    
+                        let orgMaster = await knex.from("organisations").where({ id: req.orgId }).first();
+                        let dataNos
+                        if(updateStatus === 'IP'){
+                            dataNos = {
+                                payload: {
+                                    title: "Service Request updated",
+                                    url: "",
+                                    description: `Your service requests has been updated to in progress.`,
+                                    redirectUrl: "/user/service-request",
+                                    orgData : orgMaster,
+                                    thaiTitle: "ยกเลิกคำขอบริการ",
+                                    thaiDetails: "คำขอบริการของคุณถูกยกเลิก"
+                                },
+                            };
+                        }else {
+                            dataNos = {
+                                payload: {
+                                    title: "Service Request updated",
+                                    url: "",
+                                    description: `Your service requests has been updated to on hold.`,
+                                    redirectUrl: "/user/service-request",
+                                    orgData : orgMaster,
+                                    thaiTitle: "ยกเลิกคำขอบริการ",
+                                    thaiDetails: "คำขอบริการของคุณถูกยกเลิก"
+                                },
+                            };
+                        }
+                        
+    
+                        let sender = await knex.from("users").where({ id: req.me.id }).first();
+                        let receiver;
+                        let ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH','SOCKET_NOTIFY'];
+    
+                        if (userResult) {
+                            receiver = userResult;
+                        } else {
+                            receiver = userResult2;
+                        }
+    
+                        await serviceRequestUpdateStatusNotification.send(
+                            sender,
+                            receiver,
+                            dataNos,
+                            ALLOWED_CHANNELS
+                        );
+    
+                    }
+                    
+
                 if (updateStatus === 'OH') {
                     await knex("service_orders")
                         .update({ comment: comments, updatedAt: currentTime })

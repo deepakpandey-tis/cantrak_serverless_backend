@@ -120,11 +120,14 @@ const parcelRejectedNotification = {
     },
 
     sendEmailNotification: async (sender, receiver, data) => {
+        let parcelId = data.payload.parcelId
+        // console.log("rejected parcel id=====>>>>",parcelId)
         data = {
             receiverEmail: receiver.email,
-            template: 'parcel-notification.ejs',
+            template: 'parcel-rejected.ejs',
             templateData: {
                 fullName: receiver.name,
+                parcelId:parcelId,
                 orgId:receiver.orgId
             },
             payload: {

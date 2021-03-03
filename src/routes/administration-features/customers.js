@@ -4,11 +4,14 @@ const customerMiddleware = require('../../controllers/administration-features/cu
 const authMiddleware = require('../../middlewares/auth')
 const roleMiddleware = require('../../middlewares/role')
 const trimmerSpace = require('../../middlewares/trimmerSpace');
+const resourceAccessMiddleware = require('../../middlewares/resourceAccessMiddleware');
+
 
 
 router.post('/get-customers',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
+    resourceAccessMiddleware.isPropertySetupAccessible,
     customerMiddleware.getCustomers)
 router.get('/reset-password', authMiddleware.isAuthenticated, customerMiddleware.resetPassword)
 router.post('/disassociate-house', authMiddleware.isAuthenticated, customerMiddleware.disassociateHouse)

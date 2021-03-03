@@ -16,6 +16,17 @@ const fs = require('fs');
 const customerController = {
   getCustomers: async (req, res) => {
     try {
+
+      let projectIds = [];
+      let projectsForTenants = req.userProjectResources
+      projectsForTenants = projectsForTenants.find(pfp => pfp.id == 7)
+      console.log('Project For Tenants:', projectsForTenants);
+      let accessibleProjects = projectsForTenants.projects;
+      console.log('Project For Tenants:', accessibleProjects);
+      projectIds =  _.uniqBy(accessibleProjects);
+      console.log('ProjectIds:', projectIds);
+
+
       let userDetails = null;
       let units = null;
       let fullLocationDetails = [];
@@ -60,7 +71,8 @@ const customerController = {
             "property_units.description as propertyUnitDescription"
 
           ])
-          .where({ 'users.id': customerId, 'users.emailVerified': true });
+          .where({'users.id': customerId,'users.orgId':req.orgId})
+          // .where({ 'users.id': customerId, 'users.emailVerified': true });
 
 
         // Users property units start
@@ -180,8 +192,10 @@ const customerController = {
             ])
             .where({
               "application_user_roles.roleId": 4,
-              "users.emailVerified": true
+              "users.emailVerified": true,
+              // "users.orgId": req.orgId
             })
+            // .whereIn("property_units.projectId",projectIds)
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
 
@@ -228,8 +242,10 @@ const customerController = {
             .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .where({
               "application_user_roles.roleId": 4,
-              "users.emailVerified": true
+              "users.emailVerified": true,
+              // "users.orgId": req.orgId
             })
+            // .whereIn("property_units.projectId",projectIds)
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
                 if (name) {
@@ -287,7 +303,7 @@ const customerController = {
             })
             .groupBy(['users.id', 'property_units.id'])
             .distinct(['users.id'])
-            .whereIn('property_units.projectId', resourceProject)
+            .whereIn('property_units.projectId', projectIds)
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
                 if (name) {
@@ -336,7 +352,7 @@ const customerController = {
               "users.orgId": req.orgId,
               "users.emailVerified": true
             })
-            .whereIn('property_units.projectId', resourceProject)
+            .whereIn('property_units.projectId', projectIds)
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
 
@@ -406,6 +422,17 @@ const customerController = {
 
   getInactiveCustomers: async (req, res) => {
     try {
+      let projectIds = [];
+      let projectsForTenants = req.userProjectResources
+      projectsForTenants = projectsForTenants.find(pfp => pfp.id == 7)
+      console.log('Project For Tenants:', projectsForTenants);
+      let accessibleProjects = projectsForTenants.projects;
+      console.log('Project For Tenants:', accessibleProjects);
+      projectIds =  _.uniqBy(accessibleProjects);
+      console.log('ProjectIds:', projectIds);
+
+
+
       let userDetails = null;
       let units = null;
       let fullLocationDetails = [];
@@ -450,7 +477,7 @@ const customerController = {
             "property_units.description as propertyUnitDescription"
 
           ])
-          .where({ 'users.id': customerId, 'users.isActive': false, 'users.emailVerified': false, 'users.deactivationStatus': false });
+          .where({ 'users.id': customerId, 'users.isActive': false, 'users.emailVerified': false, 'users.deactivationStatus': false,'users.orgId':req.orgId });
 
 
         // Users property units start
@@ -686,7 +713,7 @@ const customerController = {
             })
             .groupBy(['users.id', 'property_units.id'])
             .distinct(['users.id'])
-            .whereIn('property_units.projectId', resourceProject)
+            .whereIn('property_units.projectId', projectIds)
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
                 if (name) {
@@ -738,7 +765,7 @@ const customerController = {
               'users.emailVerified': false,
               'users.deactivationStatus': false
             })
-            .whereIn('property_units.projectId', resourceProject)
+            .whereIn('property_units.projectId', projectIds)
             .andWhere(qb => {
               if (Object.keys(filters).length || name || organisation) {
 
@@ -1730,15 +1757,14 @@ const customerController = {
   },
   getTenantListByProject:async(req,res)=>{
     try {
-      let projectId =  req.body.projectId
+      let buildingPhaseId =  req.body.buildingPhaseId
       let orgId = req.orgId
 
       let tenantList = await knex("user_house_allocation")
       .leftJoin("users", "user_house_allocation.userId", "users.id")
       .leftJoin("property_units","user_house_allocation.houseId","property_units.id")
-      // .leftJoin("projects","property_units.projectId","projects.id")
       .select(["users.name", "users.id"])
-      .whereIn("property_units.projectId",projectId)
+      .whereIn("property_units.buildingPhaseId",buildingPhaseId)
       .where({"user_house_allocation.orgId":orgId, "users.isActive": true});
 
       let tenant = _.uniqBy(tenantList, "id");

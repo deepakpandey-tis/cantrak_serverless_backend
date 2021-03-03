@@ -378,10 +378,12 @@ const facilityBookingController = {
                     "parcel_management.qrCode"
 
                 ])
-                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '2', 'parcel_management.pickedUpType': parcelType })
-                .where({ 'parcel_user_tis.tenantId': id })
-                .orWhere({'parcel_management.parcelStatus': '3'})
-                .orWhere({'parcel_management.parcelStatus': '4'})
+                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '2', 'parcel_management.pickedUpType': parcelType , 'parcel_user_tis.tenantId': id  })
+                .orWhere({'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '3', 'parcel_management.pickedUpType': parcelType , 'parcel_user_tis.tenantId': id })
+                .orWhere({'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '4', 'parcel_management.pickedUpType': parcelType , 'parcel_user_tis.tenantId': id })
+                // .where({ 'parcel_user_tis.tenantId': id })
+                // .orWhere({'parcel_management.parcelStatus': '3'})
+                // .orWhere({'parcel_management.parcelStatus': '4'})
                 .orderBy('parcel_management.receivedDate', 'desc')
                 .limit(20)
                
@@ -486,10 +488,12 @@ const facilityBookingController = {
                     "parcel_management.qrCode"
 
                 ])
-                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '2', 'parcel_management.pickedUpType': parcelType })
-                .where({ 'parcel_user_tis.tenantId': id })
-                .orWhere({'parcel_management.parcelStatus': '3'})
-                .orWhere({'parcel_management.parcelStatus': '4'})
+                .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '2', 'parcel_management.pickedUpType': parcelType, 'parcel_user_tis.tenantId': id  })
+                .orWhere({'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '3', 'parcel_management.pickedUpType': parcelType, 'parcel_user_tis.tenantId': id })
+                .orWhere({'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '4', 'parcel_management.pickedUpType': parcelType, 'parcel_user_tis.tenantId': id })
+                // .where({ 'parcel_user_tis.tenantId': id })
+                // .orWhere({'parcel_management.parcelStatus': '3'})
+                // .orWhere({'parcel_management.parcelStatus': '4'})
                 .orderBy('parcel_management.receivedDate', 'desc')
                 .limit(20);
                

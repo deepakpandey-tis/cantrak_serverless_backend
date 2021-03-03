@@ -618,6 +618,7 @@ const serviceOrderController = {
                         }).offset(offset).limit(per_page).orderBy('service_orders.id', 'desc')
                 ])
             } else if (_.isEmpty(filters)) {
+
                 [total, rows] = await Promise.all([
                     knex
                     .count("* as count")
@@ -836,7 +837,6 @@ const serviceOrderController = {
                         .orderBy('service_orders.id', 'desc')
                 ]);
             } else {
-
                 [total, rows] = await Promise.all([
                     knex
 
@@ -1021,8 +1021,8 @@ const serviceOrderController = {
                             "status.descriptionEng as Status",
                             "service_orders.createdAt as Date Created",
                             "buildings_and_phases.description as Building Name",
-                            "users.userName as Assigned Main User",
-                            "teams.teamName as Team Name",
+                            // "users.userName as Assigned Main User",
+                            // "teams.teamName as Team Name",
                             "requested_by.name as Requested By",
                             "property_units.unitNumber as Unit Number",
                             "property_units.id as unitId",
