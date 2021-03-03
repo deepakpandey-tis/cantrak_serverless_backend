@@ -41,16 +41,16 @@ const assetController = {
         }
     },
 
-    getAssetCategoryById: async(req,res)=>{
+    getAssetCategoryById: async (req, res) => {
 
         try {
             let categories
-            let id =req.body.id
+            let id = req.body.id
             // let filters = req.body;
             categories = await knex('asset_category_master')
-            .select()
-            .where({id:id, orgId: req.orgId, isActive: true })
-            .orderBy('asset_category_master.categoryName', 'asc');
+                .select()
+                .where({ id: id, orgId: req.orgId, isActive: true })
+                .orderBy('asset_category_master.categoryName', 'asc');
 
             res.status(200).json({
                 data: {
@@ -359,7 +359,7 @@ const assetController = {
             let reqData = req.query;
 
             //let filters = {}
-            let total, rows,rowsWithPm
+            let total, rows, rowsWithPm
             let {
                 assetName,
                 assetModel,
@@ -612,7 +612,7 @@ const assetController = {
 
                 let houseResult = await knex.from('asset_location')
                     .leftJoin('property_units', 'asset_location.unitId', 'property_units.id')
-                    .select(['property_units.unitNumber', 'property_units.houseId', 'property_units.description','asset_location.id as locationId'])
+                    .select(['property_units.unitNumber', 'property_units.houseId', 'property_units.description', 'asset_location.id as locationId'])
                     .where({ "asset_location.assetId": pd.ID }).first().orderBy('asset_location.id', 'desc')
 
                 if (houseResult) {
@@ -630,33 +630,33 @@ const assetController = {
                 }
 
             })
-            
-            pagination.data = await Parallel.map(pagination.data,async pd => {
+
+            pagination.data = await Parallel.map(pagination.data, async pd => {
                 let assetAssignedPm = await knex.from('task_group_schedule_assign_assets')
-                .leftJoin('asset_location','task_group_schedule_assign_assets.assetId','asset_location.assetId')
-                .leftJoin('task_group_schedule','task_group_schedule_assign_assets.scheduleId','task_group_schedule.id')
-                .leftJoin('pm_master2','task_group_schedule.pmId','pm_master2.id')
-                .select([
-                    'pm_master2.name as pmName',
-                    'pm_master2.id as pmId'
-                ])
-                .where({'task_group_schedule_assign_assets.assetId':pd.ID,'pm_master2.isActive':true})
+                    .leftJoin('asset_location', 'task_group_schedule_assign_assets.assetId', 'asset_location.assetId')
+                    .leftJoin('task_group_schedule', 'task_group_schedule_assign_assets.scheduleId', 'task_group_schedule.id')
+                    .leftJoin('pm_master2', 'task_group_schedule.pmId', 'pm_master2.id')
+                    .select([
+                        'pm_master2.name as pmName',
+                        'pm_master2.id as pmId'
+                    ])
+                    .where({ 'task_group_schedule_assign_assets.assetId': pd.ID, 'pm_master2.isActive': true })
                 // .where('asset_location.id',pd.locationId)
                 // .limit(1)
                 // .first()
                 let pmName = []
-                assetAssignedPm = _.uniqBy(assetAssignedPm,"pmId")
+                assetAssignedPm = _.uniqBy(assetAssignedPm, "pmId")
 
-                assetAssignedPm = assetAssignedPm.map(d=>{
-                   return d.pmName;
+                assetAssignedPm = assetAssignedPm.map(d => {
+                    return d.pmName;
                 })
-                console.log("PM data for assets=====>>>>>",assetAssignedPm)
+                console.log("PM data for assets=====>>>>>", assetAssignedPm)
                 pmName.push(assetAssignedPm)
 
-                return {...pd,...pmName}
+                return { ...pd, ...pmName }
             })
 
-            console.log("pagination data====>>>>>",pagination)
+            console.log("pagination data====>>>>>", pagination)
             return res.status(200).json({
                 data: {
                     asset: pagination,
@@ -694,7 +694,7 @@ const assetController = {
     getAssetListByCategory: async (req, res) => {
         try {
             let reqData = req.query;
-            let total, rows,rowsId;
+            let total, rows, rowsId;
             let {
                 assetCategoryId,
                 companyId,
@@ -748,8 +748,8 @@ const assetController = {
             }
 
 
-            if (building && building.length > 0 || floorZone && floorZone.length >0 || floorZoneCode && floorZoneCode.length > 0 || unitNumber && unitNumber.length > 0 || locationId && locationId.length >0) {
-                [total, rows,rowsId] = await Promise.all([
+            if (building && building.length > 0 || floorZone && floorZone.length > 0 || floorZoneCode && floorZoneCode.length > 0 || unitNumber && unitNumber.length > 0 || locationId && locationId.length > 0) {
+                [total, rows, rowsId] = await Promise.all([
                     knex
                         .count("* as count")
                         .from("asset_master")
@@ -787,15 +787,15 @@ const assetController = {
                                 qb.whereIn('floor_and_zones.floorZoneCode', floorZoneCode)
                             }
 
-                            if(unitNumber && unitNumber.length > 0){
-                                qb.whereIn('property_units.unitNumber',unitNumber)
+                            if (unitNumber && unitNumber.length > 0) {
+                                qb.whereIn('property_units.unitNumber', unitNumber)
                             }
 
-                            if(locationId && locationId.length >0){
-                                qb.whereIn('asset_location.id',locationId)
+                            if (locationId && locationId.length > 0) {
+                                qb.whereIn('asset_location.id', locationId)
                             }
                             if (assetName) {
-                                console.log("asset name",assetName)
+                                console.log("asset name", assetName)
                                 qb.where(
                                     "asset_master.assetName",
                                     "iLIKE",
@@ -823,9 +823,9 @@ const assetController = {
                                     `%${assetCode}%`
                                 );
                             }
-                            if(assetId){
+                            if (assetId) {
                                 qb.whereIn(
-                                    "asset_master.id",assetId
+                                    "asset_master.id", assetId
                                 )
                             }
                         }),
@@ -882,13 +882,13 @@ const assetController = {
                             if (floorZoneCode && floorZoneCode.length > 0) {
                                 qb.whereIn('floor_and_zones.floorZoneCode', floorZoneCode)
                             }
-                            if(unitNumber && unitNumber.length > 0){
-                                qb.whereIn('property_units.unitNumber',unitNumber)
+                            if (unitNumber && unitNumber.length > 0) {
+                                qb.whereIn('property_units.unitNumber', unitNumber)
                             }
 
-                            if(locationId && locationId.length >0){
-                                console.log("location id ======>>>>>",locationId)
-                                qb.whereIn('asset_location.id',locationId)
+                            if (locationId && locationId.length > 0) {
+                                console.log("location id ======>>>>>", locationId)
+                                qb.whereIn('asset_location.id', locationId)
                             }
                             if (assetName) {
                                 qb.where(
@@ -918,14 +918,14 @@ const assetController = {
                                     `%${assetCode}%`
                                 );
                             }
-                            if(assetId){
+                            if (assetId) {
                                 qb.whereIn(
-                                    "asset_master.id",assetId
+                                    "asset_master.id", assetId
                                 )
                             }
                         }),
 
-                        knex("asset_master")
+                    knex("asset_master")
                         .leftJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
                         .innerJoin('companies', 'asset_location.companyId', 'companies.id')
                         .leftJoin('projects', 'asset_location.projectId', 'projects.id')
@@ -945,13 +945,13 @@ const assetController = {
                             "property_units.id"
                         )
                         .select(["asset_master.id",
-                        "asset_master.assetName",
-                        "asset_master.assetSerial",
-                        'asset_location.id as locationId',
-                        'floor_and_zones.floorZoneCode',
-                        'property_units.unitNumber'
+                            "asset_master.assetName",
+                            "asset_master.assetSerial",
+                            'asset_location.id as locationId',
+                            'floor_and_zones.floorZoneCode',
+                            'property_units.unitNumber'
 
-                           
+
                         ])
                         .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_location.companyId': companyId })
                         .where('asset_location.endDate', null)
@@ -967,11 +967,11 @@ const assetController = {
                             if (floorZoneCode && floorZoneCode.length > 0) {
                                 qb.whereIn('floor_and_zones.floorZoneCode', floorZoneCode)
                             }
-                            if(unitNumber && unitNumber.length > 0){
-                                qb.whereIn('property_units.unitNumber',unitNumber)
+                            if (unitNumber && unitNumber.length > 0) {
+                                qb.whereIn('property_units.unitNumber', unitNumber)
                             }
-                            if(locationId && locationId.length >0){
-                                qb.whereIn('asset_location.id',locationId)
+                            if (locationId && locationId.length > 0) {
+                                qb.whereIn('asset_location.id', locationId)
                             }
                             if (assetName) {
                                 qb.where(
@@ -1001,9 +1001,9 @@ const assetController = {
                                     `%${assetCode}%`
                                 );
                             }
-                            if(assetId){
+                            if (assetId) {
                                 qb.whereIn(
-                                    "asset_master.id",assetId
+                                    "asset_master.id", assetId
                                 )
                             }
                         }),
@@ -1012,30 +1012,30 @@ const assetController = {
 
                 console.log("if building called======>>>>")
                 const Parallel = require('async-parallel')
-                const rowsWithSelectedAssets = await Parallel.map(rows,async row =>{
+                const rowsWithSelectedAssets = await Parallel.map(rows, async row => {
                     let pm = await knex('task_group_schedule_assign_assets')
-                    .leftJoin('asset_location','task_group_schedule_assign_assets.assetId','asset_location.assetId')
-                    .leftJoin('task_group_schedule','task_group_schedule_assign_assets.scheduleId','task_group_schedule.id')
-                    .leftJoin('pm_master2','task_group_schedule.pmId','pm_master2.id')
-                    .select([
-                        'pm_master2.name as pmName'
-                    ])
-                    // .where('pm_master2.isActive',)
-                    .where({'task_group_schedule_assign_assets.assetId':row.id,'pm_master2.isActive':true,'asset_location.id':row.locationId})
+                        .leftJoin('asset_location', 'task_group_schedule_assign_assets.assetId', 'asset_location.assetId')
+                        .leftJoin('task_group_schedule', 'task_group_schedule_assign_assets.scheduleId', 'task_group_schedule.id')
+                        .leftJoin('pm_master2', 'task_group_schedule.pmId', 'pm_master2.id')
+                        .select([
+                            'pm_master2.name as pmName'
+                        ])
+                        // .where('pm_master2.isActive',)
+                        .where({ 'task_group_schedule_assign_assets.assetId': row.id, 'pm_master2.isActive': true, 'asset_location.id': row.locationId })
                     // .where('asset_location.id',row.locationId)
                     // .limit(1)
                     // .first()
                     let pmName = []
-                    pm = _.uniqBy(pm,"PmId")
-                    pm = pm.map(d=>{
+                    pm = _.uniqBy(pm, "PmId")
+                    pm = pm.map(d => {
                         return d.pmName;
                     })
                     pmName.push(pm)
-                    console.log("pm data=====>>>>",pmName)
-                    return {...row,...pmName}
- 
+                    console.log("pm data=====>>>>", pmName)
+                    return { ...row, ...pmName }
+
                 })
-                console.log("Value of rows Id=======>>>>>>",rowsId )
+                console.log("Value of rows Id=======>>>>>>", rowsId)
                 let count = total.count;
                 pagination.total = count;
                 pagination.per_page = per_page;
@@ -1050,11 +1050,11 @@ const assetController = {
                 // pagination.totalId = rowsIdWithLocations
                 pagination.totalId = rowsId;
             } else {
-                [total, rows,rowsId] = await Promise.all([
+                [total, rows, rowsId] = await Promise.all([
                     knex
                         .count("* as count")
                         .from("asset_master")
-                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId})
+                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId })
                         .first()
                         .where({ 'asset_master.orgId': req.orgId })
                         // .where('asset_location.endDate', null)
@@ -1087,9 +1087,9 @@ const assetController = {
                                     `%${assetCode}%`
                                 );
                             }
-                            if(assetId){
+                            if (assetId) {
                                 qb.whereIn(
-                                    "asset_master.id",assetId
+                                    "asset_master.id", assetId
                                 )
                             }
                         }),
@@ -1104,8 +1104,8 @@ const assetController = {
                             "asset_master.isEngaged"
 
                         ])
-                        
-                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId})
+
+                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId })
                         .offset(offset)
                         .limit(per_page)
                         .where({ 'asset_master.orgId': req.orgId })
@@ -1141,18 +1141,18 @@ const assetController = {
                                 );
                             }
 
-                            if(assetId){
+                            if (assetId) {
                                 qb.whereIn(
-                                    "asset_master.id",assetId
+                                    "asset_master.id", assetId
                                 )
                             }
                         }),
-                        knex("asset_master")
+                    knex("asset_master")
                         .select(["asset_master.id",
-                        "asset_master.assetName",
-                        "asset_master.assetSerial"
+                            "asset_master.assetName",
+                            "asset_master.assetSerial"
                         ])
-                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId})
+                        .where({ 'asset_master.assetCategoryId': assetCategoryId, 'asset_master.companyId': companyId })
                         .where({ 'asset_master.orgId': req.orgId })
                         // .where('asset_location.endDate', null)
                         .where(qb => {
@@ -1185,9 +1185,9 @@ const assetController = {
                                     `%${assetCode}%`
                                 );
                             }
-                            if(assetId){
+                            if (assetId) {
                                 qb.whereIn(
-                                    "asset_master.id",assetId
+                                    "asset_master.id", assetId
                                 )
                             }
                         })
@@ -1223,7 +1223,7 @@ const assetController = {
                             'asset_location.id as locationId',
                             // 'asset_location.isSelected',
 
-                        ]).where({ 'asset_location.assetId': row.id})
+                        ]).where({ 'asset_location.assetId': row.id })
                         // .where(qb => {
                         //     if (building && building.length) {
                         //         qb.where('buildings_and_phases.id', building)
@@ -1240,7 +1240,7 @@ const assetController = {
                     return { ...row, ...location }
                 })
 
-                const rowsIdWithLocations = await Parallel.map(rowsId, async row =>{
+                const rowsIdWithLocations = await Parallel.map(rowsId, async row => {
 
                     const location = await knex('asset_location')
                         .innerJoin('companies', 'asset_location.companyId', 'companies.id')
@@ -1264,7 +1264,7 @@ const assetController = {
                             'floor_and_zones.floorZoneCode',
                             'property_units.unitNumber',
                             'asset_location.id as locationId'
-                        ]).where({ 'asset_location.assetId': row.id})
+                        ]).where({ 'asset_location.assetId': row.id })
                         // .where(qb => {
                         //     if (building) {
                         //         qb.where('buildings_and_phases.id', building)
@@ -1278,31 +1278,31 @@ const assetController = {
                         .limit(1)
                         .first()
 
-                        return { ...row, ...location }
+                    return { ...row, ...location }
                 })
 
-                const rowsWithSelectedAssets = await Parallel.map(rowsWithLocations,async row =>{
+                const rowsWithSelectedAssets = await Parallel.map(rowsWithLocations, async row => {
                     let pm = await knex('task_group_schedule_assign_assets')
-                    .leftJoin('asset_location','task_group_schedule_assign_assets.assetId','asset_location.assetId')
-                    .leftJoin('task_group_schedule','task_group_schedule_assign_assets.scheduleId','task_group_schedule.id')
-                    .leftJoin('pm_master2','task_group_schedule.pmId','pm_master2.id')
-                    .select([
-                        'pm_master2.name as pmName',
-                        'pm_master2.id as PmId'
-                    ])
-                    .where({'task_group_schedule_assign_assets.assetId':row.id,'asset_location.id':row.locationId,'pm_master2.isActive':true})
+                        .leftJoin('asset_location', 'task_group_schedule_assign_assets.assetId', 'asset_location.assetId')
+                        .leftJoin('task_group_schedule', 'task_group_schedule_assign_assets.scheduleId', 'task_group_schedule.id')
+                        .leftJoin('pm_master2', 'task_group_schedule.pmId', 'pm_master2.id')
+                        .select([
+                            'pm_master2.name as pmName',
+                            'pm_master2.id as PmId'
+                        ])
+                        .where({ 'task_group_schedule_assign_assets.assetId': row.id, 'asset_location.id': row.locationId, 'pm_master2.isActive': true })
                     // .where('asset_location.id',row.locationId)
                     // .limit(1)
                     // .first()
                     let pmName = []
-                    pm = _.uniqBy(pm,"PmId")
-                    pm = pm.map(d=>{
+                    pm = _.uniqBy(pm, "PmId")
+                    pm = pm.map(d => {
                         return d.pmName;
                     })
                     pmName.push(pm)
-                    console.log("pm data=====>>>>",pmName)
-                    return {...row,...pmName}
- 
+                    console.log("pm data=====>>>>", pmName)
+                    return { ...row, ...pmName }
+
                 })
 
                 let count = total.count;
@@ -2834,31 +2834,39 @@ const assetController = {
     exportAssetData: async (req, res) => {
         try {
 
+            // let projectIds = [];
+            // const accessibleProjects = req.userProjectResources;
+
+            // if (accessibleProjects.length) {
+            //     for (let pro of accessibleProjects) {
+
+            //         if (pro.projects.length) {
+
+            //             for (let projectId of pro.projects) {
+            //                 console.log("project=========", pro.projects, "====================")
+
+            //                 projectIds.push(projectId);
+            //             }
+            //         }
+            //     }
+            // }
+
+            // projectIds = _.uniqBy(projectIds);
+
             let projectIds = [];
-            const accessibleProjects = req.userProjectResources;
+            let projectsForAssets = req.userProjectResources;
+            projectsForAssets = projectsForAssets.find(pfp => pfp.id == 4);   // 3 means assets ... 
+            let accessibleProjects = projectsForAssets.projects;
+            console.log('Project For Assets:', accessibleProjects);
+            projectIds = _.uniqBy(accessibleProjects);
+            console.log('ProjectIds:', projectIds);
 
-            if (accessibleProjects.length) {
-                for (let pro of accessibleProjects) {
 
-                    if (pro.projects.length) {
-
-                        for (let projectId of pro.projects) {
-                            console.log("project=========", pro.projects, "====================")
-
-                            projectIds.push(projectId);
-                        }
-                    }
-                }
-            }
-
-            projectIds = _.uniqBy(projectIds);
-
-            let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
+            let companyResult = await knex.from('projects').select(['companyId'])
                 .whereIn('projects.id', projectIds)
                 .where({ orgId: req.orgId });
 
             let companyIds = companyResult.map(v => v.companyId);
-
             companyIds = _.uniqBy(companyIds);
 
             let {
@@ -2873,32 +2881,13 @@ const assetController = {
             } = req.body;
 
 
-            let assetResult = await knex("asset_master")
-                .leftJoin(
-                    "asset_category_master",
-                    "asset_master.assetCategoryId",
-                    "asset_category_master.id"
-                )
-                .leftJoin(
-                    "companies",
-                    "asset_master.companyId",
-                    "companies.id"
-                )
-                .leftJoin(
-                    "asset_master as asset2",
-                    "asset_master.parentAssetId",
-                    "asset2.id"
-                )
-                .leftJoin(
-                    "teams",
-                    "asset_master.assignedTeams",
-                    "teams.teamId"
-                )
-                .leftJoin(
-                    "location_tags_master",
-                    "asset_master.locationId",
-                    "location_tags_master.id"
-                )
+            let subQuery1 = knex("asset_master")
+                .leftJoin("asset_category_master", "asset_master.assetCategoryId", "asset_category_master.id")
+                .leftJoin("companies", "asset_master.companyId", "companies.id")
+                .leftJoin("asset_master as asset2", "asset_master.parentAssetId", "asset2.id")
+                .leftJoin("teams", "asset_master.assignedTeams", "teams.teamId")
+                .leftJoin("location_tags_master", "asset_master.locationId", "location_tags_master.id")
+                .joinRaw('left join asset_location al on al."assetId" = "asset_master".id and al.id = (select max(id) from asset_location al2 where al2."assetId" = "asset_master"."id")')
                 .select([
                     "asset_master.assetCode as ASSET_CODE",
                     "asset_master.assetName as ASSET_NAME",
@@ -2917,46 +2906,25 @@ const assetController = {
                     "teams.teamCode as ASSIGN_TEAM",
                     "asset_master.assignedVendors as ASSIGN_VENDOR",
                     "asset_master.additionalInformation as ASSIGN_INFORMATION",
-                    "asset_master.id as ID"
-
-                    //knex.raw(`public.f_get_companycode(am."orgId" , am."companyId" ) as "company" ,public.f_get_proj_name(am."companyId" , am."projectId" ) as "project" ,public.f_get_building_name(al."companyId", al."buildingId") as "building" ,public.f_get_floor_name(al."companyId" , al."floorId" ) as "floor" ,public.f_get_unitname(al."orgId", al."unitId" ) as "Unit_Location" (asset_master am,asset_location al)`)
+                    "asset_master.id as ID",
+                    "al.unitId"
                 ])
                 .where({ 'asset_master.orgId': req.orgId })
                 .where(qb => {
                     if (assetName) {
-                        qb.where(
-                            "asset_master.assetName",
-                            "iLIKE",
-                            `%${assetName}%`
-                        );
+                        qb.where("asset_master.assetName", "iLIKE", `%${assetName}%`);
                     }
                     if (assetSerial) {
-                        qb.where(
-                            "asset_master.assetSerial",
-                            "iLIKE",
-                            `%${assetSerial}%`
-                        )
+                        qb.where("asset_master.assetSerial", "iLIKE", `%${assetSerial}%`)
                     }
                     if (assetModel) {
-                        qb.where(
-                            "asset_master.model",
-                            "iLIKE",
-                            `%${assetModel}%`
-                        );
+                        qb.where("asset_master.model", "iLIKE", `%${assetModel}%`);
                     }
                     if (assetCode) {
-                        qb.where(
-                            "asset_master.assetCode",
-                            "iLIKE",
-                            `%${assetCode}%`
-                        );
+                        qb.where("asset_master.assetCode", "iLIKE", `%${assetCode}%`);
                     }
                     if (category) {
-                        qb.where(
-                            "asset_category_master.categoryName",
-                            "iLIKE",
-                            `%${category}%`
-                        );
+                        qb.where("asset_category_master.categoryName", "iLIKE", `%${category}%`);
                     }
                     if (asNo) {
                         qb.where("asset_master.displayId", asNo)
@@ -2968,71 +2936,38 @@ const assetController = {
                         qb.where('asset_master.projectId', project)
                     }
                 })
-                .whereIn('asset_master.companyId', companyIds)
-                .orderBy("asset_master.id", "desc");
+                .whereIn('asset_master.companyId', companyIds);
 
+            let assets = await knex.select([
+                "asset.*",
+                "pu.unitNumber as UNIT_NUMBER",
+                "faz.floorZoneCode as FLOOR_CODE",
+                "bap.buildingPhaseCode as BUILDING_CODE",
+                "p2.project as PROJECT_CODE",
+                "c2.companyId as COMPANY_CODE"
+            ]).from(subQuery1.as('asset'))
+                .leftJoin('property_units AS pu', 'asset.unitId', 'pu.id')
+                .leftJoin('floor_and_zones AS faz', 'pu.floorZoneId', 'faz.id')
+                .leftJoin('buildings_and_phases AS bap', 'pu.buildingPhaseId', 'bap.id')
+                .leftJoin('projects AS p2', 'pu.projectId', 'p2.id')
+                .leftJoin('companies AS c2', 'pu.companyId', 'c2.id');
 
+            console.log('Queried Asset Data: Result Count', assets.length);
 
+            assets = assets.map(a => {
+                delete a.unitId;
+                return a;
+            });
 
-            const Parallel = require('async-parallel');
-
-            assetResult = await Parallel.map(assetResult, async pd => {
-
-                let houseResult = await knex.from('asset_location')
-                    .leftJoin('property_units', 'asset_location.unitId', 'property_units.id')
-                    .leftJoin('floor_and_zones', 'property_units.floorZoneId', 'floor_and_zones.id')
-                    .leftJoin('buildings_and_phases', 'property_units.buildingPhaseId', 'buildings_and_phases.id')
-                    .leftJoin('projects', 'property_units.projectId', 'projects.id')
-                    .leftJoin('companies', 'property_units.companyId', 'companies.id')
-                    .select([
-                        'property_units.unitNumber',
-                        'property_units.houseId',
-                        'property_units.description',
-                        'companies.companyId as COMPANY_CODE',
-                        'projects.project as PROJECT_CODE',
-                        'buildings_and_phases.buildingPhaseCode as BUILDING_CODE',
-                        'floor_and_zones.floorZoneCode as FLOOR_CODE',
-                        'property_units.unitNumber as UNIT_NUMBER'
-                    ])
-                    .where({ "asset_location.assetId": pd.ID }).first().orderBy('asset_location.id', 'desc')
-
-                if (houseResult) {
-                    return {
-                        ..._.omit(pd, "ID"),
-                        COMPANY_CODE: houseResult.COMPANY_CODE,
-                        PROJECT_CODE: houseResult.PROJECT_CODE,
-                        BUILDING_CODE: houseResult.BUILDING_CODE,
-                        FLOOR_CODE: houseResult.FLOOR_CODE,
-                        UNIT_NUMBER: houseResult.UNIT_NUMBER,
-                    }
-                } else {
-                    return {
-                        ..._.omit(pd, "ID"),
-                        COMPANY_CODE: "",
-                        PROJECT_CODE: "",
-                        BUILDING_CODE: "",
-                        FLOOR_CODE: "",
-                        UNIT_NUMBER: "",
-                    }
-                }
-
-            })
-
-
-
-            let assets = assetResult;
             let tempraryDirectory = null;
-            let bucketName = null;
             if (process.env.IS_OFFLINE) {
-                bucketName = process.env.S3_BUCKET_NAME;
                 tempraryDirectory = "tmp/";
             } else {
                 tempraryDirectory = "/tmp/";
-                bucketName = process.env.S3_BUCKET_NAME;
             }
+            let bucketName = process.env.S3_BUCKET_NAME;
 
             var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
-            //var ws = XLSX.utils.json_to_sheet(assets);
 
             var ws;
 
@@ -3070,6 +3005,7 @@ const assetController = {
             let filename = "AssetData-" + Date.now() + ".csv";
             let filepath = tempraryDirectory + filename;
             let check = XLSX.writeFile(wb, filepath);
+
             const AWS = require("aws-sdk");
             fs.readFile(filepath, function (err, file_buffer) {
                 var s3 = new AWS.S3();
@@ -3083,7 +3019,7 @@ const assetController = {
                     if (err) {
                         console.log("Error at uploadCSVFileOnS3Bucket function", err);
                         //next(err);
-                        res.status(500).json({
+                        return res.status(500).json({
                             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
                         });
                     } else {
@@ -3093,23 +3029,18 @@ const assetController = {
                         // fs.unlink(filepath, err => {
                         //   console.log("File Deleting Error " + err);
                         // });
-                        let url = process.env.S3_BUCKET_URL + "/Export/Asset/" +
-                            filename;
-                        // let url =
-                        //   "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Asset/" +
-                        //   filename;
+                        let url = process.env.S3_BUCKET_URL + "/Export/Asset/" + filename;
 
                         return res.status(200).json({
-                            data: {
-                                assets: assets
-                            },
+                            data: {},
                             message: "Asset Data Export Successfully!",
                             url: url,
-                            assetResult
+                            // assetResult
                         });
                     }
                 });
             });
+
         } catch (err) {
             console.log(err)
             res.status(500).json({
