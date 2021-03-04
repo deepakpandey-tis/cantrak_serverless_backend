@@ -1508,7 +1508,7 @@ const parcelManagementController = {
         "property_units.id as houseId"
       ])
       .where({"property_units.isActive":true,"property_units.orgId":req.orgId})
-      .where("property_units.unitNumber","iLIKE",payload.unitNumber)
+      .where("property_units.unitNumber","iLIKE", `%${payload.unitNumber}%`)
       // .where({"property_units.isActive":true,"property_units.orgId":req.orgId})
       .whereIn("property_units.projectId",projectIds);
 
