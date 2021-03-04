@@ -262,6 +262,16 @@ module.exports.longJobsProcessor = async (event, context) => {
 
   }
 
+  if (messageType === 'ANNOUNCEMENT_BROADCAST') {
+
+    console.log('[app][longJobsProcessor]', 'Data For Announcement:', recordData);
+    
+
+
+    console.log('[app][longJobsProcessor]: Task Completed Successfully');
+
+  }
+
   return true;
 };
 
