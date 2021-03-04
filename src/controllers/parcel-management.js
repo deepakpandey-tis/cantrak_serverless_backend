@@ -1505,7 +1505,7 @@ const parcelManagementController = {
         "floor_and_zones.floorZoneCode as floorZoneCode",
         "floor_and_zones.description",
         "property_units.unitNumber as unitNumber",
-        "property_units.id as houseId"
+        "property_units.id as unitId"
       ])
       .where({"property_units.isActive":true,"property_units.orgId":req.orgId})
       .where("property_units.unitNumber","iLIKE", `%${payload.unitNumber}%`)
