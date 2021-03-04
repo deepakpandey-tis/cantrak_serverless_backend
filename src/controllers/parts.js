@@ -2856,25 +2856,16 @@ const partsController = {
                         fs.unlink(filepath, err => {
                             console.log("File Deleting Error " + err);
                         });
-                        let url = process.env.S3_BUCKET_URL + "/Export/Part/" +
-                            filename;
-                        // let url =
-                        //     "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Part/" +
-                        //     filename;
+                        let url = process.env.S3_BUCKET_URL + "/Export/Part/" + filename;
 
                         return res.status(200).json({
-                            data: {
-                                parts: rows
-                            },
+                            data: {},
                             url: url,
                             message: "Part Data Export Successfully!",
                         });
                     }
                 });
             });
-
-
-
 
         } catch (err) {
 

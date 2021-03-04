@@ -150,6 +150,17 @@ module.exports.queueProcessor = async (event, context) => {
   const currentRecord = recordsFromSQS[0];    // Since we have kept the batchSize to only 1
   console.log('Current Record:', currentRecord);
 
+  let recordData = JSON.parse(currentRecord.body);
+  console.log('[longJobsProcessor] recordData:', recordData);
+
+  if (currentRecord && recordData.payloadType && recordData.payloadType == 's3') {
+    console.log('[longJobsProcessor] Got S3 Link, Sqs Message (as json file):', recordData.s3FileKey);
+    let jsonData = await readJsonFile(process.env.S3_BUCKET_NAME, recordData.s3FileKey);
+    console.log('[longJobsProcessor] Json Data from s3:', jsonData);
+    recordData = JSON.parse(jsonData);
+  }
+
+
   let messageType = 'EMAIL';
 
   if (currentRecord.messageAttributes && currentRecord.messageAttributes.messageType) {
@@ -161,7 +172,7 @@ module.exports.queueProcessor = async (event, context) => {
   if (messageType === 'EMAIL') {
 
     const emailHelper = require('./helpers/email');
-    const mailOptions = JSON.parse(currentRecord.body);
+    const mailOptions = recordData;
     await emailHelper.sendEmail(mailOptions);
 
     console.log('[app][queueProcessor]: Email Sent Successfully');
@@ -171,7 +182,7 @@ module.exports.queueProcessor = async (event, context) => {
   if (messageType === 'NOTIFICATION') {
     console.log('[app][queueProcessor]', 'Received message is notification.');
     const notificationHandler = require('./notifications/core/notification');
-    const notificationOptions = JSON.parse(currentRecord.body);
+    const notificationOptions = recordData;
 
     console.log('[app][queueProcessor]: Notification Options:', notificationOptions);
     await notificationHandler.processQueue(notificationOptions);
