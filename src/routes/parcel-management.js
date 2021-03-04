@@ -34,4 +34,6 @@ router.post('/dispatch-outgoing-parcel',authMiddleware.isAuthenticated,roleMiddl
 
 router.post('/approve-pending-status',authMiddleware.isAuthenticated,roleMiddleware.parseUserPermission,parcelManageController.approvePendingStatus)
 
+router.post('/get-property-units-data',authMiddleware.isAuthenticated,roleMiddleware.parseUserPermission,resourceAccessMiddleware.isParcelManagementAccessible,parcelManageController.getUnitDetailsByUnitId)
+
 module.exports = router
