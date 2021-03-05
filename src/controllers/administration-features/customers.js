@@ -833,6 +833,7 @@ const customerController = {
     }
   },
 
+
   resetPassword: async (req, res) => {
     try {
 
@@ -840,23 +841,25 @@ const customerController = {
       let uuidv4 = uuid()
       let updatedCustomer;
       let subject = "Reset Password"
-      updatedCustomer = await knex('users').update({ "verifyToken": uuidv4, "password": "" }).where({ id: id }).returning(['*'])
+      updatedCustomer = await knex('users').update({ "verifyToken": uuidv4 }).where({ id: id }).returning(['*'])
       let email = updatedCustomer[0].email;
-      await emailHelper.sendTemplateEmail({ to: email, subject: subject, template: 'test-email.ejs', templateData: { fullName: updatedCustomer[0].name, OTP: 'https://dj47f2ckirq9d.cloudfront.net/reset-password/' + uuidv4, orgId:req.orgId } })
+
+      let orgMaster = await knex('organisations').select('organisationName').where({ id: req.orgId, isActive: true }).first();
+
+      await emailHelper.sendTemplateEmail({ to: email, subject: subject, template: 'customer/password-reset.ejs', templateData: { fullName: updatedCustomer[0].name, resetPasswordUrl: `${process.env.SITE_URL}/reset-password/` + uuidv4, organisationName: orgMaster.organisationName, orgId: req.orgId } })
       return res.status(200).json({
         data: updatedCustomer[0],
         message: "Password reset link sent. Please check your email!"
       });
     } catch (err) {
-      console.log(
-        "[controllers][customers][resetPassword] :  Error",
-        err
-      );
+      console.log("[controllers][customers][resetPassword] :  Error", err);
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
+
+
   disassociateHouse: async (req, res) => {
     try {
 

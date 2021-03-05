@@ -14,7 +14,7 @@ const announcementController = {
   saveAnnouncementNotifications: async (req, res) => {
     try {
       let announcementPayload = req.body;
-
+      let orgId = req.orgId;
       let announcementResult = null;
       let id = req.body.userId;
       userIds = [];
@@ -64,8 +64,8 @@ const announcementController = {
             Joi.number().allow(null).optional()
           ),
           teamId: Joi.array().items(Joi.number().allow(null).optional()),
-          isGeneral:Joi.boolean().required(),
-          publishedDate: Joi.string().allow(null).optional()         
+          isGeneral: Joi.boolean().required(),
+          publishedDate: Joi.string().allow(null).optional()
         });
 
         let result = Joi.validate(payload, schema);
@@ -134,15 +134,31 @@ const announcementController = {
 
             userIds.push(d[0]);
 
-            let receiver = await knex.from("users").where({ id: id }).first();
+            // let receiver = await knex.from("users").where({ id: id }).first();
 
-            await announcementNotification.send(
-              sender,
-              receiver,
-              dataNos,
-              ALLOWED_CHANNELS
-            );
+            // await announcementNotification.send(
+            //   sender,
+            //   receiver,
+            //   dataNos,
+            //   ALLOWED_CHANNELS
+            // );
           }
+
+          // Import SQS Helper..
+          const queueHelper = require("../helpers/queue");
+          await queueHelper.addToQueue(
+            {
+              announcementId: newAnnouncementId,
+              dataNos,
+              ALLOWED_CHANNELS,
+              orgId,
+              requestedBy: req.me,
+              orgMaster: orgMaster,
+            },
+            "long-jobs",
+            "ANNOUNCEMENT_BROADCAST"
+          );
+
         }
 
         let imagesData = req.body.logoFile;
@@ -181,7 +197,7 @@ const announcementController = {
     try {
       let userId = req.body.userId;
       let id = req.body.id;
-      
+
       let ALLOWED_CHANNELS = [];
       if (req.body.email == true) {
         ALLOWED_CHANNELS.push("EMAIL");
@@ -478,7 +494,7 @@ const announcementController = {
           pagination.current_page = page;
           pagination.from = offset;
           pagination.data = rows;
-        } catch (err) {}
+        } catch (err) { }
       } else {
         [total, rows] = await Promise.all([
           knex

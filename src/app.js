@@ -262,6 +262,40 @@ module.exports.longJobsProcessor = async (event, context) => {
 
   }
 
+  if (messageType === 'ANNOUNCEMENT_BROADCAST') {
+
+    console.log('[app][longJobsProcessor]', 'Data For Announcement:', recordData);
+    
+    const announcementHelper = require('./helpers/announcement');
+
+    const {announcementId,dataNos,ALLOWED_CHANNELS,orgId,requestedBy,orgMaster} = recordData;
+
+    if(announcementId){
+      announcementUser = await announcementHelper.createAnnouncement({announcementId,orgId});
+      console.log("Announcement UserId list=====>>>>>>",announcementUser)
+
+      if(announcementUser){
+        const announcementNotification = require('./notifications/announcement-notification/announcement-notification')
+
+
+        let receiver = announcementUser;
+        let sender = requestedBy;
+
+         await announcementNotification.send(
+              sender,
+              receiver,
+              dataNos,
+              ALLOWED_CHANNELS
+            );
+        
+      }
+    }
+
+
+    console.log('[app][longJobsProcessor]: Task Completed Successfully');
+
+  }
+
   return true;
 };
 

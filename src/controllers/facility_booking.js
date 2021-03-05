@@ -504,7 +504,7 @@ const facilityBookingController = {
                             bookingEndDateTime: moment(+bookedByUser.bookingEndDateTime).format("YYYY-MM-DD hh:mm A"),
                             noOfSeats: bookedByUser.noOfSeats,
                             facilityName: checkStatus.name,
-                            orgId:req.orgId
+                            orgId: req.orgId
                         },
                     });
                 }
@@ -1142,7 +1142,7 @@ const facilityBookingController = {
             console.log('Project For Facilities:', projectsForFacilities);
             let accessibleProjects = projectsForFacilities.projects;
             console.log('Project For Parcel:', accessibleProjects);
-            projectIds =  _.uniqBy(accessibleProjects);
+            projectIds = _.uniqBy(accessibleProjects);
             console.log('ProjectIds:', projectIds);
 
             let reqData = req.query;
@@ -1193,7 +1193,7 @@ const facilityBookingController = {
                                 "facility_master.floorZoneId",
                                 "floor_and_zones.id"
                             )
-                            .whereIn("facility_master.projectId",projectIds)
+                            .whereIn("facility_master.projectId", projectIds)
 
                             .where((qb) => {
                                 if (facilityName) {
@@ -1258,7 +1258,7 @@ const facilityBookingController = {
                                 "facility_master.isActive",
                                 "facility_master.status",
                             ])
-                            .whereIn("facility_master.projectId",projectIds)
+                            .whereIn("facility_master.projectId", projectIds)
                             .where((qb) => {
                                 if (facilityName) {
                                     qb.where(
@@ -1317,7 +1317,7 @@ const facilityBookingController = {
                         )
                         .from("facility_master")
                         .where("facility_master.orgId", req.orgId)
-                        .whereIn("facility_master.projectId",projectIds)
+                        .whereIn("facility_master.projectId", projectIds)
                         .groupBy([
                             "facility_master.id",
                             "companies.id",
@@ -1340,7 +1340,7 @@ const facilityBookingController = {
                             "floor_and_zones.id"
                         )
                         .where("facility_master.orgId", req.orgId)
-                        .whereIn("facility_master.projectId",projectIds)
+                        .whereIn("facility_master.projectId", projectIds)
                         .select([
                             "facility_master.displayId as No",
                             "facility_master.id",
@@ -1412,6 +1412,17 @@ const facilityBookingController = {
     },
     /*GET FACILITY BOOKING LIST  */
     getFacilityBookingList: async (req, res) => {
+
+        let projectIds = [];
+        let projectsForFacilities = req.userProjectResources;
+        projectsForFacilities = projectsForFacilities.find(pfp => pfp.id == 9);   // 3 means facility ... 
+        console.log('Project For Facilities:', projectsForFacilities);
+        let accessibleProjects = projectsForFacilities.projects;
+        console.log('Project For Facilities:', accessibleProjects);
+        projectIds = _.uniqBy(accessibleProjects);
+        console.log('ProjectIds:', projectIds);
+
+
         try {
             let {
                 fromDate,
@@ -1454,6 +1465,7 @@ const facilityBookingController = {
                         "facility_master.bookingStatus"
                     ])
                     .where({ "entity_bookings.orgId": orgId, isBookingCancelled: false })
+                    .whereIn("facility_master.projectId", projectIds)
                     .where((qb) => {
                         if (fromDate && toDate) {
                             qb.where(
@@ -1504,6 +1516,7 @@ const facilityBookingController = {
                         "facility_master.name as facilityName",
                         "facility_master.bookingStatus"
                     ])
+                    .whereIn("facility_master.projectId", projectIds)
                     .where({
                         "entity_bookings.orgId": req.orgId,
                         isBookingCancelled: false,
@@ -2207,7 +2220,7 @@ const facilityBookingController = {
                         ),
                         noOfSeats: resultData.noOfSeats,
                         facilityName: facilityData.name,
-                        orgId:req.orgId
+                        orgId: req.orgId
                     },
                 });
 
@@ -2225,7 +2238,7 @@ const facilityBookingController = {
                         ),
                         noOfSeats: resultData.noOfSeats,
                         facilityName: facilityData.name,
-                        orgId:req.orgId
+                        orgId: req.orgId
                     },
                 });
             } else {
@@ -2243,7 +2256,7 @@ const facilityBookingController = {
                         ),
                         noOfSeats: resultData.noOfSeats,
                         facilityName: facilityData.name,
-                        orgId:req.orgId
+                        orgId: req.orgId
                     },
                 });
             }
@@ -2303,19 +2316,19 @@ const facilityBookingController = {
                     ),
                     noOfSeats: bookedByUser.noOfSeats,
                     facilityName: facilityData.name,
-                    orgId:req.orgId
+                    orgId: req.orgId
                 },
             });
 
-            const ALLOWED_CHANNELS = ['IN_APP', 'LINE_NOTIFY','WEB_PUSH','SOCKET_NOTIFY','EMAIL']
-            let orgMaster = await knex.from("organisations").where({ id: req.orgId}).first();
+            const ALLOWED_CHANNELS = ['IN_APP', 'LINE_NOTIFY', 'WEB_PUSH', 'SOCKET_NOTIFY', 'EMAIL']
+            let orgMaster = await knex.from("organisations").where({ id: req.orgId }).first();
 
             let dataNos = {
                 payload: {
                     date: moment(req.body.date, "x").format("YYYY-MM-DD"),
                     time: moment(req.body.date, "x").format("hh:mm A"),
                     facility: req.body.facilityName,
-                    orgData : orgMaster
+                    orgData: orgMaster
                 },
             };
 
@@ -2403,12 +2416,12 @@ const facilityBookingController = {
                         bookingEndDateTime: moment(+resultData[0].bookingEndDateTime).format("YYYY-MM-DD hh:mm A"),
                         noOfSeats: resultData[0].noOfSeats,
                         facilityName: facilityData.name,
-                        orgId:req.orgId
+                        orgId: req.orgId
                     },
                 });
 
-                const ALLOWED_CHANNELS = ['IN_APP', 'LINE_NOTIFY','WEB_PUSH','SOCKET_NOTIFY','EMAIL']
-                let orgMaster = await knex.from("organisations").where({ id: req.orgId}).first();
+                const ALLOWED_CHANNELS = ['IN_APP', 'LINE_NOTIFY', 'WEB_PUSH', 'SOCKET_NOTIFY', 'EMAIL']
+                let orgMaster = await knex.from("organisations").where({ id: req.orgId }).first();
 
                 console.log("date in body", req.body.startDate)
                 let dataNos = {
@@ -2416,7 +2429,7 @@ const facilityBookingController = {
                         date: moment(req.body.startDate, "x").format("YYYY-MM-DD"),
                         time: moment(req.body.startDate, "x").utcOffset("+05:30").format("hh:mm:A"),
                         facility: req.body.facilityName,
-                        orgData : orgMaster
+                        orgData: orgMaster
                     },
                 };
 
@@ -2870,7 +2883,7 @@ const facilityBookingController = {
                                                 ).format("YYYY-MM-DD hh:mm A"),
                                                 bookingEndDateTime: moment(+booked.bookingEndDateTime).format("YYYY-MM-DD hh:mm A"),
                                                 noOfSeats: booked.noOfSeats,
-                                                orgId:req.orgId
+                                                orgId: req.orgId
                                             },
                                         });
                                     }
@@ -3168,7 +3181,7 @@ const facilityBookingController = {
             console.log('Project For Facilities:', projectsForFacilities);
             let accessibleProjects = projectsForFacilities.projects;
             console.log('Project For Parcel:', accessibleProjects);
-            projectIds =  _.uniqBy(accessibleProjects);
+            projectIds = _.uniqBy(accessibleProjects);
             console.log('ProjectIds:', projectIds);
 
             let payload = req.body;
@@ -3180,7 +3193,7 @@ const facilityBookingController = {
                 [rows] = await Promise.all([
                     knex
                         .from("facility_master")
-                        .whereIn("facility_master.projectId",projectIds)
+                        .whereIn("facility_master.projectId", projectIds)
                         .where({
                             "facility_master.orgId": req.orgId,
                             "facility_master.isActive": true,
@@ -3194,7 +3207,7 @@ const facilityBookingController = {
                 [rows] = await Promise.all([
                     knex
                         .from("facility_master")
-                        .whereIn("facility_master.projectId",projectIds)
+                        .whereIn("facility_master.projectId", projectIds)
                         .where({
                             "facility_master.orgId": req.orgId,
                             "facility_master.isActive": true,
@@ -3306,7 +3319,7 @@ const facilityBookingController = {
                 .from("user_house_allocation")
                 .leftJoin("users", "user_house_allocation.userId", "users.id")
                 .select(["users.name", "users.id"])
-                .where({"user_house_allocation.houseId": unitId,"users.isActive":true});
+                .where({ "user_house_allocation.houseId": unitId, "users.isActive": true });
             // console.log("getTenants", getTenants);
             return res.status(200).json({
                 data: {
@@ -5324,7 +5337,7 @@ const facilityBookingController = {
             console.log('Project For Facilities:', projectsForFacilities);
             let accessibleProjects = projectsForFacilities.projects;
             console.log('Project For Parcel:', accessibleProjects);
-            projectIds =  _.uniqBy(accessibleProjects);
+            projectIds = _.uniqBy(accessibleProjects);
             console.log('ProjectIds:', projectIds);
 
             let payload = req.body
@@ -5378,7 +5391,7 @@ const facilityBookingController = {
             console.log('Project For Facilities:', projectsForFacilities);
             let accessibleProjects = projectsForFacilities.projects;
             console.log('Project For Parcel:', accessibleProjects);
-            projectIds =  _.uniqBy(accessibleProjects);
+            projectIds = _.uniqBy(accessibleProjects);
             console.log('ProjectIds:', projectIds);
 
             console.log("facility id for list", req.body)
@@ -5402,7 +5415,7 @@ const facilityBookingController = {
                     "facility_master.id",
                     "facility_master.name",
                 ])
-                .whereIn("facility_master.projectId",projectIds)
+                .whereIn("facility_master.projectId", projectIds)
                 .where({ "facility_master.orgId": req.orgId, "facility_master.isActive": true })
                 .whereIn("facility_master.id", payload.id)
 
@@ -5463,7 +5476,7 @@ const facilityBookingController = {
 
             let getPropertyUnits = await knex("property_units")
                 .select("*")
-                .where({ "floorZoneId": floorId, isActive: true,type:1, orgId: req.orgId });
+                .where({ "floorZoneId": floorId, isActive: true, type: 1, orgId: req.orgId });
             console.log("getUnits", getPropertyUnits);
 
             return res.status(200).json({
