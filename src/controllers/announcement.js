@@ -134,23 +134,7 @@ const announcementController = {
 
             userIds.push(d[0]);
 
-            let receiver = await knex.from("users").where({ id: id }).first();
-
-            // Import SQS Helper..
-            // Import SQS Helper..
-            const queueHelper = require("../helpers/queue");
-            await queueHelper.addToQueue(
-              {
-                announcementId: newAnnouncementId,
-                dataNos,
-                ALLOWED_CHANNELS,
-                orgId,
-                requestedBy: req.me,
-                orgMaster: orgMaster,
-              },
-              "long-jobs",
-              "ANNOUNCEMENT_BROADCAST"
-            );
+            // let receiver = await knex.from("users").where({ id: id }).first();
 
             // await announcementNotification.send(
             //   sender,
@@ -159,6 +143,22 @@ const announcementController = {
             //   ALLOWED_CHANNELS
             // );
           }
+
+          // Import SQS Helper..
+          const queueHelper = require("../helpers/queue");
+          await queueHelper.addToQueue(
+            {
+              announcementId: newAnnouncementId,
+              dataNos,
+              ALLOWED_CHANNELS,
+              orgId,
+              requestedBy: req.me,
+              orgMaster: orgMaster,
+            },
+            "long-jobs",
+            "ANNOUNCEMENT_BROADCAST"
+          );
+
         }
 
         let imagesData = req.body.logoFile;
