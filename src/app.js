@@ -278,15 +278,22 @@ module.exports.longJobsProcessor = async (event, context) => {
         const announcementNotification = require('./notifications/announcement-notification/announcement-notification')
 
 
-        let receiver = announcementUser.userId;
+        let users = announcementUser.userId;
         let sender = requestedBy;
 
-         await announcementNotification.send(
-              sender,
-              receiver,
-              dataNos,
-              ALLOWED_CHANNELS
-            );
+        if(users && users.length){
+        for(let id of users){
+          let receiver = {id:id}
+          await announcementNotification.send(
+            sender,
+            receiver,
+            dataNos,
+            ALLOWED_CHANNELS
+          );
+        }
+
+        }
+        
         
       }
     }
