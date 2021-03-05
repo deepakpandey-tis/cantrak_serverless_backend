@@ -14,7 +14,7 @@ const announcementController = {
   saveAnnouncementNotifications: async (req, res) => {
     try {
       let announcementPayload = req.body;
-
+      let orgId = req.orgId;
       let announcementResult = null;
       let id = req.body.userId;
       userIds = [];
