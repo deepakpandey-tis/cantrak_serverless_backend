@@ -37,6 +37,7 @@ const announcementHelper = {
         };
       });
 
+      console.log("users data in helper====>>>>",userId)
       return {userId:userId};
 
 
