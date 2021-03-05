@@ -11,10 +11,9 @@ AWS.config.update({
 });
 
 const announcementHelper = {
-  createAnnouncement: async ({ announcementId, orgId }) => {
+  sendAnnouncement: async ({ announcementId, dataNos, ALLOWED_CHANNELS, orgId, requestedBy }) => {
     try {
-      let userId;
-
+    
       let users = await knex
         .from("announcement_user_master")
         .select(["announcement_user_master.userId"])
@@ -23,26 +22,34 @@ const announcementHelper = {
           "announcement_user_master.orgId": orgId,
         });
 
+
+      const announcementNotification = require('../notifications/announcement-notification/announcement-notification');
+
       const Parallel = require("async-parallel");
       Parallel.setConcurrency(10);
 
-      userId = await Parallel.map(users, async (pd) => {
-        let users = await knex
-          .from("users")
-          .select(["users.id"])
-          .where({"users.id": pd.userId,"users.isActive":true})
+      await Parallel.each(users, async (pd) => {
+        let user = await knex
+          .from("users").where({"users.id": pd.userId,"users.isActive":true})
           .first();
-        return {
-          ...users,
-        };
+
+          console.log("[helpers][announcement][sendAnnouncement]: Selected User for Annoncement Broadcast:", user);
+
+          let sender = requestedBy;
+          let receiver = user;
+
+          await announcementNotification.send(
+            sender,
+            receiver,
+            dataNos,
+            ALLOWED_CHANNELS
+          );
+          console.log("[helpers][announcement][sendAnnouncement]: Annoncement Broadcasted to:", receiver.email);
+
       });
 
-      console.log("users data in helper====>>>>",userId)
-      return {userId:userId};
-
-
     } catch (err) {
-      console.log("[helpers][Announcement][create-announcement]:  Error", err);
+      console.log("[helpers][announcement][sendAnnouncement]:  Error", err);
       return { code: "UNKNOWN_ERROR", message: err.message, error: err };
     }
   },
