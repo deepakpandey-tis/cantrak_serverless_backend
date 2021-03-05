@@ -258,48 +258,26 @@ module.exports.longJobsProcessor = async (event, context) => {
       throw Error('Work Orders Cannot be generated. Wrong Data in Payload');
     }
 
-    console.log('[app][longJobsProcessor]: Task Completed Successfully');
+    console.log('[app][longJobsProcessor]: Task Completed...');
 
   }
 
   if (messageType === 'ANNOUNCEMENT_BROADCAST') {
 
     console.log('[app][longJobsProcessor]', 'Data For Announcement:', recordData);
-    
+
     const announcementHelper = require('./helpers/announcement');
 
-    const {announcementId,dataNos,ALLOWED_CHANNELS,orgId,requestedBy,orgMaster} = recordData;
+    const { announcementId, dataNos, ALLOWED_CHANNELS, orgId, requestedBy, orgMaster } = recordData;
 
-    if(announcementId){
-      announcementUser = await announcementHelper.createAnnouncement({announcementId,orgId});
-      console.log("Announcement UserId list=====>>>>>>",announcementUser)
-
-      if(announcementUser){
-        const announcementNotification = require('./notifications/announcement-notification/announcement-notification')
-
-
-        let users = announcementUser.userId;
-        let sender = requestedBy;
-
-        if(users && users.length){
-        for(let id of users){
-          let receiver = {id:id}
-          await announcementNotification.send(
-            sender,
-            receiver,
-            dataNos,
-            ALLOWED_CHANNELS
-          );
-        }
-
-        }
-        
-        
-      }
+    if (announcementId) {
+      await announcementHelper.sendAnnouncement({ announcementId, dataNos, ALLOWED_CHANNELS, orgId, requestedBy });
+    } else {
+      console.log('[app][longJobsProcessor]', 'Announcement Id not found. Hence Announcement can not be broadcasted.');
+      throw Error('Announcement Id not found. Hence Announcement can not be broadcasted.');
     }
 
-
-    console.log('[app][longJobsProcessor]: Task Completed Successfully');
+    console.log('[app][longJobsProcessor]: Task Completed.....');
 
   }
 
