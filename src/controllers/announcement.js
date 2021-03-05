@@ -197,7 +197,8 @@ const announcementController = {
     try {
       let userId = req.body.userId;
       let id = req.body.id;
-      let orgId = req.orgId
+      let orgId = req.orgId;
+      let newAnnouncementId = req.body.newAnnouncementId;
 
       let ALLOWED_CHANNELS = [];
       if (req.body.email == true) {
