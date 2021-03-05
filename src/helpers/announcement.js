@@ -29,7 +29,7 @@ const announcementHelper = {
       userId = await Parallel.map(users, async (pd) => {
         let users = await knex
           .from("users")
-          .select(["users.id", "users.userName", "users.name as uName"])
+          .select(["users.id"])
           .where({"users.id": pd.userId,"users.isActive":true})
           .first();
         return {
