@@ -13,13 +13,7 @@ const partsController = {
     getParts: async (req, res) => {
         try {
 
-            let projectIds = [];
-            let projectsForParts = req.userProjectResources;
-            projectsForParts = projectsForParts.find(pfp => pfp.id == 3);   // 3 means parts ... 
-            console.log('Project For Parts:', projectsForParts);
-            let accessibleProjects = projectsForParts.projects;
-            console.log('Project For Parts:', accessibleProjects);
-            projectIds = _.uniqBy(accessibleProjects);
+            let projectIds = req.accessibleProjects;
             console.log('ProjectIds:', projectIds);
 
             let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
@@ -207,11 +201,9 @@ const partsController = {
             return res.status(200).json({
                 data: {
                     parts: pagination,
-                    accessibleProjects,
                     companyIds,
                     companyResult,
                     projectIds,
-
                 },
                 message: 'Parts List!'
             })
