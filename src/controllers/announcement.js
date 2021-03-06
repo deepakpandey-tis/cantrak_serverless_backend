@@ -197,6 +197,8 @@ const announcementController = {
     try {
       let userId = req.body.userId;
       let id = req.body.id;
+      let orgId = req.orgId;
+      let newAnnouncementId = req.body.newAnnouncementId;
 
       let ALLOWED_CHANNELS = [];
       if (req.body.email == true) {
@@ -233,16 +235,34 @@ const announcementController = {
       let sender = await knex.from("users").where({ id: req.me.id }).first();
 
       if (userId && userId.length > 0) {
-        for (let id of userId) {
-          let receiver = await knex.from("users").where({ id: id }).first();
 
-          await announcementNotification.send(
-            sender,
-            receiver,
-            dataNos,
-            ALLOWED_CHANNELS
+
+
+        const queueHelper = require("../helpers/queue");
+          await queueHelper.addToQueue(
+            {
+              announcementId: newAnnouncementId,
+              dataNos,
+              ALLOWED_CHANNELS,
+              orgId,
+              requestedBy: req.me,
+              orgMaster: orgMaster,
+            },
+            "long-jobs",
+            "ANNOUNCEMENT_BROADCAST"
           );
-        }
+
+
+        // for (let id of userId) {
+        //   let receiver = await knex.from("users").where({ id: id }).first();
+
+        //   await announcementNotification.send(
+        //     sender,
+        //     receiver,
+        //     dataNos,
+        //     ALLOWED_CHANNELS
+        //   );
+        // }
       }
 
       return res.status(200).json({
