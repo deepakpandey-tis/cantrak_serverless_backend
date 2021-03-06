@@ -329,24 +329,8 @@ const assetController = {
         // name, model, area, category
         try {
 
-            let projectIds = [];
-            const accessibleProjects = req.userProjectResources;
-
-            if (accessibleProjects.length) {
-                for (let pro of accessibleProjects) {
-
-                    if (pro.projects.length) {
-
-                        for (let projectId of pro.projects) {
-                            console.log("project=========", pro.projects, "====================")
-
-                            projectIds.push(projectId);
-                        }
-                    }
-                }
-            }
-
-            projectIds = _.uniqBy(projectIds);
+            let projectIds = req.accessibleProjects;
+            console.log('ProjectIds:', projectIds);
 
             let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
                 .whereIn('projects.id', projectIds)
@@ -376,63 +360,11 @@ const assetController = {
             if (page < 1) page = 1;
             let offset = (page - 1) * per_page;
 
-            //  if(assetName){
-            //   filters['asset_master.assetName'] = assetName
-            //  }
-            //  if(assetModel){
-            //     filters['asset_master.model'] = assetModel
-            //  }
-            //  if(area){
-            //     filters['asset_master.areaName'] = area
-            //  }
-            //  if(category){
-            //     filters['asset_category_master.categoryName'] = category
-            //  }
-
-
-            // if (_.isEmpty(filters)) {
-            //     [total, rows] = await Promise.all([
-            //         knex.count('* as count').from("asset_master")
-            //         .leftJoin('location_tags','asset_master.id','location_tags.entityId')
-            //         .leftJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
-            //         .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
-            //         .first(),
-
-            //         knex("asset_master")
-            //         .leftJoin('location_tags','asset_master.id','location_tags.entityId')
-            //         .leftJoin('location_tags_master','location_tags.locationTagId','location_tags_master.id')
-            //         .leftJoin('asset_category_master','asset_master.assetCategoryId','asset_category_master.id')
-            //         .select([
-            //             'asset_master.assetName as Name',
-            //             'asset_master.id as ID',
-            //             'location_tags_master.title as Location',
-            //             'asset_master.model as Model',
-            //             'asset_master.barcode as Barcode',
-            //             'asset_master.areaName as Area',
-            //             'asset_category_master.categoryName as Category',
-            //             'asset_master.createdAt as Date Created',
-            //             'asset_master.unitOfMeasure as Unit Of Measure',
-
-            //         ])
-            //         .offset(offset).limit(per_page)
-            //     ])
-            //} else {
-            //filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
             try {
                 [total, rows] = await Promise.all([
                     knex
                         .count("* as count")
                         .from("asset_master")
-                        // .leftJoin(
-                        //   "location_tags",
-                        //   "asset_master.id",
-                        //   "location_tags.entityId"
-                        // )
-                        // .leftJoin(
-                        //   "location_tags_master",
-                        //   "location_tags.locationTagId",
-                        //   "location_tags_master.id"
-                        // )
                         .leftJoin(
                             "asset_category_master",
                             "asset_master.assetCategoryId",
@@ -495,17 +427,8 @@ const assetController = {
                         .whereIn('asset_master.companyId', companyIds)
                         .first()
                         .where({ 'asset_master.orgId': req.orgId }),
+
                     knex("asset_master")
-                        // .leftJoin(
-                        //   "location_tags",
-                        //   "asset_master.id",
-                        //   "location_tags.entityId"
-                        // )
-                        // .leftJoin(
-                        //   "location_tags_master",
-                        //   "location_tags.locationTagId",
-                        //   "location_tags_master.id"
-                        // )
                         .leftJoin(
                             "asset_category_master",
                             "asset_master.assetCategoryId",
@@ -656,31 +579,16 @@ const assetController = {
                 return { ...pd, ...pmName }
             })
 
-            console.log("pagination data====>>>>>", pagination)
+            // console.log("pagination data====>>>>>", pagination)
             return res.status(200).json({
                 data: {
                     asset: pagination,
-                    accessibleProjects,
                     companyIds,
                     companyResult,
                     projectIds,
                 },
                 message: 'Asset List!'
-            })
-
-
-            // let assetData = null;
-            // assetData = await knex.select().from('asset_master')
-
-            // console.log('[controllers][asset][getAssetList]: Asset List', assetData);
-
-            // assetData = assetData.map(d => _.omit(d, ['createdAt'], ['updatedAt'], ['isActive']));
-
-            // res.status(200).json({
-            //     data: assetData,
-            //     message: "Asset List"
-            // });
-
+            });
 
         } catch (err) {
             console.log('[controllers][asset][getAssets] :  Error', err);

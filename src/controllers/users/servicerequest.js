@@ -17,6 +17,8 @@ const fs = require("fs");
 const https = require("https");
 
 const imageHelper = require("../../helpers/image");
+const accessRoleHelper = require('../../helpers/roleAccess')
+
 const serviceRequestUserAddNotification = require('../../notifications/service-request/service-request-user-add-notification');
 
 
@@ -980,13 +982,18 @@ const serviceRequestController = {
         /*SEND NOTIFICATION OPEN */
         let teamProjectResult = await knex('team_roles_project_master').where({ "projectId": payload.project, orgId: req.orgId });
         let teamIds = teamProjectResult.map(v => v.teamId);
-        userTeamResult = await knex('team_users')
-          .select(["users.*"])
-          .innerJoin('users', 'team_users.userId', 'users.id')
-          .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
-          .where({ 'team_users.orgId': req.orgId })
-          .whereIn("team_users.teamId", teamIds)
-          .whereIn('application_user_roles.roleId', [2, 3]);
+
+        userTeamResult = await accessRoleHelper.getAllUsers({projectId:payload.project,resourceId:2,orgId:req.orgId})
+
+        console.log("[corrective-maintenance][teamUser]",userTeamResult)
+
+        // userTeamResult = await knex('team_users')
+        //   .select(["users.*"])
+        //   .innerJoin('users', 'team_users.userId', 'users.id')
+        //   .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+        //   .where({ 'team_users.orgId': req.orgId })
+        //   .whereIn("team_users.teamId", teamIds)
+        //   .whereIn('application_user_roles.roleId', [2, 3]);
 
         let adminResult = await knex('users')
           .select([

@@ -1413,15 +1413,8 @@ const facilityBookingController = {
     /*GET FACILITY BOOKING LIST  */
     getFacilityBookingList: async (req, res) => {
 
-        let projectIds = [];
-        let projectsForFacilities = req.userProjectResources;
-        projectsForFacilities = projectsForFacilities.find(pfp => pfp.id == 9);   // 3 means facility ... 
-        console.log('Project For Facilities:', projectsForFacilities);
-        let accessibleProjects = projectsForFacilities.projects;
-        console.log('Project For Facilities:', accessibleProjects);
-        projectIds = _.uniqBy(accessibleProjects);
+        let projectIds = req.accessibleProjects;
         console.log('ProjectIds:', projectIds);
-
 
         try {
             let {
@@ -1542,6 +1535,7 @@ const facilityBookingController = {
                 },
                 message: "Booked List!",
             });
+
         } catch (err) {
             console.log("[controllers][facilityBooking]:  Error", err);
             return res.status(500).json({
@@ -1549,6 +1543,7 @@ const facilityBookingController = {
             });
         }
     },
+    
     /*GET USER FACILITY LIST */
     getUserFacilityList: async (req, res) => {
         try {
