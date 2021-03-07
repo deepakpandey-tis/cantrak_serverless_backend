@@ -19,6 +19,9 @@ provider:
   region: us-east-1
   memorySize: 3000
   timeout: 30
+  tracing:
+    apiGateway: true
+    lambda: true
   environment: 
   vpc:
     securityGroupIds:
