@@ -42,12 +42,14 @@ custom:
       basePath: ''
       certificateName: '*.staging.servicemind.asia'
       createRoute53Record: true
+      endpointType: 'regional'
     websocket:
       domainName: ws.staging.servicemind.asia
       stage: ${self:provider.stage}
       basePath: ''
       certificateName: '*.staging.servicemind.asia'
-      createRoute53Record: true  
+      createRoute53Record: true
+      endpointType: 'regional'
   serviceName: servicemind
   stage: ${opt:stage, self:custom.defaultStage}
   profile: ${self:custom.profiles.${self:provider.stage}}
