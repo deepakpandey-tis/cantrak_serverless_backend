@@ -11,6 +11,7 @@ plugins:
   - serverless-offline
   - serverless-dotenv-plugin
   - serverless-s3-local
+  - serverless-domain-manager
 
 provider:
   name: aws
@@ -19,6 +20,9 @@ provider:
   region: us-east-1
   memorySize: 3000
   timeout: 30
+  tracing:
+    apiGateway: true
+    lambda: true
   environment: 
   vpc:
     securityGroupIds:
@@ -31,7 +35,7 @@ provider:
   
 
 custom:
-  serviceName: servicemind-backend
+  serviceName: servicemind
   stage: ${opt:stage, self:custom.defaultStage}
   profile: ${self:custom.profiles.${self:provider.stage}}
   bucket: servicemind-resources
@@ -43,6 +47,12 @@ custom:
   apigwBinary:
     types:
       - "*/*"
+  customDomain:
+    domainName: api.staging.servicemind.asia
+    stage: ${self:provider.stage}
+    basePath: ''
+    certificateName: '*.staging.servicemind.asia'
+    createRoute53Record: true
   
   
 functions:

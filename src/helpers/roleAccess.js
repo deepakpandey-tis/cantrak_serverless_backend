@@ -1,18 +1,12 @@
 const Joi = require("@hapi/joi");
 const _ = require("lodash");
-const AWS = require("aws-sdk");
 const knex = require("../db/knex");
 const moment = require("moment-timezone");
 
-AWS.config.update({
-  accessKeyId: process.env.ACCESS_KEY_ID,
-  secretAccessKey: process.env.SECRET_ACCESS_KEY,
-  region: process.env.REGION || "us-east-1",
-});
 
 const roleAccessHelper = {
-  getAllUsers: async ({ projectId, resourceId,orgId }) => {
-    console.log("[getAllUsers][payload]",projectId,resourceId,orgId)
+  getAllUsers: async ({ projectId, resourceId, orgId }) => {
+    console.log("[getAllUsers][payload]", projectId, resourceId, orgId)
 
     try {
       let users = await knex
@@ -30,18 +24,18 @@ const roleAccessHelper = {
         )
         .select(["users.*"])
         .where({
-            "team_roles_project_master.projectId":projectId,
-            "role_resource_master.resourceId":resourceId,
-            "users.orgId":orgId
+          "team_roles_project_master.projectId": projectId,
+          "role_resource_master.resourceId": resourceId,
+          "users.orgId": orgId
         });
 
-        console.log("[helpers][roleAccess][getAllUsers]:  result", users);
+      console.log("[helpers][roleAccess][getAllUsers]:  result", users);
 
-         return users;
+      return users;
     } catch (err) {
 
-        console.log("[helpers][roleAccess][getAllUsers]:  Error", err);
-        return { code: "UNKNOWN_ERROR", message: err.message, error: err };
+      console.log("[helpers][roleAccess][getAllUsers]:  Error", err);
+      return { code: "UNKNOWN_ERROR", message: err.message, error: err };
     }
   },
 };
