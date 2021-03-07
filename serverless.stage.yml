@@ -35,6 +35,19 @@ provider:
   
 
 custom:
+  customDomain:
+    http:
+      domainName: api.staging.servicemind.asia
+      stage: ${self:provider.stage}
+      basePath: ''
+      certificateName: '*.staging.servicemind.asia'
+      createRoute53Record: true
+    websocket:
+      domainName: ws.staging.servicemind.asia
+      stage: ${self:provider.stage}
+      basePath: ''
+      certificateName: '*.staging.servicemind.asia'
+      createRoute53Record: true  
   serviceName: servicemind
   stage: ${opt:stage, self:custom.defaultStage}
   profile: ${self:custom.profiles.${self:provider.stage}}
@@ -47,12 +60,6 @@ custom:
   apigwBinary:
     types:
       - "*/*"
-  customDomain:
-    domainName: api.staging.servicemind.asia
-    stage: ${self:provider.stage}
-    basePath: ''
-    certificateName: '*.staging.servicemind.asia'
-    createRoute53Record: true
   
   
 functions:
