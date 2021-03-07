@@ -54,8 +54,7 @@
     "xlsx": "^0.15.6"
   },
   "devDependencies": {
-    "serverless": "^1.83.2",
-    "serverless-apigw-binary": "^0.4.4",
+    "serverless": "^2.28.7",
     "serverless-domain-manager": "^5.1.0",
     "serverless-dotenv-plugin": "^2.4.2",
     "serverless-offline": "^6.8.0",
