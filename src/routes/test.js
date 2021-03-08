@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
         // Trigger Daily Digest emails...
         // const dailyDigestHelper = require("../helpers/daily-digest");
         // await dailyDigestHelper.prepareDailyDigestForUsers();
-        await knex.raw(`ALTER TABLE public.users ADD "deactivationStatus" bool NULL DEFAULT false`)
+        // await knex.raw(`ALTER TABLE public.users ADD "deactivationStatus" bool NULL DEFAULT false`)
 
         let a;
 

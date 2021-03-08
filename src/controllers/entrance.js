@@ -36,6 +36,9 @@ const entranceController = {
                 });
             }
 
+            // Trim Username, some times user sent name has spaces
+            loginPayload.userName = loginPayload.userName.trim();
+
             // check username & password not blank
             loginResult = await knex('users').where(function () {
                 this.where('userName', loginPayload.userName)
