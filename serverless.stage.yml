@@ -35,22 +35,7 @@ provider:
   
 
 custom:
-  # customDomain:
-  #   http:
-  #     domainName: api.staging.servicemind.asia
-  #     stage: ${self:provider.stage}
-  #     basePath: ''
-  #     certificateName: '*.staging.servicemind.asia'
-  #     createRoute53Record: true
-  #     endpointType: 'regional'
-  #   websocket:
-  #     domainName: ws.staging.servicemind.asia
-  #     stage: ${self:provider.stage}
-  #     basePath: ''
-  #     certificateName: '*.staging.servicemind.asia'
-  #     createRoute53Record: true
-  #     endpointType: 'regional'
-  serviceName: servicemind
+  serviceName: servicemind-backend
   stage: ${opt:stage, self:custom.defaultStage}
   profile: ${self:custom.profiles.${self:provider.stage}}
   bucket: servicemind-resources
