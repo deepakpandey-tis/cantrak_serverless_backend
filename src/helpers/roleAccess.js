@@ -32,7 +32,8 @@ const roleAccessHelper = {
         .where({
             "team_roles_project_master.projectId":projectId,
             "role_resource_master.resourceId":resourceId,
-            "users.orgId":orgId
+            "users.orgId":orgId,
+            "users.isActive":true
         });
 
         console.log("[helpers][roleAccess][getAllUsers]:  result", users);
