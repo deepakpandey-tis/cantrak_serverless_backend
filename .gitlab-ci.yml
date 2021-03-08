@@ -50,5 +50,5 @@ deploy_stage:
     - npm install -g serverless
     - npm install
     - sls config credentials --profile servicemind-stage --provider aws --key ${STAGE_AWS_KEY} --secret ${STAGE_AWS_SECRET}
-    - NODE_ENV=stage sls deploy --stage stage --aws-profile servicemind-stage --config serverless.stage.yml
+    - SLS_DEBUG=* NODE_ENV=stage sls deploy --stage stage --aws-profile servicemind-stage --config serverless.stage.yml
     - echo 'Success'

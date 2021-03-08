@@ -11,6 +11,7 @@ plugins:
   - serverless-offline
   - serverless-dotenv-plugin
   - serverless-s3-local
+  # - serverless-domain-manager
 
 provider:
   name: aws
@@ -19,6 +20,9 @@ provider:
   region: us-east-1
   memorySize: 3000
   timeout: 30
+  tracing:
+    apiGateway: true
+    lambda: true
   environment: 
   vpc:
     securityGroupIds:
@@ -31,7 +35,22 @@ provider:
   
 
 custom:
-  serviceName: servicemind-backend
+  # customDomain:
+  #   http:
+  #     domainName: api.staging.servicemind.asia
+  #     stage: ${self:provider.stage}
+  #     basePath: ''
+  #     certificateName: '*.staging.servicemind.asia'
+  #     createRoute53Record: true
+  #     endpointType: 'regional'
+  #   websocket:
+  #     domainName: ws.staging.servicemind.asia
+  #     stage: ${self:provider.stage}
+  #     basePath: ''
+  #     certificateName: '*.staging.servicemind.asia'
+  #     createRoute53Record: true
+  #     endpointType: 'regional'
+  serviceName: servicemind
   stage: ${opt:stage, self:custom.defaultStage}
   profile: ${self:custom.profiles.${self:provider.stage}}
   bucket: servicemind-resources
@@ -60,22 +79,28 @@ functions:
 
   queueProcessor:
     handler: src/app.queueProcessor
-    batchSize: 1                           # Using a batchSize of 1, so that messages succeed or fail on their own.
     memorySize: 1024
     timeout: 150
     reservedConcurrency: 10                # <-- Concurrency control
     events:
-      - sqs: arn:aws:sqs:us-east-1:925816896007:mail-queue
+      - sqs: 
+          arn: arn:aws:sqs:us-east-1:925816896007:mail-queue
+          batchSize: 1                     # Using a batchSize of 1, so that messages succeed or fail on their own.
+
+
 
 
   longJobsProcessor:
     handler: src/app.longJobsProcessor
-    batchSize: 1                           # Using a batchSize of 1, so that messages succeed or fail on their own.
     memorySize: 2048
     timeout: 900                           # 15 Mins...
     reservedConcurrency: 10                # <-- Concurrency control
     events:
-      - sqs: arn:aws:sqs:us-east-1:925816896007:long-jobs
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:925816896007:long-jobs
+          batchSize: 1                     # Using a batchSize of 1, so that messages succeed or fail on their own.
+
+
 
   
   websocket:
