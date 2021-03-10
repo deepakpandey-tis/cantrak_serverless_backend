@@ -560,7 +560,6 @@ const taskGroupController = {
       // });
       console.log("consolidatedWorkOrders ======>>>>>", consolidatedWorkOrders);
 
-
       let workOrderLength = 0;
       for (let i = 0; i < consolidatedWorkOrders.length; i++) {
         workOrderLength =
@@ -570,15 +569,13 @@ const taskGroupController = {
       console.log("work order lengths======>>>>>", workOrderLength);
 
       if (workOrderLength <= 200) {
-
-
         pmWorkOrder = await creatPmHelper.createWorkOrders({
           consolidatedWorkOrders,
           payload,
           orgId,
         });
 
-        console.log("taskgroup data=======", payload)
+        console.log("taskgroup data=======", payload);
 
         return res.status(200).json({
           data: { pmWorkOrder },
@@ -703,7 +700,7 @@ const taskGroupController = {
       });
     }
   },
-  
+
   getPmList: async (req, res) => {
     try {
       const list = await knex("pm_master2").select();
@@ -954,8 +951,7 @@ const taskGroupController = {
         rowsId = [];
 
       if (payloadFilter.assignedTeam && payloadFilter.assignedTeam.length) {
-
-        [total, rows, rowsId] = await Promise.all([
+        ([total, rows, rowsId] = await Promise.all([
           knex
             .count("* as count")
             .from("task_group_schedule")
@@ -1140,7 +1136,7 @@ const taskGroupController = {
               "assigned_service_team.teamId",
               "teams.teamName",
               "teams.description",
-              "users.userName"
+              "users.userName",
             ])
             .where({
               "task_group_schedule.pmId": payload.pmId,
@@ -1223,7 +1219,7 @@ const taskGroupController = {
             .offset(offset)
             .limit(per_page)
             .orderBy("workOrderDate", "asc"),
-        ]),
+        ])),
           knex("task_group_schedule")
             .innerJoin(
               "task_group_schedule_assign_assets",
@@ -1240,11 +1236,7 @@ const taskGroupController = {
               "task_group_schedule_assign_assets.id",
               "assigned_service_team.workOrderId"
             )
-            .leftJoin(
-              "users",
-              "assigned_service_team.userId",
-              "users.id"
-            )
+            .leftJoin("users", "assigned_service_team.userId", "users.id")
             .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
             .leftJoin("users", "assigned_service_team.userId", "users.id")
             .leftJoin(
@@ -1352,7 +1344,7 @@ const taskGroupController = {
               qb.where({
                 "assigned_service_team.entityType": "work_order",
               });
-            })
+            });
       } else {
         [total, rows, rowsId] = await Promise.all([
           knex
@@ -1370,7 +1362,7 @@ const taskGroupController = {
             )
             .where({
               "task_group_schedule.pmId": payload.pmId,
-              "task_group_schedule.orgId": req.orgId
+              "task_group_schedule.orgId": req.orgId,
             })
             .where((qb) => {
               if (payload.workOrderId && payload.workOrderId != null) {
@@ -1492,7 +1484,7 @@ const taskGroupController = {
               "task_group_schedule.taskGroupId",
               "buildings_and_phases.buildingPhaseCode",
               "floor_and_zones.floorZoneCode",
-              "property_units.unitNumber"
+              "property_units.unitNumber",
             ])
             .where({
               "task_group_schedule.pmId": payload.pmId,
@@ -1589,7 +1581,11 @@ const taskGroupController = {
                   "asset_master.id",
                   "asset_location.assetId"
                 )
-                .leftJoin("companies", "asset_location.companyId", "companies.id")
+                .leftJoin(
+                  "companies",
+                  "asset_location.companyId",
+                  "companies.id"
+                )
                 .leftJoin("projects", "asset_location.projectId", "projects.id")
                 .leftJoin(
                   "buildings_and_phases",
@@ -1606,9 +1602,7 @@ const taskGroupController = {
                   "asset_location.unitId",
                   "property_units.id"
                 )
-                .select([
-                  "task_group_schedule_assign_assets.id as workOrderId",
-                ])
+                .select(["task_group_schedule_assign_assets.id as workOrderId"])
                 .where({
                   "task_group_schedule.pmId": payload.pmId,
                   "task_group_schedule.orgId": req.orgId,
@@ -1632,7 +1626,10 @@ const taskGroupController = {
                   }
 
                   if (req.body.workOrderDate) {
-                    console.log("work order date====>>>>>", req.body.workOrderDate)
+                    console.log(
+                      "work order date====>>>>>",
+                      req.body.workOrderDate
+                    );
                     qb.whereRaw(
                       `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')='${req.body.workOrderDate}'`
                     );
@@ -1680,8 +1677,7 @@ const taskGroupController = {
                   }
                 })
                 .as("X");
-            })
-
+            }),
         ]);
       }
 
@@ -1695,7 +1691,7 @@ const taskGroupController = {
             "assigned_service_team.teamId",
             "teams.teamName",
             "teams.description",
-            "users.userName"
+            "users.userName",
           ])
           .where({
             "assigned_service_team.entityId": row.workOrderId,
@@ -1708,14 +1704,12 @@ const taskGroupController = {
           })
           .first();
         return { ...row, ...teamData };
-      })
+      });
 
       rowsId = await Parallel.map(rowsId, async (row) => {
         const teamData = await knex
           .from("assigned_service_team")
-          .select([
-            "assigned_service_team.teamId",
-          ])
+          .select(["assigned_service_team.teamId"])
           .where({
             "assigned_service_team.entityId": row.workOrderId,
             "assigned_service_team.entityType": "work_order",
@@ -1727,9 +1721,7 @@ const taskGroupController = {
           })
           .first();
         return { ...row, ...teamData };
-      })
-
-
+      });
 
       let count = total.length ? total[0].count : 0;
       pagination.total = count;
@@ -1763,9 +1755,8 @@ const taskGroupController = {
       let payload = req.body;
       let reqData = req.query;
 
-      console.log("data in payload===>>>>>", payload)
+      console.log("data in payload===>>>>>", payload);
       let workOrderDate = moment(payload.workOrderDate).format("YYYY-MM-DD");
-
 
       const accessibleProjects = req.userProjectResources[0].projects;
 
@@ -1805,12 +1796,10 @@ const taskGroupController = {
           .where({
             "task_group_schedule.pmId": payload.pmId,
             "task_group_schedule.orgId": req.orgId,
-
           })
           .whereRaw(
             `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')='${workOrderDate}'`
-          )
-        ,
+          ),
         knex
           .from("task_group_schedule")
           .innerJoin(
@@ -1871,7 +1860,7 @@ const taskGroupController = {
             "task_group_schedule.taskGroupId",
             "buildings_and_phases.buildingPhaseCode",
             "floor_and_zones.floorZoneCode",
-            "property_units.unitNumber"
+            "property_units.unitNumber",
           ])
           .where({
             "task_group_schedule.pmId": payload.pmId,
@@ -1880,9 +1869,8 @@ const taskGroupController = {
           .whereRaw(
             `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')='${workOrderDate}'`
           )
-          .orderBy("workOrderId", "asc")
-
-      ])
+          .orderBy("workOrderId", "asc"),
+      ]);
       let count = total.length ? total[0].count : 0;
       pagination.total = count;
       pagination.per_page = per_page;
@@ -1907,7 +1895,6 @@ const taskGroupController = {
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
-
     }
   },
   getWorkOrderList: async (req, res) => {
@@ -1937,7 +1924,7 @@ const taskGroupController = {
         "assignedTeam",
         "repeatPeriod",
         "company",
-        "overdue"
+        "overdue",
       ]);
 
       const accessibleProjects = req.userProjectResources[0].projects;
@@ -2080,7 +2067,7 @@ const taskGroupController = {
               }
 
               if (payloadFilter.assignedTeam.length) {
-                console.log("assigned team", payloadFilter.assignedTeam)
+                console.log("assigned team", payloadFilter.assignedTeam);
                 qb.whereIn(
                   "assigned_service_team.teamId",
                   payloadFilter.assignedTeam
@@ -2167,7 +2154,7 @@ const taskGroupController = {
               "property_units.unitNumber",
               "assigned_service_team.teamId",
               "teams.teamName",
-              "teams.description"
+              "teams.description",
             ])
             .where({
               "task_group_schedule.orgId": req.orgId,
@@ -2208,7 +2195,6 @@ const taskGroupController = {
                 qb.whereRaw(
                   `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD') BETWEEN '${req.body.workOrderDateFrom}' and '${req.body.workOrderDateTo}' `
                 );
-
               }
               if (req.body.assetName && req.body.assetName.length > 0) {
                 qb.whereIn(
@@ -2419,7 +2405,7 @@ const taskGroupController = {
               "task_group_schedule_assign_assets.status",
               "buildings_and_phases.buildingPhaseCode",
               "floor_and_zones.floorZoneCode",
-              "property_units.unitNumber"
+              "property_units.unitNumber",
             ])
             .where({
               "task_group_schedule.orgId": req.orgId,
@@ -2506,7 +2492,7 @@ const taskGroupController = {
       const Parallel = require("async-parallel");
 
       rows = await Parallel.map(rows, async (row) => {
-        console.log("team called")
+        console.log("team called");
         const teamData = await knex
           .from("assigned_service_team")
           .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
@@ -2515,7 +2501,7 @@ const taskGroupController = {
             "assigned_service_team.teamId",
             "teams.teamName",
             "teams.description",
-            "users.userName"
+            "users.userName",
           ])
           .where({
             "assigned_service_team.entityId": row.workOrderId,
@@ -2528,9 +2514,9 @@ const taskGroupController = {
           })
           .first();
         return { ...row, ...teamData };
-      })
+      });
 
-      console.log("total rows====>>>", total)
+      console.log("total rows====>>>", total);
       let count = total.length ? total[0].count : 0;
       pagination.total = count;
       pagination.per_page = per_page;
@@ -4854,7 +4840,7 @@ const taskGroupController = {
       });
     }
   },
-  importTaskGroup: async (req, res) => { },
+  importTaskGroup: async (req, res) => {},
   togglePmTemplateStatus: async (req, res) => {
     try {
       const id = req.body.id;
@@ -4960,7 +4946,8 @@ const taskGroupController = {
 
       let deleteTeamAndUser = knex("assigned_service_team")
         .where({ entityType: "work_order", orgId: req.orgId })
-        .whereIn("assigned_service_team.workOrderId", payload.workOrderId).del();
+        .whereIn("assigned_service_team.workOrderId", payload.workOrderId)
+        .del();
 
       const updateWorkOrderTeamAndUsers = await knex("assigned_service_team")
         .update(teamUsersPayload)
@@ -4969,9 +4956,13 @@ const taskGroupController = {
 
       let deleteAdditionalUser = knex("assigned_service_additional_users")
         .where({
-          "assigned_service_additional_users.entityType": "work_order", orgId: req.orgId
+          "assigned_service_additional_users.entityType": "work_order",
+          orgId: req.orgId,
         })
-        .whereIn("assigned_service_additional_users.entityId", payload.workOrderId)
+        .whereIn(
+          "assigned_service_additional_users.entityId",
+          payload.workOrderId
+        )
         .del();
 
       let additionlUser = payload.additionalUsers;
@@ -4985,7 +4976,8 @@ const taskGroupController = {
             updatedAt: currentTime,
           })
           .where({
-            "assigned_service_additional_users.entityType": "work_order", orgId: req.orgId
+            "assigned_service_additional_users.entityType": "work_order",
+            orgId: req.orgId,
           })
           .whereIn(
             "assigned_service_additional_users.entityId",
@@ -5051,7 +5043,7 @@ const taskGroupController = {
         data: deletedWorkOrder,
         message: "Deleted Work order successfully!",
       });
-    } catch (err) { }
+    } catch (err) {}
   },
 
   cancelWorkOrder: async (req, res) => {
@@ -5083,7 +5075,7 @@ const taskGroupController = {
         data: resultRemarksNotes,
         message: "Work order cancelled successfully!",
       });
-    } catch (err) { }
+    } catch (err) {}
   },
   cancelPmPlan: async (req, res) => {
     try {
@@ -5986,7 +5978,7 @@ const taskGroupController = {
           "task_group_schedule_assign_assets.status as woStatus",
           "companies.taxId",
           "companies.telephone",
-          "task_group_schedule.orgId"
+          "task_group_schedule.orgId",
         ])
         .where({
           "task_group_schedule.id": payload.taskGroupScheduleId,
@@ -6174,17 +6166,20 @@ const taskGroupController = {
 
   getTeamDataByWorkOrderId: async (req, res) => {
     try {
-      let workOrderId = req.body.workOrderId[0]
-      let orgId = req.orgId
+      let workOrderId = req.body.workOrderId[0];
+      let orgId = req.orgId;
 
-      console.log("team work order id====>>>>>", workOrderId)
+      console.log("team work order id====>>>>>", workOrderId);
       let teamData = await knex
         .from("assigned_service_team")
         .select([
           "assigned_service_team.teamId",
-          "assigned_service_team.userId"
+          "assigned_service_team.userId",
         ])
-        .where({ "assigned_service_team.entityId": workOrderId, "assigned_service_team.orgId": orgId })
+        .where({
+          "assigned_service_team.entityId": workOrderId,
+          "assigned_service_team.orgId": orgId,
+        });
 
       return res.status(200).json({
         data: {
@@ -6197,22 +6192,21 @@ const taskGroupController = {
         "[controllers][task-group][get-taskgroup-asset-pm-details] :  Error",
         err
       );
-
     }
   },
 
   getAdditionalUsersByWorkOrderId: async (req, res) => {
     try {
-      let workOrderId = req.body.workOrderId[0]
-      let orgId = req.orgId
+      let workOrderId = req.body.workOrderId[0];
+      let orgId = req.orgId;
 
       let additionalUsers = await knex
         .from("assigned_service_additional_users")
-        .select([
-          "assigned_service_additional_users.userId as addUser"
-        ])
-        .where({ "assigned_service_additional_users.entityId": workOrderId, "assigned_service_additional_users.orgId": orgId })
-
+        .select(["assigned_service_additional_users.userId as addUser"])
+        .where({
+          "assigned_service_additional_users.entityId": workOrderId,
+          "assigned_service_additional_users.orgId": orgId,
+        });
 
       return res.status(200).json({
         data: {
@@ -6220,40 +6214,41 @@ const taskGroupController = {
         },
         message: "Work Order additional user list!",
       });
-
     } catch (err) {
       console.log(
         "[controllers][task-group][get-taskgroup-workOrderDate] :  Error",
         err
       );
-
     }
   },
   getWorkOrderDateFromPmId: async (req, res) => {
     try {
+      let pmId = req.body.pmId;
 
-      let pmId = req.body.pmId
-
-      console.log("value of PM id====>>>>", pmId)
+      console.log("value of PM id====>>>>", pmId);
 
       let workDate = await knex("task_group_schedule_assign_assets")
-        .leftJoin("task_group_schedule", "task_group_schedule_assign_assets.scheduleId", "task_group_schedule.id")
+        .leftJoin(
+          "task_group_schedule",
+          "task_group_schedule_assign_assets.scheduleId",
+          "task_group_schedule.id"
+        )
         .select([
           // "task_group_schedule_assign_assets.pmDate"
           knex.raw(
             `DATE("task_group_schedule_assign_assets"."pmDate") as "workOrderDate"`
-          )
+          ),
         ])
         .where({
           "task_group_schedule.pmId": pmId,
-          "task_group_schedule_assign_assets.orgId": req.orgId
+          "task_group_schedule_assign_assets.orgId": req.orgId,
         })
-        .orderBy("task_group_schedule_assign_assets.pmDate", "asc")
+        .orderBy("task_group_schedule_assign_assets.pmDate", "asc");
 
-      console.log("work order date", workDate)
+      console.log("work order date", workDate);
       return res.status(200).json({
         data: {
-          workOrderDate: workDate
+          workOrderDate: workDate,
         },
         message: "Work Order Date!",
       });
@@ -6262,14 +6257,12 @@ const taskGroupController = {
         "[controllers][task-group][get-taskgroup-pm-workDate] :  Error",
         err
       );
-
     }
   },
 
   getTaskNameFromWorkOrderDate: async (req, res) => {
     try {
-
-      let payload = req.body
+      let payload = req.body;
       let workOrderDate = moment(payload.workOrderDate).format("YYYY-MM-DD");
 
       // console.log("payload data====>>>>", workOrderDate)
@@ -6288,8 +6281,7 @@ const taskGroupController = {
         .select([
           "pm_task.id as taskId",
           "pm_task.taskName as taskName",
-          "pm_task.repeatFrequencyId"
-
+          "pm_task.repeatFrequencyId",
         ])
         .where({
           "task_group_schedule.pmId": payload.pmId,
@@ -6297,14 +6289,14 @@ const taskGroupController = {
         })
         .whereRaw(
           `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')='${workOrderDate}'`
-        )
+        );
 
-      tasks = _.uniqBy(tasks, "taskId")
-      tasks = _.uniqBy(tasks, "taskName")
+      tasks = _.uniqBy(tasks, "taskId");
+      tasks = _.uniqBy(tasks, "taskName");
 
       return res.status(200).json({
         data: {
-          tasks: tasks
+          tasks: tasks,
         },
         message: "Work Order task list!",
       });
@@ -6313,100 +6305,149 @@ const taskGroupController = {
         "[controllers][task-group][get-taskgroup-pm-task] :  Error",
         err
       );
-
     }
   },
-  // importPmChecklist : async(req,res)=>{
-  //   try {
-      
 
-  //     let data = req.body;
+  importPmChecklist: async (req, res) => {
+    try {
+      let data = req.body;
+      let updateWOStatus;
 
-  //     let errors = []
-  //     let header = Object.values(data[0]);
-  //     header.unshift('Error');
-  //     errors.push(header)
+      // console.log("request data====>>>>>",data)
 
-  //     if(
-  //       data[0].A == "Ã¯Â»Â¿ITEM" ||
-  //       (data[0].A == "ITEM" &&
-  //           data[0].B == "WORK_ORDER_NUMBER" &&
-  //           data[0].C == "ASSET_CODE" &&
-  //           data[0].D == "ASSET_NAME" &&
-  //           data[0].E == "LOCATION" &&
-  //           data[0].F == "STATUS" &&
-  //           data[0].G == "COMMENT")
-  //     ){
+      let errors = [];
+      let header = Object.values(data[0]);
+      header.unshift("Error");
+      errors.push(header);
 
-  //       if(data.length > 0){
-  //         let i = 0;
-  //         console.log("Data[0]", data[0]);
-  //         let success = 0;
-  //         let totalData = data.length - 1;
-  //         let fail = 0;
+      let currentTime = new Date().getTime();
 
-  //         for(let pm of data){
-  //           i++;
+      console.log("value of data[0]", data[0]);
+      if (
+        data[0].A == "ITEM" &&
+        data[0].B == "WORK_ORDER_NUMBER" &&
+        data[0].C == "ASSET_CODE" &&
+        data[0].D == "ASSET_NAME" &&
+        data[0].E == "LOCATION" &&
+        data[0].F == "STATUS"
+        // data[0].G == "COMMENT"
+      ) {
+        if (data.length > 0) {
+          let i = 0;
+          console.log("Data[0]", data[0]);
+          let success = 0;
+          let totalData = data.length - 1;
+          let fail = 0;
 
-  //           if(i>1){
-  //             if (!pm.A) {
-  //               let values = _.values(pm)
-  //               values.unshift('Item Number can not empty!')
-  //               errors.push(values);
-  //               fail++;
-  //               continue;
-  //           }
+          for (let pm of data) {
+            i++;
+            console.log("value of pm1======>>>>", pm);
 
-  //           if (!pm.B) {
-  //               let values = _.values(pm)
-  //               values.unshift('WORK_ORDER_NUMBER can not empty!')
-  //               errors.push(values);
-  //               fail++;
-  //               continue;
-  //           }
+            if (i > 1) {
+              if (!pm.A) {
+                let values = _.values(pm);
+                values.unshift("Item Number can not empty!");
+                errors.push(values);
+                fail++;
+                continue;
+              }
 
-  //           if (!pm.C) {
-  //               let values = _.values(pm)
-  //               values.unshift('ASSET_CODE can not empty!')
-  //               errors.push(values);
-  //               fail++;
-  //               continue;
-  //           }
-  //           if (!pm.D) {
-  //             let values = _.values(pm)
-  //             values.unshift('ASSET_NAME can not empty!')
-  //             errors.push(values);
-  //             fail++;
-  //             continue;
-  //         }
+              if (!pm.B) {
+                let values = _.values(pm);
+                values.unshift("WORK_ORDER_NUMBER can not empty!");
+                errors.push(values);
+                fail++;
+                continue;
+              }
 
+              if (!pm.C) {
+                let values = _.values(pm);
+                values.unshift("ASSET_CODE can not empty!");
+                errors.push(values);
+                fail++;
+                continue;
+              }
+              if (!pm.D) {
+                let values = _.values(pm);
+                values.unshift("ASSET_NAME can not empty!");
+                errors.push(values);
+                fail++;
+                continue;
+              }
 
-  //           if (!pm.E) {
-  //               let values = _.values(pm)
-  //               values.unshift('LOCATION can not empty!')
-  //               errors.push(values);
-  //               fail++;
-  //               continue;
-  //           }
+              if (!pm.E) {
+                let values = _.values(pm);
+                values.unshift("LOCATION can not empty!");
+                errors.push(values);
+                fail++;
+                continue;
+              }
 
-  //           if (!pm.F) {
-  //             let values = _.values(pm)
-  //             values.unshift('Status can not empty!')
-  //             errors.push(values);
-  //             fail++;
-  //             continue;
-  //         }
-       
+              if (!pm.F) {
+                let values = _.values(pm);
+                values.unshift("Status can not empty!");
+                errors.push(values);
+                fail++;
+                continue;
+              }
 
-  //           }
-  //         }
-  //       }
-  //     }
-  //   } catch (err) {
-      
-  //   }
-  // }
+              console.log("value of pm======>>>>", pm);
 
+              let updateWOStatusData = {
+                status: pm.F,
+                updatedAt: currentTime,
+              };
+
+              let updateWO = await knex
+                .update(updateWOStatusData)
+                .where({ id: pm.B, orgId: req.orgId })
+                .into("task_group_schedule_assign_assets");
+
+              let keys = Object.keys(data[0]);
+              keys.splice(0, 6);
+
+              let taskName = [];
+              keys.forEach((k) => {
+                let taskId = data[0][k].split('|')
+                taskName.push({ taskId:taskId[0], keyName: k });
+              });
+
+              // console.log("task name", taskName);
+
+              const Parallel = require("async-parallel");
+
+              await Parallel.each(taskName, async (pd) => {
+                // console.log("value of pd", pd);
+                let tasks = await knex("pm_task")
+                  .update("result", pm[pd.keyName])
+                  .where({
+                    taskGroupScheduleAssignAssetId: pm.B,
+                    orgId: req.orgId,
+                    id:pd.taskId
+                  })
+                  .returning(["*"]);
+
+                // console.log("tasks id====>>>", tasks);
+              });
+            }
+          }
+        }
+      }
+      return res.status(200).json({
+        data: {},
+        message: "Work Order Updated successfully.",
+      });
+    } catch (err) {
+      console.log(
+        "[controllers][pm-checklist][importWorkOrders] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
 };
 
 module.exports = taskGroupController;
