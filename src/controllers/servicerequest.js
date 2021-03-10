@@ -1876,7 +1876,18 @@ const serviceRequestController = {
                     }
                 }
 
-                let tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
+                let tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first();
+
+                if(!tetantResult) {
+                    return {
+                        ...pd,
+                        "Tenant Name": '',
+                        "teamName": teamName,
+                        "teamCode": teamCode,
+                        "mainUser": mainUser
+                    };
+                }
+
                 return {
                     ...pd,
                     "Tenant Name": tetantResult.name,
@@ -1893,7 +1904,7 @@ const serviceRequestController = {
                 },
                 message: "Service Request List!"
             });
-            
+
         } catch (err) {
             console.log("[controllers][service][request] :  Error", err);
             return res.status(500).json({
