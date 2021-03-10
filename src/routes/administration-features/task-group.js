@@ -314,6 +314,14 @@ resourceAccessMiddleware.isPMAccessible,
 taskGroupController.getWorkOrderListFromDate
 )
 
+router.post(
+  '/import-workOrder-checklist',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  taskGroupController.importPmChecklist
+)
+
 
 
 
