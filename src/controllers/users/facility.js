@@ -7,7 +7,9 @@ const emailHelper = require('../../helpers/email')
 
 const facilityHelper = require('../../helpers/facility');
 const QRCODE = require("qrcode");
-const facilityBookingApprovalNotification = require('../../notifications/facility/facility-booking-approval-notification')
+const facilityBookingApprovalNotification = require('../../notifications/facility/facility-booking-approval-notification');
+const accessRoleHelper = require('../../helpers/roleAccess');
+
 
 
 var arrayCompare = require("array-compare");
@@ -1330,7 +1332,7 @@ const facilityBookingController = {
             let id = req.me.id;
             let payload = req.body;
             let resultData;
-            console.log("customerHouseInfo", req.me.houseIds);
+            console.log("customerHouseInfo", req.me);
             // let unitId = req.me.houseIds[0];
             let unitId;
 
@@ -1554,6 +1556,17 @@ const facilityBookingController = {
                 let adminEmail;
                 let receiver;
 
+                let projectId = await knex('property_units').select('projectId').where({id:payload.unitId,orgId:req.orgId}).first()
+
+                console.log("projectId details====>>>>>",projectId)
+
+                userTeamResult = await accessRoleHelper.getAllUsers({projectId:projectId.projectId,resourceId:9,orgId:req.orgId})
+
+                console.log("user team result====>>>>",userTeamResult)
+
+                // if(userTeamResult){
+                //     receiver = userTeamResult[0]
+                // }else
                 if (orgAdminResult) {
 
                     let adminUser = await knex('users').select('*').where({ id: orgAdminResult.organisationAdminId }).first();
@@ -1589,12 +1602,25 @@ const facilityBookingController = {
                     },
                 };
 
-                await facilityBookingApprovalNotification.send(
-                    sender,
-                    receiver,
-                    dataNos,
-                    ALLOWED_CHANNELS
-                );
+                if(!userTeamResult){
+                    await facilityBookingApprovalNotification.send(
+                        sender,
+                        receiver,
+                        dataNos,
+                        ALLOWED_CHANNELS
+                    );
+                }
+                else {
+                    for(let user of userTeamResult){
+                        await facilityBookingApprovalNotification.send(
+                            sender,
+                            user,
+                            dataNos,
+                            ALLOWED_CHANNELS
+                        );
+                    }
+                }
+              
                 
 
 
