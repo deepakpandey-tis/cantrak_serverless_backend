@@ -1849,6 +1849,7 @@ const taskGroupController = {
             "task_group_schedule_assign_assets.id as workOrderId",
             "task_group_schedule_assign_assets.displayId as TGAA",
             "task_group_schedule_assign_assets.isActive as status",
+            "task_group_schedule_assign_assets.status as Status",
             "task_group_schedule.id as id",
             "asset_master.assetName",
             "asset_master.model",
