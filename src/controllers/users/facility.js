@@ -1569,7 +1569,7 @@ const facilityBookingController = {
 
                 await emailHelper.sendTemplateEmail({ to: user.email, subject: 'Booking Approval Required', template: 'booking-confirmed-required.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name,orgId:req.orgId } })
 
-                await emailHelper.sendTemplateEmail({ to: adminEmail, subject: 'Booking Approval Required ', template: 'booking-confirmed-admin.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name,orgId:req.orgId } })
+                // await emailHelper.sendTemplateEmail({ to: adminEmail, subject: 'Booking Approval Required ', template: 'booking-confirmed-admin.ejs', templateData: { fullName: user.name, bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'), bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), noOfSeats: resultData.noOfSeats, facilityName: facilityData.name,orgId:req.orgId } })
 
 
                 let sender = await knex.from("users").where({ id: req.me.id }).first();
@@ -1579,6 +1579,11 @@ const facilityBookingController = {
                 let dataNos = {
                     payload: {
                         orgData : orgMaster,
+                        fullName: user.name,
+                        bookingStartDateTime: moment(Number(resultData.bookingStartDateTime)).format('YYYY-MM-DD hh:mm A'),
+                        bookingEndDateTime: moment(+resultData.bookingEndDateTime).format('YYYY-MM-DD hh:mm A'), 
+                        noOfSeats: resultData.noOfSeats, 
+                        facilityName: facilityData.name
                         // thaiTitle: "อนุมัติคำขอบริการแล้ว",
                         // thaiDetails: "ใบแจ้งคำร้องของท่านได้รับการอนุมัติแล้ว กำลังมอบหมายทีมช่างเพื่อดำเนินการต่อ"
                     },

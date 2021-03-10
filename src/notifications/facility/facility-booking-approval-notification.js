@@ -73,16 +73,21 @@ const bookingapprovalNotification = {
     },
     
     sendEmailNotification: async (sender, receiver, data) => {
+        let  orgData = data.payload;
         data = {
             receiverEmail: receiver.email,
-            template: 'test-email.ejs',
+            template: 'booking-confirmed-required.ejs',
             templateData: {
                 fullName: receiver.name,
+                bookingStartDateTime:orgData.bookingStartDateTime,
+                bookingEndDateTime:orgData.bookingEndDateTime,
+                noOfSeats: orgData.noOfSeats, 
+                facilityName: orgData.facilityName,
                 orgId:receiver.orgId
             },
             payload: {
                 ...data,
-                subject: 'Test Email Notification',
+                subject: 'Facility Booking Approval Notification',
             }
         };
 
