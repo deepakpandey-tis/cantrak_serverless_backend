@@ -76,7 +76,7 @@ const addOutGoingNotification = {
     sendEmailNotification: async (sender, receiver, data) => {
         data = {
             receiverEmail: receiver.email,
-            template: 'test-email.ejs',
+            template: 'add-outgoing-parcel.ejs',
             templateData: {
                 fullName: receiver.name,
                 orgId:receiver.orgId
