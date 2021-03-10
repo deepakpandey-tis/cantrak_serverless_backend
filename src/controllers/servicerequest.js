@@ -1865,18 +1865,8 @@ const serviceRequestController = {
 
                 }
 
-                let houseResult = await knex.from('user_house_allocation').select('userId').where({ houseId: pd.unitId }).first().orderBy('id', 'desc')
-
-                if (houseResult) {
-                    let tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
-                    return {
-                        ...pd,
-                        "Tenant Name": tetantResult.name,
-                        "teamName": teamName,
-                        "teamCode": teamCode,
-                        "mainUser": mainUser
-                    }
-                } else {
+                let houseResult = await knex.from('user_house_allocation').select('userId').where({ houseId: pd.unitId }).first().orderBy('id', 'desc');
+                if (!houseResult) {
                     return {
                         ...pd,
                         "Tenant Name": '',
@@ -1886,13 +1876,16 @@ const serviceRequestController = {
                     }
                 }
 
+                let tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
+                return {
+                    ...pd,
+                    "Tenant Name": tetantResult.name,
+                    "teamName": teamName,
+                    "teamCode": teamCode,
+                    "mainUser": mainUser
+                };
 
-
-            })
-
-            // pagination.data = _.uniqBy(rows,'S Id');
-
-
+            });
 
             return res.status(200).json({
                 data: {
@@ -1900,6 +1893,7 @@ const serviceRequestController = {
                 },
                 message: "Service Request List!"
             });
+            
         } catch (err) {
             console.log("[controllers][service][request] :  Error", err);
             return res.status(500).json({
@@ -3450,7 +3444,7 @@ const serviceRequestController = {
                             url: "",
                             description: `Your service requests has been approved, an engineer will be assigned shortly.`,
                             redirectUrl: "/user/service-request",
-                            orgData : orgMaster,
+                            orgData: orgMaster,
                             thaiTitle: "อนุมัติคำขอบริการแล้ว",
                             thaiDetails: "ใบแจ้งคำร้องของท่านได้รับการอนุมัติแล้ว กำลังมอบหมายทีมช่างเพื่อดำเนินการต่อ"
                         },
@@ -3458,7 +3452,7 @@ const serviceRequestController = {
 
                     let sender = await knex.from("users").where({ id: req.me.id }).first();
                     let receiver;
-                    let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH","SOCKET_NOTIFY"];
+                    let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH", "SOCKET_NOTIFY"];
 
                     if (userResult) {
                         receiver = userResult;
@@ -3521,14 +3515,14 @@ const serviceRequestController = {
                     }
 
                     let orgMaster = await knex.from("organisations").where({ id: req.orgId }).first();
-                    
+
                     let dataNos = {
                         payload: {
                             title: "Service Request completed",
                             url: "",
                             description: `Your service request has been completed successfully.`,
                             redirectUrl: "/user/service-request",
-                            orgData : orgMaster,
+                            orgData: orgMaster,
                             thaiTitle: "คำขอบริการเสร็จสมบูรณ",
                             thaiDetails: "ระบบได้รับใบแจ้งคำร้องของท่านเรียบร้อย"
 
@@ -3537,7 +3531,7 @@ const serviceRequestController = {
 
                     let sender = await knex.from("users").where({ id: req.me.id }).first();
                     let receiver;
-                    let ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH','SOCKET_NOTIFY'];
+                    let ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY'];
 
                     if (userResult) {
                         receiver = userResult;
@@ -3562,7 +3556,7 @@ const serviceRequestController = {
                     .update({ serviceStatusCode: updateStatus, cancellationReason: cancelReason, updatedAt: currentTime, cancelledBy: req.me.id, cancelledOn: currentTime })
                     .where({ id: serviceRequestId });
 
-                     /*GET REQUEST BY & CREATED BY ID FOR NOTIFICATION OPEN */
+                /*GET REQUEST BY & CREATED BY ID FOR NOTIFICATION OPEN */
                 let userResult;
                 let userResult2
                 let requestResult;
@@ -3591,14 +3585,14 @@ const serviceRequestController = {
                     }
 
                     let orgMaster = await knex.from("organisations").where({ id: req.orgId }).first();
-                    
+
                     let dataNos = {
                         payload: {
                             title: "Service Request cancelled",
                             url: "",
                             description: `Your service requests has been cancelled.`,
                             redirectUrl: "/user/service-request",
-                            orgData : orgMaster,
+                            orgData: orgMaster,
                             thaiTitle: "ยกเลิกคำขอบริการ",
                             thaiDetails: "คำขอบริการของคุณถูกยกเลิก"
                         },
@@ -3606,7 +3600,7 @@ const serviceRequestController = {
 
                     let sender = await knex.from("users").where({ id: req.me.id }).first();
                     let receiver;
-                    let ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH','SOCKET_NOTIFY'];
+                    let ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY'];
 
                     if (userResult) {
                         receiver = userResult;
@@ -3625,36 +3619,36 @@ const serviceRequestController = {
 
                 /*GET REQUEST BY & CREATED BY ID FOR NOTIFICATIO CLOSE */
 
-                    
 
-                    // let orgMaster = await knex.from("organisations").where({ id: req.orgId }).first();
 
-                    // let dataNos = {
-                    //     payload: {
-                    //         title: "Service Request cancelled",
-                    //         url: "",
-                    //         description: `Your service requests has been cancelled.`,
-                    //         redirectUrl: "/user/service-request",
-                    //         orgData : orgMaster
-                    //     },
-                    // };
+                // let orgMaster = await knex.from("organisations").where({ id: req.orgId }).first();
 
-                    // let sender = await knex.from("users").where({ id: req.me.id }).first();
-                    // let receiver;
-                    // let ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH','SOCKET_NOTIFY'];
+                // let dataNos = {
+                //     payload: {
+                //         title: "Service Request cancelled",
+                //         url: "",
+                //         description: `Your service requests has been cancelled.`,
+                //         redirectUrl: "/user/service-request",
+                //         orgData : orgMaster
+                //     },
+                // };
 
-                    // if (userResult) {
-                    //     receiver = userResult;
-                    // } else {
-                    //     receiver = userResult2;
-                    // }
+                // let sender = await knex.from("users").where({ id: req.me.id }).first();
+                // let receiver;
+                // let ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH','SOCKET_NOTIFY'];
 
-                    // await serviceRequestUpdateStatusNotification.send(
-                    //     sender,
-                    //     receiver,
-                    //     dataNos,
-                    //     ALLOWED_CHANNELS
-                    // );
+                // if (userResult) {
+                //     receiver = userResult;
+                // } else {
+                //     receiver = userResult2;
+                // }
+
+                // await serviceRequestUpdateStatusNotification.send(
+                //     sender,
+                //     receiver,
+                //     dataNos,
+                //     ALLOWED_CHANNELS
+                // );
 
 
             }
@@ -3663,81 +3657,81 @@ const serviceRequestController = {
                     .update({ serviceStatusCode: updateStatus, updatedAt: currentTime })
                     .where({ id: serviceRequestId });
 
-                    let userResult;
-                    let userResult2
-                    let requestResult;
-                    let serviceRequestResult = await knex('service_requests').where({ id: serviceRequestId, orgId: req.orgId }).first();
-                    if (serviceRequestResult) {
-    
-                        userResult = await knex('users')
+                let userResult;
+                let userResult2
+                let requestResult;
+                let serviceRequestResult = await knex('service_requests').where({ id: serviceRequestId, orgId: req.orgId }).first();
+                if (serviceRequestResult) {
+
+                    userResult = await knex('users')
+                        .select([
+                            "users.*",
+                            "application_user_roles.roleId"
+                        ])
+                        .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
+                        .where({ 'users.id': serviceRequestResult.createdBy, 'application_user_roles.roleId': 4, 'users.orgId': req.orgId }).first();
+
+                    requestResult = await knex('requested_by').where({ id: serviceRequestResult.requestedBy, orgId: req.orgId }).first();
+                    if (requestResult) {
+
+                        userResult2 = await knex('users')
                             .select([
                                 "users.*",
                                 "application_user_roles.roleId"
                             ])
                             .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
-                            .where({ 'users.id': serviceRequestResult.createdBy, 'application_user_roles.roleId': 4, 'users.orgId': req.orgId }).first();
-    
-                        requestResult = await knex('requested_by').where({ id: serviceRequestResult.requestedBy, orgId: req.orgId }).first();
-                        if (requestResult) {
-    
-                            userResult2 = await knex('users')
-                                .select([
-                                    "users.*",
-                                    "application_user_roles.roleId"
-                                ])
-                                .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
-                                .where({ 'users.email': requestResult.email, 'application_user_roles.roleId': 4, 'users.orgId': req.orgId }).first();
-    
-                        }
-    
-                        let orgMaster = await knex.from("organisations").where({ id: req.orgId }).first();
-                        let dataNos
-                        if(updateStatus === 'IP'){
-                            dataNos = {
-                                payload: {
-                                    title: "Service Request updated",
-                                    url: "",
-                                    description: `Your service requests has been updated to in progress.`,
-                                    redirectUrl: "/user/service-request",
-                                    orgData : orgMaster,
-                                    thaiTitle: "ยกเลิกคำขอบริการ",
-                                    thaiDetails: "คำขอบริการของคุณถูกยกเลิก"
-                                },
-                            };
-                        }else {
-                            dataNos = {
-                                payload: {
-                                    title: "Service Request updated",
-                                    url: "",
-                                    description: `Your service requests has been updated to on hold.`,
-                                    redirectUrl: "/user/service-request",
-                                    orgData : orgMaster,
-                                    thaiTitle: "ยกเลิกคำขอบริการ",
-                                    thaiDetails: "คำขอบริการของคุณถูกยกเลิก"
-                                },
-                            };
-                        }
-                        
-    
-                        let sender = await knex.from("users").where({ id: req.me.id }).first();
-                        let receiver;
-                        let ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH','SOCKET_NOTIFY'];
-    
-                        if (userResult) {
-                            receiver = userResult;
-                        } else {
-                            receiver = userResult2;
-                        }
-    
-                        await serviceRequestUpdateStatusNotification.send(
-                            sender,
-                            receiver,
-                            dataNos,
-                            ALLOWED_CHANNELS
-                        );
-    
+                            .where({ 'users.email': requestResult.email, 'application_user_roles.roleId': 4, 'users.orgId': req.orgId }).first();
+
                     }
-                    
+
+                    let orgMaster = await knex.from("organisations").where({ id: req.orgId }).first();
+                    let dataNos
+                    if (updateStatus === 'IP') {
+                        dataNos = {
+                            payload: {
+                                title: "Service Request updated",
+                                url: "",
+                                description: `Your service requests has been updated to in progress.`,
+                                redirectUrl: "/user/service-request",
+                                orgData: orgMaster,
+                                thaiTitle: "ยกเลิกคำขอบริการ",
+                                thaiDetails: "คำขอบริการของคุณถูกยกเลิก"
+                            },
+                        };
+                    } else {
+                        dataNos = {
+                            payload: {
+                                title: "Service Request updated",
+                                url: "",
+                                description: `Your service requests has been updated to on hold.`,
+                                redirectUrl: "/user/service-request",
+                                orgData: orgMaster,
+                                thaiTitle: "ยกเลิกคำขอบริการ",
+                                thaiDetails: "คำขอบริการของคุณถูกยกเลิก"
+                            },
+                        };
+                    }
+
+
+                    let sender = await knex.from("users").where({ id: req.me.id }).first();
+                    let receiver;
+                    let ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY'];
+
+                    if (userResult) {
+                        receiver = userResult;
+                    } else {
+                        receiver = userResult2;
+                    }
+
+                    await serviceRequestUpdateStatusNotification.send(
+                        sender,
+                        receiver,
+                        dataNos,
+                        ALLOWED_CHANNELS
+                    );
+
+                }
+
 
                 if (updateStatus === 'OH') {
                     await knex("service_orders")
