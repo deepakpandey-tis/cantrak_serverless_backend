@@ -1000,25 +1000,46 @@ const quotationsController = {
                 })
                 //   pagination.data = rows;//_.uniqBy(rowsWithDays, 'QId');
 
-            let tetantResult;
             let houseResult;
             let Parallel = require('async-parallel');
             pagination.data = await Parallel.map(rows, async pd => {
 
                 houseResult = await knex.from('user_house_allocation').select('userId').where({ houseId: pd.unitId }).first().orderBy('id', 'desc')
 
-                if (houseResult) {
-                    tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
-                    return {
-                        ...pd,
-                        "Tenant Name": tetantResult.name
-                    }
-                } else {
+                if(!houseResult){
                     return {
                         ...pd,
                         "Tenant Name": ''
                     }
                 }
+
+                let tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
+
+                if(!tetantResult){
+                    return {
+                        ...pd,
+                        "Tenant Name": ''
+                    }
+                }
+
+                return {
+                            ...pd,
+                            "Tenant Name": tetantResult.name
+                        }
+
+
+                // if (houseResult) {
+                //     tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
+                //     return {
+                //         ...pd,
+                //         "Tenant Name": tetantResult.name
+                //     }
+                // } else {
+                //     return {
+                //         ...pd,
+                //         "Tenant Name": ''
+                //     }
+                // }
 
 
 

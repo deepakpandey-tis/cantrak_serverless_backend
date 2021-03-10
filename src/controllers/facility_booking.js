@@ -2203,7 +2203,7 @@ const facilityBookingController = {
 
                 await emailHelper.sendTemplateEmail({
                     to: user.email,
-                    subject: "Booking Approved Required",
+                    subject: "Booking Approval Required",
                     template: "booking-confirmed-required.ejs",
                     templateData: {
                         fullName: user.name,
@@ -2221,7 +2221,7 @@ const facilityBookingController = {
 
                 await emailHelper.sendTemplateEmail({
                     to: adminEmail,
-                    subject: "Booking Approved Required ",
+                    subject: "Booking Approval Required ",
                     template: "booking-confirmed-admin.ejs",
                     templateData: {
                         fullName: user.name,
