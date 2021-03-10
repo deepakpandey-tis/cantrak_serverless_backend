@@ -6272,7 +6272,7 @@ const taskGroupController = {
       let payload = req.body
       let workOrderDate = moment(payload.workOrderDate).format("YYYY-MM-DD");
 
-      console.log("payload data====>>>>", workOrderDate)
+      // console.log("payload data====>>>>", workOrderDate)
 
       let tasks = await knex("pm_task")
         .leftJoin(
@@ -6316,16 +6316,94 @@ const taskGroupController = {
 
     }
   },
-  // getAssetCategoryFromPmId:async(req,res)=>{
+  // importPmChecklist : async(req,res)=>{
   //   try {
-  //     let payload = req.body
+      
 
-  //     let pmAssetCategory = await knex("asset_category_master")
+  //     let data = req.body;
 
-  //     .select()
-  //     .where({orgId: req.orgId, isActive: true})
+  //     let errors = []
+  //     let header = Object.values(data[0]);
+  //     header.unshift('Error');
+  //     errors.push(header)
+
+  //     if(
+  //       data[0].A == "Ã¯Â»Â¿ITEM" ||
+  //       (data[0].A == "ITEM" &&
+  //           data[0].B == "WORK_ORDER_NUMBER" &&
+  //           data[0].C == "ASSET_CODE" &&
+  //           data[0].D == "ASSET_NAME" &&
+  //           data[0].E == "LOCATION" &&
+  //           data[0].F == "STATUS" &&
+  //           data[0].G == "COMMENT")
+  //     ){
+
+  //       if(data.length > 0){
+  //         let i = 0;
+  //         console.log("Data[0]", data[0]);
+  //         let success = 0;
+  //         let totalData = data.length - 1;
+  //         let fail = 0;
+
+  //         for(let pm of data){
+  //           i++;
+
+  //           if(i>1){
+  //             if (!pm.A) {
+  //               let values = _.values(pm)
+  //               values.unshift('Item Number can not empty!')
+  //               errors.push(values);
+  //               fail++;
+  //               continue;
+  //           }
+
+  //           if (!pm.B) {
+  //               let values = _.values(pm)
+  //               values.unshift('WORK_ORDER_NUMBER can not empty!')
+  //               errors.push(values);
+  //               fail++;
+  //               continue;
+  //           }
+
+  //           if (!pm.C) {
+  //               let values = _.values(pm)
+  //               values.unshift('ASSET_CODE can not empty!')
+  //               errors.push(values);
+  //               fail++;
+  //               continue;
+  //           }
+  //           if (!pm.D) {
+  //             let values = _.values(pm)
+  //             values.unshift('ASSET_NAME can not empty!')
+  //             errors.push(values);
+  //             fail++;
+  //             continue;
+  //         }
+
+
+  //           if (!pm.E) {
+  //               let values = _.values(pm)
+  //               values.unshift('LOCATION can not empty!')
+  //               errors.push(values);
+  //               fail++;
+  //               continue;
+  //           }
+
+  //           if (!pm.F) {
+  //             let values = _.values(pm)
+  //             values.unshift('Status can not empty!')
+  //             errors.push(values);
+  //             fail++;
+  //             continue;
+  //         }
+       
+
+  //           }
+  //         }
+  //       }
+  //     }
   //   } catch (err) {
-
+      
   //   }
   // }
 
