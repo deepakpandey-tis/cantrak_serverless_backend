@@ -1794,7 +1794,13 @@ const customerController = {
       let rejectedMessage = req.body.cancelReason;
       let user = await knex('users').select('*').where({ verifyToken: userToken })
       if (user && user.length) {
-        await knex('users').update({ emailVerified: false, isActive: false, updatedAt: currentTime, deactivationStatus: true }).where({ id: user[0].id })
+        let houseId = await knex('user_house_allocation').select('houseId').where({userId:user[0].id});
+        if(houseId.length <= 1){
+          await knex('users').where({id: user[0].id}).del();
+        }else{
+          await knex('users').update({ emailVerified: false, isActive: false, updatedAt: currentTime, deactivationStatus: true }).where({ id: user[0].id })
+        }
+
         /* Send Mail To User After Verify Account By Admin */
          // Insert into remarks master table
          const insertData = {
@@ -1839,7 +1845,7 @@ const customerController = {
         })
 
         /* End */
-        return res.status(200).json({ verified: true, message: 'Account has been rejected!' })
+        return res.status(200).json({house:houseId, verified: true, message: 'Account has been rejected!' })
       } else {
         return res.status(200).json({ verified: false, message: "Failed! Token Invalid." });
       }
