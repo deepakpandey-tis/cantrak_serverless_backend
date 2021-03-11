@@ -8,8 +8,7 @@ const bookingapprovalNotification = {
     send: async (sender, receiver, data, allowedChannels = ALLOWED_CHANNELS) => {
         try {
             console.log('[ALLOWED CHANNELS]',allowedChannels)
-            // console.log('[notifications][test][test-notification][send]: Sender:', sender);
-            // console.log('[notifications][test][test-notification][send]: Receiver:', receiver);
+            
             console.log('[notifications][facility-booking-approval][facility-booking-approval-notification][send]: Data:', data);
 
             if (SHOULD_QUEUE) {
@@ -29,7 +28,6 @@ const bookingapprovalNotification = {
 
 
     sendInAppNotification: async (sender, receiver, data) => {
-        console.log("Reciever Id =========>>>",receiver.id)
         let  orgData = data.payload.orgData;
         let icons;
         let images;
@@ -76,7 +74,7 @@ const bookingapprovalNotification = {
         let  orgData = data.payload;
         data = {
             receiverEmail: receiver.email,
-            template: 'booking-confirmed-required.ejs',
+            template: 'booking-confirmed-admin.ejs',
             templateData: {
                 fullName: receiver.name,
                 bookingStartDateTime:orgData.bookingStartDateTime,
