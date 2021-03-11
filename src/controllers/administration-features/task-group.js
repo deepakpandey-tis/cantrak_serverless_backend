@@ -4120,9 +4120,12 @@ const taskGroupController = {
       // Delete Tasks
       if (deletedTasks.length) {
         for (let task of deletedTasks) {
-          let delTask = await knex("template_task")
+          if(task.id){
+            let delTask = await knex("template_task")
             .where({ id: task.id })
             .del();
+          }
+         
         }
       }
 
@@ -4135,19 +4138,7 @@ const taskGroupController = {
           }
         }
       }
-      // additionalUsers: ["59", "60"]
-      // assetCategoryId: "1"
-      // endDate: "2019-11-21T18:30:00.000Z"
-      // mainUserId: "59"
-      // repeatFrequency: "1"
-      // repeatOn: []
-      // repeatPeriod: "DAY"
-      // startDate: "2019-11-19T18:30:00.000Z"
-      // taskGroupName: "Test Template"
-      // tasks: ["task 1"]
-      // teamId: "3"
-
-      // Check duplicate value open
+     
       const templateExist = await knex("task_group_templates")
         .where("taskGroupName", "iLIKE", req.body.taskGroupName)
         .where("assetCategoryId", taskGroupCatId)
@@ -6408,26 +6399,23 @@ const taskGroupController = {
 
               let taskName = [];
               keys.forEach((k) => {
-                let taskId = data[0][k].split('|')
-                taskName.push({ taskId:taskId[0], keyName: k });
+                let taskId = data[0][k].split("|");
+                taskName.push({ taskId: taskId[0], keyName: k });
               });
-
-              // console.log("task name", taskName);
 
               const Parallel = require("async-parallel");
 
               await Parallel.each(taskName, async (pd) => {
-                // console.log("value of pd", pd);
+                console.log("value of pd", pm[pd.keyName]);
                 let tasks = await knex("pm_task")
                   .update("result", pm[pd.keyName])
                   .where({
                     taskGroupScheduleAssignAssetId: pm.B,
                     orgId: req.orgId,
-                    id:pd.taskId
+                    id: pd.taskId,
                   })
                   .returning(["*"]);
 
-                // console.log("tasks id====>>>", tasks);
               });
             }
           }
