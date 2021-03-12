@@ -6407,7 +6407,8 @@ const taskGroupController = {
 
               await Parallel.each(taskName, async (pd) => {
                 console.log("value of pd", pm[pd.keyName]);
-                let tasks = await knex("pm_task")
+                if(pm[pd.keyName]){
+                  let tasks = await knex("pm_task")
                   .update("result", pm[pd.keyName])
                   .where({
                     taskGroupScheduleAssignAssetId: pm.B,
@@ -6415,6 +6416,13 @@ const taskGroupController = {
                     id: pd.taskId,
                   })
                   .returning(["*"]);
+                }else{
+                  console.log(
+                    "[controllers][pm-checklist][importWorkOrders] :  Error"
+                    
+                  );
+                }
+                
 
               });
             }
