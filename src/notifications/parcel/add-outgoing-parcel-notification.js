@@ -83,7 +83,7 @@ const addOutGoingNotification = {
             },
             payload: {
                 ...data,
-                subject: 'Test Email Notification',
+                subject: 'Outgoing Parcel Notification',
             }
         };
 
