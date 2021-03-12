@@ -4266,8 +4266,8 @@ const taskGroupController = {
               createdAt: currentTime,
               updatedAt: currentTime,
               orgId: req.orgId,
-              duration: task.duration,
-              hourlyRate: task.hourlyRate,
+              duration: task.duration ? task.duration: 0.0 ,
+              hourlyRate: task.hourlyRate ? task.hourlyRate: 0.0 ,
             })
             .returning("*");
           updatedTasks.push(updatedTaskResult[0]);
