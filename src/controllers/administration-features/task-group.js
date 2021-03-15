@@ -1755,7 +1755,7 @@ const taskGroupController = {
       let payload = req.body;
       let reqData = req.query;
 
-      console.log("data in payload===>>>>>", payload);
+      // console.log("data in payload===>>>>>", payload);
       let workOrderDate = moment(payload.workOrderDate).format("YYYY-MM-DD");
 
       const accessibleProjects = req.userProjectResources[0].projects;
@@ -3110,7 +3110,7 @@ const taskGroupController = {
   getTaskgroupAssetPmDetails: async (req, res) => {
     try {
       let payload = req.body;
-      console.log("payload data in PM details", payload);
+      // console.log("payload data in PM details", payload);
 
       const schema = Joi.object().keys({
         taskGroupScheduleId: Joi.string().required(),
@@ -3330,7 +3330,8 @@ const taskGroupController = {
             payload.taskGroupScheduleAssignAssetId,
           "pm_task.orgId": req.orgId,
         })
-        .orderBy("pm_task.repeatFrequencyId", "asc");
+        .orderBy("pm_task.taskSerialNumber");
+        // .orderBy("pm_task.repeatFrequencyId", "asc");
 
       tasks = tasks.map((v) => {
         let standardCost = 0;

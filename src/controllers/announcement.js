@@ -425,6 +425,10 @@ const announcementController = {
 
   getAnnouncementList: async (req, res) => {
     try {
+
+      let projectIds = req.accessibleProjects;
+      console.log('ProjectIds:', projectIds);
+
       let reqData = req.query;
       let total, rows;
 
@@ -450,6 +454,7 @@ const announcementController = {
               )
               .where("announcement_master.orgId", req.orgId)
               .where("announcement_master.status", true)
+              .whereIn()
               .where((qb) => {
                 if (title) {
                   qb.where("announcement_master.title", title);

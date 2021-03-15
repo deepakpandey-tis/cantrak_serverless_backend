@@ -172,6 +172,21 @@ const resourceAccessMiddleware = {
     }
   },
 
+  isAnnouncementAccessible: async (req, res, next) => {
+    if (req.superAdmin) {
+      return next();
+    }
+    let keys = req.userProjectResources.map(v => v.id);
+    if (keys.includes(11) || keys.includes("11")) {
+      console.log('[middleware][resourceAccessMiddleware]: isAnnouncementtAccessible: ', true);
+      setAccessibleProjects(req, 11);
+      next();
+    } else {
+      console.log('[middleware][resourceAccessMiddleware]:isAnnouncementtAccessible: ', false);
+      next(createError(403));
+    }
+  },
+
 };
 
 module.exports = resourceAccessMiddleware;
