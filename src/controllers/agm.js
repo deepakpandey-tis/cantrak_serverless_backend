@@ -11,7 +11,7 @@ const agmController = {
       const generatedId = await knex("agm_master")
         .insert({ createdAt: new Date().getTime() })
         .returning(["*"]);
-        
+
       return res.status(200).json({
         data: {
           id: generatedId[0].id,
@@ -237,7 +237,7 @@ const agmController = {
 
       let data = req.body.arrayToObject;
 
-      console.log("+++++++++++++", data, "=========");
+      console.log("+++++++++++++", req.body, "=========");
       let totalData = data.length - 1;
       let fail = 0;
       let success = 0;
@@ -248,10 +248,13 @@ const agmController = {
       header.unshift('Error');
       errors.push(header)
 
-      if (data[0].A === 'UNIT_NO' &&
-        data[0].B === 'OWNER_NAME' &&
-        data[0].C === 'OWNERSHIP_RATIO' &&
-        data[0].D === 'ELIGIBILITY_TOGGLE'
+      if (data[0].B === 'UNIT_NO' &&
+        data[0].C === 'HOUSE_NO' &&
+        data[0].D === 'OWNERSHIP_RATIO' &&
+        data[0].E === 'CO_OWNER_NAME' &&
+        data[0].F === 'JOIN_OWNER_NAME' &&
+        data[0].G === 'ID_NO' &&
+        data[0].H === 'ELIGIBILITY_TOGGLE'
       ) {
         if (data.length > 0) {
 
@@ -260,7 +263,7 @@ const agmController = {
             i++;
             if (i > 1) {
 
-              if (!ownerData.A) {
+              if (!ownerData.B) {
                 let values = _.values(ownerData)
                 values.unshift('Unit no. can not empty!')
                 errors.push(values);
@@ -268,17 +271,9 @@ const agmController = {
                 continue;
               }
 
-              if (!ownerData.B) {
-                let values = _.values(ownerData)
-                values.unshift('Owner name can not empty!')
-                errors.push(values);
-                fail++;
-                continue;
-              }
-
               if (!ownerData.C) {
                 let values = _.values(ownerData)
-                values.unshift('Ownership ratio can not empty!')
+                values.unshift('House Number can not empty!')
                 errors.push(values);
                 fail++;
                 continue;
@@ -286,7 +281,15 @@ const agmController = {
 
               if (!ownerData.D) {
                 let values = _.values(ownerData)
-                values.unshift('Eligibility can not empty!')
+                values.unshift('Ownership ratio can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              if (!ownerData.E) {
+                let values = _.values(ownerData)
+                values.unshift('Co Owner Name can not empty!')
                 errors.push(values);
                 fail++;
                 continue;
@@ -296,7 +299,7 @@ const agmController = {
                 .select("id")
                 .where({
                   orgId: req.orgId,
-                  unitNumber: ownerData.A.toUpperCase(),
+                  unitNumber: ownerData.B.toUpperCase(),
                 });
 
               if (checkExist.length > 0) {
@@ -309,19 +312,30 @@ const agmController = {
                 continue;
               }
 
+              let eligibility ;
+              console.log("ownerdata h====>>>>>",ownerData.H)
+              if(ownerData.H == "Yes"){
+                eligibility = true;
+              }else{
+                eligibility = false;
+              }
 
               let insertData = {
                 agmId: req.body.agmId,
+                companyId:req.body.companyId,
+                projectId:req.body.projectId,
                 unitId: unitId,
-                ownerName: ownerData.B,
-                ownerershipRatio: ownerData.C,
-                eligibility: ownerData.D,
+                houseId: ownerData.C,
+                ownerName: ownerData.E,
+                joinOwnerName: ownerData.F,
+                ownershipRatio: ownerData.D,
+                ownerIdNo: ownerData.G,
+                eligibility: eligibility,
                 orgId: req.orgId,
                 isActive: true,
                 createdAt: new Date().getTime(),
                 updatedAt: new Date().getTime(),
                 importedBy: req.me.id,
-                // displayId: 1,
                 createdBy: req.me.id
               };
 
@@ -373,31 +387,6 @@ const agmController = {
       })
     }
   },
-
-
-
-  // Get AGM Preparation List
-
-  // GetAGMPreparationList : async(req,res)=>{
-  //   try {
-  //     let payload = req.body;
-  //     console.log("payloadData++++++++", payload);
-
-  //     let total,rows ;
-
-  //     let pagination = {};
-  //     let per_page = reqData.per_page || 10;
-  //     let page = reqData.current_page || 1;
-  //     if (page < 1) page = 1;
-  //     let offset = (page - 1) * per_page;
-  //     let agmId ;
-
-  //     let {name , company , project, meetingDate , createdDate} = req.body
-
-  //   } catch (error) {
-
-  //   }
-  // }
 
 
   /*ADD OWNER*/
@@ -575,9 +564,9 @@ const agmController = {
 
   /*GET OWNER LIST  */
   getOwnerList: async (req, res) => {
-
     try {
       let payload = req.body;
+      console.log("payload value=====>>>>>",payload)
       let reqData = req.query;
       let total, rows;
       let pagination = {};
@@ -591,6 +580,7 @@ const agmController = {
           .count("* as count")
           .from("agm_owner_master")
           .leftJoin('property_units', 'agm_owner_master.unitId', 'property_units.id')
+          .where({"agm_owner_master.agmId":payload.agmId})
           .where(qb => {
             qb.where('agm_owner_master.orgId', req.orgId);
             if (payload.agmId) {
@@ -610,6 +600,7 @@ const agmController = {
             "property_units.unitNumber",
             "property_units.description as unitDescription",
           ])
+          .where({"agm_owner_master.agmId":payload.agmId})
           .where(qb => {
             qb.where('agm_owner_master.orgId', req.orgId);
             qb.where('agm_owner_master.orgId', req.orgId);
@@ -934,6 +925,59 @@ const agmController = {
       return res.status(500).json({
         errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }]
       });
+    }
+  },
+  toggleEligibility: async(req,res) =>{
+    try {
+      let ownerList;
+      let message;
+
+      await knex.transaction(async trx=>{
+        let payload = req.body;
+
+        const schema = Joi.object().keys({
+          id: Joi.number().required()
+        });
+
+        const result = Joi.validate(payload, schema);
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message }
+            ]
+          });
+        }
+
+        let ownerResult;
+
+        let checkEligibility = await knex.from('agm_owner_master').where({ id: payload.id }).returning(['*']);
+
+        if(checkEligibility && checkEligibility.length){
+          if(checkEligibility[0].eligibility = true){
+            ownerResult = await knex
+            .update({ eligibility: false })
+            .where({ id: payload.id })
+            .returning(["*"])
+            .transacting(trx)
+            .into("agm_owner_master");
+          ownerList = ownerResult[0];
+          message = "Owner deactivated successfully!"
+          } else {
+
+            
+            ownerResult = await knex
+              .update({ eligibility: true })
+              .where({ id: payload.id })
+              .returning(["*"])
+              .transacting(trx)
+              .into("agm_owner_master");
+            courier = courierResult[0];
+            message = "Owner activated successfully!"
+          }
+        }
+      })
+    } catch (err) {
+      
     }
   }
 };

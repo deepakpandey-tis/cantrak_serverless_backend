@@ -15,6 +15,7 @@ router.post("/get-agm-details", authMiddleware.isAuthenticated, agmController.ge
 router.post("/owner-proxy-registration", authMiddleware.isAuthenticated, agmController.ownerProxyRegistration);
 router.post("/get-owner-details", authMiddleware.isAuthenticated, agmController.getOwnerDetails);
 router.post("/get-agenda-list", authMiddleware.isAuthenticated, agmController.getAgendaList);
+router.post("/toggle-eligibility",authMiddleware.isAuthenticated,agmController.toggleEligibility)
 
 
 /**IMPORT AGM OWNER DATA */
