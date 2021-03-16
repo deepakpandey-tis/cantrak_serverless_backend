@@ -11,6 +11,7 @@ const agmController = {
       const generatedId = await knex("agm_master")
         .insert({ createdAt: new Date().getTime() })
         .returning(["*"]);
+        
       return res.status(200).json({
         data: {
           id: generatedId[0].id,
