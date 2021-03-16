@@ -5226,9 +5226,6 @@ const taskGroupController = {
       const payload = req.body;
       const schema = Joi.object().keys({
         taskGroupId: Joi.string().required(),
-        // result : Joi.number().required(),
-        // userId: Joi.string().required(),
-        // taskMode:Joi.number().required()
       });
 
       console.log("status and result", payload);
@@ -5257,16 +5254,7 @@ const taskGroupController = {
       for (let t of payload.taskArr) {
         console.log("payload.taskArr1", payload.taskArr);
         let updateStatus;
-        // if(t.desireValue){
-        //   updateStatus = t.desireValue
-        // }else if(req.body.status){
-        //   updateStatus = req.body.status
-        // }
-        // if (t.desireStatus) {
-        //   updateResult = t.desireStatus;
-        // } else if(req.body.result) {
-        //   updateResult = req.body.result;
-        // }
+        
         if (req.body.result) {
           updateResult = req.body.result;
         } else {
@@ -5299,6 +5287,40 @@ const taskGroupController = {
           .returning(["*"]);
 
         taskUpdated.push(taskUpdate);
+      }
+      let workResult = await knex("pm_task").where({
+        taskGroupScheduleAssignAssetId: payload.workOrderId,
+        orgId: req.orgId,
+        // taskMode: null,
+      });
+      let workComplete = await knex("pm_task").where({
+        taskGroupScheduleAssignAssetId: payload.workOrderId,
+        orgId: req.orgId,
+        status: "COM",
+      });
+
+      // console.log("work order result length====>>>>>",workResult.length,workComplete.length)
+      if (workResult.length == workComplete.length) {
+        let scheduleStatus = null;
+
+        let workDate = moment(payload.workOrderDate).format("YYYY-MM-DD");
+        let currnetDate = moment().format("YYYY-MM-DD");
+        if (workDate == currnetDate || workDate > currnetDate) {
+          scheduleStatus = "on";
+        } else if (workDate < currnetDate) {
+          scheduleStatus = "off";
+        }
+
+
+        let workOrder = await knex("task_group_schedule_assign_assets")
+        .update({
+          status: "COM",
+          updatedAt: currentTime,
+          scheduleStatus: scheduleStatus,
+        })
+        .where({ id: payload.workOrderId, orgId: req.orgId })
+        .returning(["*"]);
+
       }
       return res.status(200).json({
         data: {
@@ -5562,15 +5584,8 @@ const taskGroupController = {
       console.log("task array", payload.taskArr);
       const schema = Joi.object().keys({
         taskGroupId: Joi.string().required(),
-        //taskId: Joi.string().required(),
-        // result: Joi.number().required(),
-        // status: Joi.string().required(),
-        // result: Joi.number().allow(null).optional(),
-        // status: Joi.string().allow("").optional(),
         userId: Joi.string().required(),
         taskMode: Joi.number().required(),
-        //workOrderId: Joi.string().required(),
-        //workOrderDate: Joi.date().required()
       });
       const result = Joi.validate(
         _.omit(payload, "taskArr", "result", "status"),
@@ -5591,9 +5606,6 @@ const taskGroupController = {
 
       payload.workOrderDate = workOrderDate;
       payload.workOrderId = workOrderId;
-      //payload.status = 'COM';
-      //payload.result = 1;
-
       let currentTime = new Date().getTime();
       let taskUpdated = [];
       let updateResult;
@@ -5639,13 +5651,6 @@ const taskGroupController = {
                 .returning(["*"]);
               taskUpdated.push(taskUpdate);
             } else {
-              // let updateStatus
-              // if(t.desireValue){
-              //   updateStatus = t.desireValue
-              // }else{
-              //   updateStatus = payload.status
-              // }
-
               if (t.desireStatus) {
                 updateResult = t.desireStatus;
               } else if (req.body.result) {
@@ -5704,13 +5709,6 @@ const taskGroupController = {
         }
       } else {
         for (let t of payload.taskArr) {
-          // if (t.result == 2 || t.result == 3) {
-
-          // } else {
-
-          //   if (t.status == "Completed") {
-
-          //   } else {
           let updateStatus;
           if (t.desireValue) {
             updateStatus = t.desireValue;
