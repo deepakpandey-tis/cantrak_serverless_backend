@@ -31,21 +31,26 @@ const agmController = {
       let addedAGMResult = null;
       let agmPrepPayload = req.body;
 
+      console.log("payload for agm===>>>",req.body)
       await knex.transaction(async (trx) => {
         const payload = _.omit(req.body, [
           "agmId",
-          "votingAgendaName",
+          "votingAgenda",
           "description",
           "proxyDocumentName",
-          "ProxyDocumentTemplateId",
-          "subDocument",
+          "template",
+          "waterMarkText",
+          "proxyDocument",
+          
         ]);
 
         const schema = Joi.object().keys({
-          name: Joi.string().required(),
+          agmName: Joi.string().required(),
           companyId: Joi.string().required(),
           projectId: Joi.string().required(),
-          agmdate: Joi.string().required(),
+          agmDate: Joi.string().required(),
+          startTime: Joi.string().required(),
+          endTime : Joi.string().required()
         });
         const result = Joi.validate(payload, schema);
         if (result && result.hasOwnProperty("error") && result.error) {
@@ -70,7 +75,13 @@ const agmController = {
 
         let addAGMResultData = await knex("agm_master")
           .update({
-            ...payload,
+            // ...payload,
+            companyId:payload.companyId,
+            projectId: payload.projectId,
+            agmName : payload.agmName,
+            agmDate: new Date(payload.agmDate).getTime(),
+            startTime: new Date(payload.startTime).getTime(),
+            endTime: new Date(payload.endTime).getTime(),
             updatedAt: currentTime,
             createdAt: currentTime,
             orgId: req.orgId,
@@ -83,7 +94,7 @@ const agmController = {
 
         //insert agenda
 
-        let agendaPayload = req.body.agendaPayload;
+        let agendaPayload = req.body.votingAgenda;
 
         let delAgenda = await knex("agenda_master")
           .where({
@@ -94,15 +105,21 @@ const agmController = {
         addedAgenda = [];
 
         for (let agenda of agendaPayload) {
+          let eligibility ;
+          if(agenda.eligibleForVoting == "Yes"){
+            eligibility = true;
+          }else{
+            eligibility = false;
+          }
           let addedAgendaResult = await knex("agenda_master")
             .insert({
               agmId: addedAGMResult.id,
-              entityType: "agenda_master",
-              ...agenda,
+              agendaName:agenda.agendaName,
+              agendaNo:agenda.agendaNo,
+              eligibleForVoting:eligibility,
               updatedAt: currentTime,
               createdAt: currentTime,
               orgId: req.orgId,
-              createdBy: req.me.id,
             })
             .returning(["*"]);
           addedAgenda.push(addedAgendaResult[0]);
@@ -110,13 +127,25 @@ const agmController = {
 
         //insert proxy document
 
-        let proxyDocumentPayload = req.body.proxyDocumentPayload;
+        let proxyDocumentPayload = req.body.proxyDocumentName;
 
         let delProxyDocument = await knex("proxy_document")
           .where({
-            entityId: addedAGMResult.id,
+            agmId: addedAGMResult.id,
           })
           .del();
+
+        for(let proxy of proxyDocumentPayload ){
+          let proxyResult = await knex('proxy_document')
+          .insert({
+            agmId: addedAGMResult.id,
+            documentName:req.body.proxyDocument,
+            subDocumentName : proxy.proxyName,
+            updatedAt: currentTime,
+            createdAt: currentTime,
+            orgId: req.orgId,
+          })
+        }
 
         trx.commit;
       });
@@ -580,7 +609,8 @@ const agmController = {
           .count("* as count")
           .from("agm_owner_master")
           .leftJoin('property_units', 'agm_owner_master.unitId', 'property_units.id')
-          .where({"agm_owner_master.agmId":payload.agmId})
+          .where({"agm_owner_master.companyId":payload.companyId,"agm_owner_master.projectId":payload.projectId})
+          // .where({"agm_owner_master.agmId":payload.agmId})
           .where(qb => {
             qb.where('agm_owner_master.orgId', req.orgId);
             if (payload.agmId) {
@@ -600,9 +630,10 @@ const agmController = {
             "property_units.unitNumber",
             "property_units.description as unitDescription",
           ])
-          .where({"agm_owner_master.agmId":payload.agmId})
+          .where({"agm_owner_master.companyId":payload.companyId,"agm_owner_master.projectId":payload.projectId})
+          // .where({"agm_owner_master.agmId":payload.agmId})
           .where(qb => {
-            qb.where('agm_owner_master.orgId', req.orgId);
+            // qb.where('agm_owner_master.orgId', req.orgId);
             qb.where('agm_owner_master.orgId', req.orgId);
             if (payload.agmId) {
               qb.where('agm_owner_master.agmId', payload.agmId);
