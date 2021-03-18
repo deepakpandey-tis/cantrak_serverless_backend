@@ -1010,7 +1010,27 @@ const agmController = {
     } catch (err) {
       
     }
-  }
+  },
+  getUnitList: async (req, res) => {
+    try {
+        let id = req.me.id;
+        const { facilityId } = req.body;
+
+        let getPropertyUnits = await knex('property_units').select('*')
+            .where({ orgId: req.orgId,isActive:true })
+
+        return res.status(200).json({
+            data: {
+                propertyData: getPropertyUnits
+            }
+        })
+
+    } catch (err) {
+        res.status(500).json({
+            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        })
+    }
+},
 };
 
 module.exports = agmController;
