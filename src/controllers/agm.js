@@ -149,7 +149,7 @@ const agmController = {
       });
 
       return res.status(200).json({
-       message:"AgM added successfully"
+        message: "AgM added successfully",
       });
     } catch (err) {
       return res.status(200).json({
@@ -410,15 +410,20 @@ const agmController = {
   /*ADD OWNER*/
   addOwner: async (req, res) => {
     try {
-      let payload = req.body;
+      // let payload = req.body;
       let resultData;
       await knex.transaction(async (trx) => {
+        const payload = _.omit(req.body, ["joinOwnerName", "ownerIdNo"]);
+
         const schema = Joi.object().keys({
           agmId: Joi.string().required(),
-          unitId: Joi.string().required(),
+          companyId: Joi.string().required(),
+          projectId: Joi.string().required(),
+          houseId: Joi.string().required(),
+          unitNo: Joi.string().required(),
           ownerName: Joi.string().required(),
-          ownerershipRatio: Joi.string().required(),
-          eligibilityToggle: Joi.string().required(),
+          ownershipRatio: Joi.string().required(),
+          eligibility: Joi.boolean().required(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -430,12 +435,18 @@ const agmController = {
           });
         }
 
+        
+
         let insertData = {
-          agmId: 10,
-          unitId: payload.unitId,
+          agmId: payload.agmId,
+          unitId: payload.unitNo,
+          companyId:payload.companyId,
+          projectId: payload.projectId,
           ownerName: payload.ownerName,
-          ownerershipRatio: payload.ownerershipRatio,
-          eligibility: payload.eligibilityToggle,
+          joinOwnerName: payload.joinOwnerName,
+          ownershipRatio: payload.ownershipRatio,
+          ownerIdNo: payload.ownerIdNo,
+          eligibility: payload.eligibility,
           orgId: req.orgId,
           isActive: true,
           createdAt: new Date().getTime(),
@@ -538,55 +549,55 @@ const agmController = {
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
 
-     [total,rows] = await Promise.all([
-       knex
-      .count("* as count")
-      .from("agm_master")
-      .leftJoin("companies","agm_master.companyId","companies.id")
-      .leftJoin("projects","agm_master.projectId","projects.id")
-      .where({"agm_master.orgId":req.orgId})
-      .where((qb)=>{
-        if(payload.agmId){
-          qb.where("agm_master.id", payload.agmId);
-        }
-        if(payload.companyId){
-          qb.where("agm_master.companyId",payload.companyId)
-        }
-        if(payload.projectId){
-          qb.where("agm_master.projectId",payload.projectId)
-        }
-        if(payload.agmDate){
-          qb.where("agm_master.agmDate",payload.agmDate)
-        }
-      })
-      .first(),
-      knex
-      .from("agm_master")
-      .leftJoin("companies","agm_master.companyId","companies.id")
-      .leftJoin("projects","agm_master.projectId","projects.id")
-      .select([
-        "agm_master.*",
-        "companies.companyName",
-        "projects.projectName"
-      ])
-      .where({"agm_master.orgId":req.orgId})
-      .where((qb)=>{
-        if(payload.agmId){
-          qb.where("agm_master.id", payload.agmId);
-        }
-        if(payload.companyId){
-          qb.where("agm_master.companyId",payload.companyId)
-        }
-        if(payload.projectId){
-          qb.where("agm_master.projectId",payload.projectId)
-        }
-        if(payload.agmDate){
-          qb.where("agm_master.agmDate",payload.agmDate)
-        }
-      })
-     ])
+      [total, rows] = await Promise.all([
+        knex
+          .count("* as count")
+          .from("agm_master")
+          .leftJoin("companies", "agm_master.companyId", "companies.id")
+          .leftJoin("projects", "agm_master.projectId", "projects.id")
+          .where({ "agm_master.orgId": req.orgId })
+          .where((qb) => {
+            if (payload.agmId) {
+              qb.where("agm_master.id", payload.agmId);
+            }
+            if (payload.companyId) {
+              qb.where("agm_master.companyId", payload.companyId);
+            }
+            if (payload.projectId) {
+              qb.where("agm_master.projectId", payload.projectId);
+            }
+            if (payload.agmDate) {
+              qb.where("agm_master.agmDate", payload.agmDate);
+            }
+          })
+          .first(),
+        knex
+          .from("agm_master")
+          .leftJoin("companies", "agm_master.companyId", "companies.id")
+          .leftJoin("projects", "agm_master.projectId", "projects.id")
+          .select([
+            "agm_master.*",
+            "companies.companyName",
+            "projects.projectName",
+          ])
+          .where({ "agm_master.orgId": req.orgId })
+          .where((qb) => {
+            if (payload.agmId) {
+              qb.where("agm_master.id", payload.agmId);
+            }
+            if (payload.companyId) {
+              qb.where("agm_master.companyId", payload.companyId);
+            }
+            if (payload.projectId) {
+              qb.where("agm_master.projectId", payload.projectId);
+            }
+            if (payload.agmDate) {
+              qb.where("agm_master.agmDate", payload.agmDate);
+            }
+          }),
+      ]);
 
-     let count = total.count;
+      let count = total.count;
       pagination.total = count;
       pagination.per_page = per_page;
       pagination.offset = offset;
@@ -635,7 +646,7 @@ const agmController = {
           //   "agm_owner_master.companyId": payload.companyId,
           //   "agm_owner_master.projectId": payload.projectId,
           // })
-          .where({"agm_owner_master.agmId":payload.agmId})
+          .where({ "agm_owner_master.agmId": payload.agmId })
           .where((qb) => {
             qb.where("agm_owner_master.orgId", req.orgId);
             if (payload.agmId) {
@@ -669,7 +680,7 @@ const agmController = {
           //   "agm_owner_master.companyId": payload.companyId,
           //   "agm_owner_master.projectId": payload.projectId,
           // })
-          .where({"agm_owner_master.agmId":payload.agmId})
+          .where({ "agm_owner_master.agmId": payload.agmId })
           .where((qb) => {
             // qb.where('agm_owner_master.orgId', req.orgId);
             qb.where("agm_owner_master.orgId", req.orgId);
@@ -988,6 +999,31 @@ const agmController = {
       let getPropertyUnits = await knex("property_units")
         .select("*")
         .where({ orgId: req.orgId, isActive: true });
+
+      return res.status(200).json({
+        data: {
+          propertyData: getPropertyUnits,
+        },
+      });
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
+  getUnitListByCompanyAndProject: async (req, res) => {
+    try {
+      let id = req.me.id;
+      const { facilityId } = req.body;
+
+      let getPropertyUnits = await knex("property_units")
+        .select("*")
+        .where({
+          orgId: req.orgId,
+          isActive: true,
+          companyId: req.body.companyId,
+          projectId: req.body.projectId,
+        });
 
       return res.status(200).json({
         data: {

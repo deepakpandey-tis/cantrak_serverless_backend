@@ -72,6 +72,18 @@ router.get(
   
 )
 
+router.post(
+  "/get-proxy-document-list",
+  authMiddleware.isAuthenticated,
+  agmController.getProxyDocumentList
+)
+
+router.post(
+  "/get-unit-by-project",
+  authMiddleware.isAuthenticated,
+  agmController.getUnitListByCompanyAndProject
+)
+
 /**IMPORT AGM OWNER DATA */
 const path = require("path");
 let tempraryDirectory = null;
