@@ -435,12 +435,10 @@ const agmController = {
           });
         }
 
-        
-
         let insertData = {
           agmId: payload.agmId,
           unitId: payload.unitNo,
-          companyId:payload.companyId,
+          companyId: payload.companyId,
           projectId: payload.projectId,
           ownerName: payload.ownerName,
           joinOwnerName: payload.joinOwnerName,
@@ -725,6 +723,45 @@ const agmController = {
     }
   },
 
+  getOwnerListByUnit: async (req, res) => {
+    try {
+      let payload = req.body;
+
+      let ownerList = await knex("agm_owner_master")
+        .leftJoin(
+          "property_units",
+          "agm_owner_master.unitId",
+          "property_units.id"
+        )
+        .select([
+          "agm_owner_master.*",
+          "property_units.unitNumber",
+          "property_units.description as unitDescription",
+        ])
+        .where("agm_owner_master.orgId", req.orgId)
+        .where((qb)=>{
+          if(payload.unitNo){
+            qb.whereIn("agm_owner_master.unitId", payload.unitNo);
+          }
+          if(payload.ownerName){
+            qb.where("agm_owner_master.ownerName", payload.ownerName);
+          }
+          if(payload.ownerIdNo){
+            qb.where("agm_owner_master.ownerName", payload.ownerIdNo);
+          }
+        });
+
+
+        return res.status(200).json({
+          data: ownerList,
+          message: "get owner list Successfully!",
+        });
+    } catch (err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+      });
+    }
+  },
   /*GET AGM DETAILS */
   getAgmDetails: async (req, res) => {
     try {
@@ -1016,14 +1053,12 @@ const agmController = {
       let id = req.me.id;
       const { facilityId } = req.body;
 
-      let getPropertyUnits = await knex("property_units")
-        .select("*")
-        .where({
-          orgId: req.orgId,
-          isActive: true,
-          companyId: req.body.companyId,
-          projectId: req.body.projectId,
-        });
+      let getPropertyUnits = await knex("property_units").select("*").where({
+        orgId: req.orgId,
+        isActive: true,
+        companyId: req.body.companyId,
+        projectId: req.body.projectId,
+      });
 
       return res.status(200).json({
         data: {

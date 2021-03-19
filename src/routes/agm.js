@@ -69,20 +69,25 @@ router.get(
   authMiddleware.isAuthenticated,
   // roleMiddleware.parseUserPermission,
   agmController.getUnitList
-  
-)
+);
 
 router.post(
   "/get-proxy-document-list",
   authMiddleware.isAuthenticated,
   agmController.getProxyDocumentList
-)
+);
 
 router.post(
   "/get-unit-by-project",
   authMiddleware.isAuthenticated,
   agmController.getUnitListByCompanyAndProject
-)
+);
+
+router.post(
+  "/get-ownerlist-by-filter",
+  authMiddleware.isAuthenticated,
+  agmController.getOwnerListByUnit
+);
 
 /**IMPORT AGM OWNER DATA */
 const path = require("path");
