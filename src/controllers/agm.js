@@ -360,7 +360,7 @@ const agmController = {
                 isActive: true,
                 createdAt: new Date().getTime(),
                 updatedAt: new Date().getTime(),
-                importedBy: req.me.id,
+                // importedBy: req.me.id,
                 createdBy: req.me.id,
               };
 
