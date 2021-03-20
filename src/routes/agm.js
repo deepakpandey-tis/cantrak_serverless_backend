@@ -64,10 +64,9 @@ router.post(
   authMiddleware.isAuthenticated,
   agmController.toggleEligibility
 );
-router.get(
+router.post(
   "/get-units-for-agm",
   authMiddleware.isAuthenticated,
-  // roleMiddleware.parseUserPermission,
   agmController.getUnitList
 );
 
