@@ -89,6 +89,12 @@ router.post(
   agmController.getOwnerListByUnit
 );
 
+router.post(
+  "/owner-registration",
+  authMiddleware.isAuthenticated,
+  agmController.ownerRegistration
+)
+
 /**IMPORT AGM OWNER DATA */
 const path = require("path");
 let tempraryDirectory = null;

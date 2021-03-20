@@ -800,6 +800,48 @@ const agmController = {
     }
   },
 
+  ownerRegistration: async (req,res) => {
+    try {
+      // let payload = req.body;
+      const payload = _.omit(req.body, ["ownerId"]);
+
+      const schema = new Joi.object().keys({
+        // ownerId : Joi.array().required(),
+        signature: Joi.string().required()
+      });
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+        });
+      }
+
+      let currentTime = new Date().getTime();
+
+      let insertData = {
+        signature : payload.signature,
+        signatureAt : currentTime
+        // orgId :
+      }
+
+      let insertResult = await knex("agm_owner_master")
+      .update(insertData)
+      .whereIn("id",req.body.ownerId)
+      .returning(["*"]);
+
+      return res.status(200).json({
+        data: insertResult,
+        message: "Signature registered added successfully!",
+      });
+
+    } catch (err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+      });
+    }
+  },
+
   /*OWNER PROXY REGISTRATION*/
   ownerProxyRegistration: async (req, res) => {
     try {
