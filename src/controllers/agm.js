@@ -852,7 +852,7 @@ const agmController = {
     try {
       // let payload = req.body;
       console.log("owner Id====>>>>",req.body)
-      const payload = _.omit(req.body, ["ownerId","proxyName","proxyId"]);
+      const payload = _.omit(req.body, ["ownerId","proxyName","proxyId","ownerProxyId"]);
 
       const schema = new Joi.object().keys({
         agmId: Joi.string().required(),
@@ -881,9 +881,22 @@ const agmController = {
         .returning(["*"])
         .into("agm_owner_master");
       }
+
+      let insertProxyData = {
+        proxyName : req.body.proxyName,
+        proxyId : req.body.proxyId
+      }
       
+      let insertProxyResult
+      for(let proxy of req.body.ownerProxyId){
+        insertProxyResult = await knex
+        .update(insertProxyData)
+        .where({agmId: payload.agmId,id:proxy})
+        .returning(["*"])
+        .into("proxy_document");
+      }
       return res.status(200).json({
-        data: insertResult,
+        data: {insertResult:insertResult,insertProxyResult:insertProxyResult},
         message: "Proxy added successfully!",
       });
     } catch (err) {
