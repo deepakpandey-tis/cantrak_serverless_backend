@@ -6,7 +6,6 @@ const i18n = require('i18n');
 const indexRouter = require('./routes/index');
 const AWS = require('aws-sdk');
 
-
 /**
  * App
  */
@@ -308,3 +307,10 @@ module.exports.dailyDigestProcessor = async (event, context) => {
   console.log('[app][dailyDigestProcessor]: Task Completed Successfully');
   return true;
 };
+
+
+// app.get('/pdf',function (req, res) {
+  
+
+//   res.send('pdf');
+// })
