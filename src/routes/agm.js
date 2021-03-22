@@ -92,13 +92,13 @@ router.post(
   "/owner-registration",
   authMiddleware.isAuthenticated,
   agmController.ownerRegistration
-)
+);
 
 router.post(
   "/get-owner-signature",
   authMiddleware.isAuthenticated,
   agmController.getOwnerSignature
-)
+);
 
 /**IMPORT AGM OWNER DATA */
 const path = require("path");

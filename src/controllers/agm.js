@@ -81,7 +81,7 @@ const agmController = {
             agmDate: new Date(payload.agmDate).getTime(),
             startTime: new Date(payload.startTime).getTime(),
             endTime: new Date(payload.endTime).getTime(),
-            waterMarkText : req.body.waterMarkText,
+            waterMarkText: req.body.waterMarkText,
             updatedAt: currentTime,
             createdAt: currentTime,
             orgId: req.orgId,
@@ -450,7 +450,6 @@ const agmController = {
           isActive: true,
           createdAt: new Date().getTime(),
           updatedAt: new Date().getTime(),
-          displayId: 1,
           createdBy: req.me.id,
         };
 
@@ -739,7 +738,10 @@ const agmController = {
           "property_units.unitNumber",
           "property_units.description as unitDescription",
         ])
-        .where({"agm_owner_master.orgId": req.orgId,"agm_owner_master.agmId":payload.agmId})
+        .where({
+          "agm_owner_master.orgId": req.orgId,
+          "agm_owner_master.agmId": payload.agmId,
+        })
         .where((qb) => {
           if (payload.unitNo) {
             qb.whereIn("agm_owner_master.unitId", payload.unitNo);
@@ -807,7 +809,7 @@ const agmController = {
       const schema = new Joi.object().keys({
         agmId: Joi.string().required(),
         signature: Joi.string().required(),
-        registrationType: Joi.string().required()
+        registrationType: Joi.string().required(),
       });
 
       const result = Joi.validate(payload, schema);
@@ -822,19 +824,18 @@ const agmController = {
       let insertData = {
         signature: payload.signature,
         signatureAt: currentTime,
-        registrationType:payload.registrationType
+        registrationType: payload.registrationType,
       };
 
-      let insertResult
-      for(let owner of req.body.ownerId){
-        console.log("owner data===",owner)
+      let insertResult;
+      for (let owner of req.body.ownerId) {
+        console.log("owner data===", owner);
         insertData = await knex
-        .update(insertData)
-        .where({agmId: payload.agmId ,id:owner})
-        .returning(["*"])
-        .into("agm_owner_master");
+          .update(insertData)
+          .where({ agmId: payload.agmId, id: owner })
+          .returning(["*"])
+          .into("agm_owner_master");
       }
-      
 
       return res.status(200).json({
         data: insertResult,
@@ -851,13 +852,18 @@ const agmController = {
   ownerProxyRegistration: async (req, res) => {
     try {
       // let payload = req.body;
-      console.log("owner Id====>>>>",req.body)
-      const payload = _.omit(req.body, ["ownerId","proxyName","proxyId","ownerProxyId"]);
+      console.log("owner Id====>>>>", req.body);
+      const payload = _.omit(req.body, [
+        "ownerId",
+        "proxyName",
+        "proxyId",
+        "ownerProxyId",
+      ]);
 
       const schema = new Joi.object().keys({
         agmId: Joi.string().required(),
         signature: Joi.string().required(),
-        type:Joi.string().required()
+        type: Joi.string().required(),
       });
 
       const result = Joi.validate(payload, schema);
@@ -873,30 +879,33 @@ const agmController = {
         signatureAt: currentTime,
       };
 
-      let insertResult
-      for(let owner of req.body.ownerId){
+      let insertResult;
+      for (let owner of req.body.ownerId) {
         insertResult = await knex
-        .update(insertData)
-        .where({agmId: payload.agmId ,id:owner})
-        .returning(["*"])
-        .into("agm_owner_master");
+          .update(insertData)
+          .where({ agmId: payload.agmId, id: owner })
+          .returning(["*"])
+          .into("agm_owner_master");
       }
 
       let insertProxyData = {
-        proxyName : req.body.proxyName,
-        proxyId : req.body.proxyId
-      }
-      
-      let insertProxyResult
-      for(let proxy of req.body.ownerProxyId){
+        proxyName: req.body.proxyName,
+        proxyId: req.body.proxyId,
+      };
+
+      let insertProxyResult;
+      for (let proxy of req.body.ownerProxyId) {
         insertProxyResult = await knex
-        .update(insertProxyData)
-        .where({agmId: payload.agmId,id:proxy})
-        .returning(["*"])
-        .into("proxy_document");
+          .update(insertProxyData)
+          .where({ agmId: payload.agmId, id: proxy })
+          .returning(["*"])
+          .into("proxy_document");
       }
       return res.status(200).json({
-        data: {insertResult:insertResult,insertProxyResult:insertProxyResult},
+        data: {
+          insertResult: insertResult,
+          insertProxyResult: insertProxyResult,
+        },
         message: "Proxy added successfully!",
       });
     } catch (err) {
@@ -971,7 +980,7 @@ const agmController = {
     }
   },
 
-  getOwnerSignature :async(req,res) => {
+  getOwnerSignature: async (req, res) => {
     try {
       let payload = req.body;
 
@@ -989,23 +998,19 @@ const agmController = {
       }
 
       ownerSignature = await knex("agm_owner_master")
-      .where({ "agm_owner_master.id": payload.ownerId, orgId: req.orgId })
-      .select(["agm_owner_master.signature"]);
-
+        .where({ "agm_owner_master.id": payload.ownerId, orgId: req.orgId })
+        .select(["agm_owner_master.signature"]);
 
       return res.status(200).json({
         data: ownerSignature,
         message: "Get Owner Signature!",
       });
-      
     } catch (err) {
-
       return res.status(500).json({
         errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
       });
-      
     }
-  } ,
+  },
 
   /*UPDATE OWNER DATA */
   updateOwner: async (req, res) => {
@@ -1185,7 +1190,6 @@ const agmController = {
       });
     }
   },
- 
 };
 
 module.exports = agmController;
