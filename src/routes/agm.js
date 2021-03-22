@@ -94,6 +94,12 @@ router.post(
   agmController.ownerRegistration
 )
 
+router.post(
+  "/get-owner-signature",
+  authMiddleware.isAuthenticated,
+  agmController.getOwnerSignature
+)
+
 /**IMPORT AGM OWNER DATA */
 const path = require("path");
 let tempraryDirectory = null;
