@@ -92,12 +92,18 @@ router.post(
   "/owner-registration",
   authMiddleware.isAuthenticated,
   agmController.ownerRegistration
-)
+);
 
 router.post(
   "/get-owner-signature",
   authMiddleware.isAuthenticated,
   agmController.getOwnerSignature
+);
+
+router.post(
+  "/get-proxy-document-images",
+  authMiddleware.isAuthenticated,
+  agmController.getProxyDocumentImages
 )
 
 /**IMPORT AGM OWNER DATA */
