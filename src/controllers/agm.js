@@ -622,9 +622,10 @@ const agmController = {
   getOwnerList: async (req, res) => {
     try {
       let payload = req.body;
-      console.log("payload value=====>>>>>", payload);
+      console.log("payload value for pages=====>>>>>", payload);
       let reqData = req.query;
       let total, rows;
+      
       let pagination = {};
       let per_page = reqData.per_page || 10;
       let page = reqData.current_page || 1;
@@ -877,6 +878,7 @@ const agmController = {
       let insertData = {
         signature: payload.signature,
         signatureAt: currentTime,
+        registrationType:payload.type
       };
 
       let insertResult;
@@ -1190,6 +1192,38 @@ const agmController = {
       });
     }
   },
+
+  getProxyDocumentImages: async(req,res)=>{
+    try {
+      
+      let payload = req.body;
+
+      const schema = new Joi.object().keys({
+        agmId: Joi.number().required(),
+      });
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+        });
+      }
+
+      let images = await knex
+      .from("images")
+      .where({entityId: payload.agmId, entityType: "proxy_document" })
+
+      return res.status(200).json({
+        data: {
+          proxyImages: images,
+        },
+      });
+
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  }
 };
 
 module.exports = agmController;

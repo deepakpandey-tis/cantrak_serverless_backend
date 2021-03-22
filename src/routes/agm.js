@@ -100,6 +100,12 @@ router.post(
   agmController.getOwnerSignature
 );
 
+router.post(
+  "/get-proxy-document-images",
+  authMiddleware.isAuthenticated,
+  agmController.getProxyDocumentImages
+)
+
 /**IMPORT AGM OWNER DATA */
 const path = require("path");
 let tempraryDirectory = null;
