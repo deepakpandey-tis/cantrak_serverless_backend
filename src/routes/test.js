@@ -22,6 +22,15 @@ router.get('/', async (req, res) => {
             console.log('pdf');
             console.log(templatePath);
             const html = fs.readFileSync(templatePath, "utf8");
+            
+            let tempraryDirectory = null;
+            if (process.env.IS_OFFLINE) {
+                tempraryDirectory = "tmp/";
+            } else {
+                tempraryDirectory = "/tmp/";
+            }
+            let filename = "Vote-" + Date.now() + ".pdf";
+            let filepath = tempraryDirectory + filename;
 
             const options = {
             format: "A5",
@@ -75,7 +84,7 @@ router.get('/', async (req, res) => {
                 datas:datas
 
             },
-            path: "./output.pdf",
+            path: filepath,
             type: "",
             };
 
@@ -117,7 +126,42 @@ router.get('/', async (req, res) => {
         pdf
         .create(document, options)
         .then((results) => {
-            res.json({results:results})
+            //res.json({results:results})
+            let bucketName = process.env.S3_BUCKET_NAME;
+            const AWS = require("aws-sdk");
+            fs.readFile(results.filename, function (err, file_buffer) {
+                var s3 = new AWS.S3();
+                var params = {
+                    Bucket: bucketName,
+                    Key: "Export/Asset/" + filename,
+                    Body: file_buffer,
+                    ACL: "public-read"
+                };
+                s3.putObject(params, function (err, data) {
+                    if (err) {
+                        console.log("Error at uploadPDFFileOnS3Bucket function", err);
+                        //next(err);
+                        return res.status(200).json({
+                            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+                        });
+                    } else {
+                        console.log("File uploaded Successfully");
+
+                        //next(null, filePath);
+                        // fs.unlink(filepath, err => {
+                        //   console.log("File Deleting Error " + err);
+                        // });
+                        let url = process.env.S3_BUCKET_URL + "/Export/Asset/" + filename;
+
+                        return res.status(200).json({
+                            data: {},
+                            message: "Asset Data Export Successfully!",
+                            url: url,
+                            // assetResult
+                        });
+                    }
+                });
+            });
         })
         .catch((error) => {
             console.error(error);
