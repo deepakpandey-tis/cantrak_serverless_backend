@@ -971,6 +971,42 @@ const agmController = {
     }
   },
 
+  getOwnerSignature :async(req,res) => {
+    try {
+      let payload = req.body;
+
+      let ownerSignature;
+      const schema = new Joi.object().keys({
+        ownerId: Joi.number().required(),
+        agmId: Joi.number().required(),
+      });
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+        });
+      }
+
+      ownerSignature = await knex("agm_owner_master")
+      .where({ "agm_owner_master.id": payload.ownerId, orgId: req.orgId })
+      .select(["agm_owner_master.signature"]);
+
+
+      return res.status(200).json({
+        data: ownerSignature,
+        message: "Get Owner Signature!",
+      });
+      
+    } catch (err) {
+
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+      });
+      
+    }
+  } ,
+
   /*UPDATE OWNER DATA */
   updateOwner: async (req, res) => {
     try {
@@ -1130,7 +1166,6 @@ const agmController = {
   getUnitListByCompanyAndProject: async (req, res) => {
     try {
       let id = req.me.id;
-      const { facilityId } = req.body;
 
       let getPropertyUnits = await knex("property_units").select("*").where({
         orgId: req.orgId,
@@ -1150,6 +1185,7 @@ const agmController = {
       });
     }
   },
+ 
 };
 
 module.exports = agmController;
