@@ -13,6 +13,8 @@ const addInvitation = async (req, res) => {
             orgId: orgId,
             // database sequence number id: 10,
             ...payload,
+            arrivalDate: new Date(payload.arrivalDate).getTime(),
+            departureDate: new Date(payload.departureDate).getTime(),
             createdBy: userId,
             createdAt: currentTime,
             updatedBy: userId,
