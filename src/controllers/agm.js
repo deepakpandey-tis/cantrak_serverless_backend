@@ -115,6 +115,7 @@ const agmController = {
             .insert({
               agmId: addedAGMResult.id,
               agendaName: agenda.agendaName,
+              agendaNameThai: agenda.agendaNameThai,
               agendaNo: agenda.agendaNo,
               eligibleForVoting: eligibility,
               updatedAt: currentTime,
