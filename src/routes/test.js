@@ -55,7 +55,7 @@ router.get('/', async (req, res) => {
                 {
                     pName:'PName',
                     date:'22/03/2021',
-                    agenda:'Agenda 1',
+                    agenda:'Agenda',
                     unitNo:'',
                     oRatio:'',
                 }
@@ -141,7 +141,7 @@ router.get('/', async (req, res) => {
                     if (err) {
                         console.log("Error at uploadPDFFileOnS3Bucket function", err);
                         //next(err);
-                        return res.status(200).json({
+                        return res.status(500).json({
                             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
                         });
                     } else {
