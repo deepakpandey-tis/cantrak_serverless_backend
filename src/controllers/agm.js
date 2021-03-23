@@ -115,6 +115,7 @@ const agmController = {
             .insert({
               agmId: addedAGMResult.id,
               agendaName: agenda.agendaName,
+              agendaNameThai: agenda.agendaNameThai,
               agendaNo: agenda.agendaNo,
               eligibleForVoting: eligibility,
               updatedAt: currentTime,
@@ -641,6 +642,7 @@ const agmController = {
             "agm_owner_master.unitId",
             "property_units.id"
           )
+          // .leftJoin("proxy_document","agm_owner_master.agmId","proxy_document.agmId")
           // .where({
           //   "agm_owner_master.companyId": payload.companyId,
           //   "agm_owner_master.projectId": payload.projectId,
@@ -670,10 +672,12 @@ const agmController = {
             "agm_owner_master.unitId",
             "property_units.id"
           )
+          // .leftJoin("proxy_document","agm_owner_master.agmId","proxy_document.agmId")
           .select([
             "agm_owner_master.*",
             "property_units.unitNumber",
             "property_units.description as unitDescription",
+            // "proxy_document.proxyName"
           ])
           // .where({
           //   "agm_owner_master.companyId": payload.companyId,
@@ -701,6 +705,18 @@ const agmController = {
           .limit(per_page),
       ]);
 
+      const Parallel = require('async-parallel');
+      
+      rows = await Parallel.map(rows,async pd=>{
+        let proxyData = await knex
+        .from("proxy_document")
+        .select(["proxy_document.proxyName"])
+        .where("proxy_document.agmId",pd.agmId)
+        .first()
+
+        return {...pd,proxyData}
+      })
+
       let count = total.count;
       pagination.total = count;
       pagination.per_page = per_page;
@@ -710,6 +726,8 @@ const agmController = {
       pagination.current_page = page;
       pagination.from = offset;
       pagination.data = rows;
+
+
 
       res.status(200).json({
         data: {
