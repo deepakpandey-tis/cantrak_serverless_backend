@@ -644,14 +644,29 @@ const agmController = {
             "agm_owner_master.unitId",
             "property_units.id"
           )
+          
           // .leftJoin("proxy_document","agm_owner_master.agmId","proxy_document.agmId")
           // .where({
           //   "agm_owner_master.companyId": payload.companyId,
           //   "agm_owner_master.projectId": payload.projectId,
           // })
-          .where({ "agm_owner_master.agmId": payload.agmId })
+          .where({ "agm_owner_master.agmId": payload.agmId,"agm_owner_master.orgId": req.orgId })
           .where((qb) => {
-            qb.where("agm_owner_master.orgId", req.orgId);
+            // qb.where("agm_owner_master.orgId", req.orgId);
+            if(payload.filterType == 1){
+
+            }
+            if(payload.filterType == 2){
+              qb.where("agm_owner_master.registrationType", 1)
+            }
+            if(payload.filterType == 3){
+              qb.where("agm_owner_master.registrationType", 2)
+            }
+            if(payload.filterType == 4){
+              qb.where("agm_owner_master.registrationType", 1)
+              qb.orWhere("agm_owner_master.registrationType", 2)
+              
+            }
             if (payload.agmId) {
               qb.where("agm_owner_master.agmId", payload.agmId);
             }
@@ -685,10 +700,26 @@ const agmController = {
           //   "agm_owner_master.companyId": payload.companyId,
           //   "agm_owner_master.projectId": payload.projectId,
           // })
-          .where({ "agm_owner_master.agmId": payload.agmId })
+          .where({ "agm_owner_master.agmId": payload.agmId,"agm_owner_master.orgId": req.orgId })
           .where((qb) => {
             // qb.where('agm_owner_master.orgId', req.orgId);
-            qb.where("agm_owner_master.orgId", req.orgId);
+            // qb.where("agm_owner_master.orgId", req.orgId);
+            if(payload.filterType == 1){
+
+            }
+            if(payload.filterType == 2){
+              qb.where("agm_owner_master.registrationType", 1)
+
+            }
+            if(payload.filterType == 3){
+              qb.orWhere("agm_owner_master.registrationType", 2)
+              
+            }
+            if(payload.filterType == 4){
+              qb.where("agm_owner_master.registrationType", 1)
+              qb.orWhere("agm_owner_master.registrationType", 2)
+            }
+
             if (payload.agmId) {
               qb.where("agm_owner_master.agmId", payload.agmId);
             }
@@ -713,7 +744,7 @@ const agmController = {
         let proxyData = await knex
           .from("agm_proxy_documents")
           .select(["agm_proxy_documents.proxyName"])
-          .where("agm_proxy_documents.agmId", pd.agmId)
+          .where("agm_proxy_documents.ownerMasterId", pd.id)
           .first();
 
         return { ...pd, proxyData };
@@ -996,6 +1027,7 @@ const agmController = {
       });
     }
   },
+
 
   /*GET OWNER DETAILS */
   getOwnerDetails: async (req, res) => {
