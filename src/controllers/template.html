@@ -1,0 +1,144 @@
+<div style="width: 100% !important;">
+  <table style="width: 100%; margin-top: 10px;">
+    {{#each datas}}
+    <tr>
+      <td style="text-align: center; padding-bottom: 5px;">
+        <h6 style="margin: 0px; padding: 0px;">
+          <span style="color: #F44439;">วาระ / Agenda : </span
+          ><span>....</span>
+        </h6>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center; padding-bottom: 5px;">
+        <h6 style="margin: 0px; padding: 0px;">
+          <span style="color: #F44439;">Company Name (Th)</span>
+        </h6>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center; padding-bottom: 5px;">
+        <h6 style="margin: 0px; padding: 0px;">
+          <span style="color: #F44439;">Company Name (En)</span>
+        </h6>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center; padding-bottom: 5px;">
+        <h6 style="margin: 0px; padding: 0px;">
+          <span style="color: #F44439;">ใบลงคะแนน / Voting sheet</span>
+        </h6>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center; padding-bottom: 5px;">
+        <h6 style="margin: 0px; padding: 0px;">
+          <span style="color: #F44439;">วันที่ : </span
+          ><span>{{this.date}}</span> / 
+          <span style="color: #F44439;">Date : </span
+            ><span>{{this.date}}</span>
+        </h6>
+      </td>
+    </tr>
+    {{/each}}
+  </table>
+  <table style="width: 100%; margin-top: 10px;">
+    {{#each datas}}
+    <tr>
+      <td style=" padding-bottom: 5px;">
+        <h6 style="margin: 0px; padding: 0px;">
+          <span style="color: #F44439;">วาระที่ 1: </span
+          ><span>{{this.agenda}}</span>
+        </h6>
+      </td>
+    </tr>
+    <tr>
+      <td style=" padding-bottom: 5px;">
+        <h6 style="margin: 0px; padding: 0px;">
+          <span style="color: #F44439;">Agenda 1: </span
+          ><span>{{this.agenda}}</span>
+        </h6>
+      </td>
+    </tr>
+    {{/each}}
+  </table>
+  <table style="width: 100%; margin-top: 10px;">
+    <tr>
+      <td style="padding: 0px 10px;">
+        <table style="width: 100%;">
+          {{#each listDatas}}
+          <tr>
+            <td>
+              <div style="width: 10px; height: 10px; border: 1px solid gray;"></div>
+            </td>
+            <td>
+              <small>{{this.enText}} / {{this.thaiText}}</small>
+            </td>
+            <td>
+              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png" alt="qr-code" width="60px">
+            </td>
+          </tr>
+          {{/each}}
+        </table>
+      </td>
+    </tr>
+  </table>
+  
+  <table style="width: 100%; margin-top: 10px;">
+    <tr>
+      <td colspan="3" style=" padding-bottom: 5px;">
+        <h6 style="margin: 0px; padding: 0px;">
+          <span style="color: #F44439;">ในฐานะ / In capacity of</span>
+        </h6>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 0px 10px;">
+        <table style="width: 100%;">
+          <tr>
+            <td>
+              <div style="width: 10px; height: 10px; border: 1px solid gray;"></div>
+            </td>
+            <td>
+              <small style="padding: 0px; margin: 0px;">เจ้ าของห้ องชุด / Co-owner</small>
+            </td>
+            <td>
+              <small style="padding: 0px; margin: 0px;">ลงชื่อ / Sign ___________</small>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div style="width: 10px; height: 10px; border: 1px solid gray;"></div>
+            </td>
+            <td>
+              <small style="padding: 0px; margin: 0px;">ตัวแทน / Proxy</small>
+            </td>
+            <td>
+              <small style="padding: 0px; margin: 0px;">(_____________________)</small>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  <table style="width: 100%; margin-top: 10px;">
+    {{#each datas}}
+    <tr>
+      <td style="padding-top: 10px;">
+        <h6 style="margin: 0px; padding: 0px;">
+          <span style="color: #F44439;">ห้ องชุดเลขที่ / Unit No : </span
+          ><span>_____________________________</span>
+        </h6>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: left; padding-top: 10px;">
+        <h6 style="margin: 0px; padding: 0px;">
+          <span style="color: #F44439;">อัตาส่วนกรรมสิทธิ์ / Ownership Ratio : </span
+          ><span>________________</span>
+        </h6>
+      </td>
+    </tr>
+    {{/each}}
+  </table>
+  </div>

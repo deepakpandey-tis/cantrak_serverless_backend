@@ -64,13 +64,53 @@ router.post(
   authMiddleware.isAuthenticated,
   agmController.toggleEligibility
 );
-router.get(
+router.post(
   "/get-units-for-agm",
   authMiddleware.isAuthenticated,
-  // roleMiddleware.parseUserPermission,
   agmController.getUnitList
-  
+);
+
+router.post(
+  "/get-proxy-document-list",
+  authMiddleware.isAuthenticated,
+  agmController.getProxyDocumentList
+);
+
+router.post(
+  "/get-unit-by-project",
+  authMiddleware.isAuthenticated,
+  agmController.getUnitListByCompanyAndProject
+);
+
+router.post(
+  "/get-ownerlist-by-filter",
+  authMiddleware.isAuthenticated,
+  agmController.getOwnerListByUnit
+);
+
+router.post(
+  "/owner-registration",
+  authMiddleware.isAuthenticated,
+  agmController.ownerRegistration
+);
+
+router.post(
+  "/get-owner-signature",
+  authMiddleware.isAuthenticated,
+  agmController.getOwnerSignature
+);
+
+router.post(
+  "/get-proxy-document-images",
+  authMiddleware.isAuthenticated,
+  agmController.getProxyDocumentImages
 )
+
+router.post(
+  "/generate-pdf-of-voting-document",
+  authMiddleware.isAuthenticated,
+  agmController.generatePdfOfVotingDocument
+);
 
 /**IMPORT AGM OWNER DATA */
 const path = require("path");

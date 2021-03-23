@@ -81,6 +81,7 @@ const agmController = {
             agmDate: new Date(payload.agmDate).getTime(),
             startTime: new Date(payload.startTime).getTime(),
             endTime: new Date(payload.endTime).getTime(),
+            waterMarkText: req.body.waterMarkText,
             updatedAt: currentTime,
             createdAt: currentTime,
             orgId: req.orgId,
@@ -114,6 +115,7 @@ const agmController = {
             .insert({
               agmId: addedAGMResult.id,
               agendaName: agenda.agendaName,
+              agendaNameThai: agenda.agendaNameThai,
               agendaNo: agenda.agendaNo,
               eligibleForVoting: eligibility,
               updatedAt: currentTime,
@@ -149,7 +151,7 @@ const agmController = {
       });
 
       return res.status(200).json({
-       message:"AgM added successfully"
+        message: "AgM added successfully",
       });
     } catch (err) {
       return res.status(200).json({
@@ -360,7 +362,7 @@ const agmController = {
                 isActive: true,
                 createdAt: new Date().getTime(),
                 updatedAt: new Date().getTime(),
-                importedBy: req.me.id,
+                // importedBy: req.me.id,
                 createdBy: req.me.id,
               };
 
@@ -410,15 +412,20 @@ const agmController = {
   /*ADD OWNER*/
   addOwner: async (req, res) => {
     try {
-      let payload = req.body;
+      // let payload = req.body;
       let resultData;
       await knex.transaction(async (trx) => {
+        const payload = _.omit(req.body, ["joinOwnerName", "ownerIdNo"]);
+
         const schema = Joi.object().keys({
           agmId: Joi.string().required(),
-          unitId: Joi.string().required(),
+          companyId: Joi.string().required(),
+          projectId: Joi.string().required(),
+          houseId: Joi.string().required(),
+          unitNo: Joi.string().required(),
           ownerName: Joi.string().required(),
-          ownerershipRatio: Joi.string().required(),
-          eligibilityToggle: Joi.string().required(),
+          ownershipRatio: Joi.string().required(),
+          eligibility: Joi.boolean().required(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -431,16 +438,19 @@ const agmController = {
         }
 
         let insertData = {
-          agmId: 10,
-          unitId: payload.unitId,
+          agmId: payload.agmId,
+          unitId: payload.unitNo,
+          companyId: payload.companyId,
+          projectId: payload.projectId,
           ownerName: payload.ownerName,
-          ownerershipRatio: payload.ownerershipRatio,
-          eligibility: payload.eligibilityToggle,
+          joinOwnerName: payload.joinOwnerName,
+          ownershipRatio: payload.ownershipRatio,
+          ownerIdNo: payload.ownerIdNo,
+          eligibility: payload.eligibility,
           orgId: req.orgId,
           isActive: true,
           createdAt: new Date().getTime(),
           updatedAt: new Date().getTime(),
-          displayId: 1,
           createdBy: req.me.id,
         };
 
@@ -538,55 +548,55 @@ const agmController = {
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
 
-     [total,rows] = await Promise.all([
-       knex
-      .count("* as count")
-      .from("agm_master")
-      .leftJoin("companies","agm_master.companyId","companies.id")
-      .leftJoin("projects","agm_master.projectId","projects.id")
-      .where({"agm_master.orgId":req.orgId})
-      .where((qb)=>{
-        if(payload.agmId){
-          qb.where("agm_master.id", payload.agmId);
-        }
-        if(payload.companyId){
-          qb.where("agm_master.companyId",payload.companyId)
-        }
-        if(payload.projectId){
-          qb.where("agm_master.projectId",payload.projectId)
-        }
-        if(payload.agmDate){
-          qb.where("agm_master.agmDate",payload.agmDate)
-        }
-      })
-      .first(),
-      knex
-      .from("agm_master")
-      .leftJoin("companies","agm_master.companyId","companies.id")
-      .leftJoin("projects","agm_master.projectId","projects.id")
-      .select([
-        "agm_master.*",
-        "companies.companyName",
-        "projects.projectName"
-      ])
-      .where({"agm_master.orgId":req.orgId})
-      .where((qb)=>{
-        if(payload.agmId){
-          qb.where("agm_master.id", payload.agmId);
-        }
-        if(payload.companyId){
-          qb.where("agm_master.companyId",payload.companyId)
-        }
-        if(payload.projectId){
-          qb.where("agm_master.projectId",payload.projectId)
-        }
-        if(payload.agmDate){
-          qb.where("agm_master.agmDate",payload.agmDate)
-        }
-      })
-     ])
+      [total, rows] = await Promise.all([
+        knex
+          .count("* as count")
+          .from("agm_master")
+          .leftJoin("companies", "agm_master.companyId", "companies.id")
+          .leftJoin("projects", "agm_master.projectId", "projects.id")
+          .where({ "agm_master.orgId": req.orgId })
+          .where((qb) => {
+            if (payload.agmId) {
+              qb.where("agm_master.id", payload.agmId);
+            }
+            if (payload.companyId) {
+              qb.where("agm_master.companyId", payload.companyId);
+            }
+            if (payload.projectId) {
+              qb.where("agm_master.projectId", payload.projectId);
+            }
+            if (payload.agmDate) {
+              qb.where("agm_master.agmDate", payload.agmDate);
+            }
+          })
+          .first(),
+        knex
+          .from("agm_master")
+          .leftJoin("companies", "agm_master.companyId", "companies.id")
+          .leftJoin("projects", "agm_master.projectId", "projects.id")
+          .select([
+            "agm_master.*",
+            "companies.companyName",
+            "projects.projectName",
+          ])
+          .where({ "agm_master.orgId": req.orgId })
+          .where((qb) => {
+            if (payload.agmId) {
+              qb.where("agm_master.id", payload.agmId);
+            }
+            if (payload.companyId) {
+              qb.where("agm_master.companyId", payload.companyId);
+            }
+            if (payload.projectId) {
+              qb.where("agm_master.projectId", payload.projectId);
+            }
+            if (payload.agmDate) {
+              qb.where("agm_master.agmDate", payload.agmDate);
+            }
+          }),
+      ]);
 
-     let count = total.count;
+      let count = total.count;
       pagination.total = count;
       pagination.per_page = per_page;
       pagination.offset = offset;
@@ -613,9 +623,10 @@ const agmController = {
   getOwnerList: async (req, res) => {
     try {
       let payload = req.body;
-      console.log("payload value=====>>>>>", payload);
+      console.log("payload value for pages=====>>>>>", payload);
       let reqData = req.query;
       let total, rows;
+      
       let pagination = {};
       let per_page = reqData.per_page || 10;
       let page = reqData.current_page || 1;
@@ -631,11 +642,12 @@ const agmController = {
             "agm_owner_master.unitId",
             "property_units.id"
           )
+          // .leftJoin("proxy_document","agm_owner_master.agmId","proxy_document.agmId")
           // .where({
           //   "agm_owner_master.companyId": payload.companyId,
           //   "agm_owner_master.projectId": payload.projectId,
           // })
-          .where({"agm_owner_master.agmId":payload.agmId})
+          .where({ "agm_owner_master.agmId": payload.agmId })
           .where((qb) => {
             qb.where("agm_owner_master.orgId", req.orgId);
             if (payload.agmId) {
@@ -660,16 +672,18 @@ const agmController = {
             "agm_owner_master.unitId",
             "property_units.id"
           )
+          // .leftJoin("proxy_document","agm_owner_master.agmId","proxy_document.agmId")
           .select([
             "agm_owner_master.*",
             "property_units.unitNumber",
             "property_units.description as unitDescription",
+            // "proxy_document.proxyName"
           ])
           // .where({
           //   "agm_owner_master.companyId": payload.companyId,
           //   "agm_owner_master.projectId": payload.projectId,
           // })
-          .where({"agm_owner_master.agmId":payload.agmId})
+          .where({ "agm_owner_master.agmId": payload.agmId })
           .where((qb) => {
             // qb.where('agm_owner_master.orgId', req.orgId);
             qb.where("agm_owner_master.orgId", req.orgId);
@@ -691,6 +705,18 @@ const agmController = {
           .limit(per_page),
       ]);
 
+      const Parallel = require('async-parallel');
+      
+      rows = await Parallel.map(rows,async pd=>{
+        let proxyData = await knex
+        .from("proxy_document")
+        .select(["proxy_document.proxyName"])
+        .where("proxy_document.agmId",pd.agmId)
+        .first()
+
+        return {...pd,proxyData}
+      })
+
       let count = total.count;
       pagination.total = count;
       pagination.per_page = per_page;
@@ -700,6 +726,8 @@ const agmController = {
       pagination.current_page = page;
       pagination.from = offset;
       pagination.data = rows;
+
+
 
       res.status(200).json({
         data: {
@@ -714,6 +742,47 @@ const agmController = {
     }
   },
 
+  getOwnerListByUnit: async (req, res) => {
+    try {
+      let payload = req.body;
+
+      let ownerList = await knex("agm_owner_master")
+        .leftJoin(
+          "property_units",
+          "agm_owner_master.unitId",
+          "property_units.id"
+        )
+        .select([
+          "agm_owner_master.*",
+          "property_units.unitNumber",
+          "property_units.description as unitDescription",
+        ])
+        .where({
+          "agm_owner_master.orgId": req.orgId,
+          "agm_owner_master.agmId": payload.agmId,
+        })
+        .where((qb) => {
+          if (payload.unitNo) {
+            qb.whereIn("agm_owner_master.unitId", payload.unitNo);
+          }
+          if (payload.ownerName) {
+            qb.where("agm_owner_master.ownerName", payload.ownerName);
+          }
+          if (payload.ownerIdNo) {
+            qb.where("agm_owner_master.ownerIdNo", payload.ownerIdNo);
+          }
+        });
+
+      return res.status(200).json({
+        data: ownerList,
+        message: "get owner list Successfully!",
+      });
+    } catch (err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+      });
+    }
+  },
   /*GET AGM DETAILS */
   getAgmDetails: async (req, res) => {
     try {
@@ -752,14 +821,14 @@ const agmController = {
     }
   },
 
-  /*OWNER PROXY REGISTRATION*/
-  ownerProxyRegistration: async (req, res) => {
+  ownerRegistration: async (req, res) => {
     try {
-      let payload = req.body;
+      const payload = _.omit(req.body, ["ownerId"]);
+
       const schema = new Joi.object().keys({
-        // proxyName: Joi.string().required(),
         agmId: Joi.string().required(),
-        ownerName: Joi.string().required(),
+        signature: Joi.string().required(),
+        registrationType: Joi.string().required(),
       });
 
       const result = Joi.validate(payload, schema);
@@ -769,18 +838,94 @@ const agmController = {
         });
       }
 
+      let currentTime = new Date().getTime();
+
       let insertData = {
-        //  proxyName: payload.proxyName,
-        agmId: payload.agmId,
-        ownerName: payload.ownerName,
-        orgId: req.orgId,
+        signature: payload.signature,
+        signatureAt: currentTime,
+        registrationType: payload.registrationType,
       };
 
-      let insertResult = await knex("agm_owner_master")
-        .insert(insertData)
-        .returning(["*"]);
+      let insertResult;
+      for (let owner of req.body.ownerId) {
+        console.log("owner data===", owner);
+        insertData = await knex
+          .update(insertData)
+          .where({ agmId: payload.agmId, id: owner })
+          .returning(["*"])
+          .into("agm_owner_master");
+      }
+
       return res.status(200).json({
         data: insertResult,
+        message: "Signature registered added successfully!",
+      });
+    } catch (err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+      });
+    }
+  },
+
+  /*OWNER PROXY REGISTRATION*/
+  ownerProxyRegistration: async (req, res) => {
+    try {
+      // let payload = req.body;
+      console.log("owner Id====>>>>", req.body);
+      const payload = _.omit(req.body, [
+        "ownerId",
+        "proxyName",
+        "proxyId",
+        "ownerProxyId",
+      ]);
+
+      const schema = new Joi.object().keys({
+        agmId: Joi.string().required(),
+        signature: Joi.string().required(),
+        type: Joi.string().required(),
+      });
+
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+        });
+      }
+      let currentTime = new Date().getTime();
+
+      let insertData = {
+        signature: payload.signature,
+        signatureAt: currentTime,
+        registrationType:payload.type
+      };
+
+      let insertResult;
+      for (let owner of req.body.ownerId) {
+        insertResult = await knex
+          .update(insertData)
+          .where({ agmId: payload.agmId, id: owner })
+          .returning(["*"])
+          .into("agm_owner_master");
+      }
+
+      let insertProxyData = {
+        proxyName: req.body.proxyName,
+        proxyId: req.body.proxyId,
+      };
+
+      let insertProxyResult;
+      for (let proxy of req.body.ownerProxyId) {
+        insertProxyResult = await knex
+          .update(insertProxyData)
+          .where({ agmId: payload.agmId, id: proxy })
+          .returning(["*"])
+          .into("proxy_document");
+      }
+      return res.status(200).json({
+        data: {
+          insertResult: insertResult,
+          insertProxyResult: insertProxyResult,
+        },
         message: "Proxy added successfully!",
       });
     } catch (err) {
@@ -855,12 +1000,13 @@ const agmController = {
     }
   },
 
-  /*GET AGENDA LIST */
-  getAgendaList: async (req, res) => {
+  getOwnerSignature: async (req, res) => {
     try {
       let payload = req.body;
-      let agendaLists;
+
+      let ownerSignature;
       const schema = new Joi.object().keys({
+        ownerId: Joi.number().required(),
         agmId: Joi.number().required(),
       });
 
@@ -871,15 +1017,13 @@ const agmController = {
         });
       }
 
-      agendaLists = await knex("agenda_master")
-        .where({ "agenda_master.agmId": payload.agmId })
-        .select(["agenda_master.*"]);
-
-      // let updateResult = await knex('agm_owner_master').update(updateData).where({ id: payload.id, orgId: req.orgId }).returning(["*"]);
+      ownerSignature = await knex("agm_owner_master")
+        .where({ "agm_owner_master.id": payload.ownerId, orgId: req.orgId })
+        .select(["agm_owner_master.signature"]);
 
       return res.status(200).json({
-        data: agendaLists,
-        message: "Get Agenda Lists!",
+        data: ownerSignature,
+        message: "Get Owner Signature!",
       });
     } catch (err) {
       return res.status(500).json({
@@ -934,6 +1078,7 @@ const agmController = {
   getProxyDocumentList: async (req, res) => {
     try {
       let payload = req.body;
+      console.log("agm details===>>>", payload);
       let documentList;
       const schema = new Joi.object().keys({
         agmId: Joi.number().required(),
@@ -1016,11 +1161,21 @@ const agmController = {
   getUnitList: async (req, res) => {
     try {
       let id = req.me.id;
-      const { facilityId } = req.body;
+      const { agmId } = req.body;
 
-      let getPropertyUnits = await knex("property_units")
-        .select("*")
-        .where({ orgId: req.orgId, isActive: true });
+      let getPropertyUnits = await knex
+        .from("property_units")
+        .leftJoin(
+          "agm_owner_master",
+          "property_units.id",
+          "agm_owner_master.unitId"
+        )
+        .select(["property_units.*"])
+        .where({
+          "property_units.orgId": req.orgId,
+          "property_units.isActive": true,
+          "agm_owner_master.agmId": agmId,
+        });
 
       return res.status(200).json({
         data: {
@@ -1033,6 +1188,191 @@ const agmController = {
       });
     }
   },
+  getUnitListByCompanyAndProject: async (req, res) => {
+    try {
+      let id = req.me.id;
+
+      let getPropertyUnits = await knex("property_units").select("*").where({
+        orgId: req.orgId,
+        isActive: true,
+        companyId: req.body.companyId,
+        projectId: req.body.projectId,
+      });
+
+      return res.status(200).json({
+        data: {
+          propertyData: getPropertyUnits,
+        },
+      });
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
+
+  getProxyDocumentImages: async(req,res)=>{
+    try {
+      
+      let payload = req.body;
+
+      const schema = new Joi.object().keys({
+        agmId: Joi.number().required(),
+      });
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+        });
+      }
+
+      let images = await knex
+      .from("images")
+      .where({entityId: payload.agmId, entityType: "proxy_document" })
+
+      return res.status(200).json({
+        data: {
+          proxyImages: images,
+        },
+      });
+
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
+
+  generatePdfOfVotingDocument : async(req, res) => {
+    try {
+            
+          const path = require('path');
+          const pdf = require("pdf-creator-node");
+          const fs = require("fs");
+          
+          // Read HTML Template
+          const templatePath = path.join(__dirname,'template.html');
+          console.log('pdf');
+          console.log(templatePath);
+          const html = fs.readFileSync(templatePath, "utf8");
+          
+          let tempraryDirectory = null;
+          if (process.env.IS_OFFLINE) {
+              tempraryDirectory = "tmp/";
+          } else {
+              tempraryDirectory = "/tmp/";
+          }
+          let filename = "Vote-" + Date.now() + ".pdf";
+          let filepath = tempraryDirectory + filename;
+
+          const options = {
+          format: "A5",
+          orientation: "portrait",
+          border: "5mm",
+          header: {
+              height: "1mm",
+              contents: ''
+              //contents: '<div style="text-align: center;">Author: Shyam Hajare</div>'
+          },
+          footer: {
+              height: "1mm",
+              contents: {
+                  // first: 'Cover page',
+                  // 2: 'Second page', // Any page number is working. 1-based index
+                  // default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>', // fallback value
+                  // last: 'Last Page'
+              }
+          }
+          };
+          const datas = [
+              {
+                  pName:'PName',
+                  date:'22/03/2021',
+                  agenda:'Agenda',
+                  unitNo:'',
+                  oRatio:'',
+              }
+          ];
+          const listDatas = [
+          {
+              enText: "Consent",
+              thaiText: "เห็นชอบ",
+              qrCode:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png'
+          },
+          {
+              enText: "Dissent",
+              thaiText: "ไม่เห็นชอบ",
+              qrCode:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png'
+          },
+          {
+              enText: "Abstention",
+              thaiText: "งดออกเสียง",
+              qrCode:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png'
+          },
+          ];
+          const document = {
+          html: html,
+          data: {
+              listDatas: listDatas,
+              datas:datas
+
+          },
+          path: filepath,
+          type: "",
+          };
+
+      let success;
+
+      pdf
+      .create(document, options)
+      .then((results) => {
+          //res.json({results:results})
+          let bucketName = process.env.S3_BUCKET_NAME;
+          const AWS = require("aws-sdk");
+          fs.readFile(results.filename, function (err, file_buffer) {
+              var s3 = new AWS.S3();
+              var params = {
+                  Bucket: bucketName,
+                  Key: "Export/Asset/" + filename,
+                  Body: file_buffer,
+                  ACL: "public-read"
+              };
+              s3.putObject(params, function (err, data) {
+                  if (err) {
+                      console.log("Error at uploadPDFFileOnS3Bucket function", err);
+                      //next(err);
+                      return res.status(500).json({
+                          errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+                      });
+                  } else {
+                      console.log("File uploaded Successfully");
+
+                      //next(null, filePath);
+                      // fs.unlink(filepath, err => {
+                      //   console.log("File Deleting Error " + err);
+                      // });
+                      let url = process.env.S3_BUCKET_URL + "/Export/Asset/" + filename;
+
+                      return res.status(200).json({
+                          data: {},
+                          message: "Asset Data Export Successfully!",
+                          url: url,
+                          // assetResult
+                      });
+                  }
+              });
+          });
+      })
+      .catch((error) => {
+          console.error(error);
+          res.json({error:error})
+      });
+      //res.send('pdf');
+
+    } catch (err) {
+      res.status(200).json({ failed: true, error: err });
+    }
+  }
 };
 
 module.exports = agmController;
