@@ -1246,6 +1246,7 @@ const agmController = {
 
       const schema = new Joi.object().keys({
         agmId: Joi.number().required(),
+        ownerId:Joi.number().required()
       });
       const result = Joi.validate(payload, schema);
       if (result && result.hasOwnProperty("error") && result.error) {
@@ -1256,7 +1257,7 @@ const agmController = {
 
       let images = await knex
         .from("images")
-        .where({ entityId: payload.agmId, entityType: "proxy_document" });
+        .where({ entityId: payload.ownerId, entityType: "agm_proxy_documents" });
 
       return res.status(200).json({
         data: {
