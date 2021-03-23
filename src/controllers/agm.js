@@ -137,7 +137,7 @@ const agmController = {
           .del();
 
         for (let proxy of proxyDocumentPayload) {
-          let proxyResult = await knex("proxy_document").insert({
+          let proxyResult = await knex("agm_proxy_document_master").insert({
             agmId: addedAGMResult.id,
             documentName: req.body.proxyDocument,
             subDocumentName: proxy.proxyName,
@@ -709,9 +709,9 @@ const agmController = {
       
       rows = await Parallel.map(rows,async pd=>{
         let proxyData = await knex
-        .from("proxy_document")
-        .select(["proxy_document.proxyName"])
-        .where("proxy_document.agmId",pd.agmId)
+        .from("agm_proxy_documents")
+        .select(["agm_proxy_documents.proxyName"])
+        .where("agm_proxy_documents.agmId",pd.agmId)
         .first()
 
         return {...pd,proxyData}
