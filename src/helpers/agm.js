@@ -45,7 +45,7 @@ const createPdf = (document, agmId) => {
           var s3 = new AWS.S3();
           var params = {
             Bucket: bucketName,
-            Key: "AGM/"+ agmId + "/VotingDocuments/" + filename,
+            Key: "AGM/" + agmId + "/VotingDocuments/" + filename,
             Body: file_buffer,
             ACL: "public-read"
           };
@@ -56,8 +56,8 @@ const createPdf = (document, agmId) => {
               rej(err);
             } else {
               console.log("File uploaded Successfully");
-              let url = process.env.S3_BUCKET_URL + "AGM/"+ agmId + "/VotingDocuments/" + filename;
-              res(url);              
+              let url = process.env.S3_BUCKET_URL + "AGM/" + agmId + "/VotingDocuments/" + filename;
+              res(url);
             }
           });
         });
@@ -79,22 +79,34 @@ const agmHelper = {
 
       const votingDocGeneratedNotification = require('../notifications/agm/voting-doc-generated');
 
+      const path = require('path');
+      const fs = require("fs");
+
+      // Read HTML Template
+      const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.html');
+      console.log('[helpers][agm][generateVotingDocument]: PDF Template Path:', templatePath);
+
+      const html = fs.readFileSync(templatePath, "utf8");
+
+      let agmPropertyUnitOwners = await knex('agm_owner_master').where({ agmId: agmId });
+      console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners:', agmPropertyUnitOwners);
+
+
+      let tempraryDirectory = null;
+      if (process.env.IS_OFFLINE) {
+        tempraryDirectory = "tmp/";
+      } else {
+        tempraryDirectory = "/tmp/";
+      }
+
       const Parallel = require("async-parallel");
       Parallel.setConcurrency(10);
 
-      await Parallel.each(data.agmPropertyUnitOwners, async (pd) => {
+      await Parallel.each(agmPropertyUnitOwners, async (pd) => {
 
         console.log("[helpers][agm][generateVotingDocument]: Generating Doc for Property Owner: ", pd);
 
-        const html = data.html;
-
-        let tempraryDirectory = null;
-        if (process.env.IS_OFFLINE) {
-          tempraryDirectory = "tmp/";
-        } else {
-          tempraryDirectory = "/tmp/";
-        }
-        let filename = `agm-voting-${agmId}-${unitId}-${new Date().getTime()}.pdf`;
+        let filename = `agm-voting-${agmId}-${pd.unitId}-${new Date().getTime()}.pdf`;
         let filepath = tempraryDirectory + filename;
 
         const options = {
@@ -162,7 +174,7 @@ const agmHelper = {
       let sender = requestedBy;
       let receiver = requestedBy;
 
-      let orgData = await knex('organisations').where({id: orgId}).first();
+      let orgData = await knex('organisations').where({ id: orgId }).first();
 
       let notificationPayload = {
         payload: {

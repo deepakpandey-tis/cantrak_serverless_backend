@@ -1285,31 +1285,16 @@ const agmController = {
         });
       }
 
-      const path = require('path');
-      const fs = require("fs");
-
-      // Read HTML Template
-      const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.html');
-      console.log('[controllers][agm][generatePdfOfVotingDocument]: PDF Template Path:', templatePath);
-
-      const html = fs.readFileSync(templatePath, "utf8");
-
       // GET AGM Details...
       let agmDetails = await knex('agm_master').where({id: agmId}).first();
       console.log('[controllers][agm][generatePdfOfVotingDocument]: AGM Details:', agmDetails);
-
-      let agmPropertyUnitOwners =  await knex('agm_owner_master').where({agmId: agmId});
-      console.log('[controllers][agm][generatePdfOfVotingDocument]: AGM PU Owners:', agmPropertyUnitOwners);
-
 
       const queueHelper = require("../helpers/queue");
       await queueHelper.addToQueue(
         {
           agmId: agmId,
           data: {
-            agmDetails,
-            agmPropertyUnitOwners,
-            html
+            agmDetails
           },
           orgId: req.orgId,
           requestedBy: req.me,
