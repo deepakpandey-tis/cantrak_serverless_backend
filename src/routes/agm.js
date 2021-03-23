@@ -106,6 +106,12 @@ router.post(
   agmController.getProxyDocumentImages
 )
 
+router.post(
+  "/generate-pdf-of-voting-document",
+  authMiddleware.isAuthenticated,
+  agmController.generatePdfOfVotingDocument
+);
+
 /**IMPORT AGM OWNER DATA */
 const path = require("path");
 let tempraryDirectory = null;
