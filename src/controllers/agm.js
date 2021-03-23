@@ -130,14 +130,14 @@ const agmController = {
 
         let proxyDocumentPayload = req.body.proxyDocumentName;
 
-        let delProxyDocument = await knex("proxy_document")
+        let delProxyDocument = await knex("agm_proxy_document_master")
           .where({
             agmId: addedAGMResult.id,
           })
           .del();
 
         for (let proxy of proxyDocumentPayload) {
-          let proxyResult = await knex("proxy_document").insert({
+          let proxyResult = await knex("agm_proxy_document_master").insert({
             agmId: addedAGMResult.id,
             documentName: req.body.proxyDocument,
             subDocumentName: proxy.proxyName,
@@ -626,7 +626,7 @@ const agmController = {
       console.log("payload value for pages=====>>>>>", payload);
       let reqData = req.query;
       let total, rows;
-      
+
       let pagination = {};
       let per_page = reqData.per_page || 10;
       let page = reqData.current_page || 1;
@@ -706,15 +706,15 @@ const agmController = {
       ]);
 
       const Parallel = require('async-parallel');
-      
-      rows = await Parallel.map(rows,async pd=>{
-        let proxyData = await knex
-        .from("proxy_document")
-        .select(["proxy_document.proxyName"])
-        .where("proxy_document.agmId",pd.agmId)
-        .first()
 
-        return {...pd,proxyData}
+      rows = await Parallel.map(rows, async pd => {
+        let proxyData = await knex
+          .from("agm_proxy_documents")
+          .select(["agm_proxy_documents.proxyName"])
+          .where("agm_proxy_documents.agmId", pd.agmId)
+          .first()
+
+        return { ...pd, proxyData }
       })
 
       let count = total.count;
@@ -896,7 +896,7 @@ const agmController = {
       let insertData = {
         signature: payload.signature,
         signatureAt: currentTime,
-        registrationType:payload.type
+        registrationType: payload.type
       };
 
       let insertResult;
@@ -1090,9 +1090,9 @@ const agmController = {
         });
       }
 
-      documentList = await knex("proxy_document")
-        .where({ "proxy_document.agmId": payload.agmId })
-        .select(["proxy_document.*"]);
+      documentList = await knex("agm_proxy_document_master")
+        .where({ "agm_proxy_document_master.agmId": payload.agmId })
+        .select(["agm_proxy_document_master.*"]);
 
       // let updateResult = await knex('agm_owner_master').update(updateData).where({ id: payload.id, orgId: req.orgId }).returning(["*"]);
 
@@ -1156,7 +1156,7 @@ const agmController = {
           }
         }
       });
-    } catch (err) {}
+    } catch (err) { }
   },
   getUnitList: async (req, res) => {
     try {
@@ -1211,9 +1211,9 @@ const agmController = {
     }
   },
 
-  getProxyDocumentImages: async(req,res)=>{
+  getProxyDocumentImages: async (req, res) => {
     try {
-      
+
       let payload = req.body;
 
       const schema = new Joi.object().keys({
@@ -1227,8 +1227,8 @@ const agmController = {
       }
 
       let images = await knex
-      .from("images")
-      .where({entityId: payload.agmId, entityType: "proxy_document" })
+        .from("images")
+        .where({ entityId: payload.agmId, entityType: "proxy_document" })
 
       return res.status(200).json({
         data: {
@@ -1237,138 +1237,64 @@ const agmController = {
       });
 
     } catch (err) {
-      res.status(500).json({
+      return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
     }
   },
 
-  generatePdfOfVotingDocument : async(req, res) => {
+  generatePdfOfVotingDocument: async (req, res) => {
     try {
-          let payload = req.body;
-          console.log(payload.agmId);
-          const path = require('path');
-          const pdf = require("pdf-creator-node");
-          const fs = require("fs");
-          
-          // Read HTML Template
-          const templatePath = path.join(__dirname,'template.html');
-          console.log('pdf');
-          console.log(templatePath);
-          const html = fs.readFileSync(templatePath, "utf8");
-          
-          let tempraryDirectory = null;
-          if (process.env.IS_OFFLINE) {
-              tempraryDirectory = "tmp/";
-          } else {
-              tempraryDirectory = "/tmp/";
-          }
-          let filename = "Vote-"+ payload.agmId + "-" + Date.now() + ".pdf";
-          let filepath = tempraryDirectory + filename;
 
-          const options = {
-          format: "A5",
-          orientation: "portrait",
-          border: "5mm",
-          header: {
-              height: "1mm",
-              contents: ''
-              //contents: '<div style="text-align: center;">Author: Shyam Hajare</div>'
-          },
-          footer: {
-              height: "1mm",
-              contents: {
-                  // first: 'Cover page',
-                  // 2: 'Second page', // Any page number is working. 1-based index
-                  // default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>', // fallback value
-                  // last: 'Last Page'
-              }
-          }
-          };
-          const datas = [
-              {
-                  pName:'PName',
-                  date:'22/03/2021',
-                  agenda:'Agenda',
-                  unitNo:'',
-                  oRatio:'',
-              }
-          ];
-          const listDatas = [
-          {
-              enText: "Consent",
-              thaiText: "เห็นชอบ",
-              qrCode:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png'
-          },
-          {
-              enText: "Dissent",
-              thaiText: "ไม่เห็นชอบ",
-              qrCode:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png'
-          },
-          {
-              enText: "Abstention",
-              thaiText: "งดออกเสียง",
-              qrCode:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png'
-          },
-          ];
-          const document = {
-          html: html,
+      const payload = req.body;
+
+      const { agmId } = payload;
+      console.log('[controllers][agm][generatePdfOfVotingDocument]: AgmId:', agmId);
+
+      if (!agmId) {
+        return res.status(400).json({
+          errors: [{ code: "BAD_REQUEST", message: 'Please pass valid AgmId' }],
+        });
+      }
+
+      const path = require('path');
+      const fs = require("fs");
+
+      // Read HTML Template
+      const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.html');
+      console.log('[controllers][agm][generatePdfOfVotingDocument]: PDF Template Path:', templatePath);
+
+      const html = fs.readFileSync(templatePath, "utf8");
+
+      // GET AGM Details...
+      let agmDetails = await knex('agm_master').where({id: agmId}).first();
+      console.log('[controllers][agm][generatePdfOfVotingDocument]: AGM Details:', agmDetails);
+
+      let agmPropertyUnitOwners =  await knex('agm_owner_master').where({agmId: agmId});
+      console.log('[controllers][agm][generatePdfOfVotingDocument]: AGM PU Owners:', agmPropertyUnitOwners);
+
+
+      const queueHelper = require("../helpers/queue");
+      await queueHelper.addToQueue(
+        {
+          agmId: agmId,
           data: {
-              listDatas: listDatas,
-              datas:datas
-
+            agmDetails,
+            agmPropertyUnitOwners,
+            html
           },
-          path: filepath,
-          type: "",
-          };
+          orgId: req.orgId,
+          requestedBy: req.me,
+        },
+        "long-jobs",
+        "AGM_PREPARE_VOTING_DOCUMENT"
+      );
 
-      let success;
-
-      pdf
-      .create(document, options)
-      .then((results) => {
-          //res.json({results:results})
-          let bucketName = process.env.S3_BUCKET_NAME;
-          const AWS = require("aws-sdk");
-          fs.readFile(results.filename, function (err, file_buffer) {
-              var s3 = new AWS.S3();
-              var params = {
-                  Bucket: bucketName,
-                  Key: "Voting/"+ payload.agmId +"/" + filename,
-                  Body: file_buffer,
-                  ACL: "public-read"
-              };
-              s3.putObject(params, function (err, data) {
-                  if (err) {
-                      console.log("Error at uploadPDFFileOnS3Bucket function", err);
-                      //next(err);
-                      return res.status(500).json({
-                          errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-                      });
-                  } else {
-                      console.log("File uploaded Successfully");
-
-                      //next(null, filePath);
-                      // fs.unlink(filepath, err => {
-                      //   console.log("File Deleting Error " + err);
-                      // });
-                      let url = process.env.S3_BUCKET_URL + "Voting/"+ payload.agmId +"/" + filename;
-
-                      return res.status(200).json({
-                          data: {},
-                          message: "Asset Data Export Successfully!",
-                          url: url,
-                          // assetResult
-                      });
-                  }
-              });
-          });
-      })
-      .catch((error) => {
-          console.error(error);
-          res.json({error:error})
+      return res.status(200).json({
+        data: {},
+        message: "We are preparing Voting Document for this AGM. Please wait for few minutes. Once generated we will notify you via App Notification & Email",
       });
-      //res.send('pdf');
+
 
     } catch (err) {
       res.status(500).json({ failed: true, error: err });

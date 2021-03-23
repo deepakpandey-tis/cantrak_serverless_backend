@@ -1,0 +1,14 @@
+<% /* Note: This is injected into `emails/layouts/default-layout.ejs` */ %>
+    <p style="margin-bottom: 25px;">Dear <%= fullName %>,</p>
+    <p style="margin-bottom: 25px;">Voting Document has been generated successfully. Please use the below link to
+        download file.</p>
+    <div style="margin-bottom: 25px; text-align: center;">
+        <a style="background-color: #00ACC4; display: inline-block; font-size: 1.1em; color: #fff; padding: 10px 35px 10px; font-weight: 500; text-decoration: none; border-radius: 7px;"
+            href="<%= downloadUrl %>">Download Voting Document</a>
+    </div>
+    <p style="margin-bottom: 25px;">If you have any trouble, try pasting this link in your browser: <a
+            style="color: #00ACC4; word-wrap: break-word;" href="<%= downloadUrl %>">
+            <%= downloadUrl %>
+        </a></p>
+    <p style="margin-bottom: 5px;">Sincerely,</p>
+    <p style="margin-top: 0px;">The ServiceMind Team</p>
