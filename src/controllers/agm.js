@@ -1245,7 +1245,8 @@ const agmController = {
 
   generatePdfOfVotingDocument : async(req, res) => {
     try {
-            
+          let payload = req.body;
+          console.log(payload.agmId);
           const path = require('path');
           const pdf = require("pdf-creator-node");
           const fs = require("fs");
@@ -1262,7 +1263,7 @@ const agmController = {
           } else {
               tempraryDirectory = "/tmp/";
           }
-          let filename = "Vote-" + Date.now() + ".pdf";
+          let filename = "Vote-"+ payload.agmId + "-" + Date.now() + ".pdf";
           let filepath = tempraryDirectory + filename;
 
           const options = {
@@ -1333,7 +1334,7 @@ const agmController = {
               var s3 = new AWS.S3();
               var params = {
                   Bucket: bucketName,
-                  Key: "Export/Asset/" + filename,
+                  Key: "Voting/"+ payload.agmId +"/" + filename,
                   Body: file_buffer,
                   ACL: "public-read"
               };
@@ -1351,7 +1352,7 @@ const agmController = {
                       // fs.unlink(filepath, err => {
                       //   console.log("File Deleting Error " + err);
                       // });
-                      let url = process.env.S3_BUCKET_URL + "/Export/Asset/" + filename;
+                      let url = process.env.S3_BUCKET_URL + "Voting/"+ payload.agmId +"/" + filename;
 
                       return res.status(200).json({
                           data: {},
@@ -1370,7 +1371,7 @@ const agmController = {
       //res.send('pdf');
 
     } catch (err) {
-      res.status(200).json({ failed: true, error: err });
+      res.status(500).json({ failed: true, error: err });
     }
   }
 };
