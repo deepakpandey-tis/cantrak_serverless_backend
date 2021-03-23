@@ -137,6 +137,9 @@ const agmController = {
           .del();
 
         for (let proxy of proxyDocumentPayload) {
+
+          console.log("proxy document===>>>>",proxy)
+
           let proxyResult = await knex("agm_proxy_document_master").insert({
             agmId: addedAGMResult.id,
             documentName: req.body.proxyDocument,
@@ -362,7 +365,6 @@ const agmController = {
                 isActive: true,
                 createdAt: new Date().getTime(),
                 updatedAt: new Date().getTime(),
-                // importedBy: req.me.id,
                 createdBy: req.me.id,
               };
 
@@ -705,17 +707,17 @@ const agmController = {
           .limit(per_page),
       ]);
 
-      const Parallel = require('async-parallel');
+      const Parallel = require("async-parallel");
 
-      rows = await Parallel.map(rows, async pd => {
+      rows = await Parallel.map(rows, async (pd) => {
         let proxyData = await knex
           .from("agm_proxy_documents")
           .select(["agm_proxy_documents.proxyName"])
           .where("agm_proxy_documents.agmId", pd.agmId)
-          .first()
+          .first();
 
-        return { ...pd, proxyData }
-      })
+        return { ...pd, proxyData };
+      });
 
       let count = total.count;
       pagination.total = count;
@@ -726,8 +728,6 @@ const agmController = {
       pagination.current_page = page;
       pagination.from = offset;
       pagination.data = rows;
-
-
 
       res.status(200).json({
         data: {
@@ -877,6 +877,7 @@ const agmController = {
         "proxyName",
         "proxyId",
         "ownerProxyId",
+        "imagesArray",
       ]);
 
       const schema = new Joi.object().keys({
@@ -896,31 +897,59 @@ const agmController = {
       let insertData = {
         signature: payload.signature,
         signatureAt: currentTime,
-        registrationType: payload.type
+        registrationType: payload.type,
       };
 
       let insertResult;
+      let insertProxyResult;
+
       for (let owner of req.body.ownerId) {
         insertResult = await knex
           .update(insertData)
           .where({ agmId: payload.agmId, id: owner })
           .returning(["*"])
           .into("agm_owner_master");
+
+        for (let proxy of req.body.ownerProxyId) {
+          
+          let insertProxyData = {
+            agmId: payload.agmId,
+            ownerMasterId: owner,
+            proxyDocumentMasterId: proxy,
+            proxyName: req.body.proxyName,
+            proxyIdentificationNumber: req.body.proxyId,
+            createdAt: currentTime,
+            updatedAt: currentTime,
+            orgId: req.orgId,
+          };
+
+          insertProxyResult = await knex
+            .insert(insertProxyData)
+            .returning(["*"])
+            .into("agm_proxy_documents");
+        }
+
+        let insertImages;
+        if (req.body.imagesArray) {
+          console.log("images====>>>>", req.body.imagesArray);
+          for (let image of req.body.imagesArray) {
+            console.log("value in image===>>>", image);
+            insertImages = await knex
+            .insert({
+              title: image.filename,
+              name: image.filename,
+              s3Url: image.url,
+              entityId: owner,
+              entityType: "agm_proxy_documents",
+              orgId: req.orgId,
+            })
+            .returning(["*"])
+            .into("images");
+            
+          }
+        }
       }
 
-      let insertProxyData = {
-        proxyName: req.body.proxyName,
-        proxyId: req.body.proxyId,
-      };
-
-      let insertProxyResult;
-      for (let proxy of req.body.ownerProxyId) {
-        insertProxyResult = await knex
-          .update(insertProxyData)
-          .where({ agmId: payload.agmId, id: proxy })
-          .returning(["*"])
-          .into("proxy_document");
-      }
       return res.status(200).json({
         data: {
           insertResult: insertResult,
@@ -1213,7 +1242,6 @@ const agmController = {
 
   getProxyDocumentImages: async (req, res) => {
     try {
-
       let payload = req.body;
 
       const schema = new Joi.object().keys({
@@ -1228,14 +1256,13 @@ const agmController = {
 
       let images = await knex
         .from("images")
-        .where({ entityId: payload.agmId, entityType: "proxy_document" })
+        .where({ entityId: payload.agmId, entityType: "proxy_document" });
 
       return res.status(200).json({
         data: {
           proxyImages: images,
         },
       });
-
     } catch (err) {
       return res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
@@ -1299,7 +1326,7 @@ const agmController = {
     } catch (err) {
       res.status(200).json({ failed: true, error: err });
     }
-  }
+  },
 };
 
 module.exports = agmController;
