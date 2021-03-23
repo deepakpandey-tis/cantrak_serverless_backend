@@ -130,7 +130,7 @@ const agmController = {
 
         let proxyDocumentPayload = req.body.proxyDocumentName;
 
-        let delProxyDocument = await knex("proxy_document")
+        let delProxyDocument = await knex("agm_proxy_document_master")
           .where({
             agmId: addedAGMResult.id,
           })
@@ -1090,9 +1090,9 @@ const agmController = {
         });
       }
 
-      documentList = await knex("proxy_document")
-        .where({ "proxy_document.agmId": payload.agmId })
-        .select(["proxy_document.*"]);
+      documentList = await knex("agm_proxy_document_master")
+        .where({ "agm_proxy_document_master.agmId": payload.agmId })
+        .select(["agm_proxy_document_master.*"]);
 
       // let updateResult = await knex('agm_owner_master').update(updateData).where({ id: payload.id, orgId: req.orgId }).returning(["*"]);
 
