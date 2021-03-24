@@ -27,7 +27,7 @@ const createPdf = (document, agmId) => {
     });
 
     const page = await browser.newPage();
-    page.setContent(document.html);
+    page.setContent(document.html, { waitUntil: ['load', 'domcontentloaded', 'networkidle0'] });
 
     const pdf = await page.pdf({
       format: 'A5',
