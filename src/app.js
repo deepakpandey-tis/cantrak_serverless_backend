@@ -285,16 +285,16 @@ module.exports.longJobsProcessor = async (event, context) => {
 
     console.log('[app][longJobsProcessor]: Data For AGM Voting Doc Prepare:', recordData);
 
-    // const agmHelper = require('./helpers/agm');
+    const agmHelper = require('./helpers/agm');
 
-    // const { agmId, data, orgId, requestedBy } = recordData;
+    const { agmId, data, orgId, requestedBy } = recordData;
 
-    // if (agmId) {
-    //   await agmHelper.generateVotingDocument({ agmId, data, orgId, requestedBy });
-    // } else {
-    //   console.log('[app][longJobsProcessor]', 'AGM Id not found. Hence Voting Documents can not be generated.');
-    //   throw Error('AGM Id not found. Hence Voting Documents can not be generated.');
-    // }
+    if (agmId) {
+      await agmHelper.generateVotingDocument({ agmId, data, orgId, requestedBy });
+    } else {
+      console.log('[app][longJobsProcessor]', 'AGM Id not found. Hence Voting Documents can not be generated.');
+      throw Error('AGM Id not found. Hence Voting Documents can not be generated.');
+    }
     
     console.log('[app][longJobsProcessor]: Task Completed.....');
 
