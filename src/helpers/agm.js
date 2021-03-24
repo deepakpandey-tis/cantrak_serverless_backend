@@ -2,8 +2,8 @@ const Joi = require("@hapi/joi");
 const _ = require("lodash");
 const AWS = require("aws-sdk");
 const knex = require("../db/knex");
-const pdf = require("pdf-creator-node");
 const moment = require("moment-timezone");
+const chromium = require('chrome-aws-lambda')
 
 AWS.config.update({
   accessKeyId: process.env.ACCESS_KEY_ID,
@@ -14,57 +14,46 @@ AWS.config.update({
 
 const createPdf = (document, agmId) => {
 
-  const options = {
-    format: "A5",
-    orientation: "portrait",
-    border: "5mm",
-    header: {
-      height: "1mm",
-      contents: ''
-      //contents: '<div style="text-align: center;">Author: Shyam Hajare</div>'
-    },
-    footer: {
-      height: "1mm",
-      contents: {
-        // first: 'Cover page',
-        // 2: 'Second page', // Any page number is working. 1-based index
-        // default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>', // fallback value
-        // last: 'Last Page'
-      }
-    }
-  };
+  let bucketName = process.env.S3_BUCKET_NAME;
 
   return new Promise((res, rej) => {
 
-    pdf.create(document, options)
-      .then((results) => {
+    let browser = null;
+    browser = await chromium.puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath,
+      headless: chromium.headless
+    });
 
-        let bucketName = process.env.S3_BUCKET_NAME;
+    const page = await browser.newPage();
+    page.setContent(document.html);
 
-        fs.readFile(results.filename, function (err, file_buffer) {
-          var s3 = new AWS.S3();
-          var params = {
-            Bucket: bucketName,
-            Key: "AGM/" + agmId + "/VotingDocuments/" + filename,
-            Body: file_buffer,
-            ACL: "public-read"
-          };
+    const pdf = await page.pdf({
+      format: 'A5',
+      printBackground: true,
+      margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' }
+    });
 
-          s3.putObject(params, function (err, data) {
-            if (err) {
-              console.log("Error at uploadPDFFileOnS3Bucket function", err);
-              rej(err);
-            } else {
-              console.log("File uploaded Successfully");
-              let url = process.env.S3_BUCKET_URL + "AGM/" + agmId + "/VotingDocuments/" + filename;
-              res(url);
-            }
-          });
-        });
-      })
-      .catch((error) => {
-        rej(error);
-      });
+    const s3 = new AWS.S3();
+    const params = {
+      Bucket: bucketName,
+      Key: "AGM/" + agmId + "/VotingDocuments/" + filename,
+      Body: pdf,
+      ACL: "public-read"
+    };
+
+    s3.putObject(params, function (err, data) {
+      if (err) {
+        console.log("Error at uploadPDFFileOnS3Bucket function", err);
+        rej(err);
+      } else {
+        console.log("File uploaded Successfully");
+        let url = process.env.S3_BUCKET_URL + "AGM/" + agmId + "/VotingDocuments/" + filename;
+        res(url);
+      }
+    });
+
   });
 
 }
@@ -76,8 +65,6 @@ const agmHelper = {
     try {
 
       console.log('[helpers][agm][generateVotingDocument]: Data:', data);
-
-      const votingDocGeneratedNotification = require('../notifications/agm/voting-doc-generated');
 
       const path = require('path');
       const fs = require("fs");
@@ -109,25 +96,6 @@ const agmHelper = {
         let filename = `agm-voting-${agmId}-${pd.unitId}-${new Date().getTime()}.pdf`;
         let filepath = tempraryDirectory + filename;
 
-        const options = {
-          format: "A5",
-          orientation: "portrait",
-          border: "5mm",
-          header: {
-            height: "1mm",
-            contents: ''
-            //contents: '<div style="text-align: center;">Author: Shyam Hajare</div>'
-          },
-          footer: {
-            height: "1mm",
-            contents: {
-              // first: 'Cover page',
-              // 2: 'Second page', // Any page number is working. 1-based index
-              // default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>', // fallback value
-              // last: 'Last Page'
-            }
-          }
-        };
         const datas = [
           {
             pName: 'PName',
@@ -185,6 +153,7 @@ const agmHelper = {
         }
       };
 
+      const votingDocGeneratedNotification = require('../notifications/agm/voting-doc-generated');
       await votingDocGeneratedNotification.send(
         sender,
         receiver,
