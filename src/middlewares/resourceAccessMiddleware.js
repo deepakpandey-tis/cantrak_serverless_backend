@@ -187,6 +187,21 @@ const resourceAccessMiddleware = {
     }
   },
 
+  isAGMAccessible: async (req, res, next) => {
+    if (req.superAdmin) {
+      return next();
+    }
+    let keys = req.userProjectResources.map(v => v.id);
+    if (keys.includes(14) || keys.includes("14")) {
+      console.log('[middleware][resourceAccessMiddleware]: isAGMAccessible: ', true);
+      setAccessibleProjects(req, 14);
+      next();
+    } else {
+      console.log('[middleware][resourceAccessMiddleware]:isAGMAccessible: ', false);
+      next(createError(403));
+    }
+  },
+
 };
 
 module.exports = resourceAccessMiddleware;

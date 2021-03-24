@@ -281,9 +281,9 @@ module.exports.longJobsProcessor = async (event, context) => {
   }
 
 
-  if (messageType === 'AGM_PREPARE_VOTING_DOCUMENT') {
+  if (messageType == 'AGM_PREPARE_VOTING_DOCUMENT') {
 
-    console.log('[app][longJobsProcessor]', 'Data For AGM Voting Doc Prepare:', recordData);
+    console.log('[app][longJobsProcessor]: Data For AGM Voting Doc Prepare:', recordData);
 
     const agmHelper = require('./helpers/agm');
 
@@ -301,6 +301,7 @@ module.exports.longJobsProcessor = async (event, context) => {
   }
 
 
+  console.log('[app][longJobsProcessor]: Finished.....');
   return true;
 };
 
