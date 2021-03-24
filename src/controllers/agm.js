@@ -445,7 +445,7 @@ const agmController = {
           companyId: payload.companyId,
           projectId: payload.projectId,
           ownerName: payload.ownerName,
-          joinOwnerName: payload.joinOwnerName,
+          joinOwnerName: req.body.joinOwnerName,
           ownershipRatio: payload.ownershipRatio,
           ownerIdNo: payload.ownerIdNo,
           eligibility: payload.eligibility,
@@ -465,6 +465,68 @@ const agmController = {
       return res.status(200).json({
         data: resultData,
         message: "Owner added successfully!",
+      });
+    } catch (err) {
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+      });
+    }
+  },
+
+/*UPDATE OWNER DATA */
+
+  updateOwner: async (req, res) => {
+    try {
+      //console.log('atif');
+      // let payload = req.body;
+      let resultData;
+      //console.log(req.body);
+      await knex.transaction(async (trx) => {
+        const payload = _.omit(req.body, ["joinOwnerName", "ownerIdNo"]);
+        console.log(payload);
+        const schema = Joi.object().keys({
+          ownerId: Joi.string().required(),
+          agmId: Joi.string().required(),
+          companyId: Joi.string().required(),
+          projectId: Joi.string().required(),
+          houseId: Joi.string().required(),
+          unitNo: Joi.string().required(),
+          ownerName: Joi.string().required(),
+          ownershipRatio: Joi.string().required(),
+          eligibility: Joi.boolean().required(),
+        });
+
+        const result = Joi.validate(payload, schema);
+        if (result && result.hasOwnProperty("error") && result.error) {
+          return res.status(400).json({
+            errors: [
+              { code: "VALIDATION_ERROR", message: result.error.message },
+            ],
+          });
+        }
+
+        let updateData = {
+          agmId: payload.agmId,
+          unitId: payload.unitNo,
+          companyId: payload.companyId,
+          projectId: payload.projectId,
+          ownerName: payload.ownerName,
+          joinOwnerName: req.body.joinOwnerName,
+          ownershipRatio: payload.ownershipRatio,
+          ownerIdNo: payload.ownerIdNo,
+          eligibility: payload.eligibility,
+          orgId: req.orgId,
+          updatedAt: new Date().getTime(),
+        };
+
+        resultData = await knex('agm_owner_master')
+          .update(updateData)
+          .where({ id: payload.ownerId })
+          .returning(["*"]);
+      });
+      return res.status(200).json({
+        data: resultData,
+        message: "Owner updated successfully!",
       });
     } catch (err) {
       return res.status(500).json({
@@ -1093,47 +1155,47 @@ const agmController = {
     }
   },
 
-  /*UPDATE OWNER DATA */
-  updateOwner: async (req, res) => {
-    try {
-      let payload = req.body;
-      let updateOwner;
-      const schema = new Joi.object().keys({
-        agmId: Joi.number().required(),
-        unitNo: Joi.number().required(),
-        ownerName: Joi.string().required(),
-        eligibility: Joi.number().required(),
-        ownerId: Joi.number().required(),
-      });
+  
+  // updateOwner: async (req, res) => {
+  //   try {
+  //     let payload = req.body;
+  //     let updateOwner;
+  //     const schema = new Joi.object().keys({
+  //       agmId: Joi.number().required(),
+  //       unitNo: Joi.number().required(),
+  //       ownerName: Joi.string().required(),
+  //       eligibility: Joi.number().required(),
+  //       ownerId: Joi.number().required(),
+  //     });
 
-      const result = Joi.validate(payload, schema);
-      if (result && result.hasOwnProperty("error") && result.error) {
-        return res.status(400).json({
-          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
-        });
-      }
+  //     const result = Joi.validate(payload, schema);
+  //     if (result && result.hasOwnProperty("error") && result.error) {
+  //       return res.status(400).json({
+  //         errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+  //       });
+  //     }
 
-      let updateData = {
-        eligibility: payload.eligibility,
-        ownerName: payload.ownerName,
-        unitId: payload.unitId,
-      };
+  //     let updateData = {
+  //       eligibility: payload.eligibility,
+  //       ownerName: payload.ownerName,
+  //       unitId: payload.unitId,
+  //     };
 
-      updateOwner = await knex("agm_owner_master")
-        .update(updateData)
-        .where({ id: payload.ownerId, orgId: req.orgId, agmId: payload.agmId })
-        .returning(["*"]);
+  //     updateOwner = await knex("agm_owner_master")
+  //       .update(updateData)
+  //       .where({ id: payload.ownerId, orgId: req.orgId, agmId: payload.agmId })
+  //       .returning(["*"]);
 
-      return res.status(200).json({
-        data: updateOwner,
-        message: "Owner updated successfully!",
-      });
-    } catch (err) {
-      return res.status(500).json({
-        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
-      });
-    }
-  },
+  //     return res.status(200).json({
+  //       data: updateOwner,
+  //       message: "Owner updated successfully!",
+  //     });
+  //   } catch (err) {
+  //     return res.status(500).json({
+  //       errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+  //     });
+  //   }
+  // },
 
   /* Get Proxy Document List */
   getProxyDocumentList: async (req, res) => {
@@ -1342,7 +1404,7 @@ const agmController = {
 
 
     } catch (err) {
-      res.status(200).json({ failed: true, error: err });
+      res.status(500).json({ failed: true, error: err });
     }
   },
 };
