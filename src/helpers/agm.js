@@ -19,40 +19,52 @@ const createPdf = (document, agmId) => {
   return new Promise(async (res, rej) => {
 
     let browser = null;
-    browser = await chromium.puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath,
-      headless: chromium.headless
-    });
 
-    const page = await browser.newPage();
-    page.setContent(document.html, { waitUntil: ['load', 'domcontentloaded', 'networkidle0'] });
+    try {
 
-    const pdf = await page.pdf({
-      format: 'A5',
-      printBackground: true,
-      margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' }
-    });
+      browser = await chromium.puppeteer.launch({
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath,
+        headless: chromium.headless,
+        ignoreHTTPSErrors: true,
+      });
 
-    const s3 = new AWS.S3();
-    const params = {
-      Bucket: bucketName,
-      Key: "AGM/" + agmId + "/VotingDocuments/" + filename,
-      Body: pdf,
-      ACL: "public-read"
-    };
+      const page = await browser.newPage();
+      page.setContent(document.html, { waitUntil: ['load', 'domcontentloaded', 'networkidle0'] });
 
-    s3.putObject(params, function (err, data) {
-      if (err) {
-        console.log("Error at uploadPDFFileOnS3Bucket function", err);
-        rej(err);
-      } else {
-        console.log("File uploaded Successfully");
-        let url = process.env.S3_BUCKET_URL + "AGM/" + agmId + "/VotingDocuments/" + filename;
-        res(url);
+      const pdf = await page.pdf({
+        format: 'A5',
+        printBackground: true,
+        margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' }
+      });
+
+      const s3 = new AWS.S3();
+      const params = {
+        Bucket: bucketName,
+        Key: "AGM/" + agmId + "/VotingDocuments/" + filename,
+        Body: pdf,
+        ACL: "public-read"
+      };
+
+      // s3.putObject(params, function (err, data) {
+      //   if (err) {
+      //     console.log("Error at uploadPDFFileOnS3Bucket function", err);
+      //     rej(err);
+      //   } else {
+      //     console.log("File uploaded Successfully");
+      //     let url = process.env.S3_BUCKET_URL + "AGM/" + agmId + "/VotingDocuments/" + filename;
+      //     res(url);
+      //   }
+      // });
+
+    } catch (err) {
+      rej(err);
+    } finally {
+      if (browser !== null) {
+        await browser.close();
       }
-    });
+    }
 
   });
 
