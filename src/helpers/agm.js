@@ -63,11 +63,11 @@ const createPdf = (document, agmId) => {
         });
       })
       .catch((error) => {
-        rej(err);
+        rej(error);
       });
   });
 
-};
+}
 
 
 const agmHelper = {
@@ -88,7 +88,7 @@ const agmHelper = {
 
       const html = fs.readFileSync(templatePath, "utf8");
 
-      let agmPropertyUnitOwners = await knex('agm_owner_master').where({ agmId: agmId });
+      let agmPropertyUnitOwners = await knex('agm_owner_master').where({ agmId: agmId, eligibility: true });
       console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners:', agmPropertyUnitOwners);
 
 
