@@ -16,7 +16,7 @@ const createPdf = (document, agmId) => {
 
   let bucketName = process.env.S3_BUCKET_NAME;
 
-  return new Promise((res, rej) => {
+  return new Promise(async (res, rej) => {
 
     let browser = null;
     browser = await chromium.puppeteer.launch({
