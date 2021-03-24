@@ -20,7 +20,6 @@
     "async-parallel": "^1.2.3",
     "aws-sdk": "^2.825.0",
     "bcrypt": "^5.0.0",
-    "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "chrome-aws-lambda": "^8.0.0",
     "cors": "^2.8.5",
