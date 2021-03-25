@@ -279,11 +279,18 @@ const agmHelper = {
 
       const s3 = new AWS.S3();
 
-      let s3FileDownloadUrl = await s3.getSignedUrl('getObject', {
-        Bucket: bucketName,
-        Key: zipFileName,
-        Expires: 2 * 60 * 60
-      }).promise();
+      // let s3FileDownloadUrl = await s3.getSignedUrl('getObject', {
+      //   Bucket: bucketName,
+      //   Key: zipFileName,
+      //   Expires: 2 * 60 * 60
+      // }).promise();
+
+      let s3FileDownloadUrl = await new Promise((resolve, reject) => {
+        s3.getSignedUrl('getObject', {Bucket: bucketName, Key: zipFileName, Expires: 2 * 60 * 60 }, (err, url) => {
+          if (err) reject(err)
+          else resolve(url)
+        });
+      });
 
       console.log("[helpers][agm][generateVotingDocument]: s3FileDownloadUrl:", s3FileDownloadUrl);
 
