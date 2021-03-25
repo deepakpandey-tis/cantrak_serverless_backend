@@ -188,7 +188,7 @@ const agmHelper = {
       const s3 = new AWS.S3();
 
       var _list = await Promise.all(s3keys.map(_key => new Promise((_resolve, _reject) => {
-        s3.getObject({ Bucket: bucketName, Key: _key })
+        s3.getObject({ Bucket: bucketName, Key: _key }).promise()
           .then(_data => _resolve({ data: _data.Body, name: `${_key.split('/').pop()}` }));
       }
       ))).catch(_err => { throw new Error(_err) });
