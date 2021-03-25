@@ -104,80 +104,78 @@ const agmHelper = {
         tempraryDirectory = "/tmp/";
       }
 
-      let s3keys = []; //list of your file keys in s3  
-
+      let s3keys = []; //list of your file keys in s3 
+      const QRCODE = require("qrcode");
 
       Parallel.setConcurrency(1);
 
-      await Parallel.each(agmPropertyUnitOwners, async (pd) => {
+      await Parallel.each(agendas, async (agenda) => {
 
-        await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
-        
-        browser = await chromium.puppeteer.launch({
-          args: chromium.args,
-          defaultViewport: chromium.defaultViewport,
-          executablePath: await chromium.executablePath,
-          headless: chromium.headless,
+        await Parallel.each(agmPropertyUnitOwners, async (pd) => {
+
+          await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
+
+          browser = await chromium.puppeteer.launch({
+            args: chromium.args,
+            defaultViewport: chromium.defaultViewport,
+            executablePath: await chromium.executablePath,
+            headless: chromium.headless,
+          });
+
+          console.log("[helpers][agm][generateVotingDocument]: Generating Doc for Property Owner: ", pd);
+
+          let filename = `agm-${agmId}-pu-${pd.unitId}-t-${new Date().getTime()}.pdf`;
+          let Key = "AGM/" + agmId + "/VotingDocuments/" + filename;
+
+
+          agenda.choices = await Parallel.map(agenda.choices, async (ch) => {
+            let qrCodeObj = {
+              qrName: 'SM:AGM:VOTING',
+              orgId: orgId,
+              agmId: agmId,
+              unitId: pd.unitId,
+              unitNumber: pd.unitNumber,
+              ownershipRatio: pd.ownershipRatio,
+              agendaId: agenda.id,
+              choice: ch.id
+            };
+            let qrCodeDataURI = await QRCODE.toDataURL(JSON.stringify(qrCodeObj));
+            ch.qrCode = qrCodeDataURI;
+          });
+
+          const ejs = require('ejs');
+          const path = require('path');
+
+          // Read HTML Template
+          const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.ejs');
+          console.log('[helpers][agm][generateVotingDocument]: PDF Template Path:', templatePath);
+
+          let agmDetails = data.agmDetails;
+          agmDetails.formattedDate = moment(agmDetails.agmDate).format('LL');
+
+          let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner: pd });
+          console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
+
+          const document = {
+            html: htmlContents,
+            data: {
+              agmDetails: data.agmDetails,
+              agenda: agenda,
+              propertyOwner: pd
+            },
+            filename: filename,
+          };
+
+          await createPdf(document, agmId, browser);
+          console.log("[helpers][agm][generateVotingDocument]: Generated Doc for PU: ", pd);
+          s3keys.push(Key);
+
+          if (browser !== null) {
+            await browser.close();
+          }
+
         });
 
-        console.log("[helpers][agm][generateVotingDocument]: Generating Doc for Property Owner: ", pd);
-
-        let filename = `agm-${agmId}-pu-${pd.unitId}-t-${new Date().getTime()}.pdf`;
-        let Key = "AGM/" + agmId + "/VotingDocuments/" + filename;
-
-        let agenda = {
-          agendaNo: 1,
-          agendaName: 'Test Agenda for printing',
-          agendaNameThai: 'วาระการทดสอบสำหรับการพิมพ์',
-          choices: [
-            {
-              enText: "Consent",
-              thaiText: "เห็นชอบ",
-              qrCode: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png'
-            },
-            {
-              enText: "Dissent",
-              thaiText: "ไม่เห็นชอบ",
-              qrCode: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png'
-            },
-            {
-              enText: "Abstention",
-              thaiText: "งดออกเสียง",
-              qrCode: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png'
-            },
-          ]
-        };
-
-        // const fs = require("fs");
-        // const url = require('url');
-        // const util = require('util');
-        const ejs = require('ejs');
-        const path = require('path');
-
-        // Read HTML Template
-        const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.ejs');
-        console.log('[helpers][agm][generateVotingDocument]: PDF Template Path:', templatePath);
-
-        let htmlContents = await ejs.renderFile(templatePath, { agmDetails: data.agmDetails, agenda, propertyOwner: pd });
-        console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
-
-        const document = {
-          html: htmlContents,
-          data: {
-            agmDetails: data.agmDetails,
-            agenda: agenda,
-            propertyOwner: pd
-          },
-          filename: filename,
-        };
-
-        await createPdf(document, agmId, browser);
-        console.log("[helpers][agm][generateVotingDocument]: Generated Doc for PU: ", pd);
-        s3keys.push(Key);
-
-        if (browser !== null) {
-          await browser.close();
-        }
 
       });
 
