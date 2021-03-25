@@ -205,19 +205,19 @@ const agmHelper = {
 
       await Parallel.each(agmPropertyUnitOwners, async (pd) => {
 
+        if (!browser || wasBrowserKilled(browser)) {
+          await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
+          browser = await chromium.puppeteer.launch({
+            args: chromium.args,
+            defaultViewport: chromium.defaultViewport,
+            executablePath: await chromium.executablePath,
+            headless: chromium.headless,
+          });
+        }
+
         console.log("[helpers][agm][generateVotingDocument]: Generating Doc for Property Owner: ", pd);
 
         try {
-
-          if (!browser || wasBrowserKilled(browser)) {
-            await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
-            browser = await chromium.puppeteer.launch({
-              args: chromium.args,
-              defaultViewport: chromium.defaultViewport,
-              executablePath: await chromium.executablePath,
-              headless: chromium.headless,
-            });
-          }
 
           await Parallel.each(agendas, async (agenda) => {
 
@@ -271,11 +271,6 @@ const agmHelper = {
 
           });
 
-          if (browser !== null) {
-            await browser.close();
-            browser = null;
-          }
-
         } catch (err) {
           console.error("[helpers][announcement][sendAnnouncement]: Inner Loop: Error", err);
           if (err.list && Array.isArray(err.list)) {
@@ -288,6 +283,11 @@ const agmHelper = {
 
         console.log("[helpers][agm][generateVotingDocument]: All docs gen for Property Owner: ", pd);
       });
+
+      if (browser !== null) {
+        await browser.close();
+        browser = null;
+      }
 
       console.log("[helpers][agm][generateVotingDocument]: All PDF documents created successfully. Going to create zip file.. ");
       console.log("[helpers][agm][generateVotingDocument]: Files to be zipped: ", s3keys);
