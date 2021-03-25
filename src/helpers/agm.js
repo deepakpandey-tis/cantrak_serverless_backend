@@ -148,10 +148,11 @@ const agmHelper = {
             };
             let qrString = JSON.stringify(qrCodeObj);
             console.log("[helpers][agm][generateVotingDocument]: Qr String: ", qrString);
-            // let qrCodeDataURI = await QRCODE.toDataURL(qrString);
-            let qrCodeDataURI = 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png';
+            let qrCodeDataURI = await QRCODE.toDataURL(qrString);
+            // let qrCodeDataURI = 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png';
+            choice.qrCode = qrCodeDataURI;
             console.log("[helpers][agm][generateVotingDocument]: Qr Generated....");
-            ch.qrCode = qrCodeDataURI;
+            return choice;
           });
 
           const ejs = require('ejs');
