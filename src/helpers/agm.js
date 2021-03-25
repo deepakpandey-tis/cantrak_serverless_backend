@@ -201,41 +201,30 @@ const agmHelper = {
       let s3keys = []; //list of your file keys in s3 
       const QRCODE = require("qrcode");
 
-      Parallel.setConcurrency(3);
+      Parallel.setConcurrency(1);
 
-      if (!browser || wasBrowserKilled(browser)) {
-        await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
-        browser = await chromium.puppeteer.launch({
-          args: chromium.args,
-          defaultViewport: chromium.defaultViewport,
-          executablePath: await chromium.executablePath,
-          headless: chromium.headless,
-        });
-      }
+      await Parallel.each(agmPropertyUnitOwners, async (pd) => {
 
-      await Parallel.each(agendas, async (agenda) => {
-
-        console.log("[helpers][agm][generateVotingDocument]: Starting to Generat For Agenda: ", agenda);
+        console.log("[helpers][agm][generateVotingDocument]: Generating Doc for Property Owner: ", pd);
 
         try {
 
-          await Parallel.each(agmPropertyUnitOwners, async (pd) => {
+          if (!browser || wasBrowserKilled(browser)) {
+            await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
+            browser = await chromium.puppeteer.launch({
+              args: chromium.args,
+              defaultViewport: chromium.defaultViewport,
+              executablePath: await chromium.executablePath,
+              headless: chromium.headless,
+            });
+          }
 
-            console.log("[helpers][agm][generateVotingDocument]: Generating Doc for Property Owner: ", pd);
+          await Parallel.each(agendas, async (agenda) => {
 
-            if (!browser || wasBrowserKilled(browser)) {
-              await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
-              browser = await chromium.puppeteer.launch({
-                args: chromium.args,
-                defaultViewport: chromium.defaultViewport,
-                executablePath: await chromium.executablePath,
-                headless: chromium.headless,
-              });
-            }
+            console.log("[helpers][agm][generateVotingDocument]: Starting to Generat For Agenda: ", agenda);
 
             let filename = `agm-${agmId}-pu-${pd.unitId}-t-${new Date().getTime()}.pdf`;
             let Key = s3BasePath + filename;
-
 
             agenda.choices = await Parallel.map(agenda.choices, async (choice) => {
               let qrCodeObj = {
@@ -282,6 +271,11 @@ const agmHelper = {
 
           });
 
+          if (browser !== null) {
+            await browser.close();
+            browser = null;
+          }
+
         } catch (err) {
           console.error("[helpers][announcement][sendAnnouncement]: Inner Loop: Error", err);
           if (err.list && Array.isArray(err.list)) {
@@ -289,15 +283,11 @@ const agmHelper = {
               console.error(`[helpers][announcement][sendAnnouncement]: Inner Loop Each Error:`, item.message);
             });
           }
-          throw err;
+          throw new Error(err);
         }
 
         console.log("[helpers][agm][generateVotingDocument]: All Docs Generated For Agenda: ", agenda);
       });
-
-      if (browser !== null) {
-        await browser.close();
-      }
 
       console.log("[helpers][agm][generateVotingDocument]: All PDF documents created successfully. Going to create zip file.. ");
       console.log("[helpers][agm][generateVotingDocument]: Files to be zipped: ", s3keys);
