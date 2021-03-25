@@ -128,20 +128,20 @@ const agmHelper = {
           let Key = "AGM/" + agmId + "/VotingDocuments/" + filename;
 
 
-          agenda.choices = await Parallel.map(agenda.choices, async (ch) => {
-            let qrCodeObj = {
-              qrName: 'SM:AGM:VOTING',
-              orgId: orgId,
-              agmId: agmId,
-              unitId: pd.unitId,
-              unitNumber: pd.unitNumber,
-              ownershipRatio: pd.ownershipRatio,
-              agendaId: agenda.id,
-              choice: ch.id
-            };
-            let qrCodeDataURI = await QRCODE.toDataURL(JSON.stringify(qrCodeObj));
-            ch.qrCode = qrCodeDataURI;
-          });
+          // agenda.choices = await Parallel.map(agenda.choices, async (ch) => {
+          //   let qrCodeObj = {
+          //     qrName: 'SM:AGM:VOTING',
+          //     orgId: orgId,
+          //     agmId: agmId,
+          //     unitId: pd.unitId,
+          //     unitNumber: pd.unitNumber,
+          //     ownershipRatio: pd.ownershipRatio,
+          //     agendaId: agenda.id,
+          //     choice: ch.id
+          //   };
+          //   let qrCodeDataURI = await QRCODE.toDataURL(JSON.stringify(qrCodeObj));
+          //   ch.qrCode = qrCodeDataURI;
+          // });
 
           const ejs = require('ejs');
           const path = require('path');
