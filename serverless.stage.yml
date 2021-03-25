@@ -67,7 +67,7 @@ provider:
   
 
 custom:
-  serviceName: servicemind-backend
+  serviceName: servicemind-node
   stage: ${opt:stage, self:custom.defaultStage}
   profile: ${self:custom.profiles.${self:provider.stage}}
   bucket: servicemind-resources
