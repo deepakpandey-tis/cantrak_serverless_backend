@@ -1338,7 +1338,7 @@ const agmController = {
               .insert({
                 title: image.filename,
                 name: image.filename,
-                s3Url: image.url,
+                s3Url: image.s3Url,
                 entityId: owner,
                 entityType: "agm_proxy_documents",
                 orgId: req.orgId,
