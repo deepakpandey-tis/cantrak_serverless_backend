@@ -11,6 +11,7 @@ AWS.config.update({
   region: process.env.REGION || "us-east-1",
 });
 
+
 async function emptyS3Directory(bucket, dir) {
 
   const s3 = new AWS.S3();
@@ -37,13 +38,6 @@ async function emptyS3Directory(bucket, dir) {
   if (listedObjects.IsTruncated) await emptyS3Directory(bucket, dir);
 }
 
-const streamTo = (_bucket, _key) => {
-  var stream = require('stream');
-  const s3 = new AWS.S3();
-  var _pass = new stream.PassThrough();
-  s3.upload({ Bucket: _bucket, Key: _key, Body: _pass }, (_err, _data) => { /*...Handle Errors Here*/ });
-  return _pass;
-};
 
 const createPdf = (document, agmId, browser) => {
 
@@ -94,33 +88,55 @@ const createPdf = (document, agmId, browser) => {
 }
 
 
+const makeZippedFile = (bucket, folder, zipFileKey) => {
 
-const makeZippedFile = (folderPath, zipFileKey) => {
+  console.log('[helpers][agm][makeZippedFile]: bucket: ', bucket);
+  console.log('[helpers][agm][makeZippedFile]: folder: ', folder);
+  console.log('[helpers][agm][makeZippedFile]: zipFileKey: ', zipFileKey);
 
-  const S3Zipper = require('aws-s3-zipper');
+  const XmlStream = require('xml-stream');
+  const s3Zip = require('s3-zip');
+  const s3 = new AWS.S3();
 
-  const config = {
-    accessKeyId: process.env.ACCESS_KEY_ID,
-    secretAccessKey: process.env.SECRET_ACCESS_KEY,
-    region: process.env.REGION || "us-east-1",
-    bucket: process.env.S3_BUCKET_NAME
-  };
-  const zipper = new S3Zipper(config);
+  const params = {
+      Bucket: bucket,
+      Prefix: folder
+  }
 
   return new Promise((res, rej) => {
-    zipper.zipToS3File({
-      s3FolderName: folderPath,
-      s3ZipFileName: zipFileKey,
-      tmpDir: "/tmp"
-    }, (err, result) => {
-      if (err) {
-        rej(err);
-      }
-      res(result.zippedFiles);
-    });
+
+      const filesArray = [];
+      const files = s3.listObjects(params).createReadStream();
+      const xml = new XmlStream(files);
+      xml.collect('Key');
+      xml.on('endElement: Key', (item) => {
+          filesArray.push(item['$text'].substr(folder.length))
+      });
+
+      xml.on('end', () => {
+          console.log('[helpers][agm][makeZippedFile]: Files To Be Zipped: ', filesArray);
+          // const output = fs.createWriteStream(join(__dirname, 's3-folder.zip'));
+
+          const s3Stream = require('s3-upload-stream')(new AWS.S3());
+          const upload = s3Stream.upload({
+              "Bucket": bucket,
+              "Key": zipFileKey
+          });
+
+          upload.on('error', (error) => {
+              console.log(error);
+              rej(error)
+          });
+
+          upload.on('uploaded', (details) => {
+              res(details);
+          });
+
+          s3Zip.archive({ s3: s3, bucket: bucket, debug: true }, folder, filesArray).pipe(upload);
+
+      });
 
   });
-
 }
 
 
@@ -257,9 +273,9 @@ const agmHelper = {
       // Write Code to create Zip File...
       const zipFileName = "AGM/" + agmId + "/zipped-files/" + `${new Date().getTime()}.zip`;
 
-      await makeZippedFile(s3BasePath, zipFileName);
+      const uploadedZippedFileDetails = await makeZippedFile(bucketName, s3BasePath, zipFileName);
 
-      console.log("[helpers][agm][generateVotingDocument]: Zip File created successfully, Name:", zipFileName);
+      console.log("[helpers][agm][generateVotingDocument]: Zip File created successfully, Name:", zipFileName, uploadedZippedFileDetails);
 
       const s3 = new AWS.S3();
 
