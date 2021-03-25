@@ -11,6 +11,32 @@ AWS.config.update({
   region: process.env.REGION || "us-east-1",
 });
 
+async function emptyS3Directory(bucket, dir) {
+
+  const s3 = new AWS.S3();
+  const listParams = {
+      Bucket: bucket,
+      Prefix: dir
+  };
+
+  const listedObjects = await s3.listObjectsV2(listParams).promise();
+
+  if (listedObjects.Contents.length === 0) return;
+
+  const deleteParams = {
+      Bucket: bucket,
+      Delete: { Objects: [] }
+  };
+
+  listedObjects.Contents.forEach(({ Key }) => {
+      deleteParams.Delete.Objects.push({ Key });
+  });
+
+  await s3.deleteObjects(deleteParams).promise();
+
+  if (listedObjects.IsTruncated) await emptyS3Directory(bucket, dir);
+}
+
 const streamTo = (_bucket, _key) => {
   var stream = require('stream');
   const s3 = new AWS.S3();
@@ -110,6 +136,14 @@ const agmHelper = {
         tempraryDirectory = "/tmp/";
       }
 
+      const s3BasePath = "AGM/" + agmId + "/VotingDocuments/";
+
+      // First Clean all files from the s3 directory....
+      console.log("[helpers][agm][generateVotingDocument]: Cleaning S3 directory for AGM....", agmId);
+      await emptyS3Directory(process.env.S3_BUCKET, s3BasePath);
+      console.log("[helpers][agm][generateVotingDocument]: S3 Directory cleaned....", s3BasePath);
+
+
       let s3keys = []; //list of your file keys in s3 
       const QRCODE = require("qrcode");
 
@@ -132,7 +166,7 @@ const agmHelper = {
           });
 
           let filename = `agm-${agmId}-pu-${pd.unitId}-t-${new Date().getTime()}.pdf`;
-          let Key = "AGM/" + agmId + "/VotingDocuments/" + filename;
+          let Key = s3BasePath + filename;
 
 
           agenda.choices = await Parallel.map(agenda.choices, async (choice) => {
@@ -147,11 +181,10 @@ const agmHelper = {
               choice: choice.id
             };
             let qrString = JSON.stringify(qrCodeObj);
-            console.log("[helpers][agm][generateVotingDocument]: Qr String: ", qrString);
+            // console.log("[helpers][agm][generateVotingDocument]: Qr String: ", qrString);
             let qrCodeDataURI = await QRCODE.toDataURL(qrString);
-            // let qrCodeDataURI = 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png';
             choice.qrCode = qrCodeDataURI;
-            console.log("[helpers][agm][generateVotingDocument]: Qr Generated....");
+            // console.log("[helpers][agm][generateVotingDocument]: Qr Generated....");
             return choice;
           });
 
@@ -196,11 +229,13 @@ const agmHelper = {
       const zipFileName = "AGM/" + agmId + "/zipped-files/" + `${new Date().getTime()}.zip`;
       const s3 = new AWS.S3();
 
-      var _list = await Promise.all(s3keys.map(_key => new Promise((_resolve, _reject) => {
+      const _list = await Promise.all(s3keys.map(_key => new Promise((_resolve, _reject) => {
         s3.getObject({ Bucket: bucketName, Key: _key }).promise()
           .then(_data => _resolve({ data: _data.Body, name: `${_key.split('/').pop()}` }));
-      }
+        }
       ))).catch(_err => { throw new Error(_err) });
+      console.log("[helpers][agm][generateVotingDocument]: Prepared List for zipping:", _list);
+      console.log("[helpers][agm][generateVotingDocument]: Zip File Name:", zipFileName);
 
       await new Promise((_resolve, _reject) => {
         var _myStream = streamTo(bucketName, zipFileName);		//Now we instantiate that pipe...
