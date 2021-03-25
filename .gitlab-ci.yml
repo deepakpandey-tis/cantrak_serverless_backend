@@ -1,10 +1,10 @@
-image: trion/ng-cli-karma
+image: trion/ng-cli-karma:10.2.0
 
 stages:
   - deploy
 
 cache:
-  key: "29052020"
+  key: "25032021"
   paths:
     - node_modules/
 
