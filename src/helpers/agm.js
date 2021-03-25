@@ -11,6 +11,12 @@ AWS.config.update({
   region: process.env.REGION || "us-east-1",
 });
 
+const streamTo = (_bucket, _key) => {
+  var stream = require('stream');
+  var _pass = new stream.PassThrough();
+  s3.upload({ Bucket: _bucket, Key: _key, Body: _pass }, (_err, _data) => { /*...Handle Errors Here*/ });
+  return _pass;
+};
 
 const createPdf = (document, agmId, browser) => {
 
@@ -66,23 +72,29 @@ const agmHelper = {
   generateVotingDocument: async ({ agmId, data, orgId, requestedBy }) => {
 
     let browser = null;
+    let bucketName = process.env.S3_BUCKET_NAME;
 
     try {
 
       console.log('[helpers][agm][generateVotingDocument]: Data:', data);
 
-      const path = require('path');
-      const fs = require("fs");
-
-      // Read HTML Template
-      const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.html');
-      console.log('[helpers][agm][generateVotingDocument]: PDF Template Path:', templatePath);
-
-      const html = fs.readFileSync(templatePath, "utf8");
-
       let agmPropertyUnitOwners = await knex('agm_owner_master').where({ agmId: agmId, eligibility: true });
       console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners:', agmPropertyUnitOwners);
       console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners Length:', agmPropertyUnitOwners.length);
+
+
+      let agendas = await knex('agenda_master').where({ agmId: agmId, eligibleForVoting: true });
+      console.log('[helpers][agm][generateVotingDocument]: agendas:', agendas);
+
+      const Parallel = require("async-parallel");
+
+      agendas = await Parallel.map(agendas, async (ag) => {
+        let choices = await knex('agenda_choice').where({ agendaId: ag.id });
+        ag.choices = choices;
+        return ag;
+      });
+
+      console.log('[helpers][agm][generateVotingDocument]: Agenda with choices:', agendas);
 
 
       let tempraryDirectory = null;
@@ -92,63 +104,108 @@ const agmHelper = {
         tempraryDirectory = "/tmp/";
       }
 
-      browser = await chromium.puppeteer.launch({
-        args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
-        executablePath: await chromium.executablePath,
-        headless: chromium.headless,
-      });
+      let s3keys = []; //list of your file keys in s3  
 
-      const Parallel = require("async-parallel");
-      Parallel.setConcurrency(2);
+
+      Parallel.setConcurrency(1);
 
       await Parallel.each(agmPropertyUnitOwners, async (pd) => {
+
+        browser = await chromium.puppeteer.launch({
+          args: chromium.args,
+          defaultViewport: chromium.defaultViewport,
+          executablePath: await chromium.executablePath,
+          headless: chromium.headless,
+        });
 
         console.log("[helpers][agm][generateVotingDocument]: Generating Doc for Property Owner: ", pd);
 
         let filename = `agm-${agmId}-pu-${pd.unitId}-t-${new Date().getTime()}.pdf`;
-        let filepath = tempraryDirectory + filename;
+        let Key = "AGM/" + agmId + "/VotingDocuments/" + filename;
 
-        const datas = [
-          {
-            pName: 'PName',
-            date: '22/03/2021',
-            agenda: 'Agenda',
-            unitNo: '',
-            oRatio: '',
-          }
-        ];
-        const listDatas = [
-          {
-            enText: "Consent",
-            thaiText: "เห็นชอบ",
-            qrCode: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png'
-          },
-          {
-            enText: "Dissent",
-            thaiText: "ไม่เห็นชอบ",
-            qrCode: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png'
-          },
-          {
-            enText: "Abstention",
-            thaiText: "งดออกเสียง",
-            qrCode: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png'
-          },
-        ];
+        let agenda = {
+          agendaNo: 1,
+          agendaName: 'Test Agenda for printing',
+          agendaNameThai: 'วาระการทดสอบสำหรับการพิมพ์',
+          choices: [
+            {
+              enText: "Consent",
+              thaiText: "เห็นชอบ",
+              qrCode: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png'
+            },
+            {
+              enText: "Dissent",
+              thaiText: "ไม่เห็นชอบ",
+              qrCode: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png'
+            },
+            {
+              enText: "Abstention",
+              thaiText: "งดออกเสียง",
+              qrCode: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png'
+            },
+          ]
+        };
+
+        // const fs = require("fs");
+        // const url = require('url');
+        // const util = require('util');
+        const ejs = require('ejs');
+        const path = require('path');
+
+        // Read HTML Template
+        const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.html');
+        console.log('[helpers][agm][generateVotingDocument]: PDF Template Path:', templatePath);
+
+        let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner });
+        console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
+
         const document = {
-          html: html,
+          html: htmlContents,
           data: {
-            listDatas: listDatas,
-            datas: datas
+            agmDetails: data.agmDetails,
+            agenda: agenda,
+            propertyOwner: pu
           },
-          path: filepath,
           filename: filename,
         };
 
         await createPdf(document, agmId, browser);
         console.log("[helpers][agm][generateVotingDocument]: Generated Doc for PU: ", pd);
+        s3keys.push(Key);
+
+        if (browser !== null) {
+          await browser.close();
+        }
 
       });
+
+      console.log("[helpers][agm][generateVotingDocument]: All PDF documents created successfully. Going to create zip file.. ");
+
+      // Write Code to create Zip File...
+      const _archiver = require('archiver');
+      const zipFileName = "AGM/" + agmId + "/zipped-files/" + `${new Date().getTime()}.zip`;
+
+      var _list = await Promise.all(s3keys.map(_key => new Promise((_resolve, _reject) => {
+        s3.getObject({ Bucket: bucketName, Key: _key })
+          .then(_data => _resolve({ data: _data.Body, name: `${_key.split('/').pop()}` }));
+      }
+      ))).catch(_err => { throw new Error(_err) });
+
+      await new Promise((_resolve, _reject) => {
+        var _myStream = streamTo(bucketName, zipFileName);		//Now we instantiate that pipe...
+        var _archive = _archiver('zip');
+        _archive.on('error', err => { throw new Error(err); });
+
+        //Your promise gets resolved when the fluid stops running... so that's when you get to close and resolve
+        _myStream.on('close', _resolve);
+        _myStream.on('end', _resolve);
+        _myStream.on('error', _reject);
+
+        _archive.pipe(_myStream);			//Pass that pipe to _archive so it can push the fluid straigh down to S3 bucket
+        _list.forEach(_itm => _archive.append(_itm.data, { name: _itm.name }));		//And then we start adding files to it
+        _archive.finalize();				//Tell is, that's all we want to add. Then when it finishes, the promise will resolve in one of those events up there
+      }).catch(_err => { throw new Error(_err) });
+
 
       let s3FileDownloadUrl = 'https://www.google.com';
 
@@ -180,9 +237,7 @@ const agmHelper = {
       return { code: "UNKNOWN_ERROR", message: err.message, error: err };
 
     } finally {
-      if (browser !== null) {
-        await browser.close();
-      }
+
     }
 
   },

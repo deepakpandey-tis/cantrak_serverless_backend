@@ -1,17 +1,16 @@
 <div style="width: 100% !important;">
 <table style="width: 100%; margin-top: 20px;">
-  {{#each datas}}
   <tr>
     <td>
       <h6 style="margin: 0px; padding: 0px;">
         <span style="color: #F44439;">Project Name : </span
-        ><span>{{this.pName}}</span>
+        ><span>ABC PROJECT</span>
       </h6>
     </td>
     <td style="text-align: right;">
       <h6 style="margin: 0px; padding: 0px;">
         <span style="color: #F44439;">Date : </span
-        ><span>{{this.date}}</span>
+        ><span><%= new Date(); %></span>
       </h6>
     </td>
   </tr>
@@ -19,46 +18,43 @@
     <td>
       <h6 style="margin: 0px; padding: 0px;">
         <span style="color: #F44439;">Agenda : </span
-        ><span>{{this.agenda}}</span>
+        ><span><%= agenda.agendaName  %></span>
       </h6>
     </td>
     <td>
       
     </td>
   </tr>
-  {{/each}}
 </table>
 <table style="width: 100%; margin-top: 20px;">
-  {{#each listDatas}}
+  <% for (var i = 0; i < agenda.choices.length;  i++ ) { %>
   <tr>
     <td>
       <div style="width: 10px; height: 10px; border: 1px solid gray;"></div>
     </td>
     <td>
-      <p>{{this.enText}} / {{this.thaiText}}</p>
+      <p><%= agenda.choices[i].enText %> / <%= agenda.choices[i].thaiText %></p>
     </td>
     <td>
       <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png" alt="qr-code" width="100px">
     </td>
   </tr>
-  {{/each}}
+  <% } %>
 </table>
 <table style="width: 100%; margin-top: 20px;">
-  {{#each datas}}
   <tr>
     <td>
       <h6 style="margin: 0px; padding: 0px;">
         <span style="color: #F44439;">Unit No : </span
-        ><span>{{this.unitNo}}</span>
+        ><span><%= propertyOwner.houseId %></span>
       </h6>
     </td>
     <td style="text-align: right;">
       <h6 style="margin: 0px; padding: 0px;">
         <span style="color: #F44439;">Ownership Ratio : </span
-        ><span>{{this.oRatio}}</span>
+        ><span><%= propertyOwner.ownershipRatio %></span>
       </h6>
     </td>
   </tr>
-  {{/each}}
 </table>
 </div>
