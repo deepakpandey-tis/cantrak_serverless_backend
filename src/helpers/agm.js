@@ -111,6 +111,8 @@ const agmHelper = {
 
       await Parallel.each(agmPropertyUnitOwners, async (pd) => {
 
+        await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
+        
         browser = await chromium.puppeteer.launch({
           args: chromium.args,
           defaultViewport: chromium.defaultViewport,
@@ -180,10 +182,12 @@ const agmHelper = {
       });
 
       console.log("[helpers][agm][generateVotingDocument]: All PDF documents created successfully. Going to create zip file.. ");
+      console.log("[helpers][agm][generateVotingDocument]: Files to be zipped: ", s3keys);
 
       // Write Code to create Zip File...
       const _archiver = require('archiver');
       const zipFileName = "AGM/" + agmId + "/zipped-files/" + `${new Date().getTime()}.zip`;
+      const s3 = new AWS.S3();
 
       var _list = await Promise.all(s3keys.map(_key => new Promise((_resolve, _reject) => {
         s3.getObject({ Bucket: bucketName, Key: _key })
