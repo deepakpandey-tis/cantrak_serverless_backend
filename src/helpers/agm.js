@@ -15,8 +15,8 @@ async function emptyS3Directory(bucket, dir) {
 
   const s3 = new AWS.S3();
   const listParams = {
-      Bucket: bucket,
-      Prefix: dir
+    Bucket: bucket,
+    Prefix: dir
   };
 
   const listedObjects = await s3.listObjectsV2(listParams).promise();
@@ -24,12 +24,12 @@ async function emptyS3Directory(bucket, dir) {
   if (listedObjects.Contents.length === 0) return;
 
   const deleteParams = {
-      Bucket: bucket,
-      Delete: { Objects: [] }
+    Bucket: bucket,
+    Delete: { Objects: [] }
   };
 
   listedObjects.Contents.forEach(({ Key }) => {
-      deleteParams.Delete.Objects.push({ Key });
+    deleteParams.Delete.Objects.push({ Key });
   });
 
   await s3.deleteObjects(deleteParams).promise();
@@ -88,6 +88,36 @@ const createPdf = (document, agmId, browser) => {
     } catch (err) {
       rej(err);
     }
+
+  });
+
+}
+
+
+
+const makeZippedFile = (folderPath, zipFileKey) => {
+
+  const S3Zipper = require('aws-s3-zipper');
+
+  const config = {
+    accessKeyId: process.env.ACCESS_KEY_ID,
+    secretAccessKey: process.env.SECRET_ACCESS_KEY,
+    region: process.env.REGION || "us-east-1",
+    bucket: process.env.S3_BUCKET_NAME
+  };
+  const zipper = new S3Zipper(config);
+
+  return new Promise((res, rej) => {
+    zipper.zipToS3File({
+      s3FolderName: folderPath,
+      s3ZipFileName: zipFileKey,
+      tmpDir: "/tmp"
+    }, (err, result) => {
+      if (err) {
+        rej(err);
+      }
+      res(result.zippedFiles);
+    });
 
   });
 
@@ -225,35 +255,21 @@ const agmHelper = {
       console.log("[helpers][agm][generateVotingDocument]: Files to be zipped: ", s3keys);
 
       // Write Code to create Zip File...
-      const _archiver = require('archiver');
       const zipFileName = "AGM/" + agmId + "/zipped-files/" + `${new Date().getTime()}.zip`;
+
+      await makeZippedFile(s3BasePath, zipFileName);
+
+      console.log("[helpers][agm][generateVotingDocument]: Zip File created successfully, Name:", zipFileName);
+
       const s3 = new AWS.S3();
 
-      const _list = await Promise.all(s3keys.map(_key => new Promise((_resolve, _reject) => {
-        s3.getObject({ Bucket: bucketName, Key: _key }).promise()
-          .then(_data => _resolve({ data: _data.Body, name: `${_key.split('/').pop()}` }));
-        }
-      ))).catch(_err => { throw new Error(_err) });
-      console.log("[helpers][agm][generateVotingDocument]: Prepared List for zipping:", _list);
-      console.log("[helpers][agm][generateVotingDocument]: Zip File Name:", zipFileName);
+      let s3FileDownloadUrl = await s3.getSignedUrl('getObject', {
+        Bucket: bucketName,
+        Key: zipFileName,
+        Expires: 2 * 60 * 60
+      }).promise();
 
-      await new Promise((_resolve, _reject) => {
-        var _myStream = streamTo(bucketName, zipFileName);		//Now we instantiate that pipe...
-        var _archive = _archiver('zip');
-        _archive.on('error', err => { throw new Error(err); });
-
-        //Your promise gets resolved when the fluid stops running... so that's when you get to close and resolve
-        _myStream.on('close', _resolve);
-        _myStream.on('end', _resolve);
-        _myStream.on('error', _reject);
-
-        _archive.pipe(_myStream);			//Pass that pipe to _archive so it can push the fluid straigh down to S3 bucket
-        _list.forEach(_itm => _archive.append(_itm.data, { name: _itm.name }));		//And then we start adding files to it
-        _archive.finalize();				//Tell is, that's all we want to add. Then when it finishes, the promise will resolve in one of those events up there
-      }).catch(_err => { throw new Error(_err) });
-
-
-      let s3FileDownloadUrl = 'https://www.google.com';
+      console.log("[helpers][agm][generateVotingDocument]: s3FileDownloadUrl:", s3FileDownloadUrl);
 
       let sender = requestedBy;
       let receiver = requestedBy;
