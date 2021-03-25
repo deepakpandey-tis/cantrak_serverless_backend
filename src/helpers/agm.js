@@ -12,58 +12,48 @@ AWS.config.update({
 });
 
 
-const createPdf = (document, agmId) => {
+const createPdf = (document, agmId, browser) => {
 
   let bucketName = process.env.S3_BUCKET_NAME;
 
   return new Promise(async (res, rej) => {
 
-    let browser = null;
-
     try {
 
-      browser = await chromium.puppeteer.launch({
-        args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
-        executablePath: await chromium.executablePath,
-        headless: chromium.headless,
-        ignoreHTTPSErrors: true,
-      });
+      console.log('HTML To PRINT:', document.html);
 
       const page = await browser.newPage();
-      page.setContent(document.html, { waitUntil: ['load', 'domcontentloaded', 'networkidle0'] });
+      await page.setContent(document.html, { waitUntil: ['load', 'domcontentloaded', 'networkidle0'] });
 
       const pdf = await page.pdf({
-        format: 'A5',
+        format: 'A4',
         printBackground: true,
+        displayHeaderFooter: false,
         margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' }
       });
 
-      const s3 = new AWS.S3();
-      const params = {
-        Bucket: bucketName,
-        Key: "AGM/" + agmId + "/VotingDocuments/" + filename,
-        Body: pdf,
-        ACL: "public-read"
-      };
+      if (!pdf) {
+        console.log('Unable to generate PDF...');
+      } else {
+        let filename = document.filename;
+        console.log('PDF generated, uploading to s3 with filename:', filename);
 
-      s3.putObject(params, function (err, data) {
-        if (err) {
-          console.log("Error at uploadPDFFileOnS3Bucket function", err);
-          rej(err);
-        } else {
-          console.log("File uploaded Successfully");
-          let url = process.env.S3_BUCKET_URL + "AGM/" + agmId + "/VotingDocuments/" + filename;
-          res(url);
-        }
-      });
+        const s3 = new AWS.S3();
+        const params = {
+          Bucket: bucketName,
+          Key: "AGM/" + agmId + "/VotingDocuments/" + filename,
+          Body: pdf,
+          ACL: "public-read"
+        };
+
+        let s3Res = await s3.putObject(params).promise();
+        console.log("File uploaded Successfully on s3...", s3Res);
+
+        res(s3Res);
+      }
 
     } catch (err) {
       rej(err);
-    } finally {
-      if (browser !== null) {
-        await browser.close();
-      }
     }
 
   });
@@ -74,6 +64,9 @@ const createPdf = (document, agmId) => {
 const agmHelper = {
 
   generateVotingDocument: async ({ agmId, data, orgId, requestedBy }) => {
+
+    let browser = null;
+
     try {
 
       console.log('[helpers][agm][generateVotingDocument]: Data:', data);
@@ -89,6 +82,7 @@ const agmHelper = {
 
       let agmPropertyUnitOwners = await knex('agm_owner_master').where({ agmId: agmId, eligibility: true });
       console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners:', agmPropertyUnitOwners);
+      console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners Length:', agmPropertyUnitOwners.length);
 
 
       let tempraryDirectory = null;
@@ -98,14 +92,21 @@ const agmHelper = {
         tempraryDirectory = "/tmp/";
       }
 
+      browser = await chromium.puppeteer.launch({
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath,
+        headless: chromium.headless,
+      });
+
       const Parallel = require("async-parallel");
-      Parallel.setConcurrency(10);
+      Parallel.setConcurrency(2);
 
       await Parallel.each(agmPropertyUnitOwners, async (pd) => {
 
         console.log("[helpers][agm][generateVotingDocument]: Generating Doc for Property Owner: ", pd);
 
-        let filename = `agm-voting-${agmId}-${pd.unitId}-${new Date().getTime()}.pdf`;
+        let filename = `agm-${agmId}-pu-${pd.unitId}-t-${new Date().getTime()}.pdf`;
         let filepath = tempraryDirectory + filename;
 
         const datas = [
@@ -141,10 +142,10 @@ const agmHelper = {
             datas: datas
           },
           path: filepath,
-          type: "",
+          filename: filename,
         };
 
-        await createPdf(document, agmId);
+        await createPdf(document, agmId, browser);
         console.log("[helpers][agm][generateVotingDocument]: Generated Doc for PU: ", pd);
 
       });
@@ -178,7 +179,12 @@ const agmHelper = {
       console.log("[helpers][announcement][sendAnnouncement]:  Error", err);
       return { code: "UNKNOWN_ERROR", message: err.message, error: err };
 
+    } finally {
+      if (browser !== null) {
+        await browser.close();
+      }
     }
+
   },
 };
 
