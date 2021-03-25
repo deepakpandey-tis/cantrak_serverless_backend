@@ -98,6 +98,10 @@ const agmHelper = {
       console.log('[helpers][agm][generateVotingDocument]: Agenda with choices:', agendas);
       console.log('[helpers][agm][generateVotingDocument]: Agenda (Length):', agendas.length);
 
+      let agmDetails = data.agmDetails;
+      agmDetails.formattedDate = moment(+agmDetails.agmDate).format('LL');
+      console.log('[helpers][agm][generateVotingDocument]: Formatted Date:', agmDetails.formattedDate);
+
 
       let tempraryDirectory = null;
       if (process.env.IS_OFFLINE) {
@@ -144,8 +148,8 @@ const agmHelper = {
             };
             let qrString = JSON.stringify(qrCodeObj);
             console.log("[helpers][agm][generateVotingDocument]: Qr String: ", qrString);
-            // let qrCodeDataURI = await QRCODE.toDataURL();
-            // ch.qrCode = qrCodeDataURI;
+            let qrCodeDataURI = await QRCODE.toDataURL();
+            ch.qrCode = qrCodeDataURI;
           });
 
           const ejs = require('ejs');
@@ -154,9 +158,6 @@ const agmHelper = {
           // Read HTML Template
           const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.ejs');
           console.log('[helpers][agm][generateVotingDocument]: PDF Template Path:', templatePath);
-
-          let agmDetails = data.agmDetails;
-          agmDetails.formattedDate = moment(+agmDetails.agmDate).format('LL');
 
           let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner: pd });
           console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
