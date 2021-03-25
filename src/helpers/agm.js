@@ -140,7 +140,7 @@ const agmHelper = {
 
       // First Clean all files from the s3 directory....
       console.log("[helpers][agm][generateVotingDocument]: Cleaning S3 directory for AGM....", agmId);
-      await emptyS3Directory(process.env.S3_BUCKET, s3BasePath);
+      await emptyS3Directory(bucketName, s3BasePath);
       console.log("[helpers][agm][generateVotingDocument]: S3 Directory cleaned....", s3BasePath);
 
 
