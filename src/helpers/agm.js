@@ -221,7 +221,7 @@ const agmHelper = {
 
           await Parallel.each(agendas, async (agenda) => {
 
-            console.log("[helpers][agm][generateVotingDocument]: Starting to Generat For Agenda: ", agenda);
+            console.log("[helpers][agm][generateVotingDocument]: Starting to Generate For Agenda: ", agenda);
 
             let filename = `agm-${agmId}-pu-${pd.unitId}-t-${new Date().getTime()}.pdf`;
             let Key = s3BasePath + filename;
@@ -266,8 +266,8 @@ const agmHelper = {
             };
 
             await createPdf(document, agmId, browser);
-            console.log("[helpers][agm][generateVotingDocument]: Generated Doc for PU: ", pd);
-            s3keys.push(Key);
+            // console.log("[helpers][agm][generateVotingDocument]: Generated Doc for Agenda: ", agenda);
+            // s3keys.push(Key);
 
           });
 
@@ -286,7 +286,7 @@ const agmHelper = {
           throw new Error(err);
         }
 
-        console.log("[helpers][agm][generateVotingDocument]: All Docs Generated For Agenda: ", agenda);
+        console.log("[helpers][agm][generateVotingDocument]: All docs gen for Property Owner: ", pd);
       });
 
       console.log("[helpers][agm][generateVotingDocument]: All PDF documents created successfully. Going to create zip file.. ");
