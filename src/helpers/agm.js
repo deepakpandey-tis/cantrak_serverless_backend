@@ -78,6 +78,7 @@ const createPdf = (document, agmId, browser) => {
         let s3Res = await s3.putObject(params).promise();
         console.log("File uploaded Successfully on s3...", s3Res);
 
+        await page.close();
         res(s3Res);
       }
 
@@ -101,44 +102,49 @@ const makeZippedFile = (bucket, folder, zipFileKey) => {
   const s3 = new AWS.S3();
 
   const params = {
-      Bucket: bucket,
-      Prefix: folder
+    Bucket: bucket,
+    Prefix: folder
   }
 
   return new Promise((res, rej) => {
 
-      const filesArray = [];
-      const files = s3.listObjects(params).createReadStream();
-      const xml = new XmlStream(files);
-      xml.collect('Key');
-      xml.on('endElement: Key', (item) => {
-          filesArray.push(item['$text'].substr(folder.length))
+    const filesArray = [];
+    const files = s3.listObjects(params).createReadStream();
+    const xml = new XmlStream(files);
+    xml.collect('Key');
+    xml.on('endElement: Key', (item) => {
+      filesArray.push(item['$text'].substr(folder.length))
+    });
+
+    xml.on('end', () => {
+      console.log('[helpers][agm][makeZippedFile]: Files To Be Zipped: ', filesArray);
+      // const output = fs.createWriteStream(join(__dirname, 's3-folder.zip'));
+
+      const s3Stream = require('s3-upload-stream')(new AWS.S3());
+      const upload = s3Stream.upload({
+        "Bucket": bucket,
+        "Key": zipFileKey
       });
 
-      xml.on('end', () => {
-          console.log('[helpers][agm][makeZippedFile]: Files To Be Zipped: ', filesArray);
-          // const output = fs.createWriteStream(join(__dirname, 's3-folder.zip'));
-
-          const s3Stream = require('s3-upload-stream')(new AWS.S3());
-          const upload = s3Stream.upload({
-              "Bucket": bucket,
-              "Key": zipFileKey
-          });
-
-          upload.on('error', (error) => {
-              console.log(error);
-              rej(error)
-          });
-
-          upload.on('uploaded', (details) => {
-              res(details);
-          });
-
-          s3Zip.archive({ s3: s3, bucket: bucket, debug: true }, folder, filesArray).pipe(upload);
-
+      upload.on('error', (error) => {
+        console.log(error);
+        rej(error)
       });
+
+      upload.on('uploaded', (details) => {
+        res(details);
+      });
+
+      s3Zip.archive({ s3: s3, bucket: bucket, debug: true }, folder, filesArray).pipe(upload);
+
+    });
 
   });
+}
+
+const wasBrowserKilled = async (browser) => {
+  const procInfo = await browser.process();
+  return !!procInfo.signalCode; // null if browser is still running
 }
 
 
@@ -195,7 +201,17 @@ const agmHelper = {
       let s3keys = []; //list of your file keys in s3 
       const QRCODE = require("qrcode");
 
-      Parallel.setConcurrency(1);
+      Parallel.setConcurrency(3);
+
+      if (!browser || wasBrowserKilled(browser)) {
+        await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
+        browser = await chromium.puppeteer.launch({
+          args: chromium.args,
+          defaultViewport: chromium.defaultViewport,
+          executablePath: await chromium.executablePath,
+          headless: chromium.headless,
+        });
+      }
 
       await Parallel.each(agendas, async (agenda) => {
 
@@ -205,13 +221,15 @@ const agmHelper = {
 
           console.log("[helpers][agm][generateVotingDocument]: Generating Doc for Property Owner: ", pd);
 
-          await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
-          browser = await chromium.puppeteer.launch({
-            args: chromium.args,
-            defaultViewport: chromium.defaultViewport,
-            executablePath: await chromium.executablePath,
-            headless: chromium.headless,
-          });
+          if (!browser || wasBrowserKilled(browser)) {
+            await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
+            browser = await chromium.puppeteer.launch({
+              args: chromium.args,
+              defaultViewport: chromium.defaultViewport,
+              executablePath: await chromium.executablePath,
+              headless: chromium.headless,
+            });
+          }
 
           let filename = `agm-${agmId}-pu-${pd.unitId}-t-${new Date().getTime()}.pdf`;
           let Key = s3BasePath + filename;
@@ -260,14 +278,14 @@ const agmHelper = {
           console.log("[helpers][agm][generateVotingDocument]: Generated Doc for PU: ", pd);
           s3keys.push(Key);
 
-          if (browser !== null) {
-            await browser.close();
-          }
-
         });
 
         console.log("[helpers][agm][generateVotingDocument]: All Docs Generated For Agenda: ", agenda);
       });
+
+      if (browser !== null) {
+        await browser.close();
+      }
 
       console.log("[helpers][agm][generateVotingDocument]: All PDF documents created successfully. Going to create zip file.. ");
       console.log("[helpers][agm][generateVotingDocument]: Files to be zipped: ", s3keys);
@@ -288,15 +306,15 @@ const agmHelper = {
       // }).promise();
 
       let s3FileDownloadUrl = await new Promise((resolve, reject) => {
-        s3.getSignedUrl('getObject', {Bucket: bucketName, Key: zipFileName, Expires: 2 * 60 * 60 }, (err, url) => {
+        s3.getSignedUrl('getObject', { Bucket: bucketName, Key: zipFileName, Expires: 2 * 60 * 60 }, (err, url) => {
           if (err) reject(err)
           else resolve(url)
         });
       });
 
       console.log("[helpers][agm][generateVotingDocument]: s3FileDownloadUrl:", s3FileDownloadUrl);
-      await redisHelper.setValueWithExpiry(`agm-${agmId}-voting-docs-link`, {s3Url: s3FileDownloadUrl}, 2 * 60 * 60 );
-      
+      await redisHelper.setValueWithExpiry(`agm-${agmId}-voting-docs-link`, { s3Url: s3FileDownloadUrl }, 2 * 60 * 60);
+
 
       let sender = requestedBy;
       let receiver = requestedBy;
