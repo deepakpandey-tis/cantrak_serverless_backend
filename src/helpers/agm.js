@@ -161,7 +161,7 @@ const agmHelper = {
           console.log('[helpers][agm][generateVotingDocument]: PDF Template Path:', templatePath);
 
           let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner: pd });
-          console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
+          // console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
 
           const document = {
             html: htmlContents,
