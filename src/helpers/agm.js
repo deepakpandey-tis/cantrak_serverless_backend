@@ -229,11 +229,13 @@ const agmHelper = {
       const zipFileName = "AGM/" + agmId + "/zipped-files/" + `${new Date().getTime()}.zip`;
       const s3 = new AWS.S3();
 
-      var _list = await Promise.all(s3keys.map(_key => new Promise((_resolve, _reject) => {
+      const _list = await Promise.all(s3keys.map(_key => new Promise((_resolve, _reject) => {
         s3.getObject({ Bucket: bucketName, Key: _key }).promise()
           .then(_data => _resolve({ data: _data.Body, name: `${_key.split('/').pop()}` }));
-      }
+        }
       ))).catch(_err => { throw new Error(_err) });
+      console.log("[helpers][agm][generateVotingDocument]: Prepared List for zipping:", _list);
+      console.log("[helpers][agm][generateVotingDocument]: Zip File Name:", zipFileName);
 
       await new Promise((_resolve, _reject) => {
         var _myStream = streamTo(bucketName, zipFileName);		//Now we instantiate that pipe...
