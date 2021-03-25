@@ -47,16 +47,16 @@ const createPdf = (document, agmId) => {
         ACL: "public-read"
       };
 
-      // s3.putObject(params, function (err, data) {
-      //   if (err) {
-      //     console.log("Error at uploadPDFFileOnS3Bucket function", err);
-      //     rej(err);
-      //   } else {
-      //     console.log("File uploaded Successfully");
-      //     let url = process.env.S3_BUCKET_URL + "AGM/" + agmId + "/VotingDocuments/" + filename;
-      //     res(url);
-      //   }
-      // });
+      s3.putObject(params, function (err, data) {
+        if (err) {
+          console.log("Error at uploadPDFFileOnS3Bucket function", err);
+          rej(err);
+        } else {
+          console.log("File uploaded Successfully");
+          let url = process.env.S3_BUCKET_URL + "AGM/" + agmId + "/VotingDocuments/" + filename;
+          res(url);
+        }
+      });
 
     } catch (err) {
       rej(err);

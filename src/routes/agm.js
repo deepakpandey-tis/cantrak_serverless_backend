@@ -21,6 +21,16 @@ router.post(
   resourceAccessMiddleware.isAGMAccessible,
   agmController.addOwner
 );
+
+router.post(
+  "/update-owner",
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.updateOwner
+);
+
+
 router.post(
   "/delete-owner",
   authMiddleware.isAuthenticated, 

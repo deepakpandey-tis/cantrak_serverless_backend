@@ -9,21 +9,52 @@ service:
 plugins:
   # - serverless-apigw-binary
   - serverless-offline
-  - serverless-dotenv-plugin
+  # - serverless-dotenv-plugin
   - serverless-s3-local
   # - serverless-domain-manager
 
 provider:
   name: aws
   runtime: nodejs12.x
-  stage: production
+  stage: stage
   region: us-east-1
   memorySize: 3000
   timeout: 30
   tracing:
     apiGateway: true
     lambda: true
-  environment: 
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource: 
+        - arn:aws:s3:::*        
+  environment:
+    ENV: ${self:provider.stage}
+    REGION: ${self:provider.region}
+    DB_USER: servicemind
+    DB_PASS: su88yTIS#2020
+    DB_NAME: tis_database
+    DB_HOST: tis-dev-db-cluster.cluster-cwvy98foaa62.us-east-1.rds.amazonaws.com
+    DB_PORT: 5432
+    SITE_URL: https://d3m3k4hno3r3ok.cloudfront.net
+    ORIGIN_URL: https://uhg34qu8u4.execute-api.us-east-1.amazonaws.com/stage
+    JWT_PRIVATE_KEY: t9785464sdxfkgxhil8ed@gusu4^^464)(bu54654645
+    S3_BUCKET_NAME: servicemind-resources-dev
+    VAPID_PUBLIC_KEY: BMpCMLxldme4F8BHAKyz41cAEh8FgFvibgwdJrM7LH8Th5t47J84NVGZiPhuTOEKRBOzfsJMAgXQueLjPyoc8z0
+    VAPID_PRIVATE_KEY: MwnSWApwHAJZXnhk6K1s9jqS_ndArrcMSGuI60c7gZc
+    ACCESS_KEY_ID: AKIA5PDX4XIDSRD6YUW7
+    SECRET_ACCESS_KEY: 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
+    SQS_MAIL_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/925816896007/mail-queue
+    SQS_LONG_JOBS_URL: https://sqs.us-east-1.amazonaws.com/925816896007/long-jobs
+    FROM_EMAIL_ADDRESS: important-notifications@staging.servicemind.asia
+    NOTIFIER_ACCESS_KEY_ID: AKIA5PDX4XIDW7DJLY6P
+    NOTIFIER_SECRET_ACCESS_KEY: 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
+    S3_BUCKET_URL:  https://servicemind-resources-dev.s3.amazonaws.com
+    SOCKET_ENDPOINT: https://s6bm8bsha0.execute-api.us-east-1.amazonaws.com/stage
+    CDN_URL: resources.staging.servicemind.asia
+    REDIS_HOST: tis-dev-redis.2okp6i.0001.use1.cache.amazonaws.com
+    REDIS_PORT: 6379 
   vpc:
     securityGroupIds:
       - sg-6a527248
