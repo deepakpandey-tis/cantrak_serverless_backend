@@ -7,10 +7,10 @@ service:
 # frameworkVersion: "=X.X.X"
 
 plugins:
-  # - serverless-apigw-binary
   - serverless-offline
   - serverless-s3-local
-
+  - serverless-prune-plugin
+  
 provider:
   name: aws
   runtime: nodejs12.x
