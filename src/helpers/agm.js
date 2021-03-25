@@ -156,7 +156,7 @@ const agmHelper = {
         const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.html');
         console.log('[helpers][agm][generateVotingDocument]: PDF Template Path:', templatePath);
 
-        let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner });
+        let htmlContents = await ejs.renderFile(templatePath, { agmDetails: data.agmDetails, agenda, propertyOwner });
         console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
 
         const document = {
