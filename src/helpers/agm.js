@@ -20,12 +20,15 @@ const createPdf = (document, agmId, browser) => {
 
     try {
 
+      console.log('HTML To PRINT:', document.html);
+
       const page = await browser.newPage();
-      page.setContent(document.html, { waitUntil: ['load', 'domcontentloaded', 'networkidle0'] });
+      await page.setContent(document.html, { waitUntil: ['load', 'domcontentloaded', 'networkidle0'] });
 
       const pdf = await page.pdf({
         format: 'A5',
         printBackground: true,
+        displayHeaderFooter: false,
         margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' }
       });
 
@@ -51,7 +54,7 @@ const createPdf = (document, agmId, browser) => {
 
     } catch (err) {
       rej(err);
-    } 
+    }
 
   });
 
@@ -79,6 +82,7 @@ const agmHelper = {
 
       let agmPropertyUnitOwners = await knex('agm_owner_master').where({ agmId: agmId, eligibility: true });
       console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners:', agmPropertyUnitOwners);
+      console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners Length:', agmPropertyUnitOwners.length);
 
 
       let tempraryDirectory = null;
@@ -97,7 +101,7 @@ const agmHelper = {
       });
 
       const Parallel = require("async-parallel");
-      Parallel.setConcurrency(10);
+      Parallel.setConcurrency(2);
 
       await Parallel.each(agmPropertyUnitOwners, async (pd) => {
 
@@ -181,7 +185,7 @@ const agmHelper = {
         await browser.close();
       }
     }
-    
+
   },
 };
 
