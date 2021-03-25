@@ -363,9 +363,9 @@ const agmController = {
         data[0].C === "HOUSE_NO" &&
         data[0].D === "OWNERSHIP_RATIO" &&
         data[0].E === "CO_OWNER_NAME" &&
-        data[0].F === "ELIGIBILITY_TOGGLE" &&
-        data[0].G === "ID_NO" &&
-        data[0].H === "JOIN_OWNER_NAME"
+        data[0].F === "ELIGIBILITY_TOGGLE" 
+        // data[0].G === "ID_NO" &&
+        // data[0].H === "JOIN_OWNER_NAME"
       ) {
         if (data.length > 0) {
           let i = 0;
@@ -445,6 +445,7 @@ const agmController = {
                 companyId: req.body.companyId,
                 projectId: req.body.projectId,
                 unitId: unitId,
+                unitNumber:ownerData.B,
                 houseId: ownerData.C,
                 ownerName: ownerData.E,
                 joinOwnerName: ownerData.H,
@@ -1371,7 +1372,7 @@ const agmController = {
   getAgendaList: async (req, res) => {
     try {
       let payload = req.body;
-      let agendaLists;
+      let agendaList;
       const schema = new Joi.object().keys({
         agmId: Joi.number().required(),
       });
@@ -1392,14 +1393,35 @@ const agmController = {
         });
       }
 
-      agendaLists = await knex("agenda_master")
-        .where({ "agenda_master.agmId": payload.agmId })
+      agendaList = await knex("agenda_master")
+        .where({
+          "agenda_master.agmId": payload.agmId,
+          "agenda_master.orgId": req.orgId,
+        })
         .select(["agenda_master.*"]);
+
+      const Parallel = require("async-parallel");
+
+      agendaList = await Parallel.map(
+        agendaList,
+        async (pd) => {
+          let choiceData = await knex
+            .from("agenda_choice")
+            .select([
+              "agenda_choice.choiceValue",
+              "agenda_choice.choiceValueThai",
+            ])
+            .where("agenda_choice.agendaId", pd.id);
+          // .first();
+
+          return { ...pd, choiceData };
+        }
+      );
 
       // let updateResult = await knex('agm_owner_master').update(updateData).where({ id: payload.id, orgId: req.orgId }).returning(["*"]);
 
       return res.status(200).json({
-        data: agendaLists,
+        data: agendaList,
         message: "Get Agenda Lists!",
       });
     } catch (err) {
