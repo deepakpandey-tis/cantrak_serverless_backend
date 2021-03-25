@@ -9,6 +9,7 @@ service:
 plugins:
   # - serverless-apigw-binary
   - serverless-offline
+  - serverless-prune-plugin
   # - serverless-dotenv-plugin
   - serverless-s3-local
 

@@ -13,6 +13,7 @@ AWS.config.update({
 
 const streamTo = (_bucket, _key) => {
   var stream = require('stream');
+  const s3 = new AWS.S3();
   var _pass = new stream.PassThrough();
   s3.upload({ Bucket: _bucket, Key: _key, Body: _pass }, (_err, _data) => { /*...Handle Errors Here*/ });
   return _pass;
@@ -95,6 +96,7 @@ const agmHelper = {
       });
 
       console.log('[helpers][agm][generateVotingDocument]: Agenda with choices:', agendas);
+      console.log('[helpers][agm][generateVotingDocument]: Agenda (Length):', agendas.length);
 
 
       let tempraryDirectory = null;
@@ -111,10 +113,13 @@ const agmHelper = {
 
       await Parallel.each(agendas, async (agenda) => {
 
+        console.log("[helpers][agm][generateVotingDocument]: Starting to Generat For Agenda: ", agenda);
+
         await Parallel.each(agmPropertyUnitOwners, async (pd) => {
 
-          await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
+          console.log("[helpers][agm][generateVotingDocument]: Generating Doc for Property Owner: ", pd);
 
+          await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
           browser = await chromium.puppeteer.launch({
             args: chromium.args,
             defaultViewport: chromium.defaultViewport,
@@ -122,26 +127,26 @@ const agmHelper = {
             headless: chromium.headless,
           });
 
-          console.log("[helpers][agm][generateVotingDocument]: Generating Doc for Property Owner: ", pd);
-
           let filename = `agm-${agmId}-pu-${pd.unitId}-t-${new Date().getTime()}.pdf`;
           let Key = "AGM/" + agmId + "/VotingDocuments/" + filename;
 
 
-          // agenda.choices = await Parallel.map(agenda.choices, async (ch) => {
-          //   let qrCodeObj = {
-          //     qrName: 'SM:AGM:VOTING',
-          //     orgId: orgId,
-          //     agmId: agmId,
-          //     unitId: pd.unitId,
-          //     unitNumber: pd.unitNumber,
-          //     ownershipRatio: pd.ownershipRatio,
-          //     agendaId: agenda.id,
-          //     choice: ch.id
-          //   };
-          //   let qrCodeDataURI = await QRCODE.toDataURL(JSON.stringify(qrCodeObj));
-          //   ch.qrCode = qrCodeDataURI;
-          // });
+          agenda.choices = await Parallel.map(agenda.choices, async (choice) => {
+            let qrCodeObj = {
+              qrName: 'SM:AGM:VOTING',
+              orgId: orgId,
+              agmId: agmId,
+              unitId: pd.unitId,
+              unitNumber: pd.unitNumber,
+              ownershipRatio: pd.ownershipRatio,
+              agendaId: agenda.id,
+              choice: choice.id
+            };
+            let qrString = JSON.stringify(qrCodeObj);
+            console.log("[helpers][agm][generateVotingDocument]: Qr String: ", qrString);
+            // let qrCodeDataURI = await QRCODE.toDataURL();
+            // ch.qrCode = qrCodeDataURI;
+          });
 
           const ejs = require('ejs');
           const path = require('path');
@@ -176,7 +181,7 @@ const agmHelper = {
 
         });
 
-
+        console.log("[helpers][agm][generateVotingDocument]: All Docs Generated For Agenda: ", agenda);
       });
 
       console.log("[helpers][agm][generateVotingDocument]: All PDF documents created successfully. Going to create zip file.. ");
