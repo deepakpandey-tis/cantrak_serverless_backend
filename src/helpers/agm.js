@@ -148,7 +148,8 @@ const agmHelper = {
             };
             let qrString = JSON.stringify(qrCodeObj);
             console.log("[helpers][agm][generateVotingDocument]: Qr String: ", qrString);
-            let qrCodeDataURI = await QRCODE.toDataURL();
+            let qrCodeDataURI = await QRCODE.toDataURL(qrString);
+            console.log("[helpers][agm][generateVotingDocument]: Qr Generated....");
             ch.qrCode = qrCodeDataURI;
           });
 
