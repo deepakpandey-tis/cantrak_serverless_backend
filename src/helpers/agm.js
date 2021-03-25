@@ -3,7 +3,9 @@ const _ = require("lodash");
 const AWS = require("aws-sdk");
 const knex = require("../db/knex");
 const moment = require("moment-timezone");
-const chromium = require('chrome-aws-lambda')
+const chromium = require('chrome-aws-lambda');
+const redisHelper = require('../helpers/redis');
+
 
 AWS.config.update({
   accessKeyId: process.env.ACCESS_KEY_ID,
@@ -293,6 +295,8 @@ const agmHelper = {
       });
 
       console.log("[helpers][agm][generateVotingDocument]: s3FileDownloadUrl:", s3FileDownloadUrl);
+      await redisHelper.setValueWithExpiry(`agm-${agmId}-voting-docs-link`, {s3Url: s3FileDownloadUrl}, 2 * 60 * 60 );
+      
 
       let sender = requestedBy;
       let receiver = requestedBy;
