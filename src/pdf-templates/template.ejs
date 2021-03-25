@@ -10,7 +10,7 @@
     <td style="text-align: right;">
       <h6 style="margin: 0px; padding: 0px;">
         <span style="color: #F44439;">Date : </span
-        ><span><%= new Date(); %></span>
+        ><span><%= agmDetails.formattedDate %></span>
       </h6>
     </td>
   </tr>
@@ -18,7 +18,7 @@
     <td>
       <h6 style="margin: 0px; padding: 0px;">
         <span style="color: #F44439;">Agenda : </span
-        ><span><%= agenda.agendaName  %></span>
+        ><span><%= agenda.agendaName  %> / <%= agenda.agendaNameThai %> </span>
       </h6>
     </td>
     <td>
@@ -33,10 +33,10 @@
       <div style="width: 10px; height: 10px; border: 1px solid gray;"></div>
     </td>
     <td>
-      <p><%= agenda.choices[i].enText %> / <%= agenda.choices[i].thaiText %></p>
+      <p><%= agenda.choices[i].choiceValue %> / <%= agenda.choices[i].choiceValueThai %></p>
     </td>
     <td>
-      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png" alt="qr-code" width="100px">
+      <img src="<%= agenda.choices[i].qrCode %>" alt="qr-code" width="100px">
     </td>
   </tr>
   <% } %>
