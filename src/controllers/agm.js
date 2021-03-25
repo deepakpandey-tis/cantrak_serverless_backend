@@ -445,6 +445,7 @@ const agmController = {
                 companyId: req.body.companyId,
                 projectId: req.body.projectId,
                 unitId: unitId,
+                unitNumber:ownerData.B,
                 houseId: ownerData.C,
                 ownerName: ownerData.E,
                 joinOwnerName: ownerData.H,
