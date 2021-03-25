@@ -1699,7 +1699,10 @@ const agmController = {
           "property_units.orgId": req.orgId,
           "property_units.isActive": true,
           "agm_owner_master.agmId": agmId,
-        });
+        })
+        .orderBy("property_units.unitNumber","asc");
+        
+        getPropertyUnits = _.uniqBy(getPropertyUnits,"id")
 
       return res.status(200).json({
         data: {
