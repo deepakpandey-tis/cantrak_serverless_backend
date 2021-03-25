@@ -26,7 +26,7 @@ const createPdf = (document, agmId, browser) => {
       await page.setContent(document.html, { waitUntil: ['load', 'domcontentloaded', 'networkidle0'] });
 
       const pdf = await page.pdf({
-        format: 'A5',
+        format: 'A4',
         printBackground: true,
         displayHeaderFooter: false,
         margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' }
@@ -97,7 +97,6 @@ const agmHelper = {
         defaultViewport: chromium.defaultViewport,
         executablePath: await chromium.executablePath,
         headless: chromium.headless,
-        ignoreHTTPSErrors: true,
       });
 
       const Parallel = require("async-parallel");
