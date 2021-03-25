@@ -236,6 +236,11 @@ const agmHelper = {
     } catch (err) {
 
       console.log("[helpers][announcement][sendAnnouncement]:  Error", err);
+      if (err.list && Array.isArray(err.list)) {
+        err.list.forEach(item => {
+          sails.log.error(`[helpers][announcement][sendAnnouncement]: Each Error:`, item.message);
+        });
+      }
       return { code: "UNKNOWN_ERROR", message: err.message, error: err };
 
     } finally {
