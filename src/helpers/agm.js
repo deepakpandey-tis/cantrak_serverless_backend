@@ -217,68 +217,80 @@ const agmHelper = {
 
         console.log("[helpers][agm][generateVotingDocument]: Starting to Generat For Agenda: ", agenda);
 
-        await Parallel.each(agmPropertyUnitOwners, async (pd) => {
+        try {
 
-          console.log("[helpers][agm][generateVotingDocument]: Generating Doc for Property Owner: ", pd);
+          await Parallel.each(agmPropertyUnitOwners, async (pd) => {
 
-          if (!browser || wasBrowserKilled(browser)) {
-            await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
-            browser = await chromium.puppeteer.launch({
-              args: chromium.args,
-              defaultViewport: chromium.defaultViewport,
-              executablePath: await chromium.executablePath,
-              headless: chromium.headless,
+            console.log("[helpers][agm][generateVotingDocument]: Generating Doc for Property Owner: ", pd);
+
+            if (!browser || wasBrowserKilled(browser)) {
+              await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
+              browser = await chromium.puppeteer.launch({
+                args: chromium.args,
+                defaultViewport: chromium.defaultViewport,
+                executablePath: await chromium.executablePath,
+                headless: chromium.headless,
+              });
+            }
+
+            let filename = `agm-${agmId}-pu-${pd.unitId}-t-${new Date().getTime()}.pdf`;
+            let Key = s3BasePath + filename;
+
+
+            agenda.choices = await Parallel.map(agenda.choices, async (choice) => {
+              let qrCodeObj = {
+                qrName: 'SM:AGM:VOTING',
+                orgId: orgId,
+                agmId: agmId,
+                unitId: pd.unitId,
+                unitNumber: pd.unitNumber,
+                ownershipRatio: pd.ownershipRatio,
+                agendaId: agenda.id,
+                choice: choice.id
+              };
+              let qrString = JSON.stringify(qrCodeObj);
+              // console.log("[helpers][agm][generateVotingDocument]: Qr String: ", qrString);
+              let qrCodeDataURI = await QRCODE.toDataURL(qrString);
+              choice.qrCode = qrCodeDataURI;
+              // console.log("[helpers][agm][generateVotingDocument]: Qr Generated....");
+              return choice;
             });
-          }
 
-          let filename = `agm-${agmId}-pu-${pd.unitId}-t-${new Date().getTime()}.pdf`;
-          let Key = s3BasePath + filename;
+            const ejs = require('ejs');
+            const path = require('path');
 
+            // Read HTML Template
+            const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.ejs');
+            console.log('[helpers][agm][generateVotingDocument]: PDF Template Path:', templatePath);
 
-          agenda.choices = await Parallel.map(agenda.choices, async (choice) => {
-            let qrCodeObj = {
-              qrName: 'SM:AGM:VOTING',
-              orgId: orgId,
-              agmId: agmId,
-              unitId: pd.unitId,
-              unitNumber: pd.unitNumber,
-              ownershipRatio: pd.ownershipRatio,
-              agendaId: agenda.id,
-              choice: choice.id
+            let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner: pd });
+            // console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
+
+            const document = {
+              html: htmlContents,
+              data: {
+                agmDetails: data.agmDetails,
+                agenda: agenda,
+                propertyOwner: pd
+              },
+              filename: filename,
             };
-            let qrString = JSON.stringify(qrCodeObj);
-            // console.log("[helpers][agm][generateVotingDocument]: Qr String: ", qrString);
-            let qrCodeDataURI = await QRCODE.toDataURL(qrString);
-            choice.qrCode = qrCodeDataURI;
-            // console.log("[helpers][agm][generateVotingDocument]: Qr Generated....");
-            return choice;
+
+            await createPdf(document, agmId, browser);
+            console.log("[helpers][agm][generateVotingDocument]: Generated Doc for PU: ", pd);
+            s3keys.push(Key);
+
           });
 
-          const ejs = require('ejs');
-          const path = require('path');
-
-          // Read HTML Template
-          const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.ejs');
-          console.log('[helpers][agm][generateVotingDocument]: PDF Template Path:', templatePath);
-
-          let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner: pd });
-          // console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
-
-          const document = {
-            html: htmlContents,
-            data: {
-              agmDetails: data.agmDetails,
-              agenda: agenda,
-              propertyOwner: pd
-            },
-            filename: filename,
-          };
-
-          await createPdf(document, agmId, browser);
-          console.log("[helpers][agm][generateVotingDocument]: Generated Doc for PU: ", pd);
-          s3keys.push(Key);
-
-        });
+        } catch (err) {
+          console.error("[helpers][announcement][sendAnnouncement]: Inner Loop: Error", err);
+          if (err.list && Array.isArray(err.list)) {
+            err.list.forEach(item => {
+              console.error(`[helpers][announcement][sendAnnouncement]: Inner Loop Each Error:`, item.message);
+            });
+          }
+          throw err;
+        }
 
         console.log("[helpers][agm][generateVotingDocument]: All Docs Generated For Agenda: ", agenda);
       });
