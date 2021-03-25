@@ -148,7 +148,9 @@ const agmHelper = {
             };
             let qrString = JSON.stringify(qrCodeObj);
             console.log("[helpers][agm][generateVotingDocument]: Qr String: ", qrString);
-            let qrCodeDataURI = await QRCODE.toDataURL();
+            // let qrCodeDataURI = await QRCODE.toDataURL(qrString);
+            let qrCodeDataURI = 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png';
+            console.log("[helpers][agm][generateVotingDocument]: Qr Generated....");
             ch.qrCode = qrCodeDataURI;
           });
 
@@ -160,7 +162,7 @@ const agmHelper = {
           console.log('[helpers][agm][generateVotingDocument]: PDF Template Path:', templatePath);
 
           let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner: pd });
-          console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
+          // console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
 
           const document = {
             html: htmlContents,
