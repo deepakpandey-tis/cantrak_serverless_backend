@@ -151,7 +151,7 @@ const agmHelper = {
           console.log('[helpers][agm][generateVotingDocument]: PDF Template Path:', templatePath);
 
           let agmDetails = data.agmDetails;
-          agmDetails.formattedDate = moment(agmDetails.agmDate).format('LL');
+          agmDetails.formattedDate = moment(+agmDetails.agmDate).format('LL');
 
           let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner: pd });
           console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
