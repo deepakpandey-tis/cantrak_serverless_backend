@@ -106,7 +106,7 @@ functions:
   longJobsProcessor:
     handler: src/app.longJobsProcessor
     batchSize: 1                           # Using a batchSize of 1, so that messages succeed or fail on their own.
-    memorySize: 2048
+    memorySize: 6148
     timeout: 900                           # 15 Mins...
     reservedConcurrency: 10                # <-- Concurrency control
     events:
