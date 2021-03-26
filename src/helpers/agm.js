@@ -439,6 +439,7 @@ const agmHelper = {
                 agmId: agmId,
                 unitId: pd.unitId,
                 unitNumber: pd.unitNumber,
+                ownerMasterId: pd.id,
                 ownershipRatio: pd.ownershipRatio,
                 agendaId: agenda.id,
                 choice: choice.id
