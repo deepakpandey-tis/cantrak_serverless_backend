@@ -1,85 +1,24 @@
-<!-- <div style="width: 100% !important;">
-<table style="width: 100%; margin-top: 20px;">
-  <tr>
-    <td>
-      <h6 style="margin: 0px; padding: 0px;">
-        <span style="color: #F44439;">Project Name : </span
-        ><span>ABC PROJECT</span>
-      </h6>
-    </td>
-    <td style="text-align: right;">
-      <h6 style="margin: 0px; padding: 0px;">
-        <span style="color: #F44439;">Date : </span
-        ><span><%= agmDetails.formattedDate %></span>
-      </h6>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <h6 style="margin: 0px; padding: 0px;">
-        <span style="color: #F44439;">Agenda : </span
-        ><span><%= agenda.agendaName  %> / <%= agenda.agendaNameThai %> </span>
-      </h6>
-    </td>
-    <td>
-      
-    </td>
-  </tr>
-</table>
-<table style="width: 100%; margin-top: 20px;">
-  <% for (var i = 0; i < agenda.choices.length;  i++ ) { %>
-  <tr>
-    <td>
-      <div style="width: 10px; height: 10px; border: 1px solid gray;"></div>
-    </td>
-    <td>
-      <p><%= agenda.choices[i].choiceValue %> / <%= agenda.choices[i].choiceValueThai %></p>
-    </td>
-    <td>
-      <img src="<%= agenda.choices[i].qrCode %>" alt="qr-code" width="100px">
-    </td>
-  </tr>
-  <% } %>
-</table>
-<table style="width: 100%; margin-top: 20px;">
-  <tr>
-    <td>
-      <h6 style="margin: 0px; padding: 0px;">
-        <span style="color: #F44439;">Unit No : </span
-        ><span><%= propertyOwner.houseId %></span>
-      </h6>
-    </td>
-    <td style="text-align: right;">
-      <h6 style="margin: 0px; padding: 0px;">
-        <span style="color: #F44439;">Ownership Ratio : </span
-        ><span><%= propertyOwner.ownershipRatio %></span>
-      </h6>
-    </td>
-  </tr>
-</table>
-</div> -->
-
 <div style="width: 100% !important;">
   <table style="width: 100%; margin-top: 20px;">
     <tr>
       <td style="text-align: center; padding-bottom: 15px;">
         <h6 style="margin: 0px; padding: 0px;">
           <span style="color: #F44439;">วาระ / Agenda : </span
-          ><span>....</span>
+          ><span> <%= agenda.agendaNo  %></span>
         </h6>
       </td>
     </tr>
-    <tr>
+    <!-- <tr>
       <td style="text-align: center; padding-bottom: 15px;">
         <h6 style="margin: 0px; padding: 0px;">
           <span style="color: #F44439;">Company Name (Th)</span>
         </h6>
       </td>
-    </tr>
+    </tr> -->
     <tr>
       <td style="text-align: center; padding-bottom: 15px;">
         <h6 style="margin: 0px; padding: 0px;">
-          <span style="color: #F44439;">Company Name (En)</span>
+          <span style="color: #F44439;"><%= agmDetails.companyName %></span>
         </h6>
       </td>
     </tr>
@@ -114,7 +53,7 @@
       <td style=" padding-bottom: 15px;">
         <h6 style="margin: 0px; padding: 0px;">
           <span style="color: #F44439;">Agenda 1: </span
-          ><span><%= agenda.agendaName  %></span>
+          ><span><%= agenda.agendaNameThai  %></span>
         </h6>
       </td>
     </tr>
