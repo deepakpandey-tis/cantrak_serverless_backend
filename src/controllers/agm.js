@@ -2063,6 +2063,75 @@ const agmController = {
         ],
       });
     }
+  },
+  getOwnerRegistrationList: async(req,res)=>{
+    try {
+      
+
+      let payload = req.query;
+
+      console.log("payload value",payload)
+
+      let ownerRegistrationList= await knex
+      .from("agm_owner_master")
+      .leftJoin(
+        "property_units",
+        "agm_owner_master.unitId",
+        "property_units.id"
+      )
+      .select([
+        "agm_owner_master.*",
+        "property_units.unitNumber",
+        "property_units.description as unitDescription",
+      ])
+      
+      .where({
+        "agm_owner_master.agmId": payload.agmId,
+      })
+      .where((qb) => {
+        if (payload.type == 1) {
+        }
+        if (payload.type == 2) {
+          qb.where(
+            "agm_owner_master.registrationType",
+            1
+          );
+        }
+        if (payload.type == 3) {
+          qb.orWhere(
+            "agm_owner_master.registrationType",
+            2
+          );
+        }
+        if (payload.type == 4) {
+          qb.where(
+            "agm_owner_master.registrationType",
+            1
+          );
+          qb.orWhere(
+            "agm_owner_master.registrationType",
+            2
+          );
+        }
+
+        if (payload.agmId) {
+          qb.where(
+            "agm_owner_master.agmId",
+            payload.agmId
+          );
+        }
+      })
+
+
+      console.log("ownerRegistrationList====>>>",ownerRegistrationList)
+      return {
+        data:ownerRegistrationList
+      }
+    } catch (err) {
+
+      console.log("error==",err)
+      
+    }
   }
 };
 

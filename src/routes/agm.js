@@ -183,6 +183,14 @@ router.post(
   agmController.saveVotingData
 )
 
+router.get(
+  "/get-owner-registration-list",
+  // authMiddleware.isAuthenticated,
+  // roleMiddleware.parseUserPermission,
+  // resourceAccessMiddleware.isAGMAccessible,
+  agmController.getOwnerRegistrationList
+)
+
 /**IMPORT AGM OWNER DATA */
 const path = require("path");
 let tempraryDirectory = null;
