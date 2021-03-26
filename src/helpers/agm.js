@@ -403,55 +403,71 @@ const agmHelper = {
       await Parallel.each(agmPropertyUnitOwners, async (pd) => {
         console.log("[helpers][agm][generateVotingDocument]: Preparing for Property Owner: ", pd);
 
-        await Parallel.each(agendas, async (agenda) => {
-          console.log("[helpers][agm][generateVotingDocument]: Preparing For Agenda: ", agenda);
+        try {
 
-          agenda.choices = await Parallel.map(agenda.choices, async (choice) => {
-            let qrCodeObj = {
-              qrName: 'SM:AGM:VOTING',
-              orgId: orgId,
-              agmId: agmId,
-              unitId: pd.unitId,
-              unitNumber: pd.unitNumber,
-              ownershipRatio: pd.ownershipRatio,
-              agendaId: agenda.id,
-              choice: choice.id
+          await Parallel.each(agendas, async (agenda) => {
+            console.log("[helpers][agm][generateVotingDocument]: Preparing For Agenda: ", agenda);
+
+            agenda.choices = await Parallel.map(agenda.choices, async (choice) => {
+              let qrCodeObj = {
+                qrName: 'SM:AGM:VOTING',
+                orgId: orgId,
+                agmId: agmId,
+                unitId: pd.unitId,
+                unitNumber: pd.unitNumber,
+                ownershipRatio: pd.ownershipRatio,
+                agendaId: agenda.id,
+                choice: choice.id
+              };
+              let qrString = JSON.stringify(qrCodeObj);
+              // console.log("[helpers][agm][generateVotingDocument]: Qr String: ", qrString);
+              let qrCodeDataURI = await QRCODE.toDataURL(qrString);
+              choice.qrCode = qrCodeDataURI;
+              // console.log("[helpers][agm][generateVotingDocument]: Qr Generated....");
+              return choice;
+            });
+
+            const ejs = require('ejs');
+            const path = require('path');
+
+            // Read HTML Template
+            const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.ejs');
+            console.log('[helpers][agm][generateVotingDocument]: PDF Template Path:', templatePath);
+
+            let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner: pd });
+            // console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
+
+            const document = {
+              html: htmlContents,
+              data: {
+                agmDetails: data.agmDetails,
+                agenda: agenda,
+                propertyOwner: pd
+              },
+              filename: filename,
             };
-            let qrString = JSON.stringify(qrCodeObj);
-            // console.log("[helpers][agm][generateVotingDocument]: Qr String: ", qrString);
-            let qrCodeDataURI = await QRCODE.toDataURL(qrString);
-            choice.qrCode = qrCodeDataURI;
-            // console.log("[helpers][agm][generateVotingDocument]: Qr Generated....");
-            return choice;
+
+            console.log("[helpers][agm][generateVotingDocument]: Prepared Doc for Agenda: ", document);
+            sheetsToPrepare.push(document);
+
           });
 
-          const ejs = require('ejs');
-          const path = require('path');
-
-          // Read HTML Template
-          const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.ejs');
-          console.log('[helpers][agm][generateVotingDocument]: PDF Template Path:', templatePath);
-
-          let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner: pd });
-          // console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
-
-          const document = {
-            html: htmlContents,
-            data: {
-              agmDetails: data.agmDetails,
-              agenda: agenda,
-              propertyOwner: pd
-            },
-            filename: filename,
-          };
-
-          console.log("[helpers][agm][generateVotingDocument]: Prepared Doc for Agenda: ", document);
-          sheetsToPrepare.push(document);
-
-        });
+        } catch (err) {
+          console.error("[helpers][announcement][sendAnnouncement]: Inner Loop: Error", err);
+          if (err.list && Array.isArray(err.list)) {
+            err.list.forEach(item => {
+              console.error(`[helpers][announcement][sendAnnouncement]: Inner Loop Each Error:`, item.message);
+            });
+          }
+          throw new Error(err);
+        }
 
         console.log("[helpers][agm][generateVotingDocument]: All docs gen for Property Owner: ", pd);
       });
+
+
+      console.log("[helpers][agm][generateVotingDocument]: Generation Finished. Going to PRiNT");
+      console.log("============================== PRiNT ======================================");
 
       Parallel.setConcurrency(1);
       await Parallel.each(sheetsToPrepare, async (document) => {
