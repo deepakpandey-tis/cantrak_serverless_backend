@@ -391,12 +391,15 @@ const agmHelper = {
 
       const s3BasePath = "AGM/" + agmId + "/VotingDocuments/";
       // First Clean all files from the s3 directory....
-      console.log("[helpers][agm][generateVotingDocument]: Cleaning S3 directory for AGM....", agmId);
-      await emptyS3Directory(bucketName, s3BasePath);
-      console.log("[helpers][agm][generateVotingDocument]: S3 Directory cleaned....", s3BasePath);
+      // console.log("[helpers][agm][generateVotingDocument]: Cleaning S3 directory for AGM....", agmId);
+      // await emptyS3Directory(bucketName, s3BasePath);
+      // console.log("[helpers][agm][generateVotingDocument]: S3 Directory cleaned....", s3BasePath);
 
       // Write Logic to prepare all objects for generating parallely.........
       const QRCODE = require("qrcode");
+      const ejs = require('ejs');
+      const path = require('path');
+
       Parallel.setConcurrency(20);
       let sheetsToPrepare = [];
 
@@ -427,15 +430,14 @@ const agmHelper = {
               return choice;
             });
 
-            const ejs = require('ejs');
-            const path = require('path');
-
             // Read HTML Template
             const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.ejs');
             console.log('[helpers][agm][generateVotingDocument]: PDF Template Path:', templatePath);
 
             let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner: pd });
             // console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
+
+            let filename = `agm-${agmId}-pu-${pd.unitId}-t-${new Date().getTime()}.pdf`;
 
             const document = {
               html: htmlContents,
