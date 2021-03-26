@@ -41,7 +41,7 @@ async function emptyS3Directory(bucket, dir) {
 }
 
 
-const createPdf = (document, agmId, browser) => {
+const createPdf = (document, agmId, browser, retries = 1) => {
 
   let bucketName = process.env.S3_BUCKET_NAME;
 
@@ -49,7 +49,7 @@ const createPdf = (document, agmId, browser) => {
 
     try {
 
-      console.log('HTML To PRINT:', document.html);
+      console.log('Retries/ HTML To PRINT:', retries, document.html);
 
       const page = await browser.newPage();
       await page.setContent(document.html, { waitUntil: ['load', 'domcontentloaded', 'networkidle0'] });
@@ -83,7 +83,26 @@ const createPdf = (document, agmId, browser) => {
       }
 
     } catch (err) {
-      rej(err);
+      // rej(err);  // don't reject ... add a retry...
+
+      if (!browser || wasBrowserKilled(browser)) {
+        await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
+        browser = await chromium.puppeteer.launch({
+          args: chromium.args,
+          defaultViewport: chromium.defaultViewport,
+          executablePath: await chromium.executablePath,
+          headless: chromium.headless,
+        });
+      }
+
+      retries++;
+      if (retries > 5) {
+        console.log('Retrying after error:', err);
+        await createPdf(document, agmId, browser, retries);
+      } else {
+        rej(err);
+      }
+
     }
 
   });
@@ -471,36 +490,32 @@ const agmHelper = {
       console.log("[helpers][agm][generateVotingDocument]: Generation Finished. Going to PRiNT");
       console.log("============================== PRiNT ======================================");
 
-      Parallel.setConcurrency(1);
-      await Parallel.each(sheetsToPrepare, async (document) => {
 
-        console.log("[helpers][agm][generateVotingDocument]: Generating Doc for: ", document);
-        if (!browser || wasBrowserKilled(browser)) {
-          await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
-          browser = await chromium.puppeteer.launch({
-            args: chromium.args,
-            defaultViewport: chromium.defaultViewport,
-            executablePath: await chromium.executablePath,
-            headless: chromium.headless,
-          });
-        }
-
-        await createPdf(document, agmId, browser);
-        console.log("[helpers][agm][generateVotingDocument]: Doc Generated...");
-
+      await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
+      browser = await chromium.puppeteer.launch({
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath,
+        headless: chromium.headless,
       });
+
+      Parallel.setConcurrency(5);
+      await Parallel.each(sheetsToPrepare, async (document) => {
+        console.log("[helpers][agm][generateVotingDocument]: Generating Doc for: ", document);
+        await createPdf(document, agmId, browser);
+      });
+
+      console.log("============================== PRiNT DONE ======================================");
+
+      console.log("[helpers][agm][generateVotingDocument]: All PDF documents created successfully. Going to create zip file.. ");
 
       if (browser !== null) {
         await browser.close();
         browser = null;
       }
 
-      console.log("[helpers][agm][generateVotingDocument]: All PDF documents created successfully. Going to create zip file.. ");
-      console.log("[helpers][agm][generateVotingDocument]: Files to be zipped: ", s3keys);
-
       // Write Code to create Zip File...
       const zipFileName = "AGM/" + agmId + "/zipped-files/" + `${new Date().getTime()}.zip`;
-
       const uploadedZippedFileDetails = await makeZippedFile(bucketName, s3BasePath, zipFileName);
 
       console.log("[helpers][agm][generateVotingDocument]: Zip File created successfully, Name:", zipFileName, uploadedZippedFileDetails);
