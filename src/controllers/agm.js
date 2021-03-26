@@ -1907,7 +1907,7 @@ const agmController = {
 
       let votingData = await knex.from("agm_voting").where({
         agmId: payload.agmId,
-        ownerMasterId:payload.ownerMasterId,
+        ownerMasterId: payload.ownerMasterId,
         agendaId: payload.agendaId,
       });
 
@@ -1928,7 +1928,7 @@ const agmController = {
     }
   },
 
-  getScannedAgendaDetail: async(req,res)=>{
+  getScannedAgendaDetail: async (req, res) => {
     try {
       let payload = req.body;
 
@@ -1936,7 +1936,7 @@ const agmController = {
         agmId: Joi.number().required(),
         // ownerMasterId: Joi.number().required(),
         agendaId: Joi.number().required(),
-        choiceId : Joi.number().required()
+        choiceId: Joi.number().required(),
       });
       const result = Joi.validate(payload, schema);
       if (
@@ -1955,35 +1955,39 @@ const agmController = {
       }
 
       let agendaChoiceData = await knex
-      .from("agenda_choice")
-      .leftJoin("agenda_master","agenda_choice.agendaId","agenda_master.id")
-      .select([
-        "agenda_choice.choiceValue",
-        "agenda_master.agendaName"
-      ])
-      .where({"agenda_choice.agendaId":payload.agendaId,"agenda_choice.id":payload.choiceId})
-
+        .from("agenda_choice")
+        .leftJoin(
+          "agenda_master",
+          "agenda_choice.agendaId",
+          "agenda_master.id"
+        )
+        .select([
+          "agenda_choice.choiceValue",
+          "agenda_master.agendaName",
+        ])
+        .where({
+          "agenda_choice.agendaId": payload.agendaId,
+          "agenda_choice.id": payload.choiceId,
+        });
 
       let totalRatio = await knex("agm_owner_master")
-      .select("agm_owner_master.ownershipRatio")
-      .where("agm_owner_master.agmId",payload.agmId)
+        .select("agm_owner_master.ownershipRatio")
+        .where("agm_owner_master.agmId", payload.agmId);
 
       let total = [];
-      for(let d of totalRatio){
-        total.push(parseInt(d.ownershipRatio))
+      for (let d of totalRatio) {
+        total.push(parseInt(d.ownershipRatio));
       }
 
-      let totalRatioSum = total.reduce((a, b) => a + b, 0)
+      let totalRatioSum = total.reduce((a, b) => a + b, 0);
       // console.log("total agm ratio count====>>>>",totalRatioSum)
-
 
       return res.status(200).json({
         data: {
           agendaChoiceData: agendaChoiceData,
-          totalOwnershipRatio : totalRatioSum
+          totalOwnershipRatio: totalRatioSum,
         },
       });
-
     } catch (err) {
       return res.status(500).json({
         errors: [
@@ -1996,20 +2000,18 @@ const agmController = {
     }
   },
 
-  saveVotingData: async(req,res)=>{
+  saveVotingData: async (req, res) => {
     try {
-       let payload = req.body;
-       let insertVotingResult;
+      let payload = req.body;
+      let insertVotingResult;
 
-       await knex.transaction(async (trx) =>{
-
+      await knex.transaction(async (trx) => {
         const schema = new Joi.object().keys({
           agmId: Joi.number().required(),
           ownerMasterId: Joi.number().required(),
-          agendaId:Joi.number().required(),
-          votingPower:Joi.string().required(),
-          selectedChoiceId:Joi.number().required()
-  
+          agendaId: Joi.number().required(),
+          votingPower: Joi.string().required(),
+          selectedChoiceId: Joi.number().required(),
         });
         const result = Joi.validate(payload, schema);
         if (
@@ -2026,30 +2028,29 @@ const agmController = {
             ],
           });
         }
-  
+
         let currentTime = new Date().getTime();
-  
+
         let insertVotingData = {
-          agmId:payload.agmId,
-          ownerMasterId : payload.ownerMasterId,
+          agmId: payload.agmId,
+          ownerMasterId: payload.ownerMasterId,
           agendaId: payload.agendaId,
-          votingPower : payload.votingPower,
-          selectedChoiceId : payload.selectedChoiceId,
-          createdAt : currentTime,
-          updatedAt : currentTime,
-          orgId: req.orgId
-        }
-  
+          votingPower: payload.votingPower,
+          selectedChoiceId: payload.selectedChoiceId,
+          createdAt: currentTime,
+          updatedAt: currentTime,
+          orgId: req.orgId,
+        };
+
         insertVotingResult = await knex
-        .insert(insertVotingData)
-        .returning(["*"])
-        .into("agm_voting");
+          .insert(insertVotingData)
+          .returning(["*"])
+          .into("agm_voting");
 
         trx.commit;
+      });
 
-       });
-
-       return res.status(200).json({
+      return res.status(200).json({
         data: insertVotingResult,
         message: "Vote data added successfully!",
       });
@@ -2064,75 +2065,73 @@ const agmController = {
       });
     }
   },
-  getOwnerRegistrationList: async(req,res)=>{
+  getOwnerRegistrationList: async (req, res) => {
     try {
-      
-
       let payload = req.query;
 
-      console.log("payload value",payload)
+      console.log("payload value", payload);
 
-      let ownerRegistrationList= await knex
-      .from("agm_owner_master")
-      .leftJoin(
-        "property_units",
-        "agm_owner_master.unitId",
-        "property_units.id"
-      )
-      .select([
-        "agm_owner_master.*",
-        "property_units.unitNumber",
-        "property_units.description as unitDescription",
-      ])
-      
-      .where({
-        "agm_owner_master.agmId": payload.agmId,
-      })
-      .where((qb) => {
-        if (payload.type == 1) {
-        }
-        if (payload.type == 2) {
-          qb.where(
-            "agm_owner_master.registrationType",
-            1
-          );
-        }
-        if (payload.type == 3) {
-          qb.orWhere(
-            "agm_owner_master.registrationType",
-            2
-          );
-        }
-        if (payload.type == 4) {
-          qb.where(
-            "agm_owner_master.registrationType",
-            1
-          );
-          qb.orWhere(
-            "agm_owner_master.registrationType",
-            2
-          );
-        }
+      let ownerRegistrationList = await knex
+        .from("agm_owner_master")
+        .leftJoin(
+          "property_units",
+          "agm_owner_master.unitId",
+          "property_units.id"
+        )
+        .select([
+          "agm_owner_master.*",
+          "property_units.unitNumber",
+          "property_units.description as unitDescription",
+        ])
 
-        if (payload.agmId) {
-          qb.where(
-            "agm_owner_master.agmId",
-            payload.agmId
-          );
-        }
-      })
+        .where({
+          "agm_owner_master.agmId": payload.agmId,
+        })
+        .where((qb) => {
+          if (payload.type == 1) {
+          }
+          if (payload.type == 2) {
+            qb.where(
+              "agm_owner_master.registrationType",
+              1
+            );
+          }
+          if (payload.type == 3) {
+            qb.orWhere(
+              "agm_owner_master.registrationType",
+              2
+            );
+          }
+          if (payload.type == 4) {
+            qb.where(
+              "agm_owner_master.registrationType",
+              1
+            );
+            qb.orWhere(
+              "agm_owner_master.registrationType",
+              2
+            );
+          }
 
+          if (payload.agmId) {
+            qb.where(
+              "agm_owner_master.agmId",
+              payload.agmId
+            );
+          }
+        });
 
-      console.log("ownerRegistrationList====>>>",ownerRegistrationList)
+      console.log(
+        "ownerRegistrationList====>>>",
+        ownerRegistrationList
+      );
       return {
-        data:ownerRegistrationList
-      }
+        data: ownerRegistrationList,
+      };
     } catch (err) {
-
-      console.log("error==",err)
-      
+      console.log("error==", err);
     }
-  }
+  },
 };
 
 module.exports = agmController;
