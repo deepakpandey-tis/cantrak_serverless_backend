@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
     try {
 
         let requestedBy = await knex.from('users').where({ id: 1188 }).first();  // Tenant - daniel15@mailinator.com
-        let agmId = 239;
+        let agmId = 4;
         let orgId = 89;
 
         let agmDetails = await knex("agm_master")
