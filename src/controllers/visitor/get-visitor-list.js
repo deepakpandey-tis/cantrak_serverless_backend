@@ -1,9 +1,10 @@
 const knex = require('../../db/knex');
 
-const getVisitors = async (req, res) => {
+const getVisitorList = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
+        let projectIds = req.accessibleProjects;
         let sqlStr = '';
 
         let visitorSelect = req.query.visitorSelect;
@@ -55,4 +56,4 @@ const getVisitors = async (req, res) => {
 
 }
 
-module.exports = getVisitors;
+module.exports = getVisitorList;

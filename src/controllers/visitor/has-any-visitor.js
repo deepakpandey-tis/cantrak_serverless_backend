@@ -15,10 +15,10 @@ const hasAnyVisitor = async (req, res) => {
         WHERE vi."orgId" = ${orgId} and vi."createdBy" = ${userId}`;
 
         if(visitorSelect == 1){                 // Active and Schedule Visit
-            sqlStr = sqlStr + ` and vi."status" = 0 and vi."actualArrivalDate" is null` ;
+            sqlStr = sqlStr + ` and vi."status" = 1 and vi."actualArrivalDate" is null` ;
         }
-        else if(visitorSelect == 2){            // Inactive and Already Visited Visitor
-            sqlStr = sqlStr + ` and (vi."status" = 1 or vi."actualArrivalDate" is not null)` ;
+        else if(visitorSelect == 2){            // Cancelled and Already Visited Visitor
+            sqlStr = sqlStr + ` and (vi."status" = 3 or vi."actualArrivalDate" is not null)` ;
         }
         /*
         else all visitors

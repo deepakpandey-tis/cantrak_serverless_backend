@@ -22,7 +22,7 @@ const addInvitation = async (req, res) => {
             orgId: req.orgId
         };
 
-        console.log("Add Visitor Invitation Payload: ", insertData);
+        //console.log("Add Visitor Invitation Payload: ", insertData);
         invitation = insertData;
 
 

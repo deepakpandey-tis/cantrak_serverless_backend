@@ -9,7 +9,7 @@ const getInvitation = async (req, res) => {
         let visitorDetail = null;
         let qrCode = '';
 
-        console.log('uid - iid', userId, invitationId);
+        //console.log('uid - iid', userId, invitationId);
 
         /*
         var selectedRecs = await knex.raw(`select vi.*, uha."houseId", pu."unitNumber" from visitor_invitations vi, user_house_allocation uha, property_units pu 
@@ -36,7 +36,7 @@ const getInvitation = async (req, res) => {
         // Generate qrCode
         const qrCodeStr = 'sm' + '-org-' + visitorDetail.orgId + '-user-' + visitorDetail.createdBy + '-visitor-' + visitorDetail.id;
         qrCode = await generateQRCode(qrCodeStr);
-        console.log('qrcode', qrCode);
+        //console.log('qrcode', qrCode);
 
           const result = {
             data: {

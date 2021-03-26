@@ -2,7 +2,7 @@ const knex = require('../../db/knex');
 
 const getUserUnits = async (req, res) => {
     try {
-        console.log('getUserUnits: ', req.me)
+        //console.log('getUserUnits: ', req.me)
         let userId = req.me.id
 
         /* using raw query
@@ -23,7 +23,7 @@ const getUserUnits = async (req, res) => {
             },
             message: 'User house list!'
            });
-           console.log(data)
+           //console.log(data)
          } catch (err) {
         console.log("[controllers][Visitor][getUserUnits] :  Error", err);
         return res.status(500).json({
