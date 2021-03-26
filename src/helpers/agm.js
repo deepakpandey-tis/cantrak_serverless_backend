@@ -41,7 +41,7 @@ async function emptyS3Directory(bucket, dir) {
 }
 
 
-const createPdf = (document, agmId, browser) => {
+const createPdf = (document, agmId, browser, retries = 1) => {
 
   let bucketName = process.env.S3_BUCKET_NAME;
 
@@ -49,7 +49,7 @@ const createPdf = (document, agmId, browser) => {
 
     try {
 
-      console.log('HTML To PRINT:', document.html);
+      console.log('Retries/ HTML To PRINT:', retries, document.html);
 
       const page = await browser.newPage();
       await page.setContent(document.html, { waitUntil: ['load', 'domcontentloaded', 'networkidle0'] });
@@ -63,14 +63,14 @@ const createPdf = (document, agmId, browser) => {
 
       if (!pdf) {
         console.log('Unable to generate PDF...');
+        rej(new Error('Unable to generate PDF...'));
       } else {
-        let filename = document.filename;
-        console.log('PDF generated, uploading to s3 with filename:', filename);
+        console.log('PDF generated, uploading to s3 with filename:',  document.s3BasePath + document.filename);
 
         const s3 = new AWS.S3();
         const params = {
           Bucket: bucketName,
-          Key: "AGM/" + agmId + "/VotingDocuments/" + filename,
+          Key: document.s3BasePath + document.filename,
           Body: pdf,
           ACL: "public-read"
         };
@@ -83,7 +83,26 @@ const createPdf = (document, agmId, browser) => {
       }
 
     } catch (err) {
-      rej(err);
+      // rej(err);  // don't reject ... add a retry...
+
+      if (!browser || wasBrowserKilled(browser)) {
+        await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
+        browser = await chromium.puppeteer.launch({
+          args: chromium.args,
+          defaultViewport: chromium.defaultViewport,
+          executablePath: await chromium.executablePath,
+          headless: chromium.headless,
+        });
+      }
+
+      retries++;
+      if (retries > 5) {
+        console.log('Retrying after error:', err);
+        await createPdf(document, agmId, browser, retries);
+      } else {
+        rej(err);
+      }
+
     }
 
   });
@@ -389,14 +408,19 @@ const agmHelper = {
       console.log('[helpers][agm][generateVotingDocument]: Formatted Date:', agmDetails.formattedDate);
 
 
-      const s3BasePath = "AGM/" + agmId + "/VotingDocuments/";
+      const s3BasePath = "AGM/" + agmId + "/VotingDocuments/" + new Date().getTime() + "/";
+      console.log("[helpers][agm][generateVotingDocument]: S3 Directory (For Docs)....", s3BasePath);
+
       // First Clean all files from the s3 directory....
-      console.log("[helpers][agm][generateVotingDocument]: Cleaning S3 directory for AGM....", agmId);
-      await emptyS3Directory(bucketName, s3BasePath);
-      console.log("[helpers][agm][generateVotingDocument]: S3 Directory cleaned....", s3BasePath);
+      // console.log("[helpers][agm][generateVotingDocument]: Cleaning S3 directory for AGM....", agmId);
+      // await emptyS3Directory(bucketName, s3BasePath);
+      // console.log("[helpers][agm][generateVotingDocument]: S3 Directory cleaned....", s3BasePath);
 
       // Write Logic to prepare all objects for generating parallely.........
       const QRCODE = require("qrcode");
+      const ejs = require('ejs');
+      const path = require('path');
+
       Parallel.setConcurrency(20);
       let sheetsToPrepare = [];
 
@@ -415,6 +439,7 @@ const agmHelper = {
                 agmId: agmId,
                 unitId: pd.unitId,
                 unitNumber: pd.unitNumber,
+                ownerMasterId: pd.id,
                 ownershipRatio: pd.ownershipRatio,
                 agendaId: agenda.id,
                 choice: choice.id
@@ -427,15 +452,14 @@ const agmHelper = {
               return choice;
             });
 
-            const ejs = require('ejs');
-            const path = require('path');
-
             // Read HTML Template
             const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.ejs');
             console.log('[helpers][agm][generateVotingDocument]: PDF Template Path:', templatePath);
 
             let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner: pd });
             // console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
+
+            let filename = `agm-${agmId}-pu-${pd.unitId}-t-${new Date().getTime()}.pdf`;
 
             const document = {
               html: htmlContents,
@@ -444,6 +468,7 @@ const agmHelper = {
                 agenda: agenda,
                 propertyOwner: pd
               },
+              s3BasePath: s3BasePath,
               filename: filename,
             };
 
@@ -469,35 +494,32 @@ const agmHelper = {
       console.log("[helpers][agm][generateVotingDocument]: Generation Finished. Going to PRiNT");
       console.log("============================== PRiNT ======================================");
 
-      Parallel.setConcurrency(1);
-      await Parallel.each(sheetsToPrepare, async (document) => {
 
-        console.log("[helpers][agm][generateVotingDocument]: Generating Doc for: ", document);
-        if (!browser || wasBrowserKilled(browser)) {
-          await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
-          browser = await chromium.puppeteer.launch({
-            args: chromium.args,
-            defaultViewport: chromium.defaultViewport,
-            executablePath: await chromium.executablePath,
-            headless: chromium.headless,
-          });
-        }
-
-        await createPdf(document, agmId, browser);
-        console.log("[helpers][agm][generateVotingDocument]: All docs gen for Property Owner: ", pd);
+      await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
+      browser = await chromium.puppeteer.launch({
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath,
+        headless: chromium.headless,
       });
+
+      Parallel.setConcurrency(5);
+      await Parallel.each(sheetsToPrepare, async (document) => {
+        console.log("[helpers][agm][generateVotingDocument]: Generating Doc for: ", document);
+        await createPdf(document, agmId, browser);
+      });
+
+      console.log("============================== PRiNT DONE ======================================");
+
+      console.log("[helpers][agm][generateVotingDocument]: All PDF documents created successfully. Going to create zip file.. ");
 
       if (browser !== null) {
         await browser.close();
         browser = null;
       }
 
-      console.log("[helpers][agm][generateVotingDocument]: All PDF documents created successfully. Going to create zip file.. ");
-      console.log("[helpers][agm][generateVotingDocument]: Files to be zipped: ", s3keys);
-
       // Write Code to create Zip File...
       const zipFileName = "AGM/" + agmId + "/zipped-files/" + `${new Date().getTime()}.zip`;
-
       const uploadedZippedFileDetails = await makeZippedFile(bucketName, s3BasePath, zipFileName);
 
       console.log("[helpers][agm][generateVotingDocument]: Zip File created successfully, Name:", zipFileName, uploadedZippedFileDetails);
