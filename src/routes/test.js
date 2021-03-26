@@ -66,12 +66,81 @@ router.get('/', async (req, res) => {
             a = false;
         }
 
-        res.json({
-            IS_OFFLINE: process.env.IS_OFFLINE,
-            ifCheck: a,
-            typeOf: typeof process.env.IS_OFFLINE,
-            typeof1: typeof true
-        });
+        // res.json({
+        //     IS_OFFLINE: process.env.IS_OFFLINE,
+        //     ifCheck: a,
+        //     typeOf: typeof process.env.IS_OFFLINE,
+        //     typeof1: typeof true
+        // });
+        let aagmDetails = {
+            formattedDate:'26-03-2021',
+
+        }
+        let agenda = {
+            agendaName:'Agenda 1',
+            choices :[
+                {
+                    choiceValue:'choiceValue',
+                    choiceValueThai:'choiceValueThai',
+                    qrCode:'https://www.asti.com/wp-content/uploads/2017/08/AAEAAQAAAAAAAAWbAAAAJGFlM2NhMWM3LTNjNDQtNDFlMy04MDUyLTAxMzJjZDJhMjcwNw.png'
+                },
+                {
+                    choiceValue:'choiceValue',
+                    choiceValueThai:'choiceValueThai',
+                    qrCode:'https://www.asti.com/wp-content/uploads/2017/08/AAEAAQAAAAAAAAWbAAAAJGFlM2NhMWM3LTNjNDQtNDFlMy04MDUyLTAxMzJjZDJhMjcwNw.png'
+                },
+                {
+                    choiceValue:'choiceValue',
+                    choiceValueThai:'choiceValueThai',
+                    qrCode:'https://www.asti.com/wp-content/uploads/2017/08/AAEAAQAAAAAAAAWbAAAAJGFlM2NhMWM3LTNjNDQtNDFlMy04MDUyLTAxMzJjZDJhMjcwNw.png'
+                },
+                {
+                    choiceValue:'choiceValue',
+                    choiceValueThai:'choiceValueThai',
+                    qrCode:'https://www.asti.com/wp-content/uploads/2017/08/AAEAAQAAAAAAAAWbAAAAJGFlM2NhMWM3LTNjNDQtNDFlMy04MDUyLTAxMzJjZDJhMjcwNw.png'
+                },
+                {
+                    choiceValue:'choiceValue',
+                    choiceValueThai:'choiceValueThai',
+                    qrCode:'https://www.asti.com/wp-content/uploads/2017/08/AAEAAQAAAAAAAAWbAAAAJGFlM2NhMWM3LTNjNDQtNDFlMy04MDUyLTAxMzJjZDJhMjcwNw.png'
+                },
+                {
+                    choiceValue:'choiceValue',
+                    choiceValueThai:'choiceValueThai',
+                    qrCode:'https://www.asti.com/wp-content/uploads/2017/08/AAEAAQAAAAAAAAWbAAAAJGFlM2NhMWM3LTNjNDQtNDFlMy04MDUyLTAxMzJjZDJhMjcwNw.png'
+                },
+                {
+                    choiceValue:'choiceValue',
+                    choiceValueThai:'choiceValueThai',
+                    qrCode:'https://www.asti.com/wp-content/uploads/2017/08/AAEAAQAAAAAAAAWbAAAAJGFlM2NhMWM3LTNjNDQtNDFlMy04MDUyLTAxMzJjZDJhMjcwNw.png'
+                },
+                {
+                    choiceValue:'choiceValue',
+                    choiceValueThai:'choiceValueThai',
+                    qrCode:'https://www.asti.com/wp-content/uploads/2017/08/AAEAAQAAAAAAAAWbAAAAJGFlM2NhMWM3LTNjNDQtNDFlMy04MDUyLTAxMzJjZDJhMjcwNw.png'
+                },
+                {
+                    choiceValue:'choiceValue',
+                    choiceValueThai:'choiceValueThai',
+                    qrCode:'https://www.asti.com/wp-content/uploads/2017/08/AAEAAQAAAAAAAAWbAAAAJGFlM2NhMWM3LTNjNDQtNDFlMy04MDUyLTAxMzJjZDJhMjcwNw.png'
+                },
+                {
+                    choiceValue:'choiceValue',
+                    choiceValueThai:'choiceValueThai',
+                    qrCode:'https://www.asti.com/wp-content/uploads/2017/08/AAEAAQAAAAAAAAWbAAAAJGFlM2NhMWM3LTNjNDQtNDFlMy04MDUyLTAxMzJjZDJhMjcwNw.png'
+                },
+            ]
+        }
+        let pd = {
+            houseId:'102/24',
+            ownershipRatio:'24.5'
+        }
+        const ejs = require('ejs');
+        const path = require('path');
+
+        // Read HTML Template
+        const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.ejs');
+        res.render(templatePath,{agmDetails:aagmDetails,agenda:agenda,propertyOwner:pd});
         
      
 

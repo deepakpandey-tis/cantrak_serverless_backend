@@ -60,9 +60,9 @@
 </div> -->
 
 <div style="width: 100% !important;">
-  <table style="width: 100%; margin-top: 10px;">
+  <table style="width: 100%; margin-top: 20px;">
     <tr>
-      <td style="text-align: center; padding-bottom: 5px;">
+      <td style="text-align: center; padding-bottom: 15px;">
         <h6 style="margin: 0px; padding: 0px;">
           <span style="color: #F44439;">วาระ / Agenda : </span
           ><span>....</span>
@@ -70,28 +70,28 @@
       </td>
     </tr>
     <tr>
-      <td style="text-align: center; padding-bottom: 5px;">
+      <td style="text-align: center; padding-bottom: 15px;">
         <h6 style="margin: 0px; padding: 0px;">
           <span style="color: #F44439;">Company Name (Th)</span>
         </h6>
       </td>
     </tr>
     <tr>
-      <td style="text-align: center; padding-bottom: 5px;">
+      <td style="text-align: center; padding-bottom: 15px;">
         <h6 style="margin: 0px; padding: 0px;">
           <span style="color: #F44439;">Company Name (En)</span>
         </h6>
       </td>
     </tr>
     <tr>
-      <td style="text-align: center; padding-bottom: 5px;">
+      <td style="text-align: center; padding-bottom: 15px;">
         <h6 style="margin: 0px; padding: 0px;">
           <span style="color: #F44439;">ใบลงคะแนน / Voting sheet</span>
         </h6>
       </td>
     </tr>
     <tr>
-      <td style="text-align: center; padding-bottom: 5px;">
+      <td style="text-align: center; padding-bottom: 15px;">
         <h6 style="margin: 0px; padding: 0px;">
           <span style="color: #F44439;">วันที่ : </span
           ><span><%= agmDetails.formattedDate %></span> / 
@@ -101,9 +101,9 @@
       </td>
     </tr>
   </table>
-  <table style="width: 100%; margin-top: 10px;">
+  <table style="width: 100%; margin-top: 20px;">
     <tr>
-      <td style=" padding-bottom: 5px;">
+      <td style=" padding-bottom: 15px;">
         <h6 style="margin: 0px; padding: 0px;">
           <span style="color: #F44439;">วาระที่ 1: </span
           ><span><%= agenda.agendaName  %></span>
@@ -111,7 +111,7 @@
       </td>
     </tr>
     <tr>
-      <td style=" padding-bottom: 5px;">
+      <td style=" padding-bottom: 15px;">
         <h6 style="margin: 0px; padding: 0px;">
           <span style="color: #F44439;">Agenda 1: </span
           ><span><%= agenda.agendaName  %></span>
@@ -125,15 +125,15 @@
       <td style="padding: 0px 10px;">
         <table style="width: 100%;">
           <% for (var i = 0; i < agenda.choices.length;  i++ ) { %>
-          <tr style="margin-top: 20px; margin-bottom: 20px;">
+          <tr>
             <td>
               <div style="width: 10px; height: 10px; border: 1px solid gray;"></div>
             </td>
             <td>
               <small><%= agenda.choices[i].choiceValue %> / <%= agenda.choices[i].choiceValueThai %></small>
             </td>
-            <td>
-              <img src="<%= agenda.choices[i].qrCode %>" alt="qr-code" width="100px">
+            <td style="text-align: right; padding-top: 30px; padding-bottom: 30px;"">
+              <img src="<%= agenda.choices[i].qrCode %>" alt="qr-code" width="120px">
             </td>
           </tr>
           <% } %>
@@ -148,7 +148,7 @@
           <table style="width: 100%;">
             <% for (var i = 0; i < agenda.choices.length;  i++ ) { %>
            
-            <% if(i == 0 || i % 2 == 0){ %>
+            <% if(i == 0 || i % 3 == 0){ var c = 1; %>
             <tr style="margin-top: 20px; margin-bottom: 20px;">
             <% } %>
 
@@ -156,26 +156,26 @@
                 <table>
                   <tr>
                     <td style="text-align: center;">
-                      <div style="width: 10px; height: 10px; border: 1px solid gray;"></div>
+                      <div style="width: 10px; height: 10px; border: 1px solid gray; margin:auto;"></div>
                     </td>
                   </tr>
                   <tr>
-                    <td style="text-align: center;">
-                      <img src="<%= agenda.choices[i].qrCode %>" alt="qr-code" width="100px">
+                    <td style="text-align: center; padding-top: 10px;">
+                      <img src="<%= agenda.choices[i].qrCode %>" alt="qr-code" width="120px">
                     </td>
                   </tr>
                   <tr>
-                    <td style="text-align: center;">
+                    <td style="text-align: center; padding-bottom: 30px; padding-top: 10px;">
                       <small><%= agenda.choices[i].choiceValue %> / <%= agenda.choices[i].choiceValueThai %></small>
                     </td>
                   </tr>
                 </table>
               </td>
 
-            <% if(i == 0 || i % 2 == 0){ %>
+            <% if(c == 3){ %>
             </tr>
-            <% } %>
-            
+            <% }else{ c++;} %>
+
             <% } %>
           </table>
         </td>
@@ -200,7 +200,7 @@
             <td>
               <small style="padding: 0px; margin: 0px;">เจ้ าของห้ องชุด / Co-owner</small>
             </td>
-            <td>
+            <td style="text-align: right;">
               <small style="padding: 0px; margin: 0px;">ลงชื่อ / Sign ___________</small>
             </td>
           </tr>
@@ -211,7 +211,7 @@
             <td>
               <small style="padding: 0px; margin: 0px;">ตัวแทน / Proxy</small>
             </td>
-            <td>
+            <td style="text-align: right;">
               <small style="padding: 0px; margin: 0px;">(_____________________)</small>
             </td>
           </tr>
