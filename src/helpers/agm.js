@@ -486,7 +486,8 @@ const agmHelper = {
         }
 
         await createPdf(document, agmId, browser);
-        console.log("[helpers][agm][generateVotingDocument]: All docs gen for Property Owner: ", pd);
+        console.log("[helpers][agm][generateVotingDocument]: Doc Generated...");
+
       });
 
       if (browser !== null) {
