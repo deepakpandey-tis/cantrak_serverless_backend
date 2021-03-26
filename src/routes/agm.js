@@ -3,112 +3,158 @@ const router = express.Router();
 
 const authMiddleware = require("../middlewares/auth");
 const agmController = require("../controllers/agm");
+const roleMiddleware = require("../middlewares/role");
+const resourceAccessMiddleware = require("../middlewares/resourceAccessMiddleware");
 
-router.get(
-  "/generate-agm-id",
-  authMiddleware.isAuthenticated,
-  agmController.generateAGMId
-);
+router.get("/generate-agm-id", authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isAGMAccessible, agmController.generateAGMId );
 router.post(
   "/save-agm",
-  authMiddleware.isAuthenticated,
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
   agmController.addAgmPreparation
 );
 router.post(
   "/add-owner",
-  authMiddleware.isAuthenticated,
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
   agmController.addOwner
 );
+
+router.post(
+  "/update-owner",
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.updateOwner
+);
+
+
 router.post(
   "/delete-owner",
-  authMiddleware.isAuthenticated,
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
   agmController.deleteOwner
 );
 router.post(
   "/update-eligibility",
-  authMiddleware.isAuthenticated,
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
   agmController.updateEligibility
 );
 router.post(
   "/get-agm-list",
-  authMiddleware.isAuthenticated,
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
   agmController.getAgmList
 );
 router.post(
   "/get-owner-list",
-  authMiddleware.isAuthenticated,
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
   agmController.getOwnerList
 );
 router.post(
   "/get-agm-details",
-  authMiddleware.isAuthenticated,
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
   agmController.getAgmDetails
 );
 router.post(
   "/owner-proxy-registration",
-  authMiddleware.isAuthenticated,
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
   agmController.ownerProxyRegistration
 );
 router.post(
   "/get-owner-details",
-  authMiddleware.isAuthenticated,
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
   agmController.getOwnerDetails
 );
 router.post(
   "/get-agenda-list",
-  authMiddleware.isAuthenticated,
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
   agmController.getAgendaList
 );
 router.post(
   "/toggle-eligibility",
-  authMiddleware.isAuthenticated,
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
   agmController.toggleEligibility
 );
 router.post(
   "/get-units-for-agm",
-  authMiddleware.isAuthenticated,
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
   agmController.getUnitList
 );
 
 router.post(
   "/get-proxy-document-list",
-  authMiddleware.isAuthenticated,
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
   agmController.getProxyDocumentList
 );
 
 router.post(
   "/get-unit-by-project",
-  authMiddleware.isAuthenticated,
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
   agmController.getUnitListByCompanyAndProject
 );
 
 router.post(
   "/get-ownerlist-by-filter",
-  authMiddleware.isAuthenticated,
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
   agmController.getOwnerListByUnit
 );
 
 router.post(
   "/owner-registration",
-  authMiddleware.isAuthenticated,
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
   agmController.ownerRegistration
 );
 
 router.post(
   "/get-owner-signature",
-  authMiddleware.isAuthenticated,
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
   agmController.getOwnerSignature
 );
 
 router.post(
   "/get-proxy-document-images",
-  authMiddleware.isAuthenticated,
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
   agmController.getProxyDocumentImages
 )
 
 router.post(
   "/generate-pdf-of-voting-document",
-  authMiddleware.isAuthenticated,
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
   agmController.generatePdfOfVotingDocument
 );
 
@@ -120,8 +166,8 @@ if (process.env.IS_OFFLINE) {
 } else {
   tempraryDirectory = "/tmp/";
 }
+
 var multer = require("multer");
-const roleMiddleware = require("../middlewares/role");
 var storage = multer.diskStorage({
   destination: tempraryDirectory,
   filename: function (req, file, cb) {
@@ -135,10 +181,13 @@ var storage = multer.diskStorage({
   },
 });
 var upload = multer({ storage: storage });
+
 router.post(
   "/import-owner-data",
   upload.single("file"),
-  authMiddleware.isAuthenticated,
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
   agmController.importOwnerData
 );
 

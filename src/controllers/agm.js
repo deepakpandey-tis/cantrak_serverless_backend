@@ -4,6 +4,7 @@ const _ = require("lodash");
 const knex = require("../db/knex");
 const moment = require("moment");
 const { join } = require("lodash");
+const redisHelper = require("../helpers/redis");
 
 const agmController = {
   generateAGMId: async (req, res) => {
@@ -18,9 +19,17 @@ const agmController = {
         },
       });
     } catch (err) {
-      console.log("[controllers][AGM][generate] :  Error", err);
+      console.log(
+        "[controllers][AGM][generate] :  Error",
+        err
+      );
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -30,12 +39,13 @@ const agmController = {
     try {
       let addedAGMResult = null;
       let agmPrepPayload = req.body;
+      let addedChoices = [];
 
       console.log("payload for agm===>>>", req.body);
       await knex.transaction(async (trx) => {
         const payload = _.omit(req.body, [
           "agmId",
-          "votingAgenda",
+          "finalAddedAgenda",
           "description",
           "proxyDocumentName",
           "template",
@@ -52,10 +62,17 @@ const agmController = {
           endTime: Joi.string().required(),
         });
         const result = Joi.validate(payload, schema);
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message },
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
             ],
           });
         }
@@ -64,7 +81,10 @@ const agmController = {
           .where({ id: req.body.agmId })
           .first();
 
-        if (checkUpdate && checkUpdate.moderationStatus == true) {
+        if (
+          checkUpdate &&
+          checkUpdate.moderationStatus == true
+        ) {
           message = "AGM updated successfully!";
         } else {
           message = "AGM added successfully!";
@@ -79,7 +99,9 @@ const agmController = {
             projectId: payload.projectId,
             agmName: payload.agmName,
             agmDate: new Date(payload.agmDate).getTime(),
-            startTime: new Date(payload.startTime).getTime(),
+            startTime: new Date(
+              payload.startTime
+            ).getTime(),
             endTime: new Date(payload.endTime).getTime(),
             waterMarkText: req.body.waterMarkText,
             updatedAt: currentTime,
@@ -94,7 +116,9 @@ const agmController = {
 
         //insert agenda
 
-        let agendaPayload = req.body.votingAgenda;
+        let agendaPayload = req.body.finalAddedAgenda;
+
+        console.log("agenda payload===>>>", agendaPayload);
 
         let delAgenda = await knex("agenda_master")
           .where({
@@ -105,13 +129,17 @@ const agmController = {
         addedAgenda = [];
 
         for (let agenda of agendaPayload) {
+          console.log("agenda====>>>>", agenda);
+          // i++;
           let eligibility;
           if (agenda.eligibleForVoting == "Yes") {
             eligibility = true;
           } else {
             eligibility = false;
           }
-          let addedAgendaResult = await knex("agenda_master")
+          let addedAgendaResult = await knex(
+            "agenda_master"
+          )
             .insert({
               agmId: addedAGMResult.id,
               agendaName: agenda.agendaName,
@@ -124,20 +152,50 @@ const agmController = {
             })
             .returning(["*"]);
           addedAgenda.push(addedAgendaResult[0]);
+
+          console.log(
+            "added agenda",
+            addedAgendaResult[0].id
+          );
+
+          for (let c of agenda.choices) {
+            console.log("agenda choices===>>>>", c);
+            let agendaChoiceResult = await knex(
+              "agenda_choice"
+            ).insert({
+              agendaId: addedAgendaResult[0].id,
+              choiceValue: c.choice,
+              choiceValueThai: c.choiceThai,
+              updatedAt: currentTime,
+              createdAt: currentTime,
+              orgId: req.orgId,
+            });
+
+            addedChoices = agendaChoiceResult[0];
+          }
+
+          console.log("added choices", addedChoices);
         }
 
         //insert proxy document
 
-        let proxyDocumentPayload = req.body.proxyDocumentName;
+        let proxyDocumentPayload =
+          req.body.proxyDocumentName;
 
-        let delProxyDocument = await knex("proxy_document")
+        let delProxyDocument = await knex(
+          "agm_proxy_document_master"
+        )
           .where({
             agmId: addedAGMResult.id,
           })
           .del();
 
         for (let proxy of proxyDocumentPayload) {
-          let proxyResult = await knex("proxy_document").insert({
+          console.log("proxy document===>>>>", proxy);
+
+          let proxyResult = await knex(
+            "agm_proxy_document_master"
+          ).insert({
             agmId: addedAGMResult.id,
             documentName: req.body.proxyDocument,
             subDocumentName: proxy.proxyName,
@@ -155,7 +213,12 @@ const agmController = {
       });
     } catch (err) {
       return res.status(200).json({
-        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -183,10 +246,17 @@ const agmController = {
           agmdate: Joi.string().required(),
         });
         const result = Joi.validate(payload, schema);
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message },
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
             ],
           });
         }
@@ -195,7 +265,10 @@ const agmController = {
           .where({ id: req.body.agmId })
           .first();
 
-        if (checkUpdate && checkUpdate.moderationStatus == true) {
+        if (
+          checkUpdate &&
+          checkUpdate.moderationStatus == true
+        ) {
           message = "AGM updated successfully!";
         } else {
           message = "AGM added successfully!";
@@ -229,7 +302,9 @@ const agmController = {
         addedAgenda = [];
 
         for (let agenda of agendaPayload) {
-          let addedAgendaResult = await knex("agenda_master")
+          let addedAgendaResult = await knex(
+            "agenda_master"
+          )
             .insert({
               agmId: addedAGMResult.id,
               entityType: "agenda_master",
@@ -245,7 +320,8 @@ const agmController = {
 
         //insert proxy document
 
-        let proxyDocumentPayload = req.body.proxyDocumentPayload;
+        let proxyDocumentPayload =
+          req.body.proxyDocumentPayload;
 
         let delProxyDocument = await knex("proxy_document")
           .where({
@@ -257,7 +333,12 @@ const agmController = {
       });
     } catch (err) {
       return res.status(200).json({
-        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -283,9 +364,9 @@ const agmController = {
         data[0].C === "HOUSE_NO" &&
         data[0].D === "OWNERSHIP_RATIO" &&
         data[0].E === "CO_OWNER_NAME" &&
-        data[0].F === "ELIGIBILITY_TOGGLE" &&
-        data[0].G === "ID_NO" &&
-        data[0].H === "JOIN_OWNER_NAME"
+        data[0].F === "ELIGIBILITY_TOGGLE"
+        // data[0].G === "ID_NO" &&
+        // data[0].H === "JOIN_OWNER_NAME"
       ) {
         if (data.length > 0) {
           let i = 0;
@@ -302,7 +383,9 @@ const agmController = {
 
               if (!ownerData.C) {
                 let values = _.values(ownerData);
-                values.unshift("House Number can not empty!");
+                values.unshift(
+                  "House Number can not empty!"
+                );
                 errors.push(values);
                 fail++;
                 continue;
@@ -310,7 +393,9 @@ const agmController = {
 
               if (!ownerData.D) {
                 let values = _.values(ownerData);
-                values.unshift("Ownership ratio can not empty!");
+                values.unshift(
+                  "Ownership ratio can not empty!"
+                );
                 errors.push(values);
                 fail++;
                 continue;
@@ -318,29 +403,38 @@ const agmController = {
 
               if (!ownerData.E) {
                 let values = _.values(ownerData);
-                values.unshift("Co Owner Name can not empty!");
+                values.unshift(
+                  "Co Owner Name can not empty!"
+                );
                 errors.push(values);
                 fail++;
                 continue;
               }
               let unitId;
-              let checkExist = await knex("property_units").select("id").where({
-                orgId: req.orgId,
-                unitNumber: ownerData.B.toUpperCase(),
-              });
+              let checkExist = await knex("property_units")
+                .select("id")
+                .where({
+                  orgId: req.orgId,
+                  unitNumber: ownerData.B.toUpperCase(),
+                });
 
               if (checkExist.length > 0) {
                 unitId = checkExist[0].id;
               } else {
                 let values = _.values(ownerData);
-                values.unshift("Unit Number Does not exist!");
+                values.unshift(
+                  "Unit Number Does not exist!"
+                );
                 errors.push(values);
                 fail++;
                 continue;
               }
 
               let eligibility;
-              console.log("ownerdata h====>>>>>", ownerData.H);
+              console.log(
+                "ownerdata h====>>>>>",
+                ownerData.H
+              );
               if (ownerData.F == "Yes") {
                 eligibility = true;
               } else {
@@ -352,6 +446,7 @@ const agmController = {
                 companyId: req.body.companyId,
                 projectId: req.body.projectId,
                 unitId: unitId,
+                unitNumber: ownerData.B,
                 houseId: ownerData.C,
                 ownerName: ownerData.E,
                 joinOwnerName: ownerData.H,
@@ -362,7 +457,6 @@ const agmController = {
                 isActive: true,
                 createdAt: new Date().getTime(),
                 updatedAt: new Date().getTime(),
-                // importedBy: req.me.id,
                 createdBy: req.me.id,
               };
 
@@ -398,13 +492,21 @@ const agmController = {
       } else {
         return res.status(400).json({
           errors: [
-            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" },
+            {
+              code: "VALIDATION_ERROR",
+              message: "Please Choose valid File!",
+            },
           ],
         });
       }
     } catch (err) {
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -415,7 +517,10 @@ const agmController = {
       // let payload = req.body;
       let resultData;
       await knex.transaction(async (trx) => {
-        const payload = _.omit(req.body, ["joinOwnerName", "ownerIdNo"]);
+        const payload = _.omit(req.body, [
+          "joinOwnerName",
+          "ownerIdNo",
+        ]);
 
         const schema = Joi.object().keys({
           agmId: Joi.string().required(),
@@ -429,10 +534,17 @@ const agmController = {
         });
 
         const result = Joi.validate(payload, schema);
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message },
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
             ],
           });
         }
@@ -443,7 +555,7 @@ const agmController = {
           companyId: payload.companyId,
           projectId: payload.projectId,
           ownerName: payload.ownerName,
-          joinOwnerName: payload.joinOwnerName,
+          joinOwnerName: req.body.joinOwnerName,
           ownershipRatio: payload.ownershipRatio,
           ownerIdNo: payload.ownerIdNo,
           eligibility: payload.eligibility,
@@ -466,7 +578,89 @@ const agmController = {
       });
     } catch (err) {
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
+  },
+
+  /*UPDATE OWNER DATA */
+
+  updateOwner: async (req, res) => {
+    try {
+      //console.log('atif');
+      // let payload = req.body;
+      let resultData;
+      //console.log(req.body);
+      await knex.transaction(async (trx) => {
+        const payload = _.omit(req.body, [
+          "joinOwnerName",
+          "ownerIdNo",
+        ]);
+        console.log(payload);
+        const schema = Joi.object().keys({
+          ownerId: Joi.string().required(),
+          agmId: Joi.string().required(),
+          companyId: Joi.string().required(),
+          projectId: Joi.string().required(),
+          houseId: Joi.string().required(),
+          unitNo: Joi.string().required(),
+          ownerName: Joi.string().required(),
+          ownershipRatio: Joi.string().required(),
+          eligibility: Joi.boolean().required(),
+        });
+
+        const result = Joi.validate(payload, schema);
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
+          return res.status(400).json({
+            errors: [
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
+            ],
+          });
+        }
+
+        let updateData = {
+          agmId: payload.agmId,
+          unitId: payload.unitNo,
+          companyId: payload.companyId,
+          projectId: payload.projectId,
+          ownerName: payload.ownerName,
+          joinOwnerName: req.body.joinOwnerName,
+          ownershipRatio: payload.ownershipRatio,
+          ownerIdNo: payload.ownerIdNo,
+          eligibility: payload.eligibility,
+          orgId: req.orgId,
+          updatedAt: new Date().getTime(),
+        };
+
+        resultData = await knex("agm_owner_master")
+          .update(updateData)
+          .where({ id: payload.ownerId })
+          .returning(["*"]);
+      });
+      return res.status(200).json({
+        data: resultData,
+        message: "Owner updated successfully!",
+      });
+    } catch (err) {
+      return res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -479,9 +673,18 @@ const agmController = {
         id: Joi.string().required(),
       });
       const result = Joi.validate(payload, schema);
-      if (result && result.hasOwnProperty("error") && result.error) {
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
         return res.status(400).json({
-          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
         });
       }
       let delResult = await knex("agm_owner_master")
@@ -494,7 +697,12 @@ const agmController = {
       });
     } catch (err) {
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -510,9 +718,18 @@ const agmController = {
       });
 
       const result = Joi.validate(payload, schema);
-      if (result && result.hasOwnProperty("error") && result.error) {
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
         return res.status(400).json({
-          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
         });
       }
 
@@ -531,7 +748,12 @@ const agmController = {
       });
     } catch (err) {
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -552,28 +774,53 @@ const agmController = {
         knex
           .count("* as count")
           .from("agm_master")
-          .leftJoin("companies", "agm_master.companyId", "companies.id")
-          .leftJoin("projects", "agm_master.projectId", "projects.id")
+          .leftJoin(
+            "companies",
+            "agm_master.companyId",
+            "companies.id"
+          )
+          .leftJoin(
+            "projects",
+            "agm_master.projectId",
+            "projects.id"
+          )
           .where({ "agm_master.orgId": req.orgId })
           .where((qb) => {
             if (payload.agmId) {
               qb.where("agm_master.id", payload.agmId);
             }
             if (payload.companyId) {
-              qb.where("agm_master.companyId", payload.companyId);
+              qb.where(
+                "agm_master.companyId",
+                payload.companyId
+              );
             }
             if (payload.projectId) {
-              qb.where("agm_master.projectId", payload.projectId);
+              qb.where(
+                "agm_master.projectId",
+                payload.projectId
+              );
             }
             if (payload.agmDate) {
-              qb.where("agm_master.agmDate", payload.agmDate);
+              qb.where(
+                "agm_master.agmDate",
+                payload.agmDate
+              );
             }
           })
           .first(),
         knex
           .from("agm_master")
-          .leftJoin("companies", "agm_master.companyId", "companies.id")
-          .leftJoin("projects", "agm_master.projectId", "projects.id")
+          .leftJoin(
+            "companies",
+            "agm_master.companyId",
+            "companies.id"
+          )
+          .leftJoin(
+            "projects",
+            "agm_master.projectId",
+            "projects.id"
+          )
           .select([
             "agm_master.*",
             "companies.companyName",
@@ -585,15 +832,26 @@ const agmController = {
               qb.where("agm_master.id", payload.agmId);
             }
             if (payload.companyId) {
-              qb.where("agm_master.companyId", payload.companyId);
+              qb.where(
+                "agm_master.companyId",
+                payload.companyId
+              );
             }
             if (payload.projectId) {
-              qb.where("agm_master.projectId", payload.projectId);
+              qb.where(
+                "agm_master.projectId",
+                payload.projectId
+              );
             }
             if (payload.agmDate) {
-              qb.where("agm_master.agmDate", payload.agmDate);
+              qb.where(
+                "agm_master.agmDate",
+                payload.agmDate
+              );
             }
-          }),
+          })
+          .offset(offset)
+          .limit(per_page),
       ]);
 
       let count = total.count;
@@ -614,7 +872,12 @@ const agmController = {
       });
     } catch (err) {
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -623,10 +886,13 @@ const agmController = {
   getOwnerList: async (req, res) => {
     try {
       let payload = req.body;
-      console.log("payload value for pages=====>>>>>", payload);
+      console.log(
+        "payload value for pages=====>>>>>",
+        payload
+      );
       let reqData = req.query;
       let total, rows;
-      
+
       let pagination = {};
       let per_page = reqData.per_page || 10;
       let page = reqData.current_page || 1;
@@ -642,19 +908,53 @@ const agmController = {
             "agm_owner_master.unitId",
             "property_units.id"
           )
+
           // .leftJoin("proxy_document","agm_owner_master.agmId","proxy_document.agmId")
           // .where({
           //   "agm_owner_master.companyId": payload.companyId,
           //   "agm_owner_master.projectId": payload.projectId,
           // })
-          .where({ "agm_owner_master.agmId": payload.agmId })
+          .where({
+            "agm_owner_master.agmId": payload.agmId,
+            "agm_owner_master.orgId": req.orgId,
+          })
           .where((qb) => {
-            qb.where("agm_owner_master.orgId", req.orgId);
+            // qb.where("agm_owner_master.orgId", req.orgId);
+            if (payload.filterType == 1) {
+            }
+            if (payload.filterType == 2) {
+              qb.where(
+                "agm_owner_master.registrationType",
+                1
+              );
+            }
+            if (payload.filterType == 3) {
+              qb.where(
+                "agm_owner_master.registrationType",
+                2
+              );
+            }
+            if (payload.filterType == 4) {
+              qb.where(
+                "agm_owner_master.registrationType",
+                1
+              );
+              qb.orWhere(
+                "agm_owner_master.registrationType",
+                2
+              );
+            }
             if (payload.agmId) {
-              qb.where("agm_owner_master.agmId", payload.agmId);
+              qb.where(
+                "agm_owner_master.agmId",
+                payload.agmId
+              );
             }
             if (payload.unitId) {
-              qb.where("agm_owner_master.unitId", payload.unitId);
+              qb.where(
+                "agm_owner_master.unitId",
+                payload.unitId
+              );
             }
             if (payload.ownerName) {
               qb.where(
@@ -683,15 +983,49 @@ const agmController = {
           //   "agm_owner_master.companyId": payload.companyId,
           //   "agm_owner_master.projectId": payload.projectId,
           // })
-          .where({ "agm_owner_master.agmId": payload.agmId })
+          .where({
+            "agm_owner_master.agmId": payload.agmId,
+            "agm_owner_master.orgId": req.orgId,
+          })
           .where((qb) => {
             // qb.where('agm_owner_master.orgId', req.orgId);
-            qb.where("agm_owner_master.orgId", req.orgId);
+            // qb.where("agm_owner_master.orgId", req.orgId);
+            if (payload.filterType == 1) {
+            }
+            if (payload.filterType == 2) {
+              qb.where(
+                "agm_owner_master.registrationType",
+                1
+              );
+            }
+            if (payload.filterType == 3) {
+              qb.orWhere(
+                "agm_owner_master.registrationType",
+                2
+              );
+            }
+            if (payload.filterType == 4) {
+              qb.where(
+                "agm_owner_master.registrationType",
+                1
+              );
+              qb.orWhere(
+                "agm_owner_master.registrationType",
+                2
+              );
+            }
+
             if (payload.agmId) {
-              qb.where("agm_owner_master.agmId", payload.agmId);
+              qb.where(
+                "agm_owner_master.agmId",
+                payload.agmId
+              );
             }
             if (payload.unitId) {
-              qb.where("agm_owner_master.unitId", payload.unitId);
+              qb.where(
+                "agm_owner_master.unitId",
+                payload.unitId
+              );
             }
             if (payload.ownerName) {
               qb.where(
@@ -702,20 +1036,21 @@ const agmController = {
             }
           })
           .offset(offset)
-          .limit(per_page),
+          .limit(per_page)
+          .orderBy("agm_owner_master.unitNumber", "asc"),
       ]);
 
-      const Parallel = require('async-parallel');
-      
-      rows = await Parallel.map(rows,async pd=>{
-        let proxyData = await knex
-        .from("proxy_document")
-        .select(["proxy_document.proxyName"])
-        .where("proxy_document.agmId",pd.agmId)
-        .first()
+      const Parallel = require("async-parallel");
 
-        return {...pd,proxyData}
-      })
+      rows = await Parallel.map(rows, async (pd) => {
+        let proxyData = await knex
+          .from("agm_proxy_documents")
+          .select(["agm_proxy_documents.proxyName"])
+          .where("agm_proxy_documents.ownerMasterId", pd.id)
+          .first();
+
+        return { ...pd, proxyData };
+      });
 
       let count = total.count;
       pagination.total = count;
@@ -727,8 +1062,6 @@ const agmController = {
       pagination.from = offset;
       pagination.data = rows;
 
-
-
       res.status(200).json({
         data: {
           ownerList: pagination,
@@ -737,7 +1070,12 @@ const agmController = {
       });
     } catch (err) {
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -763,13 +1101,22 @@ const agmController = {
         })
         .where((qb) => {
           if (payload.unitNo) {
-            qb.whereIn("agm_owner_master.unitId", payload.unitNo);
+            qb.whereIn(
+              "agm_owner_master.unitId",
+              payload.unitNo
+            );
           }
           if (payload.ownerName) {
-            qb.where("agm_owner_master.ownerName", payload.ownerName);
+            qb.where(
+              "agm_owner_master.ownerName",
+              payload.ownerName
+            );
           }
           if (payload.ownerIdNo) {
-            qb.where("agm_owner_master.ownerIdNo", payload.ownerIdNo);
+            qb.where(
+              "agm_owner_master.ownerIdNo",
+              payload.ownerIdNo
+            );
           }
         });
 
@@ -779,7 +1126,12 @@ const agmController = {
       });
     } catch (err) {
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -792,15 +1144,32 @@ const agmController = {
       });
 
       const result = Joi.validate(payload, schema);
-      if (result && result.hasOwnProperty("error") && result.error) {
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
         return res.status(400).json({
-          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
         });
       }
 
       let agmDetails = await knex("agm_master")
-        .leftJoin("companies", "agm_master.companyId", "companies.id")
-        .leftJoin("projects", "agm_master.projectId", "projects.id")
+        .leftJoin(
+          "companies",
+          "agm_master.companyId",
+          "companies.id"
+        )
+        .leftJoin(
+          "projects",
+          "agm_master.projectId",
+          "projects.id"
+        )
         .select([
           "agm_master.*",
           "companies.companyId as companyCode",
@@ -808,15 +1177,28 @@ const agmController = {
           "projects.project as projectCode",
           "projects.projectName",
         ])
-        .where({ "agm_master.id": payload.id, "agm_master.orgId": req.orgId });
+        .where({
+          "agm_master.id": payload.id,
+          "agm_master.orgId": req.orgId,
+        });
+
+      let votingDocDownloadUrl = await redisHelper.getValue(
+        `agm-${payload.id}-voting-docs-link`
+      );
 
       return res.status(200).json({
         data: agmDetails,
+        votingDocDownloadUrl,
         message: "Agm Details Successfully!",
       });
     } catch (err) {
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -832,9 +1214,18 @@ const agmController = {
       });
 
       const result = Joi.validate(payload, schema);
-      if (result && result.hasOwnProperty("error") && result.error) {
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
         return res.status(400).json({
-          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
         });
       }
 
@@ -862,7 +1253,12 @@ const agmController = {
       });
     } catch (err) {
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -877,6 +1273,7 @@ const agmController = {
         "proxyName",
         "proxyId",
         "ownerProxyId",
+        "imagesArray",
       ]);
 
       const schema = new Joi.object().keys({
@@ -886,9 +1283,18 @@ const agmController = {
       });
 
       const result = Joi.validate(payload, schema);
-      if (result && result.hasOwnProperty("error") && result.error) {
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
         return res.status(400).json({
-          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
         });
       }
       let currentTime = new Date().getTime();
@@ -896,31 +1302,60 @@ const agmController = {
       let insertData = {
         signature: payload.signature,
         signatureAt: currentTime,
-        registrationType:payload.type
+        registrationType: payload.type,
       };
 
       let insertResult;
+      let insertProxyResult;
+
       for (let owner of req.body.ownerId) {
         insertResult = await knex
           .update(insertData)
           .where({ agmId: payload.agmId, id: owner })
           .returning(["*"])
           .into("agm_owner_master");
+
+        for (let proxy of req.body.ownerProxyId) {
+          let insertProxyData = {
+            agmId: payload.agmId,
+            ownerMasterId: owner,
+            proxyDocumentMasterId: proxy,
+            proxyName: req.body.proxyName,
+            proxyIdentificationNumber: req.body.proxyId,
+            createdAt: currentTime,
+            updatedAt: currentTime,
+            orgId: req.orgId,
+          };
+
+          insertProxyResult = await knex
+            .insert(insertProxyData)
+            .returning(["*"])
+            .into("agm_proxy_documents");
+        }
+
+        let insertImages;
+        if (req.body.imagesArray) {
+          console.log(
+            "images====>>>>",
+            req.body.imagesArray
+          );
+          for (let image of req.body.imagesArray) {
+            console.log("value in image===>>>", image);
+            insertImages = await knex
+              .insert({
+                title: image.filename,
+                name: image.filename,
+                s3Url: image.s3Url,
+                entityId: owner,
+                entityType: "agm_proxy_documents",
+                orgId: req.orgId,
+              })
+              .returning(["*"])
+              .into("images");
+          }
+        }
       }
 
-      let insertProxyData = {
-        proxyName: req.body.proxyName,
-        proxyId: req.body.proxyId,
-      };
-
-      let insertProxyResult;
-      for (let proxy of req.body.ownerProxyId) {
-        insertProxyResult = await knex
-          .update(insertProxyData)
-          .where({ agmId: payload.agmId, id: proxy })
-          .returning(["*"])
-          .into("proxy_document");
-      }
       return res.status(200).json({
         data: {
           insertResult: insertResult,
@@ -930,7 +1365,12 @@ const agmController = {
       });
     } catch (err) {
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -939,31 +1379,66 @@ const agmController = {
   getAgendaList: async (req, res) => {
     try {
       let payload = req.body;
-      let agendaLists;
+      let agendaList;
       const schema = new Joi.object().keys({
         agmId: Joi.number().required(),
       });
 
       const result = Joi.validate(payload, schema);
-      if (result && result.hasOwnProperty("error") && result.error) {
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
         return res.status(400).json({
-          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
         });
       }
 
-      agendaLists = await knex("agenda_master")
-        .where({ "agenda_master.agmId": payload.agmId })
+      agendaList = await knex("agenda_master")
+        .where({
+          "agenda_master.agmId": payload.agmId,
+          "agenda_master.orgId": req.orgId,
+        })
         .select(["agenda_master.*"]);
+
+      const Parallel = require("async-parallel");
+
+      agendaList = await Parallel.map(
+        agendaList,
+        async (pd) => {
+          let choiceData = await knex
+            .from("agenda_choice")
+            .select([
+              "agenda_choice.choiceValue",
+              "agenda_choice.choiceValueThai",
+            ])
+            .where("agenda_choice.agendaId", pd.id);
+          // .first();
+
+          return { ...pd, choiceData };
+        }
+      );
 
       // let updateResult = await knex('agm_owner_master').update(updateData).where({ id: payload.id, orgId: req.orgId }).returning(["*"]);
 
       return res.status(200).json({
-        data: agendaLists,
+        data: agendaList,
         message: "Get Agenda Lists!",
       });
     } catch (err) {
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -979,14 +1454,26 @@ const agmController = {
       });
 
       const result = Joi.validate(payload, schema);
-      if (result && result.hasOwnProperty("error") && result.error) {
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
         return res.status(400).json({
-          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
         });
       }
 
       ownerDetails = await knex("agm_owner_master")
-        .where({ "agm_owner_master.id": payload.ownerId, orgId: req.orgId })
+        .where({
+          "agm_owner_master.id": payload.ownerId,
+          orgId: req.orgId,
+        })
         .select(["agm_owner_master.*"]);
 
       return res.status(200).json({
@@ -995,7 +1482,12 @@ const agmController = {
       });
     } catch (err) {
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1011,14 +1503,26 @@ const agmController = {
       });
 
       const result = Joi.validate(payload, schema);
-      if (result && result.hasOwnProperty("error") && result.error) {
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
         return res.status(400).json({
-          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
         });
       }
 
       ownerSignature = await knex("agm_owner_master")
-        .where({ "agm_owner_master.id": payload.ownerId, orgId: req.orgId })
+        .where({
+          "agm_owner_master.id": payload.ownerId,
+          orgId: req.orgId,
+        })
         .select(["agm_owner_master.signature"]);
 
       return res.status(200).json({
@@ -1027,52 +1531,56 @@ const agmController = {
       });
     } catch (err) {
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
 
-  /*UPDATE OWNER DATA */
-  updateOwner: async (req, res) => {
-    try {
-      let payload = req.body;
-      let updateOwner;
-      const schema = new Joi.object().keys({
-        agmId: Joi.number().required(),
-        unitNo: Joi.number().required(),
-        ownerName: Joi.string().required(),
-        eligibility: Joi.number().required(),
-        ownerId: Joi.number().required(),
-      });
+  // updateOwner: async (req, res) => {
+  //   try {
+  //     let payload = req.body;
+  //     let updateOwner;
+  //     const schema = new Joi.object().keys({
+  //       agmId: Joi.number().required(),
+  //       unitNo: Joi.number().required(),
+  //       ownerName: Joi.string().required(),
+  //       eligibility: Joi.number().required(),
+  //       ownerId: Joi.number().required(),
+  //     });
 
-      const result = Joi.validate(payload, schema);
-      if (result && result.hasOwnProperty("error") && result.error) {
-        return res.status(400).json({
-          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
-        });
-      }
+  //     const result = Joi.validate(payload, schema);
+  //     if (result && result.hasOwnProperty("error") && result.error) {
+  //       return res.status(400).json({
+  //         errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+  //       });
+  //     }
 
-      let updateData = {
-        eligibility: payload.eligibility,
-        ownerName: payload.ownerName,
-        unitId: payload.unitId,
-      };
+  //     let updateData = {
+  //       eligibility: payload.eligibility,
+  //       ownerName: payload.ownerName,
+  //       unitId: payload.unitId,
+  //     };
 
-      updateOwner = await knex("agm_owner_master")
-        .update(updateData)
-        .where({ id: payload.ownerId, orgId: req.orgId, agmId: payload.agmId })
-        .returning(["*"]);
+  //     updateOwner = await knex("agm_owner_master")
+  //       .update(updateData)
+  //       .where({ id: payload.ownerId, orgId: req.orgId, agmId: payload.agmId })
+  //       .returning(["*"]);
 
-      return res.status(200).json({
-        data: updateOwner,
-        message: "Owner updated successfully!",
-      });
-    } catch (err) {
-      return res.status(500).json({
-        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
-      });
-    }
-  },
+  //     return res.status(200).json({
+  //       data: updateOwner,
+  //       message: "Owner updated successfully!",
+  //     });
+  //   } catch (err) {
+  //     return res.status(500).json({
+  //       errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+  //     });
+  //   }
+  // },
 
   /* Get Proxy Document List */
   getProxyDocumentList: async (req, res) => {
@@ -1084,15 +1592,26 @@ const agmController = {
         agmId: Joi.number().required(),
       });
       const result = Joi.validate(payload, schema);
-      if (result && result.hasOwnProperty("error") && result.error) {
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
         return res.status(400).json({
-          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
         });
       }
 
-      documentList = await knex("proxy_document")
-        .where({ "proxy_document.agmId": payload.agmId })
-        .select(["proxy_document.*"]);
+      documentList = await knex("agm_proxy_document_master")
+        .where({
+          "agm_proxy_document_master.agmId": payload.agmId,
+        })
+        .select(["agm_proxy_document_master.*"]);
 
       // let updateResult = await knex('agm_owner_master').update(updateData).where({ id: payload.id, orgId: req.orgId }).returning(["*"]);
 
@@ -1102,7 +1621,12 @@ const agmController = {
       });
     } catch (err) {
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1119,10 +1643,17 @@ const agmController = {
         });
 
         const result = Joi.validate(payload, schema);
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message },
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
             ],
           });
         }
@@ -1175,7 +1706,10 @@ const agmController = {
           "property_units.orgId": req.orgId,
           "property_units.isActive": true,
           "agm_owner_master.agmId": agmId,
-        });
+        })
+        .orderBy("property_units.unitNumber", "asc");
+
+      getPropertyUnits = _.uniqBy(getPropertyUnits, "id");
 
       return res.status(200).json({
         data: {
@@ -1184,7 +1718,12 @@ const agmController = {
       });
     } catch (err) {
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1192,12 +1731,14 @@ const agmController = {
     try {
       let id = req.me.id;
 
-      let getPropertyUnits = await knex("property_units").select("*").where({
-        orgId: req.orgId,
-        isActive: true,
-        companyId: req.body.companyId,
-        projectId: req.body.projectId,
-      });
+      let getPropertyUnits = await knex("property_units")
+        .select("*")
+        .where({
+          orgId: req.orgId,
+          isActive: true,
+          companyId: req.body.companyId,
+          projectId: req.body.projectId,
+        });
 
       return res.status(200).json({
         data: {
@@ -1206,173 +1747,136 @@ const agmController = {
       });
     } catch (err) {
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
 
-  getProxyDocumentImages: async(req,res)=>{
+  getProxyDocumentImages: async (req, res) => {
     try {
-      
       let payload = req.body;
 
       const schema = new Joi.object().keys({
         agmId: Joi.number().required(),
+        ownerId: Joi.number().required(),
       });
       const result = Joi.validate(payload, schema);
-      if (result && result.hasOwnProperty("error") && result.error) {
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
         return res.status(400).json({
-          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
         });
       }
 
-      let images = await knex
-      .from("images")
-      .where({entityId: payload.agmId, entityType: "proxy_document" })
+      let images = await knex.from("images").where({
+        entityId: payload.ownerId,
+        entityType: "agm_proxy_documents",
+      });
 
       return res.status(200).json({
         data: {
           proxyImages: images,
         },
       });
-
     } catch (err) {
-      res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      return res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
 
-  generatePdfOfVotingDocument : async(req, res) => {
+  generatePdfOfVotingDocument: async (req, res) => {
     try {
-            
-          const path = require('path');
-          const pdf = require("pdf-creator-node");
-          const fs = require("fs");
-          
-          // Read HTML Template
-          const templatePath = path.join(__dirname,'template.html');
-          console.log('pdf');
-          console.log(templatePath);
-          const html = fs.readFileSync(templatePath, "utf8");
-          
-          let tempraryDirectory = null;
-          if (process.env.IS_OFFLINE) {
-              tempraryDirectory = "tmp/";
-          } else {
-              tempraryDirectory = "/tmp/";
-          }
-          let filename = "Vote-" + Date.now() + ".pdf";
-          let filepath = tempraryDirectory + filename;
+      const payload = req.body;
 
-          const options = {
-          format: "A5",
-          orientation: "portrait",
-          border: "5mm",
-          header: {
-              height: "1mm",
-              contents: ''
-              //contents: '<div style="text-align: center;">Author: Shyam Hajare</div>'
-          },
-          footer: {
-              height: "1mm",
-              contents: {
-                  // first: 'Cover page',
-                  // 2: 'Second page', // Any page number is working. 1-based index
-                  // default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>', // fallback value
-                  // last: 'Last Page'
-              }
-          }
-          };
-          const datas = [
-              {
-                  pName:'PName',
-                  date:'22/03/2021',
-                  agenda:'Agenda',
-                  unitNo:'',
-                  oRatio:'',
-              }
-          ];
-          const listDatas = [
-          {
-              enText: "Consent",
-              thaiText: "เห็นชอบ",
-              qrCode:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png'
-          },
-          {
-              enText: "Dissent",
-              thaiText: "ไม่เห็นชอบ",
-              qrCode:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png'
-          },
-          {
-              enText: "Abstention",
-              thaiText: "งดออกเสียง",
-              qrCode:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png'
-          },
-          ];
-          const document = {
-          html: html,
+      const { agmId } = payload;
+      console.log(
+        "[controllers][agm][generatePdfOfVotingDocument]: AgmId:",
+        agmId
+      );
+
+      if (!agmId) {
+        return res.status(400).json({
+          errors: [
+            {
+              code: "BAD_REQUEST",
+              message: "Please pass valid AgmId",
+            },
+          ],
+        });
+      }
+
+      // GET AGM Details...
+      let agmDetails = await knex("agm_master")
+        .leftJoin(
+          "companies",
+          "agm_master.companyId",
+          "companies.id"
+        )
+        .leftJoin(
+          "projects",
+          "agm_master.projectId",
+          "projects.id"
+        )
+        .select([
+          "agm_master.*",
+          "companies.companyId as companyCode",
+          "companies.companyName",
+          "projects.project as projectCode",
+          "projects.projectName",
+        ])
+        .where({
+          "agm_master.id": agmId,
+          "agm_master.orgId": req.orgId,
+        })
+        .first();
+
+      console.log(
+        "[controllers][agm][generatePdfOfVotingDocument]: AGM Details:",
+        agmDetails
+      );
+
+      const queueHelper = require("../helpers/queue");
+      await queueHelper.addToQueue(
+        {
+          agmId: agmId,
           data: {
-              listDatas: listDatas,
-              datas:datas
-
+            agmDetails,
           },
-          path: filepath,
-          type: "",
-          };
+          orgId: req.orgId,
+          requestedBy: req.me,
+        },
+        "long-jobs",
+        "AGM_PREPARE_VOTING_DOCUMENT"
+      );
 
-      let success;
-
-      pdf
-      .create(document, options)
-      .then((results) => {
-          //res.json({results:results})
-          let bucketName = process.env.S3_BUCKET_NAME;
-          const AWS = require("aws-sdk");
-          fs.readFile(results.filename, function (err, file_buffer) {
-              var s3 = new AWS.S3();
-              var params = {
-                  Bucket: bucketName,
-                  Key: "Export/Asset/" + filename,
-                  Body: file_buffer,
-                  ACL: "public-read"
-              };
-              s3.putObject(params, function (err, data) {
-                  if (err) {
-                      console.log("Error at uploadPDFFileOnS3Bucket function", err);
-                      //next(err);
-                      return res.status(500).json({
-                          errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-                      });
-                  } else {
-                      console.log("File uploaded Successfully");
-
-                      //next(null, filePath);
-                      // fs.unlink(filepath, err => {
-                      //   console.log("File Deleting Error " + err);
-                      // });
-                      let url = process.env.S3_BUCKET_URL + "/Export/Asset/" + filename;
-
-                      return res.status(200).json({
-                          data: {},
-                          message: "Asset Data Export Successfully!",
-                          url: url,
-                          // assetResult
-                      });
-                  }
-              });
-          });
-      })
-      .catch((error) => {
-          console.error(error);
-          res.json({error:error})
+      return res.status(200).json({
+        data: {},
+        message:
+          "We are preparing Voting Document for this AGM. Please wait for few minutes. Once generated we will notify you via App Notification & Email",
       });
-      //res.send('pdf');
-
     } catch (err) {
-      res.status(200).json({ failed: true, error: err });
+      res.status(500).json({ failed: true, error: err });
     }
-  }
+  },
 };
 
 module.exports = agmController;

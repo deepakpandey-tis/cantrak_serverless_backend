@@ -9,7 +9,8 @@ service:
 plugins:
   # - serverless-apigw-binary
   - serverless-offline
-  - serverless-dotenv-plugin
+  - serverless-prune-plugin
+  # - serverless-dotenv-plugin
   - serverless-s3-local
 
 provider:
@@ -22,7 +23,39 @@ provider:
   tracing:
     apiGateway: true
     lambda: true
-  environment: 
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource: 
+        - arn:aws:s3:::*        
+  environment:
+    ENV: ${self:provider.stage}
+    REGION: ${self:provider.region}
+    DB_USER: servicemind
+    DB_PASS: su99yTIS#2020
+    DB_NAME: tis_database
+    DB_HOST: tis-serverless-db.cluster-c1klhwsjgssk.us-east-1.rds.amazonaws.com
+    DB_PORT: 5432
+    SITE_URL: https://d3lw11mvhjp3jm.cloudfront.net
+    ORIGIN_URL: https://rme4pik2uf.execute-api.us-east-1.amazonaws.com/production
+    JWT_PRIVATE_KEY: t978546456tttGFDDgut###be@e5yrgdf)(bu54654645
+    S3_BUCKET_NAME: servicemind-resources
+    VAPID_PUBLIC_KEY: BP1mVU-oBoplZiZzNkUzA5LcPP8ujiWbS0yZgm2QbBBhew9F59R21MXZb7i002JfihBz7jc8I5ITsQYVZ-EVvk0
+    VAPID_PRIVATE_KEY: 5Jr-qKpJMn-KvpjSDhxxRDX7G8zNQnz5DPYIEnr64LU
+    ACCESS_KEY_ID: AKIAQRTFBT5LS3MGPM73
+    SECRET_ACCESS_KEY: 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
+    SQS_MAIL_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/037792882519/mail-queue
+    SQS_LONG_JOBS_URL: https://sqs.us-east-1.amazonaws.com/037792882519/long-jobs
+    FROM_EMAIL_ADDRESS: important-notifications@servicemind.asia
+    APP_ENV: PRODUCTION
+    NOTIFIER_ACCESS_KEY_ID: AKIAQRTFBT5LUXG4X564
+    NOTIFIER_SECRET_ACCESS_KEY: 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
+    S3_BUCKET_URL: https://servicemind-resources.s3.amazonaws.com
+    SOCKET_ENDPOINT: https://s6bm8bsha0.execute-api.us-east-1.amazonaws.com/stage
+    CDN_URL: resources.servicemind.asia
+    REDIS_HOST: tis-prod-redis.ftr6oh.0001.use1.cache.amazonaws.com
+    REDIS_PORT: 6379
   vpc:
     securityGroupIds:
       - sg-f4e38fd6
