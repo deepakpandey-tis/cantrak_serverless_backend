@@ -65,13 +65,12 @@ const createPdf = (document, agmId, browser, retries = 1) => {
         console.log('Unable to generate PDF...');
         rej(new Error('Unable to generate PDF...'));
       } else {
-        let filename = document.filename;
-        console.log('PDF generated, uploading to s3 with filename:', filename);
+        console.log('PDF generated, uploading to s3 with filename:',  document.s3BasePath + document.filename);
 
         const s3 = new AWS.S3();
         const params = {
           Bucket: bucketName,
-          Key: "AGM/" + agmId + "/VotingDocuments/" + filename,
+          Key: document.s3BasePath + document.filename,
           Body: pdf,
           ACL: "public-read"
         };
@@ -409,11 +408,13 @@ const agmHelper = {
       console.log('[helpers][agm][generateVotingDocument]: Formatted Date:', agmDetails.formattedDate);
 
 
-      const s3BasePath = "AGM/" + agmId + "/VotingDocuments/";
+      const s3BasePath = "AGM/" + agmId + "/VotingDocuments/" + new Date().getTime() + "/";
+      console.log("[helpers][agm][generateVotingDocument]: S3 Directory (For Docs)....", s3BasePath);
+
       // First Clean all files from the s3 directory....
-      console.log("[helpers][agm][generateVotingDocument]: Cleaning S3 directory for AGM....", agmId);
-      await emptyS3Directory(bucketName, s3BasePath);
-      console.log("[helpers][agm][generateVotingDocument]: S3 Directory cleaned....", s3BasePath);
+      // console.log("[helpers][agm][generateVotingDocument]: Cleaning S3 directory for AGM....", agmId);
+      // await emptyS3Directory(bucketName, s3BasePath);
+      // console.log("[helpers][agm][generateVotingDocument]: S3 Directory cleaned....", s3BasePath);
 
       // Write Logic to prepare all objects for generating parallely.........
       const QRCODE = require("qrcode");
@@ -466,6 +467,7 @@ const agmHelper = {
                 agenda: agenda,
                 propertyOwner: pd
               },
+              s3BasePath: s3BasePath,
               filename: filename,
             };
 
