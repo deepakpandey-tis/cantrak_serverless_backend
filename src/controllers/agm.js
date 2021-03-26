@@ -4,7 +4,7 @@ const _ = require("lodash");
 const knex = require("../db/knex");
 const moment = require("moment");
 const { join } = require("lodash");
-const redisHelper = require('../helpers/redis');
+const redisHelper = require("../helpers/redis");
 
 const agmController = {
   generateAGMId: async (req, res) => {
@@ -1036,7 +1036,8 @@ const agmController = {
             }
           })
           .offset(offset)
-          .limit(per_page),
+          .limit(per_page)
+          .orderBy("agm_owner_master.unitNumber", "asc"),
       ]);
 
       const Parallel = require("async-parallel");
@@ -1181,7 +1182,9 @@ const agmController = {
           "agm_master.orgId": req.orgId,
         });
 
-      let votingDocDownloadUrl = await redisHelper.getValue(`agm-${payload.id}-voting-docs-link`);
+      let votingDocDownloadUrl = await redisHelper.getValue(
+        `agm-${payload.id}-voting-docs-link`
+      );
 
       return res.status(200).json({
         data: agmDetails,
@@ -1684,7 +1687,7 @@ const agmController = {
           }
         }
       });
-    } catch (err) { }
+    } catch (err) {}
   },
   getUnitList: async (req, res) => {
     try {
@@ -1706,7 +1709,7 @@ const agmController = {
         })
         .orderBy("property_units.unitNumber", "asc");
 
-      getPropertyUnits = _.uniqBy(getPropertyUnits, "id")
+      getPropertyUnits = _.uniqBy(getPropertyUnits, "id");
 
       return res.status(200).json({
         data: {
@@ -1823,8 +1826,16 @@ const agmController = {
 
       // GET AGM Details...
       let agmDetails = await knex("agm_master")
-        .leftJoin("companies", "agm_master.companyId", "companies.id")
-        .leftJoin("projects", "agm_master.projectId", "projects.id")
+        .leftJoin(
+          "companies",
+          "agm_master.companyId",
+          "companies.id"
+        )
+        .leftJoin(
+          "projects",
+          "agm_master.projectId",
+          "projects.id"
+        )
         .select([
           "agm_master.*",
           "companies.companyId as companyCode",
@@ -1835,9 +1846,13 @@ const agmController = {
         .where({
           "agm_master.id": agmId,
           "agm_master.orgId": req.orgId,
-        }).first();
+        })
+        .first();
 
-      console.log("[controllers][agm][generatePdfOfVotingDocument]: AGM Details:", agmDetails);
+      console.log(
+        "[controllers][agm][generatePdfOfVotingDocument]: AGM Details:",
+        agmDetails
+      );
 
       const queueHelper = require("../helpers/queue");
       await queueHelper.addToQueue(
