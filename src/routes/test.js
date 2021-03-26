@@ -104,31 +104,7 @@ router.get('/', async (req, res) => {
                     choiceValueThai:'choiceValueThai',
                     qrCode:'https://www.asti.com/wp-content/uploads/2017/08/AAEAAQAAAAAAAAWbAAAAJGFlM2NhMWM3LTNjNDQtNDFlMy04MDUyLTAxMzJjZDJhMjcwNw.png'
                 },
-                {
-                    choiceValue:'choiceValue',
-                    choiceValueThai:'choiceValueThai',
-                    qrCode:'https://www.asti.com/wp-content/uploads/2017/08/AAEAAQAAAAAAAAWbAAAAJGFlM2NhMWM3LTNjNDQtNDFlMy04MDUyLTAxMzJjZDJhMjcwNw.png'
-                },
-                {
-                    choiceValue:'choiceValue',
-                    choiceValueThai:'choiceValueThai',
-                    qrCode:'https://www.asti.com/wp-content/uploads/2017/08/AAEAAQAAAAAAAAWbAAAAJGFlM2NhMWM3LTNjNDQtNDFlMy04MDUyLTAxMzJjZDJhMjcwNw.png'
-                },
-                {
-                    choiceValue:'choiceValue',
-                    choiceValueThai:'choiceValueThai',
-                    qrCode:'https://www.asti.com/wp-content/uploads/2017/08/AAEAAQAAAAAAAAWbAAAAJGFlM2NhMWM3LTNjNDQtNDFlMy04MDUyLTAxMzJjZDJhMjcwNw.png'
-                },
-                {
-                    choiceValue:'choiceValue',
-                    choiceValueThai:'choiceValueThai',
-                    qrCode:'https://www.asti.com/wp-content/uploads/2017/08/AAEAAQAAAAAAAAWbAAAAJGFlM2NhMWM3LTNjNDQtNDFlMy04MDUyLTAxMzJjZDJhMjcwNw.png'
-                },
-                {
-                    choiceValue:'choiceValue',
-                    choiceValueThai:'choiceValueThai',
-                    qrCode:'https://www.asti.com/wp-content/uploads/2017/08/AAEAAQAAAAAAAAWbAAAAJGFlM2NhMWM3LTNjNDQtNDFlMy04MDUyLTAxMzJjZDJhMjcwNw.png'
-                },
+                
             ]
         }
         let pd = {
