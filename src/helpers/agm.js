@@ -63,6 +63,7 @@ const createPdf = (document, agmId, browser, retries = 1) => {
 
       if (!pdf) {
         console.log('Unable to generate PDF...');
+        rej(new Error('Unable to generate PDF...'));
       } else {
         let filename = document.filename;
         console.log('PDF generated, uploading to s3 with filename:', filename);
