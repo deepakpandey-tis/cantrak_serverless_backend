@@ -290,7 +290,8 @@ module.exports.longJobsProcessor = async (event, context) => {
     const { agmId, data, orgId, requestedBy } = recordData;
 
     if (agmId) {
-      await agmHelper.generateVotingDocument({ agmId, data, orgId, requestedBy });
+      // await agmHelper.generateVotingDocument({ agmId, data, orgId, requestedBy });
+      await agmHelper.generateVotingDocumentImproved({ agmId, data, orgId, requestedBy });
     } else {
       console.log('[app][longJobsProcessor]', 'AGM Id not found. Hence Voting Documents can not be generated.');
       throw Error('AGM Id not found. Hence Voting Documents can not be generated.');
