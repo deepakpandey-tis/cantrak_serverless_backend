@@ -158,6 +158,31 @@ router.post(
   agmController.generatePdfOfVotingDocument
 );
 
+router.post(
+  "/check-voting-status",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.checkVotingStatus
+)
+
+router.post(
+  "/get-scanned-agenda-data",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.getScannedAgendaDetail
+
+)
+
+router.post(
+  "/save-voting-data",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.saveVotingData
+)
+
 /**IMPORT AGM OWNER DATA */
 const path = require("path");
 let tempraryDirectory = null;

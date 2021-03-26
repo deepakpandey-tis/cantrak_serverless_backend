@@ -3,7 +3,7 @@ const _ = require("lodash");
 
 const knex = require("../db/knex");
 const moment = require("moment");
-const { join } = require("lodash");
+const { join, orderBy } = require("lodash");
 const redisHelper = require("../helpers/redis");
 
 const agmController = {
@@ -851,7 +851,8 @@ const agmController = {
             }
           })
           .offset(offset)
-          .limit(per_page),
+          .limit(per_page)
+          .orderBy("agm_master.agmDate", "asc"),
       ]);
 
       let count = total.count;
@@ -1877,6 +1878,192 @@ const agmController = {
       res.status(500).json({ failed: true, error: err });
     }
   },
+
+  checkVotingStatus: async (req, res) => {
+    try {
+      let payload = req.body;
+
+      const schema = new Joi.object().keys({
+        agmId: Joi.number().required(),
+        ownerMasterId: Joi.number().required(),
+        agendaId: Joi.number().required(),
+        // unitId:Joi.number().required()
+      });
+      const result = Joi.validate(payload, schema);
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
+        return res.status(400).json({
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
+        });
+      }
+
+      let votingData = await knex.from("agm_voting").where({
+        agmId: payload.agmId,
+        ownerMasterId:payload.ownerMasterId,
+        agendaId: payload.agendaId,
+      });
+
+      return res.status(200).json({
+        data: {
+          votingStatus: votingData,
+        },
+      });
+    } catch (err) {
+      return res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
+  },
+
+  getScannedAgendaDetail: async(req,res)=>{
+    try {
+      let payload = req.body;
+
+      const schema = new Joi.object().keys({
+        agmId: Joi.number().required(),
+        // ownerMasterId: Joi.number().required(),
+        agendaId: Joi.number().required(),
+        choiceId : Joi.number().required()
+      });
+      const result = Joi.validate(payload, schema);
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
+        return res.status(400).json({
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
+        });
+      }
+
+      let agendaChoiceData = await knex
+      .from("agenda_choice")
+      .leftJoin("agenda_master","agenda_choice.agendaId","agenda_master.id")
+      .select([
+        "agenda_choice.choiceValue",
+        "agenda_master.agendaName"
+      ])
+      .where({"agenda_choice.agendaId":payload.agendaId,"agenda_choice.id":payload.choiceId})
+
+
+      let totalRatio = await knex("agm_owner_master")
+      .select("agm_owner_master.ownershipRatio")
+      .where("agm_owner_master.agmId",payload.agmId)
+
+      let total = [];
+      for(let d of totalRatio){
+        total.push(parseInt(d.ownershipRatio))
+      }
+
+      let totalRatioSum = total.reduce((a, b) => a + b, 0)
+      // console.log("total agm ratio count====>>>>",totalRatioSum)
+
+
+      return res.status(200).json({
+        data: {
+          agendaChoiceData: agendaChoiceData,
+          totalOwnershipRatio : totalRatioSum
+        },
+      });
+
+    } catch (err) {
+      return res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
+  },
+
+  saveVotingData: async(req,res)=>{
+    try {
+       let payload = req.body;
+       let insertVotingResult;
+
+       await knex.transaction(async (trx) =>{
+
+        const schema = new Joi.object().keys({
+          agmId: Joi.number().required(),
+          ownerMasterId: Joi.number().required(),
+          agendaId:Joi.number().required(),
+          votingPower:Joi.string().required(),
+          selectedChoiceId:Joi.number().required()
+  
+        });
+        const result = Joi.validate(payload, schema);
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
+          return res.status(400).json({
+            errors: [
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
+            ],
+          });
+        }
+  
+        let currentTime = new Date().getTime();
+  
+        let insertVotingData = {
+          agmId:payload.agmId,
+          ownerMasterId : payload.ownerMasterId,
+          agendaId: payload.agendaId,
+          votingPower : payload.votingPower,
+          selectedChoiceId : payload.selectedChoiceId,
+          createdAt : currentTime,
+          updatedAt : currentTime,
+          orgId: req.orgId
+        }
+  
+        insertVotingResult = await knex
+        .insert(insertVotingData)
+        .returning(["*"])
+        .into("agm_voting");
+
+        trx.commit;
+
+       });
+
+       return res.status(200).json({
+        data: insertVotingResult,
+        message: "Vote data added successfully!",
+      });
+    } catch (err) {
+      return res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
+  }
 };
 
 module.exports = agmController;
