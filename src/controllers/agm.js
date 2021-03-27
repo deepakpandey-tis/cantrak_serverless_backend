@@ -2192,6 +2192,23 @@ const agmController = {
 
       let agendas = await knex("agenda_master").where({ agmId });
 
+      const Parallel = require('async-parallel');
+      agendas = await Parallel.map(agendas, async (agenda) => {
+        let choices = await knex('agenda_choice').where({ agendaId: agenda.id });
+        choices = await Parallel.map(choices, async (ch) => {
+          let voting = await knex('agm_voting').where({ agendaId: agenda.id, selectedChoiceId: ch.id })
+            .sum('votingPower as vp')
+            .count('*')
+            .select(['selectedChoiceId'])
+            .groupBy('selectedChoiceId').first();
+          ch.voting = voting;
+          return ch;
+        });
+        agenda.choices = choices;
+        return agenda;
+      });
+
+
       let stats = {};
 
       [invitedOwners, registeredOwners, totalOwnershipRatio, totalUnits, registeredOwnerShipRatio, registeredOwnersSelf, registeredOwnersProxy] = await Promise.all([
