@@ -2399,6 +2399,7 @@ const agmController = {
 
       const schema = new Joi.object().keys({
         unitId: Joi.number().required(),
+        agmId: Joi.number().required(),
       });
       const result = Joi.validate(payload, schema);
       if (
@@ -2418,10 +2419,10 @@ const agmController = {
 
       let ownerRegistrationStatus = await knex("agm_owner_master")
         .select([
-          "agm_owner_master.registrationType",
-          "agm_owner_master.ownerName"
+          "registrationType",
+          "ownerName"
         ])
-        .where({ "agm_owner_master.unitId": payload.unitId, "agm_owner_master.orgId": req.orgId });
+        .where({ "unitId": payload.unitId,  agmId: payload.agmId, "orgId": req.orgId }).first();
 
       return res.status(200).json({
         data: {
