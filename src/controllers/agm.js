@@ -2341,6 +2341,56 @@ const agmController = {
         ],
       });
     }
+  },
+
+  getRegistrationStatus:async(req,res)=>{
+    try {
+      let payload = req.body;
+      
+
+      const schema = new Joi.object().keys({
+        unitId: Joi.number().required(),
+      });
+      const result = Joi.validate(payload, schema);
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
+        return res.status(400).json({
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
+        });
+      }
+
+      let ownerRegistrationStatus = await knex("agm_owner_master")
+      .select([
+        "agm_owner_master.registrationType",
+        "agm_owner_master.ownerName"
+      ])
+      .where({"agm_owner_master.unitId":payload.unitId,"agm_owner_master.orgId":req.orgId});
+
+      return res.status(200).json({
+        data: {
+          ownerRegistrationStatus
+        },
+        message: "Owner registration status",
+      });
+
+    } catch (err) {
+      return res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
   }
 };
 
