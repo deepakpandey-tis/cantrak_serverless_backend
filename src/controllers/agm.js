@@ -2157,6 +2157,7 @@ const agmController = {
   getAgendaVoteSummary:async(req,res)=>{
     try {
       let payload = req.body;
+      let total , sum ,choices;
 
       const schema = new Joi.object().keys({
         agmId: Joi.number().required(),
@@ -2179,20 +2180,35 @@ const agmController = {
         });
       }
 
+       let voteSummary = await knex
+        .select([
+          "agm_voting.selectedChoiceId"
+        ])
+        .count("* as count")
+        .sum("votingPower as vp")
+        .from("agm_voting")
+        .where({"agendaId":payload.agendaId,"orgId":req.orgId,"agmId":payload.agmId})
+        .groupBy(["agm_voting.selectedChoiceId"])
 
-      let agendaSummaryResult  = await knex
-      .from("agm_voting")
-      .leftJoin("agenda_choice","agm_voting.selectedChoiceId","agenda_choice.id")
-      .select([
-        "agm_voting.votingPower",
-        "agenda_choice.choiceValue",
-        "agenda_choice.choiceValueThai",
-        "agenda_choice.id"
-      ])
-      .where({"agm_voting.agmId":266,"agm_voting.agendaId":148});
+      const Parallel = require("async-parallel");
+
+      voteSummary = await Parallel.map(voteSummary, async (pd) => {
+        let choices = await knex
+          .from("agenda_choice")
+          .select([
+            "agenda_choice.choiceValue",
+            "agenda_choice.choiceValueThai"
+          ])
+          .where("agenda_choice.id", pd.selectedChoiceId)
+          .first();
+
+        return { ...pd, choices };
+      });
 
       return res.status(200).json({
-        data: agendaSummaryResult,
+        data: {
+          voteSummary
+        },
         message: "Agenda Summary Result",
       });
     } catch (err) {
