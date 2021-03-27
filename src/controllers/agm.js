@@ -1413,6 +1413,16 @@ const agmController = {
       agendaList = await Parallel.map(
         agendaList,
         async (pd) => {
+          let vote = await knex('agm_voting').count('*').where({ "agendaId": pd.id }).first();
+          // .first();
+
+          return { ...pd, vote };
+        }
+      );
+
+      agendaList = await Parallel.map(
+        agendaList,
+        async (pd) => {
           let choiceData = await knex
             .from("agenda_choice")
             .select([
