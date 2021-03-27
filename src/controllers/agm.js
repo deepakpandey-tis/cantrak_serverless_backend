@@ -2380,6 +2380,188 @@ const agmController = {
         ],
       });
     }
+  },
+
+  getOwnerResultList:async(req,res)=>{
+    try {
+      let payload = req.body;
+      let reqData = req.query;
+      let total, rows;
+
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+      [total, rows] = await Promise.all([
+        knex
+          .count("* as count")
+          .from("agm_owner_master")
+          .leftJoin(
+            "property_units",
+            "agm_owner_master.unitId",
+            "property_units.id"
+          )
+
+          .where({
+            "agm_owner_master.agmId": payload.agmId,
+            "agm_owner_master.orgId": req.orgId,
+          })
+          // .where((qb) => {
+          //   if (payload.filterType == 1) {
+          //   }
+          //   if (payload.filterType == 2) {
+          //     qb.where(
+          //       "agm_owner_master.registrationType",
+          //       1
+          //     );
+          //   }
+          //   if (payload.filterType == 3) {
+          //     qb.where(
+          //       "agm_owner_master.registrationType",
+          //       2
+          //     );
+          //   }
+          //   if (payload.filterType == 4) {
+          //     qb.where(
+          //       "agm_owner_master.registrationType",
+          //       1
+          //     );
+          //     qb.orWhere(
+          //       "agm_owner_master.registrationType",
+          //       2
+          //     );
+          //   }
+          //   if (payload.agmId) {
+          //     qb.where(
+          //       "agm_owner_master.agmId",
+          //       payload.agmId
+          //     );
+          //   }
+          //   if (payload.unitId) {
+          //     qb.where(
+          //       "agm_owner_master.unitId",
+          //       payload.unitId
+          //     );
+          //   }
+          //   if (payload.ownerName) {
+          //     qb.where(
+          //       "agm_owner_master.ownerName",
+          //       "iLIKE",
+          //       `%${payload.ownerName}%`
+          //     );
+          //   }
+          // })
+          .first(),
+        knex
+          .from("agm_owner_master")
+          .leftJoin(
+            "property_units",
+            "agm_owner_master.unitId",
+            "property_units.id"
+          )
+
+          .select([
+            "agm_owner_master.*",
+            "property_units.unitNumber",
+            "property_units.description as unitDescription",
+          ])
+          .where({
+            "agm_owner_master.agmId": payload.agmId,
+            "agm_owner_master.orgId": req.orgId,
+          })
+          // .where((qb) => {
+            
+          //   if (payload.filterType == 1) {
+          //   }
+          //   if (payload.filterType == 2) {
+          //     qb.where(
+          //       "agm_owner_master.registrationType",
+          //       1
+          //     );
+          //   }
+          //   if (payload.filterType == 3) {
+          //     qb.orWhere(
+          //       "agm_owner_master.registrationType",
+          //       2
+          //     );
+          //   }
+          //   if (payload.filterType == 4) {
+          //     qb.where(
+          //       "agm_owner_master.registrationType",
+          //       1
+          //     );
+          //     qb.orWhere(
+          //       "agm_owner_master.registrationType",
+          //       2
+          //     );
+          //   }
+
+          //   if (payload.agmId) {
+          //     qb.where(
+          //       "agm_owner_master.agmId",
+          //       payload.agmId
+          //     );
+          //   }
+          //   if (payload.unitId) {
+          //     qb.where(
+          //       "agm_owner_master.unitId",
+          //       payload.unitId
+          //     );
+          //   }
+          //   if (payload.ownerName) {
+          //     qb.where(
+          //       "agm_owner_master.ownerName",
+          //       "iLIKE",
+          //       `%${payload.ownerName}%`
+          //     );
+          //   }
+          // })
+          .offset(offset)
+          .limit(per_page)
+          .orderBy("agm_owner_master.unitNumber", "asc"),
+      ]);
+
+      const Parallel = require("async-parallel");
+
+      // rows = await Parallel.map(rows, async (pd) => {
+      //   let proxyData = await knex
+      //     .from("agm_voting")
+      //     .select(["agm_proxy_documents.proxyName"])
+      //     .where("agm_proxy_documents.ownerMasterId", pd.id)
+      //     .first();
+
+      //   return { ...pd, proxyData };
+      // });
+
+      let count = total.count;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+      res.status(200).json({
+        data: {
+          ownerList: pagination,
+        },
+        message: "Owner list successfully !",
+      });
+    } catch (err) {
+      return res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    
+    }
   }
 };
 
