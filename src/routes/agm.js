@@ -198,6 +198,30 @@ router.get(
   agmController.getOwnerRegistrationList
 )
 
+router.post(
+  "/get-agenda-summary",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.getAgendaVoteSummary
+)
+
+router.post(
+  "/get-registration-status",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.getRegistrationStatus
+)
+
+router.post(
+  "/get-vote-result-list",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.getVotingResultList
+)
+
 /**IMPORT AGM OWNER DATA */
 const path = require("path");
 let tempraryDirectory = null;
@@ -229,6 +253,16 @@ router.post(
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.importOwnerData
+);
+
+
+
+router.get(
+  "/get-dashboard-basic-data/:id",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.getDashboardBasicData
 );
 
 module.exports = router;

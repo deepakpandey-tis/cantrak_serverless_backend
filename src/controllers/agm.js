@@ -1764,7 +1764,7 @@ const agmController = {
           }
         }
       });
-    } catch (err) {}
+    } catch (err) { }
   },
   getUnitList: async (req, res) => {
     try {
@@ -1983,7 +1983,7 @@ const agmController = {
 
       let votingData = await knex.from("agm_voting").where({
         agmId: payload.agmId,
-        ownerMasterId:payload.ownerMasterId,
+        ownerMasterId: payload.ownerMasterId,
         agendaId: payload.agendaId,
       });
 
@@ -2004,15 +2004,15 @@ const agmController = {
     }
   },
 
-  getScannedAgendaDetail: async(req,res)=>{
+  getScannedAgendaDetail: async (req, res) => {
     try {
       let payload = req.body;
 
       const schema = new Joi.object().keys({
         agmId: Joi.number().required(),
-        // ownerMasterId: Joi.number().required(),
+        ownerMasterId: Joi.number().required(),
         agendaId: Joi.number().required(),
-        choiceId : Joi.number().required()
+        choiceId: Joi.number().required(),
       });
       const result = Joi.validate(payload, schema);
       if (
@@ -2031,35 +2031,64 @@ const agmController = {
       }
 
       let agendaChoiceData = await knex
-      .from("agenda_choice")
-      .leftJoin("agenda_master","agenda_choice.agendaId","agenda_master.id")
-      .select([
-        "agenda_choice.choiceValue",
-        "agenda_master.agendaName"
-      ])
-      .where({"agenda_choice.agendaId":payload.agendaId,"agenda_choice.id":payload.choiceId})
+        .from("agenda_choice")
+        .leftJoin(
+          "agenda_master",
+          "agenda_choice.agendaId",
+          "agenda_master.id"
+        )
+        .select([
+          "agenda_choice.choiceValue",
+          "agenda_master.agendaName",
+        ])
+        .where({
+          "agenda_choice.agendaId": payload.agendaId,
+          "agenda_choice.id": payload.choiceId,
+        });
+
+      // let totalRatio = await knex("agm_owner_master")
+      //   .select("agm_owner_master.ownershipRatio")
+      //   .where("agm_owner_master.agmId", payload.agmId);
+
+      // let total = [];
+      // for (let d of totalRatio) {
+      //   total.push(parseInt(d.ownershipRatio));
+      // }
+
+      // let totalRatioSum = total.reduce((a, b) => a + b, 0);
+
+      // Use Query to calculate sum...
+      let totalOwnershipRatio = await knex("agm_owner_master")
+      .sum("ownershipRatio")
+      .where("agmId", payload.agmId)
+      .first();
+     
+    totalOwnershipRatio = totalOwnershipRatio.sum ? totalOwnershipRatio.sum : 0; 
+
+    console.log(`[controllers][agm][getScannedAgendaDetail]: Total Ownership Ratio:`, totalOwnershipRatio);
+
+    let currentUserOwnerShipRatio = await knex("agm_owner_master")
+      .where({ agmId: payload.agmId, id: payload.ownerMasterId })
+      .first();
+
+    currentUserOwnerShipRatio = currentUserOwnerShipRatio.ownershipRatio;
+    console.log(`[controllers][agm][getScannedAgendaDetail]: Current User Ownership Ratio:`, currentUserOwnerShipRatio);
+
+    let votingPower = ((currentUserOwnerShipRatio / totalOwnershipRatio) * 100).toFixed(3);
+    console.log(`[controllers][agm][getScannedAgendaDetail]: Calculated Voting Power:`, votingPower);
+    console.log(`[controllers][agm][getScannedAgendaDetail]: Voting Power (From Frontend Calc):`, payload.votingPower);
 
 
-      let totalRatio = await knex("agm_owner_master")
-      .select("agm_owner_master.ownershipRatio")
-      .where("agm_owner_master.agmId",payload.agmId)
-
-      let total = [];
-      for(let d of totalRatio){
-        total.push(parseInt(d.ownershipRatio))
-      }
-
-      let totalRatioSum = total.reduce((a, b) => a + b, 0)
       // console.log("total agm ratio count====>>>>",totalRatioSum)
-
 
       return res.status(200).json({
         data: {
           agendaChoiceData: agendaChoiceData,
-          totalOwnershipRatio : totalRatioSum
+          totalOwnershipRatio,
+          currentUserOwnerShipRatio,
+          votingPower
         },
       });
-
     } catch (err) {
       return res.status(500).json({
         errors: [
@@ -2072,63 +2101,95 @@ const agmController = {
     }
   },
 
-  saveVotingData: async(req,res)=>{
+  saveVotingData: async (req, res) => {
     try {
-       let payload = req.body;
-       let insertVotingResult;
+      let payload = req.body;
+      let insertVotingResult;
 
-       await knex.transaction(async (trx) =>{
-
-        const schema = new Joi.object().keys({
-          agmId: Joi.number().required(),
-          ownerMasterId: Joi.number().required(),
-          agendaId:Joi.number().required(),
-          votingPower:Joi.string().required(),
-          selectedChoiceId:Joi.number().required()
-  
+      const schema = new Joi.object().keys({
+        agmId: Joi.number().required(),
+        ownerMasterId: Joi.number().required(),
+        agendaId: Joi.number().required(),
+        votingPower: Joi.string().required(),
+        selectedChoiceId: Joi.number().required(),
+      });
+      const result = Joi.validate(payload, schema);
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
+        return res.status(400).json({
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
         });
-        const result = Joi.validate(payload, schema);
-        if (
-          result &&
-          result.hasOwnProperty("error") &&
-          result.error
-        ) {
-          return res.status(400).json({
-            errors: [
-              {
-                code: "VALIDATION_ERROR",
-                message: result.error.message,
-              },
-            ],
-          });
-        }
-  
-        let currentTime = new Date().getTime();
-  
-        let insertVotingData = {
-          agmId:payload.agmId,
-          ownerMasterId : payload.ownerMasterId,
-          agendaId: payload.agendaId,
-          votingPower : payload.votingPower,
-          selectedChoiceId : payload.selectedChoiceId,
-          createdAt : currentTime,
-          updatedAt : currentTime,
-          orgId: req.orgId
-        }
-  
+      }
+
+
+      let totalOwnershipRatio = await knex("agm_owner_master")
+        .sum("ownershipRatio")
+        .where("agmId", payload.agmId)
+        .first();
+       
+      totalOwnershipRatio = totalOwnershipRatio.sum ? totalOwnershipRatio.sum : 0; 
+
+      console.log(`[controllers][agm][saveVotingData]: Total Ownership Ratio:`, totalOwnershipRatio);
+
+      let currentUserOwnerShipRatio = await knex("agm_owner_master")
+        .where({ agmId: payload.agmId, id: payload.ownerMasterId })
+        .first();
+
+      currentUserOwnerShipRatio = currentUserOwnerShipRatio.ownershipRatio;
+      console.log(`[controllers][agm][saveVotingData]: Current User Ownership Ratio:`, currentUserOwnerShipRatio);
+
+      let votingPower = ((currentUserOwnerShipRatio / totalOwnershipRatio) * 100).toFixed(3);
+      console.log(`[controllers][agm][saveVotingData]: Calculated Voting Power:`, votingPower);
+      console.log(`[controllers][agm][saveVotingData]: Voting Power (From Frontend Calc):`, payload.votingPower);
+
+
+      payload.votingPower = payload.votingPower;
+
+      let currentTime = new Date().getTime();
+
+      let insertVotingData = {
+        agmId: payload.agmId,
+        ownerMasterId: payload.ownerMasterId,
+        agendaId: payload.agendaId,
+        votingPower: payload.votingPower,
+        selectedChoiceId: payload.selectedChoiceId,
+        createdAt: currentTime,
+        updatedAt: currentTime,
+        orgId: req.orgId,
+      };
+
+
+      try {
         insertVotingResult = await knex
-        .insert(insertVotingData)
-        .returning(["*"])
-        .into("agm_voting");
+          .insert(insertVotingData)
+          .returning(["*"])
+          .into("agm_voting");
+      } catch (err) {
+        let uniqueErrorMsg = `duplicate key value violates unique constraint`;
+        if (err.message.includes(uniqueErrorMsg)) {
+          console.warn('Unique Constraint Error, We will have to perform an update............');
+          insertVotingResult = await knex
+            .update({ votingPower: payload.votingPower, selectedChoiceId: payload.selectedChoiceId, updatedAt: currentTime })
+            .where({ agmId: payload.agmId, ownerMasterId: payload.ownerMasterId, agendaId: payload.agendaId, })
+            .returning(["*"])
+            .into("agm_voting");
+        }
+      }
 
-        trx.commit;
 
-       });
-
-       return res.status(200).json({
+      return res.status(200).json({
         data: insertVotingResult,
         message: "Vote data added successfully!",
       });
+
     } catch (err) {
       return res.status(500).json({
         errors: [
@@ -2140,62 +2201,61 @@ const agmController = {
       });
     }
   },
-  getOwnerRegistrationList: async(req,res)=>{
+  getOwnerRegistrationList: async (req, res) => {
     try {
-      
+
       let payload = req.query;
 
-      console.log("payload value",payload)
+      console.log("payload value", payload);
 
-      let ownerRegistrationList= await knex
-      .from("agm_owner_master")
-      .leftJoin(
-        "property_units",
-        "agm_owner_master.unitId",
-        "property_units.id"
-      )
-      .select([
-        "agm_owner_master.*",
-        "property_units.unitNumber",
-        "property_units.description as unitDescription",
-      ])
-      
-      .where({
-        "agm_owner_master.agmId": payload.agmId,
-      })
-      .where((qb) => {
-        if (payload.type == 1) {
-        }
-        if (payload.type == 2) {
-          qb.where(
-            "agm_owner_master.registrationType",
-            1
-          );
-        }
-        if (payload.type == 3) {
-          qb.orWhere(
-            "agm_owner_master.registrationType",
-            2
-          );
-        }
-        if (payload.type == 4) {
-          qb.where(
-            "agm_owner_master.registrationType",
-            1
-          );
-          qb.orWhere(
-            "agm_owner_master.registrationType",
-            2
-          );
-        }
+      let ownerRegistrationList = await knex
+        .from("agm_owner_master")
+        .leftJoin(
+          "property_units",
+          "agm_owner_master.unitId",
+          "property_units.id"
+        )
+        .select([
+          "agm_owner_master.*",
+          "property_units.unitNumber",
+          "property_units.description as unitDescription",
+        ])
+        .where({
+          "agm_owner_master.agmId": payload.agmId,
+        })
+        .where((qb) => {
+          if (payload.type == 1) {
+          }
+          if (payload.type == 2) {
+            qb.where(
+              "agm_owner_master.registrationType",
+              1
+            );
+          }
+          if (payload.type == 3) {
+            qb.orWhere(
+              "agm_owner_master.registrationType",
+              2
+            );
+          }
+          if (payload.type == 4) {
+            qb.where(
+              "agm_owner_master.registrationType",
+              1
+            );
+            qb.orWhere(
+              "agm_owner_master.registrationType",
+              2
+            );
+          }
 
-        if (payload.agmId) {
-          qb.where(
-            "agm_owner_master.agmId",
-            payload.agmId
-          );
-        }
-      });
+          if (payload.agmId) {
+            qb.where(
+              "agm_owner_master.agmId",
+              payload.agmId
+            );
+          }
+        });
 
       const Parallel = require("async-parallel");
 
@@ -2210,19 +2270,354 @@ const agmController = {
       });
 
       ownerRegistrationList = _.uniqBy(ownerRegistrationList, "id");
-      
-      console.log("ownerRegistrationList====>>>",ownerRegistrationList)
+
+      console.log("ownerRegistrationList====>>>", ownerRegistrationList)
       const path = require('path');
       // Read HTML Template
       const templatePath = path.join(__dirname, '..', 'pdf-templates', 'registration.ejs');
-      res.render(templatePath,{title:'Registration', data:ownerRegistrationList});
+      res.render(templatePath, { title: 'Registration', data: ownerRegistrationList });
       // return {
       //   data:ownerRegistrationList
       // }
     } catch (err) {
 
-      console.log("error==",err)
-      
+      console.log("error==", err)
+
+    }
+  },
+
+
+  getDashboardBasicData: async (req, res) => {
+    try {
+
+      const agmId = req.params.id;
+
+      if (!agmId) {
+        return res.status(400).json({
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: "Please send valid AGM Id",
+            },
+          ],
+        });
+      }
+
+      let agmDetails = await knex("agm_master")
+        .leftJoin(
+          "companies",
+          "agm_master.companyId",
+          "companies.id"
+        )
+        .leftJoin(
+          "projects",
+          "agm_master.projectId",
+          "projects.id"
+        )
+        .select([
+          "agm_master.*",
+          "companies.companyId as companyCode",
+          "companies.companyName",
+          "projects.project as projectCode",
+          "projects.projectName",
+        ])
+        .where({
+          "agm_master.id": agmId,
+          "agm_master.orgId": req.orgId,
+        }).first();
+
+
+      let agendas = await knex("agenda_master").where({ agmId });
+
+      const Parallel = require('async-parallel');
+      agendas = await Parallel.map(agendas, async (agenda) => {
+        let choices = await knex('agenda_choice').where({ agendaId: agenda.id });
+        choices = await Parallel.map(choices, async (ch) => {
+          let voting = await knex('agm_voting').where({ agendaId: agenda.id, selectedChoiceId: ch.id })
+            .sum('votingPower as vp')
+            .count('*')
+            .select(['selectedChoiceId'])
+            .groupBy('selectedChoiceId').first();
+          ch.voting = voting;
+          return ch;
+        });
+        agenda.choices = choices;
+        return agenda;
+      });
+
+
+      let stats = {};
+
+      [invitedOwners, registeredOwners, totalOwnershipRatio, totalUnits, registeredOwnerShipRatio, registeredOwnersSelf, registeredOwnersProxy] = await Promise.all([
+        knex('agm_owner_master').count('*').where({ agmId }).first(),
+        knex('agm_owner_master').count('*').where({ agmId }).whereNotNull('signatureAt').first(),
+        knex('agm_owner_master').sum('ownershipRatio').where({ agmId }).first(),
+        knex('agm_owner_master').count('*').where({ agmId }).first(),
+        knex('agm_owner_master').sum('ownershipRatio').where({ agmId }).whereNotNull('signatureAt').first(),
+        knex('agm_owner_master').count('*').where({ agmId, registrationType: 1 }).whereNotNull('signatureAt').first(),
+        knex('agm_owner_master').count('*').where({ agmId, registrationType: 2 }).whereNotNull('signatureAt').first(),
+      ]);
+
+      stats.invitedOwners = invitedOwners.count ? invitedOwners.count : 0;
+      stats.registeredOwners = registeredOwners.count ? registeredOwners.count : 0;
+      stats.totalOwnershipRatio = totalOwnershipRatio.sum ? totalOwnershipRatio.sum : 0;
+      stats.totalUnits = totalUnits.count ? totalUnits.count : 0;
+      stats.registeredOwnerShipRatio = registeredOwnerShipRatio.sum ? registeredOwnerShipRatio.sum : 0;
+      if (stats.totalOwnershipRatio) {
+        stats.registeredOwnerShipRatioPerentage = ((stats.registeredOwnerShipRatio / stats.totalOwnershipRatio) * 100).toFixed(2);
+      }
+      stats.registeredOwnersSelf = registeredOwnersSelf.count ? registeredOwnersSelf.count : 0;
+      stats.registeredOwnersProxy = registeredOwnersProxy.count ? registeredOwnersProxy.count : 0;
+
+      stats.coOwnerPercentage = ((stats.registeredOwnersSelf / stats.registeredOwners) * 100).toFixed(2);
+      stats.proxyPercentage = ((stats.registeredOwnersProxy / stats.registeredOwners) * 100).toFixed(2);
+
+      let resData = {
+        agmDetails,
+        agendas,
+        stats
+      }
+
+      return res.status(200).json({
+        data: resData,
+        message: "Success!",
+      });
+
+    } catch (err) {
+      return res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
+  },
+
+
+
+
+  getAgendaVoteSummary: async (req, res) => {
+    try {
+      let payload = req.body;
+      let total, sum, choices;
+
+      const schema = new Joi.object().keys({
+        agmId: Joi.number().required(),
+        agendaId: Joi.number().required(),
+
+      });
+      const result = Joi.validate(payload, schema);
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
+        return res.status(400).json({
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
+        });
+      }
+
+      let voteSummary = await knex
+        .select([
+          "agm_voting.selectedChoiceId"
+        ])
+        .count("* as count")
+        .sum("votingPower as vp")
+        .from("agm_voting")
+        .where({ "agendaId": payload.agendaId, "orgId": req.orgId, "agmId": payload.agmId })
+        .groupBy(["agm_voting.selectedChoiceId"])
+
+      const Parallel = require("async-parallel");
+
+      voteSummary = await Parallel.map(voteSummary, async (pd) => {
+        let choices = await knex
+          .from("agenda_choice")
+          .select([
+            "agenda_choice.choiceValue",
+            "agenda_choice.choiceValueThai"
+          ])
+          .where("agenda_choice.id", pd.selectedChoiceId)
+          .first();
+
+        return { ...pd, choices };
+      });
+
+      return res.status(200).json({
+        data: {
+          voteSummary
+        },
+        message: "Agenda Summary Result",
+      });
+    } catch (err) {
+
+      return res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
+  },
+
+  getRegistrationStatus: async (req, res) => {
+    try {
+      let payload = req.body;
+
+
+      const schema = new Joi.object().keys({
+        unitId: Joi.number().required(),
+        agmId: Joi.number().required(),
+      });
+      const result = Joi.validate(payload, schema);
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
+        return res.status(400).json({
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
+        });
+      }
+
+      let ownerRegistrationStatus = await knex("agm_owner_master")
+        .select([
+          "registrationType",
+          "ownerName"
+        ])
+        .where({ "unitId": payload.unitId,  agmId: payload.agmId, "orgId": req.orgId }).first();
+
+      return res.status(200).json({
+        data: {
+          ownerRegistrationStatus
+        },
+        message: "Owner registration status",
+      });
+
+    } catch (err) {
+      return res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
+  },
+
+  getVotingResultList:async(req,res)=>{
+    try {
+      let payload = req.body;
+      let reqData = req.query;
+      let total, rows;
+
+
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+      [total, rows] = await Promise.all([
+        knex
+          .count("* as count")
+          .from("agm_voting")
+          .where({
+            "agm_voting.agmId": payload.agmId,
+            "agm_voting.agendaId":payload.agendaId,
+            "agm_voting.orgId": req.orgId,
+          })
+          .first(),
+        knex
+        .from("agm_voting")
+        .select([
+          "agm_voting.ownerMasterId",
+          "agm_voting.selectedChoiceId",
+          "agm_voting.votingPower"
+        ])
+        .where({
+          "agm_voting.agmId": payload.agmId,
+          "agm_voting.agendaId":payload.agendaId,
+          "agm_voting.orgId": req.orgId,
+        })
+          .offset(offset)
+          .limit(per_page)
+          // .orderBy("agm_owner_master.unitNumber", "asc"),
+      ]);
+
+      const Parallel = require("async-parallel");
+
+      rows = await Parallel.map(rows, async (pd) => {
+        let ownerData = await knex
+          .from("agm_owner_master")
+          .select([
+            "agm_owner_master.unitNumber",
+            "agm_owner_master.houseId",
+            "agm_owner_master.ownershipRatio",
+            "agm_owner_master.ownerName",
+            "agm_owner_master.joinOwnerName",
+            "agm_owner_master.registrationType"
+          ])
+          .where("agm_owner_master.id", pd.ownerMasterId)
+          .first();
+
+        return { ...pd, ...ownerData };
+      });
+
+      rows = await Parallel.map(rows, async (pd)=>{
+
+        let choiceValue = await knex
+        .from("agenda_choice")
+        .select([
+          "agenda_choice.choiceValue",
+          "agenda_choice.choiceValueThai"
+        ])
+        .where({"agenda_choice.id":pd.selectedChoiceId})
+        .first();
+
+        return {...pd,...choiceValue}
+      })
+
+      let count = total.count;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+      res.status(200).json({
+        data: {
+          ownerList: pagination,
+        },
+        message: "Owner list successfully !",
+      });
+    } catch (err) {
+      return res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    
     }
   }
 };
