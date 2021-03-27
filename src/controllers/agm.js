@@ -1936,7 +1936,7 @@ const agmController = {
         agmId: Joi.number().required(),
         // ownerMasterId: Joi.number().required(),
         agendaId: Joi.number().required(),
-        choiceId: Joi.number().required()
+        choiceId: Joi.number().required(),
       });
       const result = Joi.validate(payload, schema);
       if (
@@ -1956,34 +1956,38 @@ const agmController = {
 
       let agendaChoiceData = await knex
         .from("agenda_choice")
-        .leftJoin("agenda_master", "agenda_choice.agendaId", "agenda_master.id")
+        .leftJoin(
+          "agenda_master",
+          "agenda_choice.agendaId",
+          "agenda_master.id"
+        )
         .select([
           "agenda_choice.choiceValue",
-          "agenda_master.agendaName"
+          "agenda_master.agendaName",
         ])
-        .where({ "agenda_choice.agendaId": payload.agendaId, "agenda_choice.id": payload.choiceId })
-
+        .where({
+          "agenda_choice.agendaId": payload.agendaId,
+          "agenda_choice.id": payload.choiceId,
+        });
 
       let totalRatio = await knex("agm_owner_master")
         .select("agm_owner_master.ownershipRatio")
-        .where("agm_owner_master.agmId", payload.agmId)
+        .where("agm_owner_master.agmId", payload.agmId);
 
       let total = [];
       for (let d of totalRatio) {
-        total.push(parseInt(d.ownershipRatio))
+        total.push(parseInt(d.ownershipRatio));
       }
 
-      let totalRatioSum = total.reduce((a, b) => a + b, 0)
+      let totalRatioSum = total.reduce((a, b) => a + b, 0);
       // console.log("total agm ratio count====>>>>",totalRatioSum)
-
 
       return res.status(200).json({
         data: {
           agendaChoiceData: agendaChoiceData,
-          totalOwnershipRatio: totalRatioSum
+          totalOwnershipRatio: totalRatioSum,
         },
       });
-
     } catch (err) {
       return res.status(500).json({
         errors: [
@@ -2002,14 +2006,12 @@ const agmController = {
       let insertVotingResult;
 
       await knex.transaction(async (trx) => {
-
         const schema = new Joi.object().keys({
           agmId: Joi.number().required(),
           ownerMasterId: Joi.number().required(),
           agendaId: Joi.number().required(),
           votingPower: Joi.string().required(),
-          selectedChoiceId: Joi.number().required()
-
+          selectedChoiceId: Joi.number().required(),
         });
         const result = Joi.validate(payload, schema);
         if (
@@ -2037,8 +2039,8 @@ const agmController = {
           selectedChoiceId: payload.selectedChoiceId,
           createdAt: currentTime,
           updatedAt: currentTime,
-          orgId: req.orgId
-        }
+          orgId: req.orgId,
+        };
 
         insertVotingResult = await knex
           .insert(insertVotingData)
@@ -2046,7 +2048,6 @@ const agmController = {
           .into("agm_voting");
 
         trx.commit;
-
       });
 
       return res.status(200).json({
@@ -2258,6 +2259,78 @@ const agmController = {
     }
   },
 
+
+
+
+  getAgendaVoteSummary:async(req,res)=>{
+    try {
+      let payload = req.body;
+      let total , sum ,choices;
+
+      const schema = new Joi.object().keys({
+        agmId: Joi.number().required(),
+        agendaId: Joi.number().required(),
+        
+      });
+      const result = Joi.validate(payload, schema);
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
+        return res.status(400).json({
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
+        });
+      }
+
+       let voteSummary = await knex
+        .select([
+          "agm_voting.selectedChoiceId"
+        ])
+        .count("* as count")
+        .sum("votingPower as vp")
+        .from("agm_voting")
+        .where({"agendaId":payload.agendaId,"orgId":req.orgId,"agmId":payload.agmId})
+        .groupBy(["agm_voting.selectedChoiceId"])
+
+      const Parallel = require("async-parallel");
+
+      voteSummary = await Parallel.map(voteSummary, async (pd) => {
+        let choices = await knex
+          .from("agenda_choice")
+          .select([
+            "agenda_choice.choiceValue",
+            "agenda_choice.choiceValueThai"
+          ])
+          .where("agenda_choice.id", pd.selectedChoiceId)
+          .first();
+
+        return { ...pd, choices };
+      });
+
+      return res.status(200).json({
+        data: {
+          voteSummary
+        },
+        message: "Agenda Summary Result",
+      });
+    } catch (err) {
+      
+      return res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
+  }
 };
 
 module.exports = agmController;
