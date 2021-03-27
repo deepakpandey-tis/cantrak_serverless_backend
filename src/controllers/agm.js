@@ -2443,11 +2443,12 @@ const agmController = {
     }
   },
 
-  getOwnerResultList:async(req,res)=>{
+  getVotingResultList:async(req,res)=>{
     try {
       let payload = req.body;
       let reqData = req.query;
       let total, rows;
+
 
       let pagination = {};
       let per_page = reqData.per_page || 10;
@@ -2458,143 +2459,62 @@ const agmController = {
       [total, rows] = await Promise.all([
         knex
           .count("* as count")
-          .from("agm_owner_master")
-          .leftJoin(
-            "property_units",
-            "agm_owner_master.unitId",
-            "property_units.id"
-          )
-
+          .from("agm_voting")
           .where({
-            "agm_owner_master.agmId": payload.agmId,
-            "agm_owner_master.orgId": req.orgId,
+            "agm_voting.agmId": payload.agmId,
+            "agm_voting.agendaId":payload.agendaId,
+            "agm_voting.orgId": req.orgId,
           })
-          // .where((qb) => {
-          //   if (payload.filterType == 1) {
-          //   }
-          //   if (payload.filterType == 2) {
-          //     qb.where(
-          //       "agm_owner_master.registrationType",
-          //       1
-          //     );
-          //   }
-          //   if (payload.filterType == 3) {
-          //     qb.where(
-          //       "agm_owner_master.registrationType",
-          //       2
-          //     );
-          //   }
-          //   if (payload.filterType == 4) {
-          //     qb.where(
-          //       "agm_owner_master.registrationType",
-          //       1
-          //     );
-          //     qb.orWhere(
-          //       "agm_owner_master.registrationType",
-          //       2
-          //     );
-          //   }
-          //   if (payload.agmId) {
-          //     qb.where(
-          //       "agm_owner_master.agmId",
-          //       payload.agmId
-          //     );
-          //   }
-          //   if (payload.unitId) {
-          //     qb.where(
-          //       "agm_owner_master.unitId",
-          //       payload.unitId
-          //     );
-          //   }
-          //   if (payload.ownerName) {
-          //     qb.where(
-          //       "agm_owner_master.ownerName",
-          //       "iLIKE",
-          //       `%${payload.ownerName}%`
-          //     );
-          //   }
-          // })
           .first(),
         knex
-          .from("agm_owner_master")
-          .leftJoin(
-            "property_units",
-            "agm_owner_master.unitId",
-            "property_units.id"
-          )
-
-          .select([
-            "agm_owner_master.*",
-            "property_units.unitNumber",
-            "property_units.description as unitDescription",
-          ])
-          .where({
-            "agm_owner_master.agmId": payload.agmId,
-            "agm_owner_master.orgId": req.orgId,
-          })
-          // .where((qb) => {
-            
-          //   if (payload.filterType == 1) {
-          //   }
-          //   if (payload.filterType == 2) {
-          //     qb.where(
-          //       "agm_owner_master.registrationType",
-          //       1
-          //     );
-          //   }
-          //   if (payload.filterType == 3) {
-          //     qb.orWhere(
-          //       "agm_owner_master.registrationType",
-          //       2
-          //     );
-          //   }
-          //   if (payload.filterType == 4) {
-          //     qb.where(
-          //       "agm_owner_master.registrationType",
-          //       1
-          //     );
-          //     qb.orWhere(
-          //       "agm_owner_master.registrationType",
-          //       2
-          //     );
-          //   }
-
-          //   if (payload.agmId) {
-          //     qb.where(
-          //       "agm_owner_master.agmId",
-          //       payload.agmId
-          //     );
-          //   }
-          //   if (payload.unitId) {
-          //     qb.where(
-          //       "agm_owner_master.unitId",
-          //       payload.unitId
-          //     );
-          //   }
-          //   if (payload.ownerName) {
-          //     qb.where(
-          //       "agm_owner_master.ownerName",
-          //       "iLIKE",
-          //       `%${payload.ownerName}%`
-          //     );
-          //   }
-          // })
+        .from("agm_voting")
+        .select([
+          "agm_voting.ownerMasterId",
+          "agm_voting.selectedChoiceId",
+          "agm_voting.votingPower"
+        ])
+        .where({
+          "agm_voting.agmId": payload.agmId,
+          "agm_voting.agendaId":payload.agendaId,
+          "agm_voting.orgId": req.orgId,
+        })
           .offset(offset)
           .limit(per_page)
-          .orderBy("agm_owner_master.unitNumber", "asc"),
+          // .orderBy("agm_owner_master.unitNumber", "asc"),
       ]);
 
       const Parallel = require("async-parallel");
 
-      // rows = await Parallel.map(rows, async (pd) => {
-      //   let proxyData = await knex
-      //     .from("agm_voting")
-      //     .select(["agm_proxy_documents.proxyName"])
-      //     .where("agm_proxy_documents.ownerMasterId", pd.id)
-      //     .first();
+      rows = await Parallel.map(rows, async (pd) => {
+        let ownerData = await knex
+          .from("agm_owner_master")
+          .select([
+            "agm_owner_master.unitNumber",
+            "agm_owner_master.houseId",
+            "agm_owner_master.ownershipRatio",
+            "agm_owner_master.ownerName",
+            "agm_owner_master.joinOwnerName",
+            "agm_owner_master.registrationType"
+          ])
+          .where("agm_owner_master.id", pd.ownerMasterId)
+          .first();
 
-      //   return { ...pd, proxyData };
-      // });
+        return { ...pd, ...ownerData };
+      });
+
+      rows = await Parallel.map(rows, async (pd)=>{
+
+        let choiceValue = await knex
+        .from("agenda_choice")
+        .select([
+          "agenda_choice.choiceValue",
+          "agenda_choice.choiceValueThai"
+        ])
+        .where({"agenda_choice.id":pd.selectedChoiceId})
+        .first();
+
+        return {...pd,...choiceValue}
+      })
 
       let count = total.count;
       pagination.total = count;

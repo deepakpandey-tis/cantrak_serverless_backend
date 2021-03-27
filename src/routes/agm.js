@@ -212,7 +212,7 @@ router.post(
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
-  agmController.getOwnerResultList
+  agmController.getVotingResultList
 )
 
 /**IMPORT AGM OWNER DATA */
