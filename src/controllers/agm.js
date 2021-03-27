@@ -2119,7 +2119,19 @@ const agmController = {
             payload.agmId
           );
         }
-      })
+      });
+
+      const Parallel = require("async-parallel");
+
+      ownerRegistrationList = await Parallel.map(ownerRegistrationList, async (pd) => {
+        let proxyData = await knex
+          .from("agm_proxy_documents")
+          .select(["agm_proxy_documents.proxyName"])
+          .where("agm_proxy_documents.ownerMasterId", pd.id)
+          .first();
+
+        return { ...pd, proxyData };
+      });
 
       ownerRegistrationList = _.uniqBy(ownerRegistrationList, "id");
       
