@@ -2069,7 +2069,7 @@ const agmController = {
 
       let payload = req.query;
 
-      console.log("payload value", payload)
+      console.log("payload value", payload);
 
       let ownerRegistrationList = await knex
         .from("agm_owner_master")
@@ -2083,7 +2083,6 @@ const agmController = {
           "property_units.unitNumber",
           "property_units.description as unitDescription",
         ])
-
         .where({
           "agm_owner_master.agmId": payload.agmId,
         })
@@ -2119,7 +2118,19 @@ const agmController = {
               payload.agmId
             );
           }
-        })
+        });
+
+      const Parallel = require("async-parallel");
+
+      ownerRegistrationList = await Parallel.map(ownerRegistrationList, async (pd) => {
+        let proxyData = await knex
+          .from("agm_proxy_documents")
+          .select(["agm_proxy_documents.proxyName"])
+          .where("agm_proxy_documents.ownerMasterId", pd.id)
+          .first();
+
+        return { ...pd, proxyData };
+      });
 
       ownerRegistrationList = _.uniqBy(ownerRegistrationList, "id");
 
@@ -2183,7 +2194,7 @@ const agmController = {
 
       let stats = {};
 
-      [invitedOwners, registeredOwners, totalOwnershipRatio, totalUnits, registeredOwnerShipRatio, registeredOwnersSelf, registeredOwnersProxy ] = await Promise.all([
+      [invitedOwners, registeredOwners, totalOwnershipRatio, totalUnits, registeredOwnerShipRatio, registeredOwnersSelf, registeredOwnersProxy] = await Promise.all([
         knex('agm_owner_master').count('*').where({ agmId }).first(),
         knex('agm_owner_master').count('*').where({ agmId }).whereNotNull('signatureAt').first(),
         knex('agm_owner_master').sum('ownershipRatio').where({ agmId }).first(),
@@ -2204,8 +2215,8 @@ const agmController = {
       stats.registeredOwnersSelf = registeredOwnersSelf.count ? registeredOwnersSelf.count : 0;
       stats.registeredOwnersProxy = registeredOwnersProxy.count ? registeredOwnersProxy.count : 0;
 
-      stats.coOwnerPercentage =  ((stats.registeredOwnersSelf / stats.registeredOwners) * 100).toFixed(2);
-      stats.proxyPercentage =  ((stats.registeredOwnersProxy / stats.registeredOwners) * 100).toFixed(2);
+      stats.coOwnerPercentage = ((stats.registeredOwnersSelf / stats.registeredOwners) * 100).toFixed(2);
+      stats.proxyPercentage = ((stats.registeredOwnersProxy / stats.registeredOwners) * 100).toFixed(2);
 
       let resData = {
         agmDetails,
