@@ -224,4 +224,14 @@ router.post(
   agmController.importOwnerData
 );
 
+
+
+router.get(
+  "/get-dashboard-basic-data/:id",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.getDashboardBasicData
+);
+
 module.exports = router;

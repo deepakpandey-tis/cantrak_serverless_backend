@@ -1688,7 +1688,7 @@ const agmController = {
           }
         }
       });
-    } catch (err) {}
+    } catch (err) { }
   },
   getUnitList: async (req, res) => {
     try {
@@ -1907,7 +1907,7 @@ const agmController = {
 
       let votingData = await knex.from("agm_voting").where({
         agmId: payload.agmId,
-        ownerMasterId:payload.ownerMasterId,
+        ownerMasterId: payload.ownerMasterId,
         agendaId: payload.agendaId,
       });
 
@@ -1928,7 +1928,7 @@ const agmController = {
     }
   },
 
-  getScannedAgendaDetail: async(req,res)=>{
+  getScannedAgendaDetail: async (req, res) => {
     try {
       let payload = req.body;
 
@@ -1936,7 +1936,7 @@ const agmController = {
         agmId: Joi.number().required(),
         // ownerMasterId: Joi.number().required(),
         agendaId: Joi.number().required(),
-        choiceId : Joi.number().required()
+        choiceId: Joi.number().required()
       });
       const result = Joi.validate(payload, schema);
       if (
@@ -1955,21 +1955,21 @@ const agmController = {
       }
 
       let agendaChoiceData = await knex
-      .from("agenda_choice")
-      .leftJoin("agenda_master","agenda_choice.agendaId","agenda_master.id")
-      .select([
-        "agenda_choice.choiceValue",
-        "agenda_master.agendaName"
-      ])
-      .where({"agenda_choice.agendaId":payload.agendaId,"agenda_choice.id":payload.choiceId})
+        .from("agenda_choice")
+        .leftJoin("agenda_master", "agenda_choice.agendaId", "agenda_master.id")
+        .select([
+          "agenda_choice.choiceValue",
+          "agenda_master.agendaName"
+        ])
+        .where({ "agenda_choice.agendaId": payload.agendaId, "agenda_choice.id": payload.choiceId })
 
 
       let totalRatio = await knex("agm_owner_master")
-      .select("agm_owner_master.ownershipRatio")
-      .where("agm_owner_master.agmId",payload.agmId)
+        .select("agm_owner_master.ownershipRatio")
+        .where("agm_owner_master.agmId", payload.agmId)
 
       let total = [];
-      for(let d of totalRatio){
+      for (let d of totalRatio) {
         total.push(parseInt(d.ownershipRatio))
       }
 
@@ -1980,7 +1980,7 @@ const agmController = {
       return res.status(200).json({
         data: {
           agendaChoiceData: agendaChoiceData,
-          totalOwnershipRatio : totalRatioSum
+          totalOwnershipRatio: totalRatioSum
         },
       });
 
@@ -1996,20 +1996,20 @@ const agmController = {
     }
   },
 
-  saveVotingData: async(req,res)=>{
+  saveVotingData: async (req, res) => {
     try {
-       let payload = req.body;
-       let insertVotingResult;
+      let payload = req.body;
+      let insertVotingResult;
 
-       await knex.transaction(async (trx) =>{
+      await knex.transaction(async (trx) => {
 
         const schema = new Joi.object().keys({
           agmId: Joi.number().required(),
           ownerMasterId: Joi.number().required(),
-          agendaId:Joi.number().required(),
-          votingPower:Joi.string().required(),
-          selectedChoiceId:Joi.number().required()
-  
+          agendaId: Joi.number().required(),
+          votingPower: Joi.string().required(),
+          selectedChoiceId: Joi.number().required()
+
         });
         const result = Joi.validate(payload, schema);
         if (
@@ -2026,30 +2026,30 @@ const agmController = {
             ],
           });
         }
-  
+
         let currentTime = new Date().getTime();
-  
+
         let insertVotingData = {
-          agmId:payload.agmId,
-          ownerMasterId : payload.ownerMasterId,
+          agmId: payload.agmId,
+          ownerMasterId: payload.ownerMasterId,
           agendaId: payload.agendaId,
-          votingPower : payload.votingPower,
-          selectedChoiceId : payload.selectedChoiceId,
-          createdAt : currentTime,
-          updatedAt : currentTime,
+          votingPower: payload.votingPower,
+          selectedChoiceId: payload.selectedChoiceId,
+          createdAt: currentTime,
+          updatedAt: currentTime,
           orgId: req.orgId
         }
-  
+
         insertVotingResult = await knex
-        .insert(insertVotingData)
-        .returning(["*"])
-        .into("agm_voting");
+          .insert(insertVotingData)
+          .returning(["*"])
+          .into("agm_voting");
 
         trx.commit;
 
-       });
+      });
 
-       return res.status(200).json({
+      return res.status(200).json({
         data: insertVotingResult,
         message: "Vote data added successfully!",
       });
@@ -2064,62 +2064,61 @@ const agmController = {
       });
     }
   },
-  getOwnerRegistrationList: async(req,res)=>{
+  getOwnerRegistrationList: async (req, res) => {
     try {
-      
+
       let payload = req.query;
 
-      console.log("payload value",payload)
+      console.log("payload value", payload);
 
-      let ownerRegistrationList= await knex
-      .from("agm_owner_master")
-      .leftJoin(
-        "property_units",
-        "agm_owner_master.unitId",
-        "property_units.id"
-      )
-      .select([
-        "agm_owner_master.*",
-        "property_units.unitNumber",
-        "property_units.description as unitDescription",
-      ])
-      
-      .where({
-        "agm_owner_master.agmId": payload.agmId,
-      })
-      .where((qb) => {
-        if (payload.type == 1) {
-        }
-        if (payload.type == 2) {
-          qb.where(
-            "agm_owner_master.registrationType",
-            1
-          );
-        }
-        if (payload.type == 3) {
-          qb.orWhere(
-            "agm_owner_master.registrationType",
-            2
-          );
-        }
-        if (payload.type == 4) {
-          qb.where(
-            "agm_owner_master.registrationType",
-            1
-          );
-          qb.orWhere(
-            "agm_owner_master.registrationType",
-            2
-          );
-        }
+      let ownerRegistrationList = await knex
+        .from("agm_owner_master")
+        .leftJoin(
+          "property_units",
+          "agm_owner_master.unitId",
+          "property_units.id"
+        )
+        .select([
+          "agm_owner_master.*",
+          "property_units.unitNumber",
+          "property_units.description as unitDescription",
+        ])
+        .where({
+          "agm_owner_master.agmId": payload.agmId,
+        })
+        .where((qb) => {
+          if (payload.type == 1) {
+          }
+          if (payload.type == 2) {
+            qb.where(
+              "agm_owner_master.registrationType",
+              1
+            );
+          }
+          if (payload.type == 3) {
+            qb.orWhere(
+              "agm_owner_master.registrationType",
+              2
+            );
+          }
+          if (payload.type == 4) {
+            qb.where(
+              "agm_owner_master.registrationType",
+              1
+            );
+            qb.orWhere(
+              "agm_owner_master.registrationType",
+              2
+            );
+          }
 
-        if (payload.agmId) {
-          qb.where(
-            "agm_owner_master.agmId",
-            payload.agmId
-          );
-        }
-      });
+          if (payload.agmId) {
+            qb.where(
+              "agm_owner_master.agmId",
+              payload.agmId
+            );
+          }
+        });
 
       const Parallel = require("async-parallel");
 
@@ -2134,21 +2133,114 @@ const agmController = {
       });
 
       ownerRegistrationList = _.uniqBy(ownerRegistrationList, "id");
-      
-      console.log("ownerRegistrationList====>>>",ownerRegistrationList)
+
+      console.log("ownerRegistrationList====>>>", ownerRegistrationList)
       const path = require('path');
       // Read HTML Template
       const templatePath = path.join(__dirname, '..', 'pdf-templates', 'registration.ejs');
-      res.render(templatePath,{title:'Registration', data:ownerRegistrationList});
+      res.render(templatePath, { title: 'Registration', data: ownerRegistrationList });
       // return {
       //   data:ownerRegistrationList
       // }
     } catch (err) {
 
-      console.log("error==",err)
-      
+      console.log("error==", err)
+
     }
-  }
+  },
+
+
+  getDashboardBasicData: async (req, res) => {
+    try {
+
+      const agmId = req.params.id;
+
+      if (!agmId) {
+        return res.status(400).json({
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: "Please send valid AGM Id",
+            },
+          ],
+        });
+      }
+
+      let agmDetails = await knex("agm_master")
+        .leftJoin(
+          "companies",
+          "agm_master.companyId",
+          "companies.id"
+        )
+        .leftJoin(
+          "projects",
+          "agm_master.projectId",
+          "projects.id"
+        )
+        .select([
+          "agm_master.*",
+          "companies.companyId as companyCode",
+          "companies.companyName",
+          "projects.project as projectCode",
+          "projects.projectName",
+        ])
+        .where({
+          "agm_master.id": agmId,
+          "agm_master.orgId": req.orgId,
+        }).first();
+
+
+      let agendas = await knex("agenda_master").where({ agmId });
+
+      let stats = {};
+
+      [invitedOwners, registeredOwners, totalOwnershipRatio, totalUnits, registeredOwnerShipRatio, registeredOwnersSelf, registeredOwnersProxy] = await Promise.all([
+        knex('agm_owner_master').count('*').where({ agmId }).first(),
+        knex('agm_owner_master').count('*').where({ agmId }).whereNotNull('signatureAt').first(),
+        knex('agm_owner_master').sum('ownershipRatio').where({ agmId }).first(),
+        knex('agm_owner_master').count('*').where({ agmId }).first(),
+        knex('agm_owner_master').sum('ownershipRatio').where({ agmId }).whereNotNull('signatureAt').first(),
+        knex('agm_owner_master').count('*').where({ agmId, registrationType: 1 }).whereNotNull('signatureAt').first(),
+        knex('agm_owner_master').count('*').where({ agmId, registrationType: 2 }).whereNotNull('signatureAt').first(),
+      ]);
+
+      stats.invitedOwners = invitedOwners.count ? invitedOwners.count : 0;
+      stats.registeredOwners = registeredOwners.count ? registeredOwners.count : 0;
+      stats.totalOwnershipRatio = totalOwnershipRatio.sum ? totalOwnershipRatio.sum : 0;
+      stats.totalUnits = totalUnits.count ? totalUnits.count : 0;
+      stats.registeredOwnerShipRatio = registeredOwnerShipRatio.sum ? registeredOwnerShipRatio.sum : 0;
+      if (stats.totalOwnershipRatio) {
+        stats.registeredOwnerShipRatioPerentage = ((stats.registeredOwnerShipRatio / stats.totalOwnershipRatio) * 100).toFixed(2);
+      }
+      stats.registeredOwnersSelf = registeredOwnersSelf.count ? registeredOwnersSelf.count : 0;
+      stats.registeredOwnersProxy = registeredOwnersProxy.count ? registeredOwnersProxy.count : 0;
+
+      stats.coOwnerPercentage = ((stats.registeredOwnersSelf / stats.registeredOwners) * 100).toFixed(2);
+      stats.proxyPercentage = ((stats.registeredOwnersProxy / stats.registeredOwners) * 100).toFixed(2);
+
+      let resData = {
+        agmDetails,
+        agendas,
+        stats
+      }
+
+      return res.status(200).json({
+        data: resData,
+        message: "Success!",
+      });
+
+    } catch (err) {
+      return res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
+  },
+
 };
 
 module.exports = agmController;
