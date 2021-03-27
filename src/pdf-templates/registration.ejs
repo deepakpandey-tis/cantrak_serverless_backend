@@ -40,7 +40,13 @@
                             <td><%= data[i].ownerName; %></td>
                             <td><%= data[i].unitNumber %></td>
                             <td><%= data[i].houseId %></td>
-                            <td><%= data[i].registrationType %></td>
+                            <td>
+                                <% if(data[i].registrationType == 1){ %>
+                                    Owner
+                                <% }else if(data[i].registrationType == 2){ %>
+                                    <%= data[i].proxyData.proxyName; %>
+                                <% } %>
+                            </td>
                             <td style="text-align: left;">
                                 <% if(data[i].signature){%>
                                     <img src="<%= data[i].signature %>" alt="" height="25" />
