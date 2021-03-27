@@ -2441,6 +2441,108 @@ const agmController = {
         ],
       });
     }
+  },
+
+  getVotingResultList:async(req,res)=>{
+    try {
+      let payload = req.body;
+      let reqData = req.query;
+      let total, rows;
+
+
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+      [total, rows] = await Promise.all([
+        knex
+          .count("* as count")
+          .from("agm_voting")
+          .where({
+            "agm_voting.agmId": payload.agmId,
+            "agm_voting.agendaId":payload.agendaId,
+            "agm_voting.orgId": req.orgId,
+          })
+          .first(),
+        knex
+        .from("agm_voting")
+        .select([
+          "agm_voting.ownerMasterId",
+          "agm_voting.selectedChoiceId",
+          "agm_voting.votingPower"
+        ])
+        .where({
+          "agm_voting.agmId": payload.agmId,
+          "agm_voting.agendaId":payload.agendaId,
+          "agm_voting.orgId": req.orgId,
+        })
+          .offset(offset)
+          .limit(per_page)
+          // .orderBy("agm_owner_master.unitNumber", "asc"),
+      ]);
+
+      const Parallel = require("async-parallel");
+
+      rows = await Parallel.map(rows, async (pd) => {
+        let ownerData = await knex
+          .from("agm_owner_master")
+          .select([
+            "agm_owner_master.unitNumber",
+            "agm_owner_master.houseId",
+            "agm_owner_master.ownershipRatio",
+            "agm_owner_master.ownerName",
+            "agm_owner_master.joinOwnerName",
+            "agm_owner_master.registrationType"
+          ])
+          .where("agm_owner_master.id", pd.ownerMasterId)
+          .first();
+
+        return { ...pd, ...ownerData };
+      });
+
+      rows = await Parallel.map(rows, async (pd)=>{
+
+        let choiceValue = await knex
+        .from("agenda_choice")
+        .select([
+          "agenda_choice.choiceValue",
+          "agenda_choice.choiceValueThai"
+        ])
+        .where({"agenda_choice.id":pd.selectedChoiceId})
+        .first();
+
+        return {...pd,...choiceValue}
+      })
+
+      let count = total.count;
+      pagination.total = count;
+      pagination.per_page = per_page;
+      pagination.offset = offset;
+      pagination.to = offset + rows.length;
+      pagination.last_page = Math.ceil(count / per_page);
+      pagination.current_page = page;
+      pagination.from = offset;
+      pagination.data = rows;
+
+      res.status(200).json({
+        data: {
+          ownerList: pagination,
+        },
+        message: "Owner list successfully !",
+      });
+    } catch (err) {
+      return res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    
+    }
   }
 };
 

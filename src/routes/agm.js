@@ -207,6 +207,14 @@ router.post(
   agmController.getRegistrationStatus
 )
 
+router.post(
+  "/get-vote-result-list",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.getVotingResultList
+)
+
 /**IMPORT AGM OWNER DATA */
 const path = require("path");
 let tempraryDirectory = null;
