@@ -36,11 +36,11 @@ router.get(
     , visitorController.getInvitationQRCode
 );
 
-router.get(
+router.post(
     "/get-visitor-list"
     , authMiddleware.isAuthenticated
-    , resourceAccessMiddleware.isVisitorManagementAccessible
     , roleMiddleware.parseUserPermission
+    , resourceAccessMiddleware.isVisitorManagementAccessible
     , visitorController.getVisitorList
 );
 

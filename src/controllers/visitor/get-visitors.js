@@ -27,7 +27,7 @@ const getVisitors = async (req, res) => {
         else all visitors
         */
 
-        //console.log(sqlStr);
+        console.log('[controllers][Visitor][getVisitors] sql: ', sqlStr);
         
         var selectedRecs = await knex.raw(sqlStr);
 
