@@ -2005,55 +2005,66 @@ const agmController = {
       let payload = req.body;
       let insertVotingResult;
 
-      await knex.transaction(async (trx) => {
-        const schema = new Joi.object().keys({
-          agmId: Joi.number().required(),
-          ownerMasterId: Joi.number().required(),
-          agendaId: Joi.number().required(),
-          votingPower: Joi.string().required(),
-          selectedChoiceId: Joi.number().required(),
+      const schema = new Joi.object().keys({
+        agmId: Joi.number().required(),
+        ownerMasterId: Joi.number().required(),
+        agendaId: Joi.number().required(),
+        votingPower: Joi.string().required(),
+        selectedChoiceId: Joi.number().required(),
+      });
+      const result = Joi.validate(payload, schema);
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
+        return res.status(400).json({
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
         });
-        const result = Joi.validate(payload, schema);
-        if (
-          result &&
-          result.hasOwnProperty("error") &&
-          result.error
-        ) {
-          return res.status(400).json({
-            errors: [
-              {
-                code: "VALIDATION_ERROR",
-                message: result.error.message,
-              },
-            ],
-          });
-        }
+      }
 
-        let currentTime = new Date().getTime();
+      let currentTime = new Date().getTime();
 
-        let insertVotingData = {
-          agmId: payload.agmId,
-          ownerMasterId: payload.ownerMasterId,
-          agendaId: payload.agendaId,
-          votingPower: payload.votingPower,
-          selectedChoiceId: payload.selectedChoiceId,
-          createdAt: currentTime,
-          updatedAt: currentTime,
-          orgId: req.orgId,
-        };
+      let insertVotingData = {
+        agmId: payload.agmId,
+        ownerMasterId: payload.ownerMasterId,
+        agendaId: payload.agendaId,
+        votingPower: payload.votingPower,
+        selectedChoiceId: payload.selectedChoiceId,
+        createdAt: currentTime,
+        updatedAt: currentTime,
+        orgId: req.orgId,
+      };
 
+
+      try {
         insertVotingResult = await knex
           .insert(insertVotingData)
           .returning(["*"])
           .into("agm_voting");
+      } catch (err) {
+        let uniqueErrorMsg = `duplicate key value violates unique constraint`;
+        if(err.message.includes(uniqueErrorMsg)) {
+          console.warn('Unique Constraint Error, We will have to perform an update............');
+          insertVotingResult = await knex
+          .update({ votingPower: payload.votingPower, selectedChoiceId: payload.selectedChoiceId, updatedAt: currentTime })
+          .where({ agmId: payload.agmId, ownerMasterId: payload.ownerMasterId, agendaId: payload.agendaId,})
+          .returning(["*"])
+          .into("agm_voting");
+        }
+      }
 
-        trx.commit;
-      });
 
       return res.status(200).json({
         data: insertVotingResult,
         message: "Vote data added successfully!",
       });
+
     } catch (err) {
       return res.status(500).json({
         errors: [
@@ -2193,6 +2204,23 @@ const agmController = {
 
       let agendas = await knex("agenda_master").where({ agmId });
 
+      const Parallel = require('async-parallel');
+      agendas = await Parallel.map(agendas, async (agenda) => {
+        let choices = await knex('agenda_choice').where({ agendaId: agenda.id });
+        choices = await Parallel.map(choices, async (ch) => {
+          let voting = await knex('agm_voting').where({ agendaId: agenda.id, selectedChoiceId: ch.id })
+            .sum('votingPower as vp')
+            .count('*')
+            .select(['selectedChoiceId'])
+            .groupBy('selectedChoiceId').first();
+          ch.voting = voting;
+          return ch;
+        });
+        agenda.choices = choices;
+        return agenda;
+      });
+
+
       let stats = {};
 
       [invitedOwners, registeredOwners, totalOwnershipRatio, totalUnits, registeredOwnerShipRatio, registeredOwnersSelf, registeredOwnersProxy] = await Promise.all([
@@ -2245,15 +2273,15 @@ const agmController = {
 
 
 
-  getAgendaVoteSummary:async(req,res)=>{
+  getAgendaVoteSummary: async (req, res) => {
     try {
       let payload = req.body;
-      let total , sum ,choices;
+      let total, sum, choices;
 
       const schema = new Joi.object().keys({
         agmId: Joi.number().required(),
         agendaId: Joi.number().required(),
-        
+
       });
       const result = Joi.validate(payload, schema);
       if (
@@ -2271,14 +2299,14 @@ const agmController = {
         });
       }
 
-       let voteSummary = await knex
+      let voteSummary = await knex
         .select([
           "agm_voting.selectedChoiceId"
         ])
         .count("* as count")
         .sum("votingPower as vp")
         .from("agm_voting")
-        .where({"agendaId":payload.agendaId,"orgId":req.orgId,"agmId":payload.agmId})
+        .where({ "agendaId": payload.agendaId, "orgId": req.orgId, "agmId": payload.agmId })
         .groupBy(["agm_voting.selectedChoiceId"])
 
       const Parallel = require("async-parallel");
@@ -2303,7 +2331,57 @@ const agmController = {
         message: "Agenda Summary Result",
       });
     } catch (err) {
+
+      return res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
+  },
+
+  getRegistrationStatus:async(req,res)=>{
+    try {
+      let payload = req.body;
       
+
+      const schema = new Joi.object().keys({
+        unitId: Joi.number().required(),
+      });
+      const result = Joi.validate(payload, schema);
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
+        return res.status(400).json({
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
+        });
+      }
+
+      let ownerRegistrationStatus = await knex("agm_owner_master")
+      .select([
+        "agm_owner_master.registrationType",
+        "agm_owner_master.ownerName"
+      ])
+      .where({"agm_owner_master.unitId":payload.unitId,"agm_owner_master.orgId":req.orgId});
+
+      return res.status(200).json({
+        data: {
+          ownerRegistrationStatus
+        },
+        message: "Owner registration status",
+      });
+
+    } catch (err) {
       return res.status(500).json({
         errors: [
           {

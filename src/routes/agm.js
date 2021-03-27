@@ -199,6 +199,14 @@ router.post(
   agmController.getAgendaVoteSummary
 )
 
+router.post(
+  "/get-registration-status",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.getRegistrationStatus
+)
+
 /**IMPORT AGM OWNER DATA */
 const path = require("path");
 let tempraryDirectory = null;

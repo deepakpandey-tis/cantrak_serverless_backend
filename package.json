@@ -4,7 +4,7 @@
   "description": "",
   "main": "./src/app.js",
   "scripts": {
-    "start": "NODE_OPTIONS=--max_old_space_size=8192 NODE_ENV=local sls offline --host=0.0.0.0",
+    "start": "NODE_ENV=local sls offline --host=0.0.0.0",
     "startDev": "DEBUG=knex:* NODE_ENV=local sls offline",
     "deploy": "NODE_ENV=dev sls deploy --stage dev --aws-profile tis-dev --config serverless.prod.yml",
     "test": "echo \"Error: no test specified\" && exit 1"
