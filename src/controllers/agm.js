@@ -2125,13 +2125,80 @@ const agmController = {
         "ownerRegistrationList====>>>",
         ownerRegistrationList
       );
+      // return {
+      //   data: ownerRegistrationList,
+      // };
+      ownerRegistrationList = _.uniqBy(ownerRegistrationList, "id");
+      
+      console.log("ownerRegistrationList====>>>",ownerRegistrationList)
+      const path = require('path');
+      // Read HTML Template
+      const templatePath = path.join(__dirname, '..', 'pdf-templates', 'registration.ejs');
+      res.render(templatePath,{title:'Registration', data:ownerRegistrationList});
       return {
-        data: ownerRegistrationList,
-      };
+        data:ownerRegistrationList
+      }
     } catch (err) {
       console.log("error==", err);
     }
   },
+
+
+
+
+  getAgendaVoteSummary:async(req,res)=>{
+    try {
+      let payload = req.body;
+
+      const schema = new Joi.object().keys({
+        agmId: Joi.number().required(),
+        agendaId: Joi.number().required(),
+        
+      });
+      const result = Joi.validate(payload, schema);
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
+        return res.status(400).json({
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
+        });
+      }
+
+
+      let agendaSummaryResult  = await knex
+      .from("agm_voting")
+      .leftJoin("agenda_choice","agm_voting.selectedChoiceId","agenda_choice.id")
+      .select([
+        "agm_voting.votingPower",
+        "agenda_choice.choiceValue",
+        "agenda_choice.choiceValueThai",
+        "agenda_choice.id"
+      ])
+      .where({"agm_voting.agmId":266,"agm_voting.agendaId":148});
+
+      return res.status(200).json({
+        data: agendaSummaryResult,
+        message: "Agenda Summary Result",
+      });
+    } catch (err) {
+      
+      return res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
+  }
 };
 
 module.exports = agmController;

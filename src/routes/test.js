@@ -125,6 +125,15 @@ router.get('/', async (req, res) => {
     }
 })
 
+router.get('/print-registration', (req, res) => {
+    console.log(req.query);
+    const path = require('path');
+    // Read HTML Template
+    const templatePath = path.join(__dirname, '..', 'pdf-templates', 'registration.ejs');
+    res.render(templatePath,{title:'Registration'});
+    //res.status(500).json({id:req.query.id, id:req.query.id, type:req.query.type});
+});
+
 router.post('/', trimmer, (req, res) => {
     return res.status(200).json(req.body)
 })

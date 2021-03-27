@@ -191,6 +191,14 @@ router.get(
   agmController.getOwnerRegistrationList
 )
 
+router.post(
+  "/get-agenda-summary",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.getAgendaVoteSummary
+)
+
 /**IMPORT AGM OWNER DATA */
 const path = require("path");
 let tempraryDirectory = null;
