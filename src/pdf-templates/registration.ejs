@@ -41,7 +41,13 @@
                             <td><%= data[i].unitNumber %></td>
                             <td><%= data[i].houseId %></td>
                             <td><%= data[i].registrationType %></td>
-                            <td><%= data[i].signature %></td>
+                            <td style="text-align: left;">
+                                <% if(data[i].signature){%>
+                                    <img src="<%= data[i].signature %>" alt="" height="25" />
+                                <% }else{ %>
+                                    N/A
+                                <% } %>
+                            </td>
                         </tr>
                         <% } %>
                     </tbody>
