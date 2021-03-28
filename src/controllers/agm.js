@@ -1488,6 +1488,8 @@ const agmController = {
       let updateResult;
       let updateAgmResult;
 
+      // Put all things in transaction..........
+
       for (let agenda of req.body.data) {
         let updateData = {
           defaultChoiceId: agenda.choiceId,
@@ -1511,6 +1513,21 @@ const agmController = {
           .returning(["*"])
           .into("agm_master");
 
+      
+      // Going to schedule a job for the same...    
+
+      const queueHelper = require("../helpers/queue");
+      await queueHelper.addToQueue(
+        {
+          agmId: agmId,
+          data: {},
+          orgId: req.orgId,
+          requestedBy: req.me,
+        },
+        "long-jobs",
+        "AGM_FINAL_SUBMIT"
+      );
+      
 
       return res.status(200).json({
         updateResult: updateResult,
