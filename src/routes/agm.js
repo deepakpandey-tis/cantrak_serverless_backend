@@ -53,6 +53,13 @@ router.post(
   agmController.getAgmList
 );
 router.post(
+  "/update-agenda",
+  authMiddleware.isAuthenticated, 
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.updateAgenda
+);
+router.post(
   "/get-owner-list",
   authMiddleware.isAuthenticated, 
   roleMiddleware.parseUserPermission,
