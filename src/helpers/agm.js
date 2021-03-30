@@ -65,13 +65,12 @@ const createPdf = (document, agmId, browser, retries = 1) => {
         console.log('Unable to generate PDF...');
         rej(new Error('Unable to generate PDF...'));
       } else {
-        let filename = document.filename;
-        console.log('PDF generated, uploading to s3 with filename:', filename);
+        console.log('PDF generated, uploading to s3 with filename:',  document.s3BasePath + document.filename);
 
         const s3 = new AWS.S3();
         const params = {
           Bucket: bucketName,
-          Key: "AGM/" + agmId + "/VotingDocuments/" + filename,
+          Key: document.s3BasePath + document.filename,
           Body: pdf,
           ACL: "public-read"
         };
@@ -409,11 +408,13 @@ const agmHelper = {
       console.log('[helpers][agm][generateVotingDocument]: Formatted Date:', agmDetails.formattedDate);
 
 
-      const s3BasePath = "AGM/" + agmId + "/VotingDocuments/";
+      const s3BasePath = "AGM/" + agmId + "/VotingDocuments/" + new Date().getTime() + "/";
+      console.log("[helpers][agm][generateVotingDocument]: S3 Directory (For Docs)....", s3BasePath);
+
       // First Clean all files from the s3 directory....
-      console.log("[helpers][agm][generateVotingDocument]: Cleaning S3 directory for AGM....", agmId);
-      await emptyS3Directory(bucketName, s3BasePath);
-      console.log("[helpers][agm][generateVotingDocument]: S3 Directory cleaned....", s3BasePath);
+      // console.log("[helpers][agm][generateVotingDocument]: Cleaning S3 directory for AGM....", agmId);
+      // await emptyS3Directory(bucketName, s3BasePath);
+      // console.log("[helpers][agm][generateVotingDocument]: S3 Directory cleaned....", s3BasePath);
 
       // Write Logic to prepare all objects for generating parallely.........
       const QRCODE = require("qrcode");
@@ -438,6 +439,7 @@ const agmHelper = {
                 agmId: agmId,
                 unitId: pd.unitId,
                 unitNumber: pd.unitNumber,
+                ownerMasterId: pd.id,
                 ownershipRatio: pd.ownershipRatio,
                 agendaId: agenda.id,
                 choice: choice.id
@@ -466,6 +468,7 @@ const agmHelper = {
                 agenda: agenda,
                 propertyOwner: pd
               },
+              s3BasePath: s3BasePath,
               filename: filename,
             };
 
@@ -562,6 +565,122 @@ const agmHelper = {
       if (err.list && Array.isArray(err.list)) {
         err.list.forEach(item => {
           console.error(`[helpers][announcement][sendAnnouncement]: Each Error:`, item.message);
+        });
+      }
+      return { code: "UNKNOWN_ERROR", message: err.message, error: err };
+
+    } finally {
+
+    }
+
+  },
+
+
+  finalSubmit: async ({ agmId, data, orgId, requestedBy }) => {
+
+    try {
+
+      let agmDetails = await knex("agm_master")
+        .leftJoin("companies","agm_master.companyId","companies.id")
+        .leftJoin(
+          "projects",
+          "agm_master.projectId",
+          "projects.id"
+        )
+        .select([
+          "agm_master.*",
+          "companies.companyId as companyCode",
+          "companies.companyName",
+          "projects.project as projectCode",
+          "projects.projectName",
+        ])
+        .where({
+          "agm_master.id": agmId,
+          "agm_master.orgId": req.orgId,
+        })
+        .first();
+
+      let agmPropertyUnitOwners = await knex('agm_owner_master').where({ agmId: agmId, eligibility: true });
+      console.log('[helpers][agm][finalSubmit]: AGM PU Owners:', agmPropertyUnitOwners);
+      console.log('[helpers][agm][finalSubmit]: AGM PU Owners Length:', agmPropertyUnitOwners.length);
+
+
+      let agendas = await knex('agenda_master').where({ agmId: agmId, eligibleForVoting: true });
+      console.log('[helpers][agm][finalSubmit]: agendas:', agendas);
+
+      const Parallel = require("async-parallel");
+
+      agendas = await Parallel.map(agendas, async (ag) => {
+        let choices = await knex('agenda_choice').where({ agendaId: ag.id });
+        ag.choices = choices;
+        return ag;
+      });
+
+      console.log('[helpers][agm][finalSubmit]: Agenda with choices:', agendas);
+      console.log('[helpers][agm][finalSubmit]: Agenda (Length):', agendas.length);
+
+
+      Parallel.setConcurrency(20);
+
+      await Parallel.each(agmPropertyUnitOwners, async (pd) => {
+        console.log("[helpers][agm][finalSubmit]: For Property Owner: ", pd);
+
+        try {
+
+          await Parallel.each(agendas, async (agenda) => {
+            console.log("[helpers][agm][finalSubmit]: Preparing For Agenda: ", agenda);
+
+
+
+          });
+
+        } catch (err) {
+          console.error("[helpers][agm][finalSubmit]: Inner Loop: Error", err);
+          if (err.list && Array.isArray(err.list)) {
+            err.list.forEach(item => {
+              console.error(`[helpers][agm][finalSubmit]: Inner Loop Each Error:`, item.message);
+            });
+          }
+          throw new Error(err);
+        }
+
+        console.log("[helpers][agm][finalSubmit]: All docs gen for Property Owner: ", pd);
+      });
+
+
+      console.log("[helpers][agm][finalSubmit]: Done default voting for all");
+      console.log("============================== FNiSHED ======================================");
+
+
+    
+      // let sender = requestedBy;
+      // let receiver = requestedBy;
+
+      // let orgData = await knex('organisations').where({ id: orgId }).first();
+
+      // let notificationPayload = {
+      //   payload: {
+      //     title: 'AGM - Final Submit Done',
+      //     description: `AGM - Finale Submit Finished: "${agmDetails.agmName}"`,
+      //     url: s3FileDownloadUrl,
+      //     orgData: orgData
+      //   }
+      // };
+
+      // const votingDocGeneratedNotification = require('../notifications/agm/voting-doc-generated');
+      // await votingDocGeneratedNotification.send(
+      //   sender,
+      //   receiver,
+      //   notificationPayload
+      // );
+      // console.log("[helpers][agm][generateVotingDocument]: Successfull Voting Doc Generated - Annoncement Send to:", receiver.email);
+
+    } catch (err) {
+
+      console.error("[helpers][agm][finalSubmit]:  Error", err);
+      if (err.list && Array.isArray(err.list)) {
+        err.list.forEach(item => {
+          console.error(`[helpers][agm][finalSubmit]: Each Error:`, item.message);
         });
       }
       return { code: "UNKNOWN_ERROR", message: err.message, error: err };

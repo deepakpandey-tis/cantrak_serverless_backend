@@ -302,6 +302,27 @@ module.exports.longJobsProcessor = async (event, context) => {
   }
 
 
+
+  if (messageType == 'AGM_FINAL_SUBMIT') {
+
+    console.log('[app][longJobsProcessor]: Data For AGM_FINAL_SUBMIT:', recordData);
+
+    const agmHelper = require('./helpers/agm');
+
+    const { agmId, data, orgId, requestedBy } = recordData;
+
+    if (agmId) {
+      await agmHelper.finalSubmit({ agmId, data, orgId, requestedBy });
+    } else {
+      console.log('[app][longJobsProcessor]', 'AGM Id not found. Hence AGM_FINAL_SUBMIT can not be done.');
+      throw Error('AGM Id not found. AGM Id not found. Hence AGM_FINAL_SUBMIT can not be done.');
+    }
+    
+    console.log('[app][longJobsProcessor]: Task Completed.....');
+
+  }
+
+
   console.log('[app][longJobsProcessor]: Finished.....');
   return true;
 };
