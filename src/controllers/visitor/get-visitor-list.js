@@ -25,7 +25,7 @@ const getVisitorList = async (req, res) => {
 
         // Setting default values, if not passed
         if(sortCol === ''){
-            sortCol = 'vi."arrivalDate"';
+            sortCol = '"arrivalDate"';
         }
 
         if(sortOrder === ''){
@@ -45,7 +45,7 @@ const getVisitorList = async (req, res) => {
         // sqlSelect = `SELECT pu2."orgId", pu2."companyId", pu2."projectId", pu2."buildingPhaseId"
         sqlSelect = `SELECT pu2."orgId", pu2."companyId", pu2."projectId", pu2."buildingPhaseId"
         , pu2."id",  pu2."unitNumber", u2."name" "tenantName", vi.id, vi."name", vi."createdAt", vi."status"
-        , vi."arrivalDate", vi."actualArrivalDate", vi."actualDepartureDate"`;
+        , vi."arrivalDate", vi."actualArrivalDate", vi."departureDate", vi."actualDepartureDate"`;
 
         sqlFrom = ` FROM property_units pu2, user_house_allocation uha, users u2, visitor_invitations vi`;
 
@@ -77,12 +77,16 @@ const getVisitorList = async (req, res) => {
         }
         sqlWhere += ` and uha."orgId" = u2."orgId" and uha."userId" = u2.id`;
         sqlWhere += ` and uha."orgId" = vi."orgId" and uha.id = vi."userHouseAllocationId" and uha."userId" = vi."createdBy"`;
-        if(visitorSelect === 1){                 // Schedule Visits: Active invitation / booking 
+        if(visitorSelect === 1){                 // Schedule Visits / Check-ins: Active invitation / booking 
             sqlWhere += ` and  vi.status = 1 and vi."actualArrivalDate" is null`;
         }
         else
-        if(visitorSelect === 2){            // Visitors History: Cancelled and Already visited
-            sqlWhere += ` and (vi."status" = 3 or vi."actualArrivalDate" is not null)`;
+        if(visitorSelect === 2){                 // Schedule Departues / Check-outs: Active invitation / booking and Checked-ins
+            sqlWhere += ` and  vi.status = 1 and vi."actualArrivalDate" is not null and vi."actualDepartureDate" is null`;
+        }
+        else
+        if(visitorSelect === 3){                // Visitors History: Cancelled and Already visited
+            sqlWhere += ` and (vi."status" = 3 or vi."actualDepartureDate" is not null)`;
         }
 
         if(payload.filter.visitorName){
@@ -136,7 +140,7 @@ const getVisitorList = async (req, res) => {
         sqlStr += ` ORDER BY vi."arrivalDate" desc`
         */
 
-        //console.log(sqlStr);
+        //console.log('getVisitorList: ', sqlStr);
         
         var selectedRecs = await knex.raw(sqlStr);
 

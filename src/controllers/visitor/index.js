@@ -1,19 +1,25 @@
 const getUserUnits = require('./get-user-units');
-const addInvitation = require('./add-invitation');
 const getInvitation = require('./get-invitation');
-const getInvitationQRCode = require('./get-invitation');
-const getVisitorList = require('./get-visitor-list')
+const getVisitorList = require('./get-visitor-list');
+const getCheckinVisitors = require('./get-checkin-visitors');
+const getCheckoutVisitors = require('./get-checkout-visitors');
 const getVisitors = require('./get-visitors');
 const getVisitorsCount = require('./get-visitors-count');
 const hasAnyVisitor = require('./has-any-visitor');
+const addInvitation = require('./add-invitation');
+const checkinVisitor = require('./checkin-visitor');
+const checkoutVisitor = require('./checkout-visitor');
 
 module.exports = {
     getUserUnits,
-    addInvitation,
     getInvitation,
-    getInvitationQRCode,
     getVisitorList,
+    getCheckinVisitors,
+    getCheckoutVisitors,
     getVisitors,
     getVisitorsCount,
-    hasAnyVisitor
+    hasAnyVisitor,
+    addInvitation,
+    checkinVisitor,
+    checkoutVisitor,
 };

@@ -30,18 +30,28 @@ router.get(
     , visitorController.getInvitation
 );
 
-router.get(
-    "/get-invitation-qrcode"
-    , authMiddleware.isAuthenticated
-    , visitorController.getInvitationQRCode
-);
-
 router.post(
     "/get-visitor-list"
     , authMiddleware.isAuthenticated
     , roleMiddleware.parseUserPermission
     , resourceAccessMiddleware.isVisitorManagementAccessible
     , visitorController.getVisitorList
+);
+
+router.get(
+    "/get-checkin-visitors"
+    , authMiddleware.isAuthenticated
+    , roleMiddleware.parseUserPermission
+    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , visitorController.getCheckinVisitors
+);
+
+router.get(
+    "/get-checkout-visitors"
+    , authMiddleware.isAuthenticated
+    , roleMiddleware.parseUserPermission
+    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , visitorController.getCheckoutVisitors
 );
 
 router.get(
@@ -60,6 +70,22 @@ router.post(
     "/add-invitation"
     , authMiddleware.isAuthenticated
     , visitorController.addInvitation
+);
+
+router.post(
+    "/checkin-visitor"
+    , authMiddleware.isAuthenticated
+    , roleMiddleware.parseUserPermission
+    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , visitorController.checkinVisitor
+);
+
+router.post(
+    "/checkout-visitor"
+    , authMiddleware.isAuthenticated
+    , roleMiddleware.parseUserPermission
+    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , visitorController.checkoutVisitor
 );
 
 module.exports = router;
