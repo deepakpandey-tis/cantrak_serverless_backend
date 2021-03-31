@@ -76,3 +76,22 @@ $function$
 drop trigger if exists updateFloorStatus_trigger on public.floor_and_zones;
 create trigger updateFloorStatus_trigger after update on public.floor_and_zones for each row execute procedure activeFloor()
 /*Floor Active/Inactive close*/
+
+/* remove overdue for completed task open*/
+create or replace function overdueForCompletedWO()
+returns trigger
+language plpgsql
+as $function$
+begin
+	if NEW.status = 'COM' then
+    	NEW."isOverdue" := null;
+	end if;
+	return NEW;
+end;
+$function$
+
+drop trigger if exists updateCompletedWOOverdueStatus_trigger on public.task_group_schedule_assign_assets;
+create trigger updateCompletedWOOverdueStatus_trigger before update on public.task_group_schedule_assign_assets for each row execute procedure overdueForCompletedWO()
+
+/* remove overdue for completed task close*/
+
