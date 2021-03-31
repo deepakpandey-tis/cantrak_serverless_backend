@@ -2235,6 +2235,39 @@ const agmController = {
 
       console.log("payload value", payload);
 
+      let agmDetails = await knex("agm_master")
+        .leftJoin(
+          "companies",
+          "agm_master.companyId",
+          "companies.id"
+        )
+        .leftJoin(
+          "projects",
+          "agm_master.projectId",
+          "projects.id"
+        )
+        .select([
+          "agm_master.*",
+          "companies.companyId as companyCode",
+          "companies.companyName",
+          "projects.project as projectCode",
+          "projects.projectName",
+        ])
+        .where({
+          "agm_master.id": payload.agmId,
+        });
+
+      agmDetails.map((r, i) => {
+        console.log('-- agm --',r);
+        // const date = new Date(r.createdAt);
+        // agmDetails[i].createdAt = date.getFullYear();
+        const timezone = 'Asia/Bangkok';
+        moment.tz.setDefault(timezone);
+        agmDetails[i].createdAt = moment(+r.createdAt). format("MMMM d, YYYY");
+        agmDetails[i].startTime = moment(+r.startTime). format("h:mm A");
+        agmDetails[i].endTime = moment(+r.endTime). format("h:mm A");
+      });
+
       let ownerRegistrationList = await knex
         .from("agm_owner_master")
         .leftJoin(
@@ -2299,10 +2332,11 @@ const agmController = {
       ownerRegistrationList = _.uniqBy(ownerRegistrationList, "id");
 
       console.log("ownerRegistrationList====>>>", ownerRegistrationList)
+      console.log("agmDetails====>>>", agmDetails)
       const path = require('path');
       // Read HTML Template
       const templatePath = path.join(__dirname, '..', 'pdf-templates', 'registration.ejs');
-      res.render(templatePath, { title: 'Registration', data: ownerRegistrationList });
+      res.render(templatePath, { title: 'Registration', data: ownerRegistrationList, agmDetails: agmDetails });
       // return {
       //   data:ownerRegistrationList
       // }
