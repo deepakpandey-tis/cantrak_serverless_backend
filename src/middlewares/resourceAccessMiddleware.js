@@ -202,6 +202,21 @@ const resourceAccessMiddleware = {
     }
   },
 
+  isVisitorManagementAccessible: async (req, res, next) => {
+    if (req.superAdmin) {
+      return next();
+    }
+    let keys = req.userProjectResources.map(v => v.id);
+    if (keys.includes(15) || keys.includes("15")) {
+      console.log('[middleware][resourceAccessMiddleware]: isVisitorManagementAccessible: ', true);
+      setAccessibleProjects(req, 11);
+      next();
+    } else {
+      console.log('[middleware][resourceAccessMiddleware]: isVisitorManagementAccessible: ', false);
+      next(createError(403));
+    }
+  },
+
 };
 
 module.exports = resourceAccessMiddleware;

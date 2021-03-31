@@ -1413,9 +1413,20 @@ const agmController = {
       agendaList = await Parallel.map(
         agendaList,
         async (pd) => {
+          let vote = await knex('agm_voting').count('*').where({ "agendaId": pd.id }).first();
+          // .first();
+
+          return { ...pd, vote };
+        }
+      );
+
+      agendaList = await Parallel.map(
+        agendaList,
+        async (pd) => {
           let choiceData = await knex
             .from("agenda_choice")
             .select([
+              "agenda_choice.id",
               "agenda_choice.choiceValue",
               "agenda_choice.choiceValueThai",
             ])
@@ -1433,6 +1444,98 @@ const agmController = {
         message: "Get Agenda Lists!",
       });
     } catch (err) {
+      return res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
+  },
+
+  /* UPDATE AGENDA*/
+
+  updateAgenda: async (req, res) => {
+    try{
+      console.log("owner Id====>>>>", req.body);
+      const payload = _.omit(req.body, [
+        "agmName",
+      ]);
+
+      const schema = new Joi.object().keys({
+        agmId: Joi.string().required(),
+        data: Joi.array().required(),
+      });
+      const result = Joi.validate(payload, schema);
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
+        return res.status(400).json({
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
+        });
+      }
+      let currentTime = new Date().getTime();
+
+      let updateResult;
+      let updateAgmResult;
+
+      // Put all things in transaction..........
+
+      for (let agenda of req.body.data) {
+        let updateData = {
+          defaultChoiceId: agenda.choiceId,
+          updatedAt: currentTime,
+        };
+        updateResult = await knex
+          .update(updateData)
+          .where({ id: agenda.agendaId })
+          .returning(["*"])
+          .into("agenda_master");
+      }
+
+      let updateAgmData = {
+        isCompleted: true,
+        updatedAt: currentTime,
+      }
+
+      updateAgmResult = await knex
+          .update(updateAgmData)
+          .where({ id: req.body.agmId })
+          .returning(["*"])
+          .into("agm_master");
+
+      
+      // Going to schedule a job for the same...    
+
+      const queueHelper = require("../helpers/queue");
+      await queueHelper.addToQueue(
+        {
+          agmId: agmId,
+          data: {},
+          orgId: req.orgId,
+          requestedBy: req.me,
+        },
+        "long-jobs",
+        "AGM_FINAL_SUBMIT"
+      );
+      
+
+      return res.status(200).json({
+        updateResult: updateResult,
+        updateAgmResult:updateAgmResult,
+        message: "Update Agenda",
+      });
+    }
+    catch (err) {
       return res.status(500).json({
         errors: [
           {
