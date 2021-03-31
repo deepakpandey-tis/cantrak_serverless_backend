@@ -78,6 +78,8 @@ const bannersRouter = require("./administration-features/banners");
 const dashboardIconRouter = require("./administration-features/dashboard-icons")
 const agmRouter = require("./agm")
 
+const visitorRouter = require('./visitor');
+
 /* GET home page. */
 router.get("/", async (req, res, next) => {
   res.json({ app: "Serverless Express App" });
@@ -177,5 +179,8 @@ router.use("/announcement",announcementRouter)
 
 router.use("/dashboard-icon",dashboardIconRouter)
 router.use("/agm",agmRouter)
+
+router.use('/visitor', visitorRouter);
+
 
 module.exports = router;
