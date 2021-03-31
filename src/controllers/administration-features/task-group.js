@@ -1706,22 +1706,22 @@ const taskGroupController = {
         return { ...row, ...teamData };
       });
 
-      rowsId = await Parallel.map(rowsId, async (row) => {
-        const teamData = await knex
-          .from("assigned_service_team")
-          .select(["assigned_service_team.teamId"])
-          .where({
-            "assigned_service_team.entityId": row.workOrderId,
-            "assigned_service_team.entityType": "work_order",
-          })
-          .where((qb) => {
-            if (req.body.assignedTeam) {
-              qb.whereIn("assigned_service_team.teamId", req.body.assignedTeam);
-            }
-          })
-          .first();
-        return { ...row, ...teamData };
-      });
+      // rowsId = await Parallel.map(rowsId, async (row) => {
+      //   const teamData = await knex
+      //     .from("assigned_service_team")
+      //     .select(["assigned_service_team.teamId"])
+      //     .where({
+      //       "assigned_service_team.entityId": row.workOrderId,
+      //       "assigned_service_team.entityType": "work_order",
+      //     })
+      //     .where((qb) => {
+      //       if (req.body.assignedTeam) {
+      //         qb.whereIn("assigned_service_team.teamId", req.body.assignedTeam);
+      //       }
+      //     })
+      //     .first();
+      //   return { ...row, ...teamData };
+      // });
 
       let count = total.length ? total[0].count : 0;
       pagination.total = count;
