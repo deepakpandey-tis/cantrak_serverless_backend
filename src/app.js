@@ -322,6 +322,43 @@ module.exports.longJobsProcessor = async (event, context) => {
 
   }
 
+  if (messageType == 'TEST_PROCESSOR') {
+
+    console.log('[app][longJobsProcessor]: Data For TEST_PROCESSOR:', recordData);
+
+    const testHelper = require('./helpers/test');
+
+    const {  } = recordData;
+
+    // if (agmId) {
+      await testHelper.setCompletedWO();
+    // } else {
+    //   console.log('[app][longJobsProcessor]', 'AGM Id not found. Hence TEST_PROCESSOR can not be done.');
+    //   throw Error('AGM Id not found. AGM Id not found. Hence TEST_PROCESSOR can not be done.');
+    // }
+    
+    console.log('[app][longJobsProcessor]: Task Completed.....');
+
+  }
+
+  if (messageType == 'TEST_PROCESSOR_OPEN') {
+
+    console.log('[app][longJobsProcessor]: Data For TEST_PROCESSOR:', recordData);
+
+    const testHelper = require('./helpers/test');
+
+    const {  } = recordData;
+
+    // if (agmId) {
+      await testHelper.setOpenWorkOrder();
+    // } else {
+    //   console.log('[app][longJobsProcessor]', 'AGM Id not found. Hence TEST_PROCESSOR can not be done.');
+    //   throw Error('AGM Id not found. AGM Id not found. Hence TEST_PROCESSOR can not be done.');
+    // }
+    
+    console.log('[app][longJobsProcessor]: Task Completed.....');
+
+  }
 
   console.log('[app][longJobsProcessor]: Finished.....');
   return true;
