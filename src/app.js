@@ -330,9 +330,12 @@ module.exports.longJobsProcessor = async (event, context) => {
 
     const { type } = recordData;
 
-    if (type = 'COMPLETED') {
+    if (type == 'COMPLETED') {
+      console.log("[COMPLETED]=====>>>>",type)
       await testHelper.setCompletedWO();
-    } else if(type = 'OPEN'){
+    } else if(type == 'OPEN'){
+      console.log("[OPEN]=====>>>>",type)
+
       await testHelper.setOpenWorkOrder();
     }
      else {
