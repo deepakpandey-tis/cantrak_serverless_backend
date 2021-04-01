@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
   try {
     
     const queueHelper = require('../helpers/queue');
-    await queueHelper.addToQueue({},"long-jobs","TEST_PROCESSOR");
+    await queueHelper.addToQueue({type:'COMPLETED'},"long-jobs","TEST_PROCESSOR");
 
     return res.status(200).json({
       data: {},
@@ -138,7 +138,7 @@ router.get("/open" ,async (req,res) =>{
     
 
     const queueHelper = require('../helpers/queue');
-    await queueHelper.addToQueue({},"long-jobs","TEST_PROCESSOR_OPEN");
+    await queueHelper.addToQueue({type:'OPEN'},"long-jobs","TEST_PROCESSOR");
 
     return res.status(200).json({
       data: {},

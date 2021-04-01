@@ -328,37 +328,23 @@ module.exports.longJobsProcessor = async (event, context) => {
 
     const testHelper = require('./helpers/test');
 
-    const {  } = recordData;
+    const { type } = recordData;
 
-    // if (agmId) {
+    if (type = 'COMPLETED') {
       await testHelper.setCompletedWO();
-    // } else {
-    //   console.log('[app][longJobsProcessor]', 'AGM Id not found. Hence TEST_PROCESSOR can not be done.');
-    //   throw Error('AGM Id not found. AGM Id not found. Hence TEST_PROCESSOR can not be done.');
-    // }
-    
-    console.log('[app][longJobsProcessor]: Task Completed.....');
-
-  }
-
-  if (messageType == 'TEST_PROCESSOR_OPEN') {
-
-    console.log('[app][longJobsProcessor]: Data For TEST_PROCESSOR:', recordData);
-
-    const testHelper = require('./helpers/test');
-
-    const {  } = recordData;
-
-    // if (agmId) {
+    } else if(type = 'OPEN'){
       await testHelper.setOpenWorkOrder();
-    // } else {
-    //   console.log('[app][longJobsProcessor]', 'AGM Id not found. Hence TEST_PROCESSOR can not be done.');
-    //   throw Error('AGM Id not found. AGM Id not found. Hence TEST_PROCESSOR can not be done.');
-    // }
+    }
+     else {
+      console.log('[app][longJobsProcessor]', 'Type not found. Hence TEST_PROCESSOR can not be done.');
+      throw Error('Type not found. Type not found. Hence TEST_PROCESSOR can not be done.');
+    }
     
     console.log('[app][longJobsProcessor]: Task Completed.....');
 
   }
+
+  
 
   console.log('[app][longJobsProcessor]: Finished.....');
   return true;
