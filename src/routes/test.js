@@ -12,77 +12,16 @@ const ALLOWED_CHANNELS = ["IN_APP", "SOCKET_NOTIFY"];
 
 router.get("/", async (req, res) => {
   try {
-    let currentTime = new Date().getTime();
+    
+    const queueHelper = require('../helpers/queue');
+    await queueHelper.addToQueue({type:'COMPLETED'},"long-jobs","TEST_PROCESSOR");
 
-    let currentDate = moment().format("YYYY-MM-DD");
-
-    console.log("current date", currentDate);
-
-    let workOrders = await knex(
-      "task_group_schedule_assign_assets"
-    )
-      .select(['id', 'status', 'completedAt'])
-      .whereRaw(
-        `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')<'${currentDate}'`
-      )
-      .where((qb)=>{
-          // qb.where({ status: "O" })
-          qb.orWhere({status: "COM"})
-      })
-      .whereNull('completedAt');
-
-    console.log("work orders", workOrders);
-
-    const Parallel = require("async-parallel");
-    Parallel.setConcurrency(20);
-
-    await Parallel.each(workOrders, async (pd) => {
-      let workResult = await knex("pm_task")
-        .count("*")
-        .where({
-          taskGroupScheduleAssignAssetId: pd.id,
-        })
-        .first();
-
-      let completedTask = await knex("pm_task")
-        .count("*")
-        .where({
-          taskGroupScheduleAssignAssetId: pd.id,
-          status: "COM",
-        })
-        .first();
-
-      console.log(
-        "work result====>>>",
-        workResult,
-        "=======",
-        completedTask
-      );
-
-      if (workResult.count == completedTask.count) {
-        let maxTime = await knex("pm_task")
-          .max("updatedAt")
-          .where({
-            taskGroupScheduleAssignAssetId: pd.id,
-            status: "COM",
-          })
-          .first();
-
-        console.log("max time====>>>", maxTime);
-
-        if (maxTime) {
-          await knex(
-            "task_group_schedule_assign_assets"
-          )
-            .update({
-              status: "COM",
-              updatedAt: currentTime,
-              completedAt: maxTime.max,
-            })
-            .where({ id: pd.id });
-        }
-      }
+    return res.status(200).json({
+      data: {},
+      message:
+        "We are updating work orders. Please wait for few minutes.",
     });
+
 
     // let requestedBy = await knex.from('users').where({ id: 1188 }).first();  // Tenant - daniel15@mailinator.com
     // let agmId = 4;
@@ -198,76 +137,13 @@ router.get("/open" ,async (req,res) =>{
   try {
     
 
-    let currentTime = new Date().getTime();
+    const queueHelper = require('../helpers/queue');
+    await queueHelper.addToQueue({type:'OPEN'},"long-jobs","TEST_PROCESSOR");
 
-    let currentDate = moment().format("YYYY-MM-DD");
-
-    console.log("current date", currentDate);
-
-    let workOrders = await knex(
-      "task_group_schedule_assign_assets"
-    )
-      .select(['id', 'status', 'completedAt'])
-      .whereRaw(
-        `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')<'${currentDate}'`
-      )
-      .where((qb)=>{
-          qb.where({ status: "O" })
-          // qb.orWhere({status: "COM"})
-      })
-      .whereNull('completedAt');
-
-    console.log("work orders", workOrders);
-
-    const Parallel = require("async-parallel");
-    Parallel.setConcurrency(20);
-
-    await Parallel.each(workOrders, async (pd) => {
-      let workResult = await knex("pm_task")
-        .count("*")
-        .where({
-          taskGroupScheduleAssignAssetId: pd.id,
-        })
-        .first();
-
-      let completedTask = await knex("pm_task")
-        .count("*")
-        .where({
-          taskGroupScheduleAssignAssetId: pd.id,
-          status: "COM",
-        })
-        .first();
-
-      console.log(
-        "work result====>>>",
-        workResult,
-        "=======",
-        completedTask
-      );
-
-      if (workResult.count == completedTask.count) {
-        let maxTime = await knex("pm_task")
-          .max("updatedAt")
-          .where({
-            taskGroupScheduleAssignAssetId: pd.id,
-            status: "COM",
-          })
-          .first();
-
-        console.log("max time====>>>", maxTime);
-
-        if (maxTime) {
-          await knex(
-            "task_group_schedule_assign_assets"
-          )
-            .update({
-              status: "COM",
-              updatedAt: currentTime,
-              completedAt: maxTime.max,
-            })
-            .where({ id: pd.id });
-        }
-      }
+    return res.status(200).json({
+      data: {},
+      message:
+        "We are updating work orders. Please wait for few minutes.",
     });
 
   } catch (err) {
