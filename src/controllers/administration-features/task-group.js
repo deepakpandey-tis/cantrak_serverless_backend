@@ -1137,6 +1137,7 @@ const taskGroupController = {
               "teams.teamName",
               "teams.description",
               "users.userName",
+              "task_group_schedule_assign_assets.completedAt"
             ])
             .where({
               "task_group_schedule.pmId": payload.pmId,
@@ -1485,6 +1486,7 @@ const taskGroupController = {
               "buildings_and_phases.buildingPhaseCode",
               "floor_and_zones.floorZoneCode",
               "property_units.unitNumber",
+              "task_group_schedule_assign_assets.completedAt"
             ])
             .where({
               "task_group_schedule.pmId": payload.pmId,
@@ -2156,6 +2158,7 @@ const taskGroupController = {
               "assigned_service_team.teamId",
               "teams.teamName",
               "teams.description",
+              "task_group_schedule_assign_assets.completedAt"
             ])
             .where({
               "task_group_schedule.orgId": req.orgId,
@@ -2408,6 +2411,7 @@ const taskGroupController = {
               "buildings_and_phases.buildingPhaseCode",
               "floor_and_zones.floorZoneCode",
               "property_units.unitNumber",
+              "task_group_schedule_assign_assets.completedAt"
             ])
             .where({
               "task_group_schedule.orgId": req.orgId,
