@@ -18,25 +18,25 @@ router.get("/", async (req, res) => {
 
     console.log("current date", currentDate);
 
-    let workOrderId = await knex(
+    let workOrders = await knex(
       "task_group_schedule_assign_assets"
     )
-      .select("id")
+      .select(['id', 'status', 'completedAt'])
       .whereRaw(
         `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')<'${currentDate}'`
       )
       .where((qb)=>{
-          qb.where({ status: "O" })
+          // qb.where({ status: "O" })
           qb.orWhere({status: "COM"})
       })
       .whereNull('completedAt');
 
-    console.log("work orders", workOrderId);
+    console.log("work orders", workOrders);
 
     const Parallel = require("async-parallel");
     Parallel.setConcurrency(20);
 
-    await Parallel.each(workOrderId, async (pd) => {
+    await Parallel.each(workOrders, async (pd) => {
       let workResult = await knex("pm_task")
         .count("*")
         .where({
@@ -71,7 +71,7 @@ router.get("/", async (req, res) => {
         console.log("max time====>>>", maxTime);
 
         if (maxTime) {
-          let workOrder = await knex(
+          await knex(
             "task_group_schedule_assign_assets"
           )
             .update({
