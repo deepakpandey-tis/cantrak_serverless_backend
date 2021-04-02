@@ -10,6 +10,12 @@ plugins:
   - serverless-offline
   - serverless-s3-local
   # - serverless-prune-plugin
+
+package:
+  exclude:
+    - .vscode/**
+    - .serverless/**
+  
   
 provider:
   name: aws

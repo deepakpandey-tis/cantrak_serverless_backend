@@ -14,6 +14,12 @@ plugins:
   - serverless-prune-plugin
   # - serverless-domain-manager
 
+package:
+  exclude:
+    - .vscode/**
+    - .serverless/**
+
+
 provider:
   name: aws
   runtime: nodejs12.x
@@ -29,7 +35,9 @@ provider:
       Action:
         - s3:*
       Resource: 
-        - arn:aws:s3:::*        
+        - arn:aws:s3:::*
+  iamManagedPolicies:
+      - arn:aws:iam::aws:policy/AmazonElasticFileSystemClientReadWriteAccess              
   environment:
     ENV: ${self:provider.stage}
     REGION: ${self:provider.region}
@@ -55,7 +63,8 @@ provider:
     SOCKET_ENDPOINT: https://s6bm8bsha0.execute-api.us-east-1.amazonaws.com/stage
     CDN_URL: resources.staging.servicemind.asia
     REDIS_HOST: tis-dev-redis.2okp6i.0001.use1.cache.amazonaws.com
-    REDIS_PORT: 6379 
+    REDIS_PORT: 6379
+    MNT_DIR: ${self:custom.localMountPath} 
   vpc:
     securityGroupIds:
       - sg-6a527248
@@ -76,9 +85,8 @@ custom:
     dev: servicemind-dev
     stage: servicemind-stage
     production: servicemind-production
-  apigwBinary:
-    types:
-      - "*/*"
+  efsAccessPoint: fsap-0269bbe5bddaa6925
+  localMountPath: /mnt/efs  
   
   
 functions:
@@ -177,3 +185,13 @@ functions:
           rate: cron(0 1 * * ? *)    # Utc 1 am every day i.e 8 am Morning Thai Time..
           enabled: true        
 
+
+
+resources:
+  extensions:
+    # Name of function <longJobsProcessor>
+    LongJobsProcessorLambdaFunction:
+      Properties:
+        FileSystemConfigs:
+          - Arn: 'arn:aws:elasticfilesystem:${self:provider.region}:#{AWS::AccountId}:access-point/${self:custom.efsAccessPoint}'
+            LocalMountPath: '${self:custom.localMountPath}'
