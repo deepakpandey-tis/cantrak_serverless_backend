@@ -332,9 +332,9 @@ module.exports.longJobsProcessor = async (event, context) => {
     console.log("[app][longJobsProcessor]: TEST_PROCESSOR: Messgae TYPE:", type)
 
     if (type == 'COMPLETED') {
-      await testHelper.setCompletedWO();
+      // await testHelper.setCompletedWO();
     } else if (type == 'OPEN') {
-      await testHelper.setOpenWorkOrder();
+      // await testHelper.setOpenWorkOrder();
     } else if (type == 'efs') {
       await testHelper.testEFS();
     } else {
