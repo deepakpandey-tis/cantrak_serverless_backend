@@ -322,6 +322,32 @@ module.exports.longJobsProcessor = async (event, context) => {
 
   }
 
+  if (messageType == 'TEST_PROCESSOR') {
+
+    console.log('[app][longJobsProcessor]: Data For TEST_PROCESSOR:', recordData);
+
+    const testHelper = require('./helpers/test');
+
+    const { type } = recordData;
+
+    if (type == 'COMPLETED') {
+      console.log("[COMPLETED]=====>>>>",type)
+      await testHelper.setCompletedWO();
+    } else if(type == 'OPEN'){
+      console.log("[OPEN]=====>>>>",type)
+
+      await testHelper.setOpenWorkOrder();
+    }
+     else {
+      console.log('[app][longJobsProcessor]', 'Type not found. Hence TEST_PROCESSOR can not be done.');
+      throw Error('Type not found. Type not found. Hence TEST_PROCESSOR can not be done.');
+    }
+    
+    console.log('[app][longJobsProcessor]: Task Completed.....');
+
+  }
+
+  
 
   console.log('[app][longJobsProcessor]: Finished.....');
   return true;
