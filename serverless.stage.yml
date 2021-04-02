@@ -193,5 +193,5 @@ resources:
     LongJobsProcessorLambdaFunction:
       Properties:
         FileSystemConfigs:
-          - Arn: 'arn:aws:elasticfilesystem:${self:provider.region}:#{AWS::AccountId}:access-point/${self:custom.efsAccessPoint}'
+          - Arn: 'arn:aws:elasticfilesystem:${self:provider.region}:925816896007:access-point/${self:custom.efsAccessPoint}'
             LocalMountPath: '${self:custom.localMountPath}'
