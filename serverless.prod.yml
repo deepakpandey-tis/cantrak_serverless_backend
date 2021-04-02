@@ -13,6 +13,13 @@ plugins:
   # - serverless-dotenv-plugin
   - serverless-s3-local
 
+
+package:
+  exclude:
+    - .vscode/**
+    - .serverless/**
+
+
 provider:
   name: aws
   runtime: nodejs12.x
