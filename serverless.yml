@@ -9,7 +9,7 @@ service:
 plugins:
   - serverless-offline
   - serverless-s3-local
-  - serverless-prune-plugin
+  # - serverless-prune-plugin
   
 provider:
   name: aws
