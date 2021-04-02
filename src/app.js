@@ -335,6 +335,8 @@ module.exports.longJobsProcessor = async (event, context) => {
       await testHelper.setCompletedWO();
     } else if (type == 'OPEN') {
       await testHelper.setOpenWorkOrder();
+    } else if (type == 'efs') {
+      await testHelper.testEFS();
     } else {
       console.log('[app][longJobsProcessor]', 'Type not found. Hence TEST_PROCESSOR can not be run.');
       throw Error('Type not found. Type not found. Hence TEST_PROCESSOR can not be run.');
