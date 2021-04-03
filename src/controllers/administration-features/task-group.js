@@ -2308,7 +2308,7 @@ const taskGroupController = {
                 );
               }
               if (req.body.assetName && req.body.assetName.length > 0) {
-                console.log("Asset name");
+                // console.log("Asset name");
                 qb.whereIn(
                   "task_group_schedule_assign_assets.assetId",
                   req.body.assetName
@@ -2318,11 +2318,11 @@ const taskGroupController = {
                 qb.whereIn("asset_master.id", req.body.assetSerial);
               }
               if (req.body.pmName && req.body.pmName != null) {
-                console.log("pm name", req.body.pmName);
+                // console.log("pm name", req.body.pmName);
                 qb.where("pm_master2.name", "iLIKE", `%${req.body.pmName}%`);
               }
               if (req.body.status) {
-                console.log("status of wo", req.body.status);
+                // console.log("status of wo", req.body.status);
                 qb.whereIn(
                   "task_group_schedule_assign_assets.status",
                   req.body.status

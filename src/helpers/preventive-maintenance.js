@@ -156,6 +156,8 @@ const pmHelper = {
             workOrderResult = assetResult[0];
 
             for (let l = 0; l < consolidatedWorkOrders[i].tasks.length; l++) {
+
+              console.log("task name====>>>>>",consolidatedWorkOrders[i].tasks[l].taskName)
               let InsertPmTaskPayload = {
                 taskName: consolidatedWorkOrders[i].tasks[l].taskName,
                 taskNameAlternate:

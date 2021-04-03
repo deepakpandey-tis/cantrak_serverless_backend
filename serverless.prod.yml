@@ -35,7 +35,9 @@ provider:
       Action:
         - s3:*
       Resource: 
-        - arn:aws:s3:::*        
+        - arn:aws:s3:::*
+  iamManagedPolicies:
+      - arn:aws:iam::aws:policy/AmazonElasticFileSystemClientReadWriteAccess              
   environment:
     ENV: ${self:provider.stage}
     REGION: ${self:provider.region}
@@ -63,6 +65,7 @@ provider:
     CDN_URL: resources.servicemind.asia
     REDIS_HOST: tis-prod-redis.ftr6oh.0001.use1.cache.amazonaws.com
     REDIS_PORT: 6379
+    MNT_DIR: ${self:custom.localMountPath}
   vpc:
     securityGroupIds:
       - sg-f4e38fd6
@@ -82,9 +85,8 @@ custom:
   profiles:
     dev: servicemind-dev
     production: servicemind-production
-  apigwBinary:
-    types:
-      - "*/*"
+  efsAccessPoint: fsap-0c00dfe21523b194f
+  localMountPath: /mnt/efs
   
   
 functions:
@@ -177,4 +179,12 @@ functions:
           enabled: true        
 
 
-  
+
+resources:
+  extensions:
+    # Name of function <longJobsProcessor>
+    LongJobsProcessorLambdaFunction:
+      Properties:
+        FileSystemConfigs:
+          - Arn: 'arn:aws:elasticfilesystem:${self:provider.region}:037792882519:access-point/${self:custom.efsAccessPoint}'
+            LocalMountPath: '${self:custom.localMountPath}'  
