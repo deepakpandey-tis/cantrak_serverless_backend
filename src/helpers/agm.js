@@ -1,4 +1,3 @@
-const Joi = require("@hapi/joi");
 const _ = require("lodash");
 const AWS = require("aws-sdk");
 const knex = require("../db/knex");
@@ -231,7 +230,7 @@ const makeZippedFileOnEFS = (folder, zipFileKey) => {
     console.log('[helpers][agm][makeZippedFile]: Found:', file);
   });
 
-  return new Promise((res, rej) => {
+  return new Promise(async (res, rej) => {
 
     const fs = require('fs-extra');
     const archiver = require('archiver');
@@ -242,6 +241,20 @@ const makeZippedFileOnEFS = (folder, zipFileKey) => {
     output.on('close', function () {
       console.log(archive.pointer() + ' total bytes');
       console.log('archiver has been finalized and the output file descriptor has closed.');
+
+      let bucketName = process.env.S3_BUCKET_NAME;
+      const s3 = new AWS.S3();
+      const params = {
+        Bucket: bucketName,
+        Key: zipFileKey,
+        Body: pdf,
+        ACL: "public-read"
+      };
+      let s3Res = await s3.putObject(params).promise();
+      console.log("Zip File uploaded Successfully on s3...", s3Res);
+
+      res(true);
+
     });
 
     archive.on('error', function (err) {
@@ -254,20 +267,6 @@ const makeZippedFileOnEFS = (folder, zipFileKey) => {
     archive.directory(folder, false);
     archive.finalize();
 
-
-    let bucketName = process.env.S3_BUCKET_NAME;
-    const s3 = new AWS.S3();
-    const params = {
-      Bucket: bucketName,
-      Key: zipFileKey,
-      Body: pdf,
-      ACL: "public-read"
-    };
-
-    let s3Res = await s3.putObject(params).promise();
-    console.log("Zip File uploaded Successfully on s3...", s3Res);
-
-    res(true);
   });
 }
 
