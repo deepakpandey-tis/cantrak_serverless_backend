@@ -164,6 +164,26 @@ const testHelper = {
   },
 
 
+  testEFS: async () => {
+    try {
+      let currentTime = new Date().getTime();
+      console.log("current date: ", currentTime);
+
+      const mountPathRoot = process.env.MNT_DIR;
+
+      const path = require('path');
+      const fs = require('fs');
+
+      fs.readdirSync(mountPathRoot).forEach(file => {
+        console.log('[helper][test][testEFS]: Found:', file);
+      });
+    
+    } catch (err) {
+      return { failed: true, error: err };
+    }
+  },
+
+
 };
 
 module.exports = testHelper;

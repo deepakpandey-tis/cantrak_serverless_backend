@@ -296,7 +296,7 @@ module.exports.longJobsProcessor = async (event, context) => {
       console.log('[app][longJobsProcessor]', 'AGM Id not found. Hence Voting Documents can not be generated.');
       throw Error('AGM Id not found. Hence Voting Documents can not be generated.');
     }
-    
+
     console.log('[app][longJobsProcessor]: Task Completed.....');
 
   }
@@ -317,7 +317,7 @@ module.exports.longJobsProcessor = async (event, context) => {
       console.log('[app][longJobsProcessor]', 'AGM Id not found. Hence AGM_FINAL_SUBMIT can not be done.');
       throw Error('AGM Id not found. AGM Id not found. Hence AGM_FINAL_SUBMIT can not be done.');
     }
-    
+
     console.log('[app][longJobsProcessor]: Task Completed.....');
 
   }
@@ -329,25 +329,24 @@ module.exports.longJobsProcessor = async (event, context) => {
     const testHelper = require('./helpers/test');
 
     const { type } = recordData;
+    console.log("[app][longJobsProcessor]: TEST_PROCESSOR: Messgae TYPE:", type)
 
     if (type == 'COMPLETED') {
-      console.log("[COMPLETED]=====>>>>",type)
-      await testHelper.setCompletedWO();
-    } else if(type == 'OPEN'){
-      console.log("[OPEN]=====>>>>",type)
+      // await testHelper.setCompletedWO();
+    } else if (type == 'OPEN') {
+      // await testHelper.setOpenWorkOrder();
+    } else if (type == 'efs') {
+      await testHelper.testEFS();
+    } else {
+      console.log('[app][longJobsProcessor]', 'Type not found. Hence TEST_PROCESSOR can not be run.');
+      throw Error('Type not found. Type not found. Hence TEST_PROCESSOR can not be run.');
+    }
 
-      await testHelper.setOpenWorkOrder();
-    }
-     else {
-      console.log('[app][longJobsProcessor]', 'Type not found. Hence TEST_PROCESSOR can not be done.');
-      throw Error('Type not found. Type not found. Hence TEST_PROCESSOR can not be done.');
-    }
-    
     console.log('[app][longJobsProcessor]: Task Completed.....');
 
   }
 
-  
+
 
   console.log('[app][longJobsProcessor]: Finished.....');
   return true;
@@ -380,7 +379,7 @@ module.exports.dailyDigestProcessor = async (event, context) => {
 
 
 // app.get('/pdf',function (req, res) {
-  
+
 
 //   res.send('pdf');
 // })

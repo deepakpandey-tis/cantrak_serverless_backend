@@ -170,4 +170,22 @@ router.post("/", trimmer, (req, res) => {
   return res.status(200).json(req.body);
 });
 
+router.get("/efs" ,async (req,res) =>{
+  try {
+
+    const queueHelper = require('../helpers/queue');
+    await queueHelper.addToQueue({type: 'efs' },"long-jobs","TEST_PROCESSOR");
+
+    return res.status(200).json({
+      data: {},
+      message:
+        "Published Test efs job.......",
+    });
+
+  } catch (err) {
+    res.status(200).json({ failed: true, error: err });
+    
+  }
+});
+
 module.exports = router;
