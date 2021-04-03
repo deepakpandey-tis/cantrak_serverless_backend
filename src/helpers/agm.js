@@ -221,13 +221,13 @@ const makeZippedFile = (bucket, folder, zipFileKey) => {
 
 const makeZippedFileOnEFS = (folder, zipFileKey) => {
 
-  console.log('[helpers][agm][makeZippedFile]: folder: ', folder);
-  console.log('[helpers][agm][makeZippedFile]: zipFileKey: ', zipFileKey);
+  console.log('[helpers][agm][makeZippedFileOnEFS]: folder: ', folder);
+  console.log('[helpers][agm][makeZippedFileOnEFS]: zipFileKey: ', zipFileKey);
 
-  console.log('[helpers][agm][makeZippedFile]: Lisiting ALL FILES: ');
+  console.log('[helpers][agm][makeZippedFileOnEFS]: Lisiting ALL FILES: ');
 
   fs.readdirSync(mountPathRoot).forEach(file => {
-    console.log('[helpers][agm][makeZippedFile]: Found:', file);
+    console.log('[helpers][agm][makeZippedFileOnEFS]: Found:', file);
   });
 
   return new Promise(async (res, rej) => {
@@ -240,7 +240,7 @@ const makeZippedFileOnEFS = (folder, zipFileKey) => {
 
     output.on('close', async () => {
       console.log(archive.pointer() + ' total bytes');
-      console.log('archiver has been finalized and the output file descriptor has closed.');
+      console.log('[helpers][agm][makeZippedFileOnEFS]: archiver has been finalized and the output file descriptor has closed.');
 
       let bucketName = process.env.S3_BUCKET_NAME;
       const s3 = new AWS.S3();
@@ -251,7 +251,7 @@ const makeZippedFileOnEFS = (folder, zipFileKey) => {
         ACL: "public-read"
       };
       let s3Res = await s3.putObject(params).promise();
-      console.log("Zip File uploaded Successfully on s3...", s3Res);
+      console.log("[helpers][agm][makeZippedFileOnEFS]: Zip File uploaded Successfully on s3...", s3Res);
 
       res(true);
 
@@ -735,6 +735,10 @@ const agmHelper = {
       Parallel.setConcurrency(20);
       let sheetsToPrepare = [];
 
+      // Read HTML Template
+      const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.ejs');
+      console.log('[helpers][agm][generateVotingDocument]: PDF Template Path:', templatePath);
+
       await Parallel.each(agmPropertyUnitOwners, async (pd) => {
         console.log("[helpers][agm][generateVotingDocument]: Preparing for Property Owner: ", pd);
 
@@ -762,10 +766,6 @@ const agmHelper = {
               // console.log("[helpers][agm][generateVotingDocument]: Qr Generated....");
               return choice;
             });
-
-            // Read HTML Template
-            const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.ejs');
-            console.log('[helpers][agm][generateVotingDocument]: PDF Template Path:', templatePath);
 
             let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner: pd });
             // console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
