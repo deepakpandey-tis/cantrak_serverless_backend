@@ -238,7 +238,7 @@ const makeZippedFileOnEFS = (folder, zipFileKey) => {
     const output = fs.createWriteStream(zipFileKey);
     const archive = archiver('zip');
 
-    output.on('close', function () {
+    output.on('close', async () => {
       console.log(archive.pointer() + ' total bytes');
       console.log('archiver has been finalized and the output file descriptor has closed.');
 
@@ -257,7 +257,7 @@ const makeZippedFileOnEFS = (folder, zipFileKey) => {
 
     });
 
-    archive.on('error', function (err) {
+    archive.on('error', (err) => {
       rej(err);
     });
 
