@@ -3,7 +3,7 @@ const _ = require("lodash");
 
 const knex = require("../db/knex");
 const moment = require("moment");
-const { join, orderBy } = require("lodash");
+const { join, orderBy, trim } = require("lodash");
 const redisHelper = require("../helpers/redis");
 
 const agmController = {
@@ -51,6 +51,7 @@ const agmController = {
           "template",
           "waterMarkText",
           "proxyDocument",
+          "combineOwnershipRatio"
         ]);
 
         const schema = Joi.object().keys({
@@ -109,6 +110,7 @@ const agmController = {
             orgId: req.orgId,
             createdBy: req.me.id,
             moderationStatus: true,
+            combineOwnershipRatio:req.body.combineOwnershipRatio
           })
           .where({ id: req.body.agmId })
           .returning(["*"]);
@@ -441,6 +443,10 @@ const agmController = {
                 eligibility = false;
               }
 
+              let ownerName = ownerData.E.trim()
+
+              // console.log("owner name value",ownerName)
+
               let insertData = {
                 agmId: req.body.agmId,
                 companyId: req.body.companyId,
@@ -448,7 +454,7 @@ const agmController = {
                 unitId: unitId,
                 unitNumber: ownerData.B,
                 houseId: ownerData.C,
-                ownerName: ownerData.E,
+                ownerName: ownerName,
                 joinOwnerName: ownerData.H,
                 ownershipRatio: ownerData.D,
                 ownerIdNo: ownerData.G,
