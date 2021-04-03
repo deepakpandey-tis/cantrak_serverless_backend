@@ -2237,6 +2237,8 @@ const agmController = {
   getOwnerRegistrationList: async (req, res) => {
     try {
 
+      let columns = []
+
       let payload = req.query;
 
       console.log("payload value", payload);
@@ -2337,12 +2339,15 @@ const agmController = {
 
       ownerRegistrationList = _.uniqBy(ownerRegistrationList, "id");
 
+      columns = req.query.columns.split(',')
+      console.log("columns",columns)
+
       console.log("ownerRegistrationList====>>>", ownerRegistrationList)
       console.log("agmDetails====>>>", agmDetails)
       const path = require('path');
       // Read HTML Template
       const templatePath = path.join(__dirname, '..', 'pdf-templates', 'registration.ejs');
-      res.render(templatePath, { title: 'Registration', data: ownerRegistrationList, agmDetails: agmDetails });
+      res.render(templatePath, { title: 'Registration',columns:columns, data: ownerRegistrationList, agmDetails: agmDetails });
       // return {
       //   data:ownerRegistrationList
       // }
