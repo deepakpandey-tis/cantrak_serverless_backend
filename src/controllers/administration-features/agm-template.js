@@ -257,5 +257,57 @@ const agmTemplateController = {
       });
     }
   },
+
+  getAGMTemplate:async(req,res)=>{
+      try {
+        let templateResult = await knex('agm_proxy_template')
+        .returning('*')
+        .where({
+            orgId: req.orgId,
+            isActive: true
+        })
+
+        return res.status(200).json({
+            data: { templateResult },
+            message: "Getting AGM Template List Successfully!",
+          });
+
+      } catch (err) {
+        console.log(
+            "[controllers][agm-template][getAGMTemplateList] :  Error",
+            err
+          );
+          res.status(500).json({
+            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+          });
+      }
+  },
+  getAgmTemplateById: async(req,res) =>{
+      try {
+          let payload = req.body;
+        let templateResult = await knex('agm_proxy_template')
+        .returning('*')
+        .where({
+            id: payload.id,
+            orgId: req.orgId,
+            isActive: true
+        })
+
+        return res.status(200).json({
+            data: { templateResult },
+            message: "Getting AGM Template List Successfully!",
+          });
+
+      } catch (error) {
+        console.log(
+            "[controllers][agm-template][getAGMTemplateList] :  Error",
+            err
+          );
+          res.status(500).json({
+            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+          });
+          
+      }
+  }
 };
 module.exports = agmTemplateController;

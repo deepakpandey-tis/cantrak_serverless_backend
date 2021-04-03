@@ -30,4 +30,16 @@ router.post(
     agmTemplateController.updateTemplate
 )
 
+router.get(
+    '/get-agm-template',
+    authMiddleware.isAuthenticated,
+    agmTemplateController.getAGMTemplate
+)
+
+router.post(
+    '/get-agm-template-by-id',
+    authMiddleware.isAuthenticated,
+    agmTemplateController.getAgmTemplateById
+)
+
 module.exports = router;
