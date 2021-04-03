@@ -79,6 +79,7 @@ const dashboardIconRouter = require("./administration-features/dashboard-icons")
 const agmRouter = require("./agm")
 
 const visitorRouter = require('./visitor');
+const agmTemplateRouter = require('./administration-features/agm-template');
 
 /* GET home page. */
 router.get("/", async (req, res, next) => {
@@ -181,6 +182,7 @@ router.use("/dashboard-icon",dashboardIconRouter)
 router.use("/agm",agmRouter)
 
 router.use('/visitor', visitorRouter);
+router.use('/agm-template',agmTemplateRouter);
 
 
 module.exports = router;
