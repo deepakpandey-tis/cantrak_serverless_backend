@@ -76,12 +76,16 @@
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
-                            <th>S. No.</th>
-                            <th>Name</th>
+                        <% for (let c of columns) { %>
+
+                            <th><%= c %></th>
+                            <!-- <th>Name</th>
                             <th>Unit No.</th>
                             <th>House Id</th>
                             <th>Registration Type</th>
-                            <th>Signature</th>
+                            <th>Signature</th> -->
+                        <% } %>
+
                         </tr>
                     </thead>
                     <tbody>
@@ -90,10 +94,19 @@
                         </tr> -->
                         <% for (var i = 0; i < data.length;  i++ ) { %>
                         <tr>
+                            <% if(columns.includes('Sr.No.')){ %>
                             <td><%= (i+1) %></td>
+                            <% } %>
+                            <% if(columns.includes('Name')){ %>
                             <td><%= data[i].ownerName; %></td>
+                            <% } %>
+                            <% if(columns.includes('Unit No')){ %>
                             <td><%= data[i].unitNumber %></td>
+                            <% } %>
+                            <% if(columns.includes('House Id')){ %>
                             <td><%= data[i].houseId %></td>
+                            <% } %>
+                            <% if(columns.includes('Registration Type')){ %>
                             <td>
                                 <% if(data[i].registrationType == 1){ %>
                                     Owner
@@ -101,6 +114,8 @@
                                     Proxy(<%= data[i].proxyData.proxyName; %>)
                                 <% } %>
                             </td>
+                            <% } %>
+                            <% if(columns.includes('Signature')){ %>
                             <td style="text-align: left;">
                                 <% if(data[i].signature){%>
                                     <img src="<%= data[i].signature %>" alt="" height="25" />
@@ -108,6 +123,7 @@
                                     N/A
                                 <% } %>
                             </td>
+                            <% } %>
                         </tr>
                         <% } %>
                     </tbody>
