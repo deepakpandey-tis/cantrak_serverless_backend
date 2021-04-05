@@ -628,6 +628,9 @@ const agmHelper = {
       }
 
       // Write Code to create Zip File...
+      await fs.ensureDir(mountPathRoot +  "/AGM/" + agmId + "/zipped-files");
+      console.log("[helpers][agm][generateVotingDocument]: ZipFile Directory Created/Ensured....");
+      
       const zipFileName = mountPathRoot +  "/AGM/" + agmId + "/zipped-files/" + `${new Date().getTime()}.zip`;
       console.log("[helpers][agm][generateVotingDocument]: Going To Create Zip file with name:", zipFileName);
       const uploadedZippedFileDetails = await makeZippedFileOnEFS(basePath, zipFileName);
