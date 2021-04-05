@@ -308,6 +308,39 @@ const agmTemplateController = {
           });
           
       }
+  },
+  toggleAGMTemplateStatus: async(req,res) => {
+    try {
+      const id = req.body.id;
+      let agmProxyTemplate = await knex('agm_proxy_template')
+      .select("isActive")
+      .where({ id: id, orgId: req.orgId })
+      .first();
+      let status = Boolean(agmProxyTemplate.isActive);
+
+      if(status){
+        await knex("agm_proxy_template")
+        .update({ isActive: false, orgId: req.orgId })
+        .where({ id: id });
+      }else{
+        await knex("agm_proxy_template")
+          .update({ isActive: true, orgId: req.orgId })
+          .where({ id: id });
+      }
+
+      return res.status(200).json({
+        data: {
+          message: "Successfully updated status!",
+        },
+      });
+
+    } catch (err) {
+
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+      
+    }
   }
 };
 module.exports = agmTemplateController;
