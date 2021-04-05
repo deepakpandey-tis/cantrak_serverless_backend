@@ -42,4 +42,9 @@ router.post(
     agmTemplateController.getAgmTemplateById
 )
 
+router.post(
+    '/toggle-agm-proxy-template',
+    authMiddleware.isAuthenticated,
+    agmTemplateController.toggleAGMTemplateStatus
+)
 module.exports = router;
