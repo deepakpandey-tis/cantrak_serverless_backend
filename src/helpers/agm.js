@@ -530,7 +530,7 @@ const agmHelper = {
 
 
       // Write Logic to prepare all objects for generating parallely.........
-      Parallel.setConcurrency(20);
+      Parallel.setConcurrency(30);
       let sheetsToPrepare = [];
 
       // Read HTML Template
@@ -628,7 +628,8 @@ const agmHelper = {
       }
 
       // Write Code to create Zip File...
-      const zipFileName = "AGM/" + agmId + "/zipped-files/" + `${new Date().getTime()}.zip`;
+      const zipFileName = mountPathRoot +  "/AGM/" + agmId + "/zipped-files/" + `${new Date().getTime()}.zip`;
+      console.log("[helpers][agm][generateVotingDocument]: Going To Create Zip file with name:", zipFileName);
       const uploadedZippedFileDetails = await makeZippedFileOnEFS(basePath, zipFileName);
 
       console.log("[helpers][agm][generateVotingDocument]: Zip File created successfully, Name:", zipFileName, uploadedZippedFileDetails);
