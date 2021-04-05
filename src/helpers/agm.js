@@ -132,10 +132,9 @@ const createPdfOnEFS = (document, agmId, browser, retries = 1) => {
         console.log('Unable to generate PDF...');
         rej(new Error('Unable to generate PDF...'));
       } else {
-        console.log('PDF generated, uploading to s3 with filename:', document.s3BasePath + document.filename);
-
+        console.log('PDF generated, with filename:', document.s3BasePath + document.filename);
         await page.close();
-        res(s3Res);
+        res(true);
       }
 
     } catch (err) {
