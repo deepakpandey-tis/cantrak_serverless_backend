@@ -44,7 +44,7 @@ provider:
     DB_USER: servicemind
     DB_PASS: su99yTIS#2020
     DB_NAME: tis_database
-    DB_HOST: tis-serverless-db.cluster-c1klhwsjgssk.us-east-1.rds.amazonaws.com
+    DB_HOST: tis-sv-db.cluster-c1klhwsjgssk.us-east-1.rds.amazonaws.com
     DB_PORT: 5432
     SITE_URL: https://d3lw11mvhjp3jm.cloudfront.net
     ORIGIN_URL: https://rme4pik2uf.execute-api.us-east-1.amazonaws.com/production
