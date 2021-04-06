@@ -1219,7 +1219,7 @@ const taskGroupController = {
             })
             .offset(offset)
             .limit(per_page)
-            .orderBy("workOrderDate", "asc"),
+            .orderBy("pmDate", "asc"),
         ])),
           knex("task_group_schedule")
             .innerJoin(
@@ -1561,7 +1561,7 @@ const taskGroupController = {
             // })
             .offset(offset)
             .limit(per_page)
-            .orderBy("workOrderId", "asc"),
+            .orderBy("pmDate", "asc"),
 
           knex
             .distinct("workOrderId")
