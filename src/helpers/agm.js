@@ -530,7 +530,7 @@ const agmHelper = {
 
 
       // Write Logic to prepare all objects for generating parallely.........
-      Parallel.setConcurrency(20);
+      Parallel.setConcurrency(30);
       let sheetsToPrepare = [];
 
       // Read HTML Template
@@ -568,7 +568,7 @@ const agmHelper = {
             let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner: pd });
             // console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
 
-            let filename = `agm-${agmId}-pu-${pd.unitId}-t-${new Date().getTime()}.pdf`;
+            let filename = `agm-${agmId}-pu-${pd.unitId}-agn-${agenda.id}.pdf`;
 
             const document = {
               html: htmlContents,
@@ -628,7 +628,11 @@ const agmHelper = {
       }
 
       // Write Code to create Zip File...
-      const zipFileName = "AGM/" + agmId + "/zipped-files/" + `${new Date().getTime()}.zip`;
+      await fs.ensureDir(mountPathRoot +  "/AGM/" + agmId + "/zipped-files");
+      console.log("[helpers][agm][generateVotingDocument]: ZipFile Directory Created/Ensured....");
+
+      const zipFileName = mountPathRoot +  "/AGM/" + agmId + "/zipped-files/" + `${new Date().getTime()}.zip`;
+      console.log("[helpers][agm][generateVotingDocument]: Going To Create Zip file with name:", zipFileName);
       const uploadedZippedFileDetails = await makeZippedFileOnEFS(basePath, zipFileName);
 
       console.log("[helpers][agm][generateVotingDocument]: Zip File created successfully, Name:", zipFileName, uploadedZippedFileDetails);
