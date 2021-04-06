@@ -106,13 +106,25 @@ const dashboardController = {
         //.whereIn("service_requests.projectId", accessibleProjects)
         // .where({ serviceStatusCode: "US", orgId: orgId, "moderationStatus": true })
         //.orWhere({ serviceStatusCode: "O", orgId: orgId, "moderationStatus": true }),
+        // knex
+        //   .from("service_requests")
+        //   .select("service_requests.serviceStatusCode as status")
+        //   .distinct("service_requests.id")
+        //   .where({ orgId: req.orgId })
+        //   .whereIn("service_requests.projectId", projectIds)
+        //   .whereIn("serviceStatusCode", ["A", "IP", "OH","O"]),
+
         knex
-          .from("service_requests")
-          .select("service_requests.serviceStatusCode as status")
-          .distinct("service_requests.id")
-          .where({ orgId: req.orgId })
-          .whereIn("service_requests.projectId", projectIds)
-          .whereIn("serviceStatusCode", ["A", "IP", "OH"]),
+        .from("service_orders")
+        .leftJoin(
+          "service_requests",
+          "service_orders.serviceRequestId",
+          "service_requests.id"
+        )
+        .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
+        .whereIn('status.descriptionEng',["Open","Approved","In Progress","On Hold"])
+        .where({ "service_orders.orgId": req.orgId })
+        .whereIn("service_requests.projectId", projectIds),
 
         //.whereIn("service_requests.projectId", accessibleProjects)
         ///.where({ serviceStatusCode: "A", orgId: orgId })
