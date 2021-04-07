@@ -61,7 +61,7 @@ provider:
     NOTIFIER_ACCESS_KEY_ID: AKIAQRTFBT5LUXG4X564
     NOTIFIER_SECRET_ACCESS_KEY: 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
     S3_BUCKET_URL: https://servicemind-resources.s3.amazonaws.com
-    SOCKET_ENDPOINT: https://s6bm8bsha0.execute-api.us-east-1.amazonaws.com/stage
+    SOCKET_ENDPOINT: https://h7oq1mw2a1.execute-api.us-east-1.amazonaws.com/production
     CDN_URL: resources.servicemind.asia
     REDIS_HOST: tis-prod-redis.ftr6oh.0001.use1.cache.amazonaws.com
     REDIS_PORT: 6379
