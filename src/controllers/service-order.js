@@ -261,6 +261,8 @@ const serviceOrderController = {
             let total, rows
             const accessibleProjects = req.userProjectResources[0].projects
 
+            let projectIds = req.accessibleProjects;
+
 
             let pagination = {};
             let per_page = reqData.per_page || 10;
@@ -448,7 +450,7 @@ const serviceOrderController = {
 
                         ]).where((qb) => {
                             qb.where({ 'service_orders.orgId': req.orgId });
-                            qb.whereIn('service_requests.projectId', accessibleProjects)
+                            qb.whereIn('service_requests.projectId', projectIds)
                             if (filters) {
                                 qb.where(filters);
                             }
@@ -556,7 +558,7 @@ const serviceOrderController = {
 
                         ]).where((qb) => {
                             qb.where({ 'service_orders.orgId': req.orgId })
-                            qb.whereIn('service_requests.projectId', accessibleProjects)
+                            qb.whereIn('service_requests.projectId', projectIds)
                             if (filters) {
                                 qb.where(filters);
                             }
@@ -634,7 +636,7 @@ const serviceOrderController = {
                         .leftJoin('companies', 'service_orders.companyId', 'companies.id')
                         .leftJoin('projects', 'property_units.projectId', 'projects.id')
                         .where({ "service_orders.orgId": req.orgId })
-                        .whereIn('service_requests.projectId', accessibleProjects)
+                        .whereIn('service_requests.projectId', projectIds)
                         .where(qb => {
                             console.log("callleddddd==========>>>>")
                             
@@ -758,7 +760,7 @@ const serviceOrderController = {
                             "projects.projectName",
                         ])
                         .where({ "service_orders.orgId": req.orgId })
-                        .whereIn('service_requests.projectId', accessibleProjects)
+                        .whereIn('service_requests.projectId', projectIds)
                         .where(qb => {
 
                             console.log("value1 callleddddd==========>>>>")
@@ -891,7 +893,7 @@ const serviceOrderController = {
                         ])
                         .where(qb => {
                             qb.where({ "service_orders.orgId": req.orgId });
-                            qb.whereIn('service_requests.projectId', accessibleProjects)
+                            qb.whereIn('service_requests.projectId', projectIds)
 
 
                             if (filters) {
@@ -1028,7 +1030,7 @@ const serviceOrderController = {
                         .where(qb => {
 
                             qb.where({ "service_orders.orgId": req.orgId });
-                            qb.whereIn('service_requests.projectId', accessibleProjects)
+                            qb.whereIn('service_requests.projectId', projectIds)
 
 
                             if (filters) {
