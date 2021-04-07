@@ -104,7 +104,7 @@ functions:
           # cors: true
   
   websocket:
-    handler: src/socket.handler
+    handler: src/handlers/socket.handler
     memorySize: 2048
     events:
       - websocket:
@@ -139,7 +139,7 @@ functions:
           route: $disconnect
 
   auth:
-    handler: src/socket.auth
+    handler: src/handlers/socket.auth
 
 
   queueProcessor:

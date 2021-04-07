@@ -104,7 +104,7 @@ functions:
 
 
   websocket:
-    handler: src/socket.handler
+    handler: src/handlers/socket.handler
     events:
       - websocket:
           # Handles new connection requests
@@ -139,7 +139,7 @@ functions:
 
 
   auth:
-    handler: src/socket.auth
+    handler: src/handlers/socket.auth
 
 
   queueProcessor:
