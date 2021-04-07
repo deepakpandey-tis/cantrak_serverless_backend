@@ -102,35 +102,9 @@ functions:
           path: /{proxy+}
           method: ANY
           # cors: true
-
-  queueProcessor:
-    handler: src/app.queueProcessor
-    memorySize: 1024
-    timeout: 150
-    reservedConcurrency: 10                # <-- Concurrency control
-    events:
-      - sqs: 
-          arn: arn:aws:sqs:us-east-1:925816896007:mail-queue
-          batchSize: 1                     # Using a batchSize of 1, so that messages succeed or fail on their own.
-
-
-
-
-  longJobsProcessor:
-    handler: src/app.longJobsProcessor
-    memorySize: 6196
-    timeout: 900                           # 15 Mins...
-    reservedConcurrency: 10                # <-- Concurrency control
-    events:
-      - sqs:
-          arn: arn:aws:sqs:us-east-1:925816896007:long-jobs
-          batchSize: 1                     # Using a batchSize of 1, so that messages succeed or fail on their own.
-
-
-
   
   websocket:
-    handler: src/socket.handler
+    handler: src/handlers/socket.handler
     memorySize: 2048
     events:
       - websocket:
@@ -165,11 +139,34 @@ functions:
           route: $disconnect
 
   auth:
-    handler: src/socket.auth
+    handler: src/handlers/socket.auth
 
-  workOrderOverdueProcessor:
-    handler: src/app.workOrderOverdueProcessor
+
+  queueProcessor:
+    handler: src/handlers/jobs.queueProcessor
     memorySize: 1024
+    timeout: 150
+    reservedConcurrency: 10                # <-- Concurrency control
+    events:
+      - sqs: 
+          arn: arn:aws:sqs:us-east-1:925816896007:mail-queue
+          batchSize: 1                     # Using a batchSize of 1, so that messages succeed or fail on their own.
+
+
+  longJobsProcessor:
+    handler: src/handlers/jobs.longJobsProcessor
+    memorySize: 5120
+    timeout: 900                           # 15 Mins...
+    reservedConcurrency: 10                # <-- Concurrency control
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:925816896007:long-jobs
+          batchSize: 1                     # Using a batchSize of 1, so that messages succeed or fail on their own.
+
+          
+  workOrderOverdueProcessor:
+    handler: src/handlers/dailyTasks.workOrderOverdueProcessor
+    memorySize: 512
     timeout: 300
     events:
       - schedule:
@@ -178,7 +175,7 @@ functions:
 
 
   dailyDigestProcessor:
-    handler: src/app.dailyDigestProcessor
+    handler: src/handlers/dailyTasks.dailyDigestProcessor
     memorySize: 1024
     timeout:  899                     # Max Time out is 15 mins..
     events:

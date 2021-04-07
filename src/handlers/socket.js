@@ -1,7 +1,7 @@
-
+const knex = require('../db/knex');
 const AWS = require('aws-sdk');
 
-const socketConnectionHelper = require('./helpers/socket-connection-helper');
+const socketConnectionHelper = require('../helpers/socket-connection-helper');
 
 // let ENDPOINT = `http://0.0.0.0:3001`;
 let ENDPOINT = process.env.SOCKET_ENDPOINT;
@@ -123,7 +123,7 @@ module.exports.handler = async function (event, context, cb) {
       }
 
       // Improve Logic Here and implement regex matcher....
-      const socketRoutes = require('./routes/socket-route');
+      const socketRoutes = require('../routes/socket-route');
       const methodToCall = socketRoutes[routeBase];
       console.log('[socket][handler]: Method To Call:', methodToCall);
       if (!methodToCall) {
