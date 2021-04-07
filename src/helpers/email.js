@@ -99,7 +99,7 @@ const emailHelper = {
             console.log('[helpers][email][sendTemplateEmail]: emailTemplatePath:', emailTemplatePath);
             console.log('[helpers][email][sendTemplateEmail]: Email layout:', layout);
 
-            let htmlEmailContents = await ejs.renderFile(emailTemplatePath, { url, ...templateData });
+            let htmlEmailContents = await ejs.renderFile(emailTemplatePath, { url, ...templateData ,orgName: orgNameData});
             htmlEmailContents = await ejs.renderFile(layout, { url: url, body: htmlEmailContents, orgLogo: orgLogoFile, orgName: orgNameData });
 
             console.log('[helpers][email][sendTemplateEmail]: htmlEmailContents :', htmlEmailContents);

@@ -59,14 +59,16 @@ const testNotification = {
 
 
     sendEmailNotification: async (sender, receiver, data) => {
+        console.log("data=======>>>>>>",data)
         data = {
             receiverEmail: receiver.email,
             template: 'test-email.ejs',
             templateData: {
-                fullName: receiver.name
+                fullName: receiver.name,
+                orgId : receiver.orgId,
+                ...data.payload
             },
             payload: {
-                ...data,
                 subject: 'Test Email Notification',
             }
         };
