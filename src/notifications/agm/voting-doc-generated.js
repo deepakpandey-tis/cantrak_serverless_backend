@@ -52,7 +52,7 @@ const votingDocGeneratedNotification = {
                 image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: data.payload.redirectUrl,
+                    url: url,
                     primaryKey: Date.now()
                 }
             },
@@ -60,7 +60,7 @@ const votingDocGeneratedNotification = {
                 {
                     action: "explore",
                     title: "Open",
-                    url: data.payload.redirectUrl
+                    url: url
 
                 }
             ]
@@ -76,7 +76,7 @@ const votingDocGeneratedNotification = {
             template: 'agm/voting-doc-generated.ejs',
             templateData: {
                 fullName: receiver.name,
-                downloadUrl: `${process.env.SITE_URL}${data.payload.redirectUrl}`,
+                downloadUrl: `${process.env.SITE_URL}${data.payload.url}`,
                 orgId:receiver.orgId
             },
             payload: {
@@ -115,7 +115,7 @@ const votingDocGeneratedNotification = {
                 image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `${process.env.SITE_URL}${data.payload.redirectUrl}`,
+                    url: `${process.env.SITE_URL}${data.payload.url}`,
                     primaryKey: Date.now()
                 }
             },
@@ -123,7 +123,7 @@ const votingDocGeneratedNotification = {
                 {
                     action: "explore",
                     title: "Open Home Page",
-                    url: `${process.env.SITE_URL}${data.payload.redirectUrl}`
+                    url: `${process.env.SITE_URL}${data.payload.url}`
                 }
             ]
         }
@@ -158,7 +158,7 @@ const votingDocGeneratedNotification = {
                 image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: data.payload.redirectUrl,
+                    url: url,
                     primaryKey: Date.now()
                 }
             },
@@ -166,7 +166,7 @@ const votingDocGeneratedNotification = {
                 {
                     action: "explore",
                     title: "Open Home Page",
-                    url:data.payload.redirectUrl
+                    url:url
                 }
             ]
         }
