@@ -18,8 +18,9 @@ const getCheckoutVisitors = async (req, res) => {
         let authorisedProjects = req.userProjectResources.find(rec => rec.id == visitorModule)
         authorisedProjectIds = authorisedProjects.projects;
 
-        sqlSelect = `SELECT vi.id, vi."orgId", vi."userHouseAllocationId", vi."name", vi."mobileNo", vi."arrivalDate", vi."departureDate", vi."guestCount", vi."vehicleNo", vi."actualArrivalDate", vi."actualDepartureDate"
-        , vi."status", vi."createdBy", vi."createdAt", vi."updatedBy", vi."updatedAt", uha."houseId", pu."unitNumber", u2."name" "tenantName", p2."projectName"`;
+        sqlSelect = `SELECT vi.id, vi."orgId", vi."userHouseAllocationId", vi."name", vi."mobileNo", vi."arrivalDate", vi."departureDate", vi."vehicleNo", vi."actualArrivalDate", vi."actualDepartureDate"
+        , vi."status", vi."tenantId", vi."createdBy", vi."createdAt", vi."updatedBy", vi."updatedAt"
+        , uha."houseId", pu."unitNumber", u2."name" "tenantName", p2."projectName"`;
 
         sqlFrom = ` FROM visitor_invitations vi, user_house_allocation uha, property_units pu, users u2, projects p2 `;
 
@@ -30,7 +31,7 @@ const getCheckoutVisitors = async (req, res) => {
             sqlWhere += ` vi.id = ${visitorId} and`;
         }
         sqlWhere += ` pu."orgId" = ${orgId} and vi."status" = 1 and vi."actualArrivalDate" is not null and vi."actualDepartureDate" is null and vi."userHouseAllocationId" = uha.id and uha."houseId" = pu.id`;
-        sqlWhere += ` and  vi."createdBy" = u2.id and pu."projectId" = p2.id `
+        sqlWhere += ` and  vi."tenantId" = u2.id and pu."projectId" = p2.id `
 
         // Visitors only of authorised projects of logged-in user
         sqlWhere += ` and pu."projectId" in (${authorisedProjectIds})`;

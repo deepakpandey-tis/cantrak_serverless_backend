@@ -1,4 +1,6 @@
 const getUserUnits = require('./get-user-units');
+const getAdminPropertyUnits = require('./get-admin-property-units');
+const getUnitTenants = require('./get-unit-tenants');
 const getInvitation = require('./get-invitation');
 const getVisitorList = require('./get-visitor-list');
 const getCheckinVisitors = require('./get-checkin-visitors');
@@ -12,6 +14,8 @@ const checkoutVisitor = require('./checkout-visitor');
 
 module.exports = {
     getUserUnits,
+    getAdminPropertyUnits,
+    getUnitTenants,
     getInvitation,
     getVisitorList,
     getCheckinVisitors,
