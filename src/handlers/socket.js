@@ -1,4 +1,4 @@
-
+const knex = require('../db/knex');
 const AWS = require('aws-sdk');
 
 const socketConnectionHelper = require('../helpers/socket-connection-helper');

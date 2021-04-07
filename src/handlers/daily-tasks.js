@@ -1,4 +1,4 @@
-const knex = require('./db/knex');
+const knex = require('../db/knex');
 const AWS = require('aws-sdk');
 
 module.exports.dBWakeUpTask = async (event, context) => {
