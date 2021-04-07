@@ -18,6 +18,21 @@ router.get(
     , visitorController.getUserUnits
 );
 
+router.post(
+    "/get-admin-property-units"
+    , authMiddleware.isAuthenticated
+    , roleMiddleware.parseUserPermission
+    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , visitorController.getAdminPropertyUnits)
+
+router.post(
+    "/get-unit-tenants"
+    , authMiddleware.isAuthenticated
+    , roleMiddleware.parseUserPermission
+    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , visitorController.getUnitTenants)
+
+
 router.get(
     "/has-any-visitor"
     , authMiddleware.isAuthenticated

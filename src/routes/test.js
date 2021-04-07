@@ -12,15 +12,17 @@ const ALLOWED_CHANNELS = ["IN_APP", "SOCKET_NOTIFY"];
 
 router.get("/", async (req, res) => {
   try {
-    
-    const queueHelper = require('../helpers/queue');
-    await queueHelper.addToQueue({type:'COMPLETED'},"long-jobs","TEST_PROCESSOR");
 
-    return res.status(200).json({
-      data: {},
-      message:
-        "We are updating work orders. Please wait for few minutes.",
-    });
+
+    
+    // const queueHelper = require('../helpers/queue');
+    // await queueHelper.addToQueue({type:'COMPLETED'},"long-jobs","TEST_PROCESSOR");
+
+    // return res.status(200).json({
+    //   data: {},
+    //   message:
+    //     "We are updating work orders. Please wait for few minutes.",
+    // });
 
 
     // let requestedBy = await knex.from('users').where({ id: 1188 }).first();  // Tenant - daniel15@mailinator.com
@@ -48,38 +50,40 @@ router.get("/", async (req, res) => {
     // const agmHelper = require('../helpers/agm');
     // await agmHelper.generateVotingDocumentImproved({ agmId, data, orgId, requestedBy });
 
-    // let sender = await knex.from('users').where({ id: 406 }).first();
-    // let receiver = await knex.from('users').where({ id: 1121 }).first();
+    let sender = await knex.from('users').where({ id: 1188 }).first();
+    let receiver = await knex.from('users').where({ id: 1188 }).first();
     // let receiver = await knex.from('users').where({ id: 406 }).first();    // Admin - TrainingAdmin
     // let receiver = await knex.from('users').where({ id: 1121 }).first();  // Tenant - daniel15@mailinator.com
 
-    // let data = {
-    //     payload: {
-    //     }
-    // };
+    let data = {
+        payload: {
+          message : 'This is Info message',
+          OTP : '2345'
+        }
+    };
 
-    // await testNotification.send(sender, receiver, data);
-    // await testNotification.send(sender, receiver, data, ALLOWED_CHANNELS);
+    await testNotification.send(sender, receiver, data);
+    await testNotification.send(sender, receiver, data, ALLOWED_CHANNELS);
 
     // Trigger Daily Digest emails...
     // const dailyDigestHelper = require("../helpers/daily-digest");
     // await dailyDigestHelper.prepareDailyDigestForUsers();
     // await knex.raw(`ALTER TABLE public.users ADD "deactivationStatus" bool NULL DEFAULT false`)
 
-    // let a;
+    let a;
 
-    // if (process.env.IS_OFFLINE) {
-    //   a = true;
-    // } else {
-    //   a = false;
-    // }
+    if (process.env.IS_OFFLINE) {
+      a = true;
+    } else {
+      a = false;
+    }
 
-    // res.json({
-    //     IS_OFFLINE: process.env.IS_OFFLINE,
-    //     ifCheck: a,
-    //     typeOf: typeof process.env.IS_OFFLINE,
-    //     typeof1: typeof true
-    // });
+    res.json({
+        IS_OFFLINE: process.env.IS_OFFLINE,
+        ifCheck: a,
+        typeOf: typeof process.env.IS_OFFLINE,
+        typeof1: typeof true
+    });
     // let aagmDetails = {
     //   formattedDate: "26-03-2021",
     // };

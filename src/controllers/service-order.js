@@ -1122,17 +1122,13 @@ const serviceOrderController = {
 
                 let houseResult = await knex.from('user_house_allocation').select('userId').where({ houseId: pd.unitId }).first().orderBy('id', 'desc')
 
+                let tetantResult;
                 if (houseResult) {
-                    let tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
-                    return {
-                        ...pd,
-                        "Tenant Name": tetantResult.name
-                    }
-                } else {
-                    return {
-                        ...pd,
-                        "Tenant Name": ''
-                    }
+                    tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
+                }
+                return {
+                    ...pd,
+                    "Tenant Name":tetantResult ? tetantResult.name : ''
                 }
 
 
@@ -2952,20 +2948,13 @@ const serviceOrderController = {
 
                 let houseResult = await knex.from('user_house_allocation').select('userId').where({ houseId: pd.unitId }).first().orderBy('id', 'desc')
 
+                let tetantResult;
                 if (houseResult) {
-                    let tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
-                    return {
-                        ...pd,
-                        "Tenant Name": tetantResult.name,
-                        tags: tag
-                    }
-                } else {
-                    return {
-                        ...pd,
-                        "Tenant Name": '',
-                        tags: tag
-
-                    }
+                    tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
+                }
+                return {
+                    ...pd,
+                    "Tenant Name":tetantResult ? tetantResult.name : ''
                 }
 
             })

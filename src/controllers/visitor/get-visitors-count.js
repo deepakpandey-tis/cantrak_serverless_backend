@@ -8,12 +8,12 @@ const getVisitorsCount = async (req, res) => {
 
         let visitorsCount = null;
 
-        sqlStr = `SELECT vi."createdBy"
+        sqlStr = `SELECT vi."tenantId"
         , sum(case when vi.status = 0 and vi."actualArrivalDate" is null then 1 else 0 end) "scheduleVisitorsCount"
         , sum(case when vi.status = 1 or vi."actualArrivalDate" is not null then 1 else 0 end) "historyVisitorsCount"
         FROM visitor_invitations vi
-        WHERE vi."orgId" = ${orgId} and vi."createdBy" = ${userId}
-        GROUP BY vi."createdBy"`;
+        WHERE vi."orgId" = ${orgId} and vi."tenantId" = ${userId}
+        GROUP BY vi."tenantId"`;
 
         var selectedRecs = await knex.raw(sqlStr);
 
