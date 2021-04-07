@@ -261,6 +261,8 @@ const serviceOrderController = {
             let total, rows
             const accessibleProjects = req.userProjectResources[0].projects
 
+            let projectIds = req.accessibleProjects;
+
 
             let pagination = {};
             let per_page = reqData.per_page || 10;
@@ -282,9 +284,9 @@ const serviceOrderController = {
 
 
 
-            if (serviceOrderStatus) {
-                filters['status.descriptionEng'] = serviceOrderStatus
-            }
+            // if (serviceOrderStatus) {
+            //     filters['status.descriptionEng'] = serviceOrderStatus
+            // }
             if (serviceOrderId) {
                 filters['service_orders.displayId'] = serviceOrderId
             }
@@ -376,38 +378,9 @@ const serviceOrderController = {
 
             let dueFromDate, dueToDate
             if (dueFrom && dueTo) {
-                //dueFromDate = new Date(moment(dueFrom).startOf('day')).getTime()
-                // dueFromDate = moment(dueFrom).format();
-                // dueToDate = moment(dueTo).format();
-                // console.log(dueFromDate)
-                //dueFromDate = moment(dueFrom).tz(selectedTimeZone).valueOf();
                 dueFromDate = dueFrom;
-                //dueToDate = new Date(moment(dueTo).startOf('day')).getTime();
-                // let toDate = moment(dueTo).endOf('date').format();
-                //dueToDate = new Date(toDate).getTime();
                 dueToDate = dueTo;
             }
-
-            // } else if (dueFrom && !dueTo) {
-
-            //     // dueFromDate = dueFrom;
-            //     // dueToDate = "2030-01-01"
-            //     // dueFromDate = new Date(moment(dueFrom).startOf('day')).getTime()
-            //     // dueFromDate = moment(dueFrom).tz(selectedTimeZone).valueOf();
-            //     // dueToDate = new Date().getTime()
-            //     dueFromDate = moment(dueFrom).tz(selectedTimeZone).valueOf();
-            //     dueToDate = new Date("2030-01-01").getTime();
-
-            // } else if (!dueFrom && dueTo) {
-            //     // dueFromDate = "2000-01-01";
-            //     // dueToDate = dueTo
-            //     dueFromDate = new Date("2000-01-01").getTime();
-            //     dueToDate = new Date(dueTo).getTime();
-
-            //     // dueFromDate = new Date().getTime()
-            //     // dueToDate = new Date(moment(dueTo).startOf('day')).getTime()
-            // }
-
 
             let createdFromDate, createdToDate
             if (createdFrom && createdTo) {
@@ -477,9 +450,12 @@ const serviceOrderController = {
 
                         ]).where((qb) => {
                             qb.where({ 'service_orders.orgId': req.orgId });
-                            qb.whereIn('service_requests.projectId', accessibleProjects)
+                            qb.whereIn('service_requests.projectId', projectIds)
                             if (filters) {
                                 qb.where(filters);
+                            }
+                            if(serviceOrderStatus){
+                                qb.whereIn('status.descriptionEng',serviceOrderStatus)
                             }
                             if (completedFromDate && completedToDate) {
                                 qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
@@ -582,9 +558,12 @@ const serviceOrderController = {
 
                         ]).where((qb) => {
                             qb.where({ 'service_orders.orgId': req.orgId })
-                            qb.whereIn('service_requests.projectId', accessibleProjects)
+                            qb.whereIn('service_requests.projectId', projectIds)
                             if (filters) {
                                 qb.where(filters);
+                            }
+                            if(serviceOrderStatus){
+                                qb.whereIn('status.descriptionEng',serviceOrderStatus)
                             }
                             if (completedFromDate && completedToDate) {
                                 qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
@@ -657,12 +636,17 @@ const serviceOrderController = {
                         .leftJoin('companies', 'service_orders.companyId', 'companies.id')
                         .leftJoin('projects', 'property_units.projectId', 'projects.id')
                         .where({ "service_orders.orgId": req.orgId })
-                        .whereIn('service_requests.projectId', accessibleProjects)
+                        .whereIn('service_requests.projectId', projectIds)
                         .where(qb => {
                             console.log("callleddddd==========>>>>")
                             
                             if (filters) {
+
+                                console.log("filters====================>>>>>>>>>>>>>>>>",filters)
                                 qb.where(filters);
+                            }
+                            if(serviceOrderStatus){
+                                qb.whereIn('status.descriptionEng',serviceOrderStatus)
                             }
                             if (completedFromDate && completedToDate) {
                                 qb.whereBetween("service_orders.completedOn", [
@@ -776,12 +760,15 @@ const serviceOrderController = {
                             "projects.projectName",
                         ])
                         .where({ "service_orders.orgId": req.orgId })
-                        .whereIn('service_requests.projectId', accessibleProjects)
+                        .whereIn('service_requests.projectId', projectIds)
                         .where(qb => {
 
                             console.log("value1 callleddddd==========>>>>")
                             if (filters) {
                                 qb.where(filters);
+                            }
+                            if(serviceOrderStatus){
+                                qb.whereIn('status.descriptionEng',serviceOrderStatus)
                             }
                             if (completedFromDate && completedToDate) {
                                 qb.whereBetween("service_orders.completedOn", [
@@ -906,11 +893,16 @@ const serviceOrderController = {
                         ])
                         .where(qb => {
                             qb.where({ "service_orders.orgId": req.orgId });
-                            qb.whereIn('service_requests.projectId', accessibleProjects)
+                            qb.whereIn('service_requests.projectId', projectIds)
 
 
                             if (filters) {
+                                console.log("filters====================>>>>>>>>>>>>>>>>1",filters)
+
                                 qb.where(filters);
+                            }
+                            if(serviceOrderStatus){
+                                qb.whereIn('status.descriptionEng',serviceOrderStatus)
                             }
                             if (completedFromDate && completedToDate) {
                                 qb.whereBetween("service_orders.completedOn", [
@@ -1038,11 +1030,14 @@ const serviceOrderController = {
                         .where(qb => {
 
                             qb.where({ "service_orders.orgId": req.orgId });
-                            qb.whereIn('service_requests.projectId', accessibleProjects)
+                            qb.whereIn('service_requests.projectId', projectIds)
 
 
                             if (filters) {
                                 qb.where(filters);
+                            }
+                            if(serviceOrderStatus){
+                                qb.whereIn('status.descriptionEng',serviceOrderStatus)
                             }
                             if (completedFromDate && completedToDate) {
                                 qb.whereBetween("service_orders.completedOn", [
@@ -1127,17 +1122,13 @@ const serviceOrderController = {
 
                 let houseResult = await knex.from('user_house_allocation').select('userId').where({ houseId: pd.unitId }).first().orderBy('id', 'desc')
 
+                let tetantResult;
                 if (houseResult) {
-                    let tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
-                    return {
-                        ...pd,
-                        "Tenant Name": tetantResult.name
-                    }
-                } else {
-                    return {
-                        ...pd,
-                        "Tenant Name": ''
-                    }
+                    tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
+                }
+                return {
+                    ...pd,
+                    "Tenant Name":tetantResult ? tetantResult.name : ''
                 }
 
 
@@ -2957,20 +2948,13 @@ const serviceOrderController = {
 
                 let houseResult = await knex.from('user_house_allocation').select('userId').where({ houseId: pd.unitId }).first().orderBy('id', 'desc')
 
+                let tetantResult;
                 if (houseResult) {
-                    let tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
-                    return {
-                        ...pd,
-                        "Tenant Name": tetantResult.name,
-                        tags: tag
-                    }
-                } else {
-                    return {
-                        ...pd,
-                        "Tenant Name": '',
-                        tags: tag
-
-                    }
+                    tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
+                }
+                return {
+                    ...pd,
+                    "Tenant Name":tetantResult ? tetantResult.name : ''
                 }
 
             })

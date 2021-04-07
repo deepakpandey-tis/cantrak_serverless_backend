@@ -1,44 +1,8 @@
 <% /* Note: This is injected into `emails/layouts/default-layout.ejs` */ %>
 <p style="margin-bottom: 25px;">Dear <%= fullName %>,</p>
 <p style="margin-bottom: 25px;"><%= message %></p>
-<table>    
-        <tr>
-            <td>&nbsp;</td> <td>FullName</td> <td>:</td> <td><%= userFullName %></td>
-        </tr>
-        <tr>
-            <td>&nbsp;</td> <td>Username</td> <td>:</td> <td><%= userName %></td>
-        </tr>
-        <tr>
-            <td>&nbsp;</td> <td>Email</td> <td>:</td> <td><%= emailId %></td>
-        </tr>
-        <tr>
-            <td>&nbsp;</td> <td>Mobile No.</td> <td>:</td> <td><%= mobileNo %></td>
-        </tr>
-        <tr>
-            <td>&nbsp;</td> <td>Gender</td> <td>:</td> <td><%= gender %></td>
-        </tr>
-        <tr>
-            <td>&nbsp;</td> <td>Company</td> <td>:</td> <td><%= company %></td>
-        </tr>
-        <tr>
-            <td>&nbsp;</td> <td>Project</td> <td>:</td> <td><%= project %></td>
-        </tr>
-        <tr>
-            <td>&nbsp;</td> <td>Building</td> <td>:</td> <td><%= building %></td>
-        </tr>
-        <tr>
-            <td>&nbsp;</td> <td>Floor No.</td> <td>:</td> <td><%= floor %></td>
-        </tr>
-        <tr>
-            <td>&nbsp;</td> <td>Unit No.</td> <td>:</td> <td><%= unit %></td>
-        </tr>
-</table>
-
-<div style="margin-bottom: 25px; text-align: center;">
-    <a style="background-color: #28AFB0; display: inline-block; font-size: 1.1em; color: #fff; padding: 10px 35px 10px; font-weight: 500; text-decoration: none; border-radius: 7px;" href="<%= verifiedLink %>">Activate Account</a>
-</div>
 <div style="margin-bottom: 25px; text-align: center;">
     <a style="display: inline-block; font-size: 1.1em; color: #28AFB0;  font-weight: 500; text-decoration: underline;" href="<%= OTP %>">View All Pending Activation</a>
 </div>
 <p style="margin-bottom: 5px;">Sincerely,</p>
-<p style="margin-top: 0px;"><%= Org %> Team</p>
+<p style="margin-top: 0px;"><%= orgName %> Team</p>

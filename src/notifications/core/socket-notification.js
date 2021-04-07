@@ -1,6 +1,6 @@
 const _ = require('lodash');
 const knex = require('../../db/knex');
-const socket = require("../../socket");
+const socket = require("../../handlers/socket");
 
 async function sendViaSocket(connectionId, data) {
   await socket.sendMessage(connectionId, data);

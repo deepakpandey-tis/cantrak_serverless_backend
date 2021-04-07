@@ -501,25 +501,6 @@ const singupController = {
         let user = insertedUser[0]
         console.log('User: ', insertedUser)
         if (insertedUser && insertedUser.length) {
-          // await emailHelper.sendTemplateEmail({
-          //   to: user.email,
-          //   subject: 'Verify Account',
-          //   template: 'test-email.ejs',
-          //   templateData: {
-          //     fullName: user.name,
-          //     userName: user.userName,
-          //     emailId: user.email,
-          //     mobileNo: user.mobileNo,
-          //     gender: gender,
-          //     company: DataResult.companyName,
-          //     project: DataResult.projects,
-          //     building: DataResult.buildings_and_phases,
-          //     floor: DataResult.floorZoneCode,
-          //     unit: DataResult.unit,
-          //     OTP: 'http://localhost:4200/login/verify-account/' + user.verifyToken
-          //   }
-          // })
-
           if (orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
             url = 'https://cbreconnect.servicemind.asia';
             org = "CBRE Connect";
@@ -602,7 +583,7 @@ const singupController = {
             await emailHelper.sendTemplateEmail({
               to: admin.email,
               subject: 'New tenant signup in ' + org,
-              template: 'test-email.ejs',
+              template: 'signup/signup.ejs',
               orgId: orgId,
               templateData: {
                 message: 'A new tenant has signed up in ' + org + ',please check the details and activate the account in order to allow the tenant to use the available services.',

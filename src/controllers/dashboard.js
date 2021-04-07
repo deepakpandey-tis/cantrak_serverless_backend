@@ -106,13 +106,25 @@ const dashboardController = {
         //.whereIn("service_requests.projectId", accessibleProjects)
         // .where({ serviceStatusCode: "US", orgId: orgId, "moderationStatus": true })
         //.orWhere({ serviceStatusCode: "O", orgId: orgId, "moderationStatus": true }),
+        // knex
+        //   .from("service_requests")
+        //   .select("service_requests.serviceStatusCode as status")
+        //   .distinct("service_requests.id")
+        //   .where({ orgId: req.orgId })
+        //   .whereIn("service_requests.projectId", projectIds)
+        //   .whereIn("serviceStatusCode", ["A", "IP", "OH","O"]),
+
         knex
-          .from("service_requests")
-          .select("service_requests.serviceStatusCode as status")
-          .distinct("service_requests.id")
-          .where({ orgId: req.orgId })
-          .whereIn("service_requests.projectId", projectIds)
-          .whereIn("serviceStatusCode", ["A", "IP", "OH"]),
+        .from("service_orders")
+        .leftJoin(
+          "service_requests",
+          "service_orders.serviceRequestId",
+          "service_requests.id"
+        )
+        .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
+        .whereIn('status.descriptionEng',["Open","Approved","In Progress","On Hold"])
+        .where({ "service_orders.orgId": req.orgId })
+        .whereIn("service_requests.projectId", projectIds),
 
         //.whereIn("service_requests.projectId", accessibleProjects)
         ///.where({ serviceStatusCode: "A", orgId: orgId })
@@ -642,7 +654,14 @@ const dashboardController = {
       let startDate;
       let endDate;
 
-
+      console.log("request body data==========",req.body)
+       // Set timezone for moment
+       moment.tz.setDefault(payload.timezone);
+       let currentDate = moment().format("YYYY-MM-DD");
+       console.log(
+           "Current Time:",
+           currentDate
+       );
       if (payload.todayDate.length) {
         startDate = moment().startOf("date", "day").format();
         endDate = moment().endOf("date", "day").format();
@@ -654,7 +673,7 @@ const dashboardController = {
         endDate = moment().endOf("date", "day").format();
       }
 
-      let currentTime = new Date(startDate).getTime();
+      // let currentTime = new Date(startDate).getTime();
       let result;
 
 
@@ -716,49 +735,11 @@ const dashboardController = {
             "task_group_schedule.orgId": req.orgId,
           })
           .whereRaw(
-            `DATE("task_group_schedule_assign_assets"."pmDate") = date(now())`
+            `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')='${currentDate}'`
           )
-          // .from("task_group_schedule_assign_assets")
-          // .leftJoin(
-          //   "task_group_schedule",
-          //   "task_group_schedule_assign_assets.scheduleId",
-          //   "task_group_schedule.id"
+          // .whereRaw(
+          //   `DATE("task_group_schedule_assign_assets"."pmDate") = date(now())`
           // )
-          // .leftJoin(
-          //   "pm_task_groups",
-          //   "task_group_schedule.taskGroupId",
-          //   "pm_task_groups.id"
-          // )
-          // .leftJoin(
-          //   "assigned_service_team",
-          //   "pm_task_groups.id",
-          //   "assigned_service_team.entityId"
-          // )
-          // .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
-          // .leftJoin("users", "assigned_service_team.userId", "users.id")
-          // .leftJoin(
-          //   "assigned_service_additional_users",
-          //   "pm_task_groups.id",
-          //   "assigned_service_additional_users.entityId"
-          // )
-          // .leftJoin(
-          //   "asset_master",
-          //   "task_group_schedule_assign_assets.assetId",
-          //   "asset_master.id"
-          // )
-          // .select([
-          //   "task_group_schedule.id as scheduleId",
-          //   "task_group_schedule_assign_assets.*",
-          //   "teams.teamName as teamName",
-          //   "assigned_service_team.userId as mainUserId",
-          //   "users.name as mainUser",
-          //   "asset_master.assetName as assetName"
-          // ])
-          // .where({ "task_group_schedule_assign_assets.orgId": orgId })
-          // .whereBetween("task_group_schedule_assign_assets.pmDate", [
-          //   startDate,
-          //   endDate
-          // ])
           .orderBy("task_group_schedule_assign_assets.id", "desc");
       } else {
         result = await knex

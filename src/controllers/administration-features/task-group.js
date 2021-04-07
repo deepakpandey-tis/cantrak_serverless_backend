@@ -1137,6 +1137,7 @@ const taskGroupController = {
               "teams.teamName",
               "teams.description",
               "users.userName",
+              "task_group_schedule_assign_assets.completedAt"
             ])
             .where({
               "task_group_schedule.pmId": payload.pmId,
@@ -1218,7 +1219,7 @@ const taskGroupController = {
             })
             .offset(offset)
             .limit(per_page)
-            .orderBy("workOrderDate", "asc"),
+            .orderBy("pmDate", "asc"),
         ])),
           knex("task_group_schedule")
             .innerJoin(
@@ -1485,6 +1486,7 @@ const taskGroupController = {
               "buildings_and_phases.buildingPhaseCode",
               "floor_and_zones.floorZoneCode",
               "property_units.unitNumber",
+              "task_group_schedule_assign_assets.completedAt"
             ])
             .where({
               "task_group_schedule.pmId": payload.pmId,
@@ -1559,7 +1561,7 @@ const taskGroupController = {
             // })
             .offset(offset)
             .limit(per_page)
-            .orderBy("workOrderId", "asc"),
+            .orderBy("pmDate", "asc"),
 
           knex
             .distinct("workOrderId")
@@ -1706,22 +1708,22 @@ const taskGroupController = {
         return { ...row, ...teamData };
       });
 
-      rowsId = await Parallel.map(rowsId, async (row) => {
-        const teamData = await knex
-          .from("assigned_service_team")
-          .select(["assigned_service_team.teamId"])
-          .where({
-            "assigned_service_team.entityId": row.workOrderId,
-            "assigned_service_team.entityType": "work_order",
-          })
-          .where((qb) => {
-            if (req.body.assignedTeam) {
-              qb.whereIn("assigned_service_team.teamId", req.body.assignedTeam);
-            }
-          })
-          .first();
-        return { ...row, ...teamData };
-      });
+      // rowsId = await Parallel.map(rowsId, async (row) => {
+      //   const teamData = await knex
+      //     .from("assigned_service_team")
+      //     .select(["assigned_service_team.teamId"])
+      //     .where({
+      //       "assigned_service_team.entityId": row.workOrderId,
+      //       "assigned_service_team.entityType": "work_order",
+      //     })
+      //     .where((qb) => {
+      //       if (req.body.assignedTeam) {
+      //         qb.whereIn("assigned_service_team.teamId", req.body.assignedTeam);
+      //       }
+      //     })
+      //     .first();
+      //   return { ...row, ...teamData };
+      // });
 
       let count = total.length ? total[0].count : 0;
       pagination.total = count;
@@ -2135,6 +2137,7 @@ const taskGroupController = {
               "asset_master.areaName as areaName",
               "asset_master.description as description",
               "asset_master.assetSerial as assetSerial",
+              "asset_master.assetCode as assetCode",
               "asset_master.id as assetId",
               "asset_master.assetCategoryId",
               "pm_master2.name as pmName",
@@ -2155,6 +2158,7 @@ const taskGroupController = {
               "assigned_service_team.teamId",
               "teams.teamName",
               "teams.description",
+              "task_group_schedule_assign_assets.completedAt"
             ])
             .where({
               "task_group_schedule.orgId": req.orgId,
@@ -2304,7 +2308,7 @@ const taskGroupController = {
                 );
               }
               if (req.body.assetName && req.body.assetName.length > 0) {
-                console.log("Asset name");
+                // console.log("Asset name");
                 qb.whereIn(
                   "task_group_schedule_assign_assets.assetId",
                   req.body.assetName
@@ -2314,11 +2318,11 @@ const taskGroupController = {
                 qb.whereIn("asset_master.id", req.body.assetSerial);
               }
               if (req.body.pmName && req.body.pmName != null) {
-                console.log("pm name", req.body.pmName);
+                // console.log("pm name", req.body.pmName);
                 qb.where("pm_master2.name", "iLIKE", `%${req.body.pmName}%`);
               }
               if (req.body.status) {
-                console.log("status of wo", req.body.status);
+                // console.log("status of wo", req.body.status);
                 qb.whereIn(
                   "task_group_schedule_assign_assets.status",
                   req.body.status
@@ -2390,6 +2394,7 @@ const taskGroupController = {
               "asset_master.areaName as areaName",
               "asset_master.description as description",
               "asset_master.assetSerial as assetSerial",
+              "asset_master.assetCode as assetCode",
               "asset_master.id as assetId",
               "asset_master.assetCategoryId",
               "pm_master2.name as pmName",
@@ -2406,6 +2411,7 @@ const taskGroupController = {
               "buildings_and_phases.buildingPhaseCode",
               "floor_and_zones.floorZoneCode",
               "property_units.unitNumber",
+              "task_group_schedule_assign_assets.completedAt"
             ])
             .where({
               "task_group_schedule.orgId": req.orgId,

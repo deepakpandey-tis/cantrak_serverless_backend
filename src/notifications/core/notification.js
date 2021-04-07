@@ -276,7 +276,7 @@ const notification = {
 
             if (err.list && Array.isArray(err.list)) {
                 err.list.forEach(item => {
-                    sails.log.error('[notifications][core][notification][send]: Each Error:', item.message);
+                    console.error('[notifications][core][notification][send]: Each Error:', item.message);
                 });
             }
 

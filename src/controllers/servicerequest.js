@@ -642,6 +642,7 @@ const serviceRequestController = {
 
             //console.log('USER**************************************',req.userProjectResources)
             const accessibleProjects = req.userProjectResources[0].projects
+            let projectIds = req.accessibleProjects;
 
             let pagination = {};
             let per_page = reqData.per_page || 10;
@@ -686,27 +687,13 @@ const serviceRequestController = {
 
             if (serviceFrom && serviceTo) {
 
-                // let fromDate = moment(serviceFrom).startOf('date').format();
                 serviceFromDate = moment(serviceFrom).tz(selectedTimeZone).valueOf();
                 let toDate = moment(serviceTo).endOf('date').format();
 
                 serviceFromDate = serviceFrom;
-                // serviceFromDate = new Date(fromDate).getTime();
-                //serviceToDate = new Date(toDate).getTime();
                 serviceToDate = serviceTo;
-                // serviceToDate = moment(serviceTo).tz(selectedTimeZone).valueOf();
 
             }
-
-            //else if (serviceFrom && !serviceTo) {
-            //     // serviceFromDate = new Date(serviceFrom).getTime();
-            //     serviceFromDate = moment(serviceFrom).tz(selectedTimeZone).valueOf();
-            //     serviceToDate = new Date("2030-01-01").getTime();
-            // } else if (!serviceFrom && serviceTo) {
-            //     serviceFromDate = new Date("2000-01-01").getTime();
-            //     serviceToDate = new Date(serviceTo).getTime();
-            //     //serviceToDate = moment(serviceTo).tz(selectedTimeZone).valueOf();
-            // }
 
             if (closingDate) {
                 filters["service_requests.completedOn"] = closingDate;
@@ -810,8 +797,6 @@ const serviceRequestController = {
                             "service_problems.categoryId",
                             "incident_categories.id"
                         )
-                        // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-                        // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
                         .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
                         .leftJoin('companies', 'service_requests.companyId', 'companies.id')
                         .leftJoin('projects', 'service_requests.projectId', 'projects.id')
@@ -819,10 +804,7 @@ const serviceRequestController = {
                         .select([
                             "service_requests.id as S Id",
                             "service_requests.description as Description",
-                            // "incident_categories.descriptionEng as Category",
-                            // "incident_sub_categories.descriptionEng as Problem",
                             "service_requests.priority as Priority",
-                            // "assignUser.name as Tenant Name",
                             "status.descriptionEng as Status",
                             "property_units.unitNumber as Unit No",
                             "u.name as Requested By",
@@ -895,18 +877,7 @@ const serviceRequestController = {
                             if (project) {
                                 qb.where('service_requests.projectId', project)
                             }
-
-                            // if (dueDateFrom && dueDateTo) {
-
-                            //   console.log("dsfsdfsdfsdfsdfffffffffffffffffff=========")
-                            //   qb.whereBetween("service_requests.createdAt", [
-                            //     dueFrom,
-                            //     dueTo
-                            //   ]);
-                            //   //qb.where({ closedBy: "" })
-                            // }
-                            //qb.where(filters);
-                            qb.whereIn('service_requests.projectId', accessibleProjects)
+                            qb.whereIn('service_requests.projectId', projectIds)
                         })
 
                         .groupBy([
@@ -921,8 +892,6 @@ const serviceRequestController = {
                             "teams.teamId",
                             "mainUsers.id",
                             "incident_categories.id",
-                            // "assignUser.id",
-                            // "user_house_allocation.id",
                             "service_orders.id",
                             "companies.id",
                             "projects.id"
@@ -964,8 +933,6 @@ const serviceRequestController = {
                             "service_problems.categoryId",
                             "incident_categories.id"
                         )
-                        // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-                        // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
                         .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
                         .leftJoin('companies', 'service_requests.companyId', 'companies.id')
                         .leftJoin('projects', 'service_requests.projectId', 'projects.id')
@@ -983,9 +950,6 @@ const serviceRequestController = {
                             "buildings_and_phases.description as buildingDescription",
                             "incident_categories.descriptionEng as problemDescription",
                             "requested_by.email as requestedByEmail",
-                            //"teams.teamName",
-                            //"teams.teamCode",
-                            //"mainUsers.name as mainUser",
                             "service_orders.id as SO Id",
                             "property_units.id as unitId",
                             "service_orders.displayId as SO#",
@@ -1055,16 +1019,7 @@ const serviceRequestController = {
                             if (project) {
                                 qb.where('service_requests.projectId', project)
                             }
-
-                            // if (dueDateFrom && dueDateTo) {
-                            //   qb.whereBetween("service_requests.createdAt", [
-                            //     dueFrom,
-                            //     dueTo
-                            //   ]);
-                            //   //qb.where({ closedBy: "" })
-                            // }
-                            //qb.where(filters);
-                            qb.whereIn('service_requests.projectId', accessibleProjects)
+                            qb.whereIn('service_requests.projectId', projectIds)
 
 
                         })
@@ -1082,8 +1037,6 @@ const serviceRequestController = {
                             "teams.teamId",
                             "mainUsers.id",
                             "incident_categories.id",
-                            // "assignUser.id",
-                            // "user_house_allocation.id",
                             "service_orders.id",
                             "companies.id",
                             "projects.id"
@@ -1130,8 +1083,6 @@ const serviceRequestController = {
                             "service_problems.categoryId",
                             "incident_categories.id"
                         )
-                        // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-                        // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
                         .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
                         .leftJoin('companies', 'service_requests.companyId', 'companies.id')
                         .leftJoin('projects', 'service_requests.projectId', 'projects.id')
@@ -1141,7 +1092,6 @@ const serviceRequestController = {
                             "service_requests.houseId as houseId",
                             "service_requests.description as Description",
                             "service_requests.priority as Priority",
-                            // "assignUser.name as Tenant Name",
                             "status.descriptionEng as Status",
                             "property_units.unitNumber as Unit No",
                             "u.name as Requested By",
@@ -1168,14 +1118,12 @@ const serviceRequestController = {
                             "teams.teamId",
                             "mainUsers.id",
                             "incident_categories.id",
-                            // "assignUser.id",
-                            // "user_house_allocation.id",
                             "service_orders.id",
                             "companies.id",
                             "projects.id"
                         ])
                         .where({ "service_requests.orgId": req.orgId, 'service_requests.moderationStatus': true })
-                        .whereIn('service_requests.projectId', accessibleProjects)
+                        .whereIn('service_requests.projectId', projectIds)
                         .where({ 'service_requests.isCreatedFromSo': false })
                         .distinct('service_requests.id'),
 
@@ -1211,8 +1159,6 @@ const serviceRequestController = {
                             "service_problems.categoryId",
                             "incident_categories.id"
                         )
-                        // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-                        // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
                         .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
                         .leftJoin('companies', 'service_requests.companyId', 'companies.id')
                         .leftJoin('projects', 'service_requests.projectId', 'projects.id')
@@ -1222,7 +1168,6 @@ const serviceRequestController = {
                             "service_requests.houseId as houseId",
                             "service_requests.description as Description",
                             "service_requests.priority as Priority",
-                            // "assignUser.name as Tenant Name",
                             "status.descriptionEng as Status",
                             "property_units.unitNumber as Unit No",
                             "requested_by.name as Requested By",
@@ -1231,9 +1176,6 @@ const serviceRequestController = {
                             "buildings_and_phases.description as buildingDescription",
                             "incident_categories.descriptionEng as problemDescription",
                             "requested_by.email as requestedByEmail",
-                            //"teams.teamName",
-                            //"teams.teamCode",
-                            //"mainUsers.name as mainUser",
                             "service_orders.id as SO Id",
                             "property_units.id as unitId",
                             "service_orders.displayId as SO#",
@@ -1256,560 +1198,22 @@ const serviceRequestController = {
                             "teams.teamId",
                             "mainUsers.id",
                             "incident_categories.id",
-                            // "assignUser.id",
-                            // "user_house_allocation.id",
                             "service_orders.id",
                             "companies.id",
                             "projects.id"
                         ])
                         .where({ "service_requests.orgId": req.orgId, 'service_requests.moderationStatus': true })
-                        .whereIn('service_requests.projectId', accessibleProjects)
+                        .whereIn('service_requests.projectId', projectIds)
                         .where({ 'service_requests.isCreatedFromSo': false })
                         .distinct('service_requests.id')
                         .orderBy('service_requests.id', 'desc')
                         .offset(offset)
                         .limit(per_page)
 
-                    //
-
-                    // knex
-                    //   .from("service_requests")
-                    //   .leftJoin(
-                    //     "property_units",
-                    //     "service_requests.houseId",
-                    //     "property_units.id"
-                    //   )
-                    //   .leftJoin(
-                    //     "service_status AS status",
-                    //     "service_requests.serviceStatusCode",
-                    //     "status.statusCode"
-                    //   )
-                    //   .leftJoin("users as u", "service_requests.requestedBy", "u.id")
-                    //   .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
-                    //   .leftJoin(
-                    //     "service_problems",
-                    //     "service_requests.id",
-                    //     "service_problems.serviceRequestId"
-                    //   )
-                    //   .leftJoin(
-                    //     "requested_by",
-                    //     "service_requests.requestedBy",
-                    //     "requested_by.id"
-                    //   )
-                    //   .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
-                    //   .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
-                    //   .leftJoin('users as mainUsers', 'assigned_service_team.userId', 'mainUsers.id')
-                    //   .select([
-                    //     "service_requests.id as S Id",
-                    //     "service_requests.houseId as houseId",
-                    //     "service_requests.description as Description",
-                    //     // "incident_categories.descriptionEng as Category",
-                    //     // "incident_sub_categories.descriptionEng as Problem",
-                    //     "service_requests.priority as Priority",
-                    //     "status.descriptionEng as Status",
-                    //     "property_units.unitNumber as Unit No",
-                    //     "requested_by.name as Requested By",
-                    //     "service_requests.createdAt as Date Created",
-                    //     "buildings_and_phases.buildingPhaseCode",
-                    //     "buildings_and_phases.description as buildingDescription",
-                    //     "service_problems.description as problemDescription",
-                    //     "requested_by.email as requestedByEmail",
-                    //     "teams.teamName",
-                    //     "teams.teamCode",
-                    //     "mainUsers.name as mainUser"
-                    //   ])
-                    //   .offset(offset)
-                    //   .limit(per_page)
-                    //   .where({ "service_requests.orgId": req.orgId })
-                    //   .whereIn('service_requests.projectId', accessibleProjects)
-                    //   .orderBy('service_requests.id', 'desc')
-                    //   .groupBy([
-                    //     "service_requests.id",
-                    //     "status.id",
-                    //     "u.id",
-                    //     "property_units.id",
-                    //     "buildings_and_phases.id",
-                    //     "service_problems.id",
-                    //     "requested_by.id",
-                    //     "assigned_service_team.id",
-                    //     "teams.teamId",
-                    //     "mainUsers.id"
-                    //   ])
-                    //   .distinct('service_requests.id')
                 ]);
 
 
             }
-
-
-
-            // if (_.isEmpty(filters) && _.isEmpty(serviceFrom && serviceTo) && _.isEmpty(dueDateFrom && dueDateTo)) {
-
-            //   [total, rows] = await Promise.all([
-            //     knex
-            //       // .count("* as count")
-            //       .from("service_requests")
-            //       .leftJoin(
-            //         "property_units",
-            //         "service_requests.houseId",
-            //         "property_units.id"
-            //       )
-            //       .leftJoin(
-            //         "service_status AS status",
-            //         "service_requests.serviceStatusCode",
-            //         "status.statusCode"
-            //       )
-            //       .leftJoin("users as u", "service_requests.requestedBy", "u.id")
-            //       .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
-            //       .leftJoin(
-            //         "service_problems",
-            //         "service_requests.id",
-            //         "service_problems.serviceRequestId"
-            //       )
-            //       .leftJoin(
-            //         "requested_by",
-            //         "service_requests.requestedBy",
-            //         "requested_by.id"
-            //       )
-            //       .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
-            //       .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
-            //       .leftJoin('users as mainUsers', 'assigned_service_team.userId', 'mainUsers.id')
-            //       .leftJoin(
-            //         "incident_categories",
-            //         "service_problems.categoryId",
-            //         "incident_categories.id"
-            //       )
-            //       // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-            //       // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
-            //       .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
-
-            //       .select([
-            //         "service_requests.id as S Id",
-            //         "service_requests.houseId as houseId",
-            //         "service_requests.description as Description",
-            //         "service_requests.priority as Priority",
-            //         // "assignUser.name as Tenant Name",
-            //         "status.descriptionEng as Status",
-            //         "property_units.unitNumber as Unit No",
-            //         "u.name as Requested By",
-            //         "service_requests.createdAt as Date Created",
-            //         "service_orders.id as SO Id",
-            //         "property_units.id as unitId",
-            //         "service_orders.displayId as SO#",
-            //         "service_requests.displayId as SR#",
-
-            //       ])
-            //       .groupBy([
-            //         "service_requests.id",
-            //         "status.id",
-            //         "u.id",
-            //         "property_units.id",
-            //         "buildings_and_phases.id",
-            //         "service_problems.id",
-            //         "requested_by.id",
-            //         "assigned_service_team.id",
-            //         "teams.teamId",
-            //         "mainUsers.id",
-            //         "incident_categories.id",
-            //         // "assignUser.id",
-            //         // "user_house_allocation.id",
-            //         "service_orders.id"
-            //       ])
-            //       .where({ "service_requests.orgId": req.orgId, 'service_requests.moderationStatus': true })
-            //       .whereIn('service_requests.projectId', accessibleProjects)
-            //       .where({ 'service_requests.isCreatedFromSo': false })
-            //       .distinct('service_requests.id')
-            //     ,
-
-
-
-            //     knex.from("service_requests")
-            //       .leftJoin(
-            //         "property_units",
-            //         "service_requests.houseId",
-            //         "property_units.id"
-            //       )
-            //       .leftJoin(
-            //         "service_status AS status",
-            //         "service_requests.serviceStatusCode",
-            //         "status.statusCode"
-            //       )
-            //       .leftJoin("users as u", "service_requests.requestedBy", "u.id")
-            //       .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
-            //       .leftJoin(
-            //         "service_problems",
-            //         "service_requests.id",
-            //         "service_problems.serviceRequestId"
-            //       )
-            //       .leftJoin(
-            //         "requested_by",
-            //         "service_requests.requestedBy",
-            //         "requested_by.id"
-            //       )
-            //       .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
-            //       .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
-            //       .leftJoin('users as mainUsers', 'assigned_service_team.userId', 'mainUsers.id')
-            //       .leftJoin(
-            //         "incident_categories",
-            //         "service_problems.categoryId",
-            //         "incident_categories.id"
-            //       )
-            //       // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-            //       // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
-            //       .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
-
-            //       .select([
-            //         "service_requests.id as S Id",
-            //         "service_requests.houseId as houseId",
-            //         "service_requests.description as Description",
-            //         "service_requests.priority as Priority",
-            //         // "assignUser.name as Tenant Name",
-            //         "status.descriptionEng as Status",
-            //         "property_units.unitNumber as Unit No",
-            //         "requested_by.name as Requested By",
-            //         "service_requests.createdAt as Date Created",
-            //         "buildings_and_phases.buildingPhaseCode",
-            //         "buildings_and_phases.description as buildingDescription",
-            //         "incident_categories.descriptionEng as problemDescription",
-            //         "requested_by.email as requestedByEmail",
-            //         "teams.teamName",
-            //         "teams.teamCode",
-            //         "mainUsers.name as mainUser",
-            //         "service_orders.id as SO Id",
-            //         "property_units.id as unitId",
-            //         "service_orders.displayId as SO#",
-            //         "service_requests.displayId as SR#",
-
-
-            //       ])
-            //       .groupBy([
-            //         "service_requests.id",
-            //         "status.id",
-            //         "u.id",
-            //         "property_units.id",
-            //         "buildings_and_phases.id",
-            //         "service_problems.id",
-            //         "requested_by.id",
-            //         "assigned_service_team.id",
-            //         "teams.teamId",
-            //         "mainUsers.id",
-            //         "incident_categories.id",
-            //         // "assignUser.id",
-            //         // "user_house_allocation.id",
-            //         "service_orders.id"
-
-            //       ])
-            //       .where({ "service_requests.orgId": req.orgId, 'service_requests.moderationStatus': true })
-            //       .whereIn('service_requests.projectId', accessibleProjects)
-            //       // .where({'service_requests.isCreatedFromSo':false})
-            //       .distinct('service_requests.id')
-            //       .orderBy('service_requests.id', 'desc')
-            //       .offset(offset)
-            //       .limit(per_page)
-
-            //     //
-
-            //     // knex
-            //     //   .from("service_requests")
-            //     //   .leftJoin(
-            //     //     "property_units",
-            //     //     "service_requests.houseId",
-            //     //     "property_units.id"
-            //     //   )
-            //     //   .leftJoin(
-            //     //     "service_status AS status",
-            //     //     "service_requests.serviceStatusCode",
-            //     //     "status.statusCode"
-            //     //   )
-            //     //   .leftJoin("users as u", "service_requests.requestedBy", "u.id")
-            //     //   .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
-            //     //   .leftJoin(
-            //     //     "service_problems",
-            //     //     "service_requests.id",
-            //     //     "service_problems.serviceRequestId"
-            //     //   )
-            //     //   .leftJoin(
-            //     //     "requested_by",
-            //     //     "service_requests.requestedBy",
-            //     //     "requested_by.id"
-            //     //   )
-            //     //   .leftJoin('assigned_service_team', 'service_requests.id', 'assigned_service_team.entityId')
-            //     //   .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
-            //     //   .leftJoin('users as mainUsers', 'assigned_service_team.userId', 'mainUsers.id')
-            //     //   .select([
-            //     //     "service_requests.id as S Id",
-            //     //     "service_requests.houseId as houseId",
-            //     //     "service_requests.description as Description",
-            //     //     // "incident_categories.descriptionEng as Category",
-            //     //     // "incident_sub_categories.descriptionEng as Problem",
-            //     //     "service_requests.priority as Priority",
-            //     //     "status.descriptionEng as Status",
-            //     //     "property_units.unitNumber as Unit No",
-            //     //     "requested_by.name as Requested By",
-            //     //     "service_requests.createdAt as Date Created",
-            //     //     "buildings_and_phases.buildingPhaseCode",
-            //     //     "buildings_and_phases.description as buildingDescription",
-            //     //     "service_problems.description as problemDescription",
-            //     //     "requested_by.email as requestedByEmail",
-            //     //     "teams.teamName",
-            //     //     "teams.teamCode",
-            //     //     "mainUsers.name as mainUser"
-            //     //   ])
-            //     //   .offset(offset)
-            //     //   .limit(per_page)
-            //     //   .where({ "service_requests.orgId": req.orgId })
-            //     //   .whereIn('service_requests.projectId', accessibleProjects)
-            //     //   .orderBy('service_requests.id', 'desc')
-            //     //   .groupBy([
-            //     //     "service_requests.id",
-            //     //     "status.id",
-            //     //     "u.id",
-            //     //     "property_units.id",
-            //     //     "buildings_and_phases.id",
-            //     //     "service_problems.id",
-            //     //     "requested_by.id",
-            //     //     "assigned_service_team.id",
-            //     //     "teams.teamId",
-            //     //     "mainUsers.id"
-            //     //   ])
-            //     //   .distinct('service_requests.id')
-            //   ]);
-
-
-
-
-            // } else {
-
-
-            //   [total, rows] = await Promise.all([
-            //     knex
-            //       // .count("* as count")
-            //       .from("service_requests")
-            //       .leftJoin(
-            //         "property_units",
-            //         "service_requests.houseId",
-            //         "property_units.id"
-            //       )
-
-            //       .leftJoin(
-            //         "assigned_service_team",
-            //         "service_requests.id",
-            //         "assigned_service_team.entityId"
-            //       )
-            //       .leftJoin(
-            //         "service_status AS status",
-            //         "service_requests.serviceStatusCode",
-            //         "status.statusCode"
-            //       )
-            //       .leftJoin("users as u", "service_requests.requestedBy", "u.id")
-            //       .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
-            //       .leftJoin(
-            //         "service_problems",
-            //         "service_requests.id",
-            //         "service_problems.serviceRequestId"
-            //       )
-            //       .leftJoin(
-            //         "requested_by",
-            //         "service_requests.requestedBy",
-            //         "requested_by.id"
-            //       )
-            //       .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
-            //       .leftJoin('users as mainUsers', 'assigned_service_team.userId', 'mainUsers.id')
-            //       .leftJoin(
-            //         "incident_categories",
-            //         "service_problems.categoryId",
-            //         "incident_categories.id"
-            //       )
-            //       // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-            //       // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
-            //       .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
-
-            //       .select([
-            //         "service_requests.id as S Id",
-            //         "service_requests.description as Description",
-            //         // "incident_categories.descriptionEng as Category",
-            //         // "incident_sub_categories.descriptionEng as Problem",
-            //         "service_requests.priority as Priority",
-            //         // "assignUser.name as Tenant Name",
-            //         "status.descriptionEng as Status",
-            //         "property_units.unitNumber as Unit No",
-            //         "u.name as Requested By",
-            //         "service_requests.createdAt as Date Created",
-            //         "service_orders.id as SO Id",
-            //         "property_units.id as unitId",
-            //         "service_orders.displayId as SO#",
-            //         "service_requests.displayId as SR#",
-
-
-            //       ])
-            //       .where({ "service_requests.orgId": req.orgId, 'service_requests.moderationStatus': true })
-            //       .where({ 'service_requests.isCreatedFromSo': false })
-            //       .where(qb => {
-            //         if (location) {
-            //           qb.where('service_requests.location', 'iLIKE', `%${location}%`)
-            //         }
-            //         if (description) {
-            //           qb.where('service_requests.description', 'iLIKE', `%${description}%`)
-            //         }
-            //         if (priority) {
-            //           qb.where('service_requests.priority', 'iLIKE', `%${priority}%`)
-            //         }
-
-            //         if (serviceFromDate && serviceToDate) {
-            //           qb.whereBetween("service_requests.createdAt", [
-            //             serviceFromDate,
-            //             serviceToDate
-            //           ]);
-            //         }
-            //         if (dueDateFrom && dueDateTo) {
-
-            //           console.log("dsfsdfsdfsdfsdfffffffffffffffffff=========")
-            //           qb.whereBetween("service_requests.createdAt", [
-            //             dueFrom,
-            //             dueTo
-            //           ]);
-            //           qb.where({ closedBy: "" })
-            //         }
-            //         qb.where(filters);
-            //         qb.whereIn('service_requests.projectId', accessibleProjects)
-            //       })
-
-            //       .groupBy([
-            //         "service_requests.id",
-            //         "status.id",
-            //         "u.id",
-            //         "property_units.id",
-            //         "buildings_and_phases.id",
-            //         "service_problems.id",
-            //         "requested_by.id",
-            //         "assigned_service_team.id",
-            //         "teams.teamId",
-            //         "mainUsers.id",
-            //         "incident_categories.id",
-            //         // "assignUser.id",
-            //         // "user_house_allocation.id",
-            //         "service_orders.id"
-            //       ])
-            //       .distinct('service_requests.id')
-            //     ,
-            //     knex
-            //       .from("service_requests")
-            //       .leftJoin(
-            //         "property_units",
-            //         "service_requests.houseId",
-            //         "property_units.id"
-            //       )
-            //       .leftJoin(
-            //         "assigned_service_team",
-            //         "service_requests.id",
-            //         "assigned_service_team.entityId"
-            //       )
-            //       .leftJoin(
-            //         "service_status AS status",
-            //         "service_requests.serviceStatusCode",
-            //         "status.statusCode"
-            //       )
-            //       .leftJoin("users as u", "service_requests.requestedBy", "u.id")
-            //       .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
-            //       .leftJoin(
-            //         "service_problems",
-            //         "service_requests.id",
-            //         "service_problems.serviceRequestId"
-            //       )
-            //       .leftJoin(
-            //         "requested_by",
-            //         "service_requests.requestedBy",
-            //         "requested_by.id"
-            //       )
-            //       .leftJoin('teams', 'assigned_service_team.teamId', 'teams.teamId')
-            //       .leftJoin('users as mainUsers', 'assigned_service_team.userId', 'mainUsers.id')
-            //       .leftJoin(
-            //         "incident_categories",
-            //         "service_problems.categoryId",
-            //         "incident_categories.id"
-            //       )
-            //       // .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-            //       // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
-            //       .leftJoin("service_orders", "service_requests.id", "service_orders.serviceRequestId")
-
-            //       .select([
-            //         "service_requests.id as S Id",
-            //         "service_requests.description as Description",
-            //         "service_requests.priority as Priority",
-            //         "status.descriptionEng as Status",
-            //         "property_units.unitNumber as Unit No",
-            //         // "assignUser.name as Tenant Name",
-            //         "requested_by.name as Requested By",
-            //         "service_requests.createdAt as Date Created",
-            //         "buildings_and_phases.buildingPhaseCode",
-            //         "buildings_and_phases.description as buildingDescription",
-            //         "incident_categories.descriptionEng as problemDescription",
-            //         "requested_by.email as requestedByEmail",
-            //         "teams.teamName",
-            //         "teams.teamCode",
-            //         "mainUsers.name as mainUser",
-            //         "service_orders.id as SO Id",
-            //         "property_units.id as unitId",
-            //         "service_orders.displayId as SO#",
-            //         "service_requests.displayId as SR#",
-
-
-            //       ])
-            //       .orderBy('service_requests.id', 'desc')
-            //       .where({ "service_requests.orgId": req.orgId, 'service_requests.moderationStatus': true })
-            //       .where({ 'service_requests.isCreatedFromSo': false })
-            //       .where(qb => {
-            //         if (location) {
-            //           qb.where('service_requests.location', 'iLIKE', `%${location}%`)
-            //         }
-            //         if (priority) {
-            //           qb.where('service_requests.priority', 'iLIKE', `%${priority}%`)
-            //         }
-            //         if (description) {
-            //           qb.where('service_requests.description', 'iLIKE', `%${description}%`)
-            //         }
-
-            //         if (serviceFromDate && serviceToDate) {
-            //           qb.whereBetween("service_requests.createdAt", [
-            //             serviceFromDate,
-            //             serviceToDate
-            //           ]);
-            //         }
-
-            //         if (dueDateFrom && dueDateTo) {
-            //           qb.whereBetween("service_requests.createdAt", [
-            //             dueFrom,
-            //             dueTo
-            //           ]);
-            //           qb.where({ closedBy: "" })
-            //         }
-            //         qb.where(filters);
-            //         qb.whereIn('service_requests.projectId', accessibleProjects)
-
-
-            //       })
-            //       .offset(offset)
-            //       .limit(per_page)
-            //       .groupBy([
-            //         "service_requests.id",
-            //         "status.id",
-            //         "u.id",
-            //         "property_units.id",
-            //         "buildings_and_phases.id",
-            //         "service_problems.id",
-            //         "requested_by.id",
-            //         "assigned_service_team.id",
-            //         "teams.teamId",
-            //         "mainUsers.id",
-            //         "incident_categories.id",
-            //         // "assignUser.id",
-            //         // "user_house_allocation.id",
-            //         "service_orders.id"
-            //       ])
-            //       .distinct('service_requests.id')
-            //   ]);
-            // }
-
             let count = total.length;
             pagination.total = count;
             pagination.per_page = per_page;
@@ -1821,21 +1225,6 @@ const serviceRequestController = {
 
             const Parallel = require('async-parallel');
 
-            // rows.tenantName = await Parallel.map(rows, async item => {
-
-            //   let userId = await knex('assigned_service_additional_users').where({ entityId: item["S Id"] ,'entityType':'service_requests'}).select('userId').first();
-
-            //   let tenantName =null;   
-            //   if(userId){
-            //   tenantName = await knex('users').where({ id: userId }).select('name').first();
-            //   tenantName="assssssssssss"
-            //   }
-
-            //   return userId;
-
-            // });
-
-            // let Parallel = require('async-parallel');
             pagination.data = await Parallel.map(rows, async pd => {
 
 
@@ -4334,22 +3723,14 @@ const serviceRequestController = {
 
                 let houseResult = await knex.from('user_house_allocation').select('userId').where({ houseId: pd.unitId }).first().orderBy('id', 'desc')
 
+                let tetantResult;
                 if (houseResult) {
-                    let tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
-                    return {
-                        ...pd,
-                        "Tenant Name": tetantResult.name,
-                        tags: tag
-                    }
-                } else {
-                    return {
-                        ...pd,
-                        "Tenant Name": '',
-                        tags: tag
-
-                    }
+                    tetantResult = await knex.from('users').select('name').where({ id: houseResult.userId }).first()
                 }
-
+                return {
+                    ...pd,
+                    "Tenant Name":tetantResult ? tetantResult.name : ''
+                }
             })
 
 

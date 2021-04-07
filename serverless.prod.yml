@@ -13,6 +13,13 @@ plugins:
   # - serverless-dotenv-plugin
   - serverless-s3-local
 
+
+package:
+  exclude:
+    - .vscode/**
+    - .serverless/**
+
+
 provider:
   name: aws
   runtime: nodejs12.x
@@ -28,14 +35,16 @@ provider:
       Action:
         - s3:*
       Resource: 
-        - arn:aws:s3:::*        
+        - arn:aws:s3:::*
+  iamManagedPolicies:
+      - arn:aws:iam::aws:policy/AmazonElasticFileSystemClientReadWriteAccess              
   environment:
     ENV: ${self:provider.stage}
     REGION: ${self:provider.region}
     DB_USER: servicemind
     DB_PASS: su99yTIS#2020
     DB_NAME: tis_database
-    DB_HOST: tis-serverless-db.cluster-c1klhwsjgssk.us-east-1.rds.amazonaws.com
+    DB_HOST: tis-sv-db.cluster-c1klhwsjgssk.us-east-1.rds.amazonaws.com
     DB_PORT: 5432
     SITE_URL: https://d3lw11mvhjp3jm.cloudfront.net
     ORIGIN_URL: https://rme4pik2uf.execute-api.us-east-1.amazonaws.com/production
@@ -56,6 +65,7 @@ provider:
     CDN_URL: resources.servicemind.asia
     REDIS_HOST: tis-prod-redis.ftr6oh.0001.use1.cache.amazonaws.com
     REDIS_PORT: 6379
+    MNT_DIR: ${self:custom.localMountPath}
   vpc:
     securityGroupIds:
       - sg-f4e38fd6
@@ -75,9 +85,8 @@ custom:
   profiles:
     dev: servicemind-dev
     production: servicemind-production
-  apigwBinary:
-    types:
-      - "*/*"
+  efsAccessPoint: fsap-0c00dfe21523b194f
+  localMountPath: /mnt/efs
   
   
 functions:
@@ -93,28 +102,9 @@ functions:
           method: ANY
           # cors: true
 
-  queueProcessor:
-    handler: src/app.queueProcessor
-    batchSize: 1                           # Using a batchSize of 1, so that messages succeed or fail on their own.
-    memorySize: 1024
-    timeout: 150
-    reservedConcurrency: 10                # <-- Concurrency control
-    events:
-      - sqs: arn:aws:sqs:us-east-1:037792882519:mail-queue
-
-
-  longJobsProcessor:
-    handler: src/app.longJobsProcessor
-    batchSize: 1                           # Using a batchSize of 1, so that messages succeed or fail on their own.
-    memorySize: 8148
-    timeout: 900                           # 15 Mins...
-    reservedConcurrency: 10                # <-- Concurrency control
-    events:
-      - sqs: arn:aws:sqs:us-east-1:037792882519:long-jobs
-
 
   websocket:
-    handler: src/socket.handler
+    handler: src/handlers/socket.handler
     events:
       - websocket:
           # Handles new connection requests
@@ -147,12 +137,34 @@ functions:
           # Handles disconnect messages
           route: $disconnect
 
+
   auth:
-    handler: src/socket.auth
-  
-  workOrderOverdueProcessor:
-    handler: src/app.workOrderOverdueProcessor
+    handler: src/handlers/socket.auth
+
+
+  queueProcessor:
+    handler: src/handlers/jobs.queueProcessor
+    batchSize: 1                           # Using a batchSize of 1, so that messages succeed or fail on their own.
     memorySize: 1024
+    timeout: 150
+    reservedConcurrency: 10                # <-- Concurrency control
+    events:
+      - sqs: arn:aws:sqs:us-east-1:037792882519:mail-queue
+
+
+  longJobsProcessor:
+    handler: src/handlers/jobs.longJobsProcessor
+    batchSize: 1                           # Using a batchSize of 1, so that messages succeed or fail on their own.
+    memorySize: 5120
+    timeout: 900                           # 15 Mins...
+    reservedConcurrency: 10                # <-- Concurrency control
+    events:
+      - sqs: arn:aws:sqs:us-east-1:037792882519:long-jobs
+
+
+  workOrderOverdueProcessor:
+    handler: src/handlers/dailyTasks.workOrderOverdueProcessor
+    memorySize: 512
     timeout: 300
     events:
       - schedule:
@@ -161,7 +173,7 @@ functions:
 
 
   dailyDigestProcessor:
-    handler: src/app.dailyDigestProcessor
+    handler: src/handlers/dailyTasks.dailyDigestProcessor
     memorySize: 1024
     timeout:  899                     # Max Time out is 15 mins..
     events:
@@ -169,5 +181,32 @@ functions:
           rate: cron(0 1 * * ? *)    # Utc 1 am every day i.e 8 am Morning Thai Time..
           enabled: true        
 
+dailyDbWakeUpProcessor:
+    handler: src/handlers/dailyTasks.dBWakeUpTask
+    memorySize: 256
+    timeout:  300                     # Max Time out is 5 mins..
+    events:
+      - schedule:
+          rate: cron(0 0 * * ? *)    # Utc 1 am every day i.e 7:00 am Morning Thai Time..
+          enabled: true
+      - schedule:
+          rate: cron(30 0 * * ? *)    # Utc 1 am every day i.e 7:30 am Morning Thai Time..
+          enabled: true
+      - schedule:
+          rate: cron(0 1 * * ? *)    # Utc 1 am every day i.e 8:00 am Morning Thai Time..
+          enabled: true
+      - schedule:
+          rate: cron(30 1 * * ? *)    # Utc 1 am every day i.e 8:30 am Morning Thai Time..
+          enabled: true
+      - schedule:
+          rate: cron(0 2 * * ? *)    # Utc 1 am every day i.e 9 am Morning Thai Time..
+          enabled: true     
 
-  
+resources:
+  extensions:
+    # Name of function <longJobsProcessor>
+    LongJobsProcessorLambdaFunction:
+      Properties:
+        FileSystemConfigs:
+          - Arn: 'arn:aws:elasticfilesystem:${self:provider.region}:037792882519:access-point/${self:custom.efsAccessPoint}'
+            LocalMountPath: '${self:custom.localMountPath}'  
