@@ -452,6 +452,11 @@ const surveyOrderController = {
       let compToDate = "";
       const accessibleProjects = req.userProjectResources[0].projects
 
+      let projectIds = req.accessibleProjects;
+
+
+
+
       let pagination = {};
       let per_page = req.query.per_page || 10;
       let page = req.query.current_page || 1;
@@ -683,7 +688,7 @@ const surveyOrderController = {
             "o.displayId as SU No"
           )
           .where({ "assigned_service_team.entityType": "survey_orders" })
-          .whereIn('s.projectId', accessibleProjects)
+          .whereIn('s.projectId', projectIds)
           .groupBy([
             "o.id",
             "s.id",
@@ -782,7 +787,7 @@ const surveyOrderController = {
           )
           .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
           .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
-          .whereIn('s.projectId', accessibleProjects)
+          .whereIn('s.projectId', projectIds)
           .orderBy('o.id', 'desc')
           .offset(offset)
           .limit(per_page);
@@ -844,7 +849,7 @@ const surveyOrderController = {
             "assignUser.name  as Tenant Name",
             "survey_orders.displayId as SU No"
           ])
-          .whereIn('service_requests.projectId', accessibleProjects)
+          .whereIn('service_requests.projectId', projectIds)
 
 
         // For get the rows With pagination
@@ -894,7 +899,7 @@ const surveyOrderController = {
 
           ])
           .offset(offset)
-          .whereIn('service_requests.projectId', accessibleProjects)
+          .whereIn('service_requests.projectId', projectIds)
           .limit(per_page)
       } else {
         /* Get List of All survey order With out Filter */
@@ -941,7 +946,7 @@ const surveyOrderController = {
 
           ])
           .where({ "survey_orders.orgId": req.orgId, "assigned_service_team.entityType": "survey_orders" })
-          .whereIn('service_requests.projectId', accessibleProjects)
+          .whereIn('service_requests.projectId', projectIds)
 
           .select([
             "survey_orders.id as S Id",
@@ -1008,7 +1013,7 @@ const surveyOrderController = {
 
           ])
           .where({ "survey_orders.orgId": req.orgId, "assigned_service_team.entityType": "survey_orders" })
-          .whereIn('service_requests.projectId', accessibleProjects)
+          .whereIn('service_requests.projectId', projectIds)
 
           .offset(offset)
           .limit(per_page);
@@ -1044,6 +1049,8 @@ const surveyOrderController = {
       let total
       let rows
       const accessibleProjects = req.userProjectResources[0].projects
+      let projectIds = req.accessibleProjects;
+
       let pagination = {};
       let per_page = req.query.per_page || 10;
       let page = req.query.current_page || 1;
@@ -1074,19 +1081,6 @@ const surveyOrderController = {
       if (filterList.project) {
         filters['property_units.projectId'] = filterList.project;
       }
-
-      // if(filterList.description){
-      //   filters['s.description'] = filterList.description;
-      // }
-
-      // if(filterList.building){
-      //   filters['buildings_and_phases.buildingPhaseCode'] = filterList.building;
-      // }
-
-      // if(filterList.unitNo){
-      //   filters['property_units.unitNo'] = filterList.unitNo;
-      // }
-
 
       [total, rows] = await Promise.all([
         knex
@@ -1150,35 +1144,10 @@ const surveyOrderController = {
             "service_problems.categoryId",
             "incident_categories.id"
           )
-          // .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
-          // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
           .leftJoin('companies', 'o.companyId', 'companies.id')
           .leftJoin('projects', 'property_units.projectId', 'projects.id')
-
-          // .select(
-          //   "o.id AS surveyId",
-          //   "o.serviceRequestId",
-          //   "o.surveyOrderStatus as Status",
-          //   "status.statusCode AS surveyStatusCode",
-          //   "u.id As createdUserId",
-          //   "u.name AS appointedBy",
-          //   "users.name AS assignedTo",
-          //   "u.name AS createdBy",
-          //   "o.appointedDate AS appointmentDate",
-          //   "o.appointedTime AS appointmentTime",
-          //   "o.createdAt AS createdAt",
-          //   "teams.teamName as teamName",
-          //   "assignUser.name  as Tenant Name",
-          //   "o.displayId as SU#",
-          //   "s.displayId as SR#",
-          //   "companies.companyName",
-          //   "companies.companyId",
-          //   "projects.project",
-          //   "projects.projectName",
-
-          // )
           .where({ "assigned_service_team.entityType": "survey_orders" })
-          .whereIn('s.projectId', accessibleProjects)
+          .whereIn('s.projectId', projectIds)
           .groupBy([
             "o.id",
             "s.id",
@@ -1188,8 +1157,6 @@ const surveyOrderController = {
             "users.id",
             "teams.teamId",
             "assigned_service_team.entityType",
-            // "assignUser.id",
-            // "user_house_allocation.id",
             "companies.id",
             "projects.id"
           ]), knex
@@ -1210,7 +1177,6 @@ const surveyOrderController = {
               "property_units.unitNumber",
               "incident_categories.descriptionEng as problemDescription",
               "requested_by.name as requestedBy",
-              // "assignUser.name  as Tenant Name",
               "o.displayId as SU#",
               "s.displayId as SR#",
               "companies.companyName",
@@ -1277,8 +1243,6 @@ const surveyOrderController = {
               "service_problems.categoryId",
               "incident_categories.id"
             )
-            // .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
-            // .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
             .leftJoin('companies', 'o.companyId', 'companies.id')
             .leftJoin('projects', 'property_units.projectId', 'projects.id')
             .groupBy([
@@ -1290,8 +1254,6 @@ const surveyOrderController = {
               "users.id",
               "teams.teamId",
               "assigned_service_team.entityType",
-              // "assignUser.id",
-              // "user_house_allocation.id",
               "companies.id",
               "projects.id",
               "buildings_and_phases.id",
@@ -1300,8 +1262,7 @@ const surveyOrderController = {
               "requested_by.id"
 
             ])
-            .whereIn('s.projectId', accessibleProjects)
-            // .orderBy('o.id', 'desc')
+            .whereIn('s.projectId', projectIds)
             .offset(offset)
             .limit(per_page)
       ])
