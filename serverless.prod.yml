@@ -178,9 +178,9 @@ functions:
           rate: cron(0 1 * * ? *)    # Utc 1 am every day i.e 8 am Morning Thai Time..
           enabled: true        
 
-dailyMorningDBWakeUpTasks:
+dailyDbWakeUpProcessor:
     handler: src/handlers/dailyTasks.dBWakeUpTask
-    memorySize: 512
+    memorySize: 256
     timeout:  300                     # Max Time out is 5 mins..
     events:
       - schedule:
