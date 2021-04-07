@@ -12,7 +12,7 @@ const hasAnyVisitor = async (req, res) => {
 
         sqlStr = `SELECT *
         FROM visitor_invitations vi
-        WHERE vi."orgId" = ${orgId} and vi."createdBy" = ${userId}`;
+        WHERE vi."orgId" = ${orgId} and vi."tenantId" = ${userId}`;
 
         if(visitorSelect == 1){                 // Active and Schedule Visit
             sqlStr = sqlStr + ` and vi."status" = 1 and vi."actualArrivalDate" is null` ;

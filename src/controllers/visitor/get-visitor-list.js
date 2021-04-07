@@ -44,7 +44,7 @@ const getVisitorList = async (req, res) => {
         // No need for these Ids
         // sqlSelect = `SELECT pu2."orgId", pu2."companyId", pu2."projectId", pu2."buildingPhaseId"
         sqlSelect = `SELECT pu2."orgId", pu2."companyId", pu2."projectId", pu2."buildingPhaseId"
-        , pu2."id",  pu2."unitNumber", u2."name" "tenantName", vi.id, vi."name", vi."createdAt", vi."status"
+        , pu2."id" "puId",  pu2."unitNumber", u2."name" "tenantName", vi.id id, vi."name", vi."createdAt", vi."status"
         , vi."arrivalDate", vi."actualArrivalDate", vi."departureDate", vi."actualDepartureDate"`;
 
         sqlFrom = ` FROM property_units pu2, user_house_allocation uha, users u2, visitor_invitations vi`;
@@ -76,7 +76,7 @@ const getVisitorList = async (req, res) => {
             sqlWhere += ` and uha."userId" = ${payload.filter.tenantId}`;
         }
         sqlWhere += ` and uha."orgId" = u2."orgId" and uha."userId" = u2.id`;
-        sqlWhere += ` and uha."orgId" = vi."orgId" and uha.id = vi."userHouseAllocationId" and uha."userId" = vi."createdBy"`;
+        sqlWhere += ` and uha."orgId" = vi."orgId" and uha.id = vi."userHouseAllocationId" and uha."userId" = vi."tenantId"`;
         if(visitorSelect === 1){                 // Schedule Visits / Check-ins: Active invitation / booking 
             sqlWhere += ` and  vi.status = 1 and vi."actualArrivalDate" is null`;
         }
@@ -93,7 +93,8 @@ const getVisitorList = async (req, res) => {
             sqlWhere += ` and lower(vi."name") like lower('%${payload.filter.visitorName}%')`;
         }
 
-        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
+        // Adding id in order by to ensure list is displayed in the order visitors are added
+        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}, id asc`;
 
         sqlStr  = `WITH Main_CTE AS (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + `)`;

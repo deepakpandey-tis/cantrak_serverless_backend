@@ -3313,7 +3313,7 @@ const facilityBookingController = {
             let getTenants = await knex
                 .from("user_house_allocation")
                 .leftJoin("users", "user_house_allocation.userId", "users.id")
-                .select(["users.name", "users.id"])
+                .select(["users.name", "users.id", "user_house_allocation.id as userHouseAllocationId"])
                 .where({ "user_house_allocation.houseId": unitId, "users.isActive": true });
             // console.log("getTenants", getTenants);
             return res.status(200).json({
