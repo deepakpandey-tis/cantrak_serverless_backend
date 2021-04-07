@@ -449,7 +449,7 @@ const agmHelper = {
         payload: {
           title: 'AGM - Voting Document Generated',
           description: `AGM - Voting Document Generated for AGM: "${data.agmDetails.agmName}"`,
-          url: s3FileDownloadUrl,
+          url: `/admin/agm/agm-details/${data.agmDetails.id}`,
           orgData: orgData
         }
       };
@@ -659,7 +659,7 @@ const agmHelper = {
         payload: {
           title: 'AGM - Voting Document Generated',
           description: `AGM - Voting Document Generated for AGM: "${data.agmDetails.agmName}"`,
-          url: s3FileDownloadUrl,
+          url: `/admin/agm/agm-details/${data.agmDetails.id}`,
           orgData: orgData
         }
       };
