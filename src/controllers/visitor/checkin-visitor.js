@@ -4,11 +4,12 @@ const checkinVisitor = async (req, res) => {
     try {
         const visitorModule = 15;
 
-        let orgId = req.me.orgId;
+        let orgId = req.orgId;
         let userId = req.me.id;
         let userName = req.me.name;
         let visitorDetail = null;
         let updateInvitation = null;
+        let images = [];
         var selectedRecs;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
@@ -16,7 +17,7 @@ const checkinVisitor = async (req, res) => {
         let currentTime = new Date().getTime();
 
         const payload = req.body;
-        const {pkey, cols} = payload.data;
+        const {pkey, cols, photoIdCards} = payload.data;
         //console.log('pkey cols: ', pkey, cols);
 
         // Checking whether logged-in user is allowed to check-in visitors of tenant's project
@@ -85,12 +86,24 @@ const checkinVisitor = async (req, res) => {
 
           updateInvitation = updateResult[0];
 
+          // Insert images in images table
+          let imagesData = photoIdCards;
+          if (imagesData && imagesData.length > 0) {
+
+              for (image of imagesData) {
+                  let d = await knex.insert({ ...image, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }).returning(['*']).transacting(trx).into('images');
+                  images.push(d[0])
+              }
+
+          }
+
           trx.commit;
       });
 
       return res.status(200).json({
         data: {
-          invitation: updateInvitation
+          invitation: updateInvitation,
+          photoIdCards: images
         },
         message: 'Check-in successfully completed!'
       });
