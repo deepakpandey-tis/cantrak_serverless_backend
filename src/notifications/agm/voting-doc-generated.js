@@ -52,7 +52,7 @@ const votingDocGeneratedNotification = {
                 image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `/user/dashboard/home`,
+                    url: data.payload.redirectUrl,
                     primaryKey: Date.now()
                 }
             },
@@ -60,7 +60,6 @@ const votingDocGeneratedNotification = {
                 {
                     action: "explore",
                     title: "Open",
-                    //url: `/user/dashboard/home`,
                     url: data.payload.redirectUrl
 
                 }
@@ -72,15 +71,12 @@ const votingDocGeneratedNotification = {
 
 
     sendEmailNotification: async (sender, receiver, data) => {
-        let title = data.payload.title;
-        let description = data.payload.description;
-        let url = data.payload.url;
         data = {
             receiverEmail: receiver.email,
             template: 'agm/voting-doc-generated.ejs',
             templateData: {
                 fullName: receiver.name,
-                downloadUrl: url,
+                downloadUrl: `${process.env.SITE_URL}${data.payload.redirectUrl}`,
                 orgId:receiver.orgId
             },
             payload: {
@@ -95,8 +91,6 @@ const votingDocGeneratedNotification = {
     sendWebPushNotification: async (sender, receiver, data) => {
         let title = data.payload.title;
         let description = data.payload.description;
-        let url = data.payload.url;
-
         let  orgData = data.payload.orgData;
         let icons;
         let images;
@@ -121,7 +115,7 @@ const votingDocGeneratedNotification = {
                 image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `${process.env.SITE_URL}/admin/dashboard/home`,
+                    url: `${process.env.SITE_URL}${data.payload.redirectUrl}`,
                     primaryKey: Date.now()
                 }
             },
@@ -129,7 +123,7 @@ const votingDocGeneratedNotification = {
                 {
                     action: "explore",
                     title: "Open Home Page",
-                    url: `${process.env.SITE_URL}/admin/dashboard/home`
+                    url: `${process.env.SITE_URL}${data.payload.redirectUrl}`
                 }
             ]
         }
@@ -164,7 +158,7 @@ const votingDocGeneratedNotification = {
                 image: images,
                 extraData: {
                     dateOfArrival: Date.now(),
-                    url: `${process.env.SITE_URL}/admin/dashboard/home`,
+                    url: data.payload.redirectUrl,
                     primaryKey: Date.now()
                 }
             },
@@ -172,7 +166,7 @@ const votingDocGeneratedNotification = {
                 {
                     action: "explore",
                     title: "Open Home Page",
-                    url: `${process.env.SITE_URL}/admin/dashboard/home`
+                    url:data.payload.redirectUrl
                 }
             ]
         }
