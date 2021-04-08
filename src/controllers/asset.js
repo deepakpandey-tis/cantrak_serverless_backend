@@ -1829,6 +1829,7 @@ const assetController = {
           "buildings_and_phases.id as buildingId",
           "floor_and_zones.id as floorId",
           "property_units.id as unitId",
+          "property_units.unitNumber",
           "property_units.id as commonAreaId",
           "property_units.type as type",
           "property_units.unitNumber as commonAreaCode",
@@ -2133,6 +2134,27 @@ const assetController = {
         //   .where({ orgId: req.orgId });
 
         asset = assetResult[0];
+
+        if (req.body.location_data) {
+          let location_data = req.body.location_data;
+          console.log("location data",location_data)
+
+          locationData = await knex              
+          .update({
+              companyId: location_data.companyId,
+              projectId: location_data.projectId,
+              buildingId: location_data.buildingPhaseId,
+              floorId: location_data.floorZoneId,
+              unitId: location_data.unitId,
+              houseId: location_data.houseId,
+              updatedAt: currentTime,
+              startDate: currentTime,
+            })
+            .where({ assetId: id, orgId: req.orgId })
+            .returning(["*"])
+            .into("asset_location");
+        }
+
 
         let additionalAttributes =
           req.body.additionalAttributes;
