@@ -1996,6 +1996,7 @@ const assetController = {
           "files",
           "vendorId",
           "additionalVendorId",
+          "location_data"
         ]);
         // validate keys
         const schema = Joi.object().keys({
