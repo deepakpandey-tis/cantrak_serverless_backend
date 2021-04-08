@@ -657,7 +657,7 @@ const dashboardController = {
       console.log("request body data==========",req.body)
        // Set timezone for moment
        const timezone = 'Asia/Bangkok';
-       moment.tz.setDefault(timezone);
+       moment.tz.setDefault(payload.timezone);
       //  let currentDate = moment().format("YYYY-MM-DD");
       //  console.log(
       //      "Current Time:",
@@ -784,6 +784,7 @@ const dashboardController = {
             "assigned_service_team.userId as mainUserId",
             "users.name as mainUser",
             "asset_master.assetName as assetName",
+            "task_group_schedule_assign_assets.id as workOrderId",
           ])
           .where({
             "task_group_schedule_assign_assets.orgId": orgId,
@@ -799,7 +800,7 @@ const dashboardController = {
           .orderBy("task_group_schedule_assign_assets.id", "desc");
       }
       return res.status(200).json({
-        data: _.uniqBy(result, "id"),
+        data: _.uniqBy(result, "workOrderId"),
         message: " Today Schedule Work order List!",
       });
     } catch (err) {
