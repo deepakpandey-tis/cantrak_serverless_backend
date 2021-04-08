@@ -3534,30 +3534,68 @@ const assetController = {
             });
         }
     },
-    // checkAssetsLocation:async (req,res) => {
-    //     try {
-
-    //         await knex.transaction(async trx=>{
-    //             let payload = req.body
-    //             const schema = Joi.object().keys({
-    //                 id: Joi.string().required()
-    //               });
-
-    //               const result = Joi.validate(payload, schema);
-    //               if (result && result.hasOwnProperty("error") && result.error) {
-    //                 return res.status(400).json({
-    //                   errors: [
-    //                     { code: "VALIDATION_ERROR", message: result.error.message }
-    //                   ]
-    //                 });
-    //               }
-
-    //               let locationResult;
-    //         })
-    //     } catch(err){
-
-    //     }
-    // }
+    getUnitDetailsByUnitNumber: async(req,res) =>{
+        try {
+    
+        //   let projectIds = [];
+        //   let projectsForPracel = req.userProjectResources
+        //   projectsForPracel = projectsForPracel.find(pfp => pfp.id == 10)
+        //   console.log('Project For Parcel:', projectsForPracel);
+        //   let accessibleProjects = projectsForPracel.projects;
+        //   console.log('Project For Parcel:', accessibleProjects);
+        //   projectIds =  _.uniqBy(accessibleProjects);
+        //   console.log('ProjectIds:', projectIds);
+    
+    
+          let payload = req.body
+    
+          console.log("data in payload",payload)
+    
+          let units = await knex
+          .from("property_units")
+          .leftJoin("companies", "property_units.companyId", "companies.id")
+          .leftJoin("projects", "property_units.projectId", "projects.id")
+          .leftJoin(
+            "buildings_and_phases",
+            "property_units.buildingPhaseId",
+            "buildings_and_phases.id"
+          )
+          .innerJoin(
+            "floor_and_zones",
+            "property_units.floorZoneId",
+            "floor_and_zones.id"
+          )
+          .select([
+            "property_units.companyId as companyId",
+            "companies.companyName as companyName",
+            "property_units.projectId as projectId",
+            "projects.projectName as projectName",
+            "property_units.buildingPhaseId as buildingPhaseId",
+            "buildings_and_phases.buildingPhaseCode as buildingPhaseCode",
+            "buildings_and_phases.description as buildingDescription",
+            "property_units.floorZoneId as floorZoneId",
+            "floor_and_zones.floorZoneCode as floorZoneCode",
+            "floor_and_zones.description",
+            "property_units.unitNumber as unitNumber",
+            "property_units.id as unitId"
+          ])
+          .where({"property_units.isActive":true,"property_units.orgId":req.orgId})
+          .where("property_units.unitNumber","iLIKE", `%${payload.unitNumber}%`)
+          .where("property_units.companyId",payload.companyId)
+        //   .whereIn("property_units.projectId",projectIds);
+    
+          return res.status(200).json({
+            data: {
+              units
+            },
+            message: "Property units data"
+          });
+        } catch (error) {
+          return res.status(500).json({
+            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+          });
+        }
+      }
 }
 
 module.exports = assetController;
