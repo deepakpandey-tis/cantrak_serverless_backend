@@ -657,11 +657,16 @@ const dashboardController = {
       console.log("request body data==========",req.body)
        // Set timezone for moment
        moment.tz.setDefault(payload.timezone);
-       let currentDate = moment().format("YYYY-MM-DD");
-       console.log(
-           "Current Time:",
-           currentDate
-       );
+      //  let currentDate = moment().format("YYYY-MM-DD");
+      //  console.log(
+      //      "Current Time:",
+      //      currentDate
+      //  );
+
+      let startNewDate = moment().startOf("date").format();
+      let endNewDate = moment().endOf("date", "day").format();
+
+
       if (payload.todayDate.length) {
         startDate = moment().startOf("date", "day").format();
         endDate = moment().endOf("date", "day").format();
@@ -734,12 +739,12 @@ const dashboardController = {
           .where({
             "task_group_schedule.orgId": req.orgId,
           })
-          .whereRaw(
-            `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')='${currentDate}'`
-          )
           // .whereRaw(
-          //   `DATE("task_group_schedule_assign_assets"."pmDate") = date(now())`
+          //   `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')='${currentDate}'`
           // )
+          .whereRaw(
+            `DATE("task_group_schedule_assign_assets"."pmDate") = date(now())`
+          )
           .orderBy("task_group_schedule_assign_assets.id", "desc");
       } else {
         result = await knex
@@ -787,8 +792,8 @@ const dashboardController = {
           .whereIn("pm_task_groups.companyId", payload.companyIds)
           // .orWhere({ 'assigned_service_additional_users.userId': id, 'assigned_service_additional_users.entityType': 'pm_task_groups' })
           .whereBetween("task_group_schedule_assign_assets.pmDate", [
-            startDate,
-            endDate,
+            startNewDate,
+            endNewDate,
           ])
           .orderBy("task_group_schedule_assign_assets.id", "desc");
       }
