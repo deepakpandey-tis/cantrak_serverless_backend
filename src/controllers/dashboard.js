@@ -656,7 +656,8 @@ const dashboardController = {
 
       console.log("request body data==========",req.body)
        // Set timezone for moment
-       moment.tz.setDefault(payload.timezone);
+       const timezone = 'Asia/Bangkok';
+       moment.tz.setDefault(timezone);
       //  let currentDate = moment().format("YYYY-MM-DD");
       //  console.log(
       //      "Current Time:",
