@@ -1,11 +1,10 @@
-const express = require("express")
+const express = require("express");
 
-const router = express.Router()
-const authMiddleware = require('../middlewares/auth')
-const assetController = require("../controllers/asset")
+const router = express.Router();
+const authMiddleware = require("../middlewares/auth");
+const assetController = require("../controllers/asset");
 const roleMiddleware = require("../middlewares/role");
-const resourceAccessMiddleware = require('../middlewares/resourceAccessMiddleware')
-
+const resourceAccessMiddleware = require("../middlewares/resourceAccessMiddleware");
 
 router.post(
   "/add-asset",
@@ -13,12 +12,13 @@ router.post(
   roleMiddleware.parseUserPermission,
   assetController.addAsset
 );
-router.post('/get-asset-list',
+router.post(
+  "/get-asset-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
   assetController.getAssetList
-)
+);
 router.get(
   "/get-all-asset-list",
   authMiddleware.isAuthenticated,
@@ -79,7 +79,7 @@ router.get(
   roleMiddleware.parseUserPermission,
   assetController.assetSearch
 );
-// Export Asset Data 
+// Export Asset Data
 // router.post(
 //   "/export-asset",
 //   authMiddleware.isAuthenticated,
@@ -96,7 +96,7 @@ router.post(
   "/get-asset-category-by-id",
   authMiddleware.isAuthenticated,
   assetController.getAssetCategoryById
-)
+);
 
 // TODO: Remove
 // Deprecated
@@ -107,8 +107,12 @@ router.post(
   assetController.getAssetListByLocation
 );
 
-router.post('/get-asset-list-by-houseId', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, assetController.getAssetListByHouseId);
-
+router.post(
+  "/get-asset-list-by-houseId",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  assetController.getAssetListByHouseId
+);
 
 router.post(
   "/export-asset-data",
@@ -117,31 +121,34 @@ router.post(
   assetController.exportAssetData
 );
 
-
-
 /**IMPORT COMPANY DATA */
-const path = require('path');
+const path = require("path");
 let tempraryDirectory = null;
 if (process.env.IS_OFFLINE) {
-  tempraryDirectory = 'tmp/';
+  tempraryDirectory = "tmp/";
 } else {
-  tempraryDirectory = '/tmp/';
+  tempraryDirectory = "/tmp/";
 }
-var multer = require('multer');
+var multer = require("multer");
 var storage = multer.diskStorage({
   destination: tempraryDirectory,
   filename: function (req, file, cb) {
-    let ext = path.extname(file.originalname)
-    if (ext == '.csv') {
+    let ext = path.extname(file.originalname);
+    if (ext == ".csv") {
       time = Date.now();
-      cb(null, 'assetData-' + time + ext);
+      cb(null, "assetData-" + time + ext);
     } else {
-      return false
+      return false;
     }
-  }
+  },
 });
 var upload = multer({ storage: storage });
-router.post('/import-asset-data', upload.single('file'), authMiddleware.isAuthenticated, assetController.importAssetData)
+router.post(
+  "/import-asset-data",
+  upload.single("file"),
+  authMiddleware.isAuthenticated,
+  assetController.importAssetData
+);
 
 router.post(
   "/get-service-request-relocated-assets",
@@ -149,10 +156,37 @@ router.post(
   assetController.getServiceRequestRelocatedAssets
 );
 
-router.post('/add-serivce-order-replace-asset', authMiddleware.isAuthenticated, assetController.replaceAsset)
-router.post('/get-service-order-replaced-asset', authMiddleware.isAuthenticated, assetController.getReplacedAssetList)
-router.post('/get-asset-list-for-replace', authMiddleware.isAuthenticated, assetController.getAssetListForReplace)
-router.post('/delete-service-assigned-asset/', authMiddleware.isAuthenticated, assetController.deleteServiceAssignedAsset);
+router.post(
+  "/add-serivce-order-replace-asset",
+  authMiddleware.isAuthenticated,
+  assetController.replaceAsset
+);
+router.post(
+  "/get-service-order-replaced-asset",
+  authMiddleware.isAuthenticated,
+  assetController.getReplacedAssetList
+);
+router.post(
+  "/get-asset-list-for-replace",
+  authMiddleware.isAuthenticated,
+  assetController.getAssetListForReplace
+);
+router.post(
+  "/delete-service-assigned-asset/",
+  authMiddleware.isAuthenticated,
+  assetController.deleteServiceAssignedAsset
+);
 
-router.post('/remove-part-from-asset',authMiddleware.isAuthenticated,assetController.removePartFromAsset)
-module.exports = router
+router.post(
+  "/remove-part-from-asset",
+  authMiddleware.isAuthenticated,
+  assetController.removePartFromAsset
+);
+
+router.post(
+  "/get-unit-details-by-unit-number",
+  authMiddleware.isAuthenticated,
+  assetController.getUnitDetailsByUnitNumber
+);
+
+module.exports = router;

@@ -972,28 +972,28 @@ const taskGroupController = {
             )
             .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
             .leftJoin("users", "assigned_service_team.userId", "users.id")
-            .leftJoin(
-              "asset_location",
-              "asset_master.id",
-              "asset_location.assetId"
-            )
-            .leftJoin("companies", "asset_location.companyId", "companies.id")
-            .leftJoin("projects", "asset_location.projectId", "projects.id")
-            .leftJoin(
-              "buildings_and_phases",
-              "asset_location.buildingId",
-              "buildings_and_phases.id"
-            )
-            .leftJoin(
-              "floor_and_zones",
-              "asset_location.floorId",
-              "floor_and_zones.id"
-            )
-            .leftJoin(
-              "property_units",
-              "asset_location.unitId",
-              "property_units.id"
-            )
+            // .leftJoin(
+            //   "asset_location",
+            //   "asset_master.id",
+            //   "asset_location.assetId"
+            // )
+            // .leftJoin("companies", "asset_location.companyId", "companies.id")
+            // .leftJoin("projects", "asset_location.projectId", "projects.id")
+            // .leftJoin(
+            //   "buildings_and_phases",
+            //   "asset_location.buildingId",
+            //   "buildings_and_phases.id"
+            // )
+            // .leftJoin(
+            //   "floor_and_zones",
+            //   "asset_location.floorId",
+            //   "floor_and_zones.id"
+            // )
+            // .leftJoin(
+            //   "property_units",
+            //   "asset_location.unitId",
+            //   "property_units.id"
+            // )
             .where({
               "task_group_schedule.pmId": payload.pmId,
               "task_group_schedule.orgId": req.orgId,
@@ -1089,28 +1089,28 @@ const taskGroupController = {
             )
             .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
             .leftJoin("users", "assigned_service_team.userId", "users.id")
-            .leftJoin(
-              "asset_location",
-              "asset_master.id",
-              "asset_location.assetId"
-            )
-            .leftJoin("companies", "asset_location.companyId", "companies.id")
-            .leftJoin("projects", "asset_location.projectId", "projects.id")
-            .leftJoin(
-              "buildings_and_phases",
-              "asset_location.buildingId",
-              "buildings_and_phases.id"
-            )
-            .leftJoin(
-              "floor_and_zones",
-              "asset_location.floorId",
-              "floor_and_zones.id"
-            )
-            .leftJoin(
-              "property_units",
-              "asset_location.unitId",
-              "property_units.id"
-            )
+            // .leftJoin(
+            //   "asset_location",
+            //   "asset_master.id",
+            //   "asset_location.assetId"
+            // )
+            // .leftJoin("companies", "asset_location.companyId", "companies.id")
+            // .leftJoin("projects", "asset_location.projectId", "projects.id")
+            // .leftJoin(
+            //   "buildings_and_phases",
+            //   "asset_location.buildingId",
+            //   "buildings_and_phases.id"
+            // )
+            // .leftJoin(
+            //   "floor_and_zones",
+            //   "asset_location.floorId",
+            //   "floor_and_zones.id"
+            // )
+            // .leftJoin(
+            //   "property_units",
+            //   "asset_location.unitId",
+            //   "property_units.id"
+            // )
             .select([
               "task_group_schedule_assign_assets.id as workOrderId",
               "task_group_schedule_assign_assets.displayId as TGAA",
@@ -1130,9 +1130,9 @@ const taskGroupController = {
               "task_group_schedule_assign_assets.frequencyTagIds",
               "task_group_schedule_assign_assets.status",
               "task_group_schedule.taskGroupId",
-              "buildings_and_phases.buildingPhaseCode",
-              "floor_and_zones.floorZoneCode",
-              "property_units.unitNumber",
+              // "buildings_and_phases.buildingPhaseCode",
+              // "floor_and_zones.floorZoneCode",
+              // "property_units.unitNumber",
               "assigned_service_team.teamId",
               "teams.teamName",
               "teams.description",
@@ -1240,28 +1240,28 @@ const taskGroupController = {
             .leftJoin("users", "assigned_service_team.userId", "users.id")
             .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
             .leftJoin("users", "assigned_service_team.userId", "users.id")
-            .leftJoin(
-              "asset_location",
-              "asset_master.id",
-              "asset_location.assetId"
-            )
-            .leftJoin("companies", "asset_location.companyId", "companies.id")
-            .leftJoin("projects", "asset_location.projectId", "projects.id")
-            .leftJoin(
-              "buildings_and_phases",
-              "asset_location.buildingId",
-              "buildings_and_phases.id"
-            )
-            .leftJoin(
-              "floor_and_zones",
-              "asset_location.floorId",
-              "floor_and_zones.id"
-            )
-            .leftJoin(
-              "property_units",
-              "asset_location.unitId",
-              "property_units.id"
-            )
+            // .leftJoin(
+            //   "asset_location",
+            //   "asset_master.id",
+            //   "asset_location.assetId"
+            // )
+            // .leftJoin("companies", "asset_location.companyId", "companies.id")
+            // .leftJoin("projects", "asset_location.projectId", "projects.id")
+            // .leftJoin(
+            //   "buildings_and_phases",
+            //   "asset_location.buildingId",
+            //   "buildings_and_phases.id"
+            // )
+            // .leftJoin(
+            //   "floor_and_zones",
+            //   "asset_location.floorId",
+            //   "floor_and_zones.id"
+            // )
+            // .leftJoin(
+            //   "property_units",
+            //   "asset_location.unitId",
+            //   "property_units.id"
+            // )
             .select([
               "task_group_schedule_assign_assets.id as workOrderId",
               "asset_master.id as assetId",
@@ -1440,28 +1440,28 @@ const taskGroupController = {
               "task_group_schedule_assign_assets.assetId",
               "asset_master.id"
             )
-            .leftJoin(
-              "asset_location",
-              "asset_master.id",
-              "asset_location.assetId"
-            )
-            .leftJoin("companies", "asset_location.companyId", "companies.id")
-            .leftJoin("projects", "asset_location.projectId", "projects.id")
-            .leftJoin(
-              "buildings_and_phases",
-              "asset_location.buildingId",
-              "buildings_and_phases.id"
-            )
-            .leftJoin(
-              "floor_and_zones",
-              "asset_location.floorId",
-              "floor_and_zones.id"
-            )
-            .leftJoin(
-              "property_units",
-              "asset_location.unitId",
-              "property_units.id"
-            )
+            // .leftJoin(
+            //   "asset_location",
+            //   "asset_master.id",
+            //   "asset_location.assetId"
+            // )
+            // .leftJoin("companies", "asset_location.companyId", "companies.id")
+            // .leftJoin("projects", "asset_location.projectId", "projects.id")
+            // .leftJoin(
+            //   "buildings_and_phases",
+            //   "asset_location.buildingId",
+            //   "buildings_and_phases.id"
+            // )
+            // .leftJoin(
+            //   "floor_and_zones",
+            //   "asset_location.floorId",
+            //   "floor_and_zones.id"
+            // )
+            // .leftJoin(
+            //   "property_units",
+            //   "asset_location.unitId",
+            //   "property_units.id"
+            // )
             .select([
               "task_group_schedule_assign_assets.id as workOrderId",
               "task_group_schedule_assign_assets.displayId as TGAA",
@@ -1483,9 +1483,9 @@ const taskGroupController = {
               "task_group_schedule_assign_assets.frequencyTagIds",
               "task_group_schedule_assign_assets.status",
               "task_group_schedule.taskGroupId",
-              "buildings_and_phases.buildingPhaseCode",
-              "floor_and_zones.floorZoneCode",
-              "property_units.unitNumber",
+              // "buildings_and_phases.buildingPhaseCode",
+              // "floor_and_zones.floorZoneCode",
+              // "property_units.unitNumber",
               "task_group_schedule_assign_assets.completedAt"
             ])
             .where({
@@ -1578,32 +1578,32 @@ const taskGroupController = {
                   "task_group_schedule_assign_assets.assetId",
                   "asset_master.id"
                 )
-                .leftJoin(
-                  "asset_location",
-                  "asset_master.id",
-                  "asset_location.assetId"
-                )
-                .leftJoin(
-                  "companies",
-                  "asset_location.companyId",
-                  "companies.id"
-                )
-                .leftJoin("projects", "asset_location.projectId", "projects.id")
-                .leftJoin(
-                  "buildings_and_phases",
-                  "asset_location.buildingId",
-                  "buildings_and_phases.id"
-                )
-                .leftJoin(
-                  "floor_and_zones",
-                  "asset_location.floorId",
-                  "floor_and_zones.id"
-                )
-                .leftJoin(
-                  "property_units",
-                  "asset_location.unitId",
-                  "property_units.id"
-                )
+                // .leftJoin(
+                //   "asset_location",
+                //   "asset_master.id",
+                //   "asset_location.assetId"
+                // )
+                // .leftJoin(
+                //   "companies",
+                //   "asset_location.companyId",
+                //   "companies.id"
+                // )
+                // .leftJoin("projects", "asset_location.projectId", "projects.id")
+                // .leftJoin(
+                //   "buildings_and_phases",
+                //   "asset_location.buildingId",
+                //   "buildings_and_phases.id"
+                // )
+                // .leftJoin(
+                //   "floor_and_zones",
+                //   "asset_location.floorId",
+                //   "floor_and_zones.id"
+                // )
+                // .leftJoin(
+                //   "property_units",
+                //   "asset_location.unitId",
+                //   "property_units.id"
+                // )
                 .select(["task_group_schedule_assign_assets.id as workOrderId"])
                 .where({
                   "task_group_schedule.pmId": payload.pmId,
@@ -1708,22 +1708,37 @@ const taskGroupController = {
         return { ...row, ...teamData };
       });
 
-      // rowsId = await Parallel.map(rowsId, async (row) => {
-      //   const teamData = await knex
-      //     .from("assigned_service_team")
-      //     .select(["assigned_service_team.teamId"])
-      //     .where({
-      //       "assigned_service_team.entityId": row.workOrderId,
-      //       "assigned_service_team.entityType": "work_order",
-      //     })
-      //     .where((qb) => {
-      //       if (req.body.assignedTeam) {
-      //         qb.whereIn("assigned_service_team.teamId", req.body.assignedTeam);
-      //       }
-      //     })
-      //     .first();
-      //   return { ...row, ...teamData };
-      // });
+      rows = await Parallel.map(rows, async (row) => {
+        const locationData = await knex
+        .from("asset_location")
+        .leftJoin("companies", "asset_location.companyId", "companies.id")
+            .leftJoin("projects", "asset_location.projectId", "projects.id")
+            .leftJoin(
+              "buildings_and_phases",
+              "asset_location.buildingId",
+              "buildings_and_phases.id"
+            )
+            .leftJoin(
+              "floor_and_zones",
+              "asset_location.floorId",
+              "floor_and_zones.id"
+            )
+            .leftJoin(
+              "property_units",
+              "asset_location.unitId",
+              "property_units.id"
+            )
+            .select([
+              "buildings_and_phases.buildingPhaseCode",
+              "floor_and_zones.floorZoneCode",
+              "property_units.unitNumber",
+            ])
+            .where("asset_location.assetId",row.assetId)
+            .first();
+
+            return {...row, ...locationData};
+
+      });
 
       let count = total.length ? total[0].count : 0;
       pagination.total = count;
@@ -1979,28 +1994,28 @@ const taskGroupController = {
             )
             .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
             .leftJoin("users", "assigned_service_team.userId", "users.id")
-            .leftJoin(
-              "asset_location",
-              "asset_master.id",
-              "asset_location.assetId"
-            )
-            .leftJoin("companies", "asset_location.companyId", "companies.id")
-            .leftJoin("projects", "asset_location.projectId", "projects.id")
-            .leftJoin(
-              "buildings_and_phases",
-              "asset_location.buildingId",
-              "buildings_and_phases.id"
-            )
-            .leftJoin(
-              "floor_and_zones",
-              "asset_location.floorId",
-              "floor_and_zones.id"
-            )
-            .leftJoin(
-              "property_units",
-              "asset_location.unitId",
-              "property_units.id"
-            )
+            // .leftJoin(
+            //   "asset_location",
+            //   "asset_master.id",
+            //   "asset_location.assetId"
+            // )
+            // .leftJoin("companies", "asset_location.companyId", "companies.id")
+            // .leftJoin("projects", "asset_location.projectId", "projects.id")
+            // .leftJoin(
+            //   "buildings_and_phases",
+            //   "asset_location.buildingId",
+            //   "buildings_and_phases.id"
+            // )
+            // .leftJoin(
+            //   "floor_and_zones",
+            //   "asset_location.floorId",
+            //   "floor_and_zones.id"
+            // )
+            // .leftJoin(
+            //   "property_units",
+            //   "asset_location.unitId",
+            //   "property_units.id"
+            // )
             .where({
               "task_group_schedule.orgId": req.orgId,
             })
