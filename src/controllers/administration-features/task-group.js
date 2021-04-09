@@ -1960,6 +1960,7 @@ const taskGroupController = {
         });
       }
 
+
       let pagination = {};
       let per_page = reqData.per_page || 10;
       let page = reqData.current_page || 1;
@@ -2562,6 +2563,13 @@ const taskGroupController = {
               "property_units.unitNumber",
             ])
             .where("asset_location.assetId",row.assetId)
+            .where((qb)=>{
+              if (payloadFilter.company) {
+                if (payloadFilter.company.length) {
+                  qb.whereIn("companies.companyId", payloadFilter.company);
+                }
+              }
+            })
             .first();
 
             return {...row, ...locationData};
