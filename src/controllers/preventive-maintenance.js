@@ -776,13 +776,13 @@ const pmController = {
           "projects.projectName",
         ])
         .where((qb) => {
-          if (fromDate && toDate) {
-            qb.whereBetween("pm_master2.createdAt", [
-              payload.fromDate,
-              payload.toDate,
-            ]);
+          // if (fromDate && toDate) {
+          //   qb.whereBetween("pm_master2.createdAt", [
+          //     payload.fromDate,
+          //     payload.toDate,
+          //   ]);
             
-          }
+          // }
 
           if (payload.companyId) {
             qb.where({ "pm_master2.companyId": payload.companyId });
