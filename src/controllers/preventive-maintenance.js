@@ -758,7 +758,11 @@ const pmController = {
       let toTime = new Date(toNewDate).getTime();
       let filterProblem;
 
-      console.log("From Time", fromDate, "To");
+      moment.tz.setDefault(payload.timezone);
+      let startNewDate = moment(fromDate).startOf("date").format();
+      let endNewDate = moment(toDate).endOf("date", "day").format();
+
+      console.log("From Time", startNewDate, "To", endNewDate);
 
       let pmResult = await knex("pm_master2")
         .leftJoin("companies", "pm_master2.companyId", "companies.id")
@@ -777,6 +781,7 @@ const pmController = {
               payload.fromDate,
               payload.toDate,
             ]);
+            
           }
 
           if (payload.companyId) {
@@ -806,7 +811,6 @@ const pmController = {
           "task_group_schedule_assign_assets.assetId",
           "asset_master.id"
         )
-        // .leftJoin('pm_task', 'task_group_schedule.taskGroupId', 'pm_task.taskGroupId')
         .select([
           "task_group_schedule.id as scheduleId",
           "task_group_schedule.taskGroupId",
@@ -818,10 +822,10 @@ const pmController = {
           "task_group_schedule_assign_assets.pmDate",
           "task_group_schedule_assign_assets.updatedAt",
           "task_group_schedule_assign_assets.scheduleStatus",
-
-          //'pm_task.taskName',
-          //  'pm_task.status',
-          //'pm_task.id as taskId'
+        ])
+        .whereBetween("task_group_schedule_assign_assets.pmDate", [
+          startNewDate,
+          endNewDate,
         ])
         .whereIn("task_group_schedule.pmId", pmIds)
         .where({ "task_group_schedule.orgId": req.orgId });
