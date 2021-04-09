@@ -2566,7 +2566,7 @@ const taskGroupController = {
             .where((qb)=>{
               if (payloadFilter.company) {
                 if (payloadFilter.company.length) {
-                  qb.whereIn("companies.companyId", payloadFilter.company);
+                  qb.whereIn("asset_location.companyId", payloadFilter.company);
                 }
               }
             })

@@ -1,28 +1,27 @@
-const Joi = require('@hapi/joi');
-const moment = require('moment');
-const uuidv4 = require('uuid/v4');
-var jwt = require('jsonwebtoken');
-const _ = require('lodash');
-const XLSX = require('xlsx');
-const knex = require('../../db/knex');
-const bcrypt = require('bcrypt');
+const Joi = require("@hapi/joi");
+const moment = require("moment");
+const uuidv4 = require("uuid/v4");
+var jwt = require("jsonwebtoken");
+const _ = require("lodash");
+const XLSX = require("xlsx");
+const knex = require("../../db/knex");
+const bcrypt = require("bcrypt");
 const saltRounds = 10;
-const fs = require('fs');
-
+const fs = require("fs");
 
 const problemController = {
   getProblems: async (req, res) => {
     // List with filter and pagination
     try {
-
       let sortPayload = req.body;
       if (!sortPayload.sortBy && !sortPayload.orderBy) {
-        sortPayload.sortBy = "incident_categories.categoryCode";
-        sortPayload.orderBy = "asc"
+        sortPayload.sortBy =
+          "incident_categories.categoryCode";
+        sortPayload.orderBy = "asc";
       }
       let reqData = req.query;
       let { searchValue } = req.body;
-      let total, rows
+      let total, rows;
 
       let pagination = {};
       let per_page = reqData.per_page || 10;
@@ -32,50 +31,120 @@ const problemController = {
 
       // if (_.isEmpty(filters)) {
       [total, rows] = await Promise.all([
-        knex.count('* as count').from("incident_sub_categories")
-          .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
-          .leftJoin('users', 'incident_categories.createdBy', 'users.id')
-          .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
-          .where({ 'incident_sub_categories.orgId': req.orgId })
-          .where(qb => {
-            if (searchValue) {
-              qb.where('incident_categories.categoryCode', 'iLIKE', `%${searchValue}%`);
-              qb.orWhere('incident_sub_categories.descriptionEng', 'iLIKE', `%${searchValue}%`);
-              qb.orWhere('incident_sub_categories.descriptionThai', 'iLIKE', `%${searchValue}%`);
-              qb.orWhere('incident_type.typeCode', 'iLIKE', `%${searchValue}%`);
-              qb.orWhere('incident_categories.descriptionEng', 'iLIKE', `%${searchValue}%`);
-            }
+        knex
+          .count("* as count")
+          .from("incident_sub_categories")
+          .leftJoin(
+            "incident_categories",
+            "incident_sub_categories.incidentCategoryId",
+            "incident_categories.id"
+          )
+          .leftJoin(
+            "users",
+            "incident_categories.createdBy",
+            "users.id"
+          )
+          .leftJoin(
+            "incident_type",
+            "incident_sub_categories.incidentTypeId",
+            "incident_type.id"
+          )
+          .where({
+            "incident_sub_categories.orgId": req.orgId,
           })
-        ,
+          .where((qb) => {
+            if (searchValue) {
+              qb.where(
+                "incident_categories.categoryCode",
+                "iLIKE",
+                `%${searchValue}%`
+              );
+              qb.orWhere(
+                "incident_sub_categories.descriptionEng",
+                "iLIKE",
+                `%${searchValue}%`
+              );
+              qb.orWhere(
+                "incident_sub_categories.descriptionThai",
+                "iLIKE",
+                `%${searchValue}%`
+              );
+              qb.orWhere(
+                "incident_type.typeCode",
+                "iLIKE",
+                `%${searchValue}%`
+              );
+              qb.orWhere(
+                "incident_categories.descriptionEng",
+                "iLIKE",
+                `%${searchValue}%`
+              );
+            }
+          }),
         knex("incident_sub_categories")
-          .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
-          .leftJoin('users', 'incident_categories.createdBy', 'users.id')
-          .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
+          .leftJoin(
+            "incident_categories",
+            "incident_sub_categories.incidentCategoryId",
+            "incident_categories.id"
+          )
+          .leftJoin(
+            "users",
+            "incident_categories.createdBy",
+            "users.id"
+          )
+          .leftJoin(
+            "incident_type",
+            "incident_sub_categories.incidentTypeId",
+            "incident_type.id"
+          )
           .select([
-            'incident_sub_categories.id as ID',
-            'incident_categories.categoryCode as Problem Code',
-            'incident_sub_categories.descriptionEng as Description(Eng)',
-            'incident_sub_categories.descriptionThai as Description(Thai)',
-            'incident_categories.descriptionEng as Category',
-            'incident_sub_categories.isActive as Status',
-            'users.name as Created By',
-            'incident_sub_categories.createdAt as Date Created',
-            'incident_type.typeCode as problem_type_code',
-            'incident_type.descriptionEng as problem_type_description',
+            "incident_sub_categories.id as ID",
+            "incident_categories.categoryCode as Problem Code",
+            "incident_sub_categories.descriptionEng as Description(Eng)",
+            "incident_sub_categories.descriptionThai as Description(Thai)",
+            "incident_categories.descriptionEng as Category",
+            "incident_sub_categories.isActive as Status",
+            "users.name as Created By",
+            "incident_sub_categories.createdAt as Date Created",
+            "incident_type.typeCode as problem_type_code",
+            "incident_type.descriptionEng as problem_type_description",
           ])
           .orderBy(sortPayload.sortBy, sortPayload.orderBy)
-          .where({ 'incident_sub_categories.orgId': req.orgId })
-          .where(qb => {
+          .where({
+            "incident_sub_categories.orgId": req.orgId,
+          })
+          .where((qb) => {
             if (searchValue) {
-              qb.where('incident_categories.categoryCode', 'iLIKE', `%${searchValue}%`);
-              qb.orWhere('incident_sub_categories.descriptionEng', 'iLIKE', `%${searchValue}%`);
-              qb.orWhere('incident_sub_categories.descriptionThai', 'iLIKE', `%${searchValue}%`);
-              qb.orWhere('incident_type.typeCode', 'iLIKE', `%${searchValue}%`);
-              qb.orWhere('incident_categories.descriptionEng', 'iLIKE', `%${searchValue}%`);
+              qb.where(
+                "incident_categories.categoryCode",
+                "iLIKE",
+                `%${searchValue}%`
+              );
+              qb.orWhere(
+                "incident_sub_categories.descriptionEng",
+                "iLIKE",
+                `%${searchValue}%`
+              );
+              qb.orWhere(
+                "incident_sub_categories.descriptionThai",
+                "iLIKE",
+                `%${searchValue}%`
+              );
+              qb.orWhere(
+                "incident_type.typeCode",
+                "iLIKE",
+                `%${searchValue}%`
+              );
+              qb.orWhere(
+                "incident_categories.descriptionEng",
+                "iLIKE",
+                `%${searchValue}%`
+              );
             }
           })
-          .offset(offset).limit(per_page)
-      ])
+          .offset(offset)
+          .limit(per_page),
+      ]);
       // } else {
       // filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
       // try {
@@ -124,15 +193,21 @@ const problemController = {
 
       return res.status(200).json({
         data: {
-          problems: pagination
+          problems: pagination,
         },
-        message: 'Problems List!'
-      })
+        message: "Problems List!",
+      });
     } catch (err) {
-      console.log('[controllers][quotation][list] :  Error', err);
+      console.log(
+        "[controllers][quotation][list] :  Error",
+        err
+      );
       return res.status(500).json({
         errors: [
-          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
         ],
       });
     }
@@ -140,53 +215,76 @@ const problemController = {
   /**EXPORT PROBLEM SUB CATEGORY DATA */
   exportProblem: async (req, res) => {
     try {
-
       let reqData = req.query;
       let filters = req.body;
       let rows = null;
       let orgId = req.orgId;
 
       if (_.isEmpty(filters)) {
-
         [rows] = await Promise.all([
           knex("incident_sub_categories")
-            .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
-            .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
+            .leftJoin(
+              "incident_categories",
+              "incident_sub_categories.incidentCategoryId",
+              "incident_categories.id"
+            )
+            .leftJoin(
+              "incident_type",
+              "incident_sub_categories.incidentTypeId",
+              "incident_type.id"
+            )
             .select([
-              'incident_categories.categoryCode as PROBLEM_CATEGORY_CODE',
-              'incident_sub_categories.descriptionEng as DESCRIPTION',
-              'incident_sub_categories.descriptionThai as ALTERNATE_DESCRIPTION',
-              'incident_sub_categories.remark as REMARK',
-              'incident_type.typeCode as PROBLEM_TYPE_CODE',
+              "incident_categories.categoryCode as PROBLEM_CATEGORY_CODE",
+              "incident_sub_categories.descriptionEng as DESCRIPTION",
+              "incident_sub_categories.descriptionThai as ALTERNATE_DESCRIPTION",
+              "incident_sub_categories.remark as REMARK",
+              "incident_type.typeCode as PROBLEM_TYPE_CODE",
             ])
-            .where({ 'incident_sub_categories.orgId': orgId })
-        ])
+            .where({
+              "incident_sub_categories.orgId": orgId,
+            }),
+        ]);
       } else {
-        filters = _.omitBy(filters, val => val === '' || _.isNull(val) || _.isUndefined(val) || _.isEmpty(val) ? true : false)
-
-        [rows] = await Promise.all([
+        filters = _.omitBy(filters, (val) =>
+          val === "" ||
+          _.isNull(val) ||
+          _.isUndefined(val) ||
+          _.isEmpty(val)
+            ? true
+            : false
+        )[rows] = await Promise.all([
           knex("incident_sub_categories")
-            .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
-            .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
+            .leftJoin(
+              "incident_categories",
+              "incident_sub_categories.incidentCategoryId",
+              "incident_categories.id"
+            )
+            .leftJoin(
+              "incident_type",
+              "incident_sub_categories.incidentTypeId",
+              "incident_type.id"
+            )
             .select([
-              'incident_categories.categoryCode as PROBLEM_CATEGORY_CODE',
-              'incident_sub_categories.descriptionEng as DESCRIPTION',
-              'incident_sub_categories.descriptionThai as ALTERNATE_DESCRIPTION',
-              'incident_sub_categories.remark as REMARK',
-              'incident_type.typeCode as PROBLEM_TYPE_CODE',
+              "incident_categories.categoryCode as PROBLEM_CATEGORY_CODE",
+              "incident_sub_categories.descriptionEng as DESCRIPTION",
+              "incident_sub_categories.descriptionThai as ALTERNATE_DESCRIPTION",
+              "incident_sub_categories.remark as REMARK",
+              "incident_type.typeCode as PROBLEM_TYPE_CODE",
             ])
-            .where({ 'incident_sub_categories.orgId': orgId })
-            .where(filters)
-        ])
+            .where({
+              "incident_sub_categories.orgId": orgId,
+            })
+            .where(filters),
+        ]);
       }
 
       let tempraryDirectory = null;
       let bucketName = null;
       if (process.env.IS_OFFLINE) {
         bucketName = process.env.S3_BUCKET_NAME;
-        tempraryDirectory = 'tmp/';
+        tempraryDirectory = "tmp/";
       } else {
-        tempraryDirectory = '/tmp/';
+        tempraryDirectory = "/tmp/";
         bucketName = process.env.S3_BUCKET_NAME;
       }
 
@@ -202,17 +300,22 @@ const problemController = {
             DESCRIPTION: "",
             ALTERNATE_DESCRIPTION: "",
             REMARK: "",
-            PROBLEM_TYPE_CODE: ""
-          }
+            PROBLEM_TYPE_CODE: "",
+          },
         ]);
       }
 
       XLSX.utils.book_append_sheet(wb, ws, "pres");
-      XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename = "ProblemSubcategoryData-" + Date.now() + ".csv";
+      XLSX.write(wb, {
+        bookType: "csv",
+        bookSST: true,
+        type: "base64",
+      });
+      let filename =
+        "ProblemSubcategoryData-" + Date.now() + ".csv";
       let filepath = tempraryDirectory + filename;
       let check = XLSX.writeFile(wb, filepath);
-      const AWS = require('aws-sdk');
+      const AWS = require("aws-sdk");
 
       fs.readFile(filepath, function (err, file_buffer) {
         var s3 = new AWS.S3();
@@ -220,14 +323,20 @@ const problemController = {
           Bucket: bucketName,
           Key: "Export/Problem_Subcategory/" + filename,
           Body: file_buffer,
-          ACL: 'public-read'
-        }
+          ACL: "public-read",
+        };
         s3.putObject(params, function (err, data) {
           if (err) {
-            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            console.log(
+              "Error at uploadCSVFileOnS3Bucket function",
+              err
+            );
             res.status(500).json({
               errors: [
-                { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                {
+                  code: "UNKNOWN_SERVER_ERROR",
+                  message: err.message,
+                },
               ],
             });
             //next(err);
@@ -235,43 +344,59 @@ const problemController = {
             console.log("File uploaded Successfully");
             //next(null, filePath);
             // let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
-            let url = process.env.S3_BUCKET_URL+"/Export/Problem_Subcategory/" +
-            filename;
+            let url =
+              process.env.S3_BUCKET_URL +
+              "/Export/Problem_Subcategory/" +
+              filename;
             //let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Problem_Subcategory/" + filename;
             res.status(200).json({
               data: rows,
-              message: "Problem Subcategory data export successfully!",
-              url: url
+              message:
+                "Problem Subcategory data export successfully!",
+              url: url,
             });
           }
         });
-      })
+      });
     } catch (err) {
-      console.log('[controllers][quotation][list] :  Error', err);
+      console.log(
+        "[controllers][quotation][list] :  Error",
+        err
+      );
       return res.status(500).json({
         errors: [
-          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
         ],
       });
     }
-
   },
   getIncidentCategories: async (req, res) => {
     try {
-      let orgId = req.orgId
+      let orgId = req.orgId;
       //const incidentCategoryId = req.body.incidentCategoryId;
-      const categories = await knex.from('incident_categories').where({ orgId: orgId, isActive: true })
+      const categories = await knex
+        .from("incident_categories")
+        .where({ orgId: orgId, isActive: true });
       return res.status(200).json({
         data: {
-          categories
+          categories,
         },
-        message: 'Categories list'
-      })
+        message: "Categories list",
+      });
     } catch (err) {
-      console.log('[controllers][quotation][list] :  Error', err);
+      console.log(
+        "[controllers][quotation][list] :  Error",
+        err
+      );
       return res.status(500).json({
         errors: [
-          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
         ],
       });
     }
@@ -279,19 +404,29 @@ const problemController = {
   getSubcategories: async (req, res) => {
     try {
       let incidentCategoryId = req.body.incidentCategoryId;
-      const subCategories = await knex('incident_sub_categories').select('*').where({ incidentCategoryId, isActive: true })
+      const subCategories = await knex(
+        "incident_sub_categories"
+      )
+        .select("*")
+        .where({ incidentCategoryId, isActive: true });
       return res.status(200).json({
         data: {
-          subCategories
+          subCategories,
         },
-        message: 'List of sub categories'
-      })
+        message: "List of sub categories",
+      });
     } catch (err) {
-      console.log('[controllers][subcategory][subcategoryList] :  Error', err);
+      console.log(
+        "[controllers][subcategory][subcategoryList] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
         errors: [
-          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
         ],
       });
     }
@@ -304,33 +439,48 @@ const problemController = {
 
       let [rows] = await Promise.all([
         knex("incident_sub_categories")
-          .leftJoin('incident_categories', 'incident_sub_categories.incidentCategoryId', 'incident_categories.id')
-          .leftJoin('incident_type', 'incident_sub_categories.incidentTypeId', 'incident_type.id')
+          .leftJoin(
+            "incident_categories",
+            "incident_sub_categories.incidentCategoryId",
+            "incident_categories.id"
+          )
+          .leftJoin(
+            "incident_type",
+            "incident_sub_categories.incidentTypeId",
+            "incident_type.id"
+          )
           .select([
-            'incident_sub_categories.id',
-            'incident_categories.categoryCode as problemCode',
-            'incident_sub_categories.descriptionEng',
-            'incident_sub_categories.descriptionThai',
-            'incident_categories.descriptionEng as Category',
-            'incident_sub_categories.isActive as Status',
-            'incident_sub_categories.createdAt as DateCreated',
-            'incident_sub_categories.remark',
+            "incident_sub_categories.id",
+            "incident_categories.categoryCode as problemCode",
+            "incident_sub_categories.descriptionEng",
+            "incident_sub_categories.descriptionThai",
+            "incident_categories.descriptionEng as Category",
+            "incident_sub_categories.isActive as Status",
+            "incident_sub_categories.createdAt as DateCreated",
+            "incident_sub_categories.remark",
             "incident_sub_categories.incidentCategoryId",
             "incident_sub_categories.incidentTypeId",
             "incident_type.typeCode as problemTypeCode",
             "incident_type.descriptionEng as problemTypeDescription",
-          ]).where('incident_sub_categories.id', problemId)
-      ])
+          ])
+          .where("incident_sub_categories.id", problemId),
+      ]);
       pagination.problems = rows;
       return res.status(200).json({
         data: pagination,
-        message: 'Problem Data Details!'
-      })
+        message: "Problem Data Details!",
+      });
     } catch (err) {
-      console.log('[controllers][problem][details] :  Error', err);
+      console.log(
+        "[controllers][problem][details] :  Error",
+        err
+      );
       return res.status(500).json({
         errors: [
-          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
         ],
       });
     }
@@ -339,25 +489,25 @@ const problemController = {
   /**IMPORT PROBLEM SUBCATEGORY DATA */
   importProblemSubCategoryData: async (req, res) => {
     try {
-
       let resultData = null;
       let data = req.body;
       let totalData = data.length - 1;
       let fail = 0;
       let success = 0;
-      console.log("=======", data[0], "+++++++++++++++")
+      console.log("=======", data[0], "+++++++++++++++");
       let result = null;
-      let errors = []
+      let errors = [];
       let header = Object.values(data[0]);
-      header.unshift('Error');
-      errors.push(header)
+      header.unshift("Error");
+      errors.push(header);
 
       if (
         data[0].A == "Ã¯Â»Â¿PROBLEM_CATEGORY_CODE" ||
         (data[0].A == "PROBLEM_CATEGORY_CODE" &&
           data[0].B == "DESCRIPTION" &&
           data[0].C == "ALTERNATE_DESCRIPTION" &&
-          data[0].D == "REMARK" && data[0].E == "PROBLEM_TYPE_CODE")
+          data[0].D == "REMARK" &&
+          data[0].E == "PROBLEM_TYPE_CODE")
       ) {
         if (data.length > 0) {
           let i = 0;
@@ -365,42 +515,48 @@ const problemController = {
             i++;
 
             if (i > 1) {
-
-
               if (!problemData.A) {
-                let values = _.values(problemData)
-                values.unshift("Problem Category code can not empty")
+                let values = _.values(problemData);
+                values.unshift(
+                  "Problem Category code can not empty"
+                );
                 errors.push(values);
                 fail++;
                 continue;
               }
 
-
               if (!problemData.B) {
-                let values = _.values(problemData)
-                values.unshift("Description can not empty")
+                let values = _.values(problemData);
+                values.unshift("Description can not empty");
                 errors.push(values);
                 fail++;
                 continue;
               }
 
               if (!problemData.E) {
-                let values = _.values(problemData)
-                values.unshift("Problem Type code can not empty")
+                let values = _.values(problemData);
+                values.unshift(
+                  "Problem Type code can not empty"
+                );
                 errors.push(values);
                 fail++;
                 continue;
               }
 
-
-
-              let categoryData = await knex("incident_categories")
+              let categoryData = await knex(
+                "incident_categories"
+              )
                 .select("id")
-                .where({ categoryCode: problemData.A.toUpperCase(), orgId: req.orgId });
+                .where({
+                  categoryCode: problemData.A.toUpperCase(),
+                  orgId: req.orgId,
+                });
               let categoryId = null;
               if (!categoryData.length) {
-                let values = _.values(problemData)
-                values.unshift('Problem Category code does not exists')
+                let values = _.values(problemData);
+                values.unshift(
+                  "Problem Category code does not exists"
+                );
                 errors.push(values);
                 fail++;
                 continue;
@@ -409,13 +565,20 @@ const problemController = {
                 categoryId = categoryData[0].id;
               }
 
-              let problemTypeData = await knex("incident_type")
+              let problemTypeData = await knex(
+                "incident_type"
+              )
                 .select("id")
-                .where({ typeCode: problemData.E.toUpperCase(), orgId: req.orgId });
+                .where({
+                  typeCode: problemData.E.toUpperCase(),
+                  orgId: req.orgId,
+                });
               let problemTypeId = null;
               if (!problemTypeData.length) {
-                let values = _.values(problemData)
-                values.unshift('Problem type code does not exists')
+                let values = _.values(problemData);
+                values.unshift(
+                  "Problem type code does not exists"
+                );
                 errors.push(values);
                 fail++;
                 continue;
@@ -424,10 +587,20 @@ const problemController = {
               if (problemTypeData.length) {
                 problemTypeId = problemTypeData[0].id;
               }
-              let checkExist = await knex("incident_sub_categories")
+              let checkExist = await knex(
+                "incident_sub_categories"
+              )
                 .select("id")
-                .where('descriptionEng', 'iLIKE',problemData.B)
-                .where({ incidentCategoryId: categoryId, orgId: req.orgId, incidentTypeId: problemTypeId });
+                .where(
+                  "descriptionEng",
+                  "iLIKE",
+                  problemData.B
+                )
+                .where({
+                  incidentCategoryId: categoryId,
+                  orgId: req.orgId,
+                  incidentTypeId: problemTypeId,
+                });
               if (checkExist.length < 1) {
                 let currentTime = new Date().getTime();
                 let insertData = {
@@ -438,7 +611,7 @@ const problemController = {
                   remark: problemData.D,
                   createdAt: currentTime,
                   updatedAt: currentTime,
-                  incidentTypeId: problemTypeId
+                  incidentTypeId: problemTypeId,
                 };
 
                 resultData = await knex
@@ -449,8 +622,10 @@ const problemController = {
                   success++;
                 }
               } else {
-                let values = _.values(problemData)
-                values.unshift('This Subcategory already exists')
+                let values = _.values(problemData);
+                values.unshift(
+                  "This Subcategory already exists"
+                );
                 errors.push(values);
                 fail++;
               }
@@ -474,26 +649,34 @@ const problemController = {
               " ) due to validation!";
           }
 
-
           return res.status(200).json({
             message: message,
-            errors: errors
+            errors: errors,
           });
         }
       } else {
         return res.status(400).json({
           errors: [
-            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-          ]
+            {
+              code: "VALIDATION_ERROR",
+              message: "Please Choose valid File!",
+            },
+          ],
         });
       }
-
-
     } catch (err) {
-      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      console.log(
+        "[controllers][propertysetup][importCompanyData] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -502,26 +685,34 @@ const problemController = {
     try {
       let problem = null;
       let message;
-      await knex.transaction(async trx => {
+      await knex.transaction(async (trx) => {
         let payload = req.body;
         const schema = Joi.object().keys({
-          id: Joi.string().required()
+          id: Joi.string().required(),
         });
         const result = Joi.validate(payload, schema);
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
+            ],
           });
         }
         let problemResult;
-        let checkStatus = await knex.from('incident_sub_categories').where({ id: payload.id }).returning(['*']);
+        let checkStatus = await knex
+          .from("incident_sub_categories")
+          .where({ id: payload.id })
+          .returning(["*"]);
 
         if (checkStatus.length) {
-
           if (checkStatus[0].isActive == true) {
-
             problemResult = await knex
               .update({ isActive: false })
               .where({ id: payload.id })
@@ -529,8 +720,7 @@ const problemController = {
               .transacting(trx)
               .into("incident_sub_categories");
             problem = problemResult[0];
-            message = "Problem Inactive Successfully!"
-
+            message = "Problem Inactive Successfully!";
           } else {
             problemResult = await knex
               .update({ isActive: true })
@@ -539,25 +729,87 @@ const problemController = {
               .transacting(trx)
               .into("incident_sub_categories");
             problem = problemResult[0];
-            message = "Problem Active Successfully!"
+            message = "Problem Active Successfully!";
           }
         }
         trx.commit;
       });
       return res.status(200).json({
         data: {
-          problem: problem
+          problem: problem,
         },
-        message: message
+        message: message,
       });
     } catch (err) {
-      console.log("[controllers][serviceCode][deleteProblem] :  Error", err);
+      console.log(
+        "[controllers][serviceCode][deleteProblem] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
-}
 
-module.exports = problemController
+  getSubcategoriesProblem: async (req, res) => {
+    try {
+      let description = req.body.subCategoryName;
+      const subCategories = await knex(
+        "incident_sub_categories"
+      )
+        .leftJoin(
+          "incident_categories",
+          "incident_sub_categories.incidentCategoryId",
+          "incident_categories.id"
+        )
+        .select([
+          "incident_sub_categories.*",
+          "incident_categories.descriptionEng as incidentDescriptionEng",
+          "incident_categories.descriptionThai as incidentDescriptionThai"
+        ])
+        .where({ "incident_sub_categories.isActive": true, "incident_sub_categories.orgId": req.orgId })
+        .where((qb) => {
+          if (description) {
+            qb.where(
+              "incident_sub_categories.descriptionEng",
+              "iLIKE",
+              `%${description}%`
+            );
+            qb.orWhere(
+              "incident_sub_categories.descriptionThai",
+              "iLIKE",
+              `%${description}%`
+            );
+          }
+        });
+      return res.status(200).json({
+        data: {
+          subCategories,
+        },
+        message: "List of sub categories",
+      });
+    } catch (err) {
+      console.log(
+        "[controllers][subcategory][subcategoryList] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
+  },
+};
+
+module.exports = problemController;
