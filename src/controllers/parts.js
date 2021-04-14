@@ -869,7 +869,7 @@ const partsController = {
         try {
 
             let partStock = null;
-
+            let assignedPart = [];
 
             await knex.transaction(async (trx) => {
                 const currentTime1 = new Date().getTime();
@@ -914,6 +914,8 @@ const partsController = {
                     if (validSRMaster) {
                         result = Joi.validate(_.omit(partStockPayload, 'receiveFrom', 'storeAdjustmentBy', 'description', 'date', 'workOrderId', 'receiveDate', 'returnedBy', 'deductTo', 'deductDate', 'building', 'floor'), schema);
                         if (partStockPayload.adjustType == "1") {
+
+                            console.log("valid SR Master========>>>>>>>>>>>>",validSRMaster)
 
                             // Issue By Id Manage with Manually and Select from list
 
@@ -1138,6 +1140,27 @@ const partsController = {
                             ])
 
                         }
+
+                        const currentTime = new Date().getTime();
+
+                        let insertData = {
+                            partId : req.body.partId,
+                            unitCost : req.body.unitCost,
+                            quantity : req.body.quantity,
+                            status : 'approved',
+                            entityId: validSRMaster.id,
+                            entityType: 'service_orders',
+                            createdAt: currentTime,
+                            updatedAt: currentTime,
+                            orgId: req.orgId,
+                            avgUnitPrice: req.body.unitCost
+                        }
+
+                        let partResult = await knex.insert(insertData).returning(['*']).into('assigned_parts');
+
+                        console.log("part result====>>>>",partResult)
+                        assignedPart.push(partResult);
+                        
                     } else {
                         return res.status(500).json({
                             errors: [
@@ -1145,6 +1168,8 @@ const partsController = {
                             ],
                         });
                     }
+
+                   
 
                 } else if (partStockPayload.adjustType == "2") {
 
