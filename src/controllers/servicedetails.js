@@ -549,7 +549,9 @@ const serviceDetailsController = {
             'status.descriptionEng as Status',
             "service_requests.displayId as SRS",
             "companies.id as comId",
-            'service_orders.comment'
+            'service_orders.comment',
+            'service_orders.calculatedDuration',
+            'service_orders.pauseDuration'
 
           )
           .where({
